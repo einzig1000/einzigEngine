@@ -17,6 +17,8 @@
 #include <DbgHelp.h>
 #pragma comment (lib, "Dbghelp.lib")
 #include <cassert>
+#include "functions.h"
+#include "definition.h"
 
 // Vector4型を定義する
 struct Vector4 {
@@ -53,6 +55,34 @@ std::string ConvertString(const std::wstring& str) {
 	return result;
 }
 
+// D3D12_RESOURCE_STATES を文字列に変換する関数
+std::string ResourceStateToString(D3D12_RESOURCE_STATES state) {
+	switch (state) {
+	case D3D12_RESOURCE_STATE_COMMON: return "COMMON";
+	case D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER: return "VERTEX_AND_CONSTANT_BUFFER";
+	case D3D12_RESOURCE_STATE_INDEX_BUFFER: return "INDEX_BUFFER";
+	case D3D12_RESOURCE_STATE_RENDER_TARGET: return "RENDER_TARGET";
+	case D3D12_RESOURCE_STATE_UNORDERED_ACCESS: return "UNORDERED_ACCESS";
+	case D3D12_RESOURCE_STATE_DEPTH_WRITE: return "DEPTH_WRITE";
+	case D3D12_RESOURCE_STATE_DEPTH_READ: return "DEPTH_READ";
+	case D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE: return "NON_PIXEL_SHADER_RESOURCE";
+	case D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE: return "PIXEL_SHADER_RESOURCE";
+	case D3D12_RESOURCE_STATE_STREAM_OUT: return "STREAM_OUT";
+	case D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT: return "INDIRECT_ARGUMENT";
+	case D3D12_RESOURCE_STATE_COPY_DEST: return "COPY_DEST";
+	case D3D12_RESOURCE_STATE_COPY_SOURCE: return "COPY_SOURCE";
+	case D3D12_RESOURCE_STATE_RESOLVE_DEST: return "RESOLVE_DEST";
+	case D3D12_RESOURCE_STATE_RESOLVE_SOURCE: return "RESOLVE_SOURCE";
+	case D3D12_RESOURCE_STATE_VIDEO_DECODE_READ: return "VIDEO_DECODE_READ";
+	case D3D12_RESOURCE_STATE_VIDEO_DECODE_WRITE: return "VIDEO_DECODE_WRITE";
+	case D3D12_RESOURCE_STATE_VIDEO_PROCESS_READ: return "VIDEO_PROCESS_READ";
+	case D3D12_RESOURCE_STATE_VIDEO_PROCESS_WRITE: return "VIDEO_PROCESS_WRITE";
+	case D3D12_RESOURCE_STATE_VIDEO_ENCODE_READ: return "VIDEO_ENCODE_READ";
+	case D3D12_RESOURCE_STATE_VIDEO_ENCODE_WRITE: return "VIDEO_ENCODE_WRITE";
+	default: return "UNKNOWN_STATE";
+	}
+}
+
 // ウィンドウプロシージャ(クリックした、×を押した等のイベントを処理する関数)
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
@@ -76,6 +106,38 @@ void Log(const std::string& message)
 	// string型からchar*型に変換した文字列
 	OutputDebugStringA(message.c_str());
 }
+// Vector4型用のオーバーロード
+void LogVector4(const std::string& message, const Vector4& vector)
+{
+	Log(message);
+	std::string a = std::format("x={}, y={}, z={}, w={}", vector.x, vector.y, vector.z, vector.w);
+	Log(a);
+}
+// Matrix4x4型用のオーバーロード
+void LogMatrix4x4(const std::string& message, const Matrix4x4& matrix)
+{
+	Log(message);
+	std::string a = ":\n";
+	for (int i = 0; i < 4; ++i) {
+		a += std::format("[{}, {}, {}, {}]\n",matrix.m[i][0], matrix.m[i][1], matrix.m[i][2], matrix.m[i][3]);
+	}
+	Log(a);
+}
+// barrier.Transition の状態をログに出力する関数
+void LogBarrierTransition(const std::string& message, const D3D12_RESOURCE_BARRIER& barrier)
+{
+	Log(message);
+	if (barrier.Type == D3D12_RESOURCE_BARRIER_TYPE_TRANSITION) {
+		std::string stateBefore = ResourceStateToString(barrier.Transition.StateBefore);
+		std::string stateAfter = ResourceStateToString(barrier.Transition.StateAfter);
+		std::string a = std::format("Barrier Transition - StateBefore: {}, StateAfter: {}", stateBefore, stateAfter);
+		Log(a);
+	}
+	else {
+		Log("Barrier is not of type TRANSITION.");
+	}
+}
+
 
 // ログをファイルに書き出す
 void Log(std::ofstream& os, const std::string& message)
@@ -201,11 +263,10 @@ IDxcBlob* CompileShader(
 	//IDxcBlobUtf16* outputName = nullptr; // Add a valid pointer for the fourth parameter
 	shaderResult->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&shaderError), nullptr);
 	//shaderResult->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&shaderError), &outputName);
-
 	if (shaderError != nullptr && shaderError->GetStringLength() != 0)
 	{
 		Log(shaderError->GetStringPointer());
-		assert(false);
+		assert(false); // コンパイルエラーが発生した場合は停止
 	}
 
 	///////////////////////////////////////
@@ -448,7 +509,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
 	// 今回は赤を書き込んでみる
 	*materialData = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
-
+	LogVector4("Material Color: [{}]", *materialData);
+	materialResource->Unmap(0, nullptr);
 #pragma endregion
 
 	///////////////////////////////////////
@@ -458,9 +520,23 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	// コマンドキューを生成する
 	ID3D12CommandQueue* commandQueue = nullptr;
 	D3D12_COMMAND_QUEUE_DESC commandQueueDesc{};
+	commandQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT; // 必須設定
 	hr = device->CreateCommandQueue(&commandQueueDesc, IID_PPV_ARGS(&commandQueue));
 	// コマンドキューの生成がうまくいかなかったので起動できない
 	assert(SUCCEEDED(hr));
+
+	//// コマンドキューを生成する
+	//ID3D12CommandQueue* commandQueue = nullptr;
+	//D3D12_COMMAND_QUEUE_DESC commandQueueDesc{};
+	//commandQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT; // DIRECTタイプを指定
+	//commandQueueDesc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL; // 通常の優先度
+	//commandQueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE; // 特別なフラグなし
+	//commandQueueDesc.NodeMask = 0; // 単一アダプタを使用
+
+	//hr = device->CreateCommandQueue(&commandQueueDesc, IID_PPV_ARGS(&commandQueue));
+	//assert(SUCCEEDED(hr)); // 生成が失敗した場合は停止
+
+
 
 #pragma endregion
 
@@ -468,17 +544,21 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	///	CommandListの生成
 	///////////////////////////////////////
 #pragma region
+
 	// コマンドアロケータを生成する
 	ID3D12CommandAllocator* commandAllocator = nullptr;
 	hr = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator));
-	// コマンドアロケータの生成がうまくいかなかったので起動できない
-	assert(SUCCEEDED(hr));
+	assert(SUCCEEDED(hr)); // 生成が失敗した場合は停止
 
 	// コマンドリストを生成する
 	ID3D12GraphicsCommandList* commandList = nullptr;
 	hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator, nullptr, IID_PPV_ARGS(&commandList));
-	// コマンドリストの生成がうまくいかなかったので起動できない
-	assert(SUCCEEDED(hr));
+	assert(SUCCEEDED(hr)); // 生成が失敗した場合は停止
+
+	// コマンドリストは初期状態でオープンしているため、必要に応じてCloseする
+	//hr = commandList->Close();
+	//assert(SUCCEEDED(hr));
+
 
 #pragma endregion
 
@@ -590,6 +670,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	// TransitionBarrierを張る
 	commandList->ResourceBarrier(1, &barrier);
+	LogBarrierTransition("Barrier State", barrier);
 #pragma endregion
 
 	// 描画先のRTVを設定する
@@ -714,8 +795,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 	rootParameters[0].Descriptor.ShaderRegister = 0;
 	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
 	rootParameters[1].Descriptor.ShaderRegister = 0;
+	//rootParameters[1].Descriptor.ShaderRegister = 1;
+
+
 	descriptionRootSignature.pParameters = rootParameters;
 	descriptionRootSignature.NumParameters = _countof(rootParameters);
 
@@ -822,6 +906,27 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 #pragma endregion
 
 	///////////////////////////////////////
+	///	TransformationMatrix用のResourceを作る & CBVを設定する
+	///////////////////////////////////////
+#pragma region
+	// WVP用のリソースを作る。Matrix4x4　１つ分のサイズを用意する
+	ID3D12Resource* wvpResource = CreateBufferResource(device, sizeof(Matrix4x4));
+	//ID3D12Resource* wvpResource = CreateBufferResource(device, sizeof(float)*16);
+	int UIO1 = sizeof(Matrix4x4);
+	int UIO2 = sizeof(wvpResource);
+	int UIO3 = sizeof(float);
+	// データを書き込む
+	Matrix4x4* wvpData = nullptr;
+	// 書き込むためのアドレスを取得
+	wvpResource->Map(0, nullptr, reinterpret_cast<void**>(&wvpData));
+	// 単位行列を書き込んでおく
+	*wvpData = MakeIdentity4x4();
+	LogMatrix4x4("WVP Matrix", *wvpData);
+	wvpResource->Unmap(0, nullptr);
+
+#pragma endregion
+
+	///////////////////////////////////////
 	///	VertexResourseを生成する
 	///////////////////////////////////////
 #pragma region
@@ -909,8 +1014,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	///	メインループ
 	///////////////////////////////////////
 	MSG msg{};
-	//uint16_t* p = nullptr;
-	//*p = 190;
 	// ウィンドウの×ボタンが押されるまでループ
 	while (msg.message != WM_QUIT)
 	{
@@ -960,9 +1063,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
 			// 形状を設定
 			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			// CBVを設定する マテリアル用のCBufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+			// CBVを設定する wvp用のCBufferの場所を設定
+			commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
 			// 描画
 			commandList->DrawInstanced(3, 1, 0, 0);
+
+
+
+
 #pragma endregion
 
 			///////////////////////////////////////
@@ -981,7 +1091,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 #pragma region
 			// コマンドリストの内容を確定させる。全てのコマンドを積んでからCloseすること
 			hr = commandList->Close();
-			assert(SUCCEEDED(hr));
+			if (FAILED(hr)) {
+				Log("Failed to close command list.");
+				assert(false);
+			}
+			//assert(SUCCEEDED(hr));
 #pragma endregion
 
 			///////////////////////////////////////
@@ -1032,6 +1146,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 #pragma endregion
 
 
+
 		}
 	}
 
@@ -1042,6 +1157,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	///////////////////////////////////////
 #pragma region
 	materialResource->Release();
+	wvpResource->Release();
 	vertexResource->Release();
 	graphicsPipelineState->Release();
 	signatureBlob->Release();
@@ -1081,7 +1197,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		debug->ReportLiveObjects(DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_ALL);
 		debug->Release();
 	}
-
 
 #pragma endregion
 
