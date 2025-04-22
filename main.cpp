@@ -181,7 +181,7 @@ ID3D12Resource* CreateBufferResource(ID3D12Device* device, size_t sizeInBytes)
 	D3D12_RESOURCE_DESC resourceDesc{};
 	// バッファリソース。テクスチャの場合はまた別の設定をする
 	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	resourceDesc.Width = sizeof(Vector4) * 3; // Vector4を３頂点分
+	resourceDesc.Width = sizeInBytes; // Vector4を３頂点分
 	// バッファの場合はこれらは１にする決まり
 	resourceDesc.Height = 1;
 	resourceDesc.DepthOrArraySize = 1;
@@ -911,10 +911,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 #pragma region
 	// WVP用のリソースを作る。Matrix4x4　１つ分のサイズを用意する
 	ID3D12Resource* wvpResource = CreateBufferResource(device, sizeof(Matrix4x4));
-	//ID3D12Resource* wvpResource = CreateBufferResource(device, sizeof(float)*16);
-	int UIO1 = sizeof(Matrix4x4);
-	int UIO2 = sizeof(wvpResource);
-	int UIO3 = sizeof(float);
+	//ID3D12Resource* wvpResource = CreateBufferResource(device, size_t(64));
 	// データを書き込む
 	Matrix4x4* wvpData = nullptr;
 	// 書き込むためのアドレスを取得
