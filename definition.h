@@ -13,6 +13,10 @@ struct Vector3
     float z = 0;
 };
 
+struct Vector4 {
+    float x, y, z, w;
+};
+
 struct Matrix3x3
 {
     float m[3][3] = {
@@ -37,3 +41,11 @@ struct Vertex
     Vector2 LB_ = { 0,0 };
     Vector2 RB_ = { 0,0 };
 };
+
+struct Transforms
+{
+    Vector3 scale;
+    Vector3 rotate;
+    Vector3 translate;
+};
+

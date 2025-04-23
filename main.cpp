@@ -20,10 +20,6 @@
 #include "functions.h"
 #include "definition.h"
 
-// Vector4型を定義する
-struct Vector4 {
-	float x, y, z, w;
-};
 
 // 文字列変換
 std::wstring ConvertString(const std::string& str) {
@@ -107,24 +103,24 @@ void Log(const std::string& message)
 	OutputDebugStringA(message.c_str());
 }
 // Vector4型用のオーバーロード
-void LogVector4(const std::string& message, const Vector4& vector)
+void Log(const std::string& message, const Vector4& vector)
 {
 	Log(message);
 	std::string a = std::format("x={}, y={}, z={}, w={}", vector.x, vector.y, vector.z, vector.w);
 	Log(a);
 }
 // Matrix4x4型用のオーバーロード
-void LogMatrix4x4(const std::string& message, const Matrix4x4& matrix)
+void Log(const std::string& message, const Matrix4x4& matrix)
 {
 	Log(message);
 	std::string a = ":\n";
 	for (int i = 0; i < 4; ++i) {
-		a += std::format("[{}, {}, {}, {}]\n",matrix.m[i][0], matrix.m[i][1], matrix.m[i][2], matrix.m[i][3]);
+		a += std::format("[{}, {}, {}, {}]\n", matrix.m[i][0], matrix.m[i][1], matrix.m[i][2], matrix.m[i][3]);
 	}
 	Log(a);
 }
 // barrier.Transition の状態をログに出力する関数
-void LogBarrierTransition(const std::string& message, const D3D12_RESOURCE_BARRIER& barrier)
+void Log(const std::string& message, const D3D12_RESOURCE_BARRIER& barrier)
 {
 	Log(message);
 	if (barrier.Type == D3D12_RESOURCE_BARRIER_TYPE_TRANSITION) {
@@ -509,7 +505,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
 	// 今回は赤を書き込んでみる
 	*materialData = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
-	LogVector4("Material Color: [{}]", *materialData);
+	Log("Material Color: [{}]", *materialData);
 	materialResource->Unmap(0, nullptr);
 #pragma endregion
 
@@ -670,7 +666,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	// TransitionBarrierを張る
 	commandList->ResourceBarrier(1, &barrier);
-	LogBarrierTransition("Barrier State", barrier);
+	Log("Barrier State", barrier);
 #pragma endregion
 
 	// 描画先のRTVを設定する
@@ -911,14 +907,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 #pragma region
 	// WVP用のリソースを作る。Matrix4x4　１つ分のサイズを用意する
 	ID3D12Resource* wvpResource = CreateBufferResource(device, sizeof(Matrix4x4));
-	//ID3D12Resource* wvpResource = CreateBufferResource(device, size_t(64));
 	// データを書き込む
 	Matrix4x4* wvpData = nullptr;
 	// 書き込むためのアドレスを取得
 	wvpResource->Map(0, nullptr, reinterpret_cast<void**>(&wvpData));
 	// 単位行列を書き込んでおく
 	*wvpData = MakeIdentity4x4();
-	LogMatrix4x4("WVP Matrix", *wvpData);
+	// ログを出したい気分
+	Log("WVP Matrix", *wvpData);
 	wvpResource->Unmap(0, nullptr);
 
 #pragma endregion
@@ -1005,6 +1001,22 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 #pragma endregion
 
+	///////////////////////////////////////
+	///	scale,rotate,translateを作成
+	///////////////////////////////////////
+#pragma region
+	// 三角形のSRT
+	Transforms transform{ {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f} };
+	
+	// カメラのSRT
+	Transforms cameraTransform{ {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,-5.0f} };
+
+
+
+#pragma endregion
+
+
+
 #pragma endregion
 
 	///////////////////////////////////////
@@ -1044,6 +1056,26 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, nullptr);
 			//指定した色で画面全体をクリアする
 			commandList->ClearRenderTargetView(rtvHandles[backBufferIndex], clearColor, 0, nullptr);
+#pragma endregion
+
+
+			///////////////////////////////////////
+			///	TransFormを使ってCBufferを更新する
+			///////////////////////////////////////
+#pragma region
+			transform.rotate.y += 0.03f;
+			Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+			Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
+			Matrix4x4 viewMatrix = Inverse(cameraMatrix);
+			Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kClientWidth) / float(kClientHeight), 0.1f, 100.0f);
+			// WVPMatrixを作る
+			Matrix4x4 worldViewProjectionMatrix = Mul(worldMatrix, Mul(viewMatrix, projectionMatrix));
+			
+			//*transformationMatrixData = worldViewProjectionMatrix;
+
+			*wvpData = worldMatrix;;
+
+
 #pragma endregion
 
 			///////////////////////////////////////
@@ -1118,7 +1150,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 #pragma endregion
 
 			///////////////////////////////////////
-			///	Feenceの値を確認してGPUを待つ
+			///	Fenceの値を確認してGPUを待つ
 			///////////////////////////////////////
 #pragma region
 			// Fenceの値が指定したSignal値にたどり着いているか確認する
