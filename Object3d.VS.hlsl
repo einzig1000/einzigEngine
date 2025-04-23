@@ -13,7 +13,7 @@ struct VertexShaderOutput
 
 struct VertexShaderInput
 {
-    float4 position : POSITION;
+    float32_t4 position : POSITION;
 };
 
 

@@ -1,4 +1,8 @@
 #include <Windows.h>
+#include "externals/imgui/imgui.h"
+#include "externals/imgui/imgui_impl_dx12.h"
+#include "externals/imgui/imgui_impl_win32.h"
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
@@ -82,6 +86,12 @@ std::string ResourceStateToString(D3D12_RESOURCE_STATES state) {
 // ウィンドウプロシージャ(クリックした、×を押した等のイベントを処理する関数)
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
+	// Imgui用
+	if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam))
+	{
+		return true;
+	}
+
 	// メッセージに応じてゲーム固有の処理を行う
 	switch (msg)
 	{
@@ -200,6 +210,24 @@ ID3D12Resource* CreateBufferResource(ID3D12Device* device, size_t sizeInBytes)
 
 	return pResource; // 作成したリソースを返す
 };
+
+ID3D12DescriptorHeap* CreateDescriptorHeap(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible)
+{
+	// ディスクリプタヒープの生成
+	ID3D12DescriptorHeap* DescriptorHeap = nullptr;
+	D3D12_DESCRIPTOR_HEAP_DESC DescriptorHeapDesc{};
+	// レンダ―ターゲットビュー用
+	DescriptorHeapDesc.Type = heapType;
+	// ダブルバッファ用に２つ。多くたってかまわない。
+	DescriptorHeapDesc.NumDescriptors = numDescriptors;
+	// 
+	DescriptorHeapDesc.Flags = shaderVisible ? D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE : D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+	// エラーチェック
+	HRESULT hr = device->CreateDescriptorHeap(&DescriptorHeapDesc, IID_PPV_ARGS(&DescriptorHeap));
+	// ディスクリプタヒープの生成がうまくいかなかったので起動できない
+	assert(SUCCEEDED(hr));
+	return DescriptorHeap;
+}
 
 // DXCを使ってShaderをCompileする関数
 IDxcBlob* CompileShader(
@@ -494,7 +522,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 #pragma endregion
 
 	///////////////////////////////////////
-	/// ここで色を変えてる
+	/// ここで三角形の色を変えてる
 	///	Material用のResourceを作る
 	///////////////////////////////////////
 #pragma region
@@ -589,16 +617,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	///	DescriptorHeapの生成
 	///////////////////////////////////////
 #pragma region
-	// ディスクリプタヒープの生成
-	ID3D12DescriptorHeap* rtvDescriptorHeap = nullptr;
-	D3D12_DESCRIPTOR_HEAP_DESC rtvDescriptorHeapDesc{};
-	// レンダ―ターゲットビュー用
-	rtvDescriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-	// ダブルバッファ用に２つ。多くたってかまわない。
-	rtvDescriptorHeapDesc.NumDescriptors = 2;
-	hr = device->CreateDescriptorHeap(&rtvDescriptorHeapDesc, IID_PPV_ARGS(&rtvDescriptorHeap));
-	// ディスクリプタヒープの生成がうまくいかなかったので起動できない
-	assert(SUCCEEDED(hr));
+
+	ID3D12DescriptorHeap* rtvDescriptorHeap = CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2, false);
+
+	ID3D12DescriptorHeap* srvDescriptorHeap = CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 128, true);
 
 #pragma endregion
 
@@ -674,6 +696,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	// 指定した色で画面全体をクリアする
 	float clearColor[] = { 0.1f,0.25f,0.5f,1.0f };// 青っぽい色。RGBAの順
 	commandList->ClearRenderTargetView(rtvHandles[backBufferIndex], clearColor, 0, nullptr);
+
+
+
+	///////////////////////////////////////
+	///	ImGuiでも利用する描画用のdescriptorHeapの設定
+	///////////////////////////////////////
+	ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap };
+	commandList->SetDescriptorHeaps(1, descriptorHeaps);
+	// ImGui 描画前にディスクリプタヒープを設定
 
 
 	///////////////////////////////////////
@@ -923,27 +954,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	///	VertexResourseを生成する
 	///////////////////////////////////////
 #pragma region
-	//// 頂点リソース用のヒープの設定
-	//D3D12_HEAP_PROPERTIES uploadHeapProperties{};
-	//uploadHeapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
-	//// 頂点リソースの設定
-	//D3D12_RESOURCE_DESC vertexResourceDesc{};
-	//// バッファリソース。テクスチャの場合はまた別の設定をする
-	//vertexResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	//vertexResourceDesc.Width = sizeof(Vector4) * 3; // Vector4を３頂点分
-	//// バッファの場合はこれらは１にする決まり
-	//vertexResourceDesc.Height = 1;
-	//vertexResourceDesc.DepthOrArraySize = 1;
-	//vertexResourceDesc.MipLevels = 1;
-	//vertexResourceDesc.SampleDesc.Count = 1;
-	//// バッファの場合はこれにする決まり
-	//vertexResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
 	//// 実際に頂点リソースを作る
 	ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(Vector4) * 3);
-	//ID3D12Resource* vertexResource = nullptr;
-	//hr = device->CreateCommittedResource(&uploadHeapProperties, D3D12_HEAP_FLAG_NONE,
-	//	&vertexResourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&vertexResource));
-	//assert(SUCCEEDED(hr));
+
 #pragma endregion
 
 	///////////////////////////////////////
@@ -961,6 +975,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 #pragma endregion
 
 	///////////////////////////////////////
+	/// ここで三角形の位置を変えてる
 	///	Resourseにデータを書き込む
 	///////////////////////////////////////
 #pragma region
@@ -1002,18 +1017,49 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 #pragma endregion
 
 	///////////////////////////////////////
+	/// imguiの初期化
+	///////////////////////////////////////
+#pragma region
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGui::StyleColorsDark();
+	ImGui_ImplWin32_Init(hwnd);
+	ImGui_ImplDX12_Init(
+		device,
+		swapChainDesc.BufferCount,
+		rtvDesc.Format,
+		srvDescriptorHeap,
+		srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
+		srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart()
+	);
+#pragma endregion
+
+	///////////////////////////////////////
 	///	scale,rotate,translateを作成
 	///////////////////////////////////////
 #pragma region
 	// 三角形のSRT
 	Transforms transform{ {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f} };
-	
+
 	// カメラのSRT
 	Transforms cameraTransform{ {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,-5.0f} };
 
 
 
 #pragma endregion
+
+	///////////////////////////////////////
+	///	ImGui用に追加変数
+	///////////////////////////////////////
+#pragma region
+
+	float PositionImGui[2] = { 0,0 };
+
+
+
+
+#pragma endregion
+
 
 
 
@@ -1035,6 +1081,36 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		else
 		{
 			// ゲームの処理
+			///////////////////////////////////////
+			///	ImGuiを使う ここからフレームが始まるぜとimguiに伝える
+			///////////////////////////////////////
+#pragma region
+
+			ImGui_ImplDX12_NewFrame();
+			ImGui_ImplWin32_NewFrame();
+			ImGui::NewFrame();
+
+
+			float ColorImGui[4] = {
+				materialData->x,
+				materialData->y,
+				materialData->z,
+				materialData->w,
+			};
+			transform.translate.x = PositionImGui[0];
+			transform.translate.y = PositionImGui[1];
+
+			ImGui::Begin("CG2_02");
+			ImGui::DragFloat4("Color", ColorImGui);
+			ImGui::DragFloat2("Position", PositionImGui,0.01f);
+			ImGui::End();
+
+			materialData->x = ColorImGui[0];
+			materialData->y = ColorImGui[1];
+			materialData->z = ColorImGui[2];
+			materialData->w = ColorImGui[3];
+
+#pragma endregion
 
 			///////////////////////////////////////
 			///	TransitionBarrierを張る(TransitionBarrierの命令を実行する)
@@ -1058,7 +1134,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			commandList->ClearRenderTargetView(rtvHandles[backBufferIndex], clearColor, 0, nullptr);
 #pragma endregion
 
-
 			///////////////////////////////////////
 			///	TransFormを使ってCBufferを更新する
 			///////////////////////////////////////
@@ -1070,13 +1145,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kClientWidth) / float(kClientHeight), 0.1f, 100.0f);
 			// WVPMatrixを作る
 			Matrix4x4 worldViewProjectionMatrix = Mul(worldMatrix, Mul(viewMatrix, projectionMatrix));
-			
+
 			//*transformationMatrixData = worldViewProjectionMatrix;
 
-			*wvpData = worldMatrix;;
+			*wvpData = worldMatrix;
 
 
 #pragma endregion
+
+			// ゲームの処理が終わり描画処理に入る前に、ImGuiの内部コマンドを生成する
+			ImGui::Render();
 
 			///////////////////////////////////////
 			///	コマンドを積む
@@ -1099,8 +1177,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			// 描画
 			commandList->DrawInstanced(3, 1, 0, 0);
 
+#pragma endregion
 
+			///////////////////////////////////////
+			///	ImGuiを描画する
+			///////////////////////////////////////
+#pragma region
 
+			// ImGui 描画前にディスクリプタヒープを設定
+			//ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap };
+			descriptorHeaps[0] = srvDescriptorHeap;
+			commandList->SetDescriptorHeaps(1, descriptorHeaps);
+
+			// 実際のcommandListのImGuiの描画コマンドを積む
+			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
 
 #pragma endregion
 
@@ -1124,6 +1214,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 				Log("Failed to close command list.");
 				assert(false);
 			}
+
 			//assert(SUCCEEDED(hr));
 #pragma endregion
 
@@ -1179,6 +1270,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		}
 	}
 
+	///////////////////////////////////////
+	/// ImGuiの終了処理
+	///////////////////////////////////////
+#pragma region
+	ImGui_ImplDX12_Shutdown();
+	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
+
+#pragma endregion
 
 
 	///////////////////////////////////////
@@ -1201,6 +1301,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	CloseHandle(fenceEvent);
 	fence->Release();
 	rtvDescriptorHeap->Release();
+	srvDescriptorHeap->Release();
 	swapChainResources[0]->Release();
 	swapChainResources[1]->Release();
 	swapChain->Release();
