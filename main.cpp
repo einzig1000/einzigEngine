@@ -2,6 +2,8 @@
 #include "externals/imgui/imgui.h"
 #include "externals/imgui/imgui_impl_dx12.h"
 #include "externals/imgui/imgui_impl_win32.h"
+#include "externals/DirectXTex/d3dx12.h"
+#include "externals/DirectXTex/DirectXTex.h"
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 #include <cstdint>
 #include <filesystem>
@@ -11,9 +13,8 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 #include <sstream> // std::ostringstream を使用するために必要
 #include <format>
 #include <strsafe.h>
-#include "externals/DirectXTex/d3dx12.h"
-#include "externals/DirectXTex/DirectXTex.h"
 #include <d3d12.h>
+#include <vector>
 #pragma comment(lib, "d3d12.lib")
 #include <dxgi1_6.h>
 #pragma comment(lib, "dxgi.lib")
@@ -24,6 +25,7 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 #include <DbgHelp.h>
 #pragma comment (lib, "Dbghelp.lib")
 #include <cassert>
+
 #include "functions.h"
 #include "definition.h"
 
@@ -213,52 +215,6 @@ void Log(const D3D12_ROOT_SIGNATURE_DESC& desc)
 		Log(oss.str());
 	}
 }
-//void Log(const D3D12_ROOT_SIGNATURE_DESC& desc)
-//{
-//	//Log(std::format("[Root Signature]\nNumParameters: {}\nNumStaticSamplers: {}\nFlags: {}\n",
-//	//	desc.NumParameters, desc.NumStaticSamplers, desc.Flags));
-//
-//	//std::string aaa = std::format("[Root Signature]\nNumParameters: {}\nNumStaticSamplers: {}\nFlags: {}\n",
-//	//	desc.NumParameters, desc.NumStaticSamplers, desc.Flags);
-//	std::string aaa = std::format("[Root Signature]\nNumParameters: {}\nNumStaticSamplers: {}\nFlags: {}\n",
-//		static_cast<unsigned int>(desc.NumParameters),
-//		static_cast<unsigned int>(desc.NumStaticSamplers),
-//		static_cast<unsigned int>(desc.Flags));
-//
-//	Log(aaa);
-//
-//	for (UINT i = 0; i < desc.NumParameters; ++i)
-//	{
-//		const auto& param = desc.pParameters[i];
-//		Log(std::format("[Root Parameter {}]\nType: {}\nShaderVisibility: {}\n",
-//			i, param.ParameterType, param.ShaderVisibility));
-//
-//		if (param.ParameterType == D3D12_ROOT_PARAMETER_TYPE_CBV ||
-//			param.ParameterType == D3D12_ROOT_PARAMETER_TYPE_SRV ||
-//			param.ParameterType == D3D12_ROOT_PARAMETER_TYPE_UAV)
-//		{
-//			Log(std::format("ShaderRegister: {}\nRegisterSpace: {}\n",
-//				param.Descriptor.ShaderRegister, param.Descriptor.RegisterSpace));
-//		}
-//		else if (param.ParameterType == D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE)
-//		{
-//			Log(std::format("NumDescriptorRanges: {}\n", param.DescriptorTable.NumDescriptorRanges));
-//			for (UINT j = 0; j < param.DescriptorTable.NumDescriptorRanges; ++j)
-//			{
-//				const auto& range = param.DescriptorTable.pDescriptorRanges[j];
-//				Log(std::format("  [Descriptor Range {}]\n  RangeType: {}\n  BaseShaderRegister: {}\n  NumDescriptors: {}\n  RegisterSpace: {}\n",
-//					j, range.RangeType, range.BaseShaderRegister, range.NumDescriptors, range.RegisterSpace));
-//			}
-//		}
-//	}
-//
-//	for (UINT i = 0; i < desc.NumStaticSamplers; ++i)
-//	{
-//		const auto& sampler = desc.pStaticSamplers[i];
-//		Log(std::format("[Static Sampler {}]\nShaderRegister: {}\nFilter: {}\nAddressU: {}\nAddressV: {}\nAddressW: {}\nShaderVisibility: {}\n",
-//			i, sampler.ShaderRegister, sampler.Filter, sampler.AddressU, sampler.AddressV, sampler.AddressW, sampler.ShaderVisibility));
-//	}
-//}
 
 
 // ログをファイルに書き出す
@@ -1098,9 +1054,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	///	RootSignatureの作成
 	///////////////////////////////////////
 #pragma region
-// RootSignatureの作成
-	//D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
-	//descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
 	// RootParametersの設定
 	D3D12_ROOT_PARAMETER rootParameters[3] = {};
@@ -1449,10 +1402,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			///	コマンドを積む
 			///////////////////////////////////////
 #pragma region
+			// 描画前にディスクリプタヒープを設定
+			ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap };
+			commandList->SetDescriptorHeaps(1, descriptorHeaps);
 			// Viewportを設定
 			commandList->RSSetViewports(1, &viewport);
 			// Scirssorを設定
 			commandList->RSSetScissorRects(1, &scissorRect);
+			// ログ
+			Log(descriptionRootSignature);
 			// RootSignatureを設定。
 			commandList->SetGraphicsRootSignature(rootSignature);
 			commandList->SetPipelineState(graphicsPipelineState);
@@ -1463,6 +1421,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
 			// CBVを設定する wvp用のCBufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
+			// SRVのDescriptorTableの先頭を設定。２はrootParameters[2]。
+			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+
+
 			// 描画
 			commandList->DrawInstanced(3, 1, 0, 0);
 
@@ -1473,28 +1435,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			///////////////////////////////////////
 #pragma region
 
-			// ImGui 描画前にディスクリプタヒープを設定
-			ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap };
-			//descriptorHeaps[0] = srvDescriptorHeap;
-			commandList->SetDescriptorHeaps(1, descriptorHeaps);
-
-
 			// 実際のcommandListのImGuiの描画コマンドを積む
 			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
 
 #pragma endregion
 
-			int sssss = _countof(rootParameters);
-			int SSSSS = descriptionRootSignature.NumParameters;
-			// ログ
-			Log(descriptionRootSignature);
-			// SRVのDescriptorTableの先頭を設定。２はrootParameters[2]である。
-			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
-
 			///////////////////////////////////////
 			/// ResourceStateを入れ替える
 			///////////////////////////////////////
 #pragma region
+
 			barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 			barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
 			commandList->ResourceBarrier(1, &barrier);
