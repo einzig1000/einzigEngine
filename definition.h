@@ -49,3 +49,8 @@ struct Transforms
     Vector3 translate;
 };
 
+struct VertexData
+{
+    Vector4 position;
+    Vector2 texcoord;
+};
