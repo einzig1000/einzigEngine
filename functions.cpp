@@ -410,7 +410,7 @@ Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip
     return Return;
 }
 
-// 正射影行列
+// 正射影行列(平行投影行列)
 Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip)
 {
     Matrix4x4 Return{};
