@@ -1440,8 +1440,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 #pragma region
 
 	float PositionImGui[2] = { 0,0 };
+	float PositionSpriteImGui[2] = { 0,0 };
 
 	float RotateImGui[3] = { 0,0,0 };
+
+	const char* items[] = { "Red", "Green", "Blue" };
+	static int item_current = 0;
+
+	static ImVec4 color{};
+	color.x = materialData[0].x;
+	color.y = materialData[0].y;
+	color.z = materialData[0].z;
+	color.w = materialData[0].w;
 
 
 #pragma endregion
@@ -1476,30 +1486,34 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			ImGui_ImplWin32_NewFrame();
 			ImGui::NewFrame();
 
+			ImGui::ShowDemoWindow(); 
 
-			float ColorImGui[4] = {
-				materialData->x,
-				materialData->y,
-				materialData->z,
-				materialData->w,
-			};
+			ImGui::Begin("CG2_02");
+			ImGui::Combo("Combo Box", &item_current, items, IM_ARRAYSIZE(items));
+			if (item_current == 0) {};
+			if (item_current == 1) {};
+			if (item_current == 2) {};
+
+			ImGui::Text("3d");
+			ImGui::DragFloat2("Position", PositionImGui, 0.01f);
+			ImGui::ColorEdit3("Pick a color", (float*)&color);
+			ImGui::DragFloat3("Rotate", RotateImGui, 0.01f);
+			ImGui::Text("sprite");
+			ImGui::DragFloat2("SpritePosition", PositionSpriteImGui, 1.0f);
+			ImGui::End();
+
+
 			transform.translate.x = PositionImGui[0];
 			transform.translate.y = PositionImGui[1];
+			transformSprite.translate.x = PositionSpriteImGui[0];
+			transformSprite.translate.y = PositionSpriteImGui[1];
 			transform.rotate.x = RotateImGui[0];
 			transform.rotate.y = RotateImGui[1];
 			transform.rotate.z = RotateImGui[2];
-
-
-			ImGui::Begin("CG2_02");
-			ImGui::DragFloat4("Color", ColorImGui, 0.01f, 0, 1);
-			ImGui::DragFloat3("Rotate", RotateImGui, 0.01f);
-			ImGui::DragFloat2("Position", PositionImGui, 0.01f);
-			ImGui::End();
-
-			materialData->x = ColorImGui[0];
-			materialData->y = ColorImGui[1];
-			materialData->z = ColorImGui[2];
-			materialData->w = ColorImGui[3];
+			materialData[0].x = color.x;
+			materialData[0].y = color.y;
+			materialData[0].z = color.z;
+			materialData[0].w = color.w;
 
 #pragma endregion
 
@@ -1723,6 +1737,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 #pragma region
 	materialResource->Release();
 	wvpResource->Release();
+	TransformationMatrixResourceSprite->Release();
 	vertexResource->Release();
 	vertexResourceSprite->Release();
 	graphicsPipelineState->Release();
