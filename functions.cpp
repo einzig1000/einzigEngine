@@ -376,81 +376,13 @@ Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Ve
 {
     Matrix4x4 Return{};
 
-    Matrix4x4 scaleMatrix{};
-    Matrix4x4 rotateXMatrix;
-    Matrix4x4 rotateYMatrix;
-    Matrix4x4 rotateZMatrix;
-    Matrix4x4 rotateXYZMatrix{};
-    Matrix4x4 translateMatrix{};
-    Matrix4x4 resultMatrix{};
-
-    // 拡縮行列
-    for (int i = 0; i < 4; ++i)
-    {
-        for (int j = 0; j < 4; ++j)
-        {
-            scaleMatrix.m[i][j] = 0.0f;
-        }
-    }
-    scaleMatrix.m[0][0] = scale.x;
-    scaleMatrix.m[1][1] = scale.y;
-    scaleMatrix.m[2][2] = scale.z;
-    scaleMatrix.m[3][3] = 1.0f;
-
-    // 回転行列
-    for (int i = 0; i < 4; ++i)
-    {
-        for (int j = 0; j < 4; ++j)
-        {
-            rotateXYZMatrix.m[i][j] = 0.0f;
-        }
-    }
-    rotateXMatrix = MakeRotateXMatrix(rotate.x);
-    rotateYMatrix = MakeRotateYMatrix(rotate.y);
-    rotateZMatrix = MakeRotateZMatrix(rotate.z);
-    rotateXYZMatrix = Mul(rotateXMatrix, Mul(rotateYMatrix, rotateZMatrix));
-
-    // 移動行列
-    for (int i = 0; i < 4; ++i)
-    {
-        for (int j = 0; j < 4; ++j)
-        {
-            translateMatrix.m[i][j] = 0.0f;
-        }
-    }
-    translateMatrix.m[0][0] = 1.0f;
-    translateMatrix.m[1][1] = 1.0f;
-    translateMatrix.m[2][2] = 1.0f;
-    translateMatrix.m[3][3] = 1.0f;
-    translateMatrix.m[3][0] = translate.x;
-    translateMatrix.m[3][1] = translate.y;
-    translateMatrix.m[3][2] = translate.z;
-
-    // 行列の結合
-    for (int i = 0; i < 4; ++i)
-    {
-        for (int j = 0; j < 4; ++j)
-        {
-            resultMatrix.m[i][j] = 0.0f;
-        }
-    }
-
-    resultMatrix.m[0][0] = scaleMatrix.m[0][0] * rotateXYZMatrix.m[0][0];
-    resultMatrix.m[0][1] = scaleMatrix.m[0][0] * rotateXYZMatrix.m[0][1];
-    resultMatrix.m[0][2] = scaleMatrix.m[0][0] * rotateXYZMatrix.m[0][2];
-    resultMatrix.m[0][3] = 0;
-    resultMatrix.m[1][0] = scaleMatrix.m[1][1] * rotateXYZMatrix.m[1][0];
-    resultMatrix.m[1][1] = scaleMatrix.m[1][1] * rotateXYZMatrix.m[1][1];
-    resultMatrix.m[1][2] = scaleMatrix.m[1][1] * rotateXYZMatrix.m[1][2];
-    resultMatrix.m[1][3] = 0;
-    resultMatrix.m[2][0] = scaleMatrix.m[2][2] * rotateXYZMatrix.m[2][0];
-    resultMatrix.m[2][1] = scaleMatrix.m[2][2] * rotateXYZMatrix.m[2][1];
-    resultMatrix.m[2][2] = scaleMatrix.m[2][2] * rotateXYZMatrix.m[2][2];
-    resultMatrix.m[2][3] = 0;
-    resultMatrix.m[3][0] = translateMatrix.m[3][0];
-    resultMatrix.m[3][1] = translateMatrix.m[3][1];
-    resultMatrix.m[3][2] = translateMatrix.m[3][2];
-    resultMatrix.m[3][3] = 1;
+    Matrix4x4 scaleMatrix = MakeScaleMatrix(scale);
+    Matrix4x4 rotateXMatrix = MakeRotateXMatrix(rotate.x);
+    Matrix4x4 rotateYMatrix = MakeRotateYMatrix(rotate.y);
+    Matrix4x4 rotateZMatrix = MakeRotateZMatrix(rotate.z);
+    Matrix4x4 rotateXYZMatrix = Mul(rotateXMatrix, Mul(rotateYMatrix, rotateZMatrix));
+    Matrix4x4 translateMatrix = MakeTranslateMatrix(translate);
+    Matrix4x4 resultMatrix = Mul(Mul(scaleMatrix, rotateXYZMatrix), translateMatrix);
 
 
     return resultMatrix;
@@ -478,7 +410,7 @@ Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip
     return Return;
 }
 
-// 正射影行列
+// 正射影行列(平行投影行列)
 Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip)
 {
     Matrix4x4 Return{};
