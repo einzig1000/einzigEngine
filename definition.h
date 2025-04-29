@@ -54,3 +54,9 @@ struct VertexData
     Vector4 position;
     Vector2 texcoord;
 };
+
+struct Sphere
+{
+    Vector3 center;
+    float radius;
+};

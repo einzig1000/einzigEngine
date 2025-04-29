@@ -1428,7 +1428,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	Transforms transformSprite{ {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f} };
 
 	// カメラのSRT
-	Transforms cameraTransform{ {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,-5.0f} };
+	Transforms cameraTransform{ {1.0f,1.0f,1.0f}, {0.0f,0.0f,-5.0f}, {0.0f,0.0f,0.0f} };
 
 
 
@@ -1439,19 +1439,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	///////////////////////////////////////
 #pragma region
 
-	float PositionImGui[2] = { 0,0 };
-	float PositionSpriteImGui[2] = { 0,0 };
-
-	float RotateImGui[3] = { 0,0,0 };
-
 	const char* items[] = { "Red", "Green", "Blue" };
 	static int item_current = 0;
-
-	static ImVec4 color{};
-	color.x = materialData[0].x;
-	color.y = materialData[0].y;
-	color.z = materialData[0].z;
-	color.w = materialData[0].w;
 
 
 #pragma endregion
@@ -1494,26 +1483,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			if (item_current == 1) {};
 			if (item_current == 2) {};
 
+			ImGui::Text("camera");
+			ImGui::DragFloat3("cameraPosition", &cameraTransform.translate.x, 0.01f);
+			ImGui::DragFloat3("cameraRotate", &cameraTransform.rotate.x, 0.01f);
 			ImGui::Text("3d");
-			ImGui::DragFloat2("Position", PositionImGui, 0.01f);
-			ImGui::ColorEdit3("Pick a color", (float*)&color);
-			ImGui::DragFloat3("Rotate", RotateImGui, 0.01f);
+			ImGui::DragFloat2("Position", &transform.translate.x, 0.01f);
+			ImGui::ColorEdit3("Pick a color", (float*)&materialData[0].x);
+			ImGui::DragFloat3("Rotate", &transform.rotate.x, 0.01f);
 			ImGui::Text("sprite");
-			ImGui::DragFloat2("SpritePosition", PositionSpriteImGui, 1.0f);
+			ImGui::DragFloat2("SpritePosition", &transformSprite.translate.x, 1.0f);
 			ImGui::End();
 
 
-			transform.translate.x = PositionImGui[0];
-			transform.translate.y = PositionImGui[1];
-			transformSprite.translate.x = PositionSpriteImGui[0];
-			transformSprite.translate.y = PositionSpriteImGui[1];
-			transform.rotate.x = RotateImGui[0];
-			transform.rotate.y = RotateImGui[1];
-			transform.rotate.z = RotateImGui[2];
-			materialData[0].x = color.x;
-			materialData[0].y = color.y;
-			materialData[0].z = color.z;
-			materialData[0].w = color.w;
 
 #pragma endregion
 
@@ -1539,7 +1520,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			commandList->ClearRenderTargetView(rtvHandles[backBufferIndex], clearColor, 0, nullptr);
 #pragma endregion
 
-			RotateImGui[1] += 0.03f;
+			transform.rotate.y += 0.00f;
 
 			///////////////////////////////////////
 			///	TransFormを使ってCBufferを更新する
@@ -1608,6 +1589,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 			// 描画
+			//commandList->DrawInstanced(6, 1, 0, 0);
 			commandList->DrawInstanced(6, 1, 0, 0);
 #pragma endregion
 

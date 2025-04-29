@@ -1,4 +1,7 @@
 #include <cmath>
+#ifndef M_PI  
+#define M_PI 3.14159265358979323846  
+#endif
 #include <cassert>
 #include "definition.h"
 
@@ -476,3 +479,148 @@ Matrix4x4 MakeViewPortMatrix(float left, float top, float width, float height, f
 
 
 #pragma endregion
+
+
+//void DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix)
+//{
+//    // グリッドの半分の幅
+//    const float kGridHalfWidth = 2.0f;
+//    // 分割数(偶数にするのが好ましい)
+//    const uint32_t kSubdivision = 10;
+//    // １つ分の長さ
+//    const float kGridEvery = ((kGridHalfWidth * 2.0f) / float(kSubdivision));
+//
+//    // 奥から手前への線を順に引いていく
+//    for (uint32_t xIndex = 0; xIndex <= kSubdivision; ++xIndex)
+//    {
+//        // ワールド座標系上の始点と終点を求める
+//        float x = -kGridHalfWidth + xIndex * kGridEvery;
+//
+//        Vector3 startWorldX = { x, 0.0f, -kGridHalfWidth };
+//        Vector3 endWorldX = { x, 0.0f, kGridHalfWidth };
+//
+//        Vector3 startWorldZ = { -kGridHalfWidth, 0.0f, x };
+//        Vector3 endWorldZ = { kGridHalfWidth, 0.0f, x };
+//
+//        // スクリーン座標系まで変換する
+//        Vector3 startScreenX = Transform(Transform(startWorldX, viewProjectionMatrix), viewportMatrix);
+//        Vector3 endScreenX = Transform(Transform(endWorldX, viewProjectionMatrix), viewportMatrix);
+//
+//        Vector3 startScreenZ = Transform(Transform(startWorldZ, viewProjectionMatrix), viewportMatrix);
+//        Vector3 endScreenZ = Transform(Transform(endWorldZ, viewProjectionMatrix), viewportMatrix);
+//
+//        // 変換した座標を用いて表示する
+//        Novice::DrawLine(
+//            static_cast<int>(startScreenX.x), static_cast<int>(startScreenX.y),
+//            static_cast<int>(endScreenX.x), static_cast<int>(endScreenX.y),
+//            0xAAAAAAFF
+//        );
+//
+//        Novice::DrawLine(
+//            static_cast<int>(startScreenZ.x), static_cast<int>(startScreenZ.y),
+//            static_cast<int>(endScreenZ.x), static_cast<int>(endScreenZ.y),
+//            0xAAAAAAFF
+//        );
+//        if (xIndex == kSubdivision / 2)
+//        {
+//            Novice::DrawLine(
+//                static_cast<int>(startScreenX.x), static_cast<int>(startScreenX.y),
+//                static_cast<int>(endScreenX.x), static_cast<int>(endScreenX.y),
+//                0x000000FF
+//            );
+//
+//            Novice::DrawLine(
+//                static_cast<int>(startScreenZ.x), static_cast<int>(startScreenZ.y),
+//                static_cast<int>(endScreenZ.x), static_cast<int>(endScreenZ.y),
+//                0x000000FF
+//            );
+//        }
+//    }
+//}
+
+//void DrawSphere(VertexData* vertexData, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color)
+void DrawSphere(VertexData* vertexData)
+{
+    // 分割数
+    const uint32_t kSubdivision = 16;
+    // 経度分割１つ分の角度
+    const float kLonEvery = float((2 * M_PI) / kSubdivision);
+    // 緯度分割１つ分の角度
+    const float kLatEvery = float(M_PI / kSubdivision);
+
+    // 緯度の方向に分割 -π/2 ～ π/2
+    for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex)
+    {
+        // 現在の緯度
+        float lat = float(-M_PI / 2.0f + latIndex * kLatEvery);
+        float nextLat = lat + kLatEvery;
+
+        // 経度方向に分割 0 ～ 2π
+        for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex)
+        {
+            // 現在の経度
+            float lon = lonIndex * kLonEvery;
+            float nextLon = lon + kLonEvery;
+
+            float u = float(lonIndex) / float(kSubdivision);
+            float v = 1.0f - float(latIndex) / float(kSubdivision);
+
+            uint32_t start = (latIndex * kSubdivision + lonIndex) * 6;
+
+            vertexData[start].position.x = std::cos(lat) * std::cos(lon);
+            vertexData[start].position.y = std::sin(lat);
+            vertexData[start].position.z = std::cos(lat) * std::sin(lon);
+            vertexData[start].position.w = 0.0f;
+            vertexData[start].texcoord.x = u;
+            vertexData[start].texcoord.y = v;
+
+            vertexData[start + 1].position.x = std::cos(nextLat) * std::cos(nextLon);
+            vertexData[start + 1].position.y = std::sin(nextLat);
+            vertexData[start + 1].position.z = std::cos(nextLat) * std::sin(nextLon);
+            vertexData[start + 1].position.w = 1.0f;
+            vertexData[start + 1].texcoord.x = u;
+            vertexData[start + 1].texcoord.y = v;
+
+            vertexData[start + 2].position.x = std::cos(nextLat) * std::cos(lon);
+            vertexData[start + 2].position.y = std::sin(nextLat);
+            vertexData[start + 2].position.z = std::cos(nextLat) * std::sin(lon);
+            vertexData[start + 2].position.w = 1.0f;
+            vertexData[start + 2].texcoord.x = u;
+            vertexData[start + 2].texcoord.y = v;
+
+
+
+
+            vertexData[start + 3].position.x = std::cos(lat) * std::cos(lon);
+            vertexData[start + 3].position.y = std::sin(lat);
+            vertexData[start + 3].position.z = std::cos(lat) * std::sin(lon);
+            vertexData[start + 3].position.w = 1.0f;
+            vertexData[start + 3].texcoord.x = u;
+            vertexData[start + 3].texcoord.y = v;
+
+            vertexData[start + 4].position.x = std::cos(lat) * std::cos(nextLon);
+            vertexData[start + 4].position.y = std::sin(lat);
+            vertexData[start + 4].position.z = std::cos(lat) * std::sin(nextLon);
+            vertexData[start + 4].position.w = 1.0f;
+            vertexData[start + 4].texcoord.x = u;
+            vertexData[start + 4].texcoord.y = v;
+
+            vertexData[start + 5].position.x = std::cos(nextLat) * std::cos(nextLon);
+            vertexData[start + 5].position.y = std::sin(nextLat);
+            vertexData[start + 5].position.z = std::cos(nextLat) * std::sin(nextLon);
+            vertexData[start + 5].position.w = 1.0f;
+            vertexData[start + 5].texcoord.x = u;
+            vertexData[start + 5].texcoord.y = v;
+
+
+
+
+            // A, B, C, Dをスクリーン座標系まで変換
+            //Vector3 screenA = Transform(Transform(A, viewProjectionMatrix), viewportMatrix);
+            //Vector3 screenB = Transform(Transform(B, viewProjectionMatrix), viewportMatrix);
+            //Vector3 screenC = Transform(Transform(C, viewProjectionMatrix), viewportMatrix);
+            //Vector3 screenD = Transform(Transform(D, viewProjectionMatrix), viewportMatrix);
+        }
+    }
+}
+
