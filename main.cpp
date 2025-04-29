@@ -852,12 +852,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 
 
-
-
-
-
-
-
 	//// 左下
 	//vertexData[0].position = { -0.5f, -0.5f, 0.0f, 1.0f };
 	//vertexData[0].texcoord = { 0.0f,1.0f };
