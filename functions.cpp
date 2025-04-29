@@ -539,10 +539,8 @@ Matrix4x4 MakeViewPortMatrix(float left, float top, float width, float height, f
 //}
 
 //void DrawSphere(VertexData* vertexData, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color)
-void DrawSphere(VertexData* vertexData)
+void DrawSphere(VertexData* vertexData, uint32_t kSubdivision)
 {
-    // 分割数
-    const uint32_t kSubdivision = 16;
     // 経度分割１つ分の角度
     const float kLonEvery = float((2 * M_PI) / kSubdivision);
     // 緯度分割１つ分の角度
