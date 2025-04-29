@@ -836,31 +836,47 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	///	頂点用のResourseを作成しデータを書き込む
 	///////////////////////////////////////
 #pragma region
+	// 球の分割数
+	const uint32_t kSubdivision = 16;
+	// 頂点の数
+	const uint32_t kSumVertex = kSubdivision * kSubdivision * 6;
 	// 頂点リソースを作る
-	ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(VertexData) * 6);
+	ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(VertexData) * kSumVertex);
 	// 頂点リソースにデータを書き込む
 	VertexData* vertexData = nullptr;
 	// 書き込むためのアドレスを取得
 	vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
-	// 左下
-	vertexData[0].position = { -0.5f, -0.5f, 0.0f, 1.0f };
-	vertexData[0].texcoord = { 0.0f,1.0f };
-	// 上
-	vertexData[1].position = { 0.0f, 0.5f, 0.0f, 1.0f };
-	vertexData[1].texcoord = { 0.5f,0.0f };
-	// 右下
-	vertexData[2].position = { 0.5f, -0.5f, 0.0f, 1.0f };
-	vertexData[2].texcoord = { 1.0f,1.0f };
-	
-	// 左下2
-	vertexData[3].position = { -0.5f, -0.5f, 0.5f, 1.0f };
-	vertexData[3].texcoord = { 0.0f,1.0f };
-	// 上2
-	vertexData[4].position = { 0.0f, 0.0f, 0.0f, 1.0f };
-	vertexData[4].texcoord = { 0.5f,0.0f };
-	// 右下2
-	vertexData[5].position = { 0.5f, -0.5f, -0.5f, 1.0f };
-	vertexData[5].texcoord = { 1.0f,1.0f };
+
+	DrawSphere(vertexData, kSubdivision);
+
+
+
+
+
+
+
+
+
+
+	//// 左下
+	//vertexData[0].position = { -0.5f, -0.5f, 0.0f, 1.0f };
+	//vertexData[0].texcoord = { 0.0f,1.0f };
+	//// 上
+	//vertexData[1].position = { 0.0f, 0.5f, 0.0f, 1.0f };
+	//vertexData[1].texcoord = { 0.5f,0.0f };
+	//// 右下
+	//vertexData[2].position = { 0.5f, -0.5f, 0.0f, 1.0f };
+	//vertexData[2].texcoord = { 1.0f,1.0f };
+	//
+	//// 左下2
+	//vertexData[3].position = { -0.5f, -0.5f, 0.5f, 1.0f };
+	//vertexData[3].texcoord = { 0.0f,1.0f };
+	//// 上2
+	//vertexData[4].position = { 0.0f, 0.0f, 0.0f, 1.0f };
+	//vertexData[4].texcoord = { 0.5f,0.0f };
+	//// 右下2
+	//vertexData[5].position = { 0.5f, -0.5f, -0.5f, 1.0f };
+	//vertexData[5].texcoord = { 1.0f,1.0f };
 
 #pragma endregion
 
@@ -921,7 +937,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	// リソースの先頭のアドレスから使う
 	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
 	// 仕様するリソースのサイズは頂点３つ分のサイズ
-	vertexBufferView.SizeInBytes = sizeof(VertexData) * 6;
+	vertexBufferView.SizeInBytes = sizeof(VertexData) * kSumVertex;
 	// １頂点あたりのサイズ
 	vertexBufferView.StrideInBytes = sizeof(VertexData);
 #pragma endregion
@@ -1425,10 +1441,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	Transforms transform{ {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f} };
 
 	// Sprite用の三角形のSRT
-	Transforms transformSprite{ {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f} };
+	Transforms transformSprite{ {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f}, {-400.0f,0.0f,0.0f} };
 
 	// カメラのSRT
-	Transforms cameraTransform{ {1.0f,1.0f,1.0f}, {0.0f,0.0f,-5.0f}, {0.0f,0.0f,0.0f} };
+	Transforms cameraTransform{ {1.0f,1.0f,1.0f}, {0.0f,0.0f,-5.0f}, {0.0f,0.0f,-10.0f} };
 
 
 
@@ -1520,7 +1536,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			commandList->ClearRenderTargetView(rtvHandles[backBufferIndex], clearColor, 0, nullptr);
 #pragma endregion
 
-			transform.rotate.y += 0.00f;
+			transform.rotate.y += 0.01f;
 
 			///////////////////////////////////////
 			///	TransFormを使ってCBufferを更新する
@@ -1590,7 +1606,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 			// 描画
 			//commandList->DrawInstanced(6, 1, 0, 0);
-			commandList->DrawInstanced(6, 1, 0, 0);
+			commandList->DrawInstanced(kSumVertex, 1, 0, 0);
 #pragma endregion
 
 			/////

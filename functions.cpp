@@ -1,9 +1,7 @@
 #include <cmath>
-#ifndef M_PI  
-#define M_PI 3.14159265358979323846  
-#endif
 #include <cassert>
 #include "definition.h"
+#include "functions.h"
 
 #pragma region Vector3
 
@@ -538,86 +536,61 @@ Matrix4x4 MakeViewPortMatrix(float left, float top, float width, float height, f
 //    }
 //}
 
-//void DrawSphere(VertexData* vertexData, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color)
 void DrawSphere(VertexData* vertexData, uint32_t kSubdivision)
 {
+    if (kSubdivision == 0 || vertexData == nullptr) {
+        return;
+    }
+
     // 経度分割１つ分の角度
     const float kLonEvery = float((2 * M_PI) / kSubdivision);
     // 緯度分割１つ分の角度
     const float kLatEvery = float(M_PI / kSubdivision);
 
+
     // 緯度の方向に分割 -π/2 ～ π/2
     for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex)
     {
-        // 現在の緯度
-        float lat = float(-M_PI / 2.0f + latIndex * kLatEvery);
-        float nextLat = lat + kLatEvery;
+        // 現在の緯度と次の緯度
+        const float lat = float(-M_PI / 2.0f + latIndex * kLatEvery);
+        const float nextLat = lat + kLatEvery;
 
         // 経度方向に分割 0 ～ 2π
         for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex)
         {
-            // 現在の経度
-            float lon = lonIndex * kLonEvery;
-            float nextLon = lon + kLonEvery;
+            // 現在の経度と次の経度
+            const float lon = lonIndex * kLonEvery;
+            const float nextLon = lon + kLonEvery;
 
-            float u = float(lonIndex) / float(kSubdivision);
-            float v = 1.0f - float(latIndex) / float(kSubdivision);
+            // テクスチャ座標を計算
+            const float u = float(lonIndex) / float(kSubdivision);
+            const float nextU = float(lonIndex + 1) / float(kSubdivision);
+            const float v = 1.0f - float(latIndex) / float(kSubdivision);
+            const float nextV = 1.0f - float(latIndex + 1) / float(kSubdivision);
 
-            uint32_t start = (latIndex * kSubdivision + lonIndex) * 6;
-
-            vertexData[start].position.x = std::cos(lat) * std::cos(lon);
-            vertexData[start].position.y = std::sin(lat);
-            vertexData[start].position.z = std::cos(lat) * std::sin(lon);
-            vertexData[start].position.w = 0.0f;
-            vertexData[start].texcoord.x = u;
-            vertexData[start].texcoord.y = v;
-
-            vertexData[start + 1].position.x = std::cos(nextLat) * std::cos(nextLon);
-            vertexData[start + 1].position.y = std::sin(nextLat);
-            vertexData[start + 1].position.z = std::cos(nextLat) * std::sin(nextLon);
-            vertexData[start + 1].position.w = 1.0f;
-            vertexData[start + 1].texcoord.x = u;
-            vertexData[start + 1].texcoord.y = v;
-
-            vertexData[start + 2].position.x = std::cos(nextLat) * std::cos(lon);
-            vertexData[start + 2].position.y = std::sin(nextLat);
-            vertexData[start + 2].position.z = std::cos(nextLat) * std::sin(lon);
-            vertexData[start + 2].position.w = 1.0f;
-            vertexData[start + 2].texcoord.x = u;
-            vertexData[start + 2].texcoord.y = v;
+            // 頂点データの開始インデックス
+            const uint32_t start = (latIndex * kSubdivision + lonIndex) * 6;
 
 
+            // 頂点データを設定 (三角形1)
+            vertexData[start + 0].position = { std::cos(lat) * std::cos(lon), std::sin(lat), std::cos(lat) * std::sin(lon), 1.0f };
+            vertexData[start + 0].texcoord = { u, v };
 
+            vertexData[start + 2].position = { std::cos(nextLat) * std::cos(nextLon), std::sin(nextLat), std::cos(nextLat) * std::sin(nextLon), 1.0f };
+            vertexData[start + 2].texcoord = { nextU, nextV };
 
-            vertexData[start + 3].position.x = std::cos(lat) * std::cos(lon);
-            vertexData[start + 3].position.y = std::sin(lat);
-            vertexData[start + 3].position.z = std::cos(lat) * std::sin(lon);
-            vertexData[start + 3].position.w = 1.0f;
-            vertexData[start + 3].texcoord.x = u;
-            vertexData[start + 3].texcoord.y = v;
+            vertexData[start + 1].position = { std::cos(nextLat) * std::cos(lon), std::sin(nextLat), std::cos(nextLat) * std::sin(lon), 1.0f };
+            vertexData[start + 1].texcoord = { u, nextV };
 
-            vertexData[start + 4].position.x = std::cos(lat) * std::cos(nextLon);
-            vertexData[start + 4].position.y = std::sin(lat);
-            vertexData[start + 4].position.z = std::cos(lat) * std::sin(nextLon);
-            vertexData[start + 4].position.w = 1.0f;
-            vertexData[start + 4].texcoord.x = u;
-            vertexData[start + 4].texcoord.y = v;
+            // 頂点データを設定 (三角形2)
+            vertexData[start + 3].position = { std::cos(lat) * std::cos(lon), std::sin(lat), std::cos(lat) * std::sin(lon), 1.0f };
+            vertexData[start + 3].texcoord = { u, v };
 
-            vertexData[start + 5].position.x = std::cos(nextLat) * std::cos(nextLon);
-            vertexData[start + 5].position.y = std::sin(nextLat);
-            vertexData[start + 5].position.z = std::cos(nextLat) * std::sin(nextLon);
-            vertexData[start + 5].position.w = 1.0f;
-            vertexData[start + 5].texcoord.x = u;
-            vertexData[start + 5].texcoord.y = v;
-
-
-
-
-            // A, B, C, Dをスクリーン座標系まで変換
-            //Vector3 screenA = Transform(Transform(A, viewProjectionMatrix), viewportMatrix);
-            //Vector3 screenB = Transform(Transform(B, viewProjectionMatrix), viewportMatrix);
-            //Vector3 screenC = Transform(Transform(C, viewProjectionMatrix), viewportMatrix);
-            //Vector3 screenD = Transform(Transform(D, viewProjectionMatrix), viewportMatrix);
+            vertexData[start + 5].position = { std::cos(lat) * std::cos(nextLon), std::sin(lat), std::cos(lat) * std::sin(nextLon), 1.0f };
+            vertexData[start + 5].texcoord = { nextU, v };
+            
+            vertexData[start + 4].position = { std::cos(nextLat) * std::cos(nextLon), std::sin(nextLat), std::cos(nextLat) * std::sin(nextLon), 1.0f };
+            vertexData[start + 4].texcoord = { nextU, nextV };
         }
     }
 }
