@@ -575,22 +575,28 @@ void DrawSphere(VertexData* vertexData, uint32_t kSubdivision)
             // 頂点データを設定 (三角形1)
             vertexData[start + 0].position = { std::cos(lat) * std::cos(lon), std::sin(lat), std::cos(lat) * std::sin(lon), 1.0f };
             vertexData[start + 0].texcoord = { u, v };
+            vertexData[start + 0].normal = { vertexData[start + 0].position.x,vertexData[start + 0].position.y,vertexData[start + 0].position.z };
 
             vertexData[start + 2].position = { std::cos(nextLat) * std::cos(nextLon), std::sin(nextLat), std::cos(nextLat) * std::sin(nextLon), 1.0f };
             vertexData[start + 2].texcoord = { nextU, nextV };
+            vertexData[start + 2].normal = { vertexData[start + 2].position.x,vertexData[start + 2].position.y,vertexData[start + 2].position.z };
 
             vertexData[start + 1].position = { std::cos(nextLat) * std::cos(lon), std::sin(nextLat), std::cos(nextLat) * std::sin(lon), 1.0f };
             vertexData[start + 1].texcoord = { u, nextV };
+            vertexData[start + 1].normal = { vertexData[start + 1].position.x,vertexData[start + 1].position.y,vertexData[start + 1].position.z };
 
             // 頂点データを設定 (三角形2)
             vertexData[start + 3].position = { std::cos(lat) * std::cos(lon), std::sin(lat), std::cos(lat) * std::sin(lon), 1.0f };
             vertexData[start + 3].texcoord = { u, v };
+            vertexData[start + 3].normal = { vertexData[start + 3].position.x,vertexData[start + 3].position.y,vertexData[start + 3].position.z };
 
             vertexData[start + 5].position = { std::cos(lat) * std::cos(nextLon), std::sin(lat), std::cos(lat) * std::sin(nextLon), 1.0f };
             vertexData[start + 5].texcoord = { nextU, v };
+            vertexData[start + 5].normal = { vertexData[start + 5].position.x,vertexData[start + 5].position.y,vertexData[start + 5].position.z };
             
             vertexData[start + 4].position = { std::cos(nextLat) * std::cos(nextLon), std::sin(nextLat), std::cos(nextLat) * std::sin(nextLon), 1.0f };
             vertexData[start + 4].texcoord = { nextU, nextV };
+            vertexData[start + 4].normal = { vertexData[start + 4].position.x,vertexData[start + 4].position.y,vertexData[start + 4].position.z };
         }
     }
 }

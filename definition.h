@@ -36,10 +36,10 @@ struct Matrix4x4
 
 struct Vertex
 {
-    Vector2 LT_ = { 0,0 };
-    Vector2 RT_ = { 0,0 };
-    Vector2 LB_ = { 0,0 };
-    Vector2 RB_ = { 0,0 };
+    Vector2 LT;
+    Vector2 RT;
+    Vector2 LB;
+    Vector2 RB;
 };
 
 struct Transforms
@@ -53,10 +53,24 @@ struct VertexData
 {
     Vector4 position;
     Vector2 texcoord;
+    Vector3 normal;
 };
 
-struct Sphere
+struct Material
 {
-    Vector3 center;
-    float radius;
+    Vector4 color;
+    int32_t enableLighting;
+};
+
+struct TransformationMatrix
+{
+    Matrix4x4 WVP;
+    Matrix4x4 World;
+};
+
+struct DirectionalLigft
+{
+    Vector4 color;
+    Vector3 direction;
+    float intensity;//輝度
 };
