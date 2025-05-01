@@ -38,13 +38,18 @@ Vector3 Mul(float scalar, const Vector3& v)
     return Return;
 }
 
-float Dot(const Vector3& v1, const Vector3& v2)
+float DotProduct(const Vector3& v1, const Vector3& v2)
 {
     float Return{};
 
     Return = (v1.x * v2.x) + (v1.y * v2.y) + (v1.z * v2.z);
 
     return Return;
+}
+
+Vector3 CrossProduct(const Vector3& v1, const Vector3& v2)
+{
+    return Vector3();
 }
 
 float Length(const Vector3& v)
@@ -381,7 +386,7 @@ Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Ve
     Matrix4x4 rotateXMatrix = MakeRotateXMatrix(rotate.x);
     Matrix4x4 rotateYMatrix = MakeRotateYMatrix(rotate.y);
     Matrix4x4 rotateZMatrix = MakeRotateZMatrix(rotate.z);
-    Matrix4x4 rotateXYZMatrix = Mul(rotateXMatrix, Mul(rotateYMatrix, rotateZMatrix));
+    Matrix4x4 rotateXYZMatrix = Mul(Mul(rotateZMatrix, rotateXMatrix), rotateYMatrix);
     Matrix4x4 translateMatrix = MakeTranslateMatrix(translate);
     Matrix4x4 resultMatrix = Mul(Mul(scaleMatrix, rotateXYZMatrix), translateMatrix);
 
@@ -477,64 +482,6 @@ Matrix4x4 MakeViewPortMatrix(float left, float top, float width, float height, f
 
 
 #pragma endregion
-
-
-//void DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix)
-//{
-//    // グリッドの半分の幅
-//    const float kGridHalfWidth = 2.0f;
-//    // 分割数(偶数にするのが好ましい)
-//    const uint32_t kSubdivision = 10;
-//    // １つ分の長さ
-//    const float kGridEvery = ((kGridHalfWidth * 2.0f) / float(kSubdivision));
-//
-//    // 奥から手前への線を順に引いていく
-//    for (uint32_t xIndex = 0; xIndex <= kSubdivision; ++xIndex)
-//    {
-//        // ワールド座標系上の始点と終点を求める
-//        float x = -kGridHalfWidth + xIndex * kGridEvery;
-//
-//        Vector3 startWorldX = { x, 0.0f, -kGridHalfWidth };
-//        Vector3 endWorldX = { x, 0.0f, kGridHalfWidth };
-//
-//        Vector3 startWorldZ = { -kGridHalfWidth, 0.0f, x };
-//        Vector3 endWorldZ = { kGridHalfWidth, 0.0f, x };
-//
-//        // スクリーン座標系まで変換する
-//        Vector3 startScreenX = Transform(Transform(startWorldX, viewProjectionMatrix), viewportMatrix);
-//        Vector3 endScreenX = Transform(Transform(endWorldX, viewProjectionMatrix), viewportMatrix);
-//
-//        Vector3 startScreenZ = Transform(Transform(startWorldZ, viewProjectionMatrix), viewportMatrix);
-//        Vector3 endScreenZ = Transform(Transform(endWorldZ, viewProjectionMatrix), viewportMatrix);
-//
-//        // 変換した座標を用いて表示する
-//        Novice::DrawLine(
-//            static_cast<int>(startScreenX.x), static_cast<int>(startScreenX.y),
-//            static_cast<int>(endScreenX.x), static_cast<int>(endScreenX.y),
-//            0xAAAAAAFF
-//        );
-//
-//        Novice::DrawLine(
-//            static_cast<int>(startScreenZ.x), static_cast<int>(startScreenZ.y),
-//            static_cast<int>(endScreenZ.x), static_cast<int>(endScreenZ.y),
-//            0xAAAAAAFF
-//        );
-//        if (xIndex == kSubdivision / 2)
-//        {
-//            Novice::DrawLine(
-//                static_cast<int>(startScreenX.x), static_cast<int>(startScreenX.y),
-//                static_cast<int>(endScreenX.x), static_cast<int>(endScreenX.y),
-//                0x000000FF
-//            );
-//
-//            Novice::DrawLine(
-//                static_cast<int>(startScreenZ.x), static_cast<int>(startScreenZ.y),
-//                static_cast<int>(endScreenZ.x), static_cast<int>(endScreenZ.y),
-//                0x000000FF
-//            );
-//        }
-//    }
-//}
 
 void DrawSphere(VertexData* vertexData, uint32_t kSubdivision)
 {

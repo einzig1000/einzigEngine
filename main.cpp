@@ -957,9 +957,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	// 
 	directionalLightResource->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData));
 	// 初期値の設定
-	directionalLightData->color = { 1.0f,1.0f,1.0f,1.0f };
-	directionalLightData->direction = { 0.0f, -1.0f, 0.0f };
+	directionalLightData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
+	directionalLightData->direction = Normalize({ 0.0f, -1.0f, 0.0f });
 	directionalLightData->intensity = 1.0f;
+
 
 #pragma endregion
 
@@ -1456,8 +1457,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	TransformationMatrixResource->Unmap(0, nullptr);
 
 	// ログを出したい気分
-	Log("World Matrix", TransformationMatrixData->World);
-	Log("WVP Matrix", TransformationMatrixData->WVP);
+	//Log("World Matrix", TransformationMatrixData->World);
+	//Log("WVP Matrix", TransformationMatrixData->WVP);
 	Log(std::format("wvpResource GPU Virtual Address: {}", TransformationMatrixResource->GetGPUVirtualAddress()));
 
 
@@ -1529,7 +1530,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	Transforms transformSprite{ {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f}, {-400.0f,0.0f,0.0f} };
 
 	// カメラのSRT
-	Transforms cameraTransform{ {1.0f,1.0f,1.0f}, {0.0f,0.0f,-5.0f}, {0.0f,0.0f,-10.0f} };
+	Transforms cameraTransform{ {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,-10.0f} };
 
 
 
@@ -1576,29 +1577,39 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			ImGui_ImplWin32_NewFrame();
 			ImGui::NewFrame();
 
-			ImGui::ShowDemoWindow(); 
+			ImGui::ShowDemoWindow();
 
 			ImGui::Begin("CG2_02");
 			ImGui::Combo("Combo Box", &item_current, items, IM_ARRAYSIZE(items));
-			if (item_current == 0) {};
-			if (item_current == 1) {};
-			if (item_current == 2) {};
 
 			ImGui::Text("camera");
 			ImGui::DragFloat3("cameraPosition", &cameraTransform.translate.x, 0.01f);
 			ImGui::DragFloat3("cameraRotate", &cameraTransform.rotate.x, 0.01f);
+
 			ImGui::Text("3d");
-			ImGui::DragFloat2("Position", &transform.translate.x, 0.01f);
 			ImGui::ColorEdit3("Color", (float*)&materialData->color.x);
+			ImGui::DragFloat2("Position", &transform.translate.x, 0.01f);
 			ImGui::DragFloat3("Rotate", &transform.rotate.x, 0.01f);
+
 			ImGui::Text("sprite");
-			ImGui::DragFloat2("SpritePosition", &transformSprite.translate.x, 1.0f);
 			ImGui::ColorEdit3("SpriteColor", (float*)&materialDataSprite->color.x);
+			ImGui::DragFloat2("SpritePosition", &transformSprite.translate.x, 1.0f);
+
 			ImGui::Text("light");
 			ImGui::ColorEdit3("LightColor", (float*)&directionalLightData->color.x);
-			ImGui::DragFloat3("LightDirection", &directionalLightData->direction.x, 0.01f);
+			ImGui::DragFloat3("LightDirection", &directionalLightData->direction.x, 0.01f, -1.0f, 1.0f);
 			ImGui::DragFloat("LightIntensity", &directionalLightData->intensity, 0.01f);
 			ImGui::End();
+
+
+
+#pragma endregion
+
+			///////////////////////////////////////
+			///	ライトの向きを正規化
+			///////////////////////////////////////
+#pragma region
+			directionalLightData->direction = Normalize(directionalLightData->direction);
 
 
 
@@ -1634,24 +1645,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 #pragma region
 
 			// 三角形用のWorldViewProjectionMatrixを作る
-			Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+			TransformationMatrixData->World = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 			Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
 			Matrix4x4 viewMatrix = Inverse(cameraMatrix);
 			Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kClientWidth) / float(kClientHeight), 0.1f, 100.0f);
 			// WVPMatrixを作る
-			Matrix4x4 worldViewProjectionMatrix = Mul(worldMatrix, Mul(viewMatrix, projectionMatrix));
-
-			TransformationMatrixData->WVP = worldViewProjectionMatrix;
+			TransformationMatrixData->WVP = Mul(TransformationMatrixData->World, Mul(viewMatrix, projectionMatrix));
 
 
 			// Sprite用のWorldViewProjectionMatrixを作る
-			Matrix4x4 worldMatrixSprite = MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
+			TransformationMatrixDataSprite->World = MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
 			Matrix4x4 viewMatrixSprite = MakeIdentity4x4();
 			Matrix4x4 projectionMatrixSprite = MakeOrthographicMatrix(0.0f, 0.0f, float(kClientWidth), float(kClientHeight), 0.0f, 100.0f);
 			// WVPMatrixを作る
-			Matrix4x4 worldViewProjectionMatrixSprite = Mul(worldMatrixSprite, Mul(viewMatrixSprite, projectionMatrixSprite));
-
-			TransformationMatrixDataSprite->WVP = worldViewProjectionMatrixSprite;
+			TransformationMatrixDataSprite->WVP = Mul(TransformationMatrixDataSprite->World, Mul(viewMatrixSprite, projectionMatrixSprite));
 
 
 #pragma endregion
@@ -1664,11 +1671,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			///////////////////////////////////////
 #pragma region
 			/////
-			//	3D三角形の描画 
+			//	DescriptorHeaps & Viewport & Scirssor & RootSignature & PSO を設定
 			/////
 #pragma region
-			
-			// 描画前にディスクリプタヒープを設定
+			// DescriptorHeapsを設定
 			ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap };
 			commandList->SetDescriptorHeaps(1, descriptorHeaps);
 			// Viewportを設定
@@ -1677,7 +1683,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			commandList->RSSetScissorRects(1, &scissorRect);
 			// RootSignatureを設定。
 			commandList->SetGraphicsRootSignature(rootSignature);
+			// PSOを設定
 			commandList->SetPipelineState(graphicsPipelineState);
+
+#pragma endregion
+
+			/////
+			//	3D三角形の描画 
+			/////
+#pragma region
+			
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
 			// 形状を設定
 			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
