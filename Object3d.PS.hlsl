@@ -15,7 +15,9 @@ PixelShaderOutput main(VertexShaderOutput input)
     // Lightingの計算
     if (gMaterial0.enableLighting != 0)
     {
-        float cos = saturate(dot(normalize(input.normal), -gDirectionalLight.direction));
+        // NdotL : NとLのdot(内積)
+        float NdotL = dot(normalize(input.normal), -gDirectionalLight.direction);
+        float cos = pow(NdotL * 0.5f + 0.5f, 2.0f);
         output.color = gMaterial0.color * textureColor * gDirectionalLight.color * cos * gDirectionalLight.intensity;
     }
     else
