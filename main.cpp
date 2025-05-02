@@ -867,7 +867,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 	///////////////////////////////////////
 	/// ここで三角形の位置を設定してる
-	///	頂点用のResourseを作成しデータを書き込む
+	///	頂点用 の Resourseを作成しデータを書き込む
 	///////////////////////////////////////
 #pragma region
 	// 球の分割数
@@ -908,7 +908,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 	///////////////////////////////////////
 	/// ここでスプライトの三角形の位置を設定してる
-	/// Sprite用 の VertexResourceSprite と VertexBufferViewSprite 作成
+	/// Sprite用 の Resourseを作成しデータを書き込む
 	///////////////////////////////////////
 #pragma region
 	// Sprite用の頂点リソースを作る
@@ -921,7 +921,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	vertexDataSprite[0].position = { 0.0f, 360.0f, 0.0f, 1.0f };
 	vertexDataSprite[0].texcoord = { 0.0f,1.0f };
 	vertexDataSprite[0].normal = { 0.0f,0.0f,-1.0f };
-	// 上
+	// 左上
 	vertexDataSprite[1].position = { 0.0f, 0.0f, 0.0f, 1.0f };
 	vertexDataSprite[1].texcoord = { 0.0f,0.0f };
 	vertexDataSprite[1].normal = { 0.0f,0.0f,-1.0f };
@@ -929,25 +929,36 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	vertexDataSprite[2].position = { 640.0f, 360.0f, 0.0f, 1.0f };
 	vertexDataSprite[2].texcoord = { 1.0f,1.0f };
 	vertexDataSprite[2].normal = { 0.0f,0.0f,-1.0f };
-
-	// 左下2
-	vertexDataSprite[3].position = { 0.0f, 0.0f, 0.0f, 1.0f };
-	vertexDataSprite[3].texcoord = { 0.0f,0.0f };
+	// 右上
+	vertexDataSprite[3].position = { 640.0f, 0.0f, 0.0f, 1.0f };
+	vertexDataSprite[3].texcoord = { 1.0f,0.0f };
 	vertexDataSprite[3].normal = { 0.0f,0.0f,-1.0f };
-	// 上2
-	vertexDataSprite[4].position = { 640.0f, 0.0f, 0.0f, 1.0f };
-	vertexDataSprite[4].texcoord = { 1.0f,0.0f };
-	vertexDataSprite[4].normal = { 0.0f,0.0f,-1.0f };
-	// 右下2
-	vertexDataSprite[5].position = { 640.0f, 360.0f, 0.0f, 1.0f };
-	vertexDataSprite[5].texcoord = { 1.0f,1.0f };
-	vertexDataSprite[5].normal = { 0.0f,0.0f,-1.0f };
+
+#pragma endregion
+
+	///////////////////////////////////////
+	/// インデックス
+	/// 
+	///////////////////////////////////////
+#pragma region
+	// 
+	ID3D12Resource* indexResourceSprite = CreateBufferResource(device, sizeof(uint32_t) * 6);
+
+	// インデックスリソースにデータを書き込む
+	uint32_t* indexDataSprite = nullptr;
+	indexResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&indexDataSprite));
+	indexDataSprite[0] = 0;
+	indexDataSprite[1] = 1;
+	indexDataSprite[2] = 2;
+	indexDataSprite[3] = 1;
+	indexDataSprite[4] = 3;
+	indexDataSprite[5] = 2;
 
 #pragma endregion
 
 	///////////////////////////////////////
 	/// ここで光源の位置を設定してる
-	/// Sprite用 の VertexResourceSprite と VertexBufferViewSprite 作成
+	/// ライト用 の Resourseを作成しデータを書き込む
 	///////////////////////////////////////
 #pragma region
 	// 
@@ -1001,6 +1012,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	vertexBufferView.SizeInBytes = sizeof(VertexData) * kSumVertex;
 	// １頂点あたりのサイズ
 	vertexBufferView.StrideInBytes = sizeof(VertexData);
+#pragma endregion
+
+	///////////////////////////////////////
+	///	IndexBufferViewを生成する
+	///////////////////////////////////////
+#pragma region
+	// インデックスバッファビューを作成する
+	D3D12_INDEX_BUFFER_VIEW indexBufferViewSprite{};
+	// リソースの先頭のアドレスから使う
+	indexBufferViewSprite.BufferLocation = indexResourceSprite->GetGPUVirtualAddress();
+	// 仕様するリソースのサイズはインデックス６つ分のサイズ
+	indexBufferViewSprite.SizeInBytes = sizeof(uint32_t) * 6;
+	// インデックスはuint32_tとする
+	indexBufferViewSprite.Format = DXGI_FORMAT_R32_UINT;
 #pragma endregion
 
 	///////////////////////////////////////
@@ -1157,7 +1182,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 #pragma endregion
 
 	///////////////////////////////////////
-	/// メインループの開始前に作る
 	///	FenceとEventを生成する
 	///////////////////////////////////////
 #pragma region
@@ -1174,7 +1198,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 #pragma endregion
 
 	///////////////////////////////////////
-	/// fenceEventを作成した直後あたりがよい
 	///	DXCの初期化
 	///////////////////////////////////////
 #pragma region
@@ -1212,7 +1235,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	commandQueue->Signal(fence, FenceValue);
 
 	///////////////////////////////////////
-	///	Feenceの値を確認してGPUを待つ
+	///	Fenceの値を確認してGPUを待つ
 	///////////////////////////////////////
 #pragma region
 	// Fenceの値が指定したSignal値にたどり着いているか確認する
@@ -1446,7 +1469,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	// World-View-Projection用のリソースを作る。Matrix4x4　１つ分のサイズを用意する
 	ID3D12Resource* TransformationMatrixResource = CreateBufferResource(device, sizeof(TransformationMatrix));
 	// データを書き込む
-	//Matrix4x4* wvpData = nullptr;
 	TransformationMatrix* TransformationMatrixData = nullptr;
 	// 書き込むためのアドレスを取得
 	TransformationMatrixResource->Map(0, nullptr, reinterpret_cast<void**>(&TransformationMatrixData));
@@ -1527,7 +1549,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	Transforms transform{ {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f} };
 
 	// Sprite用の三角形のSRT
-	Transforms transformSprite{ {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f}, {-400.0f,0.0f,0.0f} };
+	Transforms transformSprite{ {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f} };
 
 	// カメラのSRT
 	Transforms cameraTransform{ {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,-10.0f} };
@@ -1543,6 +1565,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 	const char* items[] = { "uvChecker.png", "monsterBall.png"};
 	static int item_current = 0;
+	bool autoRotation[3] = { 0,0,0 };
 
 
 #pragma endregion
@@ -1580,35 +1603,58 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			ImGui::ShowDemoWindow();
 
 			ImGui::Begin("CG2_02");
-			ImGui::Combo("Combo Box", &item_current, items, IM_ARRAYSIZE(items));
 
-			ImGui::Text("camera");
-			ImGui::DragFloat3("cameraPosition", &cameraTransform.translate.x, 0.01f);
-			ImGui::DragFloat3("cameraRotate", &cameraTransform.rotate.x, 0.01f);
+			if(ImGui::CollapsingHeader("camera"))
+			{
+				ImGui::DragFloat3("CameraPosition", &cameraTransform.translate.x, 0.01f);
+				ImGui::DragFloat3("CameraRotate", &cameraTransform.rotate.x, 0.01f);
+			}
 
-			ImGui::Text("3d");
-			ImGui::ColorEdit3("Color", (float*)&materialData->color.x);
-			ImGui::DragFloat2("Position", &transform.translate.x, 0.01f);
-			ImGui::DragFloat3("Rotate", &transform.rotate.x, 0.01f);
+			if (ImGui::CollapsingHeader("object"))
+			{
+				ImGui::Combo("Combo Box", &item_current, items, IM_ARRAYSIZE(items));
+				ImGui::ColorEdit3("ObjectColor", (float*)&materialData->color.x);
+				ImGui::DragFloat3("ObjectScale", &transform.scale.x, 0.01f);
+				ImGui::DragFloat3("ObjectPosition", &transform.translate.x, 0.01f);
+				ImGui::DragFloat3("ObjectRotate", &transform.rotate.x, 0.01f);
+				ImGui::Checkbox("X", &autoRotation[0]);
+				ImGui::SameLine(0.0f, 54.0f);
+				ImGui::Checkbox("Y", &autoRotation[1]);
+				ImGui::SameLine(0.0f, 54.0f);
+				ImGui::Checkbox("Z", &autoRotation[2]);
+				ImGui::SameLine(0.0f, 54.0f);
+				ImGui::Text("AutoRotation");
+			}
 
-			ImGui::Text("sprite");
-			ImGui::ColorEdit3("SpriteColor", (float*)&materialDataSprite->color.x);
-			ImGui::DragFloat2("SpritePosition", &transformSprite.translate.x, 1.0f);
+			if (ImGui::CollapsingHeader("sprite"))
+			{
+				ImGui::ColorEdit3("SpriteColor", (float*)&materialDataSprite->color.x);
+				ImGui::DragFloat2("SpritePosition", &transformSprite.translate.x, 1.0f);
+			}
 
-			ImGui::Text("light");
-			ImGui::ColorEdit3("LightColor", (float*)&directionalLightData->color.x);
-			ImGui::DragFloat3("LightDirection", &directionalLightData->direction.x, 0.01f, -1.0f, 1.0f);
-			ImGui::DragFloat("LightIntensity", &directionalLightData->intensity, 0.01f);
+			if (ImGui::CollapsingHeader("light"))
+			{
+				ImGui::ColorEdit3("LightColor", (float*)&directionalLightData->color.x);
+				ImGui::DragFloat3("LightDirection", &directionalLightData->direction.x, 0.01f, -1.0f, 1.0f);
+				ImGui::DragFloat("LightIntensity", &directionalLightData->intensity, 0.01f);
+			}
+
 			ImGui::End();
-
-
 
 #pragma endregion
 
 			///////////////////////////////////////
-			///	ライトの向きを正規化
+			///	演算
 			///////////////////////////////////////
 #pragma region
+
+			// 回転切り替え
+			if (autoRotation[0])transform.rotate.x += 0.01f;
+			if (autoRotation[1])transform.rotate.y += 0.01f;
+			if (autoRotation[2])transform.rotate.z += 0.01f;
+			
+			
+			// ライトの向きを正規化
 			directionalLightData->direction = Normalize(directionalLightData->direction);
 
 
@@ -1637,7 +1683,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			commandList->ClearRenderTargetView(rtvHandles[backBufferIndex], clearColor, 0, nullptr);
 #pragma endregion
 
-			transform.rotate.y += 0.01f;
 
 			///////////////////////////////////////
 			///	TransFormを使ってCBufferを更新する
@@ -1728,13 +1773,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			
 			// Spriteの描画
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
+			commandList->IASetIndexBuffer(&indexBufferViewSprite);
 			// CBVを設定する マテリアル用のCBufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
 			// CBVを設定する wvp用のCBufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(1, TransformationMatrixResourceSprite->GetGPUVirtualAddress());
 
 			// 描画
-			commandList->DrawInstanced(6, 1, 0, 0);
+			//commandList->DrawInstanced(6, 1, 0, 0);
+			commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 #pragma endregion
 
 #pragma endregion

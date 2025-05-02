@@ -3,6 +3,7 @@
 #include "definition.h"
 #include "functions.h"
 
+
 #pragma region Vector3
 
 Vector3 Add(const Vector3& v1, const Vector3& v2)
