@@ -833,7 +833,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	///	Material用のResourseを作成しデータを書き込む
 	///////////////////////////////////////
 #pragma region
-	// マテリアルリソース？を作る
+	// マテリアルリソースを作る
 	ID3D12Resource* materialResource = CreateBufferResource(device, sizeof(Material));
 	// マテリアルにデータを書き込む
 	Material* materialData = nullptr;
@@ -845,6 +845,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	//materialData[1] = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
 	materialData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
 	materialData->enableLighting = true;
+	materialData->uvTransform = MakeIdentity4x4();
 
 #pragma endregion
 
@@ -862,6 +863,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	// スプライトの色を設定 RGBA
 	materialDataSprite->color = { 1.0f, 1.0f, 1.0f, 1.0f };
 	materialDataSprite->enableLighting = false;
+	materialDataSprite->uvTransform = MakeIdentity4x4();
 
 #pragma endregion
 
@@ -1545,16 +1547,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	///	scale,rotate,translateを作成
 	///////////////////////////////////////
 #pragma region
-	// 三角形のSRT
+	// オブジェクト用
 	Transforms transform{ {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f} };
 
-	// Sprite用の三角形のSRT
+	// Sprite用
 	Transforms transformSprite{ {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f} };
 
-	// カメラのSRT
+	// カメラ用
 	Transforms cameraTransform{ {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,-10.0f} };
 
-
+	// UV用
+	Transforms uvTransformSprite{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 
 #pragma endregion
 
@@ -1565,7 +1568,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 	const char* items[] = { "uvChecker.png", "monsterBall.png"};
 	static int item_current = 0;
-	bool autoRotation[3] = { 0,0,0 };
+	bool autoRotation[3] = { 1,1,0 };
 
 
 #pragma endregion
@@ -1630,6 +1633,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			{
 				ImGui::ColorEdit3("SpriteColor", (float*)&materialDataSprite->color.x);
 				ImGui::DragFloat2("SpritePosition", &transformSprite.translate.x, 1.0f);
+			}
+
+			if (ImGui::CollapsingHeader("uv", ImGuiTreeNodeFlags_DefaultOpen))
+			{
+				ImGui::DragFloat2("uvTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
+				ImGui::DragFloat2("uvScale", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
+				ImGui::SliderAngle("uvRotate", &uvTransformSprite.rotate.z);
 			}
 
 			if (ImGui::CollapsingHeader("light"))
@@ -1705,6 +1715,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			// WVPMatrixを作る
 			TransformationMatrixDataSprite->WVP = Mul(TransformationMatrixDataSprite->World, Mul(viewMatrixSprite, projectionMatrixSprite));
 
+			// UVスプライトSRTMatrix
+			Matrix4x4 uvTransformMatrix = MakeScaleMatrix(uvTransformSprite.scale);
+			uvTransformMatrix = Mul(uvTransformMatrix, MakeRotateZMatrix(uvTransformSprite.rotate.z));
+			uvTransformMatrix = Mul(uvTransformMatrix, MakeTranslateMatrix(uvTransformSprite.translate));
+			materialDataSprite->uvTransform = uvTransformMatrix;
 
 #pragma endregion
 

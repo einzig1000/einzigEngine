@@ -8,8 +8,10 @@ ConstantBuffer<DirectionalLigft> gDirectionalLight : register(b1);
 
 PixelShaderOutput main(VertexShaderOutput input)
 {
+    // UV同次座標
+    float4 transformedUV = mul(float32_t4(input.texcoord, 0.0f, 1.0f), gMaterial0.uvTransform);
     // テクスチャカラーをサンプリング
-    float32_t4 textureColor = gTexture0.Sample(gSampler, input.texcoord);
+    float32_t4 textureColor = gTexture0.Sample(gSampler, transformedUV.xy);
     // 出力カラーを計算
     PixelShaderOutput output;
     // Lightingの計算
