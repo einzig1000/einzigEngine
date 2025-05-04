@@ -10,11 +10,10 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 #include <fstream>
 #include <chrono>
 #include <string>
-#include <sstream> // std::ostringstream を使用するために必要
+#include <sstream>
 #include <format>
 #include <strsafe.h>
 #include <d3d12.h>
-#include <vector>
 #pragma comment(lib, "d3d12.lib")
 #include <dxgi1_6.h>
 #pragma comment(lib, "dxgi.lib")
@@ -27,7 +26,6 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 #include <cassert>
 
 #include "functions.h"
-#include "definition.h"
 
 
 // 文字列変換
@@ -502,12 +500,156 @@ D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(ID3D12DescriptorHeap* descrip
 	return handleGPU;
 }
 
+// mtlファイルを読み込む関数
+MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename)
+{
+	/////////////////
+	// 変数宣言
+	/////////////////
+	MaterialData materialData;
+	std::string line;
+
+	/////////////////
+	// ファイルを開く
+	/////////////////
+	std::ifstream file(directoryPath + "/" + filename);
+	assert(file.is_open());
+
+	/////////////////
+	// MaterialDataを構築する
+	/////////////////
+	while (std::getline(file, line))
+	{
+		std::string identifier;
+		std::istringstream s(line);
+		s >> identifier;
+
+		// 
+		if (identifier == "map_KD")
+		{
+			std::string textureFilename;
+			s >> textureFilename;
+			materialData.textureFilePath = directoryPath + "/" + textureFilename;
+		}
+
+
+	}
+
+	/////////////////
+	// 構築したMaterialDataをreturnする
+	/////////////////
+	return materialData;
+}
+
+// objファイルを読み込む関数
+ModelData LoadOBJFile(const std::string& directoryPath, const std::string& filename)
+{
+	/////////////////
+	// 変数宣言
+	/////////////////
+	ModelData modelData;
+	std::vector<Vector4> positions;
+	std::vector<Vector3> normals;
+	std::vector<Vector2> texcoords;
+	std::string line;
+
+	/////////////////
+	// ファイルをひらく
+	/////////////////
+	std::ifstream file(directoryPath + "/" + filename);
+	assert(file.is_open());
+
+	/////////////////
+	// ModelDataを構築する
+	/////////////////
+	while (std::getline(file, line))
+	{
+		std::string identifier;
+		std::istringstream s(line);
+		s >> identifier;
+		// 頂点位置
+		if (identifier == "v")
+		{
+			Vector4 position;
+			s >> position.x >> position.y >> position.z;
+			position.x *= -1.0f;
+			position.w = 1.0f;
+			positions.push_back(position);
+		}
+		// 頂点テクスチャ座標
+		else if (identifier == "vt")
+		{
+			Vector2 texcoord;
+			s >> texcoord.x >> texcoord.y;
+			texcoord.y = 1.0f - texcoord.y;
+			texcoords.push_back(texcoord);
+		}
+		// 頂点法線
+		else if (identifier == "vn")
+		{
+			Vector3 normal;
+			s >> normal.x >> normal.y >> normal.z;
+			normal.x *= -1.0f;
+			normals.push_back(normal);
+		}
+		// 面
+		else if (identifier == "f")
+		{
+			VertexData triangle[3];
+			// 三角形
+			for (int32_t faceVertex = 0; faceVertex < 3; ++faceVertex)
+			{
+				std::string vertexDefinition;
+				s >> vertexDefinition;
+				// 頂点の要素へのIndexは「位置/UV/法線」で格納されているので、分解してIndexを取得する
+				std::istringstream v(vertexDefinition);
+				uint32_t elementIndices[3];
+				for (int32_t element = 0; element < 3; ++element)
+				{
+					std::string index;
+					std::getline(v, index, '/');
+					elementIndices[element] = std::stoi(index);
+				}
+				// 
+				Vector4 position = positions[elementIndices[0] - 1];
+				Vector2 texcoord = texcoords[elementIndices[1] - 1];
+				Vector3 normal = normals[elementIndices[2] - 1];
+				//VertexData vertex = { position, texcoord, normal };
+				//modelData.vertices.push_back(vertex);
+
+
+				triangle[faceVertex] = { position, texcoord, normal };
+			}
+			modelData.vertices.push_back(triangle[2]);
+			modelData.vertices.push_back(triangle[1]);
+			modelData.vertices.push_back(triangle[0]);
+
+		}
+		// mtllib
+		else if (identifier == "mtllib")
+		{
+			// materialTemplateLibraryファイルの名前を取得する
+			std::string materialFilename;
+			s >> materialFilename;
+			// 基本的にmtlはobjファイルと同一階層に配置指せるので、ディレクトリ名とファイル名を渡す
+			modelData.material = LoadMaterialTemplateFile(directoryPath, materialFilename);
+		}
+	}
+
+
+	/////////////////
+	// 構築したModelDataをreturnする
+	/////////////////
+	return modelData;
+}
+
+
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
 	///////////////////////////////////////
-	///	初期化
+	///	多分もう変わらない初期化
 	///////////////////////////////////////
 #pragma region
 
@@ -809,8 +951,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 #pragma endregion
 
+#pragma endregion
+
 	///////////////////////////////////////
-	/// ここで三角形の画像を設定してる
+	/// ここでオブジェクトの画像を設定してる
 	///	画像用のResourseを作成しデータを書き込む
 	///////////////////////////////////////
 #pragma region
@@ -829,7 +973,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 #pragma endregion
 
 	///////////////////////////////////////
-	/// ここで三角形の色を設定してる
+	/// ここでオブジェクトの色を設定してる
 	///	Material用のResourseを作成しデータを書き込む
 	///////////////////////////////////////
 #pragma region
@@ -868,22 +1012,36 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 #pragma endregion
 
 	///////////////////////////////////////
-	/// ここで三角形の位置を設定してる
+	/// ここでオブジェクトの位置を設定してる
 	///	頂点用 の Resourseを作成しデータを書き込む
 	///////////////////////////////////////
 #pragma region
-	// 球の分割数
-	const uint32_t kSubdivision = 16;
-	// 頂点の数
-	const uint32_t kSumVertex = kSubdivision * kSubdivision * 6;
+	//// 球の分割数
+	//const uint32_t kSubdivision = 16;
+	//// 頂点の数
+	//const uint32_t kSumVertex = kSubdivision * kSubdivision * 6;
+	//// 頂点リソースを作る
+	//ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(VertexData) * kSumVertex);
+	//// 頂点リソースにデータを書き込む
+	//VertexData* vertexData = nullptr;
+	//// 書き込むためのアドレスを取得
+	//vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
+	//DrawSphere(vertexData, kSubdivision);
+
+
+	// モデル読み込み
+	//ModelData modelData = LoadOBJFile("resources", "plane.obj");
+	ModelData modelData = LoadOBJFile("resources", "axis.obj");
+	//ModelData modelData = LoadOBJFile("resources", "multiMaterial.obj");
+	//ModelData modelData = LoadOBJFile("resources", "multiMesh.obj");
 	// 頂点リソースを作る
-	ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(VertexData) * kSumVertex);
+	ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(VertexData) * modelData.vertices.size());
 	// 頂点リソースにデータを書き込む
 	VertexData* vertexData = nullptr;
 	// 書き込むためのアドレスを取得
 	vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
-
-	DrawSphere(vertexData, kSubdivision);
+	// 頂点データをリソースにコピー
+	std::memcpy(vertexData, modelData.vertices.data(), sizeof(VertexData)* modelData.vertices.size());
 
 
 	//// 左下
@@ -1006,14 +1164,26 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	///	VertexBufferViewを生成する
 	///////////////////////////////////////
 #pragma region
+	//// 頂点バッファビューを作成する
+	//D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
+	//// リソースの先頭のアドレスから使う
+	//vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
+	//// 仕様するリソースのサイズは頂点３つ分のサイズ
+	//vertexBufferView.SizeInBytes = sizeof(VertexData) * kSumVertex;
+	//// １頂点あたりのサイズ
+	//vertexBufferView.StrideInBytes = sizeof(VertexData);
+	 
+	
 	// 頂点バッファビューを作成する
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
 	// リソースの先頭のアドレスから使う
 	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
 	// 仕様するリソースのサイズは頂点３つ分のサイズ
-	vertexBufferView.SizeInBytes = sizeof(VertexData) * kSumVertex;
+	vertexBufferView.SizeInBytes = UINT(sizeof(VertexData) * modelData.vertices.size());
 	// １頂点あたりのサイズ
 	vertexBufferView.StrideInBytes = sizeof(VertexData);
+
+
 #pragma endregion
 
 	///////////////////////////////////////
@@ -1481,8 +1651,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	TransformationMatrixResource->Unmap(0, nullptr);
 
 	// ログを出したい気分
-	//Log("World Matrix", TransformationMatrixData->World);
-	//Log("WVP Matrix", TransformationMatrixData->WVP);
 	Log(std::format("wvpResource GPU Virtual Address: {}", TransformationMatrixResource->GetGPUVirtualAddress()));
 
 
@@ -1551,10 +1719,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	Transforms transform{ {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f} };
 
 	// Sprite用
-	Transforms transformSprite{ {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f} };
+	Transforms transformSprite{ {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f}, {-400.0f,0.0f,0.0f} };
 
 	// カメラ用
-	Transforms cameraTransform{ {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,-10.0f} };
+	Transforms cameraTransform{ {1.0f,1.0f,1.0f}, {0.3f,0.0f,0.0f}, {0.0f,4.0f,-10.0f} };
 
 	// UV用
 	Transforms uvTransformSprite{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
@@ -1568,8 +1736,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 	const char* items[] = { "uvChecker.png", "monsterBall.png"};
 	static int item_current = 0;
-	bool autoRotation[3] = { 1,1,0 };
-
+	bool autoRotation[3] = { 0,0,0 };
 
 #pragma endregion
 
@@ -1609,17 +1776,24 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 			if(ImGui::CollapsingHeader("camera"))
 			{
-				ImGui::DragFloat3("CameraPosition", &cameraTransform.translate.x, 0.01f);
+				ImGui::DragFloat3("CameraScale", &cameraTransform.scale.x, 0.01f);
 				ImGui::DragFloat3("CameraRotate", &cameraTransform.rotate.x, 0.01f);
+				ImGui::DragFloat3("CameraTranslate", &cameraTransform.translate.x, 0.01f);
+				ImGui::SliderAngle("CameraRotateX", &cameraTransform.rotate.x);
+				ImGui::SliderAngle("CameraRotateY", &cameraTransform.rotate.y);
+				ImGui::SliderAngle("CameraRotateZ", &cameraTransform.rotate.z);
 			}
 
-			if (ImGui::CollapsingHeader("object"))
+			if (ImGui::CollapsingHeader("object", ImGuiTreeNodeFlags_DefaultOpen))
 			{
 				ImGui::Combo("Combo Box", &item_current, items, IM_ARRAYSIZE(items));
 				ImGui::ColorEdit3("ObjectColor", (float*)&materialData->color.x);
 				ImGui::DragFloat3("ObjectScale", &transform.scale.x, 0.01f);
-				ImGui::DragFloat3("ObjectPosition", &transform.translate.x, 0.01f);
 				ImGui::DragFloat3("ObjectRotate", &transform.rotate.x, 0.01f);
+				ImGui::DragFloat3("ObjectTranslate", &transform.translate.x, 0.01f);
+				ImGui::SliderAngle("ObjectRotateX", &transform.rotate.x);
+				ImGui::SliderAngle("ObjectRotateY", &transform.rotate.y);
+				ImGui::SliderAngle("ObjectRotateZ", &transform.rotate.z);
 				ImGui::Checkbox("X", &autoRotation[0]);
 				ImGui::SameLine(0.0f, 54.0f);
 				ImGui::Checkbox("Y", &autoRotation[1]);
@@ -1632,14 +1806,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			if (ImGui::CollapsingHeader("sprite"))
 			{
 				ImGui::ColorEdit3("SpriteColor", (float*)&materialDataSprite->color.x);
-				ImGui::DragFloat2("SpritePosition", &transformSprite.translate.x, 1.0f);
+				ImGui::DragFloat2("SpriteScale", &transformSprite.scale.x, 0.01f);
+				ImGui::DragFloat2("SpriteRotate", &transformSprite.rotate.x, 0.01f);
+				ImGui::DragFloat2("SpriteTranslate", &transformSprite.translate.x, 1.0f);
 			}
 
-			if (ImGui::CollapsingHeader("uv", ImGuiTreeNodeFlags_DefaultOpen))
+			if (ImGui::CollapsingHeader("uv"))
 			{
-				ImGui::DragFloat2("uvTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
 				ImGui::DragFloat2("uvScale", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
 				ImGui::SliderAngle("uvRotate", &uvTransformSprite.rotate.z);
+				ImGui::DragFloat2("uvTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
 			}
 
 			if (ImGui::CollapsingHeader("light"))
@@ -1749,7 +1925,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 #pragma endregion
 
 			/////
-			//	3D三角形の描画 
+			//	オブジェクトの描画 
 			/////
 #pragma region
 			
@@ -1778,7 +1954,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 			// 描画
 			//commandList->DrawInstanced(6, 1, 0, 0);
-			commandList->DrawInstanced(kSumVertex, 1, 0, 0);
+			//commandList->DrawInstanced(kSumVertex, 1, 0, 0);
+			commandList->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
 #pragma endregion
 
 			/////

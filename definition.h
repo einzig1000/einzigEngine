@@ -1,4 +1,6 @@
 #pragma once
+#include <vector>
+#include <string>
 
 struct Vector2
 {
@@ -75,4 +77,15 @@ struct DirectionalLigft
     Vector4 color;
     Vector3 direction;
     float intensity;//輝度
+};
+
+struct MaterialData
+{
+    std::string textureFilePath;
+};
+
+struct ModelData
+{
+    std::vector<VertexData> vertices;
+    MaterialData material;
 };
