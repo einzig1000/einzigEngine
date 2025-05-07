@@ -4,6 +4,35 @@
 #define M_PI 3.14159265358979323846  
 #endif
 
+#include <Windows.h>
+#include "externals/imgui/imgui.h"
+#include "externals/imgui/imgui_impl_dx12.h"
+#include "externals/imgui/imgui_impl_win32.h"
+#include "externals/DirectXTex/d3dx12.h"
+#include "externals/DirectXTex/DirectXTex.h"
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+#include <cstdint>
+#include <filesystem>
+#include <fstream>
+#include <chrono>
+#include <string>
+#include <sstream>
+#include <format>
+#include <strsafe.h>
+#include <d3d12.h>
+#pragma comment(lib, "d3d12.lib")
+#include <dxgi1_6.h>
+#pragma comment(lib, "dxgi.lib")
+#include <dxcapi.h>
+#pragma comment (lib, "dxcompiler")
+#include <dxgidebug.h>
+#pragma comment (lib, "dxguid.lib")
+#include <DbgHelp.h>
+#pragma comment (lib, "Dbghelp.lib")
+#include <cassert>
+
+#include "functions.h"
+
 #pragma region Vector3
 
 /// <summary>
