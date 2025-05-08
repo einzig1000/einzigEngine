@@ -1,5 +1,8 @@
 #pragma once
 #include "definition.h"
+#ifndef M_PI  
+#define M_PI 3.14159265358979323846  
+#endif
 
 #pragma region Vector3
 
@@ -160,3 +163,7 @@ Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float botto
 Matrix4x4 MakeViewPortMatrix(float left, float top, float width, float height, float minD, float maxD);
 
 #pragma endregion
+
+//void DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix);
+
+void DrawSphere(VertexData* vertexData, uint32_t kSubdivision);

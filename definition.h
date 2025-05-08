@@ -1,4 +1,6 @@
 #pragma once
+#include <vector>
+#include <string>
 
 struct Vector2
 {
@@ -36,10 +38,10 @@ struct Matrix4x4
 
 struct Vertex
 {
-    Vector2 LT_ = { 0,0 };
-    Vector2 RT_ = { 0,0 };
-    Vector2 LB_ = { 0,0 };
-    Vector2 RB_ = { 0,0 };
+    Vector2 LT;
+    Vector2 RT;
+    Vector2 LB;
+    Vector2 RB;
 };
 
 struct Transforms
@@ -53,4 +55,37 @@ struct VertexData
 {
     Vector4 position;
     Vector2 texcoord;
+    Vector3 normal;
+};
+
+struct Material
+{
+    Vector4 color;
+    int32_t enableLighting;
+    float padding[3];
+    Matrix4x4 uvTransform;
+};
+
+struct TransformationMatrix
+{
+    Matrix4x4 WVP;
+    Matrix4x4 World;
+};
+
+struct DirectionalLigft
+{
+    Vector4 color;
+    Vector3 direction;
+    float intensity;//輝度
+};
+
+struct MaterialData
+{
+    std::string textureFilePath;
+};
+
+struct ModelData
+{
+    std::vector<VertexData> vertices;
+    MaterialData material;
 };
