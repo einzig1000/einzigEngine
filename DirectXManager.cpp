@@ -90,48 +90,88 @@ void DirectXManager::InitializeSwapChain(HWND hwnd, int width, int height) {
     // モニタにうつしたら、中身を破棄
     swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 
-    Microsoft::WRL::ComPtr<IDXGISwapChain1> tempSwapChain;
-    hr = dxgiFactory->CreateSwapChainForHwnd(commandQueue.Get(), hwnd, &swapChainDesc, nullptr, nullptr, &tempSwapChain);
-    assert(SUCCEEDED(hr));
-
-    hr = tempSwapChain.As(&swapChain);
-    assert(SUCCEEDED(hr));
-
-
-
     // コマンドキュー、ウィンドウハンドル、設定を渡して生成する
-    hr = dxgiFactory->CreateSwapChainForHwnd(commandQueue, hwnd, &swapChainDesc, nullptr, nullptr, reinterpret_cast<IDXGISwapChain1**>(&swapChain));
+    hr = dxgiFactory->CreateSwapChainForHwnd(commandQueue.Get(), hwnd, &swapChainDesc, nullptr, nullptr, reinterpret_cast<IDXGISwapChain1**>(swapChain.GetAddressOf()));
+
+    //Microsoft::WRL::ComPtr<IDXGISwapChain1> tempSwapChain;
+    //hr = dxgiFactory->CreateSwapChainForHwnd(commandQueue.Get(), hwnd, &swapChainDesc, nullptr, nullptr, &tempSwapChain);
+    //assert(SUCCEEDED(hr));
+    //hr = tempSwapChain.As(&swapChain);
+    //assert(SUCCEEDED(hr));
+
+
+
+
     assert(SUCCEEDED(hr));
 }
 
+ID3D12DescriptorHeap* CreateDescriptorHeap(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible)
+{
+    // ディスクリプタヒープの生成
+    ID3D12DescriptorHeap* DescriptorHeap = nullptr;
+    D3D12_DESCRIPTOR_HEAP_DESC DescriptorHeapDesc{};
+    // レンダ―ターゲットビュー用
+    DescriptorHeapDesc.Type = heapType;
+    // ダブルバッファ用に２つ。多くたってかまわない。
+    DescriptorHeapDesc.NumDescriptors = numDescriptors;
+    // 
+    DescriptorHeapDesc.Flags = shaderVisible ? D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE : D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+    // エラーチェック
+    HRESULT hr = device->CreateDescriptorHeap(&DescriptorHeapDesc, IID_PPV_ARGS(&DescriptorHeap));
+    // ディスクリプタヒープの生成がうまくいかなかったので起動できない
+    assert(SUCCEEDED(hr));
+    return DescriptorHeap;
+}
+
 void DirectXManager::InitializeRenderTargetView() {
+    // rtvDescriptorHeapの設定 　ID3D12DescriptorHeap* CreateDescriptorHeap(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible)のもの
     D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
     rtvHeapDesc.NumDescriptors = 2;
     rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
     HRESULT hr = device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&rtvDescriptorHeap));
     assert(SUCCEEDED(hr));
 
-    for (UINT i = 0; i < 2; ++i) {
-        hr = swapChain->GetBuffer(i, IID_PPV_ARGS(&swapChainResources[i]));
+    // RTVの設定
+    D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{};
+    // 出力結果をSRGBに変換して書き込む
+    rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+    // 2dテクスチャとして書き込む
+    rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+
+    // ここより下は確認済
+    for (UINT i = 0; i < 2; ++i)
+    {
+        // エラーチェック
+        HRESULT hr = swapChain->GetBuffer(i, IID_PPV_ARGS(&swapChainResources[i]));
         assert(SUCCEEDED(hr));
 
+        // ディスクリプタの先頭を取得する
         D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
         rtvHandle.ptr += i * device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-        device->CreateRenderTargetView(swapChainResources[i].Get(), nullptr, rtvHandle);
+        device->CreateRenderTargetView(swapChainResources[i].Get(), &rtvDesc, rtvHandle);
+        //device->CreateRenderTargetView(swapChainResources[i].Get(), &nullptr, rtvHandle);
     }
 }
 
-void DirectXManager::BeginFrame() {
+void DirectXManager::BeginFrame()
+{
+    // TransitionBarrierを張る(TransitionBarrierの命令を実行する)
     backBufferIndex = swapChain->GetCurrentBackBufferIndex();
     D3D12_RESOURCE_BARRIER barrier = {};
     barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    // バリアを張る対象のリソース。現在のバッファに対して行う
     barrier.Transition.pResource = swapChainResources[backBufferIndex].Get();
+    // 遷移前（現在）のResourceState
     barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+    // 遷移後のResourceState
     barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+    // TransitionBarrierを張る
     commandList->ResourceBarrier(1, &barrier);
 }
 
-void DirectXManager::EndFrame() {
+void DirectXManager::EndFrame() 
+{
+    /// ResourceStateを入れ替える
     D3D12_RESOURCE_BARRIER barrier = {};
     barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
     barrier.Transition.pResource = swapChainResources[backBufferIndex].Get();
@@ -139,11 +179,13 @@ void DirectXManager::EndFrame() {
     barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
     commandList->ResourceBarrier(1, &barrier);
 
+    ///	コマンドリストを確定させる
     commandList->Close();
+    ///	コマンドをキックする
     ID3D12CommandList* commandLists[] = { commandList.Get() };
     commandQueue->ExecuteCommandLists(1, commandLists);
-
     swapChain->Present(1, 0);
+    /// 次のフレーム用のコマンドリストを準備
     commandAllocator->Reset();
     commandList->Reset(commandAllocator.Get(), nullptr);
 }

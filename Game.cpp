@@ -5,26 +5,33 @@ Game::Game(WindowManager& windowManager, DirectXManager& dxManager)
     : windowManager(windowManager), dxManager(dxManager) {
 }
 
-void Game::Run() {
+void Game::Run()
+{
     MSG msg = {};
-    while (msg.message != WM_QUIT) {
-        if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
+    while (msg.message != WM_QUIT)
+    {
+        if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+        {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
-        else {
+        else
+        {
             Update();
             Render();
         }
     }
 }
 
-void Game::Update() {
+void Game::Update()
+{
     // ゲームロジックの更新
 }
 
-void Game::Render() {
+void Game::Render() 
+{
     dxManager.BeginFrame();
     // 描画処理
+
     dxManager.EndFrame();
 }
