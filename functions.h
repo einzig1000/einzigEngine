@@ -164,6 +164,5 @@ Matrix4x4 MakeViewPortMatrix(float left, float top, float width, float height, f
 
 #pragma endregion
 
-//void DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix);
 
 void DrawSphere(VertexData* vertexData, uint32_t kSubdivision);
