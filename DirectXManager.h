@@ -29,6 +29,12 @@ private:
     Microsoft::WRL::ComPtr<IDXGISwapChain4> swapChain;
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvDescriptorHeap;
     Microsoft::WRL::ComPtr<ID3D12Resource> swapChainResources[2];
+    Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilBuffer;
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvDescriptorHeap;
+    Microsoft::WRL::ComPtr<ID3D12Fence> fence; // フェンスオブジェクト
+    UINT64 fenceValue;                        // フェンスの値
+    HANDLE fenceEvent;                        // イベントハンドル
+    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[2];
     UINT backBufferIndex;
 
     void EnablezDebugLayer();
@@ -36,4 +42,7 @@ private:
     void InitializeCommandQueue();
     void InitializeSwapChain(HWND hwnd, int width, int height);
     void InitializeRenderTargetView();
+    void InitializeDepthStencilView(int width, int height);
+    void InitializeBarrier();
+    void InitializeSynchronizationObjects();
 };

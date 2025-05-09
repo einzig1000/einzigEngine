@@ -26,12 +26,16 @@ void Game::Run()
 void Game::Update()
 {
     // ゲームロジックの更新
+
+
 }
 
 void Game::Render() 
 {
     dxManager.BeginFrame();
     // 描画処理
+
+
 
     dxManager.EndFrame();
 }
