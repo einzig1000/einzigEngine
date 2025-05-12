@@ -3,6 +3,9 @@
 #ifndef M_PI  
 #define M_PI 3.14159265358979323846  
 #endif
+#include <dxcapi.h>
+#pragma comment (lib, "dxcompiler")
+
 
 #pragma region Vector3
 
@@ -166,3 +169,7 @@ Matrix4x4 MakeViewPortMatrix(float left, float top, float width, float height, f
 
 
 void DrawSphere(VertexData* vertexData, uint32_t kSubdivision);
+
+
+// DXCを使ってShaderをCompileする関数
+IDxcBlob* CompileShader(const std::wstring& filePath,const wchar_t* profile,IDxcUtils* dxcUtils,IDxcCompiler3* dxcCompiler,IDxcIncludeHandler* includeHandler);

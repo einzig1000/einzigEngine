@@ -35,6 +35,8 @@ private:
     UINT64 fenceValue;                        // フェンスの値
     HANDLE fenceEvent;                        // イベントハンドル
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[2];
+    //Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;
     UINT backBufferIndex;
 
     void EnablezDebugLayer();
@@ -45,4 +47,6 @@ private:
     void InitializeDepthStencilView(int width, int height);
     void InitializeBarrier();
     void InitializeSynchronizationObjects();
+    void InitializeRootSignature();
+    void InitializePSO();
 };

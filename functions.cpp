@@ -1,5 +1,6 @@
 #include <cmath>
 #include <cassert>
+#include <Windows.h>
 #include "definition.h"
 #include "functions.h"
 
@@ -547,6 +548,81 @@ void DrawSphere(VertexData* vertexData, uint32_t kSubdivision)
             vertexData[start + 4].normal = { vertexData[start + 4].position.x,vertexData[start + 4].position.y,vertexData[start + 4].position.z };
         }
     }
+}
+
+// DXCを使ってShaderをCompileする関数
+IDxcBlob* CompileShader(
+    // CompileするShaderファイルへのパス
+    const std::wstring& filePath,
+    // Compilerに仕様するProfile
+    const wchar_t* profile,
+    // 初期化で生成したものを３つ
+    IDxcUtils* dxcUtils,
+    IDxcCompiler3* dxcCompiler,
+    IDxcIncludeHandler* includeHandler)
+{
+    ///////////////////////////////////////
+    //// 1 hlslファイルを読む
+    ///////////////////////////////////////
+    // hlslファイルを読む
+    IDxcBlobEncoding* shaderSource = nullptr;
+    HRESULT hr = dxcUtils->LoadFile(filePath.c_str(), nullptr, &shaderSource);
+    // 読めなかったら停止する
+    assert(SUCCEEDED(hr));
+    // 読み込んだファイルの内容を設定する
+    DxcBuffer shaderSourceBuffer;
+    shaderSourceBuffer.Ptr = shaderSource->GetBufferPointer();
+    shaderSourceBuffer.Size = shaderSource->GetBufferSize();
+    shaderSourceBuffer.Encoding = DXC_CP_UTF8;
+
+    ///////////////////////////////////////
+    //// 2 Compileする
+    ///////////////////////////////////////
+    LPCWSTR arguments[] = {
+        filePath.c_str(),			// コンパイル対象のhlslファイル名
+        L"-E", L"main",				// エントリーポイントの指定。基本的にmain
+        L"-T", profile,				// ShaderProfileの設定
+        L"-Zi", L"-Qembed_debug",	// デバック用の情報を埋め込む
+        L"-Od",						// 最適化を外しておく
+        L"-Zpr",					// 目盛レイアウトは行優先
+    };
+    // 実際にシェーダーをコンパイルする
+    IDxcResult* shaderResult = nullptr;
+    hr = dxcCompiler->Compile(
+        &shaderSourceBuffer,	// 読み込んだファイル
+        arguments,				// コンパイルオプション
+        _countof(arguments),	// コンパイルオプションの数
+        includeHandler,			// includeが含まれた諸々
+        IID_PPV_ARGS(&shaderResult)// コンパイル結果
+    );
+    // コンパイルエラーではなくdxcが起動出来ないなど致命的な状況
+    assert(SUCCEEDED(hr));
+
+    ///////////////////////////////////////
+    //// 3 警告・エラーが出ていないか確認する
+    ///////////////////////////////////////
+    // 警告・エラーが出たらログにだして止める
+    IDxcBlobUtf8* shaderError = nullptr;
+    IDxcBlobUtf16* outputName = nullptr;
+    shaderResult->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&shaderError), &outputName);
+
+    if (shaderError != nullptr && shaderError->GetStringLength() != 0)
+    {
+        assert(false); // コンパイルエラーが発生した場合は停止
+    }
+
+    ///////////////////////////////////////
+    //// 4 Compile結果を受け取って返す
+    ///////////////////////////////////////
+    // コンパイル結果から実行用のバイナリ部分を取得
+    IDxcBlob* shaderBlob = nullptr;
+    hr = shaderResult->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&shaderBlob), nullptr);
+    assert(SUCCEEDED(hr));
+    // もう使わないリソースを解放
+    shaderSource->Release();
+    shaderResult->Release();
+    // 実行用のバイナリを返却
+    return shaderBlob;
 }
 
 //static LONG WINAPI ExportDump(EXCEPTION_POINTERS* exception)

@@ -1,5 +1,6 @@
 #include "DirectXManager.h" // クラス定義
 #include <vector>           // std::vector (リソース管理用)
+#include "functions.h"
 
 
 DirectXManager::DirectXManager(HWND hwnd, int width, int height) {
@@ -11,6 +12,8 @@ DirectXManager::DirectXManager(HWND hwnd, int width, int height) {
 	InitializeSwapChain(hwnd, width, height);
 	InitializeRenderTargetView();
 	InitializeDepthStencilView(width, height);
+	InitializeRootSignature();
+	InitializePSO();
 	InitializeBarrier();
 	InitializeSynchronizationObjects();
 }
@@ -105,25 +108,21 @@ void DirectXManager::InitializeSwapChain(HWND hwnd, int width, int height) {
 	swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	// マルチサンプルしない
 	swapChainDesc.SampleDesc.Count = 1;
-	// ダブルバッファ
-	swapChainDesc.BufferCount = 2;
 	// 描画のターゲットとして利用する
 	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+	// ダブルバッファ
+	swapChainDesc.BufferCount = 2;
 	// モニタにうつしたら、中身を破棄
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 
 	// コマンドキュー、ウィンドウハンドル、設定を渡して生成する
 	hr = dxgiFactory->CreateSwapChainForHwnd(commandQueue.Get(), hwnd, &swapChainDesc, nullptr, nullptr, reinterpret_cast<IDXGISwapChain1**>(swapChain.GetAddressOf()));
-
-	//Microsoft::WRL::ComPtr<IDXGISwapChain1> tempSwapChain;
-	//hr = dxgiFactory->CreateSwapChainForHwnd(commandQueue.Get(), hwnd, &swapChainDesc, nullptr, nullptr, &tempSwapChain);
-	//assert(SUCCEEDED(hr));
-	//hr = tempSwapChain.As(&swapChain);
-	//assert(SUCCEEDED(hr));
-
-
-
-
+	assert(SUCCEEDED(hr));
+	
+	// SwapChainからResourceを引っ張ってくる
+	hr = swapChain->GetBuffer(0, IID_PPV_ARGS(&swapChainResources[0]));
+	assert(SUCCEEDED(hr));
+	hr = swapChain->GetBuffer(1, IID_PPV_ARGS(&swapChainResources[1]));
 	assert(SUCCEEDED(hr));
 }
 
@@ -230,6 +229,248 @@ void DirectXManager::InitializeBarrier()
 {
 }
 
+void DirectXManager::InitializeRootSignature() {
+	HRESULT hr;
+
+	// DescriptorRangeの作成
+	D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
+	descriptorRange[0].BaseShaderRegister = 0; // t0 に対応
+	descriptorRange[0].NumDescriptors = 1; // t0のみ使う　2だったらt0とt1の２つ使う
+	descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+
+	// RootParametersの設定
+	D3D12_ROOT_PARAMETER rootParameters[4] = {};
+
+	// b0: 定数バッファビュー (CBV)
+	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	rootParameters[0].Descriptor.ShaderRegister = 0;
+
+	// s0: 静的サンプラー (Static Sampler)
+	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+	rootParameters[1].Descriptor.ShaderRegister = 0;
+
+	// t0: シェーダーリソースビュー (SRV)
+	rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	rootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRange;
+	rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
+
+	// b1: ディレクショナルライト用の定数バッファビュー (CBV)
+	rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	rootParameters[3].Descriptor.ShaderRegister = 1;
+
+
+
+	// 静的サンプラーの設定
+	D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};
+	staticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+	staticSamplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	staticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	staticSamplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	staticSamplers[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+	staticSamplers[0].MaxLOD = D3D12_FLOAT32_MAX;
+	staticSamplers[0].ShaderRegister = 0; // s0 に対応
+	staticSamplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+	// ルートシグネチャの作成
+	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
+	descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+	descriptionRootSignature.pParameters = rootParameters;
+	descriptionRootSignature.NumParameters = _countof(rootParameters);
+	descriptionRootSignature.pStaticSamplers = staticSamplers;
+	descriptionRootSignature.NumStaticSamplers = _countof(staticSamplers);
+
+	// シリアライズしてバイナリにする
+	Microsoft::WRL::ComPtr<ID3DBlob> signatureBlob;
+	Microsoft::WRL::ComPtr<ID3DBlob> errorBlob;
+	hr = D3D12SerializeRootSignature(&descriptionRootSignature, D3D_ROOT_SIGNATURE_VERSION_1, &signatureBlob, &errorBlob);
+	assert(SUCCEEDED(hr));
+
+	// バイナリを元にルートシグネチャを生成
+	hr = device->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
+	assert(SUCCEEDED(hr));
+}
+
+void DirectXManager::InitializePSO()
+{
+	HRESULT hr;
+
+	// dxcCompilerを初期化
+	IDxcUtils* dxcUtils = nullptr;
+	IDxcCompiler3* dxcCompiler = nullptr;
+	hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils));
+	assert(SUCCEEDED(hr));
+	hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&dxcCompiler));
+	assert(SUCCEEDED(hr));
+
+	IDxcIncludeHandler* includeHandler = nullptr;
+	hr = dxcUtils->CreateDefaultIncludeHandler(&includeHandler);
+	assert(SUCCEEDED(hr));
+
+	///////////////////////////////////////
+	/// DescriptorRangeの作成
+	///////////////////////////////////////
+	D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
+	descriptorRange[0].BaseShaderRegister = 0; // t0 に対応
+	descriptorRange[0].NumDescriptors = 1; // t0のみ使う
+	descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+	///////////////////////////////////////
+	/// RootSignatureの作成
+	///////////////////////////////////////
+	D3D12_ROOT_PARAMETER rootParameters[4] = {};
+
+	// b0: 定数バッファビュー (CBV)
+	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	rootParameters[0].Descriptor.ShaderRegister = 0;
+
+	// s0: 静的サンプラー (Static Sampler)
+	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+	rootParameters[1].Descriptor.ShaderRegister = 0;
+
+	// t0: シェーダーリソースビュー (SRV)
+	rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	rootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRange;
+	rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
+
+	// b1: ディレクショナルライト用の定数バッファビュー (CBV)
+	rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	rootParameters[3].Descriptor.ShaderRegister = 1;
+
+	// 静的サンプラーの設定
+	D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};
+	staticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+	staticSamplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	staticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	staticSamplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	staticSamplers[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+	staticSamplers[0].MaxLOD = D3D12_FLOAT32_MAX;
+	staticSamplers[0].ShaderRegister = 0; // s0 に対応
+	staticSamplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+	// ルートシグネチャの作成
+	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
+	descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+	descriptionRootSignature.pParameters = rootParameters;
+	descriptionRootSignature.NumParameters = _countof(rootParameters);
+	descriptionRootSignature.pStaticSamplers = staticSamplers;
+	descriptionRootSignature.NumStaticSamplers = _countof(staticSamplers);
+
+	// シリアライズしてバイナリにする
+	Microsoft::WRL::ComPtr<ID3DBlob> signatureBlob;
+	Microsoft::WRL::ComPtr<ID3DBlob> errorBlob;
+	hr = D3D12SerializeRootSignature(&descriptionRootSignature, D3D_ROOT_SIGNATURE_VERSION_1, &signatureBlob, &errorBlob);
+	assert(SUCCEEDED(hr));
+
+	// バイナリを元にルートシグネチャを生成
+	hr = device->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
+	assert(SUCCEEDED(hr));
+
+	///////////////////////////////////////
+	/// InputLayoutの設定
+	///////////////////////////////////////
+	D3D12_INPUT_ELEMENT_DESC inputElementDescs[3] = {};
+	inputElementDescs[0].SemanticName = "POSITION";
+	inputElementDescs[0].SemanticIndex = 0;
+	inputElementDescs[0].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	inputElementDescs[0].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+	inputElementDescs[1].SemanticName = "TEXCOORD";
+	inputElementDescs[1].SemanticIndex = 0;
+	inputElementDescs[1].Format = DXGI_FORMAT_R32G32_FLOAT;
+	inputElementDescs[1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+	inputElementDescs[2].SemanticName = "NORMAL";
+	inputElementDescs[2].SemanticIndex = 0;
+	inputElementDescs[2].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+	inputElementDescs[2].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc{};
+	inputLayoutDesc.pInputElementDescs = inputElementDescs;
+	inputLayoutDesc.NumElements = _countof(inputElementDescs);
+
+	///////////////////////////////////////
+	/// BlendStateの設定
+	///////////////////////////////////////
+	// BlendStateの設定
+	D3D12_BLEND_DESC blendDesc{};
+	// 全ての色要素を書き込む
+	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+
+	///////////////////////////////////////
+	/// RasterizerStateの設定
+	///////////////////////////////////////
+	// RasterizerStateの設定
+	D3D12_RASTERIZER_DESC rasterizerDesc{};
+	// 裏面(時計回り)を表示しない
+	rasterizerDesc.CullMode = D3D12_CULL_MODE_BACK;
+	// 三角形の中を塗りつぶす
+	rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
+
+	///////////////////////////////////////
+	/// シェーダーのコンパイル
+	///////////////////////////////////////
+	// Pixel Shader のコンパイル
+	Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = CompileShader(L"Object3D.PS.hlsl", L"ps_6_0", dxcUtils, dxcCompiler, includeHandler);
+	assert(pixelShaderBlob != nullptr);
+
+	// Vertex Shader のコンパイル
+	Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = CompileShader(L"Object3D.VS.hlsl", L"vs_6_0", dxcUtils, dxcCompiler, includeHandler);
+	assert(vertexShaderBlob != nullptr);
+
+	///////////////////////////////////////
+	/// DepthStencilStateの設定
+	///////////////////////////////////////
+	D3D12_DEPTH_STENCIL_DESC depthStencilDesc{};
+	// depthの機能を有効化する
+	depthStencilDesc.DepthEnable = true;
+	// 書き込み？
+	depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+	// 比較関数はLessWqual。つまり、近ければ描画される。
+	depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+
+	///////////////////////////////////////
+	/// PSOの生成
+	///////////////////////////////////////
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc{};
+	// RootSignature
+	graphicsPipelineStateDesc.pRootSignature = rootSignature.Get();
+	// InputLayout
+	graphicsPipelineStateDesc.InputLayout = inputLayoutDesc;
+	// BlendState
+	graphicsPipelineStateDesc.BlendState = blendDesc;
+	// RasterizerState
+	graphicsPipelineStateDesc.RasterizerState = rasterizerDesc;
+	// VertexShader
+	graphicsPipelineStateDesc.VS = { vertexShaderBlob->GetBufferPointer(),vertexShaderBlob->GetBufferSize() };
+	// PixelShader
+	graphicsPipelineStateDesc.PS = { pixelShaderBlob->GetBufferPointer(),pixelShaderBlob->GetBufferSize() };
+	// DepthStencilState
+	graphicsPipelineStateDesc.DepthStencilState = depthStencilDesc;
+	graphicsPipelineStateDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+
+	//書き込むRTV情報
+	graphicsPipelineStateDesc.NumRenderTargets = 1;
+	graphicsPipelineStateDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+	// 利用するトポロジ(形状)のタイプ。三角形
+	graphicsPipelineStateDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	// どのように画面に打ち込むかの設定(気にしなくて良い)
+	graphicsPipelineStateDesc.SampleDesc.Count = 1;
+	graphicsPipelineStateDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
+	// 実際に生成
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState = nullptr;
+	hr = device->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&graphicsPipelineState));
+	assert(SUCCEEDED(hr));
+}
+
+
 void DirectXManager::InitializeSynchronizationObjects()
 {
 	// フェンスの初期値を設定
@@ -271,10 +512,7 @@ void DirectXManager::BeginFrame()
 	// 指定した色で画面全体をクリアする
 	float clearColor[] = { 0.1f,0.25f,0.5f,1.0f };// 青っぽい色。RGBAの順
 	commandList->ClearRenderTargetView(rtvHandles[backBufferIndex], clearColor, 0, nullptr);
-
-	///////////////////////////////////////
-	///	こんなことをしていた
-	///////////////////////////////////////
+	// 深度バッファを 1.0fにリセットする
 	commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 	// ImGui 描画前にディスクリプタヒープを設定
@@ -287,7 +525,6 @@ void DirectXManager::EndFrame()
 	/// ResourceStateを入れ替える
 	D3D12_RESOURCE_BARRIER barrier = {};
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	//barrier.Transition.pResource = swapChainResources[backBufferIndex].Get();
 	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
 	commandList->ResourceBarrier(1, &barrier);
