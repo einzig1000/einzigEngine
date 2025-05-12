@@ -173,3 +173,6 @@ void DrawSphere(VertexData* vertexData, uint32_t kSubdivision);
 
 // DXCを使ってShaderをCompileする関数
 IDxcBlob* CompileShader(const std::wstring& filePath,const wchar_t* profile,IDxcUtils* dxcUtils,IDxcCompiler3* dxcCompiler,IDxcIncludeHandler* includeHandler);
+
+
+static LONG WINAPI ExportDump(EXCEPTION_POINTERS* exception);

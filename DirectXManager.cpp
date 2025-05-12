@@ -3,7 +3,8 @@
 #include "functions.h"
 
 
-DirectXManager::DirectXManager(HWND hwnd, int width, int height) {
+DirectXManager::DirectXManager(HWND hwnd, int width, int height) 
+{
 #ifdef _DEBUG
 	EnableDebugLayer();
 #endif
@@ -14,10 +15,10 @@ DirectXManager::DirectXManager(HWND hwnd, int width, int height) {
 	InitializeDepthStencilView(width, height);
 	InitializeRootSignature();
 	InitializePSO();
-	InitializeBarrier();
 	InitializeSynchronizationObjects();
+	InitializeViewportAndScissor(width, height);
+	InitializeSRVDescriptorHeap(); // SRVディスクリプタヒープの初期化
 }
-
 
 DirectXManager::~DirectXManager() {
 	if (fenceEvent) {
@@ -258,11 +259,6 @@ void DirectXManager::InitializeDepthStencilView(int width, int height) {
 	device->CreateDepthStencilView(depthStencilBuffer.Get(), &dsvDesc, dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 }
 
-void DirectXManager::InitializeBarrier()
-{
-
-}
-
 void DirectXManager::InitializeRootSignature() {
 	HRESULT hr;
 
@@ -499,10 +495,40 @@ void DirectXManager::InitializePSO()
 	graphicsPipelineStateDesc.SampleDesc.Count = 1;
 	graphicsPipelineStateDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
 	// 実際に生成
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState = nullptr;
 	hr = device->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&graphicsPipelineState));
 	assert(SUCCEEDED(hr));
 }
+
+void DirectXManager::InitializeViewportAndScissor(int width, int height)
+{
+	// クライアント領域のサイズと一緒にして画面全体に表示
+	viewport.Width = width;
+	viewport.Height = height;
+	viewport.TopLeftX = 0;
+	viewport.TopLeftY = 0;
+	viewport.MinDepth = 0.0f;
+	viewport.MaxDepth = 1.0f;
+
+	// 基本的にビューポートと同じ矩形が構成されるようにする
+	scissorRect.left = 0;
+	scissorRect.right = width;
+	scissorRect.top = 0;
+	scissorRect.bottom = height;
+}
+
+void DirectXManager::InitializeSRVDescriptorHeap() 
+{
+	// ディスクリプタヒープの生成
+	D3D12_DESCRIPTOR_HEAP_DESC DescriptorHeapDesc{};
+	DescriptorHeapDesc.NumDescriptors = 128;
+	DescriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	DescriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	// エラーチェック
+	HRESULT hr = device->CreateDescriptorHeap(&DescriptorHeapDesc, IID_PPV_ARGS(&srvDescriptorHeap));
+	// ディスクリプタヒープの生成がうまくいかなかったので起動できない
+	assert(SUCCEEDED(hr));	
+}
+
 
 void DirectXManager::InitializeSynchronizationObjects()
 {
@@ -524,7 +550,9 @@ void DirectXManager::InitializeSynchronizationObjects()
 
 void DirectXManager::BeginFrame()
 {
-	// TransitionBarrierを張る(TransitionBarrierの命令を実行する)
+	///////////////////////////////////////
+	///	TransitionBarrierを張る(TransitionBarrierの命令を実行する)
+	///////////////////////////////////////
 	backBufferIndex = swapChain->GetCurrentBackBufferIndex();
 
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
@@ -537,20 +565,32 @@ void DirectXManager::BeginFrame()
 	// TransitionBarrierを張る
 	commandList->ResourceBarrier(1, &barrier);
 
-
-
-	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	//描画先のRTVを設定する
-	commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, &dsvHandle);
-	// 指定した色で画面全体をクリアする
+	commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, nullptr);
+	//指定した色で画面全体をクリアする
 	float clearColor[] = { 0.1f,0.25f,0.5f,1.0f };// 青っぽい色。RGBAの順
 	commandList->ClearRenderTargetView(rtvHandles[backBufferIndex], clearColor, 0, nullptr);
-	// 深度バッファを 1.0fにリセットする
-	commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
+
+	//D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	//描画先のRTVを設定する
+	//commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, &dsvHandle);
+
+
+	/////
+	//	DescriptorHeaps & Viewport & Scirssor & RootSignature & PSO を設定
+	/////
 	// ImGui 描画前にディスクリプタヒープを設定
-	//Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeaps[] = { srvDescriptorHeap };
-	//commandList->SetDescriptorHeaps(1, descriptorHeaps->GetAddressOf());
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeaps[] = { srvDescriptorHeap };
+	commandList->SetDescriptorHeaps(1, descriptorHeaps->GetAddressOf());
+	// Viewportを設定
+	commandList->RSSetViewports(1, &viewport);
+	// Scirssorを設定
+	commandList->RSSetScissorRects(1, &scissorRect);
+	// RootSignatureを設定。
+	commandList->SetGraphicsRootSignature(rootSignature.Get());
+	// PSOを設定
+	commandList->SetPipelineState(graphicsPipelineState.Get());
 }
 
 void DirectXManager::EndFrame()

@@ -37,5 +37,6 @@ void Game::Render()
 
 
 
+
     dxManager.EndFrame();
 }
