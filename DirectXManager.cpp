@@ -1,6 +1,5 @@
 #include "DirectXManager.h" // クラス定義
 #include <vector>           // std::vector (リソース管理用)
-#include "functions.h"
 
 
 DirectXManager::DirectXManager(HWND hwnd, int width, int height) 

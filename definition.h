@@ -1,6 +1,8 @@
 #pragma once
 #include <vector>
 #include <string>
+#include <d3d12.h>
+#include <wrl.h>       // Microsoft::WRL::ComPtr
 
 struct Vector2
 {
@@ -88,4 +90,29 @@ struct ModelData
 {
     std::vector<VertexData> vertices;
     MaterialData material;
+};
+
+struct Object3D
+{
+    // モデルデータ
+    ModelData modelData;
+
+    // 頂点バッファ
+    Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;
+    D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
+
+    // マテリアルデータ
+    Microsoft::WRL::ComPtr<ID3D12Resource> materialResource;
+    Material* materialData;
+
+    // 変換行列
+    Transforms transform;
+
+    // ワールド・ビュー・プロジェクション行列
+    Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResource;
+    TransformationMatrix* transformationMatrixData;
+
+    // テクスチャ
+    Microsoft::WRL::ComPtr<ID3D12Resource> textureResource;
+    D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU;
 };

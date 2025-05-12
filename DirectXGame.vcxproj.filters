@@ -31,9 +31,6 @@
     <Filter Include="WindowManager">
       <UniqueIdentifier>{a6f0f6c9-5841-4611-a8f4-25d2974af7b1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="TextureManager">
-      <UniqueIdentifier>{51430831-1b03-44c8-80f6-b2c54fe1a4dd}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -71,9 +68,6 @@
     </ClCompile>
     <ClCompile Include="WindowManager.cpp">
       <Filter>WindowManager</Filter>
-    </ClCompile>
-    <ClCompile Include="TextureManager.cpp">
-      <Filter>TextureManager</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -119,9 +113,6 @@
     </ClInclude>
     <ClInclude Include="WindowManager.h">
       <Filter>WindowManager</Filter>
-    </ClInclude>
-    <ClInclude Include="TextureManager.h">
-      <Filter>TextureManager</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

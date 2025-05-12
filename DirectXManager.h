@@ -7,7 +7,7 @@
 #include <wrl.h>            // Microsoft::WRL::ComPtr
 #include <cassert>          // assert 用
 
-//#include "functions.h"
+#include "functions.h"
 
 
 class DirectXManager {
