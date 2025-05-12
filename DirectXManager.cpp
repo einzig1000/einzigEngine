@@ -5,7 +5,7 @@
 
 DirectXManager::DirectXManager(HWND hwnd, int width, int height) {
 #ifdef _DEBUG
-	EnablezDebugLayer();
+	EnableDebugLayer();
 #endif
 	InitializeDevice();
 	InitializeCommandQueue();
@@ -18,6 +18,7 @@ DirectXManager::DirectXManager(HWND hwnd, int width, int height) {
 	InitializeSynchronizationObjects();
 }
 
+
 DirectXManager::~DirectXManager() {
 	if (fenceEvent) {
 		CloseHandle(fenceEvent);
@@ -25,16 +26,18 @@ DirectXManager::~DirectXManager() {
 }
 
 
-void DirectXManager::EnablezDebugLayer()
+void DirectXManager::EnableDebugLayer()
 {
-	ID3D12Debug1* debugController = nullptr;
+	Microsoft::WRL::ComPtr<ID3D12Debug1> debugController;
 	if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
 	{
 		// デバッグレイヤーを有効化する
 		debugController->EnableDebugLayer();
-		// さらにＧＰＵ側でもチェックを行うようにする
+		// さらにＧＰＵ側でもチェックを行うようにする。ウルトラ重いのでコメントにするのもアリ
 		debugController->SetEnableGPUBasedValidation(TRUE);
 	}
+
+
 }
 
 void DirectXManager::InitializeDevice() {
@@ -75,6 +78,36 @@ void DirectXManager::InitializeDevice() {
 
 	//エラーチェック
 	assert(device != nullptr);
+
+	// デバッグ情報のフィルタリングを設定
+#ifdef _DEBUG
+	Microsoft::WRL::ComPtr<ID3D12InfoQueue> infoQueue = nullptr;
+	if (device && SUCCEEDED(device->QueryInterface(IID_PPV_ARGS(&infoQueue)))) {
+		// 致命的なエラー時に止まる
+		infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
+		// エラー時に止まる
+		infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
+		// 警告時に止まる
+		//infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, true);
+
+		// 抑制するメッセージのID
+		D3D12_MESSAGE_ID denyIds[] = {
+			// Windows11でのDXGIデバッグレイヤーとDX12デバッグレイヤーの相互作用パグによるエラーメッセージ
+			// https://stackoverflow.com/questions/69885245/directx-12-application-is-crashing-in-windows-11
+			D3D12_MESSAGE_ID_RESOURCE_BARRIER_MISMATCHING_COMMAND_LIST_TYPE
+		};
+
+		// 抑制するレベル
+		D3D12_MESSAGE_SEVERITY severities[] = { D3D12_MESSAGE_SEVERITY_INFO };
+		D3D12_INFO_QUEUE_FILTER filter = {};
+		filter.DenyList.NumIDs = _countof(denyIds);
+		filter.DenyList.pIDList = denyIds;
+		filter.DenyList.NumSeverities = _countof(severities);
+		filter.DenyList.pSeverityList = severities;
+		// 指定したメッセージの表示を抑制する
+		infoQueue->PushStorageFilter(&filter);
+	}
+#endif
 }
 
 void DirectXManager::InitializeCommandQueue() {
@@ -227,6 +260,7 @@ void DirectXManager::InitializeDepthStencilView(int width, int height) {
 
 void DirectXManager::InitializeBarrier()
 {
+
 }
 
 void DirectXManager::InitializeRootSignature() {
@@ -470,7 +504,6 @@ void DirectXManager::InitializePSO()
 	assert(SUCCEEDED(hr));
 }
 
-
 void DirectXManager::InitializeSynchronizationObjects()
 {
 	// フェンスの初期値を設定
@@ -493,7 +526,7 @@ void DirectXManager::BeginFrame()
 {
 	// TransitionBarrierを張る(TransitionBarrierの命令を実行する)
 	backBufferIndex = swapChain->GetCurrentBackBufferIndex();
-	D3D12_RESOURCE_BARRIER barrier = {};
+
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 	// バリアを張る対象のリソース。現在のバッファに対して行う
 	barrier.Transition.pResource = swapChainResources[backBufferIndex].Get();
@@ -523,7 +556,6 @@ void DirectXManager::BeginFrame()
 void DirectXManager::EndFrame()
 {
 	/// ResourceStateを入れ替える
-	D3D12_RESOURCE_BARRIER barrier = {};
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
@@ -551,7 +583,8 @@ void DirectXManager::EndFrame()
 	}
 
 
-	/// 次のフレーム用のコマンドリストを準備
-	commandAllocator->Reset();
-	commandList->Reset(commandAllocator.Get(), nullptr);
+	HRESULT hr = commandAllocator->Reset();
+	assert(SUCCEEDED(hr));
+	hr = commandList->Reset(commandAllocator.Get(), nullptr);
+	assert(SUCCEEDED(hr));
 }

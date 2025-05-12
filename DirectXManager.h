@@ -37,9 +37,10 @@ private:
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[2];
     //Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature = nullptr;
     Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;
+    D3D12_RESOURCE_BARRIER barrier = {};
     UINT backBufferIndex;
 
-    void EnablezDebugLayer();
+    void EnableDebugLayer();
     void InitializeDevice();
     void InitializeCommandQueue();
     void InitializeSwapChain(HWND hwnd, int width, int height);
