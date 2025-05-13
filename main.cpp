@@ -19,8 +19,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
     // リソース読み込み
-    game.LoadOBJ("resources", "axis.obj");
-    game.LoadOBJ("resources", "axis.obj");
+    //int obj1 = game.LoadOBJ("resources", "axis.obj");
+    //int obj2 = game.LoadOBJ("resources", "axis.obj");
 
     game.Run();
     return 0;

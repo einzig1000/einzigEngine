@@ -117,4 +117,7 @@ struct Object3D
     // テクスチャ
     Microsoft::WRL::ComPtr<ID3D12Resource> textureResource;
     D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU;
+
+    // 識別ナンバー
+    uint32_t number;
 };

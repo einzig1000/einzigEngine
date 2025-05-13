@@ -8,16 +8,18 @@
 Game::Game(WindowManager& windowManager, DirectXManager& dxManager)
     : windowManager(windowManager), dxManager(dxManager) {
 
-    // 
+    // 読み込んだオブジェクトの合計
+    objectSum = 0;
+
+    // 光源の設定
     directionalLightResource = CreateBufferResource(dxManager.GetDevice(), sizeof(DirectionalLigft));
-    // 
     directionalLightData = nullptr;
-    // 
     directionalLightResource->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData));
-    // 初期値の設定
     directionalLightData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
     directionalLightData->direction = Normalize({ 0.0f, -1.0f, 0.0f });
     directionalLightData->intensity = 1.0f;
+
+
 }
 
 void Game::Run()
@@ -41,9 +43,9 @@ void Game::Run()
 void Game::Update()
 {
     // ゲームロジックの更新
-    objects[0].transform.rotate.x += 0.01f;
-    objects[0].transform.rotate.y += 0.01f;
-    objects[0].transform.rotate.z += 0.01f;
+    objects[obj2].transform.rotate.x += 0.01f;
+    objects[obj2].transform.rotate.y += 0.01f;
+    objects[obj2].transform.rotate.z += 0.01f;
 
     // ライトの向きを正規化
     directionalLightData->direction = Normalize(directionalLightData->direction);
@@ -69,40 +71,42 @@ void Game::Render()
 {
     dxManager.BeginFrame();
 
-    if (objects.size() > 0)
-    {
-        for (uint32_t i = 0; i < objects.size(); ++i)
-        {
-            // 描画処理
-            dxManager.GetCommandList()->IASetVertexBuffers(0, 1, &objects[i].vertexBufferView);
-            // 形状を設定
-            dxManager.GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-            // CBVを設定する マテリアル用のCBufferの場所を設定
-            dxManager.GetCommandList()->SetGraphicsRootConstantBufferView(0, objects[i].materialResource->GetGPUVirtualAddress());
-            // CBVを設定する wvp用のCBufferの場所を設定
-            dxManager.GetCommandList()->SetGraphicsRootConstantBufferView(1, objects[i].transformationMatrixResource->GetGPUVirtualAddress());
-            // CBVを設定する ディレクショナルライト用のCBufferの場所を設定
-            dxManager.GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
+    Drawobj(obj2);
+    Drawobj(obj2);
 
-            // SRVのDescriptorTableの先頭を設定。２はrootParameters[2]。
-            dxManager.GetCommandList()->SetGraphicsRootDescriptorTable(2, objects[i].textureSrvHandleGPU);
-
-            // 描画
-            dxManager.GetCommandList()->DrawInstanced(UINT(objects[i].modelData.vertices.size()), 1, 0, 0);
-        }
-    }
 
 
     dxManager.EndFrame();
 }
 
-void Game::LoadOBJ(const std::string& directoryPath, const std::string& filename)
+void Game::Drawobj(uint32_t objectNumeber)
+{
+    // 描画処理
+    dxManager.GetCommandList()->IASetVertexBuffers(0, 1, &objects[objectNumeber].vertexBufferView);
+    // 形状を設定
+    dxManager.GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    // CBVを設定する マテリアル用のCBufferの場所を設定
+    dxManager.GetCommandList()->SetGraphicsRootConstantBufferView(0, objects[objectNumeber].materialResource->GetGPUVirtualAddress());
+    // CBVを設定する wvp用のCBufferの場所を設定
+    dxManager.GetCommandList()->SetGraphicsRootConstantBufferView(1, objects[objectNumeber].transformationMatrixResource->GetGPUVirtualAddress());
+    // CBVを設定する ディレクショナルライト用のCBufferの場所を設定
+    dxManager.GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
+
+    // SRVのDescriptorTableの先頭を設定。２はrootParameters[2]。
+    dxManager.GetCommandList()->SetGraphicsRootDescriptorTable(2, objects[objectNumeber].textureSrvHandleGPU);
+
+    // 描画
+    dxManager.GetCommandList()->DrawInstanced(UINT(objects[objectNumeber].modelData.vertices.size()), 1, 0, 0);
+}
+
+int Game::LoadOBJ(const std::string& directoryPath, const std::string& filename)
 {
     // ボックスを作成
     Object3D obj;
 
     // モデルデータ
-    obj.modelData = LoadOBJFile("resources", "axis.obj");
+    //obj.modelData = LoadOBJFile("resources", "axis.obj");
+    obj.modelData = LoadOBJFile(directoryPath, filename);
 
     // 頂点バッファ
     obj.vertexResource = CreateBufferResource(dxManager.GetDevice(), sizeof(VertexData) * obj.modelData.vertices.size());
@@ -155,5 +159,11 @@ void Game::LoadOBJ(const std::string& directoryPath, const std::string& filename
     // SRVの作成
     dxManager.GetDevice()->CreateShaderResourceView(obj.textureResource.Get(), &srvDesc, textureSrvHandleCPU);
 
+    // 識別ナンバーの設定
+    obj.number = objectSum;
+    objectSum++;
+
     objects.push_back(obj);
+
+    return obj.number;
 }
