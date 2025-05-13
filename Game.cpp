@@ -7,6 +7,17 @@
 
 Game::Game(WindowManager& windowManager, DirectXManager& dxManager)
     : windowManager(windowManager), dxManager(dxManager) {
+
+    // 
+    directionalLightResource = CreateBufferResource(dxManager.GetDevice(), sizeof(DirectionalLigft));
+    // 
+    directionalLightData = nullptr;
+    // 
+    directionalLightResource->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData));
+    // 初期値の設定
+    directionalLightData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
+    directionalLightData->direction = Normalize({ 0.0f, -1.0f, 0.0f });
+    directionalLightData->intensity = 1.0f;
 }
 
 void Game::Run()
@@ -30,7 +41,27 @@ void Game::Run()
 void Game::Update()
 {
     // ゲームロジックの更新
+    objects[0].transform.rotate.x += 0.01f;
+    objects[0].transform.rotate.y += 0.01f;
+    objects[0].transform.rotate.z += 0.01f;
 
+    // ライトの向きを正規化
+    directionalLightData->direction = Normalize(directionalLightData->direction);
+
+    // カメラの設定
+    Transforms cameraTransform{ {1.0f,1.0f,1.0f}, {0.3f,0.0f,0.0f}, {0.0f,4.0f,-10.0f} };
+    Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
+    Matrix4x4 viewMatrix = Inverse(cameraMatrix);
+    Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(1280) / float(720), 0.1f, 100.0f);// int width, int heightをもってくる
+    
+
+    for (uint32_t i = 0; i < objects.size(); ++i)
+    {
+        // オブジェクトのWorldViewProjectionMatrixを作る
+        objects[i].transformationMatrixData->World = MakeAffineMatrix(objects[i].transform.scale, objects[i].transform.rotate, objects[i].transform.translate);
+        // オブジェクトのWVPMatrixを作る
+        objects[i].transformationMatrixData->WVP = Mul(objects[i].transformationMatrixData->World, Mul(viewMatrix, projectionMatrix));
+    }
 
 }
 
@@ -38,9 +69,28 @@ void Game::Render()
 {
     dxManager.BeginFrame();
 
-    // 描画処理
+    if (objects.size() > 0)
+    {
+        for (uint32_t i = 0; i < objects.size(); ++i)
+        {
+            // 描画処理
+            dxManager.GetCommandList()->IASetVertexBuffers(0, 1, &objects[i].vertexBufferView);
+            // 形状を設定
+            dxManager.GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+            // CBVを設定する マテリアル用のCBufferの場所を設定
+            dxManager.GetCommandList()->SetGraphicsRootConstantBufferView(0, objects[i].materialResource->GetGPUVirtualAddress());
+            // CBVを設定する wvp用のCBufferの場所を設定
+            dxManager.GetCommandList()->SetGraphicsRootConstantBufferView(1, objects[i].transformationMatrixResource->GetGPUVirtualAddress());
+            // CBVを設定する ディレクショナルライト用のCBufferの場所を設定
+            dxManager.GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 
+            // SRVのDescriptorTableの先頭を設定。２はrootParameters[2]。
+            dxManager.GetCommandList()->SetGraphicsRootDescriptorTable(2, objects[i].textureSrvHandleGPU);
 
+            // 描画
+            dxManager.GetCommandList()->DrawInstanced(UINT(objects[i].modelData.vertices.size()), 1, 0, 0);
+        }
+    }
 
 
     dxManager.EndFrame();
@@ -57,6 +107,8 @@ void Game::LoadOBJ(const std::string& directoryPath, const std::string& filename
     // 頂点バッファ
     obj.vertexResource = CreateBufferResource(dxManager.GetDevice(), sizeof(VertexData) * obj.modelData.vertices.size());
     obj.vertexBufferView.BufferLocation = obj.vertexResource->GetGPUVirtualAddress();
+    obj.vertexBufferView.SizeInBytes = UINT(sizeof(VertexData) * obj.modelData.vertices.size());
+    obj.vertexBufferView.StrideInBytes = sizeof(VertexData);
     VertexData* vertexData = nullptr;
     obj.vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
     std::memcpy(vertexData, obj.modelData.vertices.data(), sizeof(VertexData) * obj.modelData.vertices.size());
@@ -85,10 +137,23 @@ void Game::LoadOBJ(const std::string& directoryPath, const std::string& filename
     DirectX::ScratchImage mipImage = LoadTexture("resources/uvChecker.png");
     const DirectX::TexMetadata& metadata = mipImage.GetMetadata();
     obj.textureResource = CreateTextureResource(dxManager.GetDevice(), metadata);
-    //Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource = UploadTextureData(obj.textureResource.Get(), mipImage, dxManager.GetDevice(), commandList.Get());
-    //Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource = CreateDepthStencilTextureResource(dxManager.GetDevice(), kClientWidth, kClientHeight);
+    Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource = UploadTextureData(obj.textureResource.Get(), mipImage, dxManager.GetDevice(), dxManager.GetCommandList());
 
+
+    // metaDataを基にSRVの作成
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+    srvDesc.Format = metadata.format;
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;//2Dテクスチャ
+    srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
+
+    // SRVを作成するDescriptorHeapの場所を決める 先頭はImGuiが使ってるのでその次を使う
+    const uint32_t descriptorSizeSRV = dxManager.GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = GetCPUDescriptorHandle(dxManager.GetsrvDescriptorHeap(), descriptorSizeSRV, 1);
+    obj.textureSrvHandleGPU = GetGPUDescriptorHandle(dxManager.GetsrvDescriptorHeap(), descriptorSizeSRV, 1);
+
+    // SRVの作成
+    dxManager.GetDevice()->CreateShaderResourceView(obj.textureResource.Get(), &srvDesc, textureSrvHandleCPU);
 
     objects.push_back(obj);
-
 }

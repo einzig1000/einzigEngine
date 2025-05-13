@@ -17,6 +17,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
     DirectXManager dxManager(windowManager.GetHwnd(), 1280, 720);
     Game game(windowManager, dxManager);
 
+
+    // リソース読み込み
+    game.LoadOBJ("resources", "axis.obj");
+    game.LoadOBJ("resources", "axis.obj");
+
     game.Run();
     return 0;
 }

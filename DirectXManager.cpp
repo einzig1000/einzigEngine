@@ -159,24 +159,6 @@ void DirectXManager::InitializeSwapChain(HWND hwnd, int width, int height) {
 	assert(SUCCEEDED(hr));
 }
 
-//ID3D12DescriptorHeap* CreateDescriptorHeap(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible)
-//{
-//    // ディスクリプタヒープの生成
-//    ID3D12DescriptorHeap* DescriptorHeap = nullptr;
-//    D3D12_DESCRIPTOR_HEAP_DESC DescriptorHeapDesc{};
-//    // レンダ―ターゲットビュー用
-//    DescriptorHeapDesc.Type = heapType;
-//    // ダブルバッファ用に２つ。多くたってかまわない。
-//    DescriptorHeapDesc.NumDescriptors = numDescriptors;
-//    // 
-//    DescriptorHeapDesc.Flags = shaderVisible ? D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE : D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-//    // エラーチェック
-//    HRESULT hr = device->CreateDescriptorHeap(&DescriptorHeapDesc, IID_PPV_ARGS(&DescriptorHeap));
-//    // ディスクリプタヒープの生成がうまくいかなかったので起動できない
-//    assert(SUCCEEDED(hr));
-//    return DescriptorHeap;
-//}
-
 void DirectXManager::InitializeRenderTargetView() {
 	// rtvDescriptorHeapの設定 　ID3D12DescriptorHeap* CreateDescriptorHeap(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible)のもの
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
@@ -204,6 +186,8 @@ void DirectXManager::InitializeRenderTargetView() {
 }
 
 void DirectXManager::InitializeDepthStencilView(int width, int height) {
+	// ID3D12Resource* CreateDepthStencilTextureResource(ID3D12Device * device, int32_t width, int32_t height)の内容
+	
 	// 深度ステンシルバッファのリソースを作成
 	D3D12_RESOURCE_DESC depthStencilDesc = {};
 	depthStencilDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D; // ２次元
@@ -211,22 +195,19 @@ void DirectXManager::InitializeDepthStencilView(int width, int height) {
 	depthStencilDesc.Height = height;
 	depthStencilDesc.DepthOrArraySize = 1; // 奥行き or 配列Textureの配列数
 	depthStencilDesc.MipLevels = 1;
-	depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT; // 深度バッファ用フォーマット
-	//depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT; // TextureのFormat
+	//depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT; // 深度バッファ用フォーマット
+	depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT; // TextureのFormat
 	depthStencilDesc.SampleDesc.Count = 1;// サンプリングカウント。１固定
 	depthStencilDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL; // DepthStencilとして使うよーという通知
-
-	//resourceDesc.MipLevels = 1; // mipmapの数
-
-	// 深度値のクリア設定
-	D3D12_CLEAR_VALUE clearValue = {};
-	clearValue.Format = DXGI_FORMAT_D32_FLOAT; // フォーマット。depthStencilDescろあわせる
-	clearValue.DepthStencil.Depth = 1.0f; // 1.0f(１番遠い状態)でクリア
-	//clearValue.DepthStencil.Stencil = 0;
 
 	// 利用するHeapの設定
 	D3D12_HEAP_PROPERTIES heapProperties{};
 	heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT; // VRAM上に作る
+
+	// 深度値のクリア設定
+	D3D12_CLEAR_VALUE clearValue = {};
+	clearValue.DepthStencil.Depth = 1.0f; // 1.0f(１番遠い状態)でクリア
+	clearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT; // フォーマット。depthStencilDescろあわせる
 
 	HRESULT hr = device->CreateCommittedResource(
 		&heapProperties,
@@ -238,6 +219,9 @@ void DirectXManager::InitializeDepthStencilView(int width, int height) {
 	);
 	assert(SUCCEEDED(hr));
 
+	// depthStencilResource = depthStencilBuffer;
+
+	// dsvDescriptorHeap = CreateDescriptorHeap(device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
 	// 深度ステンシルビュー用のディスクリプタヒープを作成
 	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
 	dsvHeapDesc.NumDescriptors = 1;
@@ -249,8 +233,8 @@ void DirectXManager::InitializeDepthStencilView(int width, int height) {
 
 	// 深度ステンシルビューを作成
 	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
-	dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
-	//dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	//dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
 	dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
 
@@ -528,7 +512,6 @@ void DirectXManager::InitializeSRVDescriptorHeap()
 	assert(SUCCEEDED(hr));	
 }
 
-
 void DirectXManager::InitializeSynchronizationObjects()
 {
 	// フェンスの初期値を設定
@@ -549,6 +532,7 @@ void DirectXManager::InitializeSynchronizationObjects()
 
 void DirectXManager::BeginFrame()
 {
+	//(フレームごとに1回でOKなものども）
 	///////////////////////////////////////
 	///	TransitionBarrierを張る(TransitionBarrierの命令を実行する)
 	///////////////////////////////////////
@@ -564,17 +548,20 @@ void DirectXManager::BeginFrame()
 	// TransitionBarrierを張る
 	commandList->ResourceBarrier(1, &barrier);
 
+
+	// 描画先のRTVとDSVを設定する
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+
 	//描画先のRTVを設定する
-	commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, nullptr);
+	//commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, nullptr);
+	commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, &dsvHandle);
+
 	//指定した色で画面全体をクリアする
 	float clearColor[] = { 0.1f,0.25f,0.5f,1.0f };// 青っぽい色。RGBAの順
 	commandList->ClearRenderTargetView(rtvHandles[backBufferIndex], clearColor, 0, nullptr);
 
-
-	//D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-	//描画先のRTVを設定する
-	//commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, &dsvHandle);
-
+	// 画面全体をクリア
+	commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 	/////
 	//	DescriptorHeaps & Viewport & Scirssor & RootSignature & PSO を設定
@@ -596,15 +583,23 @@ void DirectXManager::EndFrame()
 {
 	/// ResourceStateを入れ替える
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barrier.Transition.pResource = swapChainResources[backBufferIndex].Get();
 	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
 	commandList->ResourceBarrier(1, &barrier);
 
 	///	コマンドリストを確定させる
-	commandList->Close();
+	HRESULT hr = commandList->Close();
+	if (FAILED(hr)) {
+		Log("Failed to close command list.");
+		assert(false);
+	}
 	// GPUにコマンドリストの実行を行わせる
-	ID3D12CommandList* commandLists[] = { commandList.Get() };
-	commandQueue->ExecuteCommandLists(1, commandLists);
+	//ID3D12CommandList* commandLists[] = { commandList.Get() };
+	//commandQueue->ExecuteCommandLists(1, commandLists);
+	Microsoft::WRL::ComPtr<ID3D12CommandList> commandLists[] = { commandList.Get() };
+	commandQueue->ExecuteCommandLists(1, commandLists->GetAddressOf());
+	// GPUとOSに画面の交換を行うよう通知する
 	swapChain->Present(1, 0);
 
 
@@ -622,7 +617,7 @@ void DirectXManager::EndFrame()
 	}
 
 
-	HRESULT hr = commandAllocator->Reset();
+	hr = commandAllocator->Reset();
 	assert(SUCCEEDED(hr));
 	hr = commandList->Reset(commandAllocator.Get(), nullptr);
 	assert(SUCCEEDED(hr));

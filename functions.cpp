@@ -733,7 +733,27 @@ void Log(std::ofstream& os, const std::string& message)
     OutputDebugStringA(message.c_str());
 }
 
-static LONG WINAPI ExportDump(EXCEPTION_POINTERS* exception)
+void VectorScreenPrintf(int x, int y, const Vector3& vector, const char* label) {
+    // ここではデバッグ出力に表示します（実際の画面描画は環境依存）
+    char buffer[256];
+    sprintf_s(buffer, "%s: (%.3f, %.3f, %.3f)\n", label, vector.x, vector.y, vector.z);
+    OutputDebugStringA(buffer);
+}
+
+void MatrixScreenPrintf(int x, int y, const Matrix4x4& matrix, const char* label) {
+    // ここではデバッグ出力に表示します（実際の画面描画は環境依存）
+    char buffer[256];
+    OutputDebugStringA(label);
+    OutputDebugStringA(":\n");
+    for (int i = 0; i < 4; ++i) {
+        sprintf_s(buffer, "[%.3f, %.3f, %.3f, %.3f]\n",
+            matrix.m[i][0], matrix.m[i][1], matrix.m[i][2], matrix.m[i][3]);
+        OutputDebugStringA(buffer);
+    }
+}
+
+
+LONG WINAPI ExportDump(EXCEPTION_POINTERS* exception)
 {
     //時刻を取得して、時刻を名前に入れたファイルを作成。Dumpsディレクトリ以下に出力
     SYSTEMTIME time;

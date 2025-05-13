@@ -1,7 +1,9 @@
 #pragma once
 #include <vector>
 #include <string>
+#include <initguid.h>
 #include <d3d12.h>
+#pragma comment(lib, "d3d12.lib")
 #include <wrl.h>       // Microsoft::WRL::ComPtr
 
 struct Vector2

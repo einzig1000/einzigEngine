@@ -9,6 +9,9 @@ public:
     Game(WindowManager& windowManager, DirectXManager& dxManager);
     void Run();
 
+    // objファイルで読み込むタイプのものを読み込む関数
+    void LoadOBJ(const std::string& directoryPath, const std::string& filename);
+
 private:
     WindowManager& windowManager;
     DirectXManager& dxManager;
@@ -20,6 +23,8 @@ private:
 
     // objファイルで読み込むタイプのもの
     std::vector<Object3D> objects;
-    // objファイルで読み込むタイプのものを読み込む関数
-    void LoadOBJ(const std::string& directoryPath, const std::string& filename);
+
+    // 光源
+    Microsoft::WRL::ComPtr<ID3D12Resource>  directionalLightResource;
+    DirectionalLigft* directionalLightData;
 };

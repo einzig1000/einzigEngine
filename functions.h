@@ -297,7 +297,7 @@ void Log(std::ofstream& os, const std::string& message);
 /// </summary>
 /// <param name="exception">例外情報</param>
 /// <returns>例外ハンドラの実行結果</returns>
-static LONG WINAPI ExportDump(EXCEPTION_POINTERS* exception);
+LONG WINAPI ExportDump(EXCEPTION_POINTERS* exception);
 
 /// <summary>
 /// バッファリソースを作成する関数
