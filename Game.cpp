@@ -89,8 +89,8 @@ void Game::Render()
 {
     dxManager.BeginFrame();
 
-    Drawobj(transformOBJ1,obj1);
-    Drawobj(transformOBJ2,obj1);
+    Drawobj(transformOBJ1, obj1, 0);
+    Drawobj(transformOBJ2, obj1, 1);
 
 
 
@@ -174,15 +174,48 @@ void Game::ImGuiUpdata()
 
 }
 
-void Game::Drawobj(const Transforms& localTransform, uint32_t objectNumeber)
+void Game::Drawobj(const Transforms& localTransform, uint32_t objectNumeber, size_t matrixIndex)
 {
+    //for (int i = 0; i < objectSum; ++i)
+    //{
+    //    if (i == objectNumeber)
+    //    {
+    //        配列[i]++;
+    //    }
+    //}
+    
+    Object3D& obj = objects[objectNumeber];
+    
+    //uint32_t matrixIndex = 0;
+
+    // objectNumeberの等しいオブジェクトの描画が２回目以降になったらransformationMatrixを拡張する（objectNumeberが等しい＝objects[].transformを共有しているから各々独立させて動かすことが出来ないから）
+    if (matrixIndex >= obj.transformationMatrixResource.size()) {
+        size_t oldSize = obj.transformationMatrixResource.size();
+        obj.transformationMatrixResource.resize(matrixIndex + 1);
+        obj.transformationMatrixData.resize(matrixIndex + 1);
+        for (size_t i = oldSize; i <= matrixIndex; ++i) {
+            obj.transformationMatrixResource[i] = CreateBufferResource(dxManager.GetDevice(), sizeof(TransformationMatrix));
+            obj.transformationMatrixData[i] = nullptr;
+            obj.transformationMatrixResource[i]->Map(0, nullptr, reinterpret_cast<void**>(&obj.transformationMatrixData[i]));
+            obj.transformationMatrixData[i]->World = MakeIdentity4x4();
+            obj.transformationMatrixData[i]->WVP = MakeIdentity4x4();
+            obj.transformationMatrixResource[i]->Unmap(0, nullptr);
+        }
+    }
+
     // オブジェクトのWorldViewProjectionMatrixを作る
     Matrix4x4 objectMatrix = MakeAffineMatrix(objects[objectNumeber].transform.scale, objects[objectNumeber].transform.rotate, objects[objectNumeber].transform.translate);
     Matrix4x4 drawMatrix = MakeAffineMatrix(localTransform.scale, localTransform.rotate, localTransform.translate);
 
-    objects[objectNumeber].transformationMatrixData->World = Mul(objectMatrix, drawMatrix);
+    obj.transformationMatrixResource[matrixIndex]->Map(0, nullptr, reinterpret_cast<void**>(&obj.transformationMatrixData[matrixIndex]));
+    obj.transformationMatrixData[matrixIndex]->World = Mul(objectMatrix, drawMatrix);
+    obj.transformationMatrixData[matrixIndex]->WVP = Mul(obj.transformationMatrixData[matrixIndex]->World, Mul(viewMatrix, projectionMatrix));
+    obj.transformationMatrixResource[matrixIndex]->Unmap(0, nullptr);
+
+
+    //objects[objectNumeber].transformationMatrixData->World = Mul(objectMatrix, drawMatrix);
     // オブジェクトのWVPMatrixを作る
-    objects[objectNumeber].transformationMatrixData->WVP = Mul(objects[objectNumeber].transformationMatrixData->World, Mul(viewMatrix, projectionMatrix));
+    //objects[objectNumeber].transformationMatrixData->WVP = Mul(objects[objectNumeber].transformationMatrixData->World, Mul(viewMatrix, projectionMatrix));
 
     // 描画処理
     dxManager.GetCommandList()->IASetVertexBuffers(0, 1, &objects[objectNumeber].vertexBufferView);
@@ -191,7 +224,7 @@ void Game::Drawobj(const Transforms& localTransform, uint32_t objectNumeber)
     // CBVを設定する マテリアル用のCBufferの場所を設定
     dxManager.GetCommandList()->SetGraphicsRootConstantBufferView(0, objects[objectNumeber].materialResource->GetGPUVirtualAddress());
     // CBVを設定する wvp用のCBufferの場所を設定
-    dxManager.GetCommandList()->SetGraphicsRootConstantBufferView(1, objects[objectNumeber].transformationMatrixResource->GetGPUVirtualAddress());
+    dxManager.GetCommandList()->SetGraphicsRootConstantBufferView(1, objects[objectNumeber].transformationMatrixResource[matrixIndex]->GetGPUVirtualAddress());
     // CBVを設定する ディレクショナルライト用のCBufferの場所を設定
     dxManager.GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 
@@ -232,16 +265,18 @@ int Game::LoadOBJ(const std::string& directoryPath, const std::string& filename)
     obj.transform = { {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f} };
 
     // ワールド・ビュー・プロジェクション行列
-    obj.transformationMatrixResource = CreateBufferResource(dxManager.GetDevice(), sizeof(TransformationMatrix));
-    obj.transformationMatrixData = nullptr;
-    obj.transformationMatrixResource->Map(0, nullptr, reinterpret_cast<void**>(&obj.transformationMatrixData));
-    obj.transformationMatrixData->World = MakeIdentity4x4();
-    obj.transformationMatrixData->WVP = MakeIdentity4x4();
-    obj.transformationMatrixResource->Unmap(0, nullptr);
+    obj.transformationMatrixResource.resize(1);
+    obj.transformationMatrixData.resize(1);
+    obj.transformationMatrixResource[0] = CreateBufferResource(dxManager.GetDevice(), sizeof(TransformationMatrix));
+    obj.transformationMatrixData[0] = nullptr;
+    obj.transformationMatrixResource[0]->Map(0, nullptr, reinterpret_cast<void**>(&obj.transformationMatrixData[0]));
+    obj.transformationMatrixData[0]->World = MakeIdentity4x4();
+    obj.transformationMatrixData[0]->WVP = MakeIdentity4x4();
+    obj.transformationMatrixResource[0]->Unmap(0, nullptr);
 
 
     // テクスチャ
-    DirectX::ScratchImage mipImage = LoadTexture("resources/uvChecker.png");
+    DirectX::ScratchImage mipImage = LoadTexture("resources/monsterBall.png");
     const DirectX::TexMetadata& metadata = mipImage.GetMetadata();
     obj.textureResource = CreateTextureResource(dxManager.GetDevice(), metadata);
     Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource = UploadTextureData(obj.textureResource.Get(), mipImage, dxManager.GetDevice(), dxManager.GetCommandList());

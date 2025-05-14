@@ -111,10 +111,10 @@ struct Object3D
     Transforms transform;
 
     // ワールド・ビュー・プロジェクション行列
-    Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResource;
-    TransformationMatrix* transformationMatrixData;
-    //std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> transformationMatrixResources;
-    //std::vector<TransformationMatrix*> transformationMatrixDatas;
+    //Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResource;
+    //TransformationMatrix* transformationMatrixData;
+    std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> transformationMatrixResource;
+    std::vector<TransformationMatrix*> transformationMatrixData;
 
     // テクスチャ
     Microsoft::WRL::ComPtr<ID3D12Resource> textureResource;

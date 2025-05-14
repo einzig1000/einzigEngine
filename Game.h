@@ -21,8 +21,8 @@ private:
     void Render();
     void ImGuiUpdata();
 
-    //void Drawobj(Transforms localTransform, uint32_t objectNumeber);
-    void Drawobj(const Transforms& localTransform, uint32_t objectNumeber);
+    void Drawobj(const Transforms& localTransform, uint32_t objectNumeber, size_t matrixIndex);
+    //void Drawobj(const Transforms& localTransform, uint32_t objectNumeber);
 
 
     // objファイルで読み込むタイプのもの
