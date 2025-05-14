@@ -5,9 +5,26 @@
 #include <cstdint>
 
 
-Game::Game(WindowManager& windowManager, DirectXManager& dxManager)
-    : windowManager(windowManager), dxManager(dxManager) {
+Game::Game(WindowManager& windowManager, DirectXManager& dxManager) : windowManager(windowManager), dxManager(dxManager)
+{
+    /// imguiの初期化
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGui::StyleColorsDark();
+    ImGui_ImplWin32_Init(windowManager.GetHwnd());
+    ImGui_ImplDX12_Init(
+        dxManager.GetDevice(),
+        dxManager.GetSwapChainDesc().BufferCount,
+        dxManager.GetRtvDesc().Format,
+        dxManager.GetsrvDescriptorHeap(),
+        dxManager.GetsrvDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
+        dxManager.GetsrvDescriptorHeap()->GetGPUDescriptorHandleForHeapStart()
+    );
+    item_current = 0;
 
+    // カメラ系
+    cameraTransform = { {1.0f,1.0f,1.0f}, {0.3f,0.0f,0.0f}, {0.0f,4.0f,-10.0f} };
+    
     // 読み込んだオブジェクトの合計
     objectSum = 0;
 
@@ -18,8 +35,17 @@ Game::Game(WindowManager& windowManager, DirectXManager& dxManager)
     directionalLightData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
     directionalLightData->direction = Normalize({ 0.0f, -1.0f, 0.0f });
     directionalLightData->intensity = 1.0f;
+}
 
+Game::~Game()
+{
+    // ImGuiの終了処理
+    ImGui_ImplDX12_Shutdown();
+    ImGui_ImplWin32_Shutdown();
+    ImGui::DestroyContext();
 
+    // COMの終了処理
+    CoUninitialize();
 }
 
 void Game::Run()
@@ -34,6 +60,7 @@ void Game::Run()
         }
         else
         {
+            ImGuiUpdata();
             Update();
             Render();
         }
@@ -43,27 +70,18 @@ void Game::Run()
 void Game::Update()
 {
     // ゲームロジックの更新
-    objects[obj2].transform.rotate.x += 0.01f;
-    objects[obj2].transform.rotate.y += 0.01f;
-    objects[obj2].transform.rotate.z += 0.01f;
 
     // ライトの向きを正規化
     directionalLightData->direction = Normalize(directionalLightData->direction);
 
     // カメラの設定
-    Transforms cameraTransform{ {1.0f,1.0f,1.0f}, {0.3f,0.0f,0.0f}, {0.0f,4.0f,-10.0f} };
     Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
-    Matrix4x4 viewMatrix = Inverse(cameraMatrix);
-    Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(1280) / float(720), 0.1f, 100.0f);// int width, int heightをもってくる
+    viewMatrix = Inverse(cameraMatrix);
+    projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(1280) / float(720), 0.1f, 100.0f);// int width, int heightをもってくる
     
-
-    for (uint32_t i = 0; i < objects.size(); ++i)
-    {
-        // オブジェクトのWorldViewProjectionMatrixを作る
-        objects[i].transformationMatrixData->World = MakeAffineMatrix(objects[i].transform.scale, objects[i].transform.rotate, objects[i].transform.translate);
-        // オブジェクトのWVPMatrixを作る
-        objects[i].transformationMatrixData->WVP = Mul(objects[i].transformationMatrixData->World, Mul(viewMatrix, projectionMatrix));
-    }
+    
+    
+    
 
 }
 
@@ -71,16 +89,101 @@ void Game::Render()
 {
     dxManager.BeginFrame();
 
-    Drawobj(obj2);
-    Drawobj(obj2);
+    Drawobj(transformOBJ1,obj1);
+    Drawobj(transformOBJ2,obj1);
 
 
 
+    // 実際のcommandListのImGuiの描画コマンドを積む
     dxManager.EndFrame();
 }
 
-void Game::Drawobj(uint32_t objectNumeber)
+void Game::ImGuiUpdata()
 {
+    ImGui_ImplDX12_NewFrame();
+    ImGui_ImplWin32_NewFrame();
+    ImGui::NewFrame();
+    ImGui::Begin("CG2_02");
+
+    if (ImGui::CollapsingHeader("camera"))
+    {
+        ImGui::DragFloat3("CameraScale", &cameraTransform.scale.x, 0.01f);
+        ImGui::DragFloat3("CameraRotate", &cameraTransform.rotate.x, 0.01f);
+        ImGui::DragFloat3("CameraTranslate", &cameraTransform.translate.x, 0.01f);
+        ImGui::SliderAngle("CameraRotateX", &cameraTransform.rotate.x);
+        ImGui::SliderAngle("CameraRotateY", &cameraTransform.rotate.y);
+        ImGui::SliderAngle("CameraRotateZ", &cameraTransform.rotate.z);
+    }
+
+    const char* items[] = { "axis.obj", "plane.obj" };
+    if (ImGui::CollapsingHeader("object", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        ImGui::Combo("Combo Box", &item_current, items, IM_ARRAYSIZE(items));
+        ImGui::ColorEdit3("ObjectColor", (float*)&objects[item_current].materialData->color.x);
+        ImGui::DragFloat3("ObjectScale", &objects[item_current].transform.scale.x, 0.01f);
+        ImGui::DragFloat3("ObjectRotate", &objects[item_current].transform.rotate.x, 0.01f);
+        ImGui::DragFloat3("ObjectTranslate", &objects[item_current].transform.translate.x, 0.01f);
+        ImGui::SliderAngle("ObjectRotateX", &objects[item_current].transform.rotate.x);
+        ImGui::SliderAngle("ObjectRotateY", &objects[item_current].transform.rotate.y);
+        ImGui::SliderAngle("ObjectRotateZ", &objects[item_current].transform.rotate.z);
+        ImGui::Checkbox("X", &autoRotation[0]);
+        ImGui::SameLine(0.0f, 54.0f);
+        ImGui::Checkbox("Y", &autoRotation[1]);
+        ImGui::SameLine(0.0f, 54.0f);
+        ImGui::Checkbox("Z", &autoRotation[2]);
+        ImGui::SameLine(0.0f, 54.0f);
+        ImGui::Text("AutoRotation");
+
+
+        ImGui::DragFloat3("transformOBJ1Scale", &transformOBJ1.scale.x, 0.01f);
+        ImGui::DragFloat3("transformOBJ1Rotate", &transformOBJ1.rotate.x, 0.01f);
+        ImGui::DragFloat3("transformOBJ1Translate", &transformOBJ1.translate.x, 0.01f);
+
+        ImGui::DragFloat3("transformOBJ2Scale", &transformOBJ2.scale.x, 0.02f);
+        ImGui::DragFloat3("transformOBJ2Rotate", &transformOBJ2.rotate.x, 0.02f);
+        ImGui::DragFloat3("transformOBJ2Translate", &transformOBJ2.translate.x, 0.02f);
+    }
+    if (autoRotation[0])objects[item_current].transform.rotate.x += 0.01f;
+    if (autoRotation[1])objects[item_current].transform.rotate.y += 0.01f;
+    if (autoRotation[2])objects[item_current].transform.rotate.z += 0.01f;
+
+    //if (ImGui::CollapsingHeader("sprite"))
+    //{
+    //    ImGui::ColorEdit3("SpriteColor", (float*)&materialDataSprite->color.x);
+    //    ImGui::DragFloat2("SpriteScale", &transformSprite.scale.x, 0.01f);
+    //    ImGui::DragFloat2("SpriteRotate", &transformSprite.rotate.x, 0.01f);
+    //    ImGui::DragFloat2("SpriteTranslate", &transformSprite.translate.x, 1.0f);
+    //}
+
+    //if (ImGui::CollapsingHeader("uv"))
+    //{
+    //    ImGui::DragFloat2("uvScale", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
+    //    ImGui::SliderAngle("uvRotate", &uvTransformSprite.rotate.z);
+    //    ImGui::DragFloat2("uvTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
+    //}
+
+    if (ImGui::CollapsingHeader("light"))
+    {
+        ImGui::ColorEdit3("LightColor", (float*)&directionalLightData->color.x);
+        ImGui::DragFloat3("LightDirection", &directionalLightData->direction.x, 0.01f, -1.0f, 1.0f);
+        ImGui::DragFloat("LightIntensity", &directionalLightData->intensity, 0.01f);
+    }
+
+    ImGui::End();
+    ImGui::Render();
+
+}
+
+void Game::Drawobj(const Transforms& localTransform, uint32_t objectNumeber)
+{
+    // オブジェクトのWorldViewProjectionMatrixを作る
+    Matrix4x4 objectMatrix = MakeAffineMatrix(objects[objectNumeber].transform.scale, objects[objectNumeber].transform.rotate, objects[objectNumeber].transform.translate);
+    Matrix4x4 drawMatrix = MakeAffineMatrix(localTransform.scale, localTransform.rotate, localTransform.translate);
+
+    objects[objectNumeber].transformationMatrixData->World = Mul(objectMatrix, drawMatrix);
+    // オブジェクトのWVPMatrixを作る
+    objects[objectNumeber].transformationMatrixData->WVP = Mul(objects[objectNumeber].transformationMatrixData->World, Mul(viewMatrix, projectionMatrix));
+
     // 描画処理
     dxManager.GetCommandList()->IASetVertexBuffers(0, 1, &objects[objectNumeber].vertexBufferView);
     // 形状を設定

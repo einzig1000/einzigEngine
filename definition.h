@@ -50,9 +50,9 @@ struct Vertex
 
 struct Transforms
 {
-    Vector3 scale;
-    Vector3 rotate;
-    Vector3 translate;
+    Vector3 scale = { 1,1,1 };
+    Vector3 rotate = { 0,0,0 };
+    Vector3 translate = { 0,0,0 };
 };
 
 struct VertexData
@@ -113,6 +113,8 @@ struct Object3D
     // ワールド・ビュー・プロジェクション行列
     Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResource;
     TransformationMatrix* transformationMatrixData;
+    //std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> transformationMatrixResources;
+    //std::vector<TransformationMatrix*> transformationMatrixDatas;
 
     // テクスチャ
     Microsoft::WRL::ComPtr<ID3D12Resource> textureResource;

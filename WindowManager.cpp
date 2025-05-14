@@ -3,11 +3,11 @@
 // ウィンドウプロシージャ(クリックした、×を押した等のイベントを処理する関数)
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
-    //// Imgui用
-    //if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam))
-    //{
-    //    return true;
-    //}
+    // Imgui用
+    if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam))
+    {
+        return true;
+    }
 
     // メッセージに応じてゲーム固有の処理を行う
     switch (msg)

@@ -1,5 +1,7 @@
 #include "DirectXManager.h" // クラス定義
 #include <vector>           // std::vector (リソース管理用)
+#include "externals/imgui/imgui_impl_dx12.h"
+#include "externals/imgui/imgui_impl_win32.h"
 
 
 DirectXManager::DirectXManager(HWND hwnd, int width, int height) 
@@ -132,7 +134,6 @@ void DirectXManager::InitializeSwapChain(HWND hwnd, int width, int height) {
 	HRESULT hr = CreateDXGIFactory(IID_PPV_ARGS(&dxgiFactory));
 	assert(SUCCEEDED(hr));
 
-	DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
 	// 画面の幅。ウィンドウのクライアント領域を同じものにしておく
 	swapChainDesc.Width = width;
 	// 画面の高さ。ウィンドウのクライアント領域を同じものにしておく
@@ -168,7 +169,6 @@ void DirectXManager::InitializeRenderTargetView() {
 	assert(SUCCEEDED(hr));
 
 	// RTVの設定
-	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{};
 	// 出力結果をSRGBに変換して書き込む
 	rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
 	// 2dテクスチャとして書き込む
@@ -581,6 +581,9 @@ void DirectXManager::BeginFrame()
 
 void DirectXManager::EndFrame()
 {
+	// 実際のcommandListのImGuiの描画コマンドを積む
+	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList.Get());
+
 	/// ResourceStateを入れ替える
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 	barrier.Transition.pResource = swapChainResources[backBufferIndex].Get();

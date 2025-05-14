@@ -18,6 +18,10 @@ public:
     ID3D12Device* GetDevice() const { return device.Get(); }
     ID3D12GraphicsCommandList* GetCommandList() const { return commandList.Get(); }
     ID3D12DescriptorHeap* GetsrvDescriptorHeap() const { return srvDescriptorHeap.Get(); }
+    const DXGI_SWAP_CHAIN_DESC1& GetSwapChainDesc() const { return swapChainDesc; }
+    const D3D12_RENDER_TARGET_VIEW_DESC& GetRtvDesc() const { return rtvDesc; }
+
+
 
     void BeginFrame();
     void EndFrame();
@@ -33,8 +37,10 @@ private:
     // --- スワップチェーン関連 ---
     Microsoft::WRL::ComPtr<IDXGISwapChain4> swapChain; // スワップチェーン。ダブルバッファリングを管理し、画面の描画を切り替える。
     Microsoft::WRL::ComPtr<ID3D12Resource> swapChainResources[2]; // スワップチェーンのバックバッファリソース。
+    DXGI_SWAP_CHAIN_DESC1 swapChainDesc;
     UINT backBufferIndex; // 現在のバックバッファのインデックス。
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[2]; // レンダーターゲットビューのディスクリプタハンドル。
+    D3D12_RENDER_TARGET_VIEW_DESC rtvDesc;
 
     // --- ディスクリプタヒープ関連 ---
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvDescriptorHeap; // レンダーターゲットビュー用のディスクリプタヒープ。
