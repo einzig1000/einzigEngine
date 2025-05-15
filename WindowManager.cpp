@@ -53,6 +53,9 @@ void WindowManager::CreateMainWindow(int width, int height, const std::wstring& 
     RECT wrc = { 0,0,width,height };
     // クライアント領域を元に実際のサイズのwrcを変更してもらう
     AdjustWindowRect(&wrc, WS_OVERLAPPEDWINDOW, false);
+    // 画面サイズの保存
+    width_ = width;
+    height_ = height;
 
     // ウィンドウの生成
     hwnd = CreateWindow(

@@ -40,7 +40,7 @@ Game::Game(WindowManager& windowManager, DirectXManager& dxManager) : windowMana
     // リソース読み込み
     uvCheckerTex = LoadTexture("resources/uvChecker.png");
     monsterBallTex = LoadTexture("resources/monsterBall.png");
-    gold1x1Tex = LoadTexture("resources/gold1x1.png");
+    //gold1x1Tex = LoadTexture("resources/gold1x1.png");
 
     obj1 = LoadOBJ("resources", "axis.obj");
     obj2 = LoadOBJ("resources", "plane.obj");
@@ -73,6 +73,7 @@ void Game::Run()
         {
             ImGuiUpdate();
             Update();
+            UpdateCameraAndLight();
             Render();
         }
     }
@@ -80,8 +81,23 @@ void Game::Run()
 
 void Game::Update()
 {
-    // ゲームロジックの更新
 
+
+
+}
+
+void Game::Draw()
+{
+    Drawobj(transformOBJ1, obj1, uvCheckerTex, 0);
+    Drawobj(transformOBJ2, obj1, monsterBallTex, 1);
+
+
+}
+
+
+
+void Game::UpdateCameraAndLight()
+{
     // ライトの向きを正規化
     directionalLightData->direction = Normalize(directionalLightData->direction);
 
@@ -89,20 +105,14 @@ void Game::Update()
     Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
     viewMatrix = Inverse(cameraMatrix);
     projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(1280) / float(720), 0.1f, 100.0f);// int width, int heightをもってくる
-
-
-
+    //projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(windowManager.Getwidth()) / float(windowManager.Getheight()), 0.1f, 100.0f);// int width, int heightをもってくる
 }
 
 void Game::Render()
 {
     dxManager.BeginFrame();
 
-    Drawobj(transformOBJ1, obj1, uvCheckerTex, 0);
-    Drawobj(transformOBJ2, obj1, gold1x1Tex, 1);
-
-
-
+    Draw();
 
     dxManager.EndFrame();
 }
@@ -182,7 +192,6 @@ void Game::ImGuiUpdate()
     ImGui::Render();
 
 }
-
 
 void Game::Drawobj(const Transforms& localTransform, uint32_t objectNumeber, uint32_t textureNumber, size_t matrixIndex)
 {

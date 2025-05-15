@@ -16,8 +16,11 @@ private:
     DirectXManager& dxManager;
 
     void Update();
-    void Render();
+    void UpdateCameraAndLight();
     void ImGuiUpdate();
+
+    void Render();
+    void Draw();
 
     // モデルデータ
     int LoadOBJ(const std::string& directoryPath, const std::string& filename);
