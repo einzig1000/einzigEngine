@@ -10,7 +10,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	Game::Initialize(1280, 720, L"CG2");
 
 	// 変数宣言
-	int a = Game::LoadTexture("resources/uvChecker.png");
+	int uvChecker = Game::LoadTexture("resources/uvChecker.png");
 	int obj1 = Game::LoadOBJ("resources", "axis.obj");
 	Transforms transformOBJ1;
 	Transforms transformOBJ2;
@@ -36,8 +36,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		///
 		/// ↓描画処理ここから
 		///
-		Game::Drawobj(transformOBJ1, obj1, a, 0);
-		Game::Drawobj(transformOBJ2, obj1, a, 1);
+		Game::Drawobj(transformOBJ1, obj1, uvChecker);
+		Game::Drawobj(transformOBJ2, obj1, uvChecker);
 
 		///
 		/// ↑描画処理ここまで
