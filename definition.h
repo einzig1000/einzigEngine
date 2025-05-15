@@ -7,6 +7,7 @@
 #include <wrl.h>       // Microsoft::WRL::ComPtr
 #include "externals/DirectXTex/DirectXTex.h"
 
+
 struct Vector2
 {
     float x = 0;
@@ -95,6 +96,7 @@ struct ModelData
     MaterialData material;
 };
 
+
 struct Object3D
 {
     // モデルデータ
@@ -121,6 +123,9 @@ struct Object3D
 
     // 識別ナンバー
     uint32_t number;
+
+    // 描画回数
+    uint32_t drawCount;
 };
 
 struct textureData {

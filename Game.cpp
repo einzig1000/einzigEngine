@@ -21,56 +21,7 @@ Matrix4x4 Game::viewMatrix;
 Matrix4x4 Game::projectionMatrix;
 
 
-Game::Game(int width, int height, const std::wstring& title)
-{
-    if (!windowManager) {
-        windowManager = new WindowManager(width, height, title);
-    }
-    if (!dxManager) {
-        dxManager = new DirectXManager(windowManager->GetHwnd(), width, height);
-    }
-
-    /// imguiの初期化
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGui::StyleColorsDark();
-    ImGui_ImplWin32_Init(windowManager->GetHwnd());
-    ImGui_ImplDX12_Init(
-        dxManager->GetDevice(),
-        dxManager->GetSwapChainDesc().BufferCount,
-        dxManager->GetRtvDesc().Format,
-        dxManager->GetsrvDescriptorHeap(),
-        dxManager->GetsrvDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
-        dxManager->GetsrvDescriptorHeap()->GetGPUDescriptorHandleForHeapStart()
-    );
-
-    // カメラ系
-    cameraTransform = { {1.0f,1.0f,1.0f}, {0.3f,0.0f,0.0f}, {0.0f,4.0f,-10.0f} };
-
-    // 読み込んだオブジェクトの合計
-    objectSum = 0;
-    textureSum = 0;
-
-    // 光源の設定
-    directionalLightResource = CreateBufferResource(dxManager->GetDevice(), sizeof(DirectionalLigft));
-    directionalLightData = nullptr;
-    directionalLightResource->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData));
-    directionalLightData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-    directionalLightData->direction = Normalize({ 0.0f, -1.0f, 0.0f });
-    directionalLightData->intensity = 1.0f;
-}
-
-Game::~Game()
-{
-    // ImGuiの終了処理
-    ImGui_ImplDX12_Shutdown();
-    ImGui_ImplWin32_Shutdown();
-    ImGui::DestroyContext();
-
-    // COMの終了処理
-    CoUninitialize();
-}
-
+// 初期化用
 void Game::Initialize(int width, int height, const std::wstring& title)
 {
     // COM の初期化
@@ -116,6 +67,7 @@ void Game::Initialize(int width, int height, const std::wstring& title)
     directionalLightData->intensity = 1.0f;
 }
 
+// メインループ用
 bool Game::ProcessMessage() {
     MSG msg = {};
     if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
@@ -127,8 +79,6 @@ bool Game::ProcessMessage() {
     }
     return true;
 }
-
-
 void Game::BeginFrame()
 {
     ImGui_ImplDX12_NewFrame();
@@ -138,23 +88,6 @@ void Game::BeginFrame()
     UpdateCameraAndLight();
     dxManager->BeginFrame();
 }
-
-void Game::EndFrame()
-{
-    ImGui::Render();
-
-    dxManager->EndFrame();
-}
-
-void Game::Finalize() {
-    delete dxManager;
-    dxManager = nullptr;
-    delete windowManager;
-    windowManager = nullptr;
-}
-
-
-
 void Game::UpdateCameraAndLight()
 {
     
@@ -167,70 +100,39 @@ void Game::UpdateCameraAndLight()
     projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(1280) / float(720), 0.1f, 100.0f);// int width, int heightをもってくる
     //projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(windowManager.Getwidth()) / float(windowManager.Getheight()), 0.1f, 100.0f);// int width, int heightをもってくる
 }
-
-
-void Game::Drawobj(const Transforms& localTransform, uint32_t objectNumeber, uint32_t textureNumber, size_t matrixIndex)
+void Game::EndFrame()
 {
-    Object3D& obj = objects[objectNumeber];
+    ImGui::Render();
 
-    // objectNumeberの等しいオブジェクトの描画が２回目以降になったらransformationMatrixを拡張する（objectNumeberが等しい＝objects[].transformを共有しているから各々独立させて動かすことが出来ないから）
-    // じゃあobjects[].transformいらなくない？　→　objects[].transformはobjectNumeberが等しいモデル全てに影響を及ぼすtransformとしてつかえるんじゃよそれはそれで使い道がありそうじゃろう
-    if (matrixIndex >= obj.transformationMatrixResource.size()) {
-        size_t oldSize = obj.transformationMatrixResource.size();
-        obj.transformationMatrixResource.resize(matrixIndex + 1);
-        obj.transformationMatrixData.resize(matrixIndex + 1);
-        for (size_t i = oldSize; i <= matrixIndex; ++i) {
-            obj.transformationMatrixResource[i] = CreateBufferResource(dxManager->GetDevice(), sizeof(TransformationMatrix));
-            obj.transformationMatrixData[i] = nullptr;
-            obj.transformationMatrixResource[i]->Map(0, nullptr, reinterpret_cast<void**>(&obj.transformationMatrixData[i]));
-            obj.transformationMatrixData[i]->World = MakeIdentity4x4();
-            obj.transformationMatrixData[i]->WVP = MakeIdentity4x4();
-            obj.transformationMatrixResource[i]->Unmap(0, nullptr);
-        }
+    dxManager->EndFrame();
+
+    for (uint32_t objectNum = 0; objectNum < objectSum; ++objectNum)
+    {
+        objects[objectNum].drawCount = 0;
     }
-
-    // オブジェクトのWorldViewProjectionMatrixを作る
-    Matrix4x4 objectMatrix = MakeAffineMatrix(obj.transform.scale, obj.transform.rotate, obj.transform.translate);
-    Matrix4x4 drawMatrix = MakeAffineMatrix(localTransform.scale, localTransform.rotate, localTransform.translate);
-
-    obj.transformationMatrixResource[matrixIndex]->Map(0, nullptr, reinterpret_cast<void**>(&obj.transformationMatrixData[matrixIndex]));
-    obj.transformationMatrixData[matrixIndex]->World = Mul(objectMatrix, drawMatrix);
-    obj.transformationMatrixData[matrixIndex]->WVP = Mul(obj.transformationMatrixData[matrixIndex]->World, Mul(viewMatrix, projectionMatrix));
-    obj.transformationMatrixResource[matrixIndex]->Unmap(0, nullptr);
-
-    // textureNumberに一致するテクスチャを探す
-    const textureData* tex = nullptr;
-    for (const auto& t : textures) {
-        if (t.number == textureNumber) {
-            tex = &t;
-            break;
-        }
-    }
-    // 見つからなかったらuncheckを使う
-    if (tex == nullptr) {
-        tex = &textures[0];
-    }
-
-    // 描画処理
-    dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &obj.vertexBufferView);
-    // 形状を設定
-    dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    // CBVを設定する マテリアル用のCBufferの場所を設定
-    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, obj.materialResource->GetGPUVirtualAddress());
-    // CBVを設定する wvp用のCBufferの場所を設定
-    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, obj.transformationMatrixResource[matrixIndex]->GetGPUVirtualAddress());
-    // SRVのDescriptorTableの先頭を設定。２はrootParameters[2]。
-    dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
-    // CBVを設定する ディレクショナルライト用のCBufferの場所を設定
-    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
-
-
-
-
-    // 描画
-    dxManager->GetCommandList()->DrawInstanced(UINT(obj.modelData.vertices.size()), 1, 0, 0);
 }
 
+// 終了処理
+void Game::Finalize()
+{
+    // ImGuiの終了処理
+    ImGui_ImplDX12_Shutdown();
+    ImGui_ImplWin32_Shutdown();
+    ImGui::DestroyContext();
+
+    // COMの終了処理
+    CoUninitialize();
+
+    delete dxManager;
+    dxManager = nullptr;
+    delete windowManager;
+    windowManager = nullptr;
+}
+
+
+
+
+// リソース読み込み
 int Game::LoadTexture(const std::string& filePath)
 {
     // ボックスを作成
@@ -317,11 +219,81 @@ int Game::LoadOBJ(const std::string& directoryPath, const std::string& filename)
     obj.number = objectSum;
     objectSum++;
 
+    // 表示回数初期化
+    obj.drawCount = 0;
+
     // ボックスをpush_back
     objects.push_back(obj);
 
     // 識別ナンバーをreturn
     return obj.number;
 }
+
+//描画
+void Game::Drawobj(const Transforms& localTransform, uint32_t objectNumeber, uint32_t textureNumber)
+{
+    Object3D& obj = objects[objectNumeber];
+
+    // objectNumeberの等しいオブジェクトの描画が２回目以降になったらransformationMatrixを拡張する（objectNumeberが等しい＝objects[].transformを共有しているから各々独立させて動かすことが出来ないから）
+    // じゃあobjects[].transformいらなくない？　→　objects[].transformはobjectNumeberが等しいモデル全てに影響を及ぼすtransformとしてつかえるんじゃよそれはそれで使い道がありそうじゃろう
+    if (obj.drawCount >= obj.transformationMatrixResource.size()) {
+        size_t oldSize = obj.transformationMatrixResource.size();
+        obj.transformationMatrixResource.resize(obj.drawCount + 1);
+        obj.transformationMatrixData.resize(obj.drawCount + 1);
+        for (size_t i = oldSize; i <= obj.drawCount; ++i) {
+            obj.transformationMatrixResource[i] = CreateBufferResource(dxManager->GetDevice(), sizeof(TransformationMatrix));
+            obj.transformationMatrixData[i] = nullptr;
+            obj.transformationMatrixResource[i]->Map(0, nullptr, reinterpret_cast<void**>(&obj.transformationMatrixData[i]));
+            obj.transformationMatrixData[i]->World = MakeIdentity4x4();
+            obj.transformationMatrixData[i]->WVP = MakeIdentity4x4();
+            obj.transformationMatrixResource[i]->Unmap(0, nullptr);
+        }
+    }
+
+    // オブジェクトのWorldViewProjectionMatrixを作る
+    Matrix4x4 objectMatrix = MakeAffineMatrix(obj.transform.scale, obj.transform.rotate, obj.transform.translate);
+    Matrix4x4 drawMatrix = MakeAffineMatrix(localTransform.scale, localTransform.rotate, localTransform.translate);
+
+    obj.transformationMatrixResource[obj.drawCount]->Map(0, nullptr, reinterpret_cast<void**>(&obj.transformationMatrixData[obj.drawCount]));
+    obj.transformationMatrixData[obj.drawCount]->World = Mul(objectMatrix, drawMatrix);
+    obj.transformationMatrixData[obj.drawCount]->WVP = Mul(obj.transformationMatrixData[obj.drawCount]->World, Mul(viewMatrix, projectionMatrix));
+    obj.transformationMatrixResource[obj.drawCount]->Unmap(0, nullptr);
+
+    // textureNumberに一致するテクスチャを探す
+    const textureData* tex = nullptr;
+    for (const auto& t : textures) {
+        if (t.number == textureNumber) {
+            tex = &t;
+            break;
+        }
+    }
+    // 見つからなかったらuncheckを使う
+    if (tex == nullptr) {
+        tex = &textures[0];
+    }
+
+    // 描画処理
+    dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &obj.vertexBufferView);
+    // 形状を設定
+    dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    // CBVを設定する マテリアル用のCBufferの場所を設定
+    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, obj.materialResource->GetGPUVirtualAddress());
+    // CBVを設定する wvp用のCBufferの場所を設定
+    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, obj.transformationMatrixResource[obj.drawCount]->GetGPUVirtualAddress());
+    // SRVのDescriptorTableの先頭を設定。２はrootParameters[2]。
+    dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
+    // CBVを設定する ディレクショナルライト用のCBufferの場所を設定
+    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
+
+
+
+
+    // 描画
+    dxManager->GetCommandList()->DrawInstanced(UINT(obj.modelData.vertices.size()), 1, 0, 0);
+
+    // 描画回数更新
+    objects[objectNumeber].drawCount += 1;
+}
+
 
 

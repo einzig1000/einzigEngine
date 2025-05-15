@@ -9,9 +9,6 @@
 
 class Game {
 public:
-    Game(int width, int height, const std::wstring& title);
-    ~Game();
-
     // 初期化
     static void Initialize(int width, int height, const std::wstring& title);
 
@@ -20,15 +17,15 @@ public:
     static void BeginFrame();
     static void EndFrame();
 
-    // 解放
+    // 終了処理
     static void Finalize();
 
-    // LoadResource
+    // リソース読み込み
     static int LoadOBJ(const std::string& directoryPath, const std::string& filename);
     static int LoadTexture(const std::string& filePath);
 
     // 描画
-    static void Drawobj(const Transforms& localTransform, uint32_t objectNumber, uint32_t textureNumber, size_t matrixIndex);
+    static void Drawobj(const Transforms& localTransform, uint32_t objectNumber, uint32_t textureNumber);
 
 private:
     static void UpdateCameraAndLight();
