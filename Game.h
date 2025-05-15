@@ -26,6 +26,13 @@ public:
 
     // 描画
     static void Drawobj(const Transforms& localTransform, uint32_t objectNumber, uint32_t textureNumber);
+    static void DrawTriangle(const VertexData* vertexData, uint32_t textureNumber, const Vector4& materialColor);
+    static void DrawSphere(const Transforms& localTransform, VertexData* vertexData, uint32_t kSubdivision, uint32_t textureNumber);
+
+    // ImGui
+    static Transforms* GetTransforms(int i) { return &objects[i].transform; }
+
+    //ID3D12Device* GetDevice() const { return device.Get(); }
 
 private:
     static void UpdateCameraAndLight();

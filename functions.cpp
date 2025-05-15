@@ -519,7 +519,7 @@ Matrix4x4 MakeViewPortMatrix(float left, float top, float width, float height, f
 #pragma endregion
 
 
-void DrawSphere(VertexData* vertexData, uint32_t kSubdivision)
+void CreateSphere(VertexData* vertexData, uint32_t kSubdivision)
 {
     if (kSubdivision == 0 || vertexData == nullptr) {
         return;
@@ -529,7 +529,6 @@ void DrawSphere(VertexData* vertexData, uint32_t kSubdivision)
     const float kLonEvery = float((2 * M_PI) / kSubdivision);
     // 緯度分割１つ分の角度
     const float kLatEvery = float(M_PI / kSubdivision);
-
 
     // 緯度の方向に分割 -π/2 ～ π/2
     for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex)
@@ -543,9 +542,9 @@ void DrawSphere(VertexData* vertexData, uint32_t kSubdivision)
         {
             // 現在の経度と次の経度
             const float lon = lonIndex * kLonEvery;
-            const float nextLon = lon + kLonEvery;
+            const float nextLon = (lonIndex + 1) * kLonEvery;
 
-            // テクスチャ座標を計算
+            // テクスチャ座標を計算（[0,1]範囲をしっかりカバー）
             const float u = float(lonIndex) / float(kSubdivision);
             const float nextU = float(lonIndex + 1) / float(kSubdivision);
             const float v = 1.0f - float(latIndex) / float(kSubdivision);
@@ -554,35 +553,39 @@ void DrawSphere(VertexData* vertexData, uint32_t kSubdivision)
             // 頂点データの開始インデックス
             const uint32_t start = (latIndex * kSubdivision + lonIndex) * 6;
 
-
             // 頂点データを設定 (三角形1)
             vertexData[start + 0].position = { std::cos(lat) * std::cos(lon), std::sin(lat), std::cos(lat) * std::sin(lon), 1.0f };
             vertexData[start + 0].texcoord = { u, v };
-            vertexData[start + 0].normal = { vertexData[start + 0].position.x,vertexData[start + 0].position.y,vertexData[start + 0].position.z };
 
             vertexData[start + 2].position = { std::cos(nextLat) * std::cos(nextLon), std::sin(nextLat), std::cos(nextLat) * std::sin(nextLon), 1.0f };
             vertexData[start + 2].texcoord = { nextU, nextV };
-            vertexData[start + 2].normal = { vertexData[start + 2].position.x,vertexData[start + 2].position.y,vertexData[start + 2].position.z };
 
             vertexData[start + 1].position = { std::cos(nextLat) * std::cos(lon), std::sin(nextLat), std::cos(nextLat) * std::sin(lon), 1.0f };
             vertexData[start + 1].texcoord = { u, nextV };
-            vertexData[start + 1].normal = { vertexData[start + 1].position.x,vertexData[start + 1].position.y,vertexData[start + 1].position.z };
 
             // 頂点データを設定 (三角形2)
             vertexData[start + 3].position = { std::cos(lat) * std::cos(lon), std::sin(lat), std::cos(lat) * std::sin(lon), 1.0f };
             vertexData[start + 3].texcoord = { u, v };
-            vertexData[start + 3].normal = { vertexData[start + 3].position.x,vertexData[start + 3].position.y,vertexData[start + 3].position.z };
 
             vertexData[start + 5].position = { std::cos(lat) * std::cos(nextLon), std::sin(lat), std::cos(lat) * std::sin(nextLon), 1.0f };
             vertexData[start + 5].texcoord = { nextU, v };
-            vertexData[start + 5].normal = { vertexData[start + 5].position.x,vertexData[start + 5].position.y,vertexData[start + 5].position.z };
 
             vertexData[start + 4].position = { std::cos(nextLat) * std::cos(nextLon), std::sin(nextLat), std::cos(nextLat) * std::sin(nextLon), 1.0f };
             vertexData[start + 4].texcoord = { nextU, nextV };
-            vertexData[start + 4].normal = { vertexData[start + 4].position.x,vertexData[start + 4].position.y,vertexData[start + 4].position.z };
+
+            // 法線を正規化して設定
+            for (int i = 0; i < 6; ++i) {
+                Vector3 n = {
+                    vertexData[start + i].position.x,
+                    vertexData[start + i].position.y,
+                    vertexData[start + i].position.z
+                };
+                vertexData[start + i].normal = Normalize(n);
+            }
         }
     }
 }
+
 
 
 

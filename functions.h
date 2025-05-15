@@ -238,7 +238,7 @@ Matrix4x4 MakeViewPortMatrix(float left, float top, float width, float height, f
 /// </summary>
 /// <param name="vertexData">頂点データを格納する配列</param>
 /// <param name="kSubdivision">球体の分割数</param>
-void DrawSphere(VertexData* vertexData, uint32_t kSubdivision);
+void CreateSphere(VertexData* vertexData, uint32_t kSubdivision);
 
 /// <summary>
 /// UTF-8 文字列をワイド文字列 (UTF-16) に変換する関数

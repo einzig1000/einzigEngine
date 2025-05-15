@@ -251,7 +251,7 @@ void Game::Drawobj(const Transforms& localTransform, uint32_t objectNumeber, uin
     }
 
     // オブジェクトのWorldViewProjectionMatrixを作る
-    Matrix4x4 objectMatrix = MakeAffineMatrix(obj.transform.scale, obj.transform.rotate, obj.transform.translate);
+    Matrix4x4 objectMatrix = MakeAffineMatrix(objects[objectNumeber].transform.scale, objects[objectNumeber].transform.rotate, objects[objectNumeber].transform.translate);
     Matrix4x4 drawMatrix = MakeAffineMatrix(localTransform.scale, localTransform.rotate, localTransform.translate);
 
     obj.transformationMatrixResource[obj.drawCount]->Map(0, nullptr, reinterpret_cast<void**>(&obj.transformationMatrixData[obj.drawCount]));
@@ -295,5 +295,151 @@ void Game::Drawobj(const Transforms& localTransform, uint32_t objectNumeber, uin
     objects[objectNumeber].drawCount += 1;
 }
 
+void Game::DrawTriangle(const VertexData* vertexData, uint32_t textureNumber, const Vector4& materialColor)
+{
+    // 頂点リソースを作る
+    Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource = CreateBufferResource(dxManager->GetDevice(), sizeof(VertexData) * 3);
+    VertexData* vData = nullptr;
+    // 書き込むためのアドレスを取得
+    HRESULT hr = vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vData));
+    if (FAILED(hr) || vData == nullptr) return;
+    // 頂点リソースにデータを書き込む
+    for (int i = 0; i < 3; ++i) {
+        vData[i] = vertexData[i];
+    }
+    vertexResource->Unmap(0, nullptr);
 
+    // textureNumberに一致するテクスチャを探す
+    const textureData* tex = nullptr;
+    for (const auto& t : textures) {
+        if (t.number == textureNumber) {
+            tex = &t;
+            break;
+        }
+    }
+    // 見つからなかったらuncheckを使う
+    if (tex == nullptr) {
+        tex = &textures[0];
+    }
+
+
+    // 頂点バッファビューを作成する
+    D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
+    // リソースの先頭のアドレスから使う
+    vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
+    // 仕様するリソースのサイズは頂点３つ分のサイズ
+    vertexBufferView.SizeInBytes = sizeof(VertexData) * 3;
+    // １頂点あたりのサイズ
+    vertexBufferView.StrideInBytes = sizeof(VertexData);
+
+    // マテリアルリソースを作る
+    Microsoft::WRL::ComPtr<ID3D12Resource> materialResource = CreateBufferResource(dxManager->GetDevice(), sizeof(Vector4));
+    // マテリアルにデータを書き込む
+    Vector4* materialData = nullptr;
+    // 書き込むためのアドレスを取得
+    materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
+    // 今回は赤を書き込んでみる
+    *materialData = materialColor;
+    materialResource->Unmap(0, nullptr);
+
+    // World-View-Projection用のリソースを作る。Matrix4x4　１つ分のサイズを用意する
+    Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource = CreateBufferResource(dxManager->GetDevice(), sizeof(Matrix4x4));
+    // データを書き込む
+    Matrix4x4* wvpData = nullptr;
+    // 書き込むためのアドレスを取得
+    hr = wvpResource->Map(0, nullptr, reinterpret_cast<void**>(&wvpData));
+    // 単位行列を書き込んでおく
+    //*wvpData = MakeIdentity4x4();
+    if (SUCCEEDED(hr) && wvpData) {
+        *wvpData = Mul(MakeIdentity4x4(), Mul(viewMatrix, projectionMatrix));
+        wvpResource->Unmap(0, nullptr);
+    }
+
+    // RootSignatureを設定。
+    dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
+    // 形状を設定
+    dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    // CBVを設定する マテリアル用のCBufferの場所を設定
+    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+    // CBVを設定する wvp用のCBufferの場所を設定
+    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
+    // SRVのDescriptorTableの先頭を設定。２はrootParameters[2]。
+    dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
+
+
+    // 描画
+    dxManager->GetCommandList()->DrawInstanced(3, 1, 0, 0);
+}
+
+void Game::DrawSphere(const Transforms& localTransform, VertexData* vertexData, uint32_t kSubdivision, uint32_t textureNumber)
+{
+    CreateSphere(vertexData, kSubdivision);
+    const uint32_t kSumVertex = kSubdivision * kSubdivision * 6;
+
+    // 頂点バッファリソースを作成
+    Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource = CreateBufferResource(dxManager->GetDevice(), sizeof(VertexData) * kSumVertex);
+    VertexData* vData = nullptr;
+    HRESULT hr = vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vData));
+    if (FAILED(hr) || vData == nullptr) return;
+    std::memcpy(vData, vertexData, sizeof(VertexData) * kSumVertex);
+    vertexResource->Unmap(0, nullptr);
+
+    // 頂点バッファビューを作成する
+    D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
+    // リソースの先頭のアドレスから使う
+    vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
+    // 仕様するリソースのサイズは頂点３つ分のサイズ
+    vertexBufferView.SizeInBytes = sizeof(VertexData) * kSumVertex;
+    // １頂点あたりのサイズ
+    vertexBufferView.StrideInBytes = sizeof(VertexData);
+
+
+    // textureNumberに一致するテクスチャを探す
+    const textureData* tex = nullptr;
+    for (const auto& t : textures) {
+        if (t.number == textureNumber) {
+            tex = &t;
+            break;
+        }
+    }
+    // 見つからなかったらuncheckを使う
+    if (tex == nullptr) {
+        tex = &textures[0];
+    }
+
+    // マテリアルリソース（白色）を作成
+    Microsoft::WRL::ComPtr<ID3D12Resource> materialResource = CreateBufferResource(dxManager->GetDevice(), 256);
+    Vector4* materialData = nullptr;
+    materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
+    *materialData = { 1.0f, 0.0f, 1.0f, 1.0f };
+    materialResource->Unmap(0, nullptr);
+
+    // WVPリソース（単位行列）を作成
+    Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource = CreateBufferResource(dxManager->GetDevice(), 256);
+    TransformationMatrix* wvpData = nullptr;
+    hr = wvpResource->Map(0, nullptr, reinterpret_cast<void**>(&wvpData));
+    wvpData->World = MakeIdentity4x4();
+    wvpData->WVP = MakeIdentity4x4();
+    if (SUCCEEDED(hr) && wvpData) {
+        wvpData->World = MakeAffineMatrix(localTransform.scale, localTransform.rotate, localTransform.translate);
+        wvpData->WVP = Mul(wvpData->World, Mul(viewMatrix, projectionMatrix));
+        wvpResource->Unmap(0, nullptr);
+    }
+
+    // 描画処理
+    dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
+    // 形状を設定
+    dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    // CBVを設定する マテリアル用のCBufferの場所を設定
+    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+    // CBVを設定する wvp用のCBufferの場所を設定
+    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
+    // SRVのDescriptorTableの先頭を設定。２はrootParameters[2]。
+    dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
+    // CBVを設定する ディレクショナルライト用のCBufferの場所を設定
+    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
+
+    dxManager->GetCommandList()->DrawInstanced(kSumVertex, 1, 0, 0);
+
+}
 

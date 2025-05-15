@@ -598,8 +598,6 @@ void DirectXManager::EndFrame()
 		assert(false);
 	}
 	// GPUにコマンドリストの実行を行わせる
-	//ID3D12CommandList* commandLists[] = { commandList.Get() };
-	//commandQueue->ExecuteCommandLists(1, commandLists);
 	Microsoft::WRL::ComPtr<ID3D12CommandList> commandLists[] = { commandList.Get() };
 	commandQueue->ExecuteCommandLists(1, commandLists->GetAddressOf());
 	// GPUとOSに画面の交換を行うよう通知する
