@@ -94,6 +94,37 @@ void Game::Draw()
 
 }
 
+int Game::ProcessMessage()
+{
+    MSG msg = {};
+    if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+    {
+        if (msg.message == WM_QUIT) {
+            return 0;
+        }
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+    return 1;
+}
+
+void Game::BeginFrame()
+{
+    ImGui_ImplDX12_NewFrame();
+    ImGui_ImplWin32_NewFrame();
+    ImGui::NewFrame();
+
+    UpdateCameraAndLight();
+    dxManager.BeginFrame();
+}
+
+void Game::EndFrame()
+{
+    ImGui::Render();
+
+    dxManager.EndFrame();
+}
+
 
 
 void Game::UpdateCameraAndLight()

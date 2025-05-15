@@ -11,9 +11,12 @@ public:
     void Run();
 
 
-private:
-    WindowManager& windowManager;
-    DirectXManager& dxManager;
+    // モデルデータ
+    int LoadOBJ(const std::string& directoryPath, const std::string& filename);
+    void Drawobj(const Transforms& localTransform, uint32_t objectNumeber, uint32_t textureNumber, size_t matrixIndex);
+
+    // テクスチャデータ
+    int LoadTexture(const std::string& filePath);
 
     void Update();
     void UpdateCameraAndLight();
@@ -22,12 +25,14 @@ private:
     void Render();
     void Draw();
 
-    // モデルデータ
-    int LoadOBJ(const std::string& directoryPath, const std::string& filename);
-    void Drawobj(const Transforms& localTransform, uint32_t objectNumeber, uint32_t textureNumber, size_t matrixIndex);
+    int ProcessMessage();
+    void BeginFrame();
+    void EndFrame();
 
-    // テクスチャデータ
-    int LoadTexture(const std::string& filePath);
+    DirectXManager& dxManager;
+private:
+    WindowManager& windowManager;
+
 
 
     // モデル
