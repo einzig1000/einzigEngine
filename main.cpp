@@ -1,40 +1,33 @@
-#include "WindowManager.h"  // ウィンドウ管理
-#include "DirectXManager.h" // DirectX管理
 #include "Game.h"           // ゲームロジック
 #include "functions.h"      // 関数s
 
 
 
 
-int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
-	// COM の初期化
-	HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
-	assert(SUCCEEDED(hr));
-	// 例外ハンドラの設定
-	SetUnhandledExceptionFilter(ExportDump);
-
+int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
+{
 	// ウィンドウ、DrectX初期化
-	WindowManager windowManager(1280, 720, L"CG2");
-	DirectXManager dxManager(windowManager.GetHwnd(), 1280, 720);
-	Game game(windowManager, dxManager);
-
+	Game::Initialize(1280, 720, L"CG2");
 
 	// 変数宣言
-	int a = game.LoadTexture("resources/uvChecker.png");
-	int obj1 = game.LoadOBJ("resources", "axis.obj");
+	int a = Game::LoadTexture("resources/uvChecker.png");
+	int obj1 = Game::LoadOBJ("resources", "axis.obj");
 	Transforms transformOBJ1;
+	Transforms transformOBJ2;
+	transformOBJ1.translate = { 1.0f,1.0f,1.0f };
 
 
-	while (game.ProcessMessage())
+	while (Game::ProcessMessage())
 	{
 		// フレームの開始
-		game.BeginFrame();
+		Game::BeginFrame();
 
 
 
 		///
 		/// ↓更新処理ここから
 		///
+		transformOBJ1.rotate.x += 0.01f;
 
 		///
 		/// ↑更新処理ここまで
@@ -43,7 +36,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		/// ↓描画処理ここから
 		///
-		game.Drawobj(transformOBJ1, obj1, a, 0);
+		Game::Drawobj(transformOBJ1, obj1, a, 0);
+		Game::Drawobj(transformOBJ2, obj1, a, 1);
 
 		///
 		/// ↑描画処理ここまで
@@ -53,10 +47,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 		// フレームの終了
-		game.EndFrame();
+		Game::EndFrame();
 	}
 
-	//game.Run();
+	Game::Finalize();
 
 	return 0;
 }

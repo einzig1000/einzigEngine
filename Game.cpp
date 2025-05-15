@@ -4,23 +4,45 @@
 #include "externals/DirectXTex/DirectXTex.h"
 #include <cstdint>
 
+WindowManager* Game::windowManager = nullptr;
+DirectXManager* Game::dxManager = nullptr;
 
-Game::Game(WindowManager& windowManager, DirectXManager& dxManager) : windowManager(windowManager), dxManager(dxManager)
+std::vector<Object3D> Game::objects;
+uint32_t Game::objectSum = 0;
+
+std::vector<textureData> Game::textures;
+uint32_t Game::textureSum = 0;
+
+Microsoft::WRL::ComPtr<ID3D12Resource> Game::directionalLightResource;
+DirectionalLigft* Game::directionalLightData = nullptr;
+
+Transforms Game::cameraTransform;
+Matrix4x4 Game::viewMatrix;
+Matrix4x4 Game::projectionMatrix;
+
+
+Game::Game(int width, int height, const std::wstring& title)
 {
+    if (!windowManager) {
+        windowManager = new WindowManager(width, height, title);
+    }
+    if (!dxManager) {
+        dxManager = new DirectXManager(windowManager->GetHwnd(), width, height);
+    }
+
     /// imguiの初期化
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGui::StyleColorsDark();
-    ImGui_ImplWin32_Init(windowManager.GetHwnd());
+    ImGui_ImplWin32_Init(windowManager->GetHwnd());
     ImGui_ImplDX12_Init(
-        dxManager.GetDevice(),
-        dxManager.GetSwapChainDesc().BufferCount,
-        dxManager.GetRtvDesc().Format,
-        dxManager.GetsrvDescriptorHeap(),
-        dxManager.GetsrvDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
-        dxManager.GetsrvDescriptorHeap()->GetGPUDescriptorHandleForHeapStart()
+        dxManager->GetDevice(),
+        dxManager->GetSwapChainDesc().BufferCount,
+        dxManager->GetRtvDesc().Format,
+        dxManager->GetsrvDescriptorHeap(),
+        dxManager->GetsrvDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
+        dxManager->GetsrvDescriptorHeap()->GetGPUDescriptorHandleForHeapStart()
     );
-    item_current = 0;
 
     // カメラ系
     cameraTransform = { {1.0f,1.0f,1.0f}, {0.3f,0.0f,0.0f}, {0.0f,4.0f,-10.0f} };
@@ -30,22 +52,12 @@ Game::Game(WindowManager& windowManager, DirectXManager& dxManager) : windowMana
     textureSum = 0;
 
     // 光源の設定
-    directionalLightResource = CreateBufferResource(dxManager.GetDevice(), sizeof(DirectionalLigft));
+    directionalLightResource = CreateBufferResource(dxManager->GetDevice(), sizeof(DirectionalLigft));
     directionalLightData = nullptr;
     directionalLightResource->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData));
     directionalLightData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
     directionalLightData->direction = Normalize({ 0.0f, -1.0f, 0.0f });
     directionalLightData->intensity = 1.0f;
-
-    // リソース読み込み
-    uvCheckerTex = LoadTexture("resources/uvChecker.png");
-    monsterBallTex = LoadTexture("resources/monsterBall.png");
-    //gold1x1Tex = LoadTexture("resources/gold1x1.png");
-
-    obj1 = LoadOBJ("resources", "axis.obj");
-    obj2 = LoadOBJ("resources", "plane.obj");
-    obj3 = LoadOBJ("resources", "multiMaterial.obj");
-    obj4 = LoadOBJ("resources", "multiMesh.obj");
 }
 
 Game::~Game()
@@ -59,54 +71,63 @@ Game::~Game()
     CoUninitialize();
 }
 
-void Game::Run()
+void Game::Initialize(int width, int height, const std::wstring& title)
 {
-    MSG msg = {};
-    while (msg.message != WM_QUIT)
-    {
-        if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
-        {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        }
-        else
-        {
-            ImGuiUpdate();
-            Update();
-            UpdateCameraAndLight();
-            Render();
-        }
+    // COM の初期化
+    HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
+    assert(SUCCEEDED(hr));
+    // 例外ハンドラの設定
+    SetUnhandledExceptionFilter(ExportDump);
+
+    if (!windowManager) {
+        windowManager = new WindowManager(width, height, title);
     }
+    if (!dxManager) {
+        dxManager = new DirectXManager(windowManager->GetHwnd(), width, height);
+    }
+
+    /// imguiの初期化
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGui::StyleColorsDark();
+    ImGui_ImplWin32_Init(windowManager->GetHwnd());
+    ImGui_ImplDX12_Init(
+        dxManager->GetDevice(),
+        dxManager->GetSwapChainDesc().BufferCount,
+        dxManager->GetRtvDesc().Format,
+        dxManager->GetsrvDescriptorHeap(),
+        dxManager->GetsrvDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
+        dxManager->GetsrvDescriptorHeap()->GetGPUDescriptorHandleForHeapStart()
+    );
+
+    // カメラ系
+    cameraTransform = { {1.0f,1.0f,1.0f}, {0.3f,0.0f,0.0f}, {0.0f,4.0f,-10.0f} };
+
+    // 読み込んだオブジェクトの合計
+    objectSum = 0;
+    textureSum = 0;
+
+    // 光源の設定
+    directionalLightResource = CreateBufferResource(dxManager->GetDevice(), sizeof(DirectionalLigft));
+    directionalLightData = nullptr;
+    directionalLightResource->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData));
+    directionalLightData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
+    directionalLightData->direction = Normalize({ 0.0f, -1.0f, 0.0f });
+    directionalLightData->intensity = 1.0f;
 }
 
-void Game::Update()
-{
-
-
-
-}
-
-void Game::Draw()
-{
-    Drawobj(transformOBJ1, obj1, uvCheckerTex, 0);
-    Drawobj(transformOBJ2, obj1, monsterBallTex, 1);
-
-
-}
-
-int Game::ProcessMessage()
-{
+bool Game::ProcessMessage() {
     MSG msg = {};
-    if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
-    {
+    if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
         if (msg.message == WM_QUIT) {
-            return 0;
+            return false;
         }
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
-    return 1;
+    return true;
 }
+
 
 void Game::BeginFrame()
 {
@@ -115,20 +136,28 @@ void Game::BeginFrame()
     ImGui::NewFrame();
 
     UpdateCameraAndLight();
-    dxManager.BeginFrame();
+    dxManager->BeginFrame();
 }
 
 void Game::EndFrame()
 {
     ImGui::Render();
 
-    dxManager.EndFrame();
+    dxManager->EndFrame();
+}
+
+void Game::Finalize() {
+    delete dxManager;
+    dxManager = nullptr;
+    delete windowManager;
+    windowManager = nullptr;
 }
 
 
 
 void Game::UpdateCameraAndLight()
 {
+    
     // ライトの向きを正規化
     directionalLightData->direction = Normalize(directionalLightData->direction);
 
@@ -139,90 +168,6 @@ void Game::UpdateCameraAndLight()
     //projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(windowManager.Getwidth()) / float(windowManager.Getheight()), 0.1f, 100.0f);// int width, int heightをもってくる
 }
 
-void Game::Render()
-{
-    dxManager.BeginFrame();
-
-    Draw();
-
-    dxManager.EndFrame();
-}
-
-void Game::ImGuiUpdate()
-{
-    ImGui_ImplDX12_NewFrame();
-    ImGui_ImplWin32_NewFrame();
-    ImGui::NewFrame();
-    ImGui::Begin("CG2_02");
-
-    if (ImGui::CollapsingHeader("camera"))
-    {
-        ImGui::DragFloat3("CameraScale", &cameraTransform.scale.x, 0.01f);
-        ImGui::DragFloat3("CameraRotate", &cameraTransform.rotate.x, 0.01f);
-        ImGui::DragFloat3("CameraTranslate", &cameraTransform.translate.x, 0.01f);
-        ImGui::SliderAngle("CameraRotateX", &cameraTransform.rotate.x);
-        ImGui::SliderAngle("CameraRotateY", &cameraTransform.rotate.y);
-        ImGui::SliderAngle("CameraRotateZ", &cameraTransform.rotate.z);
-    }
-
-    const char* items[] = { "axis.obj", "plane.obj" };
-    if (ImGui::CollapsingHeader("object", ImGuiTreeNodeFlags_DefaultOpen))
-    {
-        ImGui::Combo("Combo Box", &item_current, items, IM_ARRAYSIZE(items));
-        ImGui::ColorEdit3("ObjectColor", (float*)&objects[item_current].materialData->color.x);
-        ImGui::DragFloat3("ObjectScale", &objects[item_current].transform.scale.x, 0.01f);
-        ImGui::DragFloat3("ObjectRotate", &objects[item_current].transform.rotate.x, 0.01f);
-        ImGui::DragFloat3("ObjectTranslate", &objects[item_current].transform.translate.x, 0.01f);
-        ImGui::SliderAngle("ObjectRotateX", &objects[item_current].transform.rotate.x);
-        ImGui::SliderAngle("ObjectRotateY", &objects[item_current].transform.rotate.y);
-        ImGui::SliderAngle("ObjectRotateZ", &objects[item_current].transform.rotate.z);
-        ImGui::Checkbox("X", &autoRotation[0]);
-        ImGui::SameLine(0.0f, 54.0f);
-        ImGui::Checkbox("Y", &autoRotation[1]);
-        ImGui::SameLine(0.0f, 54.0f);
-        ImGui::Checkbox("Z", &autoRotation[2]);
-        ImGui::SameLine(0.0f, 54.0f);
-        ImGui::Text("AutoRotation");
-
-
-        ImGui::DragFloat3("transformOBJ1Scale", &transformOBJ1.scale.x, 0.01f);
-        ImGui::DragFloat3("transformOBJ1Rotate", &transformOBJ1.rotate.x, 0.01f);
-        ImGui::DragFloat3("transformOBJ1Translate", &transformOBJ1.translate.x, 0.01f);
-
-        ImGui::DragFloat3("transformOBJ2Scale", &transformOBJ2.scale.x, 0.02f);
-        ImGui::DragFloat3("transformOBJ2Rotate", &transformOBJ2.rotate.x, 0.02f);
-        ImGui::DragFloat3("transformOBJ2Translate", &transformOBJ2.translate.x, 0.02f);
-    }
-    if (autoRotation[0])objects[item_current].transform.rotate.x += 0.01f;
-    if (autoRotation[1])objects[item_current].transform.rotate.y += 0.01f;
-    if (autoRotation[2])objects[item_current].transform.rotate.z += 0.01f;
-
-    //if (ImGui::CollapsingHeader("sprite"))
-    //{
-    //    ImGui::ColorEdit3("SpriteColor", (float*)&materialDataSprite->color.x);
-    //    ImGui::DragFloat2("SpriteScale", &transformSprite.scale.x, 0.01f);
-    //    ImGui::DragFloat2("SpriteRotate", &transformSprite.rotate.x, 0.01f);
-    //    ImGui::DragFloat2("SpriteTranslate", &transformSprite.translate.x, 1.0f);
-    //}
-
-    //if (ImGui::CollapsingHeader("uv"))
-    //{
-    //    ImGui::DragFloat2("uvScale", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
-    //    ImGui::SliderAngle("uvRotate", &uvTransformSprite.rotate.z);
-    //    ImGui::DragFloat2("uvTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
-    //}
-
-    if (ImGui::CollapsingHeader("light"))
-    {
-        ImGui::ColorEdit3("LightColor", (float*)&directionalLightData->color.x);
-        ImGui::DragFloat3("LightDirection", &directionalLightData->direction.x, 0.01f, -1.0f, 1.0f);
-        ImGui::DragFloat("LightIntensity", &directionalLightData->intensity, 0.01f);
-    }
-
-    ImGui::End();
-    ImGui::Render();
-
-}
 
 void Game::Drawobj(const Transforms& localTransform, uint32_t objectNumeber, uint32_t textureNumber, size_t matrixIndex)
 {
@@ -235,7 +180,7 @@ void Game::Drawobj(const Transforms& localTransform, uint32_t objectNumeber, uin
         obj.transformationMatrixResource.resize(matrixIndex + 1);
         obj.transformationMatrixData.resize(matrixIndex + 1);
         for (size_t i = oldSize; i <= matrixIndex; ++i) {
-            obj.transformationMatrixResource[i] = CreateBufferResource(dxManager.GetDevice(), sizeof(TransformationMatrix));
+            obj.transformationMatrixResource[i] = CreateBufferResource(dxManager->GetDevice(), sizeof(TransformationMatrix));
             obj.transformationMatrixData[i] = nullptr;
             obj.transformationMatrixResource[i]->Map(0, nullptr, reinterpret_cast<void**>(&obj.transformationMatrixData[i]));
             obj.transformationMatrixData[i]->World = MakeIdentity4x4();
@@ -245,7 +190,7 @@ void Game::Drawobj(const Transforms& localTransform, uint32_t objectNumeber, uin
     }
 
     // オブジェクトのWorldViewProjectionMatrixを作る
-    Matrix4x4 objectMatrix = MakeAffineMatrix(objects[objectNumeber].transform.scale, objects[objectNumeber].transform.rotate, objects[objectNumeber].transform.translate);
+    Matrix4x4 objectMatrix = MakeAffineMatrix(obj.transform.scale, obj.transform.rotate, obj.transform.translate);
     Matrix4x4 drawMatrix = MakeAffineMatrix(localTransform.scale, localTransform.rotate, localTransform.translate);
 
     obj.transformationMatrixResource[matrixIndex]->Map(0, nullptr, reinterpret_cast<void**>(&obj.transformationMatrixData[matrixIndex]));
@@ -261,30 +206,29 @@ void Game::Drawobj(const Transforms& localTransform, uint32_t objectNumeber, uin
             break;
         }
     }
-    //assert(tex && "指定されたtextureNumberのテクスチャが見つかりません");
-    if (tex == nullptr)
-    {
+    // 見つからなかったらuncheckを使う
+    if (tex == nullptr) {
         tex = &textures[0];
     }
 
     // 描画処理
-    dxManager.GetCommandList()->IASetVertexBuffers(0, 1, &objects[objectNumeber].vertexBufferView);
+    dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &obj.vertexBufferView);
     // 形状を設定
-    dxManager.GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     // CBVを設定する マテリアル用のCBufferの場所を設定
-    dxManager.GetCommandList()->SetGraphicsRootConstantBufferView(0, objects[objectNumeber].materialResource->GetGPUVirtualAddress());
+    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, obj.materialResource->GetGPUVirtualAddress());
     // CBVを設定する wvp用のCBufferの場所を設定
-    dxManager.GetCommandList()->SetGraphicsRootConstantBufferView(1, objects[objectNumeber].transformationMatrixResource[matrixIndex]->GetGPUVirtualAddress());
-    // CBVを設定する ディレクショナルライト用のCBufferの場所を設定
-    dxManager.GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
-
-
-
+    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, obj.transformationMatrixResource[matrixIndex]->GetGPUVirtualAddress());
     // SRVのDescriptorTableの先頭を設定。２はrootParameters[2]。
-    dxManager.GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
+    dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
+    // CBVを設定する ディレクショナルライト用のCBufferの場所を設定
+    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
+
+
+
 
     // 描画
-    dxManager.GetCommandList()->DrawInstanced(UINT(objects[objectNumeber].modelData.vertices.size()), 1, 0, 0);
+    dxManager->GetCommandList()->DrawInstanced(UINT(obj.modelData.vertices.size()), 1, 0, 0);
 }
 
 int Game::LoadTexture(const std::string& filePath)
@@ -302,7 +246,7 @@ int Game::LoadTexture(const std::string& filePath)
     DirectX::ScratchImage mipImageLocal;
     hr = DirectX::GenerateMipMaps(image.GetImages(), image.GetImageCount(), image.GetMetadata(), DirectX::TEX_FILTER_SRGB, 0, mipImageLocal);
     assert(SUCCEEDED(hr));
-    
+
     text.metadata = mipImageLocal.GetMetadata();
     text.number = textureSum;
     text.mipImage = std::move(mipImageLocal);
@@ -310,13 +254,13 @@ int Game::LoadTexture(const std::string& filePath)
 
 
     // テクスチャリソースとSRVの作成
-    text.textureResource = CreateTextureResource(dxManager.GetDevice(), text.metadata);
-    Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource = UploadTextureData(text.textureResource.Get(), text.mipImage, dxManager.GetDevice(), dxManager.GetCommandList());
+    text.textureResource = CreateTextureResource(dxManager->GetDevice(), text.metadata);
+    Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource = UploadTextureData(text.textureResource.Get(), text.mipImage, dxManager->GetDevice(), dxManager->GetCommandList());
 
 
-    const uint32_t descriptorSizeSRV = dxManager.GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-    D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = GetCPUDescriptorHandle(dxManager.GetsrvDescriptorHeap(), descriptorSizeSRV, textureSum);
-    text.textureSrvHandleGPU = GetGPUDescriptorHandle(dxManager.GetsrvDescriptorHeap(), descriptorSizeSRV, textureSum);
+    const uint32_t descriptorSizeSRV = dxManager->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = GetCPUDescriptorHandle(dxManager->GetsrvDescriptorHeap(), descriptorSizeSRV, textureSum);
+    text.textureSrvHandleGPU = GetGPUDescriptorHandle(dxManager->GetsrvDescriptorHeap(), descriptorSizeSRV, textureSum);
 
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
     srvDesc.Format = text.metadata.format;
@@ -324,7 +268,7 @@ int Game::LoadTexture(const std::string& filePath)
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
     srvDesc.Texture2D.MipLevels = UINT(text.metadata.mipLevels);
 
-    dxManager.GetDevice()->CreateShaderResourceView(text.textureResource.Get(), &srvDesc, textureSrvHandleCPU);
+    dxManager->GetDevice()->CreateShaderResourceView(text.textureResource.Get(), &srvDesc, textureSrvHandleCPU);
 
     textures.push_back(std::move(text));
 
@@ -340,7 +284,7 @@ int Game::LoadOBJ(const std::string& directoryPath, const std::string& filename)
     obj.modelData = LoadOBJFile(directoryPath, filename);
 
     // 頂点バッファ
-    obj.vertexResource = CreateBufferResource(dxManager.GetDevice(), sizeof(VertexData) * obj.modelData.vertices.size());
+    obj.vertexResource = CreateBufferResource(dxManager->GetDevice(), sizeof(VertexData) * obj.modelData.vertices.size());
     obj.vertexBufferView.BufferLocation = obj.vertexResource->GetGPUVirtualAddress();
     obj.vertexBufferView.SizeInBytes = UINT(sizeof(VertexData) * obj.modelData.vertices.size());
     obj.vertexBufferView.StrideInBytes = sizeof(VertexData);
@@ -349,7 +293,7 @@ int Game::LoadOBJ(const std::string& directoryPath, const std::string& filename)
     std::memcpy(vertexData, obj.modelData.vertices.data(), sizeof(VertexData) * obj.modelData.vertices.size());
 
     // マテリアルデータ
-    obj.materialResource = CreateBufferResource(dxManager.GetDevice(), sizeof(Material));
+    obj.materialResource = CreateBufferResource(dxManager->GetDevice(), sizeof(Material));
     obj.materialData = nullptr;
     obj.materialResource->Map(0, nullptr, reinterpret_cast<void**>(&obj.materialData));
     obj.materialData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -362,7 +306,7 @@ int Game::LoadOBJ(const std::string& directoryPath, const std::string& filename)
     // ワールド・ビュー・プロジェクション行列
     obj.transformationMatrixResource.resize(1);
     obj.transformationMatrixData.resize(1);
-    obj.transformationMatrixResource[0] = CreateBufferResource(dxManager.GetDevice(), sizeof(TransformationMatrix));
+    obj.transformationMatrixResource[0] = CreateBufferResource(dxManager->GetDevice(), sizeof(TransformationMatrix));
     obj.transformationMatrixData[0] = nullptr;
     obj.transformationMatrixResource[0]->Map(0, nullptr, reinterpret_cast<void**>(&obj.transformationMatrixData[0]));
     obj.transformationMatrixData[0]->World = MakeIdentity4x4();
@@ -373,8 +317,10 @@ int Game::LoadOBJ(const std::string& directoryPath, const std::string& filename)
     obj.number = objectSum;
     objectSum++;
 
+    // ボックスをpush_back
     objects.push_back(obj);
 
+    // 識別ナンバーをreturn
     return obj.number;
 }
 

@@ -1,74 +1,54 @@
 #pragma once
-#include "WindowManager.h"  // ウィンドウ管理
-#include "DirectXManager.h" // DirectX管理
+#include "WindowManager.h"
+#include "DirectXManager.h"
 #include "definition.h"
 #include <array>
+#include <vector>
+#include <string>
+#include <wrl/client.h>
 
 class Game {
 public:
-    Game(WindowManager& windowManager, DirectXManager& dxManager);
+    Game(int width, int height, const std::wstring& title);
     ~Game();
-    void Run();
 
+    // 初期化
+    static void Initialize(int width, int height, const std::wstring& title);
 
-    // モデルデータ
-    int LoadOBJ(const std::string& directoryPath, const std::string& filename);
-    void Drawobj(const Transforms& localTransform, uint32_t objectNumeber, uint32_t textureNumber, size_t matrixIndex);
+    // メインループ用
+    static bool ProcessMessage();
+    static void BeginFrame();
+    static void EndFrame();
 
-    // テクスチャデータ
-    int LoadTexture(const std::string& filePath);
+    // 解放
+    static void Finalize();
 
-    void Update();
-    void UpdateCameraAndLight();
-    void ImGuiUpdate();
+    // LoadResource
+    static int LoadOBJ(const std::string& directoryPath, const std::string& filename);
+    static int LoadTexture(const std::string& filePath);
 
-    void Render();
-    void Draw();
+    // 描画
+    static void Drawobj(const Transforms& localTransform, uint32_t objectNumber, uint32_t textureNumber, size_t matrixIndex);
 
-    int ProcessMessage();
-    void BeginFrame();
-    void EndFrame();
-
-    DirectXManager& dxManager;
 private:
-    WindowManager& windowManager;
+    static void UpdateCameraAndLight();
 
+    // 静的メンバ（ここでは宣言のみ。初期化はGame.cppで行う）
+    static WindowManager* windowManager;
+    static DirectXManager* dxManager;
 
+    static std::vector<Object3D> objects;
+    static uint32_t objectSum;
 
-    // モデル
-    std::vector<Object3D> objects;
-    uint32_t objectSum;// 読み込んだオブジェクトの合計
+    static std::vector<textureData> textures;
+    static uint32_t textureSum;
 
-    // テクスチャ
-    std::vector<textureData> textures;
-    uint32_t textureSum;// 読み込んだテクスチャの合計
+    static Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource;
+    static DirectionalLigft* directionalLightData;
 
-    // 光源
-    Microsoft::WRL::ComPtr<ID3D12Resource>  directionalLightResource;
-    DirectionalLigft* directionalLightData;
+    static Transforms cameraTransform;
+    static Matrix4x4 viewMatrix;
+    static Matrix4x4 projectionMatrix;
 
-    // カメラ
-    Transforms cameraTransform;
-    Matrix4x4 viewMatrix;
-    Matrix4x4 projectionMatrix;
-
-    // リソース読み込み
-    int uvCheckerTex;
-    int monsterBallTex;
-    int gold1x1Tex;
-
-    int obj1;
-    int obj2;
-    int obj3;
-    int obj4;
-
-
-    Transforms transformOBJ1;
-    Transforms transformOBJ2;
-
-
-
-    // ImGui用変数
-    int item_current;
-    bool autoRotation[3] = { 0,0,0 };
+    static int uvCheckerTex;
 };

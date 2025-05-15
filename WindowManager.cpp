@@ -24,7 +24,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 }
 
 
-WindowManager::WindowManager(int width, int height, const std::wstring& title) {
+WindowManager::WindowManager(int width, int height, const std::wstring& title)
+    : width(width), height(height)
+{
     RegisterWindowClass();
     CreateMainWindow(width, height, title);
 }
@@ -53,9 +55,6 @@ void WindowManager::CreateMainWindow(int width, int height, const std::wstring& 
     RECT wrc = { 0,0,width,height };
     // クライアント領域を元に実際のサイズのwrcを変更してもらう
     AdjustWindowRect(&wrc, WS_OVERLAPPEDWINDOW, false);
-    // 画面サイズの保存
-    width_ = width;
-    height_ = height;
 
     // ウィンドウの生成
     hwnd = CreateWindow(

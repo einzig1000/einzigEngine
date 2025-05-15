@@ -15,15 +15,15 @@ public:
     ~WindowManager();
 
     HWND GetHwnd() const { return hwnd; }
-    uint32_t Getwidth() const { return width_; }
-    uint32_t Getheight() const { return height_; }
+    uint32_t Getwidth() const { return width; }
+    uint32_t Getheight() const { return height; }
 
 private:
     HWND hwnd;
     WNDCLASS wc;
 
-    uint32_t width_;
-    uint32_t height_;
+    uint32_t width;
+    uint32_t height;
 
     void RegisterWindowClass();
     void CreateMainWindow(int width, int height, const std::wstring& title);
