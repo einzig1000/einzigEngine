@@ -5,6 +5,7 @@
 #include <d3d12.h>
 #pragma comment(lib, "d3d12.lib")
 #include <wrl.h>       // Microsoft::WRL::ComPtr
+#include "externals/DirectXTex/DirectXTex.h"
 
 struct Vector2
 {
@@ -111,8 +112,6 @@ struct Object3D
     Transforms transform;
 
     // ワールド・ビュー・プロジェクション行列
-    //Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResource;
-    //TransformationMatrix* transformationMatrixData;
     std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> transformationMatrixResource;
     std::vector<TransformationMatrix*> transformationMatrixData;
 
@@ -122,4 +121,12 @@ struct Object3D
 
     // 識別ナンバー
     uint32_t number;
+};
+
+struct textureData {
+    DirectX::TexMetadata metadata;
+    DirectX::ScratchImage mipImage;
+    uint32_t number;
+    Microsoft::WRL::ComPtr<ID3D12Resource> textureResource;
+    D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU;
 };

@@ -24,9 +24,10 @@ Game::Game(WindowManager& windowManager, DirectXManager& dxManager) : windowMana
 
     // カメラ系
     cameraTransform = { {1.0f,1.0f,1.0f}, {0.3f,0.0f,0.0f}, {0.0f,4.0f,-10.0f} };
-    
+
     // 読み込んだオブジェクトの合計
     objectSum = 0;
+    textureSum = 0;
 
     // 光源の設定
     directionalLightResource = CreateBufferResource(dxManager.GetDevice(), sizeof(DirectionalLigft));
@@ -35,6 +36,16 @@ Game::Game(WindowManager& windowManager, DirectXManager& dxManager) : windowMana
     directionalLightData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
     directionalLightData->direction = Normalize({ 0.0f, -1.0f, 0.0f });
     directionalLightData->intensity = 1.0f;
+
+    // リソース読み込み
+    uvCheckerTex = LoadTexture("resources/uvChecker.png");
+    monsterBallTex = LoadTexture("resources/monsterBall.png");
+    gold1x1Tex = LoadTexture("resources/gold1x1.png");
+
+    obj1 = LoadOBJ("resources", "axis.obj");
+    obj2 = LoadOBJ("resources", "plane.obj");
+    obj3 = LoadOBJ("resources", "multiMaterial.obj");
+    obj4 = LoadOBJ("resources", "multiMesh.obj");
 }
 
 Game::~Game()
@@ -60,7 +71,7 @@ void Game::Run()
         }
         else
         {
-            ImGuiUpdata();
+            ImGuiUpdate();
             Update();
             Render();
         }
@@ -78,27 +89,25 @@ void Game::Update()
     Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
     viewMatrix = Inverse(cameraMatrix);
     projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(1280) / float(720), 0.1f, 100.0f);// int width, int heightをもってくる
-    
-    
-    
-    
+
+
 
 }
 
-void Game::Render() 
+void Game::Render()
 {
     dxManager.BeginFrame();
 
-    Drawobj(transformOBJ1, obj1, 0);
-    Drawobj(transformOBJ2, obj1, 1);
+    Drawobj(transformOBJ1, obj1, uvCheckerTex, 0);
+    Drawobj(transformOBJ2, obj1, gold1x1Tex, 1);
 
 
 
-    // 実際のcommandListのImGuiの描画コマンドを積む
+
     dxManager.EndFrame();
 }
 
-void Game::ImGuiUpdata()
+void Game::ImGuiUpdate()
 {
     ImGui_ImplDX12_NewFrame();
     ImGui_ImplWin32_NewFrame();
@@ -174,21 +183,13 @@ void Game::ImGuiUpdata()
 
 }
 
-void Game::Drawobj(const Transforms& localTransform, uint32_t objectNumeber, size_t matrixIndex)
+
+void Game::Drawobj(const Transforms& localTransform, uint32_t objectNumeber, uint32_t textureNumber, size_t matrixIndex)
 {
-    //for (int i = 0; i < objectSum; ++i)
-    //{
-    //    if (i == objectNumeber)
-    //    {
-    //        配列[i]++;
-    //    }
-    //}
-    
     Object3D& obj = objects[objectNumeber];
-    
-    //uint32_t matrixIndex = 0;
 
     // objectNumeberの等しいオブジェクトの描画が２回目以降になったらransformationMatrixを拡張する（objectNumeberが等しい＝objects[].transformを共有しているから各々独立させて動かすことが出来ないから）
+    // じゃあobjects[].transformいらなくない？　→　objects[].transformはobjectNumeberが等しいモデル全てに影響を及ぼすtransformとしてつかえるんじゃよそれはそれで使い道がありそうじゃろう
     if (matrixIndex >= obj.transformationMatrixResource.size()) {
         size_t oldSize = obj.transformationMatrixResource.size();
         obj.transformationMatrixResource.resize(matrixIndex + 1);
@@ -212,10 +213,19 @@ void Game::Drawobj(const Transforms& localTransform, uint32_t objectNumeber, siz
     obj.transformationMatrixData[matrixIndex]->WVP = Mul(obj.transformationMatrixData[matrixIndex]->World, Mul(viewMatrix, projectionMatrix));
     obj.transformationMatrixResource[matrixIndex]->Unmap(0, nullptr);
 
-
-    //objects[objectNumeber].transformationMatrixData->World = Mul(objectMatrix, drawMatrix);
-    // オブジェクトのWVPMatrixを作る
-    //objects[objectNumeber].transformationMatrixData->WVP = Mul(objects[objectNumeber].transformationMatrixData->World, Mul(viewMatrix, projectionMatrix));
+    // textureNumberに一致するテクスチャを探す
+    const textureData* tex = nullptr;
+    for (const auto& t : textures) {
+        if (t.number == textureNumber) {
+            tex = &t;
+            break;
+        }
+    }
+    //assert(tex && "指定されたtextureNumberのテクスチャが見つかりません");
+    if (tex == nullptr)
+    {
+        tex = &textures[0];
+    }
 
     // 描画処理
     dxManager.GetCommandList()->IASetVertexBuffers(0, 1, &objects[objectNumeber].vertexBufferView);
@@ -228,11 +238,57 @@ void Game::Drawobj(const Transforms& localTransform, uint32_t objectNumeber, siz
     // CBVを設定する ディレクショナルライト用のCBufferの場所を設定
     dxManager.GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 
+
+
     // SRVのDescriptorTableの先頭を設定。２はrootParameters[2]。
-    dxManager.GetCommandList()->SetGraphicsRootDescriptorTable(2, objects[objectNumeber].textureSrvHandleGPU);
+    dxManager.GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
 
     // 描画
     dxManager.GetCommandList()->DrawInstanced(UINT(objects[objectNumeber].modelData.vertices.size()), 1, 0, 0);
+}
+
+int Game::LoadTexture(const std::string& filePath)
+{
+    // ボックスを作成
+    textureData text;
+
+    // テクスチャファイルを読んでプログラムを扱えるようにする
+    DirectX::ScratchImage image{};
+    std::wstring filePathw = ConvertString(filePath);
+    HRESULT hr = DirectX::LoadFromWICFile(filePathw.c_str(), DirectX::WIC_FLAGS_FORCE_SRGB, nullptr, image);
+    assert(SUCCEEDED(hr));
+
+    // ミップマップの作成
+    DirectX::ScratchImage mipImageLocal;
+    hr = DirectX::GenerateMipMaps(image.GetImages(), image.GetImageCount(), image.GetMetadata(), DirectX::TEX_FILTER_SRGB, 0, mipImageLocal);
+    assert(SUCCEEDED(hr));
+    
+    text.metadata = mipImageLocal.GetMetadata();
+    text.number = textureSum;
+    text.mipImage = std::move(mipImageLocal);
+    textureSum++;
+
+
+    // テクスチャリソースとSRVの作成
+    text.textureResource = CreateTextureResource(dxManager.GetDevice(), text.metadata);
+    Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource = UploadTextureData(text.textureResource.Get(), text.mipImage, dxManager.GetDevice(), dxManager.GetCommandList());
+
+
+    const uint32_t descriptorSizeSRV = dxManager.GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = GetCPUDescriptorHandle(dxManager.GetsrvDescriptorHeap(), descriptorSizeSRV, textureSum);
+    text.textureSrvHandleGPU = GetGPUDescriptorHandle(dxManager.GetsrvDescriptorHeap(), descriptorSizeSRV, textureSum);
+
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+    srvDesc.Format = text.metadata.format;
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Texture2D.MipLevels = UINT(text.metadata.mipLevels);
+
+    dxManager.GetDevice()->CreateShaderResourceView(text.textureResource.Get(), &srvDesc, textureSrvHandleCPU);
+
+    textures.push_back(std::move(text));
+
+    return text.number;
 }
 
 int Game::LoadOBJ(const std::string& directoryPath, const std::string& filename)
@@ -241,7 +297,6 @@ int Game::LoadOBJ(const std::string& directoryPath, const std::string& filename)
     Object3D obj;
 
     // モデルデータ
-    //obj.modelData = LoadOBJFile("resources", "axis.obj");
     obj.modelData = LoadOBJFile(directoryPath, filename);
 
     // 頂点バッファ
@@ -274,29 +329,6 @@ int Game::LoadOBJ(const std::string& directoryPath, const std::string& filename)
     obj.transformationMatrixData[0]->WVP = MakeIdentity4x4();
     obj.transformationMatrixResource[0]->Unmap(0, nullptr);
 
-
-    // テクスチャ
-    DirectX::ScratchImage mipImage = LoadTexture("resources/monsterBall.png");
-    const DirectX::TexMetadata& metadata = mipImage.GetMetadata();
-    obj.textureResource = CreateTextureResource(dxManager.GetDevice(), metadata);
-    Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource = UploadTextureData(obj.textureResource.Get(), mipImage, dxManager.GetDevice(), dxManager.GetCommandList());
-
-
-    // metaDataを基にSRVの作成
-    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-    srvDesc.Format = metadata.format;
-    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;//2Dテクスチャ
-    srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
-
-    // SRVを作成するDescriptorHeapの場所を決める 先頭はImGuiが使ってるのでその次を使う
-    const uint32_t descriptorSizeSRV = dxManager.GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-    D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = GetCPUDescriptorHandle(dxManager.GetsrvDescriptorHeap(), descriptorSizeSRV, 1);
-    obj.textureSrvHandleGPU = GetGPUDescriptorHandle(dxManager.GetsrvDescriptorHeap(), descriptorSizeSRV, 1);
-
-    // SRVの作成
-    dxManager.GetDevice()->CreateShaderResourceView(obj.textureResource.Get(), &srvDesc, textureSrvHandleCPU);
-
     // 識別ナンバーの設定
     obj.number = objectSum;
     objectSum++;
@@ -305,3 +337,5 @@ int Game::LoadOBJ(const std::string& directoryPath, const std::string& filename)
 
     return obj.number;
 }
+
+

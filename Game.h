@@ -10,8 +10,6 @@ public:
     ~Game();
     void Run();
 
-    // objファイルで読み込むタイプのものを読み込む関数
-    int LoadOBJ(const std::string& directoryPath, const std::string& filename);
 
 private:
     WindowManager& windowManager;
@@ -19,30 +17,42 @@ private:
 
     void Update();
     void Render();
-    void ImGuiUpdata();
+    void ImGuiUpdate();
 
-    void Drawobj(const Transforms& localTransform, uint32_t objectNumeber, size_t matrixIndex);
-    //void Drawobj(const Transforms& localTransform, uint32_t objectNumeber);
+    // モデルデータ
+    int LoadOBJ(const std::string& directoryPath, const std::string& filename);
+    void Drawobj(const Transforms& localTransform, uint32_t objectNumeber, uint32_t textureNumber, size_t matrixIndex);
+
+    // テクスチャデータ
+    int LoadTexture(const std::string& filePath);
 
 
-    // objファイルで読み込むタイプのもの
+    // モデル
     std::vector<Object3D> objects;
     uint32_t objectSum;// 読み込んだオブジェクトの合計
+
+    // テクスチャ
+    std::vector<textureData> textures;
+    uint32_t textureSum;// 読み込んだテクスチャの合計
 
     // 光源
     Microsoft::WRL::ComPtr<ID3D12Resource>  directionalLightResource;
     DirectionalLigft* directionalLightData;
 
-    // カメラ用マトリックス
+    // カメラ
     Transforms cameraTransform;
     Matrix4x4 viewMatrix;
     Matrix4x4 projectionMatrix;
 
     // リソース読み込み
-    int obj1 = LoadOBJ("resources", "axis.obj");
-    int obj2 = LoadOBJ("resources", "plane.obj");
-    int obj3 = LoadOBJ("resources", "multiMaterial.obj");
-    int obj4 = LoadOBJ("resources", "multiMesh.obj");
+    int uvCheckerTex;
+    int monsterBallTex;
+    int gold1x1Tex;
+
+    int obj1;
+    int obj2;
+    int obj3;
+    int obj4;
 
 
     Transforms transformOBJ1;

@@ -1,14 +1,23 @@
 #pragma once
-#include <Windows.h>
+
 #include "definition.h"
-//#include <windows.h>
-#ifndef M_PI  
-#define M_PI 3.14159265358979323846  
-#endif
-#include <dxcapi.h>
-#pragma comment (lib, "dxcompiler")
+
+// DirectXTexやD3D12拡張
 #include "externals/DirectXTex/d3dx12.h"
-#include "externals/DirectXTex/DirectXTex.h"
+//#include "externals/DirectXTex/DirectXTex.h"
+
+// Windows API
+#include <Windows.h>
+
+// DXC API
+#include <dxcapi.h>
+#pragma comment(lib, "dxcompiler")
+
+// マクロ定義
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 
 #pragma region Vector3
 
@@ -334,7 +343,7 @@ ID3D12DescriptorHeap* CreateDescriptorHeap(ID3D12Device* device, D3D12_DESCRIPTO
 /// </summary>
 /// <param name="filePath">テクスチャファイルのパス</param>
 /// <returns>読み込まれたテクスチャデータ</returns>
-DirectX::ScratchImage LoadTexture(const std::string& filePath);
+///DirectX::ScratchImage LoadTexture(const std::string& filePath);
 
 /// <summary>
 /// テクスチャのメタデータを基に DirectX 12 のテクスチャリソースを作成する関数

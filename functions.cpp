@@ -1,17 +1,40 @@
-#include <cmath>
-#include <cassert>
-#include "definition.h"
-#include "functions.h"
-#include <DbgHelp.h>
-#pragma comment (lib, "Dbghelp.lib")
-#include <strsafe.h>
+//#include "definition.h"
+//#include "functions.h"
+//#include <cmath>
+//#include <cassert>
+//#include <DbgHelp.h>
+//#pragma comment (lib, "Dbghelp.lib")
+//#include <strsafe.h>
+//#include <iostream>
+//#include <fstream>
+//#include <sstream>
+//#include <vector>
+//#include <string>
+//#include <format>
 
+
+#include "functions.h"
+#include "definition.h"
+
+#include <cassert>
+#include <cmath>
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <vector>
 #include <string>
 #include <format>
+
+//#include "externals/DirectXTex/DirectXTex.h"
+#include <d3d12.h>
+#include <wrl.h>
+
+#include <windows.h>
+#include <DbgHelp.h>
+#include <strsafe.h>
+
+#pragma comment(lib, "d3d12.lib")
+#pragma comment(lib, "Dbghelp.lib")
 
 
 
@@ -911,22 +934,22 @@ IDxcBlob* CompileShader(
 }
 
 // 1,Textureデータを読む
-DirectX::ScratchImage LoadTexture(const std::string& filePath)
-{
-    // テクスチャファイルを読んでプログラムを扱えるようにする
-    DirectX::ScratchImage image{};
-    std::wstring filePathw = ConvertString(filePath);
-    HRESULT hr = DirectX::LoadFromWICFile(filePathw.c_str(), DirectX::WIC_FLAGS_FORCE_SRGB, nullptr, image);
-    assert(SUCCEEDED(hr));
-
-    // ミップマップの作成
-    DirectX::ScratchImage mipImages{};
-    hr = DirectX::GenerateMipMaps(image.GetImages(), image.GetImageCount(), image.GetMetadata(), DirectX::TEX_FILTER_SRGB, 0, mipImages);
-    assert(SUCCEEDED(hr));
-
-    // ミップマップ付きのデータを返す
-    return mipImages;
-}
+//DirectX::ScratchImage LoadTexture(const std::string& filePath)
+//{
+//    // テクスチャファイルを読んでプログラムを扱えるようにする
+//    DirectX::ScratchImage image{};
+//    std::wstring filePathw = ConvertString(filePath);
+//    HRESULT hr = DirectX::LoadFromWICFile(filePathw.c_str(), DirectX::WIC_FLAGS_FORCE_SRGB, nullptr, image);
+//    assert(SUCCEEDED(hr));
+//
+//    // ミップマップの作成
+//    DirectX::ScratchImage mipImages{};
+//    hr = DirectX::GenerateMipMaps(image.GetImages(), image.GetImageCount(), image.GetMetadata(), DirectX::TEX_FILTER_SRGB, 0, mipImages);
+//    assert(SUCCEEDED(hr));
+//
+//    // ミップマップ付きのデータを返す
+//    return mipImages;
+//}
 
 // 2,
 ID3D12Resource* CreateTextureResource(ID3D12Device* device, const DirectX::TexMetadata& metadata)
