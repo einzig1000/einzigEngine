@@ -25,7 +25,7 @@ public:
     static int LoadTexture(const std::string& filePath);
 
     // 描画
-    static void Drawobj(const Transforms& localTransform, uint32_t objectNumber, uint32_t textureNumber, const Vector4& materialColor);
+    static void Drawobj(const Transforms& localTransform, const Transforms& worldTransform, uint32_t objectNumeber, uint32_t textureNumber, const Vector4& materialColor);
     static void DrawTriangle(const Transforms& localTransform, const VertexData* vertexData, uint32_t textureNumber, const Vector4& materialColor);
     static void DrawSphere(const Transforms& localTransform, VertexData* vertexData, uint32_t kSubdivision, uint32_t textureNumber, const Vector4& materialColor);
 

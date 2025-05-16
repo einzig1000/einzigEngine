@@ -230,7 +230,7 @@ int Game::LoadOBJ(const std::string& directoryPath, const std::string& filename)
 }
 
 //描画
-void Game::Drawobj(const Transforms& localTransform, uint32_t objectNumeber, uint32_t textureNumber, const Vector4& materialColor)
+void Game::Drawobj(const Transforms& localTransform, const Transforms& worldTransform, uint32_t objectNumeber, uint32_t textureNumber, const Vector4& materialColor)
 {
     Object3D& obj = objects[objectNumeber];
 
@@ -250,12 +250,34 @@ void Game::Drawobj(const Transforms& localTransform, uint32_t objectNumeber, uin
         }
     }
 
+    /////
     // オブジェクトのWorldViewProjectionMatrixを作る
+    ////
+    
+    // オブジェクト間共有マトリックス
     Matrix4x4 objectMatrix = MakeAffineMatrix(objects[objectNumeber].transform.scale, objects[objectNumeber].transform.rotate, objects[objectNumeber].transform.translate);
-    Matrix4x4 drawMatrix = MakeAffineMatrix(localTransform.scale, localTransform.rotate, localTransform.translate);
+    
+    // オブジェクト自身を中心に回転マトリックス
+    Matrix4x4 localMatrix = MakeAffineMatrix(localTransform.scale, localTransform.rotate, localTransform.translate);
+
+    // 原点を中心に回転マトリックス
+    // 1. 原点へ移動
+    Matrix4x4 toOrigin = MakeTranslateMatrix({ -worldTransform.translate.x, -worldTransform.translate.y, -worldTransform.translate.z });
+    // 2. 回転
+    Matrix4x4 rotation = MakeAffineMatrix(worldTransform.scale, worldTransform.rotate, { 0,0,0 });
+    // 3. 元の位置へ戻す
+    Matrix4x4 fromOrigin = MakeTranslateMatrix(worldTransform.translate);
+    Matrix4x4 worldMatrix = Mul(Mul(fromOrigin, rotation), toOrigin);
+
+
+
+
+
+
 
     obj.transformationMatrixResource[obj.drawCount]->Map(0, nullptr, reinterpret_cast<void**>(&obj.transformationMatrixData[obj.drawCount]));
-    obj.transformationMatrixData[obj.drawCount]->World = Mul(objectMatrix, drawMatrix);
+    //obj.transformationMatrixData[obj.drawCount]->World = Mul(objectMatrix, localMatrix);
+    obj.transformationMatrixData[obj.drawCount]->World = Mul(objectMatrix, Mul(localMatrix, worldMatrix));
     obj.transformationMatrixData[obj.drawCount]->WVP = Mul(obj.transformationMatrixData[obj.drawCount]->World, Mul(viewMatrix, projectionMatrix));
     obj.transformationMatrixResource[obj.drawCount]->Unmap(0, nullptr);
 
@@ -448,7 +470,7 @@ void Game::DrawSphere(const Transforms& localTransform, VertexData* vertexData, 
     dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
     // SRVのDescriptorTableの先頭を設定。２はrootParameters[2]。
     //dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
-    dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, textures[0].textureSrvHandleGPU);
+    dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
     // CBVを設定する ディレクショナルライト用のCBufferの場所を設定
     dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 
