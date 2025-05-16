@@ -485,8 +485,8 @@ void DirectXManager::InitializePSO()
 void DirectXManager::InitializeViewportAndScissor(int width, int height)
 {
 	// クライアント領域のサイズと一緒にして画面全体に表示
-	viewport.Width = width;
-	viewport.Height = height;
+	viewport.Width = float(width);
+	viewport.Height = float(height);
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
 	viewport.MinDepth = 0.0f;

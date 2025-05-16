@@ -78,7 +78,7 @@ struct TransformationMatrix
     Matrix4x4 World;
 };
 
-struct DirectionalLigft
+struct DirectionalLight
 {
     Vector4 color;
     Vector3 direction;

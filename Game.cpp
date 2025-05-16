@@ -14,7 +14,7 @@ std::vector<textureData> Game::textures;
 uint32_t Game::textureSum = 0;
 
 Microsoft::WRL::ComPtr<ID3D12Resource> Game::directionalLightResource;
-DirectionalLigft* Game::directionalLightData = nullptr;
+DirectionalLight* Game::directionalLightData = nullptr;
 
 Transforms Game::cameraTransform;
 Matrix4x4 Game::viewMatrix;
@@ -59,7 +59,7 @@ void Game::Initialize(int width, int height, const std::wstring& title)
     textureSum = 0;
 
     // 光源の設定
-    directionalLightResource = CreateBufferResource(dxManager->GetDevice(), sizeof(DirectionalLigft));
+    directionalLightResource = CreateBufferResource(dxManager->GetDevice(), sizeof(DirectionalLight));
     directionalLightData = nullptr;
     directionalLightResource->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData));
     directionalLightData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -230,7 +230,7 @@ int Game::LoadOBJ(const std::string& directoryPath, const std::string& filename)
 }
 
 //描画
-void Game::Drawobj(const Transforms& localTransform, uint32_t objectNumeber, uint32_t textureNumber)
+void Game::Drawobj(const Transforms& localTransform, uint32_t objectNumeber, uint32_t textureNumber, const Vector4& materialColor)
 {
     Object3D& obj = objects[objectNumeber];
 
@@ -258,6 +258,16 @@ void Game::Drawobj(const Transforms& localTransform, uint32_t objectNumeber, uin
     obj.transformationMatrixData[obj.drawCount]->World = Mul(objectMatrix, drawMatrix);
     obj.transformationMatrixData[obj.drawCount]->WVP = Mul(obj.transformationMatrixData[obj.drawCount]->World, Mul(viewMatrix, projectionMatrix));
     obj.transformationMatrixResource[obj.drawCount]->Unmap(0, nullptr);
+
+
+    // マテリアルリソースを作成
+    obj.materialResource = CreateBufferResource(dxManager->GetDevice(), sizeof(Material));
+    obj.materialData = nullptr;
+    obj.materialResource->Map(0, nullptr, reinterpret_cast<void**>(&obj.materialData));
+    obj.materialData->color = materialColor;
+    obj.materialData->enableLighting = true;
+    obj.materialData->uvTransform = MakeIdentity4x4();
+    obj.materialResource->Unmap(0, nullptr);
 
     // textureNumberに一致するテクスチャを探す
     const textureData* tex = nullptr;
@@ -295,7 +305,7 @@ void Game::Drawobj(const Transforms& localTransform, uint32_t objectNumeber, uin
     objects[objectNumeber].drawCount += 1;
 }
 
-void Game::DrawTriangle(const VertexData* vertexData, uint32_t textureNumber, const Vector4& materialColor)
+void Game::DrawTriangle(const Transforms& localTransform, const VertexData* vertexData, uint32_t textureNumber, const Vector4& materialColor)
 {
     // 頂点リソースを作る
     Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource = CreateBufferResource(dxManager->GetDevice(), sizeof(VertexData) * 3);
@@ -371,7 +381,7 @@ void Game::DrawTriangle(const VertexData* vertexData, uint32_t textureNumber, co
     dxManager->GetCommandList()->DrawInstanced(3, 1, 0, 0);
 }
 
-void Game::DrawSphere(const Transforms& localTransform, VertexData* vertexData, uint32_t kSubdivision, uint32_t textureNumber)
+void Game::DrawSphere(const Transforms& localTransform, VertexData* vertexData, uint32_t kSubdivision, uint32_t textureNumber, const Vector4& materialColor)
 {
     CreateSphere(vertexData, kSubdivision);
     const uint32_t kSumVertex = kSubdivision * kSubdivision * 6;
@@ -407,15 +417,17 @@ void Game::DrawSphere(const Transforms& localTransform, VertexData* vertexData, 
         tex = &textures[0];
     }
 
-    // マテリアルリソース（白色）を作成
-    Microsoft::WRL::ComPtr<ID3D12Resource> materialResource = CreateBufferResource(dxManager->GetDevice(), 256);
-    Vector4* materialData = nullptr;
+    // マテリアルリソースを作成
+    Microsoft::WRL::ComPtr<ID3D12Resource> materialResource = CreateBufferResource(dxManager->GetDevice(), sizeof(Material));
+    Material* materialData = nullptr;
     materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
-    *materialData = { 1.0f, 0.0f, 1.0f, 1.0f };
+    materialData->color = materialColor;
+    materialData->enableLighting = true;
+    materialData->uvTransform = MakeIdentity4x4();
     materialResource->Unmap(0, nullptr);
 
     // WVPリソース（単位行列）を作成
-    Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource = CreateBufferResource(dxManager->GetDevice(), 256);
+    Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource = CreateBufferResource(dxManager->GetDevice(), sizeof(TransformationMatrix));
     TransformationMatrix* wvpData = nullptr;
     hr = wvpResource->Map(0, nullptr, reinterpret_cast<void**>(&wvpData));
     wvpData->World = MakeIdentity4x4();
@@ -435,7 +447,8 @@ void Game::DrawSphere(const Transforms& localTransform, VertexData* vertexData, 
     // CBVを設定する wvp用のCBufferの場所を設定
     dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
     // SRVのDescriptorTableの先頭を設定。２はrootParameters[2]。
-    dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
+    //dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
+    dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, textures[0].textureSrvHandleGPU);
     // CBVを設定する ディレクショナルライト用のCBufferの場所を設定
     dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 

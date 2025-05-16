@@ -25,9 +25,9 @@ public:
     static int LoadTexture(const std::string& filePath);
 
     // 描画
-    static void Drawobj(const Transforms& localTransform, uint32_t objectNumber, uint32_t textureNumber);
-    static void DrawTriangle(const VertexData* vertexData, uint32_t textureNumber, const Vector4& materialColor);
-    static void DrawSphere(const Transforms& localTransform, VertexData* vertexData, uint32_t kSubdivision, uint32_t textureNumber);
+    static void Drawobj(const Transforms& localTransform, uint32_t objectNumber, uint32_t textureNumber, const Vector4& materialColor);
+    static void DrawTriangle(const Transforms& localTransform, const VertexData* vertexData, uint32_t textureNumber, const Vector4& materialColor);
+    static void DrawSphere(const Transforms& localTransform, VertexData* vertexData, uint32_t kSubdivision, uint32_t textureNumber, const Vector4& materialColor);
 
     // ImGui
     static Transforms* GetTransforms(int i) { return &objects[i].transform; }
@@ -48,7 +48,7 @@ private:
     static uint32_t textureSum;
 
     static Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource;
-    static DirectionalLigft* directionalLightData;
+    static DirectionalLight* directionalLightData;
 
     static Transforms cameraTransform;
     static Matrix4x4 viewMatrix;

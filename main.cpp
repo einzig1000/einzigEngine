@@ -11,31 +11,23 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 	// 変数宣言
 	int uvChecker = Game::LoadTexture("resources/uvChecker.png");
+	int monsterBall = Game::LoadTexture("resources/monsterBall.png");
+	int white1x1 = Game::LoadTexture("resources/white1x1.png");
 	int obj1 = Game::LoadOBJ("resources", "axis.obj");
+	int obj2 = Game::LoadOBJ("resources", "cone.obj");
 	Transforms transformOBJ1;
-	Transforms transformOBJ2;
 	transformOBJ1.translate = { 1.0f,1.0f,1.0f };
+	Transforms transformOBJ2;
+	transformOBJ1.translate = { 2.0f,2.0f,2.0f };
 
 	bool autoRotation[3] = { 0,0,0 };
 
-	VertexData triangle1[3];
-	// 左下
-	triangle1[0].position = { -0.5f, -0.5f, 0.0f, 1.0f };
-	triangle1[0].texcoord = { 0.0f, 1.0f };
-	triangle1[0].normal = { -0.5f, -0.5f, 0.0f };
-	// 上
-	triangle1[1].position = { 0.0f, 0.5f, 0.0f, 1.0f };
-	triangle1[1].texcoord = { 0.5f, 0.0f };
-	triangle1[1].normal = { 0.0f, 0.5f, 0.0f };
-	// 右下
-	triangle1[2].position = { 0.5f, -0.5f, 0.0f, 1.0f };
-	triangle1[2].texcoord = { 1.0f, 1.0f };
-	triangle1[2].normal = { 0.5f, -0.5f, 0.0f };
 
-	Vector4 color = { 1.0f, 0.0f, 0.0f, 1.0f };
+	Vector4 color = { 1.0f, 1.0f, 0.0f, 1.0f };
 
 
 	Transforms transformSphere1;
+	transformSphere1.scale = { 0.5f, 0.5f, 0.5f };
 	// 球の分割数
 	const uint32_t kSubdivision = 16;
 	// 頂点リソースにデータを書き込む
@@ -62,12 +54,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		/// ↓描画処理ここから
 		///
 		
-		Game::Drawobj(transformOBJ1, obj1, uvChecker);
-		Game::Drawobj(transformOBJ2, obj1, uvChecker);
+		Game::Drawobj(transformOBJ1, obj1, uvChecker, color);
+		Game::Drawobj(transformOBJ2, obj2, monsterBall, color);
 
-		//Game::DrawTriangle(triangle1, uvChecker, color);
 
-		Game::DrawSphere(transformSphere1, vertexData, kSubdivision, uvChecker);
+		Game::DrawSphere(transformSphere1, vertexData, kSubdivision, white1x1, color);
 
 
 		const char* items[] = { "axis.obj", "plane.obj" };
