@@ -32,38 +32,66 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	}
 
 
-	//Transforms transformsObj[3][TRIGROUP1];
-	//Transforms transformsObjworld[3][TRIGROUP1];
-	//Vector4 color[3][TRIGROUP1];
-	//for (int i = 0; i < TRIGROUP1; ++i)
-	//{
-	//	transformsObj[0][i].scale = { 0.2f, 0.2f, 0.2f };
-	//	transformsObj[0][i].translate = { 0.0f,0.0f,0.0f };
-	//	transformsObj[0][i].rotate = { 0.0f,(36.0f / 60.0f) * i,1.5f };
-	//	//transformsObjworld[0][i].rotate = { 0.0f, 0.0f, 0.0f };
-	//	color[0][i] = { 0.7f, 0.2f, 0.3f, 0.2f };
-	//}
-	//for (int i = 0; i < TRIGROUP2; ++i)
-	//{
-	//	transformsObj[1][i].scale = { 0.2f, 0.2f, 0.2f };
-	//	transformsObj[1][i].translate = { 0.0f,0.0f,0.0f };
-	//	transformsObj[1][i].rotate = { 0.0f,(36.0f / 60.0f) * i,1.5f };
-	//	//transformsObjworld[1][i].rotate = { 1.0f, 0.0f, 0.0f };
-	//	color[1][i] = { 0.3f, 0.7f, 0.2f, 0.2f };
-	//}
-	//for (int i = 0; i < TRIGROUP3; ++i)
-	//{
-	//	transformsObj[2][i].scale = { 0.2f, 0.2f, 0.2f };
-	//	transformsObj[2][i].translate = { 0.0f,0.0f,0.0f };
-	//	transformsObj[2][i].rotate = { 0.0f,(36.0f / 60.0f) * i,1.5f };
-	//	//transformsObjworld[2][i].rotate = { 2.0f, 0.0f, 0.0f };
-	//	color[2][i] = { 0.2f, 0.3f, 0.7f, 0.2f };
-	//}
+	Transforms transformTriangle;
+	VertexData vertexDataTriangle[6];
+	Vector4 triColor = { 1.0f,0.0f,0.0f,1.0f };
+	const char* items[] = { "uvChecker", "monsterBall","white1x1" };
+	static int item_current = 0;
+	// 左下
+	vertexDataTriangle[0].position = { -0.5f, -0.5f, 0.0f, 1.0f };
+	vertexDataTriangle[0].texcoord = { 0.0f,1.0f };
+	// 上
+	vertexDataTriangle[1].position = { 0.0f, 0.5f, 0.0f, 1.0f };
+	vertexDataTriangle[1].texcoord = { 0.5f,0.0f };
+	// 右下
+	vertexDataTriangle[2].position = { 0.5f, -0.5f, 0.0f, 1.0f };
+	vertexDataTriangle[2].texcoord = { 1.0f,1.0f };
+
+
+	// 左下2
+	vertexDataTriangle[3].position = { -0.5f, -0.5f, 0.5f, 1.0f };
+	vertexDataTriangle[3].texcoord = { 0.0f,1.0f };
+	// 上2
+	vertexDataTriangle[4].position = { 0.0f, 0.0f, 0.0f, 1.0f };
+	vertexDataTriangle[4].texcoord = { 0.5f,0.0f };
+	// 右下2
+	vertexDataTriangle[5].position = { 0.5f, -0.5f, -0.5f, 1.0f };
+	vertexDataTriangle[5].texcoord = { 1.0f,1.0f };
+
+	// 頂点座標をVector3として取得
+	Vector3 a = { vertexDataTriangle[0].position.x, vertexDataTriangle[0].position.y, vertexDataTriangle[0].position.z };
+	Vector3 b = { vertexDataTriangle[1].position.x, vertexDataTriangle[1].position.y, vertexDataTriangle[1].position.z };
+	Vector3 c = { vertexDataTriangle[2].position.x, vertexDataTriangle[2].position.y, vertexDataTriangle[2].position.z };
+
+	// ベクトル計算
+	Vector3 ab = { b.x - a.x, b.y - a.y, b.z - a.z };
+	Vector3 ac = { c.x - a.x, c.y - a.y, c.z - a.z };
+
+	// 外積で法線を求める
+	Vector3 normal = {
+		ab.y * ac.z - ab.z * ac.y,
+		ab.z * ac.x - ab.x * ac.z,
+		ab.x * ac.y - ab.y * ac.x
+	};
+
+	// 正規化
+	float length = std::sqrt(normal.x * normal.x + normal.y * normal.y + normal.z * normal.z);
+	if (length != 0.0f) {
+		normal.x /= length;
+		normal.y /= length;
+		normal.z /= length;
+	}
+
+	// 法線を代入
+	vertexDataTriangle[0].normal = normal;
+	vertexDataTriangle[1].normal = normal;
+	vertexDataTriangle[2].normal = normal;
+
+
+
 
 	bool autoRotation2[3] = { 0,0,0 };
 	bool autoRotation[3] = { 0,0,0 };
-
-
 	bool translate[3] = { 0,0,0 };
 
 
@@ -74,6 +102,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	const uint32_t kSubdivision = 16;
 	// 頂点リソースにデータを書き込む
 	VertexData vertexData[kSubdivision * kSubdivision * 6 ];
+
+
 
 	int frame = 0;
 	while (Game::ProcessMessage())
@@ -128,18 +158,29 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 				{ transformsObj[i].scale.x, transformsObj[i].scale.y, transformsObj[i].scale.z},
 				{ transformsObj[i].rotate.x,transformsObj[i].rotate.y, transformsObj[i].rotate.z },
 				{ transformsObj[i].translate.x, transformsObj[i].translate.y, transformsObj[i].translate.z} },
-
+		
 				{ transformsObjworld[i].scale,transformsObjworld[i].rotate,transformsObjworld[i].translate },
-				obj1, white1x1, color[i]);
-
+				obj1, monsterBall, color[i]);
+		
 		}
-
+		
 		Game::DrawSphere(transformSphere1, vertexData, kSubdivision, monsterBall, { 1.0f, 1.0f, 1.0f, 1.0f });
 
+		if (item_current == 0)Game::DrawTriangle(transformTriangle, vertexDataTriangle, 6, uvChecker, triColor);
+		if (item_current == 1)Game::DrawTriangle(transformTriangle, vertexDataTriangle, 6, monsterBall, triColor);
+		if (item_current == 2)Game::DrawTriangle(transformTriangle, vertexDataTriangle, 6, white1x1, triColor);
 
-		const char* items[] = { "axis.obj", "plane.obj" };
+
 		if (ImGui::CollapsingHeader("object", ImGuiTreeNodeFlags_DefaultOpen))
 		{
+			ImGui::Combo("Combo Box", &item_current, items, IM_ARRAYSIZE(items));
+			ImGui::DragFloat3("TriangleScale", &transformTriangle.scale.x, 0.01f);
+			ImGui::DragFloat3("TriangleRotate", &transformTriangle.rotate.x, 0.01f);
+			ImGui::DragFloat3("TriangleTranslate", &transformTriangle.translate.x, 0.01f);
+			ImGui::ColorEdit3("TriangleColor", (float*)&triColor.x);
+
+
+			ImGui::Text("ob");
 			ImGui::DragFloat3("ObjectScale", &Game::GetTransforms(obj1)->scale.x, 0.01f);
 			ImGui::DragFloat3("ObjectRotate", &Game::GetTransforms(obj1)->rotate.x, 0.01f);
 			ImGui::DragFloat3("ObjectTranslate", &Game::GetTransforms(obj1)->translate.x, 0.01f);
