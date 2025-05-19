@@ -1,6 +1,12 @@
 #pragma once
 #include <vector>
 #include <string>
+#include <initguid.h>
+#include <d3d12.h>
+#pragma comment(lib, "d3d12.lib")
+#include <wrl.h>       // Microsoft::WRL::ComPtr
+#include "externals/DirectXTex/DirectXTex.h"
+
 
 struct Vector2
 {
@@ -46,9 +52,9 @@ struct Vertex
 
 struct Transforms
 {
-    Vector3 scale;
-    Vector3 rotate;
-    Vector3 translate;
+    Vector3 scale = { 1,1,1 };
+    Vector3 rotate = { 0,0,0 };
+    Vector3 translate = { 0,0,0 };
 };
 
 struct VertexData
@@ -72,7 +78,7 @@ struct TransformationMatrix
     Matrix4x4 World;
 };
 
-struct DirectionalLigft
+struct DirectionalLight
 {
     Vector4 color;
     Vector3 direction;
@@ -88,4 +94,44 @@ struct ModelData
 {
     std::vector<VertexData> vertices;
     MaterialData material;
+};
+
+
+struct Object3D
+{
+    // モデルデータ
+    ModelData modelData;
+
+    // 頂点バッファ
+    Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;
+    D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
+
+    // マテリアルデータ
+    Microsoft::WRL::ComPtr<ID3D12Resource> materialResource;
+    Material* materialData;
+
+    // 変換行列
+    Transforms transform;
+
+    // ワールド・ビュー・プロジェクション行列
+    std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> transformationMatrixResource;
+    std::vector<TransformationMatrix*> transformationMatrixData;
+
+    // テクスチャ
+    Microsoft::WRL::ComPtr<ID3D12Resource> textureResource;
+    D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU;
+
+    // 識別ナンバー
+    uint32_t number;
+
+    // 描画回数
+    uint32_t drawCount;
+};
+
+struct textureData {
+    DirectX::TexMetadata metadata;
+    DirectX::ScratchImage mipImage;
+    uint32_t number;
+    Microsoft::WRL::ComPtr<ID3D12Resource> textureResource;
+    D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU;
 };

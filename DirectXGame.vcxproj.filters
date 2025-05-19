@@ -22,6 +22,15 @@
     <Filter Include="definition">
       <UniqueIdentifier>{2d11e023-36d8-40a2-a5cd-ac9aef762785}</UniqueIdentifier>
     </Filter>
+    <Filter Include="DirectXManager">
+      <UniqueIdentifier>{22ffd2e0-0bae-47c8-b104-4729f9332def}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game">
+      <UniqueIdentifier>{24c1e14d-3c15-48b9-9b53-6d5405a3ce02}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="WindowManager">
+      <UniqueIdentifier>{a6f0f6c9-5841-4611-a8f4-25d2974af7b1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -50,6 +59,15 @@
     </ClCompile>
     <ClCompile Include="functions.cpp">
       <Filter>functions</Filter>
+    </ClCompile>
+    <ClCompile Include="DirectXManager.cpp">
+      <Filter>DirectXManager</Filter>
+    </ClCompile>
+    <ClCompile Include="Game.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="WindowManager.cpp">
+      <Filter>WindowManager</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -86,6 +104,15 @@
     </ClInclude>
     <ClInclude Include="definition.h">
       <Filter>definition</Filter>
+    </ClInclude>
+    <ClInclude Include="DirectXManager.h">
+      <Filter>DirectXManager</Filter>
+    </ClInclude>
+    <ClInclude Include="Game.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowManager.h">
+      <Filter>WindowManager</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

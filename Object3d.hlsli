@@ -28,7 +28,7 @@ struct TransformationMatrix
     float32_t4x4 World;
 };
 
-struct DirectionalLigft
+struct DirectionalLight
 {
     float32_t4 color;
     float32_t3 direction;

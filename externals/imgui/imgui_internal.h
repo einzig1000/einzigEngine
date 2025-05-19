@@ -149,7 +149,7 @@ struct ImGuiContextHook;            // Hook for extensions like ImGuiTestEngine
 struct ImGuiDataTypeInfo;           // Type information associated to a ImGuiDataType enum
 struct ImGuiDeactivatedItemData;    // Data for IsItemDeactivated()/IsItemDeactivatedAfterEdit() function.
 struct ImGuiErrorRecoveryState;     // Storage of stack sizes for error handling and recovery
-struct ImGuiGroupData;              // Stacked storage data for BeginGroup()/EndGroup()
+struct ImGuiGroUpdate;              // Stacked storage data for BeginGroup()/EndGroup()
 struct ImGuiInputTextState;         // Internal state of the currently focused/edited text input box
 struct ImGuiInputTextDeactivateData;// Short term storage to backup text of a deactivating InputText() while another is stealing active id
 struct ImGuiLastItemData;           // Status storage for last submitted items
@@ -163,7 +163,7 @@ struct ImGuiNextWindowData;         // Storage for SetNextWindow** functions
 struct ImGuiNextItemData;           // Storage for SetNextItem** functions
 struct ImGuiOldColumnData;          // Storage data for a single column for legacy Columns() api
 struct ImGuiOldColumns;             // Storage data for a columns set for legacy Columns() api
-struct ImGuiPopupData;              // Storage for current popup stack
+struct ImGuiPopUpdate;              // Storage for current popup stack
 struct ImGuiSettingsHandler;        // Storage for one type registered in the .ini file
 struct ImGuiStyleMod;               // Stacked style modifier, backup of modified data so we can restore it
 struct ImGuiStyleVarInfo;           // Style variable information (e.g. to access style variables from an enum)
@@ -1077,7 +1077,7 @@ struct IMGUI_API ImGuiComboPreviewData
 };
 
 // Stacked storage data for BeginGroup()/EndGroup()
-struct IMGUI_API ImGuiGroupData
+struct IMGUI_API ImGuiGroUpdate
 {
     ImGuiID     WindowID;
     ImVec2      BackupCursorPos;
@@ -1359,7 +1359,7 @@ enum ImGuiPopupPositionPolicy
 };
 
 // Storage for popup stacks (g.OpenPopupStack and g.BeginPopupStack)
-struct ImGuiPopupData
+struct ImGuiPopUpdate
 {
     ImGuiID             PopupId;        // Set on OpenPopup()
     ImGuiWindow*        Window;         // Resolved on BeginPopup() - may stay unresolved if user never calls OpenPopup()
@@ -1370,7 +1370,7 @@ struct ImGuiPopupData
     ImVec2              OpenPopupPos;   // Set on OpenPopup(), preferred popup position (typically == OpenMousePos when using mouse)
     ImVec2              OpenMousePos;   // Set on OpenPopup(), copy of mouse position at the time of opening popup
 
-    ImGuiPopupData()    { memset(this, 0, sizeof(*this)); ParentNavLayer = OpenFrameCount = -1; }
+    ImGuiPopUpdate()    { memset(this, 0, sizeof(*this)); ParentNavLayer = OpenFrameCount = -1; }
 };
 
 //-----------------------------------------------------------------------------
@@ -2175,9 +2175,9 @@ struct ImGuiContext
     ImVector<ImFont*>               FontStack;                  // Stack for PushFont()/PopFont() - inherited by Begin()
     ImVector<ImGuiFocusScopeData>   FocusScopeStack;            // Stack for PushFocusScope()/PopFocusScope() - inherited by BeginChild(), pushed into by Begin()
     ImVector<ImGuiItemFlags>        ItemFlagsStack;             // Stack for PushItemFlag()/PopItemFlag() - inherited by Begin()
-    ImVector<ImGuiGroupData>        GroupStack;                 // Stack for BeginGroup()/EndGroup() - not inherited by Begin()
-    ImVector<ImGuiPopupData>        OpenPopupStack;             // Which popups are open (persistent)
-    ImVector<ImGuiPopupData>        BeginPopupStack;            // Which level of BeginPopup() we are in (reset every frame)
+    ImVector<ImGuiGroUpdate>        GroupStack;                 // Stack for BeginGroup()/EndGroup() - not inherited by Begin()
+    ImVector<ImGuiPopUpdate>        OpenPopupStack;             // Which popups are open (persistent)
+    ImVector<ImGuiPopUpdate>        BeginPopupStack;            // Which level of BeginPopup() we are in (reset every frame)
     ImVector<ImGuiTreeNodeStackData>TreeNodeStack;              // Stack for TreeNode()
 
     // Viewports
