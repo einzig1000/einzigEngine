@@ -327,7 +327,7 @@ void Game::Drawobj(const Transforms& localTransform, const Transforms& worldTran
     objects[objectNumeber].drawCount += 1;
 }
 
-void Game::DrawTriangle(const Transforms& localTransform, const VertexData* vertexData, uint32_t kSumVertex, uint32_t textureNumber, const Vector4& materialColor)
+void Game::DrawTriangle(const Transforms& localTransform, const Transforms& worldTransform, const VertexData* vertexData, uint32_t kSumVertex, uint32_t textureNumber, const Vector4& materialColor)
 {
     // 頂点リソースを作る
     Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource = CreateBufferResource(dxManager->GetDevice(), sizeof(VertexData) * kSumVertex);
@@ -388,7 +388,7 @@ void Game::DrawTriangle(const Transforms& localTransform, const VertexData* vert
     wvpData->World = MakeIdentity4x4();
     wvpData->WVP = MakeIdentity4x4();
     if (SUCCEEDED(hr) && wvpData) {
-        wvpData->World = MakeAffineMatrix(localTransform.scale, localTransform.rotate, localTransform.translate);
+        wvpData->World = Mul(MakeAffineMatrix(localTransform.scale, localTransform.rotate, localTransform.translate), MakeAffineMatrix(worldTransform.scale, worldTransform.rotate, worldTransform.translate));
         wvpData->WVP = Mul(wvpData->World, Mul(viewMatrix, projectionMatrix));
         wvpResource->Unmap(0, nullptr);
     }

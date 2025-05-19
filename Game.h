@@ -26,7 +26,7 @@ public:
 
     // 描画
     static void Drawobj(const Transforms& localTransform, const Transforms& worldTransform, uint32_t objectNumeber, uint32_t textureNumber, const Vector4& materialColor);
-    static void DrawTriangle(const Transforms& localTransform, const VertexData* vertexData, uint32_t kSumVertex, uint32_t textureNumber, const Vector4& materialColor);
+    static void DrawTriangle(const Transforms& localTransform, const Transforms& worldTransform, const VertexData* vertexData, uint32_t kSumVertex, uint32_t textureNumber, const Vector4& materialColor);
     static void DrawSphere(const Transforms& localTransform, VertexData* vertexData, uint32_t kSubdivision, uint32_t textureNumber, const Vector4& materialColor);
 
     // ImGui

@@ -84,7 +84,11 @@ float DotProduct(const Vector3& v1, const Vector3& v2)
 
 Vector3 CrossProduct(const Vector3& v1, const Vector3& v2)
 {
-    return Vector3();
+    Vector3 result;
+    result.x = v1.y * v2.z - v1.z * v2.y;
+    result.y = v1.z * v2.x - v1.x * v2.z;
+    result.z = v1.x * v2.y - v1.y * v2.x;
+    return result;
 }
 
 float Length(const Vector3& v)
@@ -96,6 +100,20 @@ float Length(const Vector3& v)
     Return = sqrtf((a * a) + (v.z * v.z));
 
     return Return;
+}
+
+Vector3 CalculateNormal(const Vector4& v0, const Vector4& v1, const Vector4& v2)
+{
+    Vector3 ab = { v1.x - v0.x, v1.y - v0.y, v1.z - v0.z };
+    Vector3 ac = { v2.x - v0.x, v2.y - v0.y, v2.z - v0.z };
+    Vector3 normal = CrossProduct(ab, ac);
+    float length = Length(normal);
+    if (length != 0.0f) {
+        normal.x /= length;
+        normal.y /= length;
+        normal.z /= length;
+    }
+    return normal;
 }
 
 Vector3 Normalize(const Vector3& v)

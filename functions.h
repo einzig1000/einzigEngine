@@ -68,6 +68,9 @@ Vector3 CrossProduct(const Vector3& v1, const Vector3& v2);
 /// <returns>vの長さ</returns>
 float Length(const Vector3& v);
 
+// 3頂点から法線ベクトルを計算し、正規化して返す
+Vector3 CalculateNormal(const Vector4& v0, const Vector4& v1, const Vector4& v2);
+
 /// <summary>
 /// 正規化したVector3
 /// </summary>
