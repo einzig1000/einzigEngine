@@ -8,6 +8,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
 	// ウィンドウ、DrectX初期化
 	Game::Initialize(1280, 720, L"CG2");
+	//D3DResourceLeakChecker* debug;
 
 	while (Game::ProcessMessage())
 	{
@@ -43,6 +44,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	}
 
 	Game::Finalize();
+
 
 	return 0;
 }

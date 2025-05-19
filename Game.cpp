@@ -10,7 +10,7 @@ DirectXManager* Game::dxManager = nullptr;
 std::vector<Object3D> Game::objects;
 uint32_t Game::objectSum = 0;
 
-std::vector<textureData> Game::textures;
+std::vector<TextureData> Game::textures;
 uint32_t Game::textureSum = 0;
 
 Microsoft::WRL::ComPtr<ID3D12Resource> Game::directionalLightResource;
@@ -136,7 +136,7 @@ void Game::Finalize()
 int Game::LoadTexture(const std::string& filePath)
 {
     // ボックスを作成
-    textureData text;
+    TextureData text;
 
     // テクスチャファイルを読んでプログラムを扱えるようにする
     DirectX::ScratchImage image{};
@@ -292,7 +292,7 @@ void Game::Drawobj(const Transforms& localTransform, const Transforms& worldTran
     obj.materialResource->Unmap(0, nullptr);
 
     // textureNumberに一致するテクスチャを探す
-    const textureData* tex = nullptr;
+    const TextureData* tex = nullptr;
     for (const auto& t : textures) {
         if (t.number == textureNumber) {
             tex = &t;
@@ -353,7 +353,7 @@ void Game::DrawTriangle(const Transforms& localTransform, const Transforms& worl
 
 
     // textureNumberに一致するテクスチャを探す
-    const textureData* tex = nullptr;
+    const TextureData* tex = nullptr;
     for (const auto& t : textures) {
         if (t.number == textureNumber) {
             tex = &t;
@@ -435,7 +435,7 @@ void Game::DrawSphere(const Transforms& localTransform, VertexData* vertexData, 
 
 
     // textureNumberに一致するテクスチャを探す
-    const textureData* tex = nullptr;
+    const TextureData* tex = nullptr;
     for (const auto& t : textures) {
         if (t.number == textureNumber) {
             tex = &t;

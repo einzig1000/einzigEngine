@@ -1,10 +1,21 @@
 #pragma once
+// 標準ライブラリ
 #include <vector>
 #include <string>
+
+// Windows/DirectX
 #include <initguid.h>
+#include <dxgidebug.h>
 #include <d3d12.h>
+
+// ライブラリリンク
+#pragma comment(lib, "dxguid.lib")
 #pragma comment(lib, "d3d12.lib")
-#include <wrl.h>       // Microsoft::WRL::ComPtr
+
+// WRL
+#include <wrl.h> // Microsoft::WRL::ComPtr
+
+// 外部ライブラリ
 #include "externals/DirectXTex/DirectXTex.h"
 
 
@@ -22,7 +33,7 @@ struct Vector3
 };
 
 struct Vector4 {
-    float x, y, z, w;
+    float x = 0, y = 0, z = 0, w = 0;
 };
 
 struct Matrix3x3
@@ -128,10 +139,25 @@ struct Object3D
     uint32_t drawCount;
 };
 
-struct textureData {
+struct TextureData {
     DirectX::TexMetadata metadata;
     DirectX::ScratchImage mipImage;
     uint32_t number;
     Microsoft::WRL::ComPtr<ID3D12Resource> textureResource;
     D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU;
 };
+
+
+//struct D3DResourceLeakChecker
+//{
+//    ~D3DResourceLeakChecker()
+//    {
+//        // リソースリーク確認
+//        Microsoft::WRL::ComPtr <IDXGIDebug1> debug;
+//        if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&debug)))) {
+//            debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_ALL);
+//            debug->ReportLiveObjects(DXGI_DEBUG_APP, DXGI_DEBUG_RLO_ALL);
+//            debug->ReportLiveObjects(DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_ALL);
+//        }
+//    }
+//};

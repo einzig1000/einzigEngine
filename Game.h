@@ -44,7 +44,7 @@ private:
     static std::vector<Object3D> objects;
     static uint32_t objectSum;
 
-    static std::vector<textureData> textures;
+    static std::vector<TextureData> textures;
     static uint32_t textureSum;
 
     static Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource;
