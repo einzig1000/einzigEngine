@@ -531,6 +531,7 @@ void DirectXManager::InitializeSynchronizationObjects()
 void DirectXManager::BeginFrame()
 {
 	//(フレームごとに1回でOKなものども）
+	
 	///////////////////////////////////////
 	///	TransitionBarrierを張る(TransitionBarrierの命令を実行する)
 	///////////////////////////////////////
