@@ -58,16 +58,21 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 		Game::DrawSprite(transform, vdata, uvChecker, color);
 
+		if (ImGui::CollapsingHeader("sphere"))
+		{
+			ImGui::DragFloat3("SphereScale", &Game::cameraTransform.scale.x, 0.01f);
+			ImGui::DragFloat3("SphereRotate", &Game::cameraTransform.rotate.x, 0.01f);
+			ImGui::DragFloat3("SphereTranslate", &Game::cameraTransform.translate.x, 0.01f);
+		}
 		///
 		/// ↑描画処理ここまで
 		///
 
-
-
-
 		// フレームの終了
 		Game::EndFrame();
 	}
+
+
 
 	Game::Finalize();
 

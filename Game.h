@@ -32,6 +32,7 @@ public:
 
     // ImGui
     static Transforms* GetTransforms(int i) { return &objects[i].transform; }
+    static Transforms cameraTransform;
 
 private:
     static void UpdateCameraAndLight();
@@ -51,7 +52,6 @@ private:
     static Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource;
     static DirectionalLight* directionalLightData;
 
-    static Transforms cameraTransform;
     static Matrix4x4 viewMatrix;
     static Matrix4x4 projectionMatrix;
 };
