@@ -45,12 +45,13 @@ private:
     static std::vector<TextureData> textures;
     static uint32_t textureSum;
 
+    static Microsoft::WRL::ComPtr<ID3D12Resource> indexResource;
+    static D3D12_INDEX_BUFFER_VIEW indexBufferView;
+
     static Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource;
     static DirectionalLight* directionalLightData;
 
     static Transforms cameraTransform;
     static Matrix4x4 viewMatrix;
     static Matrix4x4 projectionMatrix;
-
-    //static int uvCheckerTex;
 };
