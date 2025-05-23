@@ -56,7 +56,8 @@ void Game::Initialize(int width, int height, const std::wstring& title)
 
     // 読み込んだオブジェクトの合計
     objectSum = 0;
-    textureSum = 0;
+    textureSum = 1;
+
 
     // 光源の設定
     directionalLightResource = CreateBufferResource(dxManager->GetDevice(), sizeof(DirectionalLight));
@@ -484,5 +485,92 @@ void Game::DrawSphere(const Transforms& localTransform, VertexData* vertexData, 
 
     dxManager->GetCommandList()->DrawInstanced(kSumVertex, 1, 0, 0);
 
+}
+
+void Game::DrawSprite(const Transforms& localTransform, VertexData* vertexData, uint32_t textureNumber, const Vector4& materialColor)
+{
+    // 頂点バッファリソースを作成
+    Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource = CreateBufferResource(dxManager->GetDevice(), sizeof(VertexData) * 6);
+    VertexData* vData = nullptr;
+    HRESULT hr = vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vData));
+    if (FAILED(hr) || vData == nullptr) return;
+    std::memcpy(vData, vertexData, sizeof(VertexData) * 6);
+    vertexResource->Unmap(0, nullptr);
+
+    // インデックスリソースを作成
+    Microsoft::WRL::ComPtr<ID3D12Resource> indexResource = CreateBufferResource(dxManager->GetDevice(), sizeof(uint32_t) * 6);
+    uint32_t* indexDataSprite = nullptr;
+    indexResource->Map(0, nullptr, reinterpret_cast<void**>(&indexDataSprite));
+    indexDataSprite[0] = 0;
+    indexDataSprite[1] = 1;
+    indexDataSprite[2] = 2;
+    indexDataSprite[3] = 1;
+    indexDataSprite[4] = 3;
+    indexDataSprite[5] = 2;
+
+    // 頂点バッファビューを作成する
+    D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
+    // リソースの先頭のアドレスから使う
+    vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
+    // 仕様するリソースのサイズは頂点4つ分のサイズ
+    vertexBufferView.SizeInBytes = sizeof(VertexData) * 6;
+    // １頂点あたりのサイズ
+    vertexBufferView.StrideInBytes = sizeof(VertexData);
+
+
+    // インデックスバッファビューを作成する
+    D3D12_INDEX_BUFFER_VIEW indexBufferViewSprite{};
+    // リソースの先頭のアドレスから使う
+    indexBufferViewSprite.BufferLocation = indexResource->GetGPUVirtualAddress();
+    // 仕様するリソースのサイズはインデックス６つ分のサイズ
+    indexBufferViewSprite.SizeInBytes = sizeof(uint32_t) * 6;
+    // インデックスはuint32_tとする
+    indexBufferViewSprite.Format = DXGI_FORMAT_R32_UINT;
+
+
+    // textureNumberに一致するテクスチャを探す
+    const TextureData* tex = nullptr;
+    for (const auto& t : textures) {
+        if (t.number == textureNumber) {
+            tex = &t;
+            break;
+        }
+    }
+    // 見つからなかったらuncheckを使う
+    if (tex == nullptr) {
+        tex = &textures[0];
+    }
+
+    // マテリアルリソースを作成
+    Microsoft::WRL::ComPtr<ID3D12Resource> materialResource = CreateBufferResource(dxManager->GetDevice(), sizeof(Material));
+    Material* materialData = nullptr;
+    materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
+    materialData->color = materialColor;
+    materialData->enableLighting = false;
+    materialData->uvTransform = MakeIdentity4x4();
+    materialResource->Unmap(0, nullptr);
+
+    // WVPリソース（単位行列）を作成
+    Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource = CreateBufferResource(dxManager->GetDevice(), sizeof(TransformationMatrix));
+    TransformationMatrix* wvpData = nullptr;
+    hr = wvpResource->Map(0, nullptr, reinterpret_cast<void**>(&wvpData));
+    wvpData->World = MakeIdentity4x4();
+    wvpData->WVP = MakeIdentity4x4();
+    if (SUCCEEDED(hr) && wvpData) {
+        wvpData->World = MakeAffineMatrix(localTransform.scale, localTransform.rotate, localTransform.translate);
+        wvpData->WVP = Mul(wvpData->World, Mul(viewMatrix, projectionMatrix));
+        wvpResource->Unmap(0, nullptr);
+    }
+
+    // Spriteの描画
+    dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
+    dxManager->GetCommandList()->IASetIndexBuffer(&indexBufferViewSprite);
+    // CBVを設定する マテリアル用のCBufferの場所を設定
+    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+    // CBVを設定する wvp用のCBufferの場所を設定
+    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
+
+    // 描画
+    dxManager->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
 }
 

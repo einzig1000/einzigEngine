@@ -13,7 +13,7 @@
 #pragma comment(lib, "d3d12.lib")
 
 // WRL
-#include <wrl.h> // Microsoft::WRL::ComPtr
+#include <wrl.h>
 
 // 外部ライブラリ
 #include "externals/DirectXTex/DirectXTex.h"

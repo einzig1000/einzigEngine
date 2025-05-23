@@ -28,6 +28,7 @@ DirectXManager::~DirectXManager() {
 }
 
 
+
 void DirectXManager::EnableDebugLayer()
 {
 	Microsoft::WRL::ComPtr<ID3D12Debug1> debugController;
