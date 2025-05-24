@@ -518,6 +518,7 @@ void Game::DrawSprite(const Transforms& localTransform, VertexData* vertexData, 
     std::memcpy(vData, vertexData, sizeof(VertexData) * 4);
     vertexResource->Unmap(0, nullptr);
 
+
     // 頂点バッファビューを作成する
     D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
     // リソースの先頭のアドレスから使う
@@ -557,8 +558,18 @@ void Game::DrawSprite(const Transforms& localTransform, VertexData* vertexData, 
     wvpData->World = MakeIdentity4x4();
     wvpData->WVP = MakeIdentity4x4();
     if (SUCCEEDED(hr) && wvpData) {
+        Matrix4x4 orthoProjectionMatrix =
+            MakeOrthographicMatrix(
+                0.0f,
+                0.0f,
+                static_cast<float>(windowManager->Getwidth()),
+                static_cast<float>(windowManager->Getheight()),
+                0.0f,
+                100.0f
+            );
+        // ワールド行列と正射影行列を乗算してWVP行列を計算
         wvpData->World = MakeAffineMatrix(localTransform.scale, localTransform.rotate, localTransform.translate);
-        wvpData->WVP = Mul(wvpData->World, Mul(viewMatrix, projectionMatrix));
+        wvpData->WVP = Mul(wvpData->World, orthoProjectionMatrix); // または Mul(worldMatrix, MakeIdentity4x4() * orthoProjectionMatrix);
         wvpResource->Unmap(0, nullptr);
     }
 

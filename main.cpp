@@ -10,31 +10,48 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	Game::Initialize(1280, 720, L"CG2");
 	//D3DResourceLeakChecker* debug = nullptr;
 
-	Transforms transform = { {1,1,1}, {0,0,0}, {0,0,0} };
-	VertexData vdata[4];
+	int uvChecker = Game::LoadTexture("resources/uvChecker.png");
+	int monsterBall = Game::LoadTexture("resources/monsterBall.png");
+	int white1x1 = Game::LoadTexture("resources/white1x1.png");
+	int obj2 = Game::LoadOBJ("resources", "cone.obj");
+	int obj1 = Game::LoadOBJ("resources", "axis.obj");
 
-	// 左下
-	vdata[0].position = { 100.0f, 560.0f, 0.0f, 1.0f };
-	vdata[0].texcoord = { 0.0f, 1.0f };
-	vdata[0].normal = { 0.0f, 0.0f, -1.0f };
-	// 左上
-	vdata[1].position = { 100.0f, 360.0f, 0.0f, 1.0f };
-	vdata[1].texcoord = { 0.0f, 0.0f };
-	vdata[1].normal = { 0.0f, 0.0f, -1.0f };
-	// 右下
-	vdata[2].position = { 300.0f, 560.0f, 0.0f, 1.0f };
-	vdata[2].texcoord = { 1.0f, 1.0f };
-	vdata[2].normal = { 0.0f, 0.0f, -1.0f };
-	// 右上
-	vdata[3].position = { 300.0f, 360.0f, 0.0f, 1.0f };
-	vdata[3].texcoord = { 1.0f, 0.0f };
-	vdata[3].normal = { 0.0f, 0.0f, -1.0f };
-
-
+	Transforms transformsObj;
+	Transforms transformsObjworld;
+	transformsObj.scale = { 1.2f, 1.2f, 1.2f };
+	transformsObj.translate = { 0.0f,0.0f,0.0f };
+	transformsObj.rotate = { 0.0f,(36.0f / 60.0f),1.5f };
 
 	Vector4 color = { 1.0f,0.0f,0.0f,1.0f };
-	int uvChecker = Game::LoadTexture("resources/uvChecker.png");
 
+	Transforms transform = { {1,1,1}, {0,0,0}, {0,0,0} };
+	Transforms transform1 = { {1,1,1}, {0,0,0}, {0,0,0} };
+	VertexData vdata[4];
+	// 右下 左下
+	vdata[0].position = { 0.0f, 0.0f, 0.0f, 1.0f };
+	vdata[0].texcoord = { 0.0f, 0.0f };
+	vdata[0].normal = { 0.0f,0.0f,-1.0f };
+	// 左下 左上
+	vdata[1].position = { 640.0f, 0.0f, 0.0f, 1.0f };
+	vdata[1].texcoord = { 1.0f, 0.0f };
+	vdata[1].normal = { 0.0f,0.0f,-1.0f };
+	// 右上 右下
+	vdata[2].position = { 0.0f, 360.0f, 0.0f, 1.0f };
+	vdata[2].texcoord = { 0.0f, 1.0f };
+	vdata[2].normal = { 0.0f,0.0f,-1.0f };
+	// 左上 右上
+	vdata[3].position = { 640.0f, 360.0f, 0.0f, 1.0f };
+	vdata[3].texcoord = { 1.0f, 1.0f };
+	vdata[3].normal = { 0.0f,0.0f,-1.0f };
+
+
+	Transforms transformSphere1;
+	transformSphere1.scale = { 0.3f, 0.3f, 0.3f };
+	transformSphere1.rotate = { 0.0f,4.72f,0.0f };
+	// 球の分割数
+	const uint32_t kSubdivision = 16;
+	// 頂点リソースにデータを書き込む
+	VertexData vertexData[kSubdivision * kSubdivision * 6];
 
 	while (Game::ProcessMessage())
 	{
@@ -57,12 +74,21 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		///
 
 		Game::DrawSprite(transform, vdata, uvChecker, color);
+		Game::DrawSprite(transform1, vdata, uvChecker, color);
+		Game::Drawobj(transformsObj, transformsObjworld, obj1, uvChecker, color);
+		//Game::DrawSphere(transformSphere1, vertexData, kSubdivision, monsterBall, { 1.0f, 1.0f, 1.0f, 1.0f });
 
 		if (ImGui::CollapsingHeader("sphere"))
 		{
 			ImGui::DragFloat3("SphereScale", &Game::cameraTransform.scale.x, 0.01f);
 			ImGui::DragFloat3("SphereRotate", &Game::cameraTransform.rotate.x, 0.01f);
 			ImGui::DragFloat3("SphereTranslate", &Game::cameraTransform.translate.x, 0.01f);
+		}
+		if (ImGui::CollapsingHeader("Sprite"))
+		{
+			ImGui::DragFloat3("SpriteScale", &transform.scale.x, 0.01f);
+			ImGui::DragFloat3("SpriteRotate", &transform.rotate.x, 0.01f);
+			ImGui::DragFloat3("SpriteTranslate", &transform.translate.x, 0.1f);
 		}
 		///
 		/// ↑描画処理ここまで
