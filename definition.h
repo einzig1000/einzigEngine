@@ -126,8 +126,8 @@ struct Object3D
     ModelData modelData;
 
     // 頂点バッファ
-    Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;
-    D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
+    //Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;
+    //D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
 
     // マテリアルデータ
     Microsoft::WRL::ComPtr<ID3D12Resource> materialResource;
@@ -150,6 +150,7 @@ struct Object3D
     // 描画回数
     uint32_t drawCount;
 };
+
 
 struct TextureData {
     DirectX::TexMetadata metadata;

@@ -1,4 +1,4 @@
-#include "Game.h"           // クラス定義
+#include "Game.h"
 #include "functions.h"
 #include "externals/DirectXTex/d3dx12.h"
 #include "externals/DirectXTex/DirectXTex.h"
@@ -13,15 +13,21 @@ uint32_t Game::objectSum = 0;
 std::vector<TextureData> Game::textures;
 uint32_t Game::textureSum = 0;
 
+Microsoft::WRL::ComPtr<ID3D12Resource> Game::vertexResourceSprite;
+UINT Game::vertexResourceSizeSprite;
+Microsoft::WRL::ComPtr<ID3D12Resource> Game::vertexResourceObj;
+UINT Game::vertexResourceSizeObj;
+Microsoft::WRL::ComPtr<ID3D12Resource> Game::vertexResourceTriangle;
+UINT Game::vertexResourceSizeTriangle;
+Microsoft::WRL::ComPtr<ID3D12Resource> Game::vertexResourceSphere;
+UINT Game::vertexResourceSizeSphere;
+
+
 Microsoft::WRL::ComPtr<ID3D12Resource> Game::indexResource;
 D3D12_INDEX_BUFFER_VIEW Game::indexBufferView;
 
 Microsoft::WRL::ComPtr<ID3D12Resource> Game::directionalLightResource;
 DirectionalLight* Game::directionalLightData = nullptr;
-
-//Transforms Game::cameraTransform;
-//Matrix4x4 Game::viewMatrix;
-//Matrix4x4 Game::projectionMatrix;
 
 CameraController* Game::cameraController;
 
@@ -58,7 +64,6 @@ void Game::Initialize(int width, int height, const std::wstring& title)
     );
 
     // カメラ系
-    //cameraTransform = { {1.0f,1.0f,1.0f}, {0.3f,0.0f,0.0f}, {0.0f,4.0f,-10.0f} };
     cameraController = new CameraController;
 
 
@@ -66,7 +71,20 @@ void Game::Initialize(int width, int height, const std::wstring& title)
     objectSum = 0;
     textureSum = 1;
 
-    // インデックスリソースを作成
+    // 頂点バッファ
+    vertexResourceSizeSprite = sizeof(VertexData) * 256; // スプライト
+    vertexResourceSprite = CreateBufferResource(dxManager->GetDevice(), vertexResourceSizeSprite);
+
+    vertexResourceSizeObj = sizeof(VertexData) * 4096; // オブジェクト
+    vertexResourceObj = CreateBufferResource(dxManager->GetDevice(), vertexResourceSizeObj);
+
+    vertexResourceSizeTriangle = sizeof(VertexData) * 1024; // 三角形
+    vertexResourceTriangle = CreateBufferResource(dxManager->GetDevice(), vertexResourceSizeTriangle);
+
+    vertexResourceSizeSphere = sizeof(VertexData) * 4096; // 球
+    vertexResourceSphere = CreateBufferResource(dxManager->GetDevice(), vertexResourceSizeSphere);
+
+    // インデックスリソース
     indexResource = CreateBufferResource(dxManager->GetDevice(), sizeof(uint32_t) * 6);
     uint32_t* indexData = nullptr;
     indexResource->Map(0, nullptr, reinterpret_cast<void**>(&indexData));
@@ -103,7 +121,7 @@ bool Game::ProcessMessage() {
             return false;
         }
         if (msg.message == WM_MOUSEWHEEL) {
-            // ホイールの回転量を加算???なんでマウス頬いーるだけ？
+            // ホイールの回転量を加算　クリックはboolで回転量はintだからmessageを使う。らしい。
             wheelDelta_ += GET_WHEEL_DELTA_WPARAM(msg.wParam);
         }
         TranslateMessage(&msg);
@@ -123,16 +141,11 @@ void Game::BeginFrame()
 }
 void Game::UpdateCameraAndLight()
 {
-    
     // ライトの向きを正規化
     directionalLightData->direction = Normalize(directionalLightData->direction);
 
-    // カメラの設定
+    // カメラの更新
     cameraController->Updata();
-    //cameraController->cameraMatrix = MakeAffineMatrix(cameraController->transform.scale, cameraController->transform.rotate, cameraController->transform.translate);
-    //cameraController->viewMatrix = Inverse(cameraController->cameraMatrix);
-    //cameraController->projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(1280) / float(720), 0.1f, 100.0f);// int width, int heightをもってくる
-    //projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(windowManager.Getwidth()) / float(windowManager.Getheight()), 0.1f, 100.0f);// int width, int heightをもってくる
 }
 void Game::EndFrame()
 {
@@ -157,6 +170,7 @@ void Game::Finalize()
     // COMの終了処理
     CoUninitialize();
 
+    // 解放処理
     delete dxManager;
     dxManager = nullptr;
     delete windowManager;
@@ -219,14 +233,6 @@ int Game::LoadOBJ(const std::string& directoryPath, const std::string& filename)
     // モデルデータ
     obj.modelData = LoadOBJFile(directoryPath, filename);
 
-    // 頂点バッファ
-    obj.vertexResource = CreateBufferResource(dxManager->GetDevice(), sizeof(VertexData) * obj.modelData.vertices.size());
-    obj.vertexBufferView.BufferLocation = obj.vertexResource->GetGPUVirtualAddress();
-    obj.vertexBufferView.SizeInBytes = UINT(sizeof(VertexData) * obj.modelData.vertices.size());
-    obj.vertexBufferView.StrideInBytes = sizeof(VertexData);
-    VertexData* vertexData = nullptr;
-    obj.vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
-    std::memcpy(vertexData, obj.modelData.vertices.data(), sizeof(VertexData) * obj.modelData.vertices.size());
 
     // マテリアルデータ
     obj.materialResource = CreateBufferResource(dxManager->GetDevice(), sizeof(Material));
@@ -235,6 +241,7 @@ int Game::LoadOBJ(const std::string& directoryPath, const std::string& filename)
     obj.materialData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
     obj.materialData->enableLighting = true;
     obj.materialData->uvTransform = MakeIdentity4x4();
+    obj.materialResource->Unmap(0, nullptr);
 
     // 変換行列
     obj.transform = { {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f} };
@@ -263,10 +270,26 @@ int Game::LoadOBJ(const std::string& directoryPath, const std::string& filename)
     return obj.number;
 }
 
-//描画
+// 描画
 void Game::Drawobj(const Transforms& localTransform, const Transforms& worldTransform, uint32_t objectNumeber, uint32_t textureNumber, const Vector4& materialColor)
 {
     Object3D& obj = objects[objectNumeber];
+
+    // 必要な頂点数
+    const uint32_t vertexCount = static_cast<uint32_t>(obj.modelData.vertices.size());
+    if (vertexCount == 0) return;
+    if (sizeof(VertexData) * vertexCount > vertexResourceSizeObj) return; // バッファオーバー防止
+
+    VertexData* vData = nullptr;
+    HRESULT hr = vertexResourceObj->Map(0, nullptr, reinterpret_cast<void**>(&vData));
+    if (FAILED(hr) || vData == nullptr) return;
+    std::memcpy(vData, obj.modelData.vertices.data(), sizeof(VertexData) * vertexCount);
+    vertexResourceObj->Unmap(0, nullptr);
+
+    D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
+    vertexBufferView.BufferLocation = vertexResourceObj->GetGPUVirtualAddress();
+    vertexBufferView.SizeInBytes = sizeof(VertexData) * vertexCount;
+    vertexBufferView.StrideInBytes = sizeof(VertexData);
 
     // objectNumeberの等しいオブジェクトの描画が２回目以降になったらransformationMatrixを拡張する（objectNumeberが等しい＝objects[].transformを共有しているから各々独立させて動かすことが出来ないから）
     // じゃあobjects[].transformいらなくない？　→　objects[].transformはobjectNumeberが等しいモデル全てに影響を及ぼすtransformとしてつかえるんじゃよそれはそれで使い道がありそうじゃろう
@@ -289,7 +312,7 @@ void Game::Drawobj(const Transforms& localTransform, const Transforms& worldTran
     ////
     
     // オブジェクト間共有マトリックス
-    Matrix4x4 objectMatrix = MakeAffineMatrix(objects[objectNumeber].transform.scale, objects[objectNumeber].transform.rotate, objects[objectNumeber].transform.translate);
+    Matrix4x4 objectMatrix = MakeAffineMatrix(obj.transform.scale, obj.transform.rotate, obj.transform.translate);
     
     // オブジェクト自身を中心に回転マトリックス
     Matrix4x4 localMatrix = MakeAffineMatrix(localTransform.scale, localTransform.rotate, localTransform.translate);
@@ -305,12 +328,7 @@ void Game::Drawobj(const Transforms& localTransform, const Transforms& worldTran
 
 
 
-
-
-
-
     obj.transformationMatrixResource[obj.drawCount]->Map(0, nullptr, reinterpret_cast<void**>(&obj.transformationMatrixData[obj.drawCount]));
-    //obj.transformationMatrixData[obj.drawCount]->World = Mul(objectMatrix, localMatrix);
     obj.transformationMatrixData[obj.drawCount]->World = Mul(objectMatrix, Mul(localMatrix, worldMatrix));
     obj.transformationMatrixData[obj.drawCount]->WVP = Mul(obj.transformationMatrixData[obj.drawCount]->World, cameraController->viewProjectionMatrix);
     obj.transformationMatrixResource[obj.drawCount]->Unmap(0, nullptr);
@@ -339,7 +357,7 @@ void Game::Drawobj(const Transforms& localTransform, const Transforms& worldTran
     }
 
     // 描画処理
-    dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &obj.vertexBufferView);
+    dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
     // 形状を設定
     dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     // CBVを設定する マテリアル用のCBufferの場所を設定
@@ -355,38 +373,27 @@ void Game::Drawobj(const Transforms& localTransform, const Transforms& worldTran
 
 
     // 描画
-    dxManager->GetCommandList()->DrawInstanced(UINT(obj.modelData.vertices.size()), 1, 0, 0);
+    dxManager->GetCommandList()->DrawInstanced(vertexCount, 1, 0, 0);
 
     // 描画回数更新
-    objects[objectNumeber].drawCount += 1;
+    obj.drawCount += 1;
 }
 
 void Game::DrawTriangle(const Transforms& localTransform, const Transforms& worldTransform, const VertexData* vertexData, uint32_t kSumVertex, uint32_t textureNumber, const Vector4& materialColor)
 {
-    // 頂点リソースを作る
-    Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource = CreateBufferResource(dxManager->GetDevice(), sizeof(VertexData) * kSumVertex);
-    // 頂点バッファリソースを作成
+    if (kSumVertex * sizeof(VertexData) > vertexResourceSizeTriangle) return;
+
     VertexData* vData = nullptr;
-    // 書き込むためのアドレスを取得
-    HRESULT hr = vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vData));
+    HRESULT hr = vertexResourceTriangle->Map(0, nullptr, reinterpret_cast<void**>(&vData));
     if (FAILED(hr) || vData == nullptr) return;
-    // 頂点リソースにデータを書き込む
     std::memcpy(vData, vertexData, sizeof(VertexData) * kSumVertex);
-    vertexResource->Unmap(0, nullptr);
+    vertexResourceTriangle->Unmap(0, nullptr);
 
-
-    // 頂点バッファビューを作成する
     D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
-    // リソースの先頭のアドレスから使う
-    vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
-    // 仕様するリソースのサイズは頂点３つ分のサイズ
+    vertexBufferView.BufferLocation = vertexResourceTriangle->GetGPUVirtualAddress();
     vertexBufferView.SizeInBytes = sizeof(VertexData) * kSumVertex;
-    // １頂点あたりのサイズ
     vertexBufferView.StrideInBytes = sizeof(VertexData);
 
-
-
-    // textureNumberに一致するテクスチャを探す
     const TextureData* tex = nullptr;
     for (const auto& t : textures) {
         if (t.number == textureNumber) {
@@ -394,7 +401,6 @@ void Game::DrawTriangle(const Transforms& localTransform, const Transforms& worl
             break;
         }
     }
-    // 見つからなかったらuncheckを使う
     if (tex == nullptr) {
         tex = &textures[0];
     }
@@ -412,7 +418,7 @@ void Game::DrawTriangle(const Transforms& localTransform, const Transforms& worl
     materialData->uvTransform = MakeIdentity4x4();
     materialResource->Unmap(0, nullptr);
 
-    // World-View-Projection用のリソースを作る。Matrix4x4　１つ分のサイズを用意する
+    // World-View-Projection用のリソースを作る。TransformationMatrix　１つ分のサイズを用意する
     Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource = CreateBufferResource(dxManager->GetDevice(), sizeof(TransformationMatrix));
     // データを書き込む
     TransformationMatrix* wvpData = nullptr;
@@ -426,6 +432,11 @@ void Game::DrawTriangle(const Transforms& localTransform, const Transforms& worl
         wvpData->WVP = Mul(wvpData->World, cameraController->viewProjectionMatrix);
         wvpResource->Unmap(0, nullptr);
     }
+
+   
+   
+    
+   
 
     // RootSignatureを設定。
     dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
@@ -447,28 +458,22 @@ void Game::DrawTriangle(const Transforms& localTransform, const Transforms& worl
 
 void Game::DrawSphere(const Transforms& localTransform, VertexData* vertexData, uint32_t kSubdivision, uint32_t textureNumber, const Vector4& materialColor)
 {
-    CreateSphere(vertexData, kSubdivision);
     const uint32_t kSumVertex = kSubdivision * kSubdivision * 6;
+    if (kSumVertex * sizeof(VertexData) > vertexResourceSizeSphere) return;
 
-    // 頂点バッファリソースを作成
-    Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource = CreateBufferResource(dxManager->GetDevice(), sizeof(VertexData) * kSumVertex);
+    CreateSphere(vertexData, kSubdivision);
+
     VertexData* vData = nullptr;
-    HRESULT hr = vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vData));
+    HRESULT hr = vertexResourceSphere->Map(0, nullptr, reinterpret_cast<void**>(&vData));
     if (FAILED(hr) || vData == nullptr) return;
     std::memcpy(vData, vertexData, sizeof(VertexData) * kSumVertex);
-    vertexResource->Unmap(0, nullptr);
+    vertexResourceSphere->Unmap(0, nullptr);
 
-    // 頂点バッファビューを作成する
     D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
-    // リソースの先頭のアドレスから使う
-    vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
-    // 仕様するリソースのサイズは頂点３つ分のサイズ
+    vertexBufferView.BufferLocation = vertexResourceSphere->GetGPUVirtualAddress();
     vertexBufferView.SizeInBytes = sizeof(VertexData) * kSumVertex;
-    // １頂点あたりのサイズ
     vertexBufferView.StrideInBytes = sizeof(VertexData);
 
-
-    // textureNumberに一致するテクスチャを探す
     const TextureData* tex = nullptr;
     for (const auto& t : textures) {
         if (t.number == textureNumber) {
@@ -476,7 +481,6 @@ void Game::DrawSphere(const Transforms& localTransform, VertexData* vertexData, 
             break;
         }
     }
-    // 見つからなかったらuncheckを使う
     if (tex == nullptr) {
         tex = &textures[0];
     }
@@ -521,19 +525,17 @@ void Game::DrawSphere(const Transforms& localTransform, VertexData* vertexData, 
 
 void Game::DrawSprite(const Transforms& localTransform, VertexData* vertexData, uint32_t textureNumber, const Vector4& materialColor)
 {
-    // 頂点バッファリソースを作成
-    Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource = CreateBufferResource(dxManager->GetDevice(), sizeof(VertexData) * 4);
     VertexData* vData = nullptr;
-    HRESULT hr = vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vData));
+    HRESULT hr = vertexResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&vData));
     if (FAILED(hr) || vData == nullptr) return;
     std::memcpy(vData, vertexData, sizeof(VertexData) * 4);
-    vertexResource->Unmap(0, nullptr);
+    vertexResourceSprite->Unmap(0, nullptr);
 
 
     // 頂点バッファビューを作成する
     D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
     // リソースの先頭のアドレスから使う
-    vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
+    vertexBufferView.BufferLocation = vertexResourceSprite->GetGPUVirtualAddress();
     // 仕様するリソースのサイズは頂点4つ分のサイズ
     vertexBufferView.SizeInBytes = sizeof(VertexData) * 4;
     // １頂点あたりのサイズ
@@ -602,6 +604,7 @@ void Game::DrawSprite(const Transforms& localTransform, VertexData* vertexData, 
     dxManager->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
 }
 
+// 入力
 void Game::GetMousePosition(Vector2* position)
 {
     // hwnd: ゲームウィンドウのハンドル（WindowManagerなどから取得）
