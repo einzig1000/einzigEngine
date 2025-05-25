@@ -17,7 +17,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	int obj1 = Game::LoadOBJ("resources", "axis.obj");
 
 	Transforms transformsObj;
-	Transforms transformsObjworld;
+	Vector3 rotateCenterObj;
 	transformsObj.scale = { 1.2f, 1.2f, 1.2f };
 	transformsObj.translate = { 0.0f,0.0f,0.0f };
 	transformsObj.rotate = { 0.0f,(36.0f / 60.0f),1.5f };
@@ -66,7 +66,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		/// ↓更新処理ここから
 		///
 
-
+		rotateCenterObj = transformsObj.rotate;
 		///
 		/// ↑更新処理ここまで
 		///
@@ -75,9 +75,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		/// ↓描画処理ここから
 		///
 
-		Game::DrawSprite(transform, vdata, uvChecker, color);
-		Game::DrawSprite(transform1, vdata, uvChecker, color);
-		Game::Drawobj(transformsObj, transformsObjworld, obj1, uvChecker, color);
+		//Game::DrawSprite(transform, vdata, uvChecker, color);
+		//Game::DrawSprite(transform1, vdata, uvChecker, color);
+		Game::Drawobj(transformsObj, rotateCenterObj, obj1, uvChecker, color);
 		//Game::DrawSphere(transformSphere1, vertexData, kSubdivision, monsterBall, { 1.0f, 1.0f, 1.0f, 1.0f });
 
 		Game::GetMousePosition(&mousePosition);

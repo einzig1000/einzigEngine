@@ -21,17 +21,21 @@ Microsoft::WRL::ComPtr<ID3D12Resource> Game::vertexResourceTriangle;
 UINT Game::vertexResourceSizeTriangle;
 Microsoft::WRL::ComPtr<ID3D12Resource> Game::vertexResourceSphere;
 UINT Game::vertexResourceSizeSphere;
-
-
 Microsoft::WRL::ComPtr<ID3D12Resource> Game::indexResource;
 D3D12_INDEX_BUFFER_VIEW Game::indexBufferView;
+
+std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> Game::materialResources;
+std::vector<Material*> Game::materialData;
+std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> Game::wvpResources;
+std::vector<TransformationMatrix*> Game::wvpData;
+size_t Game::drawCallIndex = 0;
 
 Microsoft::WRL::ComPtr<ID3D12Resource> Game::directionalLightResource;
 DirectionalLight* Game::directionalLightData = nullptr;
 
 CameraController* Game::cameraController;
 
-int Game::wheelDelta_ = 0;
+int Game::wheelDelta = 0;
 
 // 初期化用
 void Game::Initialize(int width, int height, const std::wstring& title)
@@ -71,7 +75,7 @@ void Game::Initialize(int width, int height, const std::wstring& title)
     objectSum = 0;
     textureSum = 1;
 
-    // 頂点バッファ
+    // 頂点リソース
     vertexResourceSizeSprite = sizeof(VertexData) * 256; // スプライト
     vertexResourceSprite = CreateBufferResource(dxManager->GetDevice(), vertexResourceSizeSprite);
 
@@ -83,6 +87,17 @@ void Game::Initialize(int width, int height, const std::wstring& title)
 
     vertexResourceSizeSphere = sizeof(VertexData) * 4096; // 球
     vertexResourceSphere = CreateBufferResource(dxManager->GetDevice(), vertexResourceSizeSphere);
+
+    materialResources.resize(kMaxDrawCallPerFrame);
+    materialData.resize(kMaxDrawCallPerFrame);
+    wvpResources.resize(kMaxDrawCallPerFrame);
+    wvpData.resize(kMaxDrawCallPerFrame);
+    for (size_t i = 0; i < kMaxDrawCallPerFrame; ++i) {
+        materialResources[i] = CreateBufferResource(dxManager->GetDevice(), sizeof(Material));
+        materialResources[i]->Map(0, nullptr, reinterpret_cast<void**>(&materialData[i]));
+        wvpResources[i] = CreateBufferResource(dxManager->GetDevice(), sizeof(TransformationMatrix));
+        wvpResources[i]->Map(0, nullptr, reinterpret_cast<void**>(&wvpData[i]));
+    }
 
     // インデックスリソース
     indexResource = CreateBufferResource(dxManager->GetDevice(), sizeof(uint32_t) * 6);
@@ -122,7 +137,7 @@ bool Game::ProcessMessage() {
         }
         if (msg.message == WM_MOUSEWHEEL) {
             // ホイールの回転量を加算　クリックはboolで回転量はintだからmessageを使う。らしい。
-            wheelDelta_ += GET_WHEEL_DELTA_WPARAM(msg.wParam);
+            wheelDelta += GET_WHEEL_DELTA_WPARAM(msg.wParam);
         }
         TranslateMessage(&msg);
         DispatchMessage(&msg);
@@ -157,6 +172,7 @@ void Game::EndFrame()
     {
         objects[objectNum].drawCount = 0;
     }
+    drawCallIndex = 0;
 }
 
 // 終了処理
@@ -175,6 +191,8 @@ void Game::Finalize()
     dxManager = nullptr;
     delete windowManager;
     windowManager = nullptr;
+    delete cameraController;
+    cameraController = nullptr;
 }
 
 
@@ -271,15 +289,20 @@ int Game::LoadOBJ(const std::string& directoryPath, const std::string& filename)
 }
 
 // 描画
-void Game::Drawobj(const Transforms& localTransform, const Transforms& worldTransform, uint32_t objectNumeber, uint32_t textureNumber, const Vector4& materialColor)
+void Game::Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const Vector4& materialColor)
 {
-    Object3D& obj = objects[objectNumeber];
+    // 描画回数上限
+    if (drawCallIndex >= kMaxDrawCallPerFrame) return;
+
+    // ボックスの作成
+    Object3D& obj = objects[objectNumber];
 
     // 必要な頂点数
     const uint32_t vertexCount = static_cast<uint32_t>(obj.modelData.vertices.size());
     if (vertexCount == 0) return;
-    if (sizeof(VertexData) * vertexCount > vertexResourceSizeObj) return; // バッファオーバー防止
+    if (sizeof(VertexData) * vertexCount > vertexResourceSizeObj) return;
 
+    // 頂点リソース
     VertexData* vData = nullptr;
     HRESULT hr = vertexResourceObj->Map(0, nullptr, reinterpret_cast<void**>(&vData));
     if (FAILED(hr) || vData == nullptr) return;
@@ -291,57 +314,83 @@ void Game::Drawobj(const Transforms& localTransform, const Transforms& worldTran
     vertexBufferView.SizeInBytes = sizeof(VertexData) * vertexCount;
     vertexBufferView.StrideInBytes = sizeof(VertexData);
 
-    // objectNumeberの等しいオブジェクトの描画が２回目以降になったらransformationMatrixを拡張する（objectNumeberが等しい＝objects[].transformを共有しているから各々独立させて動かすことが出来ないから）
-    // じゃあobjects[].transformいらなくない？　→　objects[].transformはobjectNumeberが等しいモデル全てに影響を及ぼすtransformとしてつかえるんじゃよそれはそれで使い道がありそうじゃろう
-    if (obj.drawCount >= obj.transformationMatrixResource.size()) {
-        size_t oldSize = obj.transformationMatrixResource.size();
-        obj.transformationMatrixResource.resize(obj.drawCount + 1);
-        obj.transformationMatrixData.resize(obj.drawCount + 1);
-        for (size_t i = oldSize; i <= obj.drawCount; ++i) {
-            obj.transformationMatrixResource[i] = CreateBufferResource(dxManager->GetDevice(), sizeof(TransformationMatrix));
-            obj.transformationMatrixData[i] = nullptr;
-            obj.transformationMatrixResource[i]->Map(0, nullptr, reinterpret_cast<void**>(&obj.transformationMatrixData[i]));
-            obj.transformationMatrixData[i]->World = MakeIdentity4x4();
-            obj.transformationMatrixData[i]->WVP = MakeIdentity4x4();
-            obj.transformationMatrixResource[i]->Unmap(0, nullptr);
-        }
-    }
+    // objectNumber の等しいオブジェクトの描画が２回目以降になったらransformationMatrixを拡張する（objectNumber が等しい＝objects[].transformを共有しているから各々独立させて動かすことが出来ないから）
+    // じゃあobjects[].transformいらなくない？　→　objects[].transformはobjectNumber が等しいモデル全てに影響を及ぼすtransformとしてつかえるんじゃよそれはそれで使い道がありそうじゃろう
+    //if (obj.drawCount >= obj.transformationMatrixResource.size()) {
+    //    size_t oldSize = obj.transformationMatrixResource.size();
+    //    obj.transformationMatrixResource.resize(obj.drawCount + 1);
+    //    obj.transformationMatrixData.resize(obj.drawCount + 1);
+    //    for (size_t i = oldSize; i <= obj.drawCount; ++i) {
+    //        obj.transformationMatrixResource[i] = CreateBufferResource(dxManager->GetDevice(), sizeof(TransformationMatrix));
+    //        obj.transformationMatrixData[i] = nullptr;
+    //        obj.transformationMatrixResource[i]->Map(0, nullptr, reinterpret_cast<void**>(&obj.transformationMatrixData[i]));
+    //        obj.transformationMatrixData[i]->World = MakeIdentity4x4();
+    //        obj.transformationMatrixData[i]->WVP = MakeIdentity4x4();
+    //        obj.transformationMatrixResource[i]->Unmap(0, nullptr);
+    //    }
+    //}
 
     /////
     // オブジェクトのWorldViewProjectionMatrixを作る
     ////
-    
+
+
+    //  Matrix4x4 toOrigin = MakeTranslateMatrix({ -worldTransform.translate.x, -worldTransform.translate.y, -worldTransform.translate.z });
+    //  Matrix4x4 rotation = MakeAffineMatrix(worldTransform.scale, worldTransform.rotate, { 0,0,0 });
+    //  Matrix4x4 fromOrigin = MakeTranslateMatrix(worldTransform.translate);
+    //// 原点に戻してから回転   [Mul(fromOrigin, rotation)]
+    //// そして原点に戻す       [Mul(Mul(fromOrigin, rotation), toOrigin)]
+    //// よってworldMatrixはその場で回転した結果のマトリックスになる
+    //  Matrix4x4 worldMatrix = Mul(Mul(fromOrigin, rotation), toOrigin);
+    //// オブジェクト自身を中心に回転マトリックス
+    //Matrix4x4 localMatrix = MakeAffineMatrix(localTransform.scale, localTransform.rotate, localTransform.translate);
+
+    //// オブジェクト間共有マトリックス
+    //Matrix4x4 objectMatrix = MakeAffineMatrix(obj.transform.scale, obj.transform.rotate, obj.transform.translate);
+
+    //wvpData[drawCallIndex]->World = Mul(objectMatrix, Mul(localMatrix, worldMatrix));
+    //wvpData[drawCallIndex]->WVP = Mul(wvpData[drawCallIndex]->World, cameraController->viewProjectionMatrix);
+
+
+    // マテリアル
+    materialData[drawCallIndex]->color = materialColor;
+    materialData[drawCallIndex]->enableLighting = true;
+    materialData[drawCallIndex]->uvTransform = MakeIdentity4x4();
+
+    // wvp
+    Matrix4x4 toCenter = MakeTranslateMatrix({ -center.x, -center.y, -center.z });          // centerへ移動用マトリックス
+    Matrix4x4 rotateScale = MakeAffineMatrix(transform.scale, transform.rotate, { 0,0,0 }); // 回転・スケール用マトリックス
+    Matrix4x4 fromCenter = MakeTranslateMatrix(center);                                     // centerから元の位置へ戻す用マトリックス
+    Matrix4x4 translate = MakeTranslateMatrix(transform.translate);                         // 移動用マトリックス
+
+
+    // １、Mul(rotateScale, toCenter) = 回転中心へ移動してから回転拡縮。center = transform.translate ならその場で回る
+    // ２、Mul(fromCenter, ↑)        = 回転中心から元の位置へ戻す
+    // ３、Mul(translate, ↑)         = 最終的な平行移動（全体の移動）
+    // ４、centerを中心に回転拡縮し、最後にtransform.translateで移動した結果のマトリックスが完成
+    Matrix4x4 worldMatrix = Mul(translate, Mul(fromCenter, Mul(rotateScale, toCenter)));
+
     // オブジェクト間共有マトリックス
     Matrix4x4 objectMatrix = MakeAffineMatrix(obj.transform.scale, obj.transform.rotate, obj.transform.translate);
-    
-    // オブジェクト自身を中心に回転マトリックス
-    Matrix4x4 localMatrix = MakeAffineMatrix(localTransform.scale, localTransform.rotate, localTransform.translate);
 
-    // 原点を中心に回転マトリックス
-    // 1. 原点へ移動
-    Matrix4x4 toOrigin = MakeTranslateMatrix({ -worldTransform.translate.x, -worldTransform.translate.y, -worldTransform.translate.z });
-    // 2. 回転
-    Matrix4x4 rotation = MakeAffineMatrix(worldTransform.scale, worldTransform.rotate, { 0,0,0 });
-    // 3. 元の位置へ戻す
-    Matrix4x4 fromOrigin = MakeTranslateMatrix(worldTransform.translate);
-    Matrix4x4 worldMatrix = Mul(Mul(fromOrigin, rotation), toOrigin);
+    wvpData[drawCallIndex]->World = Mul(objectMatrix, worldMatrix);
+    wvpData[drawCallIndex]->WVP = Mul(wvpData[drawCallIndex]->World, cameraController->viewProjectionMatrix);
 
 
+    //obj.transformationMatrixResource[obj.drawCount]->Map(0, nullptr, reinterpret_cast<void**>(&obj.transformationMatrixData[obj.drawCount]));
+    //obj.transformationMatrixData[obj.drawCount]->World = Mul(objectMatrix, Mul(localMatrix, worldMatrix));
+    //obj.transformationMatrixData[obj.drawCount]->WVP = Mul(obj.transformationMatrixData[obj.drawCount]->World, cameraController->viewProjectionMatrix);
+    //obj.transformationMatrixResource[obj.drawCount]->Unmap(0, nullptr);
 
-    obj.transformationMatrixResource[obj.drawCount]->Map(0, nullptr, reinterpret_cast<void**>(&obj.transformationMatrixData[obj.drawCount]));
-    obj.transformationMatrixData[obj.drawCount]->World = Mul(objectMatrix, Mul(localMatrix, worldMatrix));
-    obj.transformationMatrixData[obj.drawCount]->WVP = Mul(obj.transformationMatrixData[obj.drawCount]->World, cameraController->viewProjectionMatrix);
-    obj.transformationMatrixResource[obj.drawCount]->Unmap(0, nullptr);
 
-
-    // マテリアルリソースを作成
-    obj.materialResource = CreateBufferResource(dxManager->GetDevice(), sizeof(Material));
-    obj.materialData = nullptr;
-    obj.materialResource->Map(0, nullptr, reinterpret_cast<void**>(&obj.materialData));
-    obj.materialData->color = materialColor;
-    obj.materialData->enableLighting = true;
-    obj.materialData->uvTransform = MakeIdentity4x4();
-    obj.materialResource->Unmap(0, nullptr);
+    //// マテリアルリソースを作成
+    //obj.materialResource = CreateBufferResource(dxManager->GetDevice(), sizeof(Material));
+    //obj.materialData = nullptr;
+    //obj.materialResource->Map(0, nullptr, reinterpret_cast<void**>(&obj.materialData));
+    //obj.materialData->color = materialColor;
+    //obj.materialData->enableLighting = true;
+    //obj.materialData->uvTransform = MakeIdentity4x4();
+    //obj.materialResource->Unmap(0, nullptr);
 
     // textureNumberに一致するテクスチャを探す
     const TextureData* tex = nullptr;
@@ -639,8 +688,8 @@ bool Game::IsPressMouse(int i)
 
 int Game::GetWheel()
 {
-    int delta = wheelDelta_;
-    wheelDelta_ = 0; // 1フレームで消費
+    int delta = wheelDelta;
+    wheelDelta = 0; // 1フレームで消費
     return delta;
 }
 

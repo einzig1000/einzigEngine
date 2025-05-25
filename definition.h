@@ -141,8 +141,8 @@ struct Object3D
     std::vector<TransformationMatrix*> transformationMatrixData;
 
     // テクスチャ
-    Microsoft::WRL::ComPtr<ID3D12Resource> textureResource;
-    D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU;
+    //Microsoft::WRL::ComPtr<ID3D12Resource> textureResource;
+    //D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU;
 
     // 識別ナンバー
     uint32_t number;

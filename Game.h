@@ -26,7 +26,7 @@ public:
     static int LoadTexture(const std::string& filePath);
 
     // 描画
-    static void Drawobj(const Transforms& localTransform, const Transforms& worldTransform, uint32_t objectNumeber, uint32_t textureNumber, const Vector4& materialColor);
+    static void Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const Vector4& materialColor);
     static void DrawTriangle(const Transforms& localTransform, const Transforms& worldTransform, const VertexData* vertexData, uint32_t kSumVertex, uint32_t textureNumber, const Vector4& materialColor);
     static void DrawSphere(const Transforms& localTransform, VertexData* vertexData, uint32_t kSubdivision, uint32_t textureNumber, const Vector4& materialColor);
     static void DrawSprite(const Transforms& localTransform, VertexData* vertexData, uint32_t textureNumber, const Vector4& materialColor);
@@ -51,7 +51,7 @@ private:
     static std::vector<TextureData> textures;
     static uint32_t textureSum;
 
-    // 頂点バッファども
+    // 頂点リソースども
     static Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceSprite;
     static UINT vertexResourceSizeSprite;
 
@@ -64,14 +64,26 @@ private:
     static Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceSphere;
     static UINT vertexResourceSizeSphere;
 
+
     static Microsoft::WRL::ComPtr<ID3D12Resource> indexResource;
     static D3D12_INDEX_BUFFER_VIEW indexBufferView;
 
 
+    // 使い回す定数バッファ（マテリアル/WVP）をフレーム数分用意
+    static constexpr size_t kMaxDrawCallPerFrame = 256;
+    static std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> materialResources;
+    static std::vector<Material*> materialData;
+    static std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> wvpResources;
+    static std::vector<TransformationMatrix*> wvpData;
+    static size_t drawCallIndex;
 
+    // ライト
     static Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource;
     static DirectionalLight* directionalLightData;
 
+    // カメラ
     static CameraController* cameraController;
-    static int wheelDelta_;
+    
+    // マウスホイール量
+    static int wheelDelta;
 };

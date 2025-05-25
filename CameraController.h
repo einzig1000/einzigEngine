@@ -40,7 +40,7 @@ private:
     ///               カメラ距離               ///
     //////////////////////////////////////////////
     // カメラの距離（cameraTargetからの距離）
-    float distance = 6.49f;
+    float distance = 15.00f; // 6.49f
     bool pressMouse0 = 0;
     bool prePressMouse0 = 0;
     int mouseWheel = 0;
