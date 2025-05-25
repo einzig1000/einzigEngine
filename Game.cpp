@@ -270,10 +270,11 @@ int Game::LoadOBJ(const std::string& directoryPath, const std::string& filename)
     return obj.number;
 }
 
+
 // 描画
-void Game::Drawobj(const Transforms& localTransform, const Transforms& worldTransform, uint32_t objectNumeber, uint32_t textureNumber, const Vector4& materialColor)
+void Game::Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const Vector4& materialColor)
 {
-    Object3D& obj = objects[objectNumeber];
+    Object3D& obj = objects[objectNumber];
 
     // 必要な頂点数
     const uint32_t vertexCount = static_cast<uint32_t>(obj.modelData.vertices.size());
@@ -307,32 +308,24 @@ void Game::Drawobj(const Transforms& localTransform, const Transforms& worldTran
         }
     }
 
-    /////
-    // オブジェクトのWorldViewProjectionMatrixを作る
-    ////
-    
+    // wvp
+    Matrix4x4 toCenter = MakeTranslateMatrix({ -center.x, -center.y, -center.z });          // centerへ移動用マトリックス
+    Matrix4x4 rotateScale = MakeAffineMatrix(transform.scale, transform.rotate, { 0,0,0 }); // 回転・スケール用マトリックス
+    Matrix4x4 fromCenter = MakeTranslateMatrix(center);                                     // centerから元の位置へ戻す用マトリックス
+    Matrix4x4 translate = MakeTranslateMatrix(transform.translate);                         // 移動用マトリックス
+
+
+    // １、Mul(rotateScale, toCenter) = 回転中心へ移動してから回転拡縮。center = transform.translate ならその場で回る
+    // ２、Mul(fromCenter, ↑)        = 回転中心から元の位置へ戻す
+    // ３、Mul(translate, ↑)         = 最終的な平行移動（全体の移動）
+    // ４、centerを中心に回転拡縮し、最後にtransform.translateで移動した結果のマトリックスが完成
+    Matrix4x4 worldMatrix = Mul(translate, Mul(fromCenter, Mul(rotateScale, toCenter)));
+
     // オブジェクト間共有マトリックス
     Matrix4x4 objectMatrix = MakeAffineMatrix(obj.transform.scale, obj.transform.rotate, obj.transform.translate);
-    
-    // オブジェクト自身を中心に回転マトリックス
-    Matrix4x4 localMatrix = MakeAffineMatrix(localTransform.scale, localTransform.rotate, localTransform.translate);
 
-    // 原点を中心に回転マトリックス
-    // 1. 原点へ移動
-    Matrix4x4 toOrigin = MakeTranslateMatrix({ -worldTransform.translate.x, -worldTransform.translate.y, -worldTransform.translate.z });
-    // 2. 回転
-    Matrix4x4 rotation = MakeAffineMatrix(worldTransform.scale, worldTransform.rotate, { 0,0,0 });
-    // 3. 元の位置へ戻す
-    Matrix4x4 fromOrigin = MakeTranslateMatrix(worldTransform.translate);
-    Matrix4x4 worldMatrix = Mul(Mul(fromOrigin, rotation), toOrigin);
-
-
-
-    obj.transformationMatrixResource[obj.drawCount]->Map(0, nullptr, reinterpret_cast<void**>(&obj.transformationMatrixData[obj.drawCount]));
-    obj.transformationMatrixData[obj.drawCount]->World = Mul(objectMatrix, Mul(localMatrix, worldMatrix));
+    obj.transformationMatrixData[obj.drawCount]->World = Mul(objectMatrix, worldMatrix);
     obj.transformationMatrixData[obj.drawCount]->WVP = Mul(obj.transformationMatrixData[obj.drawCount]->World, cameraController->viewProjectionMatrix);
-    obj.transformationMatrixResource[obj.drawCount]->Unmap(0, nullptr);
-
 
     // マテリアルリソースを作成
     obj.materialResource = CreateBufferResource(dxManager->GetDevice(), sizeof(Material));

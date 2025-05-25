@@ -75,9 +75,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		/// ↓描画処理ここから
 		///
 
-		Game::DrawSprite(transform, vdata, uvChecker, color);
-		Game::DrawSprite(transform1, vdata, uvChecker, color);
-		Game::Drawobj(transformsObj, transformsObjworld, obj1, uvChecker, color);
+		//Game::DrawSprite(transform, vdata, uvChecker, color);
+		//Game::DrawSprite(transform1, vdata, uvChecker, color);
+		Game::Drawobj(transformsObj, transformsObj.translate, obj1, uvChecker, color);
 		//Game::DrawSphere(transformSphere1, vertexData, kSubdivision, monsterBall, { 1.0f, 1.0f, 1.0f, 1.0f });
 
 		Game::GetMousePosition(&mousePosition);
@@ -93,10 +93,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			ImGui::DragFloat3("SpriteScale", &transform.scale.x, 0.01f);
 			ImGui::DragFloat3("SpriteRotate", &transform.rotate.x, 0.01f);
 			ImGui::DragFloat3("SpriteTranslate", &transform.translate.x, 0.1f);
-		}
-		if (ImGui::CollapsingHeader("mousePosition"))
-		{
-			ImGui::DragFloat2("SpriteScale", &mousePosition.x, 0.01f);
 		}
 		///
 		/// ↑描画処理ここまで

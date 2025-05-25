@@ -10,68 +10,69 @@
 
 class Game {
 public:
-    // 初期化
-    static void Initialize(int width, int height, const std::wstring& title);
+	// 初期化
+	static void Initialize(int width, int height, const std::wstring& title);
 
-    // メインループ用
-    static bool ProcessMessage();
-    static void BeginFrame();
-    static void EndFrame();
+	// メインループ用
+	static bool ProcessMessage();
+	static void BeginFrame();
+	static void EndFrame();
 
-    // 終了処理
-    static void Finalize();
+	// 終了処理
+	static void Finalize();
 
-    // リソース読み込み
-    static int LoadOBJ(const std::string& directoryPath, const std::string& filename);
-    static int LoadTexture(const std::string& filePath);
+	// リソース読み込み
+	static int LoadOBJ(const std::string& directoryPath, const std::string& filename);
+	static int LoadTexture(const std::string& filePath);
 
-    // 描画
-    static void Drawobj(const Transforms& localTransform, const Transforms& worldTransform, uint32_t objectNumeber, uint32_t textureNumber, const Vector4& materialColor);
-    static void DrawTriangle(const Transforms& localTransform, const Transforms& worldTransform, const VertexData* vertexData, uint32_t kSumVertex, uint32_t textureNumber, const Vector4& materialColor);
-    static void DrawSphere(const Transforms& localTransform, VertexData* vertexData, uint32_t kSubdivision, uint32_t textureNumber, const Vector4& materialColor);
-    static void DrawSprite(const Transforms& localTransform, VertexData* vertexData, uint32_t textureNumber, const Vector4& materialColor);
+	// 描画
+	//static void Drawobj(const Transforms& localTransform, const Transforms& worldTransform, uint32_t objectNumeber, uint32_t textureNumber, const Vector4& materialColor);
+	static void Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const Vector4& materialColor);
+	static void DrawTriangle(const Transforms& localTransform, const Transforms& worldTransform, const VertexData* vertexData, uint32_t kSumVertex, uint32_t textureNumber, const Vector4& materialColor);
+	static void DrawSphere(const Transforms& localTransform, VertexData* vertexData, uint32_t kSubdivision, uint32_t textureNumber, const Vector4& materialColor);
+	static void DrawSprite(const Transforms& localTransform, VertexData* vertexData, uint32_t textureNumber, const Vector4& materialColor);
 
-    // マウス
-    static void GetMousePosition(Vector2* position);
-    static bool IsPressMouse(int i);
-    static int GetWheel();
+	// マウス
+	static void GetMousePosition(Vector2* position);
+	static bool IsPressMouse(int i);
+	static int GetWheel();
 
 
 private:
-    static void UpdateCameraAndLight();
+	static void UpdateCameraAndLight();
 
-    static WindowManager* windowManager;
-    static DirectXManager* dxManager;
+	static WindowManager* windowManager;
+	static DirectXManager* dxManager;
 
-    // モデル
-    static std::vector<Object3D> objects;
-    static uint32_t objectSum;
+	// モデル
+	static std::vector<Object3D> objects;
+	static uint32_t objectSum;
 
-    // 画像
-    static std::vector<TextureData> textures;
-    static uint32_t textureSum;
+	// 画像
+	static std::vector<TextureData> textures;
+	static uint32_t textureSum;
 
-    // 頂点バッファども
-    static Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceSprite;
-    static UINT vertexResourceSizeSprite;
+	// 頂点バッファども
+	static Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceSprite;
+	static UINT vertexResourceSizeSprite;
 
-    static Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceObj;
-    static UINT vertexResourceSizeObj;
+	static Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceObj;
+	static UINT vertexResourceSizeObj;
 
-    static Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceTriangle;
-    static UINT vertexResourceSizeTriangle;
+	static Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceTriangle;
+	static UINT vertexResourceSizeTriangle;
 
-    static Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceSphere;
-    static UINT vertexResourceSizeSphere;
+	static Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceSphere;
+	static UINT vertexResourceSizeSphere;
 
-    static Microsoft::WRL::ComPtr<ID3D12Resource> indexResource;
-    static D3D12_INDEX_BUFFER_VIEW indexBufferView;
+	static Microsoft::WRL::ComPtr<ID3D12Resource> indexResource;
+	static D3D12_INDEX_BUFFER_VIEW indexBufferView;
 
 
 
-    static Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource;
-    static DirectionalLight* directionalLightData;
+	static Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource;
+	static DirectionalLight* directionalLightData;
 
-    static CameraController* cameraController;
-    static int wheelDelta_;
+	static CameraController* cameraController;
+	static int wheelDelta_;
 };
