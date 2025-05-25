@@ -130,15 +130,15 @@ struct Object3D
     //D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
 
     // マテリアルデータ
-    Microsoft::WRL::ComPtr<ID3D12Resource> materialResource;
-    Material* materialData;
+    //Microsoft::WRL::ComPtr<ID3D12Resource> materialResource;
+    //Material* materialData;
 
     // 変換行列
     Transforms transform;
 
     // ワールド・ビュー・プロジェクション行列
-    std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> transformationMatrixResource;
-    std::vector<TransformationMatrix*> transformationMatrixData;
+    //std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> transformationMatrixResource;
+    //std::vector<TransformationMatrix*> transformationMatrixData;
 
     // テクスチャ
     //Microsoft::WRL::ComPtr<ID3D12Resource> textureResource;

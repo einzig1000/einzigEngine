@@ -253,26 +253,26 @@ int Game::LoadOBJ(const std::string& directoryPath, const std::string& filename)
 
 
     // マテリアルデータ
-    obj.materialResource = CreateBufferResource(dxManager->GetDevice(), sizeof(Material));
-    obj.materialData = nullptr;
-    obj.materialResource->Map(0, nullptr, reinterpret_cast<void**>(&obj.materialData));
-    obj.materialData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-    obj.materialData->enableLighting = true;
-    obj.materialData->uvTransform = MakeIdentity4x4();
-    obj.materialResource->Unmap(0, nullptr);
+    //obj.materialResource = CreateBufferResource(dxManager->GetDevice(), sizeof(Material));
+    //obj.materialData = nullptr;
+    //obj.materialResource->Map(0, nullptr, reinterpret_cast<void**>(&obj.materialData));
+    //obj.materialData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
+    //obj.materialData->enableLighting = true;
+    //obj.materialData->uvTransform = MakeIdentity4x4();
+    //obj.materialResource->Unmap(0, nullptr);
 
     // 変換行列
     obj.transform = { {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f} };
 
     // ワールド・ビュー・プロジェクション行列
-    obj.transformationMatrixResource.resize(1);
-    obj.transformationMatrixData.resize(1);
-    obj.transformationMatrixResource[0] = CreateBufferResource(dxManager->GetDevice(), sizeof(TransformationMatrix));
-    obj.transformationMatrixData[0] = nullptr;
-    obj.transformationMatrixResource[0]->Map(0, nullptr, reinterpret_cast<void**>(&obj.transformationMatrixData[0]));
-    obj.transformationMatrixData[0]->World = MakeIdentity4x4();
-    obj.transformationMatrixData[0]->WVP = MakeIdentity4x4();
-    obj.transformationMatrixResource[0]->Unmap(0, nullptr);
+    //obj.transformationMatrixResource.resize(1);
+    //obj.transformationMatrixData.resize(1);
+    //obj.transformationMatrixResource[0] = CreateBufferResource(dxManager->GetDevice(), sizeof(TransformationMatrix));
+    //obj.transformationMatrixData[0] = nullptr;
+    //obj.transformationMatrixResource[0]->Map(0, nullptr, reinterpret_cast<void**>(&obj.transformationMatrixData[0]));
+    //obj.transformationMatrixData[0]->World = MakeIdentity4x4();
+    //obj.transformationMatrixData[0]->WVP = MakeIdentity4x4();
+    //obj.transformationMatrixResource[0]->Unmap(0, nullptr);
 
     // 識別ナンバーの設定
     obj.number = objectSum;
@@ -314,44 +314,6 @@ void Game::Drawobj(const Transforms& transform, const Vector3& center, uint32_t 
     vertexBufferView.SizeInBytes = sizeof(VertexData) * vertexCount;
     vertexBufferView.StrideInBytes = sizeof(VertexData);
 
-    // objectNumber の等しいオブジェクトの描画が２回目以降になったらransformationMatrixを拡張する（objectNumber が等しい＝objects[].transformを共有しているから各々独立させて動かすことが出来ないから）
-    // じゃあobjects[].transformいらなくない？　→　objects[].transformはobjectNumber が等しいモデル全てに影響を及ぼすtransformとしてつかえるんじゃよそれはそれで使い道がありそうじゃろう
-    //if (obj.drawCount >= obj.transformationMatrixResource.size()) {
-    //    size_t oldSize = obj.transformationMatrixResource.size();
-    //    obj.transformationMatrixResource.resize(obj.drawCount + 1);
-    //    obj.transformationMatrixData.resize(obj.drawCount + 1);
-    //    for (size_t i = oldSize; i <= obj.drawCount; ++i) {
-    //        obj.transformationMatrixResource[i] = CreateBufferResource(dxManager->GetDevice(), sizeof(TransformationMatrix));
-    //        obj.transformationMatrixData[i] = nullptr;
-    //        obj.transformationMatrixResource[i]->Map(0, nullptr, reinterpret_cast<void**>(&obj.transformationMatrixData[i]));
-    //        obj.transformationMatrixData[i]->World = MakeIdentity4x4();
-    //        obj.transformationMatrixData[i]->WVP = MakeIdentity4x4();
-    //        obj.transformationMatrixResource[i]->Unmap(0, nullptr);
-    //    }
-    //}
-
-    /////
-    // オブジェクトのWorldViewProjectionMatrixを作る
-    ////
-
-
-    //  Matrix4x4 toOrigin = MakeTranslateMatrix({ -worldTransform.translate.x, -worldTransform.translate.y, -worldTransform.translate.z });
-    //  Matrix4x4 rotation = MakeAffineMatrix(worldTransform.scale, worldTransform.rotate, { 0,0,0 });
-    //  Matrix4x4 fromOrigin = MakeTranslateMatrix(worldTransform.translate);
-    //// 原点に戻してから回転   [Mul(fromOrigin, rotation)]
-    //// そして原点に戻す       [Mul(Mul(fromOrigin, rotation), toOrigin)]
-    //// よってworldMatrixはその場で回転した結果のマトリックスになる
-    //  Matrix4x4 worldMatrix = Mul(Mul(fromOrigin, rotation), toOrigin);
-    //// オブジェクト自身を中心に回転マトリックス
-    //Matrix4x4 localMatrix = MakeAffineMatrix(localTransform.scale, localTransform.rotate, localTransform.translate);
-
-    //// オブジェクト間共有マトリックス
-    //Matrix4x4 objectMatrix = MakeAffineMatrix(obj.transform.scale, obj.transform.rotate, obj.transform.translate);
-
-    //wvpData[drawCallIndex]->World = Mul(objectMatrix, Mul(localMatrix, worldMatrix));
-    //wvpData[drawCallIndex]->WVP = Mul(wvpData[drawCallIndex]->World, cameraController->viewProjectionMatrix);
-
-
     // マテリアル
     materialData[drawCallIndex]->color = materialColor;
     materialData[drawCallIndex]->enableLighting = true;
@@ -377,21 +339,6 @@ void Game::Drawobj(const Transforms& transform, const Vector3& center, uint32_t 
     wvpData[drawCallIndex]->WVP = Mul(wvpData[drawCallIndex]->World, cameraController->viewProjectionMatrix);
 
 
-    //obj.transformationMatrixResource[obj.drawCount]->Map(0, nullptr, reinterpret_cast<void**>(&obj.transformationMatrixData[obj.drawCount]));
-    //obj.transformationMatrixData[obj.drawCount]->World = Mul(objectMatrix, Mul(localMatrix, worldMatrix));
-    //obj.transformationMatrixData[obj.drawCount]->WVP = Mul(obj.transformationMatrixData[obj.drawCount]->World, cameraController->viewProjectionMatrix);
-    //obj.transformationMatrixResource[obj.drawCount]->Unmap(0, nullptr);
-
-
-    //// マテリアルリソースを作成
-    //obj.materialResource = CreateBufferResource(dxManager->GetDevice(), sizeof(Material));
-    //obj.materialData = nullptr;
-    //obj.materialResource->Map(0, nullptr, reinterpret_cast<void**>(&obj.materialData));
-    //obj.materialData->color = materialColor;
-    //obj.materialData->enableLighting = true;
-    //obj.materialData->uvTransform = MakeIdentity4x4();
-    //obj.materialResource->Unmap(0, nullptr);
-
     // textureNumberに一致するテクスチャを探す
     const TextureData* tex = nullptr;
     for (const auto& t : textures) {
@@ -410,15 +357,15 @@ void Game::Drawobj(const Transforms& transform, const Vector3& center, uint32_t 
     // 形状を設定
     dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     // CBVを設定する マテリアル用のCBufferの場所を設定
-    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, obj.materialResource->GetGPUVirtualAddress());
+    //dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, obj.materialResource->GetGPUVirtualAddress());
+    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources[drawCallIndex]->GetGPUVirtualAddress());
     // CBVを設定する wvp用のCBufferの場所を設定
-    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, obj.transformationMatrixResource[obj.drawCount]->GetGPUVirtualAddress());
+    //dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, obj.transformationMatrixResource[obj.drawCount]->GetGPUVirtualAddress());
+    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources[drawCallIndex]->GetGPUVirtualAddress());
     // SRVのDescriptorTableの先頭を設定。２はrootParameters[2]。
     dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
     // CBVを設定する ディレクショナルライト用のCBufferの場所を設定
     dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
-
-
 
 
     // 描画
