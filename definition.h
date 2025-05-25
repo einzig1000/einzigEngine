@@ -19,6 +19,12 @@
 #include "externals/DirectXTex/DirectXTex.h"
 
 
+struct Vector2int
+{
+    int x = 0;
+    int y = 0;
+};
+
 struct Vector2
 {
     float x = 0;
@@ -51,6 +57,12 @@ struct Matrix4x4
     { 0,0,0,0 },
     { 0,0,0,0 },
     { 0,0,0,0 } };
+};
+
+struct Sphere
+{
+    Vector3 center;
+    float radius = 1;
 };
 
 struct Vertex

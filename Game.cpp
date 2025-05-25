@@ -19,10 +19,13 @@ D3D12_INDEX_BUFFER_VIEW Game::indexBufferView;
 Microsoft::WRL::ComPtr<ID3D12Resource> Game::directionalLightResource;
 DirectionalLight* Game::directionalLightData = nullptr;
 
-Transforms Game::cameraTransform;
-Matrix4x4 Game::viewMatrix;
-Matrix4x4 Game::projectionMatrix;
+//Transforms Game::cameraTransform;
+//Matrix4x4 Game::viewMatrix;
+//Matrix4x4 Game::projectionMatrix;
 
+CameraController* Game::cameraController;
+
+int Game::wheelDelta_ = 0;
 
 // 初期化用
 void Game::Initialize(int width, int height, const std::wstring& title)
@@ -55,7 +58,9 @@ void Game::Initialize(int width, int height, const std::wstring& title)
     );
 
     // カメラ系
-    cameraTransform = { {1.0f,1.0f,1.0f}, {0.3f,0.0f,0.0f}, {0.0f,4.0f,-10.0f} };
+    //cameraTransform = { {1.0f,1.0f,1.0f}, {0.3f,0.0f,0.0f}, {0.0f,4.0f,-10.0f} };
+    cameraController = new CameraController;
+
 
     // 読み込んだオブジェクトの合計
     objectSum = 0;
@@ -97,6 +102,10 @@ bool Game::ProcessMessage() {
         if (msg.message == WM_QUIT) {
             return false;
         }
+        if (msg.message == WM_MOUSEWHEEL) {
+            // ホイールの回転量を加算???なんでマウス頬いーるだけ？
+            wheelDelta_ += GET_WHEEL_DELTA_WPARAM(msg.wParam);
+        }
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
@@ -108,6 +117,7 @@ void Game::BeginFrame()
     ImGui_ImplWin32_NewFrame();
     ImGui::NewFrame();
 
+
     UpdateCameraAndLight();
     dxManager->BeginFrame();
 }
@@ -118,9 +128,10 @@ void Game::UpdateCameraAndLight()
     directionalLightData->direction = Normalize(directionalLightData->direction);
 
     // カメラの設定
-    Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
-    viewMatrix = Inverse(cameraMatrix);
-    projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(1280) / float(720), 0.1f, 100.0f);// int width, int heightをもってくる
+    cameraController->Updata();
+    //cameraController->cameraMatrix = MakeAffineMatrix(cameraController->transform.scale, cameraController->transform.rotate, cameraController->transform.translate);
+    //cameraController->viewMatrix = Inverse(cameraController->cameraMatrix);
+    //cameraController->projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(1280) / float(720), 0.1f, 100.0f);// int width, int heightをもってくる
     //projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(windowManager.Getwidth()) / float(windowManager.Getheight()), 0.1f, 100.0f);// int width, int heightをもってくる
 }
 void Game::EndFrame()
@@ -301,7 +312,7 @@ void Game::Drawobj(const Transforms& localTransform, const Transforms& worldTran
     obj.transformationMatrixResource[obj.drawCount]->Map(0, nullptr, reinterpret_cast<void**>(&obj.transformationMatrixData[obj.drawCount]));
     //obj.transformationMatrixData[obj.drawCount]->World = Mul(objectMatrix, localMatrix);
     obj.transformationMatrixData[obj.drawCount]->World = Mul(objectMatrix, Mul(localMatrix, worldMatrix));
-    obj.transformationMatrixData[obj.drawCount]->WVP = Mul(obj.transformationMatrixData[obj.drawCount]->World, Mul(viewMatrix, projectionMatrix));
+    obj.transformationMatrixData[obj.drawCount]->WVP = Mul(obj.transformationMatrixData[obj.drawCount]->World, cameraController->viewProjectionMatrix);
     obj.transformationMatrixResource[obj.drawCount]->Unmap(0, nullptr);
 
 
@@ -412,7 +423,7 @@ void Game::DrawTriangle(const Transforms& localTransform, const Transforms& worl
     wvpData->WVP = MakeIdentity4x4();
     if (SUCCEEDED(hr) && wvpData) {
         wvpData->World = Mul(MakeAffineMatrix(localTransform.scale, localTransform.rotate, localTransform.translate), MakeAffineMatrix(worldTransform.scale, worldTransform.rotate, worldTransform.translate));
-        wvpData->WVP = Mul(wvpData->World, Mul(viewMatrix, projectionMatrix));
+        wvpData->WVP = Mul(wvpData->World, cameraController->viewProjectionMatrix);
         wvpResource->Unmap(0, nullptr);
     }
 
@@ -487,7 +498,7 @@ void Game::DrawSphere(const Transforms& localTransform, VertexData* vertexData, 
     wvpData->WVP = MakeIdentity4x4();
     if (SUCCEEDED(hr) && wvpData) {
         wvpData->World = MakeAffineMatrix(localTransform.scale, localTransform.rotate, localTransform.translate);
-        wvpData->WVP = Mul(wvpData->World, Mul(viewMatrix, projectionMatrix));
+        wvpData->WVP = Mul(wvpData->World, cameraController->viewProjectionMatrix);
         wvpResource->Unmap(0, nullptr);
     }
 
@@ -589,5 +600,44 @@ void Game::DrawSprite(const Transforms& localTransform, VertexData* vertexData, 
 
     // 描画
     dxManager->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
+}
+
+void Game::GetMousePosition(Vector2* position)
+{
+    // hwnd: ゲームウィンドウのハンドル（WindowManagerなどから取得）
+    POINT mousePosScreen;
+    GetCursorPos(&mousePosScreen); // 画面座標で取得
+
+    // クライアント座標（ウィンドウ左上基準）に変換
+    ScreenToClient(windowManager->GetHwnd(), &mousePosScreen);
+
+    // mousePosScreen.x, mousePosScreen.y がウィンドウ内のマウス座標
+    position->x = float(mousePosScreen.x);
+    position->y = float(mousePosScreen.y);
+}
+
+bool Game::IsPressMouse(int i)
+{
+    // 左クリック
+    if (i == 0)
+    {
+        bool leftButton = (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
+        return leftButton;
+    }
+    // 右クリック
+    if (i == 1)
+    {
+        bool rightButton = (GetAsyncKeyState(VK_RBUTTON) & 0x8000) != 0;
+        return rightButton;
+    }
+
+    return false;
+}
+
+int Game::GetWheel()
+{
+    int delta = wheelDelta_;
+    wheelDelta_ = 0; // 1フレームで消費
+    return delta;
 }
 

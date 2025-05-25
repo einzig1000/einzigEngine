@@ -2,6 +2,7 @@
 #include "WindowManager.h"
 #include "DirectXManager.h"
 #include "definition.h"
+#include "CameraController.h"
 #include <array>
 #include <vector>
 #include <string>
@@ -30,9 +31,14 @@ public:
     static void DrawSphere(const Transforms& localTransform, VertexData* vertexData, uint32_t kSubdivision, uint32_t textureNumber, const Vector4& materialColor);
     static void DrawSprite(const Transforms& localTransform, VertexData* vertexData, uint32_t textureNumber, const Vector4& materialColor);
 
+    // マウス
+    static void GetMousePosition(Vector2* position);
+    static bool IsPressMouse(int i);
+    static int GetWheel();
+
     // ImGui
-    static Transforms* GetTransforms(int i) { return &objects[i].transform; }
-    static Transforms cameraTransform;
+    //static Transforms* GetTransforms(int i) { return &objects[i].transform; }
+    //static Transforms cameraTransform;
 
 private:
     static void UpdateCameraAndLight();
@@ -52,6 +58,9 @@ private:
     static Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource;
     static DirectionalLight* directionalLightData;
 
-    static Matrix4x4 viewMatrix;
-    static Matrix4x4 projectionMatrix;
+    //static Matrix4x4 viewMatrix;
+    //static Matrix4x4 projectionMatrix;
+
+    static CameraController* cameraController;
+    static int wheelDelta_; // ホイール量累積
 };

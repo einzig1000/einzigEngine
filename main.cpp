@@ -53,6 +53,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	// 頂点リソースにデータを書き込む
 	VertexData vertexData[kSubdivision * kSubdivision * 6];
 
+	Vector2 mousePosition = { 0,0 };
+
 	while (Game::ProcessMessage())
 	{
 		// フレームの開始
@@ -78,17 +80,23 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		Game::Drawobj(transformsObj, transformsObjworld, obj1, uvChecker, color);
 		//Game::DrawSphere(transformSphere1, vertexData, kSubdivision, monsterBall, { 1.0f, 1.0f, 1.0f, 1.0f });
 
+		Game::GetMousePosition(&mousePosition);
+
 		if (ImGui::CollapsingHeader("sphere"))
 		{
-			ImGui::DragFloat3("SphereScale", &Game::cameraTransform.scale.x, 0.01f);
-			ImGui::DragFloat3("SphereRotate", &Game::cameraTransform.rotate.x, 0.01f);
-			ImGui::DragFloat3("SphereTranslate", &Game::cameraTransform.translate.x, 0.01f);
+			//ImGui::DragFloat3("SphereScale", &Game::cameraTransform.scale.x, 0.01f);
+			//ImGui::DragFloat3("SphereRotate", &Game::cameraTransform.rotate.x, 0.01f);
+			//ImGui::DragFloat3("SphereTranslate", &Game::cameraTransform.translate.x, 0.01f);
 		}
 		if (ImGui::CollapsingHeader("Sprite"))
 		{
 			ImGui::DragFloat3("SpriteScale", &transform.scale.x, 0.01f);
 			ImGui::DragFloat3("SpriteRotate", &transform.rotate.x, 0.01f);
 			ImGui::DragFloat3("SpriteTranslate", &transform.translate.x, 0.1f);
+		}
+		if (ImGui::CollapsingHeader("mousePosition"))
+		{
+			ImGui::DragFloat2("SpriteScale", &mousePosition.x, 0.01f);
 		}
 		///
 		/// ↑描画処理ここまで
