@@ -251,28 +251,8 @@ int Game::LoadOBJ(const std::string& directoryPath, const std::string& filename)
     // モデルデータ
     obj.modelData = LoadOBJFile(directoryPath, filename);
 
-
-    // マテリアルデータ
-    //obj.materialResource = CreateBufferResource(dxManager->GetDevice(), sizeof(Material));
-    //obj.materialData = nullptr;
-    //obj.materialResource->Map(0, nullptr, reinterpret_cast<void**>(&obj.materialData));
-    //obj.materialData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-    //obj.materialData->enableLighting = true;
-    //obj.materialData->uvTransform = MakeIdentity4x4();
-    //obj.materialResource->Unmap(0, nullptr);
-
     // 変換行列
     obj.transform = { {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f} };
-
-    // ワールド・ビュー・プロジェクション行列
-    //obj.transformationMatrixResource.resize(1);
-    //obj.transformationMatrixData.resize(1);
-    //obj.transformationMatrixResource[0] = CreateBufferResource(dxManager->GetDevice(), sizeof(TransformationMatrix));
-    //obj.transformationMatrixData[0] = nullptr;
-    //obj.transformationMatrixResource[0]->Map(0, nullptr, reinterpret_cast<void**>(&obj.transformationMatrixData[0]));
-    //obj.transformationMatrixData[0]->World = MakeIdentity4x4();
-    //obj.transformationMatrixData[0]->WVP = MakeIdentity4x4();
-    //obj.transformationMatrixResource[0]->Unmap(0, nullptr);
 
     // 識別ナンバーの設定
     obj.number = objectSum;
