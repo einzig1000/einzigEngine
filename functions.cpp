@@ -1169,38 +1169,80 @@ ModelData LoadOBJFile(const std::string& directoryPath, const std::string& filen
             normals.push_back(normal);
         }
         // 面
+        //else if (identifier == "f")
+        //{
+        //    VertexData triangle[3];
+        //    // 三角形
+        //    for (int32_t faceVertex = 0; faceVertex < 3; ++faceVertex)
+        //    {
+        //        std::string vertexDefinition;
+        //        s >> vertexDefinition;
+        //        // 頂点の要素へのIndexは「位置/UV/法線」で格納されているので、分解してIndexを取得する
+        //        std::istringstream v(vertexDefinition);
+        //        uint32_t elementIndices[3];
+        //        for (int32_t element = 0; element < 3; ++element)
+        //        {
+        //            std::string index;
+        //            std::getline(v, index, '/');
+        //            elementIndices[element] = std::stoi(index);
+        //        }
+        //        // 
+        //        Vector4 position = positions[elementIndices[0] - 1];
+        //        Vector2 texcoord = texcoords[elementIndices[1] - 1];
+        //        Vector3 normal = normals[elementIndices[2] - 1];
+        //        //VertexData vertex = { position, texcoord, normal };
+        //        //modelData.vertices.push_back(vertex);
+        //
+        //
+        //        triangle[faceVertex] = { position, texcoord, normal };
+        //    }
+        //    modelData.vertices.push_back(triangle[2]);
+        //    modelData.vertices.push_back(triangle[1]);
+        //    modelData.vertices.push_back(triangle[0]);
+        //
+        //}
+
+        // 面
         else if (identifier == "f")
         {
-            VertexData triangle[3];
-            // 三角形
-            for (int32_t faceVertex = 0; faceVertex < 3; ++faceVertex)
+            // 1行分の頂点定義をすべて取得
+            std::vector<std::string> vertexDefs;
+            std::string vertexDefinition;
+            while (s >> vertexDefinition)
             {
-                std::string vertexDefinition;
-                s >> vertexDefinition;
-                // 頂点の要素へのIndexは「位置/UV/法線」で格納されているので、分解してIndexを取得する
-                std::istringstream v(vertexDefinition);
-                uint32_t elementIndices[3];
-                for (int32_t element = 0; element < 3; ++element)
-                {
-                    std::string index;
-                    std::getline(v, index, '/');
-                    elementIndices[element] = std::stoi(index);
-                }
-                // 
-                Vector4 position = positions[elementIndices[0] - 1];
-                Vector2 texcoord = texcoords[elementIndices[1] - 1];
-                Vector3 normal = normals[elementIndices[2] - 1];
-                //VertexData vertex = { position, texcoord, normal };
-                //modelData.vertices.push_back(vertex);
-
-
-                triangle[faceVertex] = { position, texcoord, normal };
+                vertexDefs.push_back(vertexDefinition);
             }
-            modelData.vertices.push_back(triangle[2]);
-            modelData.vertices.push_back(triangle[1]);
-            modelData.vertices.push_back(triangle[0]);
 
+            // 3頂点未満は無視
+            if (vertexDefs.size() < 3) continue;
+
+            // 扇形分割で三角形を生成
+            for (size_t i = 1; i + 1 < vertexDefs.size(); ++i)
+            {
+                VertexData triangle[3];
+                std::string vdefs[3] = { vertexDefs[0], vertexDefs[i], vertexDefs[i + 1] };
+                for (int faceVertex = 0; faceVertex < 3; ++faceVertex)
+                {
+                    std::istringstream v(vdefs[faceVertex]);
+                    uint32_t elementIndices[3] = {};
+                    for (int element = 0; element < 3; ++element)
+                    {
+                        std::string index;
+                        std::getline(v, index, '/');
+                        elementIndices[element] = std::stoi(index);
+                    }
+                    Vector4 position = positions[elementIndices[0] - 1];
+                    Vector2 texcoord = texcoords[elementIndices[1] - 1];
+                    Vector3 normal = normals[elementIndices[2] - 1];
+                    triangle[faceVertex] = { position, texcoord, normal };
+                }
+                // 頂点の順序を逆にして追加（右手系→左手系変換のため）
+                modelData.vertices.push_back(triangle[2]);
+                modelData.vertices.push_back(triangle[1]);
+                modelData.vertices.push_back(triangle[0]);
+            }
         }
+
         // mtllib
         else if (identifier == "mtllib")
         {
