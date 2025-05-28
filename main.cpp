@@ -12,8 +12,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	int uvChecker = Game::LoadTexture("resources/uvChecker.png");
 	int monsterBall = Game::LoadTexture("resources/monsterBall.png");
 	int white1x1 = Game::LoadTexture("resources/white1x1.png");
-	int obj2 = Game::LoadOBJ("resources", "cone.obj");
-	int obj1 = Game::LoadOBJ("resources", "axis.obj");
+	int obj2 = Game::LoadOBJ("resources/model", "cone.obj");
+	int obj1 = Game::LoadOBJ("resources/model", "axis.obj");
 
 	Transforms transformsObj;
 	transformsObj.scale = { 1.2f, 1.2f, 1.2f };
@@ -98,8 +98,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 		Game::DrawTriangle(localTransform, worldTransform, triangleVertices, textureNumber, materialColor);
 
-		Game::DrawSprite(transform, vdata, uvChecker, color);
-		Game::DrawSprite(transform1, vdata, uvChecker, color);
+		//Game::DrawSprite(transform, vdata, uvChecker, color);
+		//Game::DrawSprite(transform1, vdata, uvChecker, color);
 		Game::Drawobj(transformsObj, transformsObj.translate, obj1, uvChecker, color);
 		Game::DrawSphere(transformSphere1, vertexData, kSubdivision, monsterBall, { 1.0f, 1.0f, 1.0f, 1.0f });
 
