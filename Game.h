@@ -27,7 +27,7 @@ public:
 
     // 描画
     static void Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const Vector4& materialColor);
-    static void DrawTriangle(const Transforms& localTransform, const Transforms& worldTransform, const VertexData* vertexData, uint32_t kSumVertex, uint32_t textureNumber, const Vector4& materialColor);
+    static void DrawTriangle(const Transforms& localTransform, const Transforms& worldTransform, const VertexData* vertexData, uint32_t textureNumber, const Vector4& materialColor);
     static void DrawSphere(const Transforms& localTransform, VertexData* vertexData, uint32_t kSubdivision, uint32_t textureNumber, const Vector4& materialColor);
     static void DrawSprite(const Transforms& localTransform, VertexData* vertexData, uint32_t textureNumber, const Vector4& materialColor);
 
@@ -39,17 +39,49 @@ public:
 
 private:
     static void UpdateCameraAndLight();
+    /// <summary>
+    /// Draw用データ作成するやつ
+    /// </summary>
+    /// <param name="dstBufferSize">Map先バッファサイズ</param>
+    /// <param name="srcVertexData">コピー元頂点データ</param>
+    /// <param name="vertexCount">頂点数</param>
+    /// <param name="vertexResource">頂点リソース</param>
+    /// <param name="vertexResourceSize">頂点リソースサイズ</param>
+    /// <param name="material">マテリアル</param>
+    /// <param name="materialColor">マテリアル色</param>
+    /// <param name="enableLighting">ライティングするか</param>
+    /// <param name="uvTransform">UV変換</param>
+    /// <param name="wvp">WVP</param>
+    /// <param name="world">ワールド行列</param>
+    /// <param name="wvpMatrix">WVP行列</param>
+    /// <param name="textureNumber">テクスチャ番号</param>
+    /// <param name="textures">テクスチャリスト</param>
+    /// <returns> Draw用データ</returns>
+    static DrawData SetupDrawData(
+        size_t dstBufferSize,
+        const VertexData* srcVertexData,
+        size_t vertexCount,
+        Microsoft::WRL::ComPtr<ID3D12Resource>& vertexResource,
+        UINT& vertexResourceSize,
+        Material* material,
+        const Vector4& materialColor,
+        bool enableLighting,
+        const Matrix4x4& uvTransform,
+        TransformationMatrix* wvp,
+        const Matrix4x4& world,
+        const Matrix4x4& wvpMatrix,
+        uint32_t textureNumber,
+        const std::vector<TextureData>& textures
+    );
 
     static WindowManager* windowManager;
     static DirectXManager* dxManager;
 
     // モデル
     static std::vector<Object3D> objects;
-    static uint32_t objectSum;
 
     // 画像
     static std::vector<TextureData> textures;
-    static uint32_t textureSum;
 
     // 頂点リソースども
     static Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceSprite;

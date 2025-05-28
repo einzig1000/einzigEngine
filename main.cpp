@@ -8,7 +8,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
 	// ウィンドウ、DrectX初期化
 	Game::Initialize(1280, 720, L"CG2");
-	//D3DResourceLeakChecker* debug = nullptr;
 
 	int uvChecker = Game::LoadTexture("resources/uvChecker.png");
 	int monsterBall = Game::LoadTexture("resources/monsterBall.png");
@@ -43,6 +42,30 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	vdata[3].texcoord = { 1.0f, 1.0f };
 	vdata[3].normal = { 0.0f,0.0f,-1.0f };
 
+	// 頂点データ例
+	VertexData triangleVertices[3] = {
+		{ {0.0f, 0.5f, 0.0f, 1.0f}, {0.5f, 0.0f}, {0.0f, 0.0f, 1.0f} },
+		{ {0.5f, -0.5f, 0.0f, 1.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, 1.0f} },
+		{ {-0.5f, -0.5f, 0.0f, 1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, 1.0f} }
+	};
+	// ローカル変換
+	Transforms localTransform = {};
+	localTransform.scale = { 1.0f, 1.0f, 1.0f };
+	localTransform.rotate = { 0.0f, 0.0f, 0.0f };
+	localTransform.translate = { 0.0f, 0.0f, 0.0f };
+
+	// ワールド変換
+	Transforms worldTransform = {};
+	worldTransform.scale = { 1.0f, 1.0f, 1.0f };
+	worldTransform.rotate = { 0.0f, 0.0f, 0.0f };
+	worldTransform.translate = { 0.0f, 0.0f, 0.0f };
+
+	// テクスチャ番号（0番はデフォルトのテクスチャ）
+	uint32_t textureNumber = 0;
+
+	// マテリアルカラー（白）
+	Vector4 materialColor = { 1.0f, 1.0f, 1.0f, 1.0f };
+
 
 	Transforms transformSphere1;
 	transformSphere1.scale = { 0.3f, 0.3f, 0.3f };
@@ -73,10 +96,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		/// ↓描画処理ここから
 		///
 
-		//Game::DrawSprite(transform, vdata, uvChecker, color);
-		//Game::DrawSprite(transform1, vdata, uvChecker, color);
+		Game::DrawTriangle(localTransform, worldTransform, triangleVertices, textureNumber, materialColor);
+
+		Game::DrawSprite(transform, vdata, uvChecker, color);
+		Game::DrawSprite(transform1, vdata, uvChecker, color);
 		Game::Drawobj(transformsObj, transformsObj.translate, obj1, uvChecker, color);
-		//Game::DrawSphere(transformSphere1, vertexData, kSubdivision, monsterBall, { 1.0f, 1.0f, 1.0f, 1.0f });
+		Game::DrawSphere(transformSphere1, vertexData, kSubdivision, monsterBall, { 1.0f, 1.0f, 1.0f, 1.0f });
 
 		Game::GetMousePosition(&mousePosition);
 

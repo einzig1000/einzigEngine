@@ -146,11 +146,7 @@ struct Object3D
 
     // 識別ナンバー
     uint32_t number;
-
-    // 描画回数
-    uint32_t drawCount;
 };
-
 
 struct TextureData {
     DirectX::TexMetadata metadata;
@@ -158,6 +154,12 @@ struct TextureData {
     uint32_t number;
     Microsoft::WRL::ComPtr<ID3D12Resource> textureResource;
     D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU;
+};
+
+struct DrawData
+{
+    D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
+    const TextureData* texture;
 };
 
 
