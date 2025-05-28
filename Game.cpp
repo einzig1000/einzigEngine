@@ -547,6 +547,12 @@ bool Game::IsPressMouse(int i)
         bool rightButton = (GetAsyncKeyState(VK_RBUTTON) & 0x8000) != 0;
         return rightButton;
     }
+    // ミドルボタン（マウスホイールクリック）
+    if (i == 2)
+    {
+        bool middleButton = (GetAsyncKeyState(VK_MBUTTON) & 0x8000) != 0;
+        return middleButton;
+    }
 
     return false;
 }

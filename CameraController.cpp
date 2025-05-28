@@ -20,7 +20,7 @@ void CameraController::Updata()
         prePressMouse0 = pressMouse0;
         pressMouse0 = Game::IsPressMouse(0);
         prePressMouse2 = pressMouse2;
-        pressMouse2 = Game::IsPressMouse(1);
+        pressMouse2 = Game::IsPressMouse(2);
 
         mouseWheel = Game::GetWheel();
 
