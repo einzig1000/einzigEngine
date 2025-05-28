@@ -300,6 +300,7 @@ int Game::LoadOBJ(const std::string& directoryPath, const std::string& filename)
     return obj.number;
 }
 
+
 // 描画
 void Game::Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const Vector4& materialColor)
 {
