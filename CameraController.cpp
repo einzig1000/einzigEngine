@@ -157,10 +157,6 @@ void CameraController::Updata()
 
 
 
-    ImGui::DragFloat3("cameraTransform,rotate", &transform.rotate.x, 0.01f);
-    ImGui::DragFloat("cameraTransform,distance", &distance, 0.01f);
-
-
 }
 
 void CameraController::Draw()

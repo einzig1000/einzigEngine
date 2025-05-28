@@ -8,6 +8,7 @@
 #include <cassert>          // assert 用
 
 #include "functions.h"
+#include "GetHitKey.h"
 
 
 class DirectXManager {
@@ -74,5 +75,7 @@ private:
     void InitializePSO();
     void InitializeViewportAndScissor(int width, int height);
     void InitializeSRVDescriptorHeap();
+    void InitializeGetHitKey(HWND hwnd);
 
+    GetHitKey* getHitKey;
 };

@@ -34,6 +34,9 @@
     <Filter Include="CameraController">
       <UniqueIdentifier>{8119ccfa-d6ad-4af0-83e5-034de74534f5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="GetHitKey">
+      <UniqueIdentifier>{aa632014-e276-40cd-b8d2-109d728ee4ef}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -74,6 +77,9 @@
     </ClCompile>
     <ClCompile Include="CameraController.cpp">
       <Filter>CameraController</Filter>
+    </ClCompile>
+    <ClCompile Include="GetHitKey.cpp">
+      <Filter>GetHitKey</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -122,6 +128,9 @@
     </ClInclude>
     <ClInclude Include="CameraController.h">
       <Filter>CameraController</Filter>
+    </ClInclude>
+    <ClInclude Include="GetHitKey.h">
+      <Filter>GetHitKey</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

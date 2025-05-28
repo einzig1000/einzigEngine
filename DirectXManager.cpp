@@ -19,12 +19,15 @@ DirectXManager::DirectXManager(HWND hwnd, int width, int height)
 	InitializeSynchronizationObjects();
 	InitializeViewportAndScissor(width, height);
 	InitializeSRVDescriptorHeap(); // SRVディスクリプタヒープの初期化
+	InitializeGetHitKey(hwnd);
 }
 
 DirectXManager::~DirectXManager() {
 	if (fenceEvent) {
 		CloseHandle(fenceEvent);
 	}
+	delete getHitKey;
+	getHitKey = nullptr;
 }
 
 
@@ -529,8 +532,18 @@ void DirectXManager::InitializeSynchronizationObjects()
 	assert(fenceEvent != nullptr);
 }
 
+void DirectXManager::InitializeGetHitKey(HWND hwnd)
+{
+	if (!getHitKey)
+	{
+		getHitKey = new GetHitKey(hwnd);
+	}
+}
+
 void DirectXManager::BeginFrame()
 {
+	getHitKey->Update();
+
 	//(フレームごとに1回でOKなものども）
 	///////////////////////////////////////
 	///	TransitionBarrierを張る(TransitionBarrierの命令を実行する)

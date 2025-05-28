@@ -1,5 +1,6 @@
 #include "Game.h"           // ゲームロジック
 #include "functions.h"      // 関数s
+#include "GetHitKey.h"
 
 #define TRIANGLE_SUM 60
 
@@ -8,7 +9,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
 	// ウィンドウ、DrectX初期化
 	Game::Initialize(1280, 720, L"CG2");
-
+	
 	int uvChecker = Game::LoadTexture("resources/uvChecker.png");
 	int monsterBall = Game::LoadTexture("resources/monsterBall.png");
 	int white1x1 = Game::LoadTexture("resources/white1x1.png");

@@ -32,6 +32,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> Game::directionalLightResource;
 DirectionalLight* Game::directionalLightData = nullptr;
 
 CameraController* Game::cameraController;
+bool Game::cameraMode;
 
 int Game::wheelDelta = 0;
 
@@ -67,6 +68,7 @@ void Game::Initialize(int width, int height, const std::wstring& title)
 
     // カメラ系
     cameraController = new CameraController;
+    cameraMode = 1;
 
     // 頂点リソース
     vertexResourceSizeSprite = static_cast<UINT>(sizeof(VertexData) * 256); // スプライト 
@@ -144,16 +146,23 @@ void Game::BeginFrame()
     ImGui::NewFrame();
 
 
-    UpdateCameraAndLight();
+    UpdateLight();
+    UpdateCamera();
     dxManager->BeginFrame();
 }
-void Game::UpdateCameraAndLight()
+void Game::UpdateLight()
 {
     // ライトの向きを正規化
     directionalLightData->direction = Normalize(directionalLightData->direction);
-
+}
+void Game::UpdateCamera()
+{
+    if (GetHitKey::keys[DIK_SPACE] && !GetHitKey::preKeys[DIK_SPACE])
+    {
+        ToggleCamera();
+    }
     // カメラの更新
-    cameraController->Updata();
+    if (cameraMode)cameraController->Updata();
 }
 void Game::EndFrame()
 {
@@ -549,4 +558,3 @@ int Game::GetWheel()
     wheelDelta = 0; // 1フレームで消費
     return delta;
 }
-
