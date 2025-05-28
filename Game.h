@@ -37,9 +37,6 @@ public:
 	static bool IsPressMouse(int i);
 	static int GetWheel();
 
-	// カメラ
-	static void ToggleCamera() { if (cameraMode)cameraMode = 0; else cameraMode = 1; };
-
 private:
 	static void UpdateCamera();
 	static void UpdateLight();
@@ -119,7 +116,6 @@ private:
 
 	// カメラ
 	static CameraController* cameraController;
-	static bool cameraMode;
 
 	// マウスホイール量
 	static int wheelDelta;
