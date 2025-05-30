@@ -3,6 +3,7 @@
 #include "DirectXManager.h"
 #include "definition.h"
 #include "CameraController.h"
+#include "MouseController.h"
 #include <array>
 #include <vector>
 #include <string>
@@ -27,19 +28,27 @@ public:
 	static int LoadTexture(const std::string& filePath);
 
 	// 描画
-	static void Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const Vector4& materialColor);
-	static void DrawTriangle(const Transforms& localTransform, const Transforms& worldTransform, const VertexData* vertexData, uint32_t textureNumber, const Vector4& materialColor);
-	static void DrawSphere(const Transforms& localTransform, VertexData* vertexData, uint32_t kSubdivision, uint32_t textureNumber, const Vector4& materialColor);
-	static void DrawSprite(const Transforms& localTransform, VertexData* vertexData, uint32_t textureNumber, const Vector4& materialColor);
+	static void Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor);
+	static void DrawTriangle(const Transforms& localTransform, const Transforms& worldTransform, const VertexData* vertexData, uint32_t textureNumber, const uint32_t& materialColor);
+	static void DrawSphere(const Transforms& localTransform, VertexData* vertexData, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor);
+	static void DrawSprite(const Transforms& localTransform, VertexData* vertexData, uint32_t textureNumber, const uint32_t& materialColor);
 
 	// マウス
 	static void GetMousePosition(Vector2* position);
+	static void SetMouseRay();
+	static bool IsCollisionMouseRayAABB(AABB aabb, int objNum);
 	static bool IsPressMouse(int i);
 	static int GetWheel();
+
+	// カメラ
+	static void MoveCenterTarget(Vector3 target, int spendFrame);
+	static void MoveRotateTarget(Vector3 target, int spendFrame);
+	static void MoveDistanceTarget(float target, int spendFrame);
 
 private:
 	static void UpdateCamera();
 	static void UpdateLight();
+	static Vector4 ConvertUintToVector4(uint32_t color);
 	/// <summary>
 	/// Draw用データ作成するやつ
 	/// </summary>
@@ -65,15 +74,15 @@ private:
 		Microsoft::WRL::ComPtr<ID3D12Resource>& vertexResource,
 		UINT& vertexResourceSize,
 		Material* material,
-		const Vector4& materialColor,
+		const uint32_t& materialColor,
 		bool enableLighting,
 		const Matrix4x4& uvTransform,
 		TransformationMatrix* wvp,
 		const Matrix4x4& world,
 		const Matrix4x4& wvpMatrix,
 		uint32_t textureNumber,
-		const std::vector<TextureData>& textures
-	);
+		const std::vector<TextureData>& textures);
+
 
 	static WindowManager* windowManager;
 	static DirectXManager* dxManager;
@@ -118,5 +127,6 @@ private:
 	static CameraController* cameraController;
 
 	// マウスホイール量
+	static MouseController* mouseController;
 	static int wheelDelta;
 };

@@ -18,6 +18,8 @@
 // 外部ライブラリ
 #include "externals/DirectXTex/DirectXTex.h"
 
+#define WIDTH 1280
+#define HEIGHT 720
 
 struct Vector2int
 {
@@ -29,6 +31,19 @@ struct Vector2
 {
     float x = 0;
     float y = 0;
+
+    Vector2 operator-(const Vector2& rhs) const
+    {
+        return Vector2{ x - rhs.x, y - rhs.y };
+    }
+    Vector2 operator+(const Vector2& rhs) const
+    {
+        return Vector2{ x + rhs.x, y + rhs.y };
+    }
+    bool operator==(const Vector2& rhs) const
+    {
+        return x == rhs.x && y == rhs.y;
+    }
 };
 
 struct Vector3
@@ -36,10 +51,37 @@ struct Vector3
     float x = 0;
     float y = 0;
     float z = 0;
+
+    Vector3 operator-(const Vector3& rhs) const
+    {
+        return Vector3{ x - rhs.x, y - rhs.y, z - rhs.z };
+    }
+    Vector3 operator+(const Vector3& rhs) const
+    {
+        return Vector3{ x + rhs.x, y + rhs.y, z + rhs.z };
+    }
+    bool operator==(const Vector3& rhs) const
+    {
+        return x == rhs.x && y == rhs.y && z == rhs.z;
+    }
 };
 
-struct Vector4 {
+struct Vector4
+{
     float x = 0, y = 0, z = 0, w = 0;
+
+    Vector4 operator-(const Vector4& rhs) const
+    {
+        return Vector4{ x - rhs.x, y - rhs.y, z - rhs.z, w - rhs.w };
+    }
+    Vector4 operator+(const Vector4& rhs) const
+    {
+        return Vector4{ x + rhs.x, y + rhs.y, z + rhs.z, w + rhs.w };
+    }
+    bool operator==(const Vector4& rhs) const
+    {
+        return x == rhs.x && y == rhs.y && z == rhs.z && w == rhs.w;
+    }
 };
 
 struct Matrix3x3
@@ -65,6 +107,17 @@ struct Sphere
     float radius = 1;
 };
 
+struct Plane
+{
+    Vector3 normal; // 法線
+    float distance;
+};
+
+struct Triangle
+{
+    Vector3 vertices[3];
+};
+
 struct Vertex
 {
     Vector2 LT;
@@ -85,6 +138,30 @@ struct VertexData
     Vector4 position;
     Vector2 texcoord;
     Vector3 normal;
+};
+
+struct Line
+{
+    // 始点
+    Vector3 origin;
+    // 終点ベクトル
+    Vector3 diff;
+};
+
+struct Ray
+{
+    // 始点
+    Vector3 origin;
+    // 終点ベクトル
+    Vector3 diff;
+};
+
+struct Segment
+{
+    // 始点
+    Vector3 origin;
+    // 終点ベクトル
+    Vector3 diff;
 };
 
 struct Material
@@ -126,8 +203,9 @@ struct Object3D
     ModelData modelData;
 
     // 頂点バッファ
-    //Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;
-    //D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
+    Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer;
+    D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
+    UINT vertexBufferSize;
 
     // マテリアルデータ
     //Microsoft::WRL::ComPtr<ID3D12Resource> materialResource;
@@ -148,7 +226,8 @@ struct Object3D
     uint32_t number;
 };
 
-struct TextureData {
+struct TextureData
+{
     DirectX::TexMetadata metadata;
     DirectX::ScratchImage mipImage;
     uint32_t number;
@@ -162,17 +241,9 @@ struct DrawData
     const TextureData* texture;
 };
 
-
-//struct D3DResourceLeakChecker
-//{
-//    ~D3DResourceLeakChecker()
-//    {
-//        // リソースリーク確認
-//        Microsoft::WRL::ComPtr <IDXGIDebug1> debug;
-//        if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&debug)))) {
-//            debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_ALL);
-//            debug->ReportLiveObjects(DXGI_DEBUG_APP, DXGI_DEBUG_RLO_ALL);
-//            debug->ReportLiveObjects(DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_ALL);
-//        }
-//    }
-//};
+// ブロックのローカルAABB（中心(0,0,0)、サイズ1の立方体）
+struct AABB
+{
+    Vector3 min;
+    Vector3 max;
+};

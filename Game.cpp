@@ -32,6 +32,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> Game::directionalLightResource;
 DirectionalLight* Game::directionalLightData = nullptr;
 
 CameraController* Game::cameraController;
+MouseController* Game::mouseController;
 
 int Game::wheelDelta = 0;
 
@@ -44,10 +45,12 @@ void Game::Initialize(int width, int height, const std::wstring& title)
     // 例外ハンドラの設定
     SetUnhandledExceptionFilter(ExportDump);
 
-    if (!windowManager) {
+    if (!windowManager)
+    {
         windowManager = new WindowManager(width, height, title);
     }
-    if (!dxManager) {
+    if (!dxManager)
+    {
         dxManager = new DirectXManager(windowManager->GetHwnd(), width, height);
     }
 
@@ -65,8 +68,11 @@ void Game::Initialize(int width, int height, const std::wstring& title)
         dxManager->GetsrvDescriptorHeap()->GetGPUDescriptorHandleForHeapStart()
     );
 
-    // カメラ系
+    // カメラ
     cameraController = new CameraController;
+
+    // マウス
+    mouseController = new MouseController;
 
     // 頂点リソース
     vertexResourceSizeSprite = static_cast<UINT>(sizeof(VertexData) * 256); // スプライト 
@@ -85,7 +91,8 @@ void Game::Initialize(int width, int height, const std::wstring& title)
     materialData.resize(kMaxDrawCallPerFrame);
     wvpResources.resize(kMaxDrawCallPerFrame);
     wvpData.resize(kMaxDrawCallPerFrame);
-    for (size_t i = 0; i < kMaxDrawCallPerFrame; ++i) {
+    for (size_t i = 0; i < kMaxDrawCallPerFrame; ++i)
+    {
         materialResources[i] = CreateBufferResource(dxManager->GetDevice(), sizeof(Material));
         materialResources[i]->Map(0, nullptr, reinterpret_cast<void**>(&materialData[i]));
         wvpResources[i] = CreateBufferResource(dxManager->GetDevice(), sizeof(TransformationMatrix));
@@ -122,13 +129,17 @@ void Game::Initialize(int width, int height, const std::wstring& title)
 }
 
 // メインループ用
-bool Game::ProcessMessage() {
+bool Game::ProcessMessage()
+{
     MSG msg = {};
-    if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
-        if (msg.message == WM_QUIT) {
+    if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+    {
+        if (msg.message == WM_QUIT)
+        {
             return false;
         }
-        if (msg.message == WM_MOUSEWHEEL) {
+        if (msg.message == WM_MOUSEWHEEL)
+        {
             // ホイールの回転量を加算　クリックはboolで回転量はintだからmessageを使う。らしい。
             wheelDelta += GET_WHEEL_DELTA_WPARAM(msg.wParam);
         }
@@ -157,8 +168,8 @@ void Game::UpdateCamera()
 {
     if (GetHitKey::keys[DIK_SPACE] && !GetHitKey::preKeys[DIK_SPACE])
     {
-        if (cameraController->cameraMode == 1)cameraController->cameraMode = 0;
-        else cameraController->cameraMode = 1;
+        if (cameraController->cameraMode_ == 1)cameraController->cameraMode_ = 0;
+        else cameraController->cameraMode_ = 1;
     }
     // カメラの更新
     cameraController->Updata();
@@ -190,10 +201,12 @@ void Game::Finalize()
     windowManager = nullptr;
     delete cameraController;
     cameraController = nullptr;
+    delete mouseController;
+    mouseController = nullptr;
 }
 
 // Draw用データ作成するやつ
-DrawData Game::SetupDrawData(size_t dstBufferSize, const VertexData* srcVertexData, size_t vertexCount, Microsoft::WRL::ComPtr<ID3D12Resource>& vertexResource, UINT& vertexResourceSize, Material* material, const Vector4& materialColor, bool enableLighting, const Matrix4x4& uvTransform, TransformationMatrix* wvp, const Matrix4x4& world, const Matrix4x4& wvpMatrix, uint32_t textureNumber, const std::vector<TextureData>& textures)
+DrawData Game::SetupDrawData(size_t dstBufferSize, const VertexData* srcVertexData, size_t vertexCount, Microsoft::WRL::ComPtr<ID3D12Resource>& vertexResource, UINT& vertexResourceSize, Material* material, const uint32_t& materialColor, bool enableLighting, const Matrix4x4& uvTransform, TransformationMatrix* wvp, const Matrix4x4& world, const Matrix4x4& wvpMatrix, uint32_t textureNumber, const std::vector<TextureData>& textures)
 {
     // 描画回数上限
     if (drawCallIndex >= kMaxDrawCallPerFrame) return{};
@@ -216,7 +229,8 @@ DrawData Game::SetupDrawData(size_t dstBufferSize, const VertexData* srcVertexDa
     vertexBufferView.StrideInBytes = sizeof(VertexData);
 
     // マテリアル
-    material->color = materialColor;
+    Vector4 color = ConvertUintToVector4(materialColor);
+    material->color = color;
     material->enableLighting = enableLighting;
     material->uvTransform = uvTransform;
 
@@ -241,7 +255,6 @@ DrawData Game::SetupDrawData(size_t dstBufferSize, const VertexData* srcVertexDa
 
     return { vertexBufferView, tex };
 }
-
 
 // リソース読み込み
 int Game::LoadTexture(const std::string& filePath)
@@ -271,8 +284,8 @@ int Game::LoadTexture(const std::string& filePath)
 
 
     const uint32_t descriptorSizeSRV = dxManager->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-    D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = GetCPUDescriptorHandle(dxManager->GetsrvDescriptorHeap(), descriptorSizeSRV, text.number+1);
-    text.textureSrvHandleGPU = GetGPUDescriptorHandle(dxManager->GetsrvDescriptorHeap(), descriptorSizeSRV, text.number+1);
+    D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = GetCPUDescriptorHandle(dxManager->GetsrvDescriptorHeap(), descriptorSizeSRV, text.number + 1);
+    text.textureSrvHandleGPU = GetGPUDescriptorHandle(dxManager->GetsrvDescriptorHeap(), descriptorSizeSRV, text.number + 1);
 
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
     srvDesc.Format = text.metadata.format;
@@ -291,93 +304,235 @@ int Game::LoadOBJ(const std::string& directoryPath, const std::string& filename)
 {
     // ボックスを作成
     Object3D obj;
-
     // モデルデータ
     obj.modelData = LoadOBJFile(directoryPath, filename);
-
     // 変換行列
     obj.transform = { {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f} };
-
-    // 識別ナンバーの設定
+    // 識別ナンバー
     obj.number = static_cast<uint32_t>(objects.size());
 
-    // ボックスをpush_back
+    // まず空のObject3Dをvectorに追加し、参照を取得
     objects.push_back(obj);
+    Object3D& ref = objects.back();
 
-    // 識別ナンバーをreturn
-    return obj.number;
+    // 頂点バッファ作成
+    ref.vertexBufferSize = sizeof(VertexData) * UINT(ref.modelData.vertices.size());
+    ref.vertexBuffer = CreateBufferResource(dxManager->GetDevice(), ref.vertexBufferSize);
+    VertexData* vData = nullptr;
+    ref.vertexBuffer->Map(0, nullptr, reinterpret_cast<void**>(&vData));
+    std::memcpy(vData, ref.modelData.vertices.data(), ref.vertexBufferSize);
+    ref.vertexBuffer->Unmap(0, nullptr);
+
+    ref.vertexBufferView.BufferLocation = ref.vertexBuffer->GetGPUVirtualAddress();
+    ref.vertexBufferView.SizeInBytes = static_cast<UINT>(ref.vertexBufferSize);
+    ref.vertexBufferView.StrideInBytes = sizeof(VertexData);
+
+    return ref.number;
 }
 
 // 描画
-void Game::Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const Vector4& materialColor)
+
+// 消すな保険
+
+//void Game::Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor)
+//{
+//    if (objectNumber >= objects.size()) return;
+//
+//    Object3D& obj = objects[objectNumber];
+//    const uint32_t kSumVertex = static_cast<uint32_t>(obj.modelData.vertices.size());
+//
+//    // centerを中心に回転・拡縮、移動は原点中心
+//    Matrix4x4 toCenter = MakeTranslateMatrix({ -center.x, -center.y, -center.z });              // centerへ移動用マトリックス
+//    Matrix4x4 rotateScale = MakeAffineMatrix(transform.scale, transform.rotate, { 0,0,0 });     // 回転・スケール用マトリックス
+//    Matrix4x4 fromCenter = MakeTranslateMatrix(center);                                         // centerから元の位置へ戻す用マトリックス
+//    Matrix4x4 translate = MakeTranslateMatrix(transform.translate);                             // 移動用マトリックス
+//
+//    // (fromCenter * rotateScale * toCenter) * translate
+//    // １、Mul(rotateScale, toCenter) = 回転中心へ移動してから回転拡縮。center = { 0,0,0 } ならその場で回る
+//    // ２、Mul(fromCenter, ↑)        = 回転中心から元の位置へ戻す
+//    // ３、Mul(translate, ↑)         = 最終的な平行移動（全体の移動）
+//    // ４、centerを中心に回転拡縮し、最後にtransform.translateで移動した結果のマトリックスが完成
+//    Matrix4x4 centerMatrix = Mul(fromCenter, Mul(rotateScale, toCenter));
+//    Matrix4x4 worldMatrix = Mul(centerMatrix, translate);
+//
+//    // オブジェクト間共有マトリックス
+//    Matrix4x4 objectMatrix = MakeAffineMatrix(obj.transform.scale, obj.transform.rotate, obj.transform.translate);
+//
+//    Matrix4x4 world = Mul(objectMatrix, worldMatrix);
+//    Matrix4x4 wvpMatrix = Mul(world, cameraController->viewProjectionMatrix);
+//
+//    // テクスチャ取得
+//    const TextureData* tex = nullptr;
+//    for (const auto& t : textures)
+//    {
+//        if (t.number == textureNumber)
+//        {
+//            tex = &t;
+//            break;
+//        }
+//    }
+//    if (tex == nullptr && !textures.empty())
+//    {
+//        tex = &textures[0];
+//    }
+//    if (!tex) return;
+//
+//    materialData[drawCallIndex]->color = materialColor;
+//    materialData[drawCallIndex]->enableLighting = true;
+//    materialData[drawCallIndex]->uvTransform = MakeIdentity4x4();
+//    wvpData[drawCallIndex]->World = world;
+//    wvpData[drawCallIndex]->WVP = wvpMatrix;
+//
+//    // 頂点バッファをバインド（描画に使う頂点データを指定）
+//    dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &obj.vertexBufferView);
+//    // プリミティブトポロジ（描画する形状の種類：三角形リスト）を設定
+//    dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+//    // ルートパラメータ0にマテリアル用定数バッファ（色・ライティング情報など）をバインド
+//    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources[drawCallIndex]->GetGPUVirtualAddress());
+//    // ルートパラメータ1にWVP（ワールド・ビュー・プロジェクション）用定数バッファをバインド
+//    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources[drawCallIndex]->GetGPUVirtualAddress());
+//    // ルートパラメータ2にテクスチャのSRV（シェーダリソースビュー）をバインド
+//    dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
+//    // ルートパラメータ3にディレクショナルライト用定数バッファをバインド
+//    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
+//    // 頂点数分のインスタンス描画を実行（実際に描画コマンドを発行）
+//    dxManager->GetCommandList()->DrawInstanced(kSumVertex, 1, 0, 0);
+//
+//    drawCallIndex++;
+//}
+
+void Game::Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor)
 {
-    // objectNumberの範囲チェック
     if (objectNumber >= objects.size()) return;
 
-    // ボックスの作成
     Object3D& obj = objects[objectNumber];
-
-    // 必要な頂点数
     const uint32_t kSumVertex = static_cast<uint32_t>(obj.modelData.vertices.size());
 
-    // wvp
-    Matrix4x4 toCenter = MakeTranslateMatrix({ -center.x, -center.y, -center.z });          // centerへ移動用マトリックス
-    Matrix4x4 rotateScale = MakeAffineMatrix(transform.scale, transform.rotate, { 0,0,0 }); // 回転・スケール用マトリックス
-    Matrix4x4 fromCenter = MakeTranslateMatrix(center);                                     // centerから元の位置へ戻す用マトリックス
-    Matrix4x4 translate = MakeTranslateMatrix(transform.translate);                         // 移動用マトリックス
 
-    // １、Mul(rotateScale, toCenter) = 回転中心へ移動してから回転拡縮。center = transform.translate ならその場で回る
-    // ２、Mul(fromCenter, ↑)        = 回転中心から元の位置へ戻す
-    // ３、Mul(translate, ↑)         = 最終的な平行移動（全体の移動）
-    // ４、centerを中心に回転拡縮し、最後にtransform.translateで移動した結果のマトリックスが完成
-    Matrix4x4 worldMatrix = Mul(translate, Mul(fromCenter, Mul(rotateScale, toCenter)));
+    // 1. centerを中心に拡縮・回転
+    Matrix4x4 toCenter = MakeTranslateMatrix({ -center.x, -center.y, -center.z });
+    Matrix4x4 rotateScale = MakeAffineMatrix(transform.scale, transform.rotate, { 0,0,0 });
+    Matrix4x4 fromCenter = MakeTranslateMatrix(center);
+    Matrix4x4 centerMatrix = Mul(fromCenter, Mul(rotateScale, toCenter));
 
-    // オブジェクト間共有マトリックス
-    Matrix4x4 objectMatrix = MakeAffineMatrix(obj.transform.scale, obj.transform.rotate, obj.transform.translate);
+    // 2. 回転・拡縮後の原点座標を求める
+    Vector3 origin = { 0, 0, 0 };
+    Vector3 rotatedOrigin = Transform(origin, centerMatrix);
 
-    Matrix4x4 world = Mul(objectMatrix, worldMatrix);
-    Matrix4x4 wvpMatrix = Mul(world, cameraController->viewProjectionMatrix);
+    // 3. translateとの差分を補正移動として加える
+    Vector3 offset = {
+        transform.translate.x - rotatedOrigin.x,
+        transform.translate.y - rotatedOrigin.y,
+        transform.translate.z - rotatedOrigin.z
+    };
+    Matrix4x4 offsetMatrix = MakeTranslateMatrix(offset);
 
-    // 共通セットアップ
-    DrawData drawData = SetupDrawData(
-        vertexResourceSizeObj,
-        obj.modelData.vertices.data(),
-        kSumVertex,
-        vertexResourceObj,
-        vertexResourceSizeObj,
-        materialData[drawCallIndex],
-        materialColor,
-        true,
-        MakeIdentity4x4(),
-        wvpData[drawCallIndex],
-        world,
-        wvpMatrix,
-        textureNumber,
-        textures
-    );
-    if (!drawData.texture) return;
+    // 4. 最終ワールド行列
+    Matrix4x4 worldMatrix = Mul(centerMatrix, offsetMatrix);
 
-    // 描画処理
-    dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &drawData.vertexBufferView);
-    // 形状を設定
+    // WVP行列
+    Matrix4x4 wvpMatrix = Mul(worldMatrix, cameraController->viewProjectionMatrix);
+
+    wvpData[drawCallIndex]->World = worldMatrix;
+    wvpData[drawCallIndex]->WVP = wvpMatrix;
+
+    // テクスチャ取得
+    const TextureData* tex = nullptr;
+    for (const auto& t : textures)
+    {
+        if (t.number == textureNumber)
+        {
+            tex = &t;
+            break;
+        }
+    }
+    if (tex == nullptr && !textures.empty())
+    {
+        tex = &textures[0];
+    }
+    if (!tex) return;
+
+    Vector4 color = ConvertUintToVector4(materialColor);
+    materialData[drawCallIndex]->color = color;
+    materialData[drawCallIndex]->enableLighting = true;
+    materialData[drawCallIndex]->uvTransform = MakeIdentity4x4();
+
+    // 頂点バッファをバインド（描画に使う頂点データを指定）
+    dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &obj.vertexBufferView);
+    // プリミティブトポロジ（描画する形状の種類：三角形リスト）を設定
     dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    // CBVを設定する マテリアル用のCBufferの場所を設定
+    // ルートパラメータ0にマテリアル用定数バッファ（色・ライティング情報など）をバインド
     dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources[drawCallIndex]->GetGPUVirtualAddress());
-    // CBVを設定する wvp用のCBufferの場所を設定
+    // ルートパラメータ1にWVP（ワールド・ビュー・プロジェクション）用定数バッファをバインド
     dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources[drawCallIndex]->GetGPUVirtualAddress());
-    // SRVのDescriptorTableの先頭を設定。２はrootParameters[2]。
-    dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, drawData.texture->textureSrvHandleGPU);
-    // CBVを設定する ディレクショナルライト用のCBufferの場所を設定
+    // ルートパラメータ2にテクスチャのSRV（シェーダリソースビュー）をバインド
+    dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
+    // ルートパラメータ3にディレクショナルライト用定数バッファをバインド
     dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
-
-
-    // 描画
+    // 頂点数分のインスタンス描画を実行（実際に描画コマンドを発行）
     dxManager->GetCommandList()->DrawInstanced(kSumVertex, 1, 0, 0);
 
     drawCallIndex++;
 }
 
-void Game::DrawTriangle(const Transforms& localTransform, const Transforms& worldTransform, const VertexData* vertexData, uint32_t textureNumber, const Vector4& materialColor)
+//void Game::Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor)
+//{
+//    if (objectNumber >= objects.size()) return;
+//
+//    Object3D& obj = objects[objectNumber];
+//    const uint32_t kSumVertex = static_cast<uint32_t>(obj.modelData.vertices.size());
+//
+//    // 1. centerへ移動
+//    Matrix4x4 toCenter = MakeTranslateMatrix({ -center.x, -center.y, -center.z });
+//    // 2. scale・rotate
+//    Matrix4x4 rotateScale = MakeAffineMatrix(transform.scale, transform.rotate, { 0,0,0 });
+//    // 3. centerへ戻す
+//    Matrix4x4 fromCenter = MakeTranslateMatrix(center);
+//    // 4. translate（ワールド原点基準）
+//    Matrix4x4 translate = MakeTranslateMatrix(transform.translate);
+//
+//    // 合成: translate * fromCenter * rotateScale * toCenter
+//    Matrix4x4 worldMatrix = Mul(translate, Mul(fromCenter, Mul(rotateScale, toCenter)));
+//
+//    // WVP行列
+//    Matrix4x4 wvpMatrix = Mul(worldMatrix, cameraController->viewProjectionMatrix);
+//
+//    wvpData[drawCallIndex]->World = worldMatrix;
+//    wvpData[drawCallIndex]->WVP = wvpMatrix;
+//
+//    // テクスチャ取得
+//    const TextureData* tex = nullptr;
+//    for (const auto& t : textures)
+//    {
+//        if (t.number == textureNumber)
+//        {
+//            tex = &t;
+//            break;
+//        }
+//    }
+//    if (tex == nullptr && !textures.empty())
+//    {
+//        tex = &textures[0];
+//    }
+//    if (!tex) return;
+//
+//    materialData[drawCallIndex]->color = materialColor;
+//    materialData[drawCallIndex]->enableLighting = true;
+//    materialData[drawCallIndex]->uvTransform = MakeIdentity4x4();
+//
+//    dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &obj.vertexBufferView);
+//    dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+//    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources[drawCallIndex]->GetGPUVirtualAddress());
+//    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources[drawCallIndex]->GetGPUVirtualAddress());
+//    dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
+//    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
+//    dxManager->GetCommandList()->DrawInstanced(kSumVertex, 1, 0, 0);
+//
+//    drawCallIndex++;
+//}
+//
+
+void Game::DrawTriangle(const Transforms& localTransform, const Transforms& worldTransform, const VertexData* vertexData, uint32_t textureNumber, const uint32_t& materialColor)
 {
     Matrix4x4 world = Mul(
         MakeAffineMatrix(localTransform.scale, localTransform.rotate, localTransform.translate),
@@ -402,7 +557,7 @@ void Game::DrawTriangle(const Transforms& localTransform, const Transforms& worl
         textures
     );
     if (!drawData.texture) return;
-   
+
 
     // RootSignatureを設定。
     dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &drawData.vertexBufferView);
@@ -423,7 +578,7 @@ void Game::DrawTriangle(const Transforms& localTransform, const Transforms& worl
     drawCallIndex++;
 }
 
-void Game::DrawSphere(const Transforms& localTransform, VertexData* vertexData, uint32_t kSubdivision, uint32_t textureNumber, const Vector4& materialColor)
+void Game::DrawSphere(const Transforms& localTransform, VertexData* vertexData, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor)
 {
     // 必要な頂点数
     const uint32_t kSumVertex = kSubdivision * kSubdivision * 6;
@@ -471,7 +626,7 @@ void Game::DrawSphere(const Transforms& localTransform, VertexData* vertexData, 
     drawCallIndex++;
 }
 
-void Game::DrawSprite(const Transforms& localTransform, VertexData* vertexData, uint32_t textureNumber, const Vector4& materialColor)
+void Game::DrawSprite(const Transforms& localTransform, VertexData* vertexData, uint32_t textureNumber, const uint32_t& materialColor)
 {
     Matrix4x4 orthoProjectionMatrix = MakeOrthographicMatrix(
         0.0f, 0.0f,
@@ -533,6 +688,25 @@ void Game::GetMousePosition(Vector2* position)
     position->y = float(mousePosScreen.y);
 }
 
+void Game::SetMouseRay()
+{
+    // hwnd: ゲームウィンドウのハンドル（WindowManagerなどから取得）
+    POINT mousePosScreen;
+    GetCursorPos(&mousePosScreen); // 画面座標で取得
+
+    // クライアント座標（ウィンドウ左上基準）に変換
+    ScreenToClient(windowManager->GetHwnd(), &mousePosScreen);
+
+    // mousePosScreen.x, mousePosScreen.y がウィンドウ内のマウス座標
+    mouseController->SetMousePosition({ float(mousePosScreen.x) ,float(mousePosScreen.y) });
+    mouseController->SetMouseRay(windowManager->Getwidth(), windowManager->Getheight(), cameraController->viewProjectionMatrix);
+}
+
+bool Game::IsCollisionMouseRayAABB(AABB aabb, int objNum)
+{
+    return IsCollision(mouseController->GetMouseRay(), aabb, objects[objNum].modelData.vertices, MakeAffineMatrix(objects[objNum].transform.scale, objects[objNum].transform.rotate, objects[objNum].transform.translate));
+};
+
 bool Game::IsPressMouse(int i)
 {
     // 左クリック
@@ -562,4 +736,30 @@ int Game::GetWheel()
     int delta = wheelDelta;
     wheelDelta = 0; // 1フレームで消費
     return delta;
+}
+
+// カメラ操作
+void Game::MoveCenterTarget(Vector3 target, int spendFrame)
+{
+    cameraController->SetCenterTarget(target, spendFrame);
+}
+
+void Game::MoveRotateTarget(Vector3 target, int spendFrame)
+{
+    cameraController->SetRotateTarget(target, spendFrame);
+}
+
+void Game::MoveDistanceTarget(float target, int spendFrame)
+{
+    cameraController->SetDistanceTarget(target, spendFrame);
+}
+
+// int型のcolorをVector4に変換
+Vector4 Game::ConvertUintToVector4(uint32_t color)
+{
+    float a = ((color >> 24) & 0xFF) / 255.0f; // Alpha
+    float r = ((color >> 16) & 0xFF) / 255.0f; // Red
+    float g = ((color >> 8) & 0xFF) / 255.0f;  // Green
+    float b = (color & 0xFF) / 255.0f;      // Blue
+    return { r, g, b, a };
 }

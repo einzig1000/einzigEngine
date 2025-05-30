@@ -1,69 +1,77 @@
 #include "CameraController.h"
 #include "functions.h"
 #include "Game.h"
+#include "Easings.h"
 Matrix4x4 CameraController::viewportMatrix;
 Matrix4x4 CameraController::viewProjectionMatrix;
 
 
 CameraController::CameraController()
 {
-    transform.translate = { 0.0f,1.9f,-6.49f };
-    transform.rotate = { 0.26f,0.0f,0.0f };
-    mousePositionGap = { 0,0 };
-    cameraMode = 1;
+    transform_.translate = { 0.0f, 0.0f, 0.0f }; //{ 0.0f,1.9f,-6.49f} 
+    transform_.rotate = { 0.82f, 0.0f, 0.0f }; // { 0.26f,0.0f,0.0f };  
 
-    preTarget = target;
-    preRotate.x = transform.rotate.x;
-    preRotate.y = transform.rotate.y;
+    mousePositionGap_ = { 0,0 };
+    cameraMode_ = 1;
+
+    center_ = { -5.44f, 0.0f, -5.0f };
+    preCenter_ = center_;
+    preRotate_.x = transform_.rotate.x;
+    preRotate_.y = transform_.rotate.y;
+
+    distance_ = 17.00f; // 6.49f
 }
 
 void CameraController::Updata()
 {
-    if (cameraMode)
+    // カメラ操作可能
+    if (cameraMode_)
     {
-        prePressMouse0 = pressMouse0;
-        pressMouse0 = Game::IsPressMouse(0);
-        prePressMouse2 = pressMouse2;
-        pressMouse2 = Game::IsPressMouse(2);
+        prePressMouse0_ = pressMouse0_;
+        pressMouse0_ = Game::IsPressMouse(0);
+        prePressMouse2_ = pressMouse2_;
+        pressMouse2_ = Game::IsPressMouse(2);
 
-        mouseWheel = Game::GetWheel();
+        mouseWheel_ = Game::GetWheel();
 
         //////////////////////////////////////////////
         ///              カメラ回転                ///
         ////////////////////////////////////////////// 
+#pragma region
         // クリックした瞬間
-        if (prePressMouse0 == 0 && pressMouse0)
+        if (prePressMouse0_ == 0 && pressMouse0_)
         {
-            Game::GetMousePosition(&preMousePosition);
+            Game::GetMousePosition(&preMousePosition_);
         }
         // クリックしている最中
-        if (pressMouse0)
+        if (pressMouse0_)
         {
-            Game::GetMousePosition(&mousePosition);
-            mousePositionGap.x = mousePosition.x - preMousePosition.x;
-            mousePositionGap.y = mousePosition.y - preMousePosition.y;
-            transform.rotate.x = (mousePositionGap.y / 100.0f + 0.26f) + (preRotate.x);
-            transform.rotate.y = (mousePositionGap.x / 100.0f) + (preRotate.y);
+            Game::GetMousePosition(&mousePosition_);
+            mousePositionGap_.x = mousePosition_.x - preMousePosition_.x;
+            mousePositionGap_.y = mousePosition_.y - preMousePosition_.y;
+            transform_.rotate.x = (mousePositionGap_.y / 100.0f + 0.26f) + (preRotate_.x);
+            transform_.rotate.y = (mousePositionGap_.x / 100.0f) + (preRotate_.y);
         }
         // クリックやめた瞬間
-        if (prePressMouse0 && pressMouse0 == 0)
+        if (prePressMouse0_ && pressMouse0_ == 0)
         {
-            preRotate.x = transform.rotate.x;
-            preRotate.y = transform.rotate.y;
+            preRotate_ = transform_.rotate;
         }
+#pragma endregion
 
         //////////////////////////////////////////////
         ///                回転中心                ///
         ////////////////////////////////////////////// 
-        if (prePressMouse2 == 0 && pressMouse2)
+#pragma region
+        if (prePressMouse2_ == 0 && pressMouse2_)
         {
-            Game::GetMousePosition(&preMousePosition);
+            Game::GetMousePosition(&preMousePosition_);
         }
-        if (pressMouse2)
+        if (pressMouse2_)
         {
-            Game::GetMousePosition(&mousePosition);
-            mousePositionGap.x = float(mousePosition.x - preMousePosition.x);
-            mousePositionGap.y = float(mousePosition.y - preMousePosition.y);
+            Game::GetMousePosition(&mousePosition_);
+            mousePositionGap_.x = float(mousePosition_.x - preMousePosition_.x);
+            mousePositionGap_.y = float(mousePosition_.y - preMousePosition_.y);
 
             //	カメラの回転行列（cameraRotMat）を作ることで、カメラの「右」「上」方向ベクトルを取得できます。
             //	右方向ベクトル = 回転行列の1列目（m[0][0], m[1][0], m[2][0]）
@@ -82,38 +90,62 @@ void CameraController::Updata()
             // 
 
 
-            Matrix4x4 cameraRotMat = MakeAffineMatrix({ 1,1,1 }, transform.rotate, { 0,0,0 });
+            Matrix4x4 cameraRotMat = MakeAffineMatrix({ 1,1,1 }, transform_.rotate, { 0,0,0 });
             // 右方向ベクトル（ローカルx軸）
             Vector3 right = { cameraRotMat.m[0][0], cameraRotMat.m[1][0], cameraRotMat.m[2][0] };
             // 上方向ベクトル（ローカルy軸）
             Vector3 up = { cameraRotMat.m[0][1], cameraRotMat.m[1][1], cameraRotMat.m[2][1] };
 
 
-            // Targetを移動
-            target = Add(preTarget, Add(
-                Mul(mousePositionGap.x / 100.0f, Mul(-1, right)),
-                Mul(-mousePositionGap.y / 100.0f, Mul(-1, up))
+            // Centerを移動
+            center_ = Add(preCenter_, Add(
+                Mul(mousePositionGap_.x / 100.0f, Mul(-1, right)),
+                Mul(-mousePositionGap_.y / 100.0f, Mul(-1, up))
             ));
         }
-        if (prePressMouse2 && pressMouse2 == 0)
+        if (prePressMouse2_ && pressMouse2_ == 0)
         {
-            preTarget = target;
+            preCenter_ = center_;
         }
 
 
+
+#pragma endregion
 
         //////////////////////////////////////////////
         ///               カメラ距離               ///
         ////////////////////////////////////////////// 
-        if (mouseWheel > 0)
+#pragma region
+        if (mouseWheel_ > 0)
         {
-            distance -= float(mouseWheel) / 100;
+            distance_ -= float(mouseWheel_) / 100;
         }
-        if (mouseWheel < 0)
-        { 
-            distance -= float(mouseWheel) / 100;
+        if (mouseWheel_ < 0)
+        {
+            distance_ -= float(mouseWheel_) / 100;
+        }
+#pragma endregion
+    }
+    // カメラ操作禁止
+    else
+    {
+        if (easeRotate_.easingFlag)
+        {
+            MovingRotate();
+        }
+        if (easeCenter_.easingFlag)
+        {
+            MovingCenter();
+        }
+        if (easeDistance_.easingFlag)
+        {
+            MovingDistance();
         }
     }
+    ImGui::DragFloat3("cameraCenter", &center_.x, 0.01f);
+    ImGui::DragFloat3("cameraRotate", &transform_.rotate.x, 0.01f);
+    ImGui::DragFloat("cameraDistance", &distance_, 0.01f);
+    ImGui::Checkbox("cameraMode", &cameraMode_);
 
     //////////////////////////////////////////////
     ///               カメラ移動               ///
@@ -122,12 +154,12 @@ void CameraController::Updata()
     ////  カメラを原点で回転させた後に移動  ////（カメラのscaleとtranslateは動かさない）
 
     // カメラ初期値
-    Vector3 cameraLocalPos = { 0.0f, 0.0f, -distance };
+    Vector3 cameraLocalPos = { 0.0f, 0.0f, -distance_ };
 
     // カメラに回転適用（カメラのscaleとtranslateはマジで動かさない）
     Matrix4x4 cameraRotateMatrix = MakeAffineMatrix(
         { 1,1,1 },
-        transform.rotate,
+        transform_.rotate,
         { 0,0,0 }
     );
 
@@ -139,31 +171,93 @@ void CameraController::Updata()
     };
 
 
-    // 原点上で回転したrotatedCameraPosに　cameraTargetを足せば中心がcameraTargetに変わる
-    transform.translate = Add(target, rotatedCameraPos);
+    // 原点上で回転したrotatedCameraPosに　cameraCenterを足せば中心がcameraCenterに変わる
+    transform_.translate = Add(center_, rotatedCameraPos);
 
     // カメラ行列を作成
-    cameraMatrix = MakeAffineMatrix(
+    cameraMatrix_ = MakeAffineMatrix(
         { 1,1,1 },
-        transform.rotate,
-        transform.translate
+        transform_.rotate,
+        transform_.translate
     );
 
     // ビュー・射影・ビューポート行列
-    viewMatrix = Inverse(cameraMatrix);
-    projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(1280) / float(720), 0.1f, 100.0f);
-    viewProjectionMatrix = Mul(viewMatrix, projectionMatrix);
-    //viewportMatrix = MakeViewPortMatrix(0, 0, float(1280), float(720), 0.0f, 1.0f);
-
-    //cameraMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
-    //viewMatrix = Inverse(cameraMatrix);
-    //projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(1280) / float(720), 0.1f, 100.0f);// int width, int heightをもってくる
-
-
-
+    viewMatrix_ = Inverse(cameraMatrix_);
+    projectionMatrix_ = MakePerspectiveFovMatrix(0.45f, float(1280) / float(720), 0.1f, 100.0f);
+    viewProjectionMatrix = Mul(viewMatrix_, projectionMatrix_);
 }
 
 void CameraController::Draw()
 {
     //Game::DrawSphere(transformSphere1, vertexData, kSubdivision, monsterBall, { 1.0f, 1.0f, 1.0f, 1.0f });
 }
+
+// 実際に動かす
+void CameraController::MovingCenter()
+{
+    center_.x = Easings::OUT_QUART(easeCenter_.flame, easeCenter_.maxFrame, easeCenter_.start.x, easeCenter_.end.x);
+    center_.y = Easings::OUT_QUART(easeCenter_.flame, easeCenter_.maxFrame, easeCenter_.start.y, easeCenter_.end.y);
+    center_.z = Easings::OUT_QUART(easeCenter_.flame, easeCenter_.maxFrame, easeCenter_.start.z, easeCenter_.end.z);
+    preCenter_ = center_;
+
+    easeCenter_.flame++;
+    if (easeCenter_.flame > easeCenter_.maxFrame)
+    {
+        easeCenter_.easingFlag = 0;
+    }
+}
+
+void CameraController::MovingRotate()
+{
+    transform_.rotate.x = Easings::OUT_QUART(easeRotate_.flame, easeRotate_.maxFrame, easeRotate_.start.x, easeRotate_.end.x);
+    transform_.rotate.y = Easings::OUT_QUART(easeRotate_.flame, easeRotate_.maxFrame, easeRotate_.start.y, easeRotate_.end.y);
+    transform_.rotate.z = Easings::OUT_QUART(easeRotate_.flame, easeRotate_.maxFrame, easeRotate_.start.z, easeRotate_.end.z);
+    preRotate_ = transform_.rotate;
+
+    easeRotate_.flame++;
+
+    if (easeRotate_.flame > easeRotate_.maxFrame)
+    {
+        easeRotate_.easingFlag = 0;
+    }
+}
+
+void CameraController::MovingDistance()
+{
+    distance_ = Easings::OUT_QUART(easeDistance_.flame, easeDistance_.maxFrame, easeDistance_.start.x, easeDistance_.end.x);
+
+    easeDistance_.flame++;
+
+    if (easeDistance_.flame > easeDistance_.maxFrame)
+    {
+        easeDistance_.easingFlag = 0;
+    }
+}
+
+// 動かす先の設定
+void CameraController::SetCenterTarget(Vector3 target, int spendFrame)
+{
+    easeCenter_.start = center_;
+    easeCenter_.end = target;
+    easeCenter_.easingFlag = 1;
+    easeCenter_.flame = 0;
+    easeCenter_.maxFrame = spendFrame;
+};
+
+void CameraController::SetRotateTarget(Vector3 target, int spendFrame)
+{
+    easeRotate_.start = transform_.rotate;
+    easeRotate_.end = target;
+    easeRotate_.easingFlag = 1;
+    easeRotate_.flame = 0;
+    easeRotate_.maxFrame = spendFrame;
+};
+
+void CameraController::SetDistanceTarget(float target, int spendFrame)
+{
+    easeDistance_.start.x = distance_;
+    easeDistance_.end.x = target;
+    easeDistance_.easingFlag = 1;
+    easeDistance_.flame = 0;
+    easeDistance_.maxFrame = spendFrame;
+};

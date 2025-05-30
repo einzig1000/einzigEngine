@@ -95,6 +95,8 @@ void VectorScreenPrintf(int x, int y, const Vector3& vector, const char* label);
 /// <returns>座標変換されたvector</returns>
 Vector3 Transform(const Vector3& vector, const Matrix4x4& matrix);
 
+Vector4 Transform(const Vector4& v, const Matrix4x4& m);
+
 #pragma endregion
 
 #pragma region Matrix4x4
@@ -232,8 +234,17 @@ Matrix4x4 MakeViewPortMatrix(float left, float top, float width, float height, f
 
 #pragma endregion
 
+bool IsCollision(const Sphere& s1, const Sphere& s2);
+bool IsCollision(const Sphere& s, const Plane& p);
+bool IsCollision(const Segment& s, const Plane& p);
+bool IsCollision(const Segment& s, const Triangle& t);
+bool IsCollision(const Ray& r, const Plane& p);
+bool IsCollision(const Ray& r, const AABB& aabb);
+bool IsCollision(const Ray& r, const Triangle& t);
 
+bool IsCollision(const Ray& ray, const AABB& aabb, const std::vector<VertexData>& vertices, const Matrix4x4& worldMatrix);
 
+AABB CreateAABB(const Transforms& transforms);
 
 
 /// <summary>
