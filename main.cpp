@@ -97,14 +97,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		/// ↓描画処理ここから
 		///
 
-		Game::DrawTriangle(localTransform, worldTransform, triangleVertices, textureNumber, materialColor);
+		//Game::DrawTriangle(localTransform, worldTransform, triangleVertices, textureNumber, materialColor);
 
 		//Game::DrawSprite(transform, vdata, uvChecker, color);
 		//Game::DrawSprite(transform1, vdata, uvChecker, color);
 		Game::Drawobj(transformsObj, transformsObj.translate, obj1, uvChecker, color);
-		Game::DrawSphere(transformSphere1, vertexData, kSubdivision, monsterBall, { 1.0f, 1.0f, 1.0f, 1.0f });
+		//Game::DrawSphere(transformSphere1, vertexData, kSubdivision, monsterBall, { 1.0f, 1.0f, 1.0f, 1.0f });
 
-		Game::GetMousePosition(&mousePosition);
+		//Game::GetMousePosition(&mousePosition);
 
 		if (ImGui::CollapsingHeader("sphere"))
 		{

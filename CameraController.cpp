@@ -11,6 +11,10 @@ CameraController::CameraController()
     transform.rotate = { 0.26f,0.0f,0.0f };
     mousePositionGap = { 0,0 };
     cameraMode = 1;
+
+    preTarget = target;
+    preRotate.x = transform.rotate.x;
+    preRotate.y = transform.rotate.y;
 }
 
 void CameraController::Updata()

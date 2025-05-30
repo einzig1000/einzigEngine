@@ -128,7 +128,6 @@ Vector3 Normalize(const Vector3& v)
     return Return;
 }
 
-
 Vector3 Transform(const Vector3& vector, const Matrix4x4& matrix)
 {
     Vector3 result{};
