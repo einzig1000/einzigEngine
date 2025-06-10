@@ -11,7 +11,8 @@
 #include "GetHitKey.h"
 
 
-class DirectXManager {
+class DirectXManager
+{
 public:
     DirectXManager(HWND hwnd, int width, int height);
     ~DirectXManager();

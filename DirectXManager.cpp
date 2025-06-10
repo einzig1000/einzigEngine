@@ -4,7 +4,7 @@
 #include "externals/imgui/imgui_impl_win32.h"
 
 
-DirectXManager::DirectXManager(HWND hwnd, int width, int height) 
+DirectXManager::DirectXManager(HWND hwnd, int width, int height)
 {
 #ifdef _DEBUG
 	EnableDebugLayer();
@@ -22,8 +22,10 @@ DirectXManager::DirectXManager(HWND hwnd, int width, int height)
 	InitializeGetHitKey(hwnd);
 }
 
-DirectXManager::~DirectXManager() {
-	if (fenceEvent) {
+DirectXManager::~DirectXManager()
+{
+	if (fenceEvent)
+	{
 		CloseHandle(fenceEvent);
 	}
 	delete getHitKey;
@@ -44,7 +46,8 @@ void DirectXManager::EnableDebugLayer()
 	}
 }
 
-void DirectXManager::InitializeDevice() {
+void DirectXManager::InitializeDevice()
+{
 	// DXGIFactoryの生成
 	Microsoft::WRL::ComPtr<IDXGIFactory7> dxgiFactory;
 	// エラーチェック
@@ -54,12 +57,14 @@ void DirectXManager::InitializeDevice() {
 	// 使用するアダプタ(GPU)を決定する
 	Microsoft::WRL::ComPtr<IDXGIAdapter4> useAdapter;
 	// 良い順にアダプタを頼む
-	for (UINT i = 0; dxgiFactory->EnumAdapterByGpuPreference(i, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&useAdapter)) != DXGI_ERROR_NOT_FOUND; ++i) {
+	for (UINT i = 0; dxgiFactory->EnumAdapterByGpuPreference(i, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&useAdapter)) != DXGI_ERROR_NOT_FOUND; ++i)
+	{
 		DXGI_ADAPTER_DESC3 adapterDesc;
 		hr = useAdapter->GetDesc3(&adapterDesc);
 		assert(SUCCEEDED(hr)); //エラーチェック
 		// ソフトウェアアダプタでなければ採用
-		if (!(adapterDesc.Flags & DXGI_ADAPTER_FLAG3_SOFTWARE)) {
+		if (!(adapterDesc.Flags & DXGI_ADAPTER_FLAG3_SOFTWARE))
+		{
 			break;
 		}
 	}
@@ -86,7 +91,8 @@ void DirectXManager::InitializeDevice() {
 	// デバッグ情報のフィルタリングを設定
 #ifdef _DEBUG
 	Microsoft::WRL::ComPtr<ID3D12InfoQueue> infoQueue = nullptr;
-	if (device && SUCCEEDED(device->QueryInterface(IID_PPV_ARGS(&infoQueue)))) {
+	if (device && SUCCEEDED(device->QueryInterface(IID_PPV_ARGS(&infoQueue))))
+	{
 		// 致命的なエラー時に止まる
 		infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
 		// エラー時に止まる
@@ -114,7 +120,8 @@ void DirectXManager::InitializeDevice() {
 #endif
 }
 
-void DirectXManager::InitializeCommandQueue() {
+void DirectXManager::InitializeCommandQueue()
+{
 	D3D12_COMMAND_QUEUE_DESC commandQueueDesc = {};
 	commandQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 
@@ -131,7 +138,8 @@ void DirectXManager::InitializeCommandQueue() {
 	assert(SUCCEEDED(hr));
 }
 
-void DirectXManager::InitializeSwapChain(HWND hwnd, int width, int height) {
+void DirectXManager::InitializeSwapChain(HWND hwnd, int width, int height)
+{
 	Microsoft::WRL::ComPtr<IDXGIFactory7> dxgiFactory;
 	HRESULT hr = CreateDXGIFactory(IID_PPV_ARGS(&dxgiFactory));
 	assert(SUCCEEDED(hr));
@@ -154,7 +162,7 @@ void DirectXManager::InitializeSwapChain(HWND hwnd, int width, int height) {
 	// コマンドキュー、ウィンドウハンドル、設定を渡して生成する
 	hr = dxgiFactory->CreateSwapChainForHwnd(commandQueue.Get(), hwnd, &swapChainDesc, nullptr, nullptr, reinterpret_cast<IDXGISwapChain1**>(swapChain.GetAddressOf()));
 	assert(SUCCEEDED(hr));
-	
+
 	// SwapChainからResourceを引っ張ってくる
 	hr = swapChain->GetBuffer(0, IID_PPV_ARGS(&swapChainResources[0]));
 	assert(SUCCEEDED(hr));
@@ -162,7 +170,8 @@ void DirectXManager::InitializeSwapChain(HWND hwnd, int width, int height) {
 	assert(SUCCEEDED(hr));
 }
 
-void DirectXManager::InitializeRenderTargetView() {
+void DirectXManager::InitializeRenderTargetView()
+{
 	// rtvDescriptorHeapの設定 　ID3D12DescriptorHeap* CreateDescriptorHeap(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible)のもの
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
 	rtvHeapDesc.NumDescriptors = 2;
@@ -187,9 +196,10 @@ void DirectXManager::InitializeRenderTargetView() {
 	device->CreateRenderTargetView(swapChainResources[1].Get(), &rtvDesc, rtvHandles[1]);
 }
 
-void DirectXManager::InitializeDepthStencilView(int width, int height) {
+void DirectXManager::InitializeDepthStencilView(int width, int height)
+{
 	// ID3D12Resource* CreateDepthStencilTextureResource(ID3D12Device * device, int32_t width, int32_t height)の内容
-	
+
 	// 深度ステンシルバッファのリソースを作成
 	D3D12_RESOURCE_DESC depthStencilDesc = {};
 	depthStencilDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D; // ２次元
@@ -244,7 +254,8 @@ void DirectXManager::InitializeDepthStencilView(int width, int height) {
 	device->CreateDepthStencilView(depthStencilBuffer.Get(), &dsvDesc, dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 }
 
-void DirectXManager::InitializeRootSignature() {
+void DirectXManager::InitializeRootSignature()
+{
 	HRESULT hr;
 
 	// DescriptorRangeの作成
@@ -501,7 +512,7 @@ void DirectXManager::InitializeViewportAndScissor(int width, int height)
 	scissorRect.bottom = height;
 }
 
-void DirectXManager::InitializeSRVDescriptorHeap() 
+void DirectXManager::InitializeSRVDescriptorHeap()
 {
 	// ディスクリプタヒープの生成
 	D3D12_DESCRIPTOR_HEAP_DESC DescriptorHeapDesc{};
@@ -511,7 +522,7 @@ void DirectXManager::InitializeSRVDescriptorHeap()
 	// エラーチェック
 	HRESULT hr = device->CreateDescriptorHeap(&DescriptorHeapDesc, IID_PPV_ARGS(&srvDescriptorHeap));
 	// ディスクリプタヒープの生成がうまくいかなかったので起動できない
-	assert(SUCCEEDED(hr));	
+	assert(SUCCEEDED(hr));
 }
 
 void DirectXManager::InitializeSynchronizationObjects()
@@ -606,7 +617,8 @@ void DirectXManager::EndFrame()
 
 	///	コマンドリストを確定させる
 	HRESULT hr = commandList->Close();
-	if (FAILED(hr)) {
+	if (FAILED(hr))
+	{
 		Log("Failed to close command list.");
 		assert(false);
 	}

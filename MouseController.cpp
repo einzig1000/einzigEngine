@@ -1,7 +1,7 @@
 #include "MouseController.h"
 #include "functions.h"
 
-void MouseController::SetMouseRay(uint32_t width, uint32_t height, Matrix4x4 viewProjectionMatrix)
+void MouseController::SetMouseRay(const uint32_t width, const uint32_t height, const Matrix4x4 viewProjectionMatrix)
 {
     // 左下が０、右上が１とした時のマウスポジション
     float ndcX = (position_.x / width) * 2.0f - 1.0f;
@@ -12,7 +12,7 @@ void MouseController::SetMouseRay(uint32_t width, uint32_t height, Matrix4x4 vie
     Vector4 farPoint = { ndcX, ndcY, 1.0f, 1.0f };
 
     // 逆射影行列
-    Matrix4x4 invViewProj = Inverse(viewProjectionMatrix);
+    Matrix4x4 invViewProj = viewProjectionMatrix.Inverse();
 
     // ワールド空間に変換
     Vector4 nearWorld = Transform(nearPoint, invViewProj);
@@ -20,9 +20,9 @@ void MouseController::SetMouseRay(uint32_t width, uint32_t height, Matrix4x4 vie
 
     // マウスレイの始点・方向
     ray_.origin = { nearWorld.x / nearWorld.w, nearWorld.y / nearWorld.w, nearWorld.z / nearWorld.w };
-    ray_.diff = Normalize({
-        (farWorld.x / farWorld.w) - ray_.origin.x,
-        (farWorld.y / farWorld.w) - ray_.origin.y,
-        (farWorld.z / farWorld.w) - ray_.origin.z
-        });
+    ray_.diff = Vector3{
+    (farWorld.x / farWorld.w) - ray_.origin.x,
+    (farWorld.y / farWorld.w) - ray_.origin.y,
+    (farWorld.z / farWorld.w) - ray_.origin.z
+    }.Normalized();
 }

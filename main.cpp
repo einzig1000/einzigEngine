@@ -1,7 +1,6 @@
 #include "Game.h"           // ゲームロジック
 #include "functions.h"      // 関数s
 #include "Easings.h"
-#include "CG2_05.h"
 
 
 
@@ -10,8 +9,22 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
 	// ウィンドウ、DrectX初期化
 	Game::Initialize(WIDTH, HEIGHT, L"CG2");
-	CG2_05* cg = new CG2_05;
 
+
+	// テクスチャ
+	int uvCheckerPng;
+	uvCheckerPng = Game::LoadTexture("resources/uvChecker.png");
+	int blockPng;
+	blockPng = Game::LoadTexture("resources/map.png");
+	// モデル
+	int blockModel;
+	blockModel = Game::LoadOBJ("resources/model", "map.obj");
+
+
+	Transforms blockTransforms;
+	blockTransforms.scale = { 1.2f, 1.2f, 1.2f };
+	blockTransforms.translate = { 0,0,0 };
+	blockTransforms.rotate = { 0.0f,0.0f,0.0f };
 
 	while (Game::ProcessMessage())
 	{
@@ -23,7 +36,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		///
 		/// ↓更新処理ここから
 		///
-		cg->Update();
+		
 		///
 		/// ↑更新処理ここまで
 		///
@@ -31,7 +44,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		///
 		/// ↓描画処理ここから
 		///
-		cg->Draw();
+		Game::Drawobj(blockTransforms, {0,0,0}, blockModel, uvCheckerPng, 0xFFFFFFFF);
+		
 
 		///
 		/// ↑描画処理ここまで
@@ -42,10 +56,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		// フレームの終了
 		Game::EndFrame();
 	}
-
-	delete cg;
-	cg = nullptr;
-
 	Game::Finalize();
 
 

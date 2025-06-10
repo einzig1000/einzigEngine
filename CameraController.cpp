@@ -8,18 +8,17 @@ Matrix4x4 CameraController::viewProjectionMatrix;
 
 CameraController::CameraController()
 {
-    transform_.translate = { 0.0f, 0.0f, 0.0f }; //{ 0.0f,1.9f,-6.49f} 
-    transform_.rotate = { 0.82f, 0.0f, 0.0f }; // { 0.26f,0.0f,0.0f };  
-
     mousePositionGap_ = { 0,0 };
     cameraMode_ = 0;
 
-    center_ = { -5.44f, 0.0f, -5.0f };
+    transform_.translate = { 0.0f, 0.0f, 0.0f };
+    transform_.rotate = { 1.26f, 0.0f, 0.0f };
+    center_ = { 0.0f, 0.0f, 0.0f };
+    distance_ = 39.60f;
+
     preCenter_ = center_;
     preRotate_.x = transform_.rotate.x;
     preRotate_.y = transform_.rotate.y;
-
-    distance_ = 24.00f; // 6.49f
 }
 
 void CameraController::Updata()
@@ -90,7 +89,7 @@ void CameraController::Updata()
             // 
 
 
-            Matrix4x4 cameraRotMat = MakeAffineMatrix({ 1,1,1 }, transform_.rotate, { 0,0,0 });
+            Matrix4x4 cameraRotMat = Matrix4x4::MakeAffineMatrix({ 1,1,1 }, transform_.rotate, { 0,0,0 });
             // 右方向ベクトル（ローカルx軸）
             Vector3 right = { cameraRotMat.m[0][0], cameraRotMat.m[1][0], cameraRotMat.m[2][0] };
             // 上方向ベクトル（ローカルy軸）
@@ -98,10 +97,8 @@ void CameraController::Updata()
 
 
             // Centerを移動
-            center_ = Add(preCenter_, Add(
-                Mul(mousePositionGap_.x / 100.0f, Mul(-1, right)),
-                Mul(-mousePositionGap_.y / 100.0f, Mul(-1, up))
-            ));
+            //center_ = preCenter_ + (((right * -1) * (mousePositionGap_.x / 100.0f)) + ((up * -1) * (-mousePositionGap_.y / 100.0f)));
+            center_ = preCenter_ + (((right * -1) * (mousePositionGap_.x / 100.0f)) + ((up * 1) * (-mousePositionGap_.y / 100.0f)));
         }
         if (prePressMouse2_ && pressMouse2_ == 0)
         {
@@ -126,26 +123,26 @@ void CameraController::Updata()
         }
 #pragma endregion
     }
-    // カメラ操作禁止
-    else
+
+    if (easeRotate_.easingFlag)
     {
-        if (easeRotate_.easingFlag)
-        {
-            MovingRotate();
-        }
-        if (easeCenter_.easingFlag)
-        {
-            MovingCenter();
-        }
-        if (easeDistance_.easingFlag)
-        {
-            MovingDistance();
-        }
+        MovingRotate();
     }
+    if (easeCenter_.easingFlag)
+    {
+        MovingCenter();
+    }
+    if (easeDistance_.easingFlag)
+    {
+        MovingDistance();
+    }
+
+#ifdef DEBUG
     ImGui::DragFloat3("cameraCenter", &center_.x, 0.01f);
     ImGui::DragFloat3("cameraRotate", &transform_.rotate.x, 0.01f);
     ImGui::DragFloat("cameraDistance", &distance_, 0.01f);
-    ImGui::Checkbox("cameraMode", &cameraMode_);
+#endif
+    ImGui::Checkbox("cameraMode(SPACE key)", &cameraMode_);
 
     //////////////////////////////////////////////
     ///               カメラ移動               ///
@@ -157,7 +154,7 @@ void CameraController::Updata()
     Vector3 cameraLocalPos = { 0.0f, 0.0f, -distance_ };
 
     // カメラに回転適用（カメラのscaleとtranslateはマジで動かさない）
-    Matrix4x4 cameraRotateMatrix = MakeAffineMatrix(
+    Matrix4x4 cameraRotateMatrix = Matrix4x4::MakeAffineMatrix(
         { 1,1,1 },
         transform_.rotate,
         { 0,0,0 }
@@ -172,19 +169,19 @@ void CameraController::Updata()
 
 
     // 原点上で回転したrotatedCameraPosに　cameraCenterを足せば中心がcameraCenterに変わる
-    transform_.translate = Add(center_, rotatedCameraPos);
+    transform_.translate = (center_ + rotatedCameraPos);
 
     // カメラ行列を作成
-    cameraMatrix_ = MakeAffineMatrix(
+    cameraMatrix_ = Matrix4x4::MakeAffineMatrix(
         { 1,1,1 },
         transform_.rotate,
         transform_.translate
     );
 
     // ビュー・射影・ビューポート行列
-    viewMatrix_ = Inverse(cameraMatrix_);
-    projectionMatrix_ = MakePerspectiveFovMatrix(0.45f, float(1280) / float(720), 0.1f, 100.0f);
-    viewProjectionMatrix = Mul(viewMatrix_, projectionMatrix_);
+    viewMatrix_ = (cameraMatrix_.Inverse());
+    projectionMatrix_ = Matrix4x4::MakePerspectiveFovMatrix(0.45f, float(1280) / float(720), 0.1f, 100.0f);
+    viewProjectionMatrix = (viewMatrix_ * projectionMatrix_);
 }
 
 void CameraController::Draw()

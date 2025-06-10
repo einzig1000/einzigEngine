@@ -5,16 +5,12 @@ class MouseController
 {
 public:
 	void SetMousePosition(Vector2 position) { position_ = position; };
-	void SetMouseRay(uint32_t width, uint32_t height, Matrix4x4 viewProjectionMatrix);
+	void SetMouseRay(const uint32_t width, const  uint32_t height, const Matrix4x4 viewProjectionMatrix);
 
-	Vector2 GetMousePosition() { return position_; }
-	Ray GetMouseRay() { return ray_; }
+	Vector2 GetMousePosition() const { return position_; }
+	Ray GetMouseRay() const { return ray_; }
 
 private:
 	Vector2 position_;
 	Ray ray_;
-
-
-
 };
-

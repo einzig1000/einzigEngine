@@ -124,7 +124,7 @@ void Game::Initialize(int width, int height, const std::wstring& title)
     directionalLightData = nullptr;
     directionalLightResource->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData));
     directionalLightData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-    directionalLightData->direction = Normalize({ 0.0f, -1.0f, 0.0f });
+    directionalLightData->direction = { 0.0f, -1.0f, 0.0f };
     directionalLightData->intensity = 1.0f;
 }
 
@@ -162,7 +162,7 @@ void Game::BeginFrame()
 void Game::UpdateLight()
 {
     // ライトの向きを正規化
-    directionalLightData->direction = Normalize(directionalLightData->direction);
+    directionalLightData->direction = (directionalLightData->direction.Normalized());
 }
 void Game::UpdateCamera()
 {
@@ -239,19 +239,7 @@ DrawData Game::SetupDrawData(size_t dstBufferSize, const VertexData* srcVertexDa
     wvp->WVP = wvpMatrix;
 
     // テクスチャ
-    const TextureData* tex = nullptr;
-    for (const auto& t : textures)
-    {
-        if (t.number == textureNumber)
-        {
-            tex = &t;
-            break;
-        }
-    }
-    if (tex == nullptr && !textures.empty())
-    {
-        tex = &textures[0];
-    }
+    const TextureData* tex = GetTexture(textureNumber);
 
     return { vertexBufferView, tex };
 }
@@ -308,6 +296,8 @@ int Game::LoadOBJ(const std::string& directoryPath, const std::string& filename)
     obj.modelData = LoadOBJFile(directoryPath, filename);
     // 変換行列
     obj.transform = { {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f} };
+    // AABB
+    obj.aabb = CreateLocalAABB(obj.modelData);
     // 識別ナンバー
     obj.number = static_cast<uint32_t>(objects.size());
 
@@ -331,76 +321,6 @@ int Game::LoadOBJ(const std::string& directoryPath, const std::string& filename)
 }
 
 // 描画
-
-// 消すな保険
-
-//void Game::Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor)
-//{
-//    if (objectNumber >= objects.size()) return;
-//
-//    Object3D& obj = objects[objectNumber];
-//    const uint32_t kSumVertex = static_cast<uint32_t>(obj.modelData.vertices.size());
-//
-//    // centerを中心に回転・拡縮、移動は原点中心
-//    Matrix4x4 toCenter = MakeTranslateMatrix({ -center.x, -center.y, -center.z });              // centerへ移動用マトリックス
-//    Matrix4x4 rotateScale = MakeAffineMatrix(transform.scale, transform.rotate, { 0,0,0 });     // 回転・スケール用マトリックス
-//    Matrix4x4 fromCenter = MakeTranslateMatrix(center);                                         // centerから元の位置へ戻す用マトリックス
-//    Matrix4x4 translate = MakeTranslateMatrix(transform.translate);                             // 移動用マトリックス
-//
-//    // (fromCenter * rotateScale * toCenter) * translate
-//    // １、Mul(rotateScale, toCenter) = 回転中心へ移動してから回転拡縮。center = { 0,0,0 } ならその場で回る
-//    // ２、Mul(fromCenter, ↑)        = 回転中心から元の位置へ戻す
-//    // ３、Mul(translate, ↑)         = 最終的な平行移動（全体の移動）
-//    // ４、centerを中心に回転拡縮し、最後にtransform.translateで移動した結果のマトリックスが完成
-//    Matrix4x4 centerMatrix = Mul(fromCenter, Mul(rotateScale, toCenter));
-//    Matrix4x4 worldMatrix = Mul(centerMatrix, translate);
-//
-//    // オブジェクト間共有マトリックス
-//    Matrix4x4 objectMatrix = MakeAffineMatrix(obj.transform.scale, obj.transform.rotate, obj.transform.translate);
-//
-//    Matrix4x4 world = Mul(objectMatrix, worldMatrix);
-//    Matrix4x4 wvpMatrix = Mul(world, cameraController->viewProjectionMatrix);
-//
-//    // テクスチャ取得
-//    const TextureData* tex = nullptr;
-//    for (const auto& t : textures)
-//    {
-//        if (t.number == textureNumber)
-//        {
-//            tex = &t;
-//            break;
-//        }
-//    }
-//    if (tex == nullptr && !textures.empty())
-//    {
-//        tex = &textures[0];
-//    }
-//    if (!tex) return;
-//
-//    materialData[drawCallIndex]->color = materialColor;
-//    materialData[drawCallIndex]->enableLighting = true;
-//    materialData[drawCallIndex]->uvTransform = MakeIdentity4x4();
-//    wvpData[drawCallIndex]->World = world;
-//    wvpData[drawCallIndex]->WVP = wvpMatrix;
-//
-//    // 頂点バッファをバインド（描画に使う頂点データを指定）
-//    dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &obj.vertexBufferView);
-//    // プリミティブトポロジ（描画する形状の種類：三角形リスト）を設定
-//    dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-//    // ルートパラメータ0にマテリアル用定数バッファ（色・ライティング情報など）をバインド
-//    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources[drawCallIndex]->GetGPUVirtualAddress());
-//    // ルートパラメータ1にWVP（ワールド・ビュー・プロジェクション）用定数バッファをバインド
-//    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources[drawCallIndex]->GetGPUVirtualAddress());
-//    // ルートパラメータ2にテクスチャのSRV（シェーダリソースビュー）をバインド
-//    dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
-//    // ルートパラメータ3にディレクショナルライト用定数バッファをバインド
-//    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
-//    // 頂点数分のインスタンス描画を実行（実際に描画コマンドを発行）
-//    dxManager->GetCommandList()->DrawInstanced(kSumVertex, 1, 0, 0);
-//
-//    drawCallIndex++;
-//}
-
 void Game::Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor)
 {
     if (objectNumber >= objects.size()) return;
@@ -410,10 +330,10 @@ void Game::Drawobj(const Transforms& transform, const Vector3& center, uint32_t 
 
 
     // 1. centerを中心に拡縮・回転
-    Matrix4x4 toCenter = MakeTranslateMatrix({ -center.x, -center.y, -center.z });
-    Matrix4x4 rotateScale = MakeAffineMatrix(transform.scale, transform.rotate, { 0,0,0 });
-    Matrix4x4 fromCenter = MakeTranslateMatrix(center);
-    Matrix4x4 centerMatrix = Mul(fromCenter, Mul(rotateScale, toCenter));
+    Matrix4x4 toCenter = Matrix4x4::MakeTranslateMatrix({ -center.x, -center.y, -center.z });
+    Matrix4x4 rotateScale = Matrix4x4::MakeAffineMatrix(transform.scale, transform.rotate, { 0,0,0 });
+    Matrix4x4 fromCenter = Matrix4x4::MakeTranslateMatrix(center);
+    Matrix4x4 centerMatrix = (fromCenter * (rotateScale * toCenter));
 
     // 2. 回転・拡縮後の原点座標を求める
     Vector3 origin = { 0, 0, 0 };
@@ -425,37 +345,25 @@ void Game::Drawobj(const Transforms& transform, const Vector3& center, uint32_t 
         transform.translate.y - rotatedOrigin.y,
         transform.translate.z - rotatedOrigin.z
     };
-    Matrix4x4 offsetMatrix = MakeTranslateMatrix(offset);
+    Matrix4x4 offsetMatrix = Matrix4x4::MakeTranslateMatrix(offset);
 
     // 4. 最終ワールド行列
-    Matrix4x4 worldMatrix = Mul(centerMatrix, offsetMatrix);
+    Matrix4x4 worldMatrix = (centerMatrix * offsetMatrix);
 
     // WVP行列
-    Matrix4x4 wvpMatrix = Mul(worldMatrix, cameraController->viewProjectionMatrix);
+    Matrix4x4 wvpMatrix = (worldMatrix * cameraController->viewProjectionMatrix);
 
     wvpData[drawCallIndex]->World = worldMatrix;
     wvpData[drawCallIndex]->WVP = wvpMatrix;
 
-    // テクスチャ取得
-    const TextureData* tex = nullptr;
-    for (const auto& t : textures)
-    {
-        if (t.number == textureNumber)
-        {
-            tex = &t;
-            break;
-        }
-    }
-    if (tex == nullptr && !textures.empty())
-    {
-        tex = &textures[0];
-    }
+    const TextureData* tex = GetTexture(textureNumber);
     if (!tex) return;
 
     Vector4 color = ConvertUintToVector4(materialColor);
+    //Vector4 rgbaColor = ConvertARGBtoRGBA(color);
     materialData[drawCallIndex]->color = color;
     materialData[drawCallIndex]->enableLighting = true;
-    materialData[drawCallIndex]->uvTransform = MakeIdentity4x4();
+    materialData[drawCallIndex]->uvTransform = Matrix4x4::MakeIdentity4x4();
 
     // 頂点バッファをバインド（描画に使う頂点データを指定）
     dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &obj.vertexBufferView);
@@ -475,70 +383,13 @@ void Game::Drawobj(const Transforms& transform, const Vector3& center, uint32_t 
     drawCallIndex++;
 }
 
-//void Game::Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor)
-//{
-//    if (objectNumber >= objects.size()) return;
-//
-//    Object3D& obj = objects[objectNumber];
-//    const uint32_t kSumVertex = static_cast<uint32_t>(obj.modelData.vertices.size());
-//
-//    // 1. centerへ移動
-//    Matrix4x4 toCenter = MakeTranslateMatrix({ -center.x, -center.y, -center.z });
-//    // 2. scale・rotate
-//    Matrix4x4 rotateScale = MakeAffineMatrix(transform.scale, transform.rotate, { 0,0,0 });
-//    // 3. centerへ戻す
-//    Matrix4x4 fromCenter = MakeTranslateMatrix(center);
-//    // 4. translate（ワールド原点基準）
-//    Matrix4x4 translate = MakeTranslateMatrix(transform.translate);
-//
-//    // 合成: translate * fromCenter * rotateScale * toCenter
-//    Matrix4x4 worldMatrix = Mul(translate, Mul(fromCenter, Mul(rotateScale, toCenter)));
-//
-//    // WVP行列
-//    Matrix4x4 wvpMatrix = Mul(worldMatrix, cameraController->viewProjectionMatrix);
-//
-//    wvpData[drawCallIndex]->World = worldMatrix;
-//    wvpData[drawCallIndex]->WVP = wvpMatrix;
-//
-//    // テクスチャ取得
-//    const TextureData* tex = nullptr;
-//    for (const auto& t : textures)
-//    {
-//        if (t.number == textureNumber)
-//        {
-//            tex = &t;
-//            break;
-//        }
-//    }
-//    if (tex == nullptr && !textures.empty())
-//    {
-//        tex = &textures[0];
-//    }
-//    if (!tex) return;
-//
-//    materialData[drawCallIndex]->color = materialColor;
-//    materialData[drawCallIndex]->enableLighting = true;
-//    materialData[drawCallIndex]->uvTransform = MakeIdentity4x4();
-//
-//    dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &obj.vertexBufferView);
-//    dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-//    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources[drawCallIndex]->GetGPUVirtualAddress());
-//    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources[drawCallIndex]->GetGPUVirtualAddress());
-//    dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
-//    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
-//    dxManager->GetCommandList()->DrawInstanced(kSumVertex, 1, 0, 0);
-//
-//    drawCallIndex++;
-//}
-//
-
 void Game::DrawTriangle(const Transforms& localTransform, const Transforms& worldTransform, const VertexData* vertexData, uint32_t textureNumber, const uint32_t& materialColor)
 {
-    Matrix4x4 world = Mul(
-        MakeAffineMatrix(localTransform.scale, localTransform.rotate, localTransform.translate),
-        MakeAffineMatrix(worldTransform.scale, worldTransform.rotate, worldTransform.translate)
-    );
-    Matrix4x4 wvpMatrix = Mul(world, cameraController->viewProjectionMatrix);
+    Matrix4x4 world = (
+        Matrix4x4::MakeAffineMatrix(localTransform.scale, localTransform.rotate, localTransform.translate) *
+        Matrix4x4::MakeAffineMatrix(worldTransform.scale, worldTransform.rotate, worldTransform.translate)
+        );
+    Matrix4x4 wvpMatrix = (world * cameraController->viewProjectionMatrix);
 
     DrawData drawData = SetupDrawData(
         vertexResourceSizeTriangle,
@@ -549,7 +400,7 @@ void Game::DrawTriangle(const Transforms& localTransform, const Transforms& worl
         materialData[drawCallIndex],
         materialColor,
         true,
-        MakeIdentity4x4(),
+        Matrix4x4::MakeIdentity4x4(),
         wvpData[drawCallIndex],
         world,
         wvpMatrix,
@@ -586,8 +437,8 @@ void Game::DrawSphere(const Transforms& localTransform, VertexData* vertexData, 
     // 頂点
     CreateSphere(vertexData, kSubdivision);
 
-    Matrix4x4 world = MakeAffineMatrix(localTransform.scale, localTransform.rotate, localTransform.translate);
-    Matrix4x4 wvpMatrix = Mul(world, cameraController->viewProjectionMatrix);
+    Matrix4x4 world = Matrix4x4::MakeAffineMatrix(localTransform.scale, localTransform.rotate, localTransform.translate);
+    Matrix4x4 wvpMatrix = (world * cameraController->viewProjectionMatrix);
 
     DrawData drawData = SetupDrawData(
         vertexResourceSizeSphere,
@@ -598,7 +449,7 @@ void Game::DrawSphere(const Transforms& localTransform, VertexData* vertexData, 
         materialData[drawCallIndex],
         materialColor,
         true,
-        MakeIdentity4x4(),
+        Matrix4x4::MakeIdentity4x4(),
         wvpData[drawCallIndex],
         world,
         wvpMatrix,
@@ -628,13 +479,13 @@ void Game::DrawSphere(const Transforms& localTransform, VertexData* vertexData, 
 
 void Game::DrawSprite(const Transforms& localTransform, VertexData* vertexData, uint32_t textureNumber, const uint32_t& materialColor)
 {
-    Matrix4x4 orthoProjectionMatrix = MakeOrthographicMatrix(
+    Matrix4x4 orthoProjectionMatrix = Matrix4x4::MakeOrthographicMatrix(
         0.0f, 0.0f,
         static_cast<float>(windowManager->Getwidth()),
         static_cast<float>(windowManager->Getheight()),
         0.0f, 100.0f);
-    Matrix4x4 world = MakeAffineMatrix(localTransform.scale, localTransform.rotate, localTransform.translate);
-    Matrix4x4 wvpMatrix = Mul(world, orthoProjectionMatrix);
+    Matrix4x4 world = Matrix4x4::MakeAffineMatrix(localTransform.scale, localTransform.rotate, localTransform.translate);
+    Matrix4x4 wvpMatrix = (world * orthoProjectionMatrix);
 
     DrawData drawData = SetupDrawData(
         vertexResourceSizeSprite,
@@ -645,7 +496,7 @@ void Game::DrawSprite(const Transforms& localTransform, VertexData* vertexData, 
         materialData[drawCallIndex],
         materialColor,
         false,
-        MakeIdentity4x4(),
+        Matrix4x4::MakeIdentity4x4(),
         wvpData[drawCallIndex],
         world,
         wvpMatrix,
@@ -671,6 +522,18 @@ void Game::DrawSprite(const Transforms& localTransform, VertexData* vertexData, 
     dxManager->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
     drawCallIndex++;
+}
+
+TextureData* Game::GetTexture(uint32_t textureNumber)
+{
+    for (auto& t : textures)
+    {
+        if (t.number == textureNumber)
+        {
+            return &t;
+        }
+    }
+    return nullptr;
 }
 
 // 入力
@@ -704,7 +567,7 @@ void Game::SetMouseRay()
 
 bool Game::IsCollisionMouseRayAABB(AABB aabb, int objNum)
 {
-    return IsCollision(mouseController->GetMouseRay(), aabb, objects[objNum].modelData.vertices, MakeAffineMatrix(objects[objNum].transform.scale, objects[objNum].transform.rotate, objects[objNum].transform.translate));
+    return IsCollision(mouseController->GetMouseRay(), aabb, objects[objNum].modelData.vertices, Matrix4x4::MakeAffineMatrix(objects[objNum].transform.scale, objects[objNum].transform.rotate, objects[objNum].transform.translate));
 };
 
 bool Game::IsPressMouse(int i)
@@ -734,7 +597,7 @@ bool Game::IsPressMouse(int i)
 int Game::GetWheel()
 {
     int delta = wheelDelta;
-    wheelDelta = 0; // 1フレームで消費
+    wheelDelta = 0;
     return delta;
 }
 
@@ -754,12 +617,92 @@ void Game::MoveDistanceTarget(float target, int spendFrame)
     cameraController->SetDistanceTarget(target, spendFrame);
 }
 
+AABB Game::CreateAABB(const Transforms& transforms, uint32_t objectNumber)
+{
+    Matrix4x4 worldMatrix = Matrix4x4::MakeAffineMatrix(transforms.scale, transforms.rotate, transforms.translate);
+
+    Object3D& obj = objects[objectNumber];
+
+    // ローカルAABBの8頂点
+    Vector3 corners[8] = {
+        {obj.aabb.min.x, obj.aabb.min.y, obj.aabb.min.z},
+        {obj.aabb.max.x, obj.aabb.min.y, obj.aabb.min.z},
+        {obj.aabb.min.x, obj.aabb.max.y, obj.aabb.min.z},
+        {obj.aabb.max.x, obj.aabb.max.y, obj.aabb.min.z},
+        {obj.aabb.min.x, obj.aabb.min.y, obj.aabb.max.z},
+        {obj.aabb.max.x, obj.aabb.min.y, obj.aabb.max.z},
+        {obj.aabb.min.x, obj.aabb.max.y, obj.aabb.max.z},
+        {obj.aabb.max.x, obj.aabb.max.y, obj.aabb.max.z},
+    };
+
+    // 8頂点をワールド空間に変換
+    Vector3 worldMin = Transform(corners[0], worldMatrix);
+    Vector3 worldMax = worldMin;
+
+    for (int i = 1; i < 8; ++i)
+    {
+        Vector3 v = Transform(corners[i], worldMatrix);
+        worldMin.x = my_min(worldMin.x, v.x);
+        worldMin.y = my_min(worldMin.y, v.y);
+        worldMin.z = my_min(worldMin.z, v.z);
+        worldMax.x = my_max(worldMax.x, v.x);
+        worldMax.y = my_max(worldMax.y, v.y);
+        worldMax.z = my_max(worldMax.z, v.z);
+    }
+    return { worldMin, worldMax };
+}
+
 // int型のcolorをVector4に変換
 Vector4 Game::ConvertUintToVector4(uint32_t color)
 {
-    float a = ((color >> 24) & 0xFF) / 255.0f; // Alpha
-    float r = ((color >> 16) & 0xFF) / 255.0f; // Red
-    float g = ((color >> 8) & 0xFF) / 255.0f;  // Green
-    float b = (color & 0xFF) / 255.0f;      // Blue
+    float r = ((color >> 24) & 0xFF) / 255.0f;
+    float g = ((color >> 16) & 0xFF) / 255.0f;
+    float b = ((color >> 8) & 0xFF) / 255.0f;
+    float a = (color & 0xFF) / 255.0f;
     return { r, g, b, a };
+}
+
+Vector4 Game::ConvertARGBtoRGBA(const Vector4& argb)
+{
+    return { argb.y, argb.z, argb.w, argb.x };
+}
+
+AABB Game::CreateLocalAABB(const ModelData& model)
+{
+    AABB localAABB;
+
+    // 最小値と最大値を初期化
+    // 浮動小数点数の最大値で初期化することで、最初の頂点で確実に更新されるようにします
+    localAABB.min.x = (std::numeric_limits<float>::max)();
+    localAABB.min.y = (std::numeric_limits<float>::max)();
+    localAABB.min.z = (std::numeric_limits<float>::max)();
+
+    // 浮動小数点数の最小値で初期化することで、最初の頂点で確実に更新されるようにします
+    localAABB.max.x = std::numeric_limits<float>::lowest(); // または -std::numeric_limits<float>::max()
+
+    // モデルの頂点が一つも無い場合（エラーハンドリング）
+    if (model.vertices.empty())
+    {
+        // デフォルト値やエラーを返すなど、適切な処理を行う
+        // ここでは便宜上、中心0、サイズ0のAABBを返す
+        localAABB.min = { 0.0f, 0.0f, 0.0f };
+        localAABB.max = { 0.0f, 0.0f, 0.0f };
+        return localAABB;
+    }
+
+    // 全ての頂点を調べてAABBの最小値と最大値を更新
+    for (const auto& vertex : model.vertices)
+    {
+        // 各軸の最小値を更新
+        if (vertex.position.x < localAABB.min.x) localAABB.min.x = vertex.position.x;
+        if (vertex.position.y < localAABB.min.y) localAABB.min.y = vertex.position.y;
+        if (vertex.position.z < localAABB.min.z) localAABB.min.z = vertex.position.z;
+
+        // 各軸の最大値を更新
+        if (vertex.position.x > localAABB.max.x) localAABB.max.x = vertex.position.x;
+        if (vertex.position.y > localAABB.max.y) localAABB.max.y = vertex.position.y;
+        if (vertex.position.z > localAABB.max.z) localAABB.max.z = vertex.position.z;
+    }
+
+    return localAABB;
 }

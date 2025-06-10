@@ -32,6 +32,8 @@ public:
 	static void DrawTriangle(const Transforms& localTransform, const Transforms& worldTransform, const VertexData* vertexData, uint32_t textureNumber, const uint32_t& materialColor);
 	static void DrawSphere(const Transforms& localTransform, VertexData* vertexData, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor);
 	static void DrawSprite(const Transforms& localTransform, VertexData* vertexData, uint32_t textureNumber, const uint32_t& materialColor);
+	static TextureData* GetTexture(uint32_t textureNumber);
+
 
 	// マウス
 	static void GetMousePosition(Vector2* position);
@@ -45,10 +47,17 @@ public:
 	static void MoveRotateTarget(Vector3 target, int spendFrame);
 	static void MoveDistanceTarget(float target, int spendFrame);
 
+	// AABBの作成
+	static AABB CreateAABB(const Transforms& transforms, uint32_t objectNumber);
+
+
 private:
 	static void UpdateCamera();
 	static void UpdateLight();
 	static Vector4 ConvertUintToVector4(uint32_t color);
+	static Vector4 ConvertARGBtoRGBA(const Vector4& argb);
+	static AABB CreateLocalAABB(const ModelData& model);
+
 	/// <summary>
 	/// Draw用データ作成するやつ
 	/// </summary>

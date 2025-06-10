@@ -37,9 +37,6 @@
     <Filter Include="GetHitKey">
       <UniqueIdentifier>{aa632014-e276-40cd-b8d2-109d728ee4ef}</UniqueIdentifier>
     </Filter>
-    <Filter Include="CG2_05">
-      <UniqueIdentifier>{7ba07f4e-5727-4ebf-9bd4-72ea2a3fece1}</UniqueIdentifier>
-    </Filter>
     <Filter Include="MouseController">
       <UniqueIdentifier>{2dff2682-3b8b-491d-96a6-d1df4709d6a1}</UniqueIdentifier>
     </Filter>
@@ -89,9 +86,6 @@
     </ClCompile>
     <ClCompile Include="GetHitKey.cpp">
       <Filter>GetHitKey</Filter>
-    </ClCompile>
-    <ClCompile Include="CG2_05.cpp">
-      <Filter>CG2_05</Filter>
     </ClCompile>
     <ClCompile Include="MouseController.cpp">
       <Filter>MouseController</Filter>
@@ -149,9 +143,6 @@
     </ClInclude>
     <ClInclude Include="GetHitKey.h">
       <Filter>GetHitKey</Filter>
-    </ClInclude>
-    <ClInclude Include="CG2_05.h">
-      <Filter>CG2_05</Filter>
     </ClInclude>
     <ClInclude Include="MouseController.h">
       <Filter>MouseController</Filter>
