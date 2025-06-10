@@ -12,14 +12,14 @@ CameraController::CameraController()
     transform_.rotate = { 0.82f, 0.0f, 0.0f }; // { 0.26f,0.0f,0.0f };  
 
     mousePositionGap_ = { 0,0 };
-    cameraMode_ = 1;
+    cameraMode_ = 0;
 
     center_ = { -5.44f, 0.0f, -5.0f };
     preCenter_ = center_;
     preRotate_.x = transform_.rotate.x;
     preRotate_.y = transform_.rotate.y;
 
-    distance_ = 17.00f; // 6.49f
+    distance_ = 24.00f; // 6.49f
 }
 
 void CameraController::Updata()
