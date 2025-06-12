@@ -1,6 +1,12 @@
 #pragma once
 
 #include <xaudio2.h>
+#include <sdkddkver.h> // これが一番最初の方にあることを確認
+
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0A00 // Windows 10
+#endif
+
 #include <mfapi.h>
 #include <mfidl.h>
 #include <mferror.h>
@@ -8,7 +14,6 @@
 #include <map>
 #include <string>
 #include <atomic> // ストリーミング再生のための同期プリミティブ
-#include <sdkddkver.h> // _WIN32_WINNT_WIN10 などの定義用
 
 // Windows 10 バージョン 1709 (Fall Creators Update) 以降を対象とします。
 // 必要に応じて、プロジェクト設定で_WIN32_WINNTの値を調整してください。

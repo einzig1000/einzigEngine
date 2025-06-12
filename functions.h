@@ -151,6 +151,20 @@ void Log(const std::string& label, const T& value)
     OutputDebugStringA(oss.str().c_str());
 }
 
+template <typename T>
+void Log(const T& arg)
+{
+    //std::cout << arg << std::endl;
+    Log(arg);
+}
+
+// Recursive variadic template
+template <typename T, typename... Args>
+void Log(const T& arg, Args... args)
+{
+    //std::cout << arg;
+    Log(args...); // Recursively call with remaining arguments
+}
 
 
 /// <summary>

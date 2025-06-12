@@ -18,7 +18,6 @@
 #include <windows.h>
 #include <DbgHelp.h>
 #include <strsafe.h>
-#include <sstream>
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "Dbghelp.lib")
@@ -770,23 +769,6 @@ IDxcBlob* CompileShader(
     return shaderBlob;
 }
 
-// 1,Textureデータを読む
-//DirectX::ScratchImage LoadTexture(const std::string& filePath)
-//{
-//    // テクスチャファイルを読んでプログラムを扱えるようにする
-//    DirectX::ScratchImage image{};
-//    std::wstring filePathw = ConvertString(filePath);
-//    HRESULT hr = DirectX::LoadFromWICFile(filePathw.c_str(), DirectX::WIC_FLAGS_FORCE_SRGB, nullptr, image);
-//    assert(SUCCEEDED(hr));
-//
-//    // ミップマップの作成
-//    DirectX::ScratchImage mipImages{};
-//    hr = DirectX::GenerateMipMaps(image.GetImages(), image.GetImageCount(), image.GetMetadata(), DirectX::TEX_FILTER_SRGB, 0, mipImages);
-//    assert(SUCCEEDED(hr));
-//
-//    // ミップマップ付きのデータを返す
-//    return mipImages;
-//}
 
 // 2,
 ID3D12Resource* CreateTextureResource(ID3D12Device* device, const DirectX::TexMetadata& metadata)
