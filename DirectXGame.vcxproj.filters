@@ -43,6 +43,9 @@
     <Filter Include="Easings">
       <UniqueIdentifier>{5ce197b2-ab89-4348-961a-ba97c01444f9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="AudioManager">
+      <UniqueIdentifier>{d6981e3b-9d2e-4acf-aaf3-0a1a631f2860}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -92,6 +95,9 @@
     </ClCompile>
     <ClCompile Include="Easings.cpp">
       <Filter>Easings</Filter>
+    </ClCompile>
+    <ClCompile Include="AudioManager.cpp">
+      <Filter>AudioManager</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -149,6 +155,9 @@
     </ClInclude>
     <ClInclude Include="Easings.h">
       <Filter>Easings</Filter>
+    </ClInclude>
+    <ClInclude Include="AudioManager.h">
+      <Filter>AudioManager</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

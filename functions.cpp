@@ -18,6 +18,7 @@
 #include <windows.h>
 #include <DbgHelp.h>
 #include <strsafe.h>
+#include <sstream>
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "Dbghelp.lib")
@@ -41,17 +42,7 @@ Vector3 CalculateNormal(const Vector4& v0, const Vector4& v1, const Vector4& v2)
 {
     Vector3 ab = { v1.x - v0.x, v1.y - v0.y, v1.z - v0.z };
     Vector3 ac = { v2.x - v0.x, v2.y - v0.y, v2.z - v0.z };
-    //Vector3 normal = CrossProduct(ab, ac);
-    //float length = Length(normal);
-    Vector3 normal = ab.Cross(ac);
-    float length = normal.Length();
-    if (length != 0.0f)
-    {
-        normal.x /= length;
-        normal.y /= length;
-        normal.z /= length;
-    }
-    return normal;
+    return ab.Cross(ac).Normalized();
 }
 Vector3 Transform(const Vector3& vector, const Matrix4x4& matrix)
 {
@@ -313,8 +304,6 @@ bool IsCollision(const Ray& ray, const AABB& aabb, const std::vector<VertexData>
     {
         return false;
     }
-    // 下の行を消して修正を再開
-    return true;
 
     // AABBに当たっていた場合のみ、三角形ごとに詳細判定
     for (size_t i = 0; i + 2 < vertices.size(); i += 3)
@@ -489,7 +478,7 @@ std::string ResourceStateToString(D3D12_RESOURCE_STATES state)
 void Log(const std::string& message)
 {
     // string型からchar*型に変換した文字列
-    OutputDebugStringA(message.c_str());
+    OutputDebugStringA((message + "\n").c_str());
 }
 // Vector4型用のオーバーロード
 void Log(const std::string& message, const Vector4& vector)
@@ -599,6 +588,7 @@ void Log(std::ofstream& os, const std::string& message)
     os << message << std::endl;
     OutputDebugStringA(message.c_str());
 }
+
 
 void VectorScreenPrintf(int x, int y, const Vector3& vector, const char* label)
 {

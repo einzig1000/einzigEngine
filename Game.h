@@ -34,6 +34,12 @@ public:
 	static void DrawSprite(const Transforms& localTransform, VertexData* vertexData, uint32_t textureNumber, const uint32_t& materialColor);
 	static TextureData* GetTexture(uint32_t textureNumber);
 
+	// 音
+	static uint32_t LoadAudio(const std::string& filePath);
+	static void PlayAudio(const uint32_t& audioId, bool loop);
+	static void StopAudio(const uint32_t& audioId);
+	static void SetAudioVolume(const uint32_t& audioId, float volume);
+	static void SetMasterVolume(float volume);
 
 	// マウス
 	static void GetMousePosition(Vector2* position);
@@ -58,6 +64,7 @@ private:
 	static Vector4 ConvertARGBtoRGBA(const Vector4& argb);
 	static AABB CreateLocalAABB(const ModelData& model);
 
+#pragma region
 	/// <summary>
 	/// Draw用データ作成するやつ
 	/// </summary>
@@ -92,6 +99,7 @@ private:
 		uint32_t textureNumber,
 		const std::vector<TextureData>& textures);
 
+#pragma endregion
 
 	static WindowManager* windowManager;
 	static DirectXManager* dxManager;

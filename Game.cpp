@@ -140,7 +140,7 @@ bool Game::ProcessMessage()
         }
         if (msg.message == WM_MOUSEWHEEL)
         {
-            // ホイールの回転量を加算　クリックはboolで回転量はintだからmessageを使う。らしい。
+            // ホイールの回転量を加算　クリックはboolで回転量はintだからmessageを使う。らしい。なんで？
             wheelDelta += GET_WHEEL_DELTA_WPARAM(msg.wParam);
         }
         TranslateMessage(&msg);
@@ -535,6 +535,33 @@ TextureData* Game::GetTexture(uint32_t textureNumber)
     }
     return nullptr;
 }
+
+// 音
+uint32_t Game::LoadAudio(const std::string& filePath)
+{
+    return dxManager->GetAudioManager()->LoadAudio(filePath);
+}
+
+void Game::PlayAudio(const uint32_t& audioId, bool loop)
+{
+    dxManager->GetAudioManager()->PlayAudio(audioId, loop);
+}
+
+void Game::StopAudio(const uint32_t& audioId)
+{
+    dxManager->GetAudioManager()->StopAudio(audioId);
+}
+
+void Game::SetAudioVolume(const uint32_t& audioId, float volume)
+{
+    dxManager->GetAudioManager()->SetVolume(audioId, volume);
+}
+
+void Game::SetMasterVolume(float volume)
+{
+    dxManager->GetAudioManager()->SetMasterVolume(volume);
+}
+
 
 // 入力
 void Game::GetMousePosition(Vector2* position)

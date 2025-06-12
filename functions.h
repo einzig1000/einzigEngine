@@ -7,6 +7,8 @@
 
 // Windows API
 #include <Windows.h>
+#include <sstream>
+
 
 // DXC API
 #include <dxcapi.h>
@@ -140,6 +142,16 @@ void Log(const D3D12_ROOT_SIGNATURE_DESC& desc);
 /// <param name="os">出力先のファイルストリーム</param>
 /// <param name="message">出力するメッセージ</param>
 void Log(std::ofstream& os, const std::string& message);
+
+template <typename T>
+void Log(const std::string& label, const T& value)
+{
+    std::ostringstream oss;
+    oss << label << ": " << value << std::endl;
+    OutputDebugStringA(oss.str().c_str());
+}
+
+
 
 /// <summary>
 /// クラッシュ時にミニダンプを生成する関数

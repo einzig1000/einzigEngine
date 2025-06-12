@@ -3,13 +3,14 @@
 #include "Easings.h"
 
 
-
-
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
 	// ウィンドウ、DrectX初期化
 	Game::Initialize(WIDTH, HEIGHT, L"CG2");
 
+
+
+	int alert = Game::LoadAudio("resources/sound/SE/alert.wav");
 
 	// テクスチャ
 	int uvCheckerPng;
@@ -36,6 +37,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		///
 		/// ↓更新処理ここから
 		///
+		//Game::PlayAudio(alert, true);
+		if (GetHitKey::keys[DIK_1] && !GetHitKey::preKeys[DIK_1])
+		{
+			Game::PlayAudio(alert,false);
+		}
 		
 		///
 		/// ↑更新処理ここまで

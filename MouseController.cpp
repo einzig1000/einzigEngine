@@ -12,11 +12,11 @@ void MouseController::SetMouseRay(const uint32_t width, const uint32_t height, c
     Vector4 farPoint = { ndcX, ndcY, 1.0f, 1.0f };
 
     // 逆射影行列
-    Matrix4x4 invViewProj = viewProjectionMatrix.Inverse();
+    Matrix4x4 inverseViewProj = viewProjectionMatrix.Inverse();
 
     // ワールド空間に変換
-    Vector4 nearWorld = Transform(nearPoint, invViewProj);
-    Vector4 farWorld = Transform(farPoint, invViewProj);
+    Vector4 nearWorld = Transform(nearPoint, inverseViewProj);
+    Vector4 farWorld = Transform(farPoint, inverseViewProj);
 
     // マウスレイの始点・方向
     ray_.origin = { nearWorld.x / nearWorld.w, nearWorld.y / nearWorld.w, nearWorld.z / nearWorld.w };

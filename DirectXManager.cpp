@@ -20,6 +20,7 @@ DirectXManager::DirectXManager(HWND hwnd, int width, int height)
 	InitializeViewportAndScissor(width, height);
 	InitializeSRVDescriptorHeap(); // SRVディスクリプタヒープの初期化
 	InitializeGetHitKey(hwnd);
+	InitializeAudioManager();
 }
 
 DirectXManager::~DirectXManager()
@@ -28,8 +29,11 @@ DirectXManager::~DirectXManager()
 	{
 		CloseHandle(fenceEvent);
 	}
+	audioManager_->Deinitialize();
 	delete getHitKey;
 	getHitKey = nullptr;
+	delete audioManager_;
+	audioManager_ = nullptr;
 }
 
 
@@ -549,6 +553,12 @@ void DirectXManager::InitializeGetHitKey(HWND hwnd)
 	{
 		getHitKey = new GetHitKey(hwnd);
 	}
+}
+
+void DirectXManager::InitializeAudioManager()
+{
+	audioManager_ = new AudioManager;
+	audioManager_->Initialize();
 }
 
 void DirectXManager::BeginFrame()
