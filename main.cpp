@@ -37,12 +37,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		///
 		/// ↓更新処理ここから
 		///
-		//Game::PlayAudio(alert, true);
 		if (GetHitKey::keys[DIK_1] && !GetHitKey::preKeys[DIK_1])
 		{
 			Game::PlayAudio(alert,true);
 		}
-		
+		Log("%f", Game::GetMasterVolume());
+
 		///
 		/// ↑更新処理ここまで
 		///

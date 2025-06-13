@@ -564,12 +564,12 @@ void Game::SetMasterVolume(float volume)
 
 float Game::GetVolume(const uint32_t& audioId)
 {
-    dxManager->GetAudioManager()->GetVolume(audioId);
+    return dxManager->GetAudioManager()->GetVolume(audioId);
 }
 
 float Game::GetMasterVolume()
 {
-    dxManager->GetAudioManager()->GetMasterVolume();
+    return dxManager->GetAudioManager()->GetMasterVolume();
 }
 
 

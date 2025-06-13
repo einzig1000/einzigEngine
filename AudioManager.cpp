@@ -351,7 +351,7 @@ float AudioManager::GetVolume(const uint32_t& audioId)
         return currentVolume;
     }
     Log("AudioID:%u が存在しないか意味分からんバグか", audioId);
-    assert(0);
+    return 0.0f;
 }
 
 // マスター音量のセッターゲッター
@@ -377,7 +377,7 @@ float AudioManager::GetMasterVolume()
         return currentVolume;
     }
     Log("マスター音量を取得できませんでした。なんてログがでることは100%ありえません");
-    assert(0);
+    return 0.0f;
 }
 
 // 解放のループ内でたくさん使う
