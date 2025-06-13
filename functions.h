@@ -143,28 +143,23 @@ void Log(const D3D12_ROOT_SIGNATURE_DESC& desc);
 /// <param name="message">出力するメッセージ</param>
 void Log(std::ofstream& os, const std::string& message);
 
-template <typename T>
-void Log(const std::string& label, const T& value)
-{
-    std::ostringstream oss;
-    oss << label << ": " << value << std::endl;
-    OutputDebugStringA(oss.str().c_str());
-}
 
-template <typename T>
-void Log(const T& arg)
-{
-    //std::cout << arg << std::endl;
-    Log(arg);
-}
+// printf形式のLog関数
+void Log(const char* format, ...);
 
-// Recursive variadic template
-template <typename T, typename... Args>
-void Log(const T& arg, Args... args)
-{
-    //std::cout << arg;
-    Log(args...); // Recursively call with remaining arguments
-}
+// std::string を受け取る Log 関数 (functions.cpp で定義される)
+void Log(const std::string& message);
+
+
+
+
+
+
+
+
+
+
+
 
 
 /// <summary>

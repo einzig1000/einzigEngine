@@ -562,6 +562,16 @@ void Game::SetMasterVolume(float volume)
     dxManager->GetAudioManager()->SetMasterVolume(volume);
 }
 
+float Game::GetVolume(const uint32_t& audioId)
+{
+    dxManager->GetAudioManager()->GetVolume(audioId);
+}
+
+float Game::GetMasterVolume()
+{
+    dxManager->GetAudioManager()->GetMasterVolume();
+}
+
 
 // 入力
 void Game::GetMousePosition(Vector2* position)

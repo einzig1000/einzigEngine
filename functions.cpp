@@ -415,6 +415,7 @@ std::wstring ConvertString(const std::string& str)
         return std::wstring();
     }
 
+
     auto sizeNeeded = MultiByteToWideChar(CP_UTF8, 0, reinterpret_cast<const char*>(&str[0]), static_cast<int>(str.size()), NULL, 0);
     if (sizeNeeded == 0)
     {
@@ -580,6 +581,57 @@ void Log(const D3D12_ROOT_SIGNATURE_DESC& desc)
         Log(oss.str());
     }
 }
+
+void Log(const char* format, ...)
+{
+    // 最大バッファサイズを設定 (printfが出力する文字列の最大長)
+    const int BUFFER_SIZE = 256;
+    char buffer[BUFFER_SIZE];
+
+    // 可変引数リストを扱うためのポインタ
+    va_list args;
+
+    // 可変引数リストの開始
+    va_start(args, format);
+
+    // va_list を使ってフォーマットされた文字列をバッファに書き込む
+    // vsnprintf は、バッファオーバーフローを防ぐために最大サイズを指定できます。
+    // _vsnprintf_s (MSVC固有) の方がより安全ですが、vsnprintf (C標準) も使用できます。
+#ifdef _MSC_VER // Microsoft Visual C++ の場合
+    // _vsnprintf_s は、バッファサイズと最大文字数を引数に取ります
+    // snprintf の戻り値が書き込まれた文字数なので、それと比較して切り捨てを検知することも可能
+    int written = _vsnprintf_s(buffer, BUFFER_SIZE, _TRUNCATE, format, args);
+#else // その他のコンパイラの場合 (GCC, Clangなど)
+    int written = vsnprintf(buffer, BUFFER_SIZE, format, args);
+#endif
+
+    // 可変引数リストの終了
+    va_end(args);
+
+    // バッファに書き込まれた文字列に改行を追加してOutputDebugStringAで出力
+    // written が -1 になる場合 (エラーまたは切り捨て) も考慮
+    if (written >= 0 && written < BUFFER_SIZE - 1)
+    { // 最後に改行とNULL終端文字のスペースを確保
+        buffer[written] = '\n';
+        buffer[written + 1] = '\0';
+        OutputDebugStringA(buffer);
+    }
+    else if (written >= BUFFER_SIZE - 1)
+    { // バッファが足りなかった場合
+// バッファを拡張するか、切り捨てられたことをログに出すなど、エラーハンドリング
+// 現状は、バッファの最後の文字を改行にして、NULL終端する
+        buffer[BUFFER_SIZE - 2] = '\n';
+        buffer[BUFFER_SIZE - 1] = '\0';
+        OutputDebugStringA(buffer);
+        // 必要であれば、別のログメカニズムでバッファオーバーフローを警告
+        OutputDebugStringA("Log: Warning! Log buffer truncated.\n");
+    }
+    else
+    { // vsnprintf がエラーを返した場合
+        OutputDebugStringA("Log: Error in formatting log message.\n");
+    }
+}
+
 
 // ログをファイルに書き出す
 void Log(std::ofstream& os, const std::string& message)

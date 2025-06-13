@@ -2,6 +2,7 @@
 #pragma comment(lib, "mfreadwrite.lib")
 #pragma comment(lib, "mfuuid.lib") // 新規追加: UUID定義のため、これも必要になる場合があります
 
+
 #include "AudioManager.h"
 #include <combaseapi.h> // CoInitializeEx, CoUninitialize のため
 #include <iostream>     // 基本的なエラー出力のため（任意、デバッグ用）
@@ -20,44 +21,59 @@
 #include "functions.h" // Log関数などの定義があるはず
 
 
-
-// VoiceCallbackの実装
-void VoiceCallback::OnBufferEnd(void* pBufferContext)
-{
-    // ストリーミング再生の場合、ここで次のバッファをサブミットするロジックを実装します。
-    // この例ではファイル全体がメモリに読み込まれるため、このコールバックは
-    // 主に必要に応じてループ再生を制御するために使用できます。
-    // 例: pBufferContext に AudioEntry* が渡される場合、そこから再生状態を管理できます。
-}
-
-// AudioManagerの実装
+// x
 AudioManager::AudioManager()
     : pXAudio2(nullptr), pMasteringVoice(nullptr)
-{}
-
-AudioManager::~AudioManager()
 {
-    Deinitialize(); // shutdown から Deinitialize に変更
+    Initialize();
 }
 
+// x
+AudioManager::~AudioManager()
+{
+    // 読み込まれた全てのオーディオエントリをクリーンアップ
+    for (auto& pair : loadedAudio)
+    {
+        CleanupAudioEntry(pair.second);
+    }
+    loadedAudio.clear();
+
+    // マスタリングボイスを破棄
+    if (pMasteringVoice)
+    {
+        pMasteringVoice->DestroyVoice();
+        pMasteringVoice = nullptr;
+    }
+    // XAudio2エンジンを解放
+    if (pXAudio2)
+    {
+        pXAudio2->Release();
+        pXAudio2 = nullptr;
+    }
+
+    MFShutdown();
+    CoUninitialize();
+}
+
+// x
 HRESULT AudioManager::Initialize()
 {
     // XAudio2の初期化
     HRESULT hr = XAudio2Create(&pXAudio2, 0, XAUDIO2_DEFAULT_PROCESSOR);
     if (FAILED(hr))
     {
-        std::cerr << "エラー: XAudio2エンジンの作成に失敗しました。HRESULT: " << std::hex << hr << std::endl;
-        return hr;
+        Log("XAudio2エンジンの作成に失敗しました。HRESULT: 0x%X", hr);
+        assert(0);
     }
 
     // マスタリングボイスの作成
     hr = pXAudio2->CreateMasteringVoice(&pMasteringVoice);
     if (FAILED(hr))
     {
-        std::cerr << "エラー: XAudio2マスタリングボイスの作成に失敗しました。HRESULT: " << std::hex << hr << std::endl;
+        Log("XAudio2マスタリングボイスの作成に失敗しました。HRESULT: 0x%X", hr);
         if (pXAudio2) pXAudio2->Release();
         pXAudio2 = nullptr;
-        return hr;
+        assert(0);
     }
 
     // Media Foundationの初期化
@@ -65,84 +81,18 @@ HRESULT AudioManager::Initialize()
     hr = MFStartup(MF_VERSION, MFSTARTUP_FULL);
     if (FAILED(hr))
     {
-        std::cerr << "エラー: Media Foundationの初期化に失敗しました。HRESULT: " << std::hex << hr << std::endl;
+        Log("Media Foundationの初期化に失敗しました。HRESULT: 0x%X", hr);
         if (pMasteringVoice) pMasteringVoice->DestroyVoice();
         if (pXAudio2) pXAudio2->Release();
         pMasteringVoice = nullptr;
         pXAudio2 = nullptr;
-        return hr;
+        assert(0);
     }
 
     return S_OK;
 }
 
-void AudioManager::Deinitialize() // shutdown から Deinitialize に変更
-{
-    // 読み込まれた全てのオーディオエントリをクリーンアップします
-    for (auto& pair : loadedAudio)
-    {
-        CleanupAudioEntry(pair.second);
-    }
-    loadedAudio.clear();
-
-    // マスタリングボイスを破棄します
-    if (pMasteringVoice)
-    {
-        pMasteringVoice->DestroyVoice();
-        pMasteringVoice = nullptr;
-    }
-    // XAudio2エンジンを解放します
-    if (pXAudio2)
-    {
-        pXAudio2->Release();
-        pXAudio2 = nullptr;
-    }
-
-    // Media Foundationをシャットダウンします
-    // Media Foundation APIが不要になったらMFShutdownを呼び出す必要があります
-    MFShutdown();
-}
-
-//uint32_t AudioManager::LoadAudio(const std::string& filePath)
-//{
-//    // 既にaudioIdが設定されている
-//    if (loadedAudio.count(audioId))
-//    {
-//        std::cerr << "警告: ID '" << filePath << "' のオーディオは既に読み込まれています。" << std::endl;
-//        return S_FALSE;
-//    }
-//
-//    AudioEntry newEntry = {};
-//    HRESULT hr = ReadAudioData(filePath, newEntry);
-//    // シンプルに読み込めなかった
-//    if (FAILED(hr))
-//    {
-//        std::cerr << "エラー: '" << filePath << "' からオーディオデータを読み込めませんでした。HRESULT: " << std::hex << hr << std::endl;
-//        CleanupAudioEntry(newEntry);
-//        return hr;
-//    }
-//    // ReadAudioData 関数の最後に追加
-//
-//    // newEntry.pSourceVoiceにソースボイスオブジェクトのアドレスを入れるらしい
-//    hr = pXAudio2->CreateSourceVoice(&newEntry.pSourceVoice, &newEntry.wfx, 0, XAUDIO2_DEFAULT_FREQ_RATIO, &voiceCallback);
-//    if (FAILED(hr))
-//    {
-//        std::cerr << "エラー: ID '" << filePath << "' のXAudio2ソースボイスを作成できませんでした。HRESULT: " << std::hex << hr << std::endl;
-//        CleanupAudioEntry(newEntry);
-//        return hr;
-//    }
-//
-//    // XAUDIO2_BUFFERを設定？
-//    newEntry.xAudioBuffer.pAudioData = newEntry.audioData.data();
-//    newEntry.xAudioBuffer.AudioBytes = static_cast<UINT32>(newEntry.audioData.size());
-//    newEntry.xAudioBuffer.Flags = XAUDIO2_END_OF_STREAM; // これが最後のバッファであることを示します
-//    newEntry.audioId = loadedAudio.size();
-//
-//    loadedAudio[audioId] = newEntry;
-//    std::cout << "情報: オーディオ '" << audioId << "' を正常に読み込みました。" << std::endl;
-//    return newEntry.audioId;
-//}
-
+// 読み込み
 uint32_t AudioManager::LoadAudio(const std::string& filePath)
 {
     static uint32_t nextAudioId = 0;
@@ -150,114 +100,96 @@ uint32_t AudioManager::LoadAudio(const std::string& filePath)
     HRESULT hr = S_OK;
 
     // ファイルパスをワイド文字列に変換
-    int wlen = MultiByteToWideChar(CP_UTF8, 0, filePath.c_str(), -1, nullptr, 0);
-    std::wstring wFilePath(wlen, L'\0');
-    MultiByteToWideChar(CP_UTF8, 0, filePath.c_str(), -1, &wFilePath[0], wlen);
+    std::wstring wFilePath = ConvertString(filePath);
 
     Microsoft::WRL::ComPtr<IMFSourceReader> pSourceReader;
 
-    // ソースリーダーの作成
+    // ソースリーダー(オーディオデータを読み取るためのインターフェース)の作成
     hr = MFCreateSourceReaderFromURL(wFilePath.c_str(), nullptr, &pSourceReader);
     if (FAILED(hr))
     {
-        Log("Failed to create source reader from URL:", hr);
-        return UINT32_MAX; // エラー
+        Log("ソースリーダーの作成に失敗しました: 0x%X", hr);
+        assert(0);
     }
 
-    // オーディオストリームを選択
+    // メディアファイルには 複数のストリーム（音声・動画・字幕など） が含まれていることがあるため音声を取得するよと設定しているらしい
     hr = pSourceReader->SetStreamSelection((DWORD)MF_SOURCE_READER_FIRST_AUDIO_STREAM, TRUE);
     if (FAILED(hr))
     {
-        Log("Failed to select audio stream:", hr);
-        return UINT32_MAX;
+        Log("取得ストリームの設定に失敗しました: 0x%X", hr);
+        assert(0);
     }
 
-    // オーディオフォーマットの取得と設定
+    // 音声データがどんな形式(MP3,WAV,AACとか)で保存されているかを調べる
     Microsoft::WRL::ComPtr<IMFMediaType> pMediaType;
     hr = pSourceReader->GetCurrentMediaType((DWORD)MF_SOURCE_READER_FIRST_AUDIO_STREAM, &pMediaType);
     if (FAILED(hr))
     {
-        Log("Failed to get current media type:", hr);
-        return UINT32_MAX;
+        Log("オーディオフォーマットの取得に失敗しました: 0x%X", hr);
+        assert(0);
     }
 
-    // WAVEFORMATEX情報を取得
+    // 上で取得した形式からWAVEFORMATEXに変換
     UINT32 formatSize = 0;
     WAVEFORMATEX* wfx = nullptr;
     hr = MFCreateWaveFormatExFromMFMediaType(pMediaType.Get(), &wfx, &formatSize);
     if (FAILED(hr))
     {
-        Log("Failed to create WAVEFORMATEX from media type:", hr);
+        Log("メディアタイプの変換に失敗しました: 0x%X", hr);
         return UINT32_MAX;
     }
     memcpy(&entry.wfx, wfx, sizeof(WAVEFORMATEX));
     CoTaskMemFree(wfx); // 取得したメモリを解放
 
     Log("--- WAVEFORMATEX Debug Info ---");
-    Log("wFormatTag", entry.wfx.wFormatTag);
-    Log("nChannels", entry.wfx.nChannels);
-    Log("nSamplesPerSec", entry.wfx.nSamplesPerSec);
-    Log("nAvgBytesPerSec", entry.wfx.nAvgBytesPerSec);
-    Log("nBlockAlign", entry.wfx.nBlockAlign);
-    Log("wBitsPerSample", entry.wfx.wBitsPerSample);
-    Log("cbSize", entry.wfx.cbSize);
+    Log("wFormatTag: 0x%X", entry.wfx.wFormatTag);
+    Log("nChannels: %u", entry.wfx.nChannels);
+    Log("nSamplesPerSec: %u", entry.wfx.nSamplesPerSec);
+    Log("nAvgBytesPerSec: %u", entry.wfx.nAvgBytesPerSec);
+    Log("nBlockAlign: %u", entry.wfx.nBlockAlign);
+    Log("wBitsPerSample: %u", entry.wfx.wBitsPerSample);
+    Log("cbSize: %u", entry.wfx.cbSize);
     Log("-------------------------------");
-
-    // オーディオの総バイト数を推定
-    // MF_MD_DURATION (プレゼンテーションの期間) を取得し、nAvgBytesPerSec を用いて計算
-    PROPVARIANT var;
-    PropVariantInit(&var);
-    hr = pSourceReader->GetPresentationAttribute(MF_SOURCE_READER_MEDIASOURCE, MF_MD_DURATION, &var);
-    LONGLONG duration = 0; // 単位は100ナノ秒
-    if (SUCCEEDED(hr))
-    {
-        duration = var.uhVal.QuadPart;
-        PropVariantClear(&var);
-    }
-    else
-    {
-        Log("Failed to get audio duration. This might affect expected byte calculation.");
-    }
-
-    // 推定されるオーディオデータの総バイト数
-    // duration は 100ナノ秒単位なので、秒に変換するために 10,000,000 で割る
-    // その後、秒 * nAvgBytesPerSec で推定される総バイト数を計算
-    LONGLONG estimatedTotalAudioBytes = 0;
-    if (entry.wfx.nAvgBytesPerSec > 0)
-    { // 0除算防止
-        estimatedTotalAudioBytes = (duration / 10000000LL) * entry.wfx.nAvgBytesPerSec;
-        // 小数点以下の秒数を考慮したより正確な計算
-        estimatedTotalAudioBytes += ((duration % 10000000LL) * entry.wfx.nAvgBytesPerSec) / 10000000LL;
-    }
-    Log("Estimated Total Audio Bytes (approx):", estimatedTotalAudioBytes);
-
 
     // オーディオデータの読み込み
     DWORD currentBufferLength = 0;
     DWORD totalAudioDataSize = 0; // 実際に読み込んだ総バイト数を追跡
-    entry.audioData.reserve(static_cast<size_t>(estimatedTotalAudioBytes > 0 ? estimatedTotalAudioBytes : 1024 * 1024)); // 事前にメモリを確保 (推定値またはデフォルトで1MB)
+
+    // 初期化時に適度な容量を予約 (例えば、1MB)。後で必要に応じて拡張される
+    // audioData.size() が250400とのことなので、それを目安に少し余裕を持たせる
+    entry.audioData.reserve(256 * 1024); // 256 KB を予約
 
     while (true)
     {
         Microsoft::WRL::ComPtr<IMFSample> pSample;
+        DWORD actualStreamIndex = 0;
+        DWORD streamFlags = 0;
+        LONGLONG timestamp = 0;
+
         hr = pSourceReader->ReadSample(
             (DWORD)MF_SOURCE_READER_FIRST_AUDIO_STREAM,
             0,
-            nullptr,            // actual timestamp
-            nullptr,            // actual stream flags
-            nullptr,            // actual system time
+            &actualStreamIndex,
+            &streamFlags,
+            &timestamp,
             &pSample
         );
 
         if (FAILED(hr))
         {
-            Log("ReadSample FAILED with HRESULT:", hr);
+            Log("ReadSample FAILED with HRESULT: 0x%X", hr);
+            break;
+        }
+
+        if (streamFlags & MF_SOURCE_READERF_ENDOFSTREAM)
+        {
+            Log("End of stream reached.");
             break;
         }
 
         if (pSample == nullptr)
         {
-            Log("End of stream reached or pSample is null.");
+            Log("pSample is null but not end of stream. This might be unexpected.");
             break;
         }
 
@@ -265,7 +197,7 @@ uint32_t AudioManager::LoadAudio(const std::string& filePath)
         hr = pSample->ConvertToContiguousBuffer(&pBuffer);
         if (FAILED(hr))
         {
-            Log("ConvertToContiguousBuffer FAILED with HRESULT:", hr);
+            Log("ConvertToContiguousBuffer FAILED with HRESULT: 0x%X", hr);
             break;
         }
 
@@ -273,271 +205,182 @@ uint32_t AudioManager::LoadAudio(const std::string& filePath)
         hr = pBuffer->Lock(&pAudioData, nullptr, &currentBufferLength);
         if (FAILED(hr))
         {
-            Log("Buffer Lock FAILED with HRESULT:", hr);
+            Log("Buffer Lock FAILED with HRESULT: 0x%X", hr);
             break;
         }
 
         if (currentBufferLength > 0)
         {
+            // audioData の末尾にデータを追加
             size_t current_vector_size = entry.audioData.size();
             entry.audioData.resize(current_vector_size + currentBufferLength);
             memcpy(entry.audioData.data() + current_vector_size, pAudioData, currentBufferLength);
-            totalAudioDataSize += currentBufferLength; // 読み込んだバイト数を加算
+            totalAudioDataSize += currentBufferLength;
+            Log("Read chunk: %u bytes. Total: %u bytes.", currentBufferLength, totalAudioDataSize);
         }
 
         hr = pBuffer->Unlock();
         if (FAILED(hr))
         {
-            Log("Buffer Unlock FAILED with HRESULT:", hr);
-            break;
-        }
-
-        // currentBufferLength == 0 はストリームの終端を示す
-        if (currentBufferLength == 0)
-        {
-            Log("currentBufferLength is 0. End of audio data.");
+            Log("Buffer Unlock FAILED with HRESULT: 0x%X", hr);
             break;
         }
     }
 
-    Log("Actual total audio data loaded:", totalAudioDataSize);
-    Log("Final audioData.size():", entry.audioData.size()); // totalAudioDataSize と同じになるはず
+    Log("Actual total audio data loaded: %u", totalAudioDataSize);
+    Log("Final audioData.size(): %u", (uint32_t)entry.audioData.size());
 
-    if (FAILED(hr) && hr != S_OK) // ループがエラーで終了した場合は無効なIDを返す
+
+    if (hr != S_OK && hr != MF_E_END_OF_STREAM)
     {
-        Log("Audio data loading failed during read loop.");
+        Log("Audio data loading encountered an unhandled error. HRESULT: 0x%X", hr);
         return UINT32_MAX;
     }
 
     // XAudio2Bufferの設定
     ZeroMemory(&entry.xAudioBuffer, sizeof(entry.xAudioBuffer));
-    entry.xAudioBuffer.AudioBytes = (UINT32)entry.audioData.size();
+    // ここが非常に重要: 読み込んだバイト数をそのまま設定
+    entry.xAudioBuffer.AudioBytes = totalAudioDataSize; // entry.audioData.size() でも同じはず
     entry.xAudioBuffer.pAudioData = entry.audioData.data();
     entry.xAudioBuffer.LoopBegin = 0;
     entry.xAudioBuffer.LoopLength = 0;
     entry.xAudioBuffer.LoopCount = 0; // 0は1回再生
 
     // ソースボイスの作成
+    // XAudio2Create が成功し、pXAudio2 が有効であることを確認
+    if (!pXAudio2)
+    {
+        Log("XAudio2 engine not initialized when trying to create source voice.");
+        return UINT32_MAX;
+    }
+
     hr = pXAudio2->CreateSourceVoice(&entry.pSourceVoice, &entry.wfx, 0, XAUDIO2_DEFAULT_FREQ_RATIO, &voiceCallback);
     if (FAILED(hr))
     {
-        Log("Failed to create source voice:", hr);
+        Log("Failed to create source voice: 0x%X", hr);
         return UINT32_MAX;
     }
 
     // マップに格納
     uint32_t id = nextAudioId++;
-    loadedAudio[id] = std::move(entry); // move で効率的に格納
-    Log("Audio loaded successfully. ID:", id, " Path:", filePath);
+    loadedAudio[id] = std::move(entry);
+    Log("Audio loaded successfully. ID: %u Path: %s", id, filePath.c_str());
 
     return id;
 }
 
+// 再生
 void AudioManager::PlayAudio(const uint32_t& audioId, bool loop)
 {
     auto it = loadedAudio.find(audioId);
-    if (it == loadedAudio.end())
+    if (it != loadedAudio.end())
     {
-        std::cerr << "エラー: ID '" << audioId << "' のオーディオは読み込まれていません。" << std::endl;
-        assert(0);
-    }
+        AudioEntry& entry = it->second;
 
-    AudioEntry& entry = it->second;
-    entry.xAudioBuffer.LoopCount = loop ? XAUDIO2_LOOP_INFINITE : 0;
+        // すでに再生中であれば停止
+        entry.pSourceVoice->Stop(0);
+        entry.pSourceVoice->FlushSourceBuffers(); // バッファをクリア
 
-    // すでに再生中の場合は、再度サブミットする前に停止してバッファをフラッシュします
-    entry.pSourceVoice->Stop(0);
-    entry.pSourceVoice->FlushSourceBuffers();
+        // loopが１の場合XAUDIO2_LOOP_INFINITE(無限ループ)に設定。0なら0
+        entry.xAudioBuffer.LoopCount = loop ? XAUDIO2_LOOP_INFINITE : 0; // ループ設定
 
-    HRESULT hr = entry.pSourceVoice->SubmitSourceBuffer(&entry.xAudioBuffer);
-    if (FAILED(hr))
-    {
-        std::cerr << "エラー: ID '" << audioId << "' のオーディオバッファのサブミットに失敗しました。HRESULT: " << std::hex << hr << std::endl;
-        assert(0);
-    }
+        // オーディオデータをキューに送信し再生の準備をする(サブミット)
+        HRESULT hr = entry.pSourceVoice->SubmitSourceBuffer(&entry.xAudioBuffer);
+        if (FAILED(hr))
+        {
+            Log("Failed to submit source buffer for audio ID: %u HRESULT: 0x%X", audioId, hr);
+            assert(0);
+        }
 
-    hr = entry.pSourceVoice->Start(0);
-    if (FAILED(hr))
-    {
-        std::cerr << "エラー: ID '" << audioId << "' のオーディオ再生の開始に失敗しました。HRESULT: " << std::hex << hr << std::endl;
+        // 再生
+        hr = entry.pSourceVoice->Start(0);
+        if (FAILED(hr))
+        {
+            Log("%dのオーディオバッファの再生に失敗しました。: % u HRESULT : 0x % X", audioId, hr);
+            assert(0);
+        }
+        Log("ID:%uのオーディオを再生します。Loop: %d", audioId, loop);
     }
     else
     {
-        std::cout << "情報: オーディオ '" << audioId << "' を再生しています (ループ: " << (loop ? "True" : "False") << ")。" << std::endl;
+        Log("存在しないオーディオの再生を失敗しました。ID: %u", audioId);
+        assert(0);
     }
 }
 
+// 再生中のオーディオ停止
 void AudioManager::StopAudio(const uint32_t& audioId)
 {
     auto it = loadedAudio.find(audioId);
     if (it != loadedAudio.end())
     {
         it->second.pSourceVoice->Stop(0);
-        it->second.pSourceVoice->FlushSourceBuffers(); // 保留中のバッファをクリア
-        std::cout << "情報: オーディオ '" << audioId << "' を停止しました。" << std::endl;
+        it->second.pSourceVoice->FlushSourceBuffers();
+        Log("%uのオーディオを停止しました", audioId);
     }
     else
     {
-        std::cerr << "警告: 読み込まれていないオーディオID '" << audioId << "' の停止を試みました。" << std::endl;
+        Log("存在しないオーディオを停止しました。ID: %u", audioId);
+        assert(0);
     }
 }
 
+// 特定のオーディオ音量のセッターゲッター
 void AudioManager::SetVolume(const uint32_t& audioId, float volume)
 {
     auto it = loadedAudio.find(audioId);
+    // findできなかった場合はloadedAudio.end()がかえってくる。
     if (it != loadedAudio.end())
     {
         it->second.pSourceVoice->SetVolume(volume);
-        std::cout << "情報: オーディオ '" << audioId << "' のボリュームを " << volume << " に設定しました。" << std::endl;
+        Log("%uのボリュームを%fに設定しました", audioId, volume);
     }
     else
     {
-        std::cerr << "警告: 読み込まれていないオーディオID '" << audioId << "' のボリューム設定を試みました。" << std::endl;
+        Log("存在しないオーディオのボリュームを設定しました。ID: %u", audioId);
+        assert(0);
     }
 }
+float AudioManager::GetVolume(const uint32_t& audioId)
+{
+    auto it = loadedAudio.find(audioId);
+    if (it != loadedAudio.end() && it->second.pSourceVoice)
+    {
+        float currentVolume = 0.0f;
+        it->second.pSourceVoice->GetVolume(&currentVolume);
+        return currentVolume;
+    }
+    Log("AudioID:%u が存在しないか意味分からんバグか", audioId);
+    assert(0);
+}
 
+// マスター音量のセッターゲッター
 void AudioManager::SetMasterVolume(float volume)
 {
     if (pMasteringVoice)
     {
         pMasteringVoice->SetVolume(volume);
-        std::cout << "情報: マスターボリュームを " << volume << " に設定しました。" << std::endl;
+        Log("マスターボリューム: %f", volume);
     }
     else
     {
-        std::cerr << "警告: マスターボイスが初期化されていません。マスターボリュームを設定できません。" << std::endl;
+        Log("多分マスターボリュームが初期化されてないとかです");
+        assert(0);
     }
 }
-
-// Media Foundation を使用したオーディオデータ読み込みの基本実装
-// goto を削除し、Microsoft::WRL::ComPtr を使用してリソースを自動管理
-HRESULT AudioManager::ReadAudioData(const std::string& filePath, AudioEntry& entry)
+float AudioManager::GetMasterVolume()
 {
-    HRESULT hr = S_OK;
-
-    Microsoft::WRL::ComPtr<IMFSourceReader> pReader;
-    Microsoft::WRL::ComPtr<IMFMediaType> pMediaType;
-    Microsoft::WRL::ComPtr<IMFMediaType> pPartialType;
-    Microsoft::WRL::ComPtr<IMFSample> pSample;
-
-    // URL（ファイルパス）からソースリーダーを作成
-    hr = MFCreateSourceReaderFromURL(ConvertString(filePath).c_str(), nullptr, &pReader);
-    if (FAILED(hr)) return hr;
-
-    // 全てのストリームを選択解除
-    hr = pReader->SetStreamSelection(MF_SOURCE_READER_ALL_STREAMS, FALSE);
-    if (FAILED(hr)) return hr;
-
-    // 最初のオーディオストリームを選択
-    hr = pReader->SetStreamSelection(MF_SOURCE_READER_FIRST_AUDIO_STREAM, TRUE);
-    if (FAILED(hr)) return hr;
-
-    // オーディオストリームの現在のメディアタイプを取得
-    hr = pReader->GetCurrentMediaType(MF_SOURCE_READER_FIRST_AUDIO_STREAM, &pMediaType);
-    if (FAILED(hr)) return hr;
-
-    GUID majorType;
-    hr = pMediaType->GetMajorType(&majorType);
-    if (FAILED(hr)) return hr;
-
-    // メインタイプがオーディオでない場合はエラー
-    if (majorType != MFMediaType_Audio)
+    if (pMasteringVoice)
     {
-        return MF_E_INVALIDMEDIATYPE;
+        float currentVolume = 0.0f;
+        pMasteringVoice->GetVolume(&currentVolume);
+        return currentVolume;
     }
-
-    // デコーダをPCM出力に設定
-    hr = MFCreateMediaType(&pPartialType);
-    if (FAILED(hr)) return hr;
-
-    hr = pPartialType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
-    if (FAILED(hr)) return hr;
-
-    hr = pPartialType->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_PCM); // PCM形式でデコード
-    if (FAILED(hr)) return hr;
-
-    hr = pReader->SetCurrentMediaType(MF_SOURCE_READER_FIRST_AUDIO_STREAM, nullptr, pPartialType.Get());
-    if (FAILED(hr)) return hr;
-
-    // 変換後の実際のPCMメディアタイプを取得
-    pMediaType.Reset(); // 既存のpMediaTypeを解放
-    hr = pReader->GetCurrentMediaType(MF_SOURCE_READER_FIRST_AUDIO_STREAM, &pMediaType);
-    if (FAILED(hr)) return hr;
-
-    // WAVEFORMATEX 構造体に変換
-    UINT32 cbFormat = 0;
-    WAVEFORMATEX* wf = nullptr;
-    hr = MFCreateWaveFormatExFromMFMediaType(pMediaType.Get(), &wf, &cbFormat);
-    if (FAILED(hr)) return hr;
-
-    entry.wfx = *wf;
-    CoTaskMemFree(wf); // CoTaskMemAllocで割り当てられたメモリを解放
-
-    // 全てのサンプルを読み込む
-    DWORD actualStreamIndex = 0;
-    DWORD flags = 0;
-    LONGLONG timestamp = 0;
-
-    while (true)
-    {
-        // 多分ここでデコード
-        hr = pReader->ReadSample(
-            MF_SOURCE_READER_FIRST_AUDIO_STREAM, // dwStreamIndex (DWORD)
-            0,                                   // dwControlFlags (DWORD)
-            &actualStreamIndex,                  // pdwActualStreamIndex (DWORD*) - 実際に読み込まれたストリームのインデックスを受け取る
-            &flags,                              // pdwStreamFlags (DWORD*) - ストリームフラグを受け取る
-            &timestamp,                          // pllTimestamp (LONGLONG*) - タイムスタンプを受け取る
-            pSample.ReleaseAndGetAddressOf()     // ppSample (IMFSample** ) - サンプルを受け取る
-        );
-
-        if (FAILED(hr))
-        {
-            //break; // エラー発生時に中断
-            assert(0);
-        }
-        // デコード＆entryに入力が終わった
-        if (flags & MF_SOURCE_READERF_ENDOFSTREAM)
-        {
-            break; // ストリームの終わりに達した
-        }
-
-        // pSampleあれば
-        if (pSample)
-        {
-            Microsoft::WRL::ComPtr<IMFMediaBuffer> pBuffer;
-            hr = pSample->ConvertToContiguousBuffer(&pBuffer); // 連続したメモリバッファに変換
-            if (FAILED(hr)) break;
-
-            // オーディオデータを１～１０とした時、そして１～３で１つのチャンクだった時
-            BYTE* pAudioBytes = nullptr;
-            DWORD cbAudioBytes = 0;
-            // ここでpAudioBytesには１のポインタが渡される、cbAudioBytesは３（１チャンクのサイズ）が与えられる
-            hr = pBuffer->Lock(&pAudioBytes, nullptr, &cbAudioBytes); // バッファをロックしてデータにアクセス
-            if (FAILED(hr)) break;
-
-            // オーディオデータをベクターに追加
-            // ここでentry.audioDataに「entry.audioData.end()」に「pAudioBytes」から「pAudioBytes + cbAudioBytes」バイト分入れる
-            entry.audioData.insert(entry.audioData.end(), pAudioBytes, pAudioBytes + cbAudioBytes);
-            hr = pBuffer->Unlock(); // バッファのロック解除 (ComPtrが自動解放するため、Unlock後にReleaseは不要)
-        }
-        pSample.Reset(); // 次のループのためにサンプルを解放
-    }
-
-
-    Log("--- WAVEFORMATEX Debug Info ---");
-    Log("wFormatTag", entry.wfx.wFormatTag);
-    Log("nChannels", entry.wfx.nChannels);
-    Log("nSamplesPerSec", entry.wfx.nSamplesPerSec);
-    Log("nAvgBytesPerSec", entry.wfx.nAvgBytesPerSec);
-    Log("nBlockAlign", entry.wfx.nBlockAlign);
-    Log("wBitsPerSample", entry.wfx.wBitsPerSample);
-    Log("cbSize", entry.wfx.cbSize);
-    Log("audioData.size()", entry.audioData.size());
-    Log("-------------------------------");
-
-    return hr; // ループ内でエラーが発生した場合も hr が返される
+    Log("マスター音量を取得できませんでした。なんてログがでることは100%ありえません");
+    assert(0);
 }
 
+// 解放のループ内でたくさん使う
 void AudioManager::CleanupAudioEntry(AudioEntry& entry)
 {
     if (entry.pSourceVoice)
@@ -545,6 +388,10 @@ void AudioManager::CleanupAudioEntry(AudioEntry& entry)
         entry.pSourceVoice->DestroyVoice();
         entry.pSourceVoice = nullptr;
     }
-    // audioData は std::vector なので、自動的に解放されます
-    // xAudioBuffer.pAudioData は audioData を指しているため、別途解放は不要です
+}
+
+// なんかいずれ使えるらしいけどまだ理解できない・
+void VoiceCallback::OnBufferEnd(void* pBufferContext)
+{
+
 }

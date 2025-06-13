@@ -40,7 +40,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		//Game::PlayAudio(alert, true);
 		if (GetHitKey::keys[DIK_1] && !GetHitKey::preKeys[DIK_1])
 		{
-			Game::PlayAudio(alert,false);
+			Game::PlayAudio(alert,true);
 		}
 		
 		///

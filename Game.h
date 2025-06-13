@@ -40,6 +40,8 @@ public:
 	static void StopAudio(const uint32_t& audioId);
 	static void SetAudioVolume(const uint32_t& audioId, float volume);
 	static void SetMasterVolume(float volume);
+	static float GetVolume(const uint32_t& audioId);
+	static float GetMasterVolume();
 
 	// マウス
 	static void GetMousePosition(Vector2* position);

@@ -1,26 +1,16 @@
 #pragma once
 
+
 #include <xaudio2.h>
-#include <sdkddkver.h> // これが一番最初の方にあることを確認
-
-#ifndef _WIN32_WINNT
-#define _WIN32_WINNT 0x0A00 // Windows 10
-#endif
-
 #include <mfapi.h>
 #include <mfidl.h>
 #include <mferror.h>
 #include <vector>
 #include <map>
 #include <string>
-#include <atomic> // ストリーミング再生のための同期プリミティブ
+#include <atomic>
+#include <sdkddkver.h>
 
-// Windows 10 バージョン 1709 (Fall Creators Update) 以降を対象とします。
-// 必要に応じて、プロジェクト設定で_WIN32_WINNTの値を調整してください。
-// 例: #define _WIN32_WINNT _WIN32_WINNT_WIN10 // 最新のWindows 10
-#ifndef _WIN32_WINNT
-#define _WIN32_WINNT 0x0A00 // Windows 10
-#endif
 
 // XAudio2ボイスイベント用のカスタムコールバック
 class VoiceCallback : public IXAudio2VoiceCallback
@@ -41,24 +31,27 @@ public:
     AudioManager();
     ~AudioManager();
 
-    // 初期化と終了処理
-    HRESULT Initialize();
-    void Deinitialize(); // shutdown から変更
-
 
     uint32_t LoadAudio(const std::string& filePath);
 
-    // 読み込まれたオーディオを再生します
+    // 読み込まれたオーディオを再生
     void PlayAudio(const uint32_t& audioId, bool loop = false);
 
-    // オーディオの再生を停止します
+    // オーディオの再生を停止
     void StopAudio(const uint32_t& audioId);
 
-    // 特定のオーディオまたはマスターボリュームを設定します
+    // 特定のオーディオまたはマスターボリュームを設定
     void SetVolume(const uint32_t& audioId, float volume);
     void SetMasterVolume(float volume);
 
+    // 特定のオーディオまたはマスターボリュームを返す
+    float GetVolume(const uint32_t& audioId);
+    float GetMasterVolume();
+
 private:
+    // 初期化
+    HRESULT Initialize();
+
     IXAudio2* pXAudio2;
     IXAudio2MasteringVoice* pMasteringVoice;
     VoiceCallback voiceCallback;
@@ -81,6 +74,4 @@ private:
 
     // VoiceCallbackからAudioManagerへのアクセスを許可（フレンドクラスやファクトリパターンも検討）
     friend class VoiceCallback;
-
-    uint32_t audioId = 0;
 };

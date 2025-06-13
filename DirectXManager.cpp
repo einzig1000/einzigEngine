@@ -29,7 +29,8 @@ DirectXManager::~DirectXManager()
 	{
 		CloseHandle(fenceEvent);
 	}
-	audioManager_->Deinitialize();
+	delete audioManager_;
+	audioManager_ = nullptr;
 	delete getHitKey;
 	getHitKey = nullptr;
 	delete audioManager_;
@@ -558,7 +559,6 @@ void DirectXManager::InitializeGetHitKey(HWND hwnd)
 void DirectXManager::InitializeAudioManager()
 {
 	audioManager_ = new AudioManager;
-	audioManager_->Initialize();
 }
 
 void DirectXManager::BeginFrame()
