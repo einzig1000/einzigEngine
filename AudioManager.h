@@ -16,12 +16,19 @@
 class VoiceCallback : public IXAudio2VoiceCallback
 {
 public:
+    // バッファの再生が終了したときに呼び出される
     STDMETHOD_(void, OnBufferEnd)(void* pBufferContext) override;
+    // ボイスの処理パスが開始したときに呼び出される
     STDMETHOD_(void, OnVoiceProcessingPassStart)(UINT32 BytesRequired) override {}
+    // ボイスの処理パスが終了したときに呼び出される
     STDMETHOD_(void, OnVoiceProcessingPassEnd)() override {}
+    // ストリームが終了したときに呼び出される（ループ再生時など）
     STDMETHOD_(void, OnStreamEnd)() override {}
+    // バッファの再生が開始したときに呼び出される
     STDMETHOD_(void, OnBufferStart)(void* pBufferContext) override {}
+    // ループの終わりに達したときに呼び出される
     STDMETHOD_(void, OnLoopEnd)(void* pBufferContext) override {}
+    // ボイスでエラーが発生したときに呼び出される
     STDMETHOD_(void, OnVoiceError)(void* pBufferContext, HRESULT Error) override {}
 };
 
@@ -35,9 +42,9 @@ public:
     uint32_t LoadAudio(const std::string& filePath);
 
     // 読み込まれたオーディオを再生
-    void PlayAudio(const uint32_t& audioId, bool loop = false);
+    void PlayAudio(const uint32_t& audioId, bool loop);
 
-    // オーディオの再生を停止
+    // 特定のオーディオの再生を停止
     void StopAudio(const uint32_t& audioId);
 
     // 特定のオーディオまたはマスターボリュームを設定
@@ -47,6 +54,9 @@ public:
     // 特定のオーディオまたはマスターボリュームを返す
     float GetVolume(const uint32_t& audioId);
     float GetMasterVolume();
+
+    // 現在再生してるか？
+    bool IsAudioPlaying(const uint32_t& audioId);
 
 private:
     // 初期化
@@ -68,7 +78,7 @@ private:
     std::map<uint32_t, AudioEntry> loadedAudio;
 
     // Media Foundation を使用してオーディオデータを読み込みます
-    HRESULT ReadAudioData(const std::string& filePath, AudioEntry& entry);
+    //HRESULT ReadAudioData(const std::string& filePath, AudioEntry& entry);
     // AudioEntryのリソースをクリーンアップします
     void CleanupAudioEntry(AudioEntry& entry);
 

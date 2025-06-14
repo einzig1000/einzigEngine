@@ -42,6 +42,7 @@ public:
 	static void SetMasterVolume(float volume);
 	static float GetVolume(const uint32_t& audioId);
 	static float GetMasterVolume();
+	static bool IsAudioPlaying(const uint32_t& audioId);
 
 	// マウス
 	static void GetMousePosition(Vector2* position);

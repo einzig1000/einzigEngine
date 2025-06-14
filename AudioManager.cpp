@@ -1,6 +1,7 @@
 #pragma comment(lib, "Mfplat.lib")
 #pragma comment(lib, "mfreadwrite.lib")
 #pragma comment(lib, "mfuuid.lib") // 新規追加: UUID定義のため、これも必要になる場合があります
+#pragma comment(lib, "Mfplat.lib")
 
 
 #include "AudioManager.h"
@@ -8,6 +9,9 @@
 #include <iostream>     // 基本的なエラー出力のため（任意、デバッグ用）
 #include <Windows.h>    // MultiByteToWideChar, WideCharToMultiByte のため
 #include <wrl/client.h> // Microsoft::WRL::ComPtr のため
+#include <atlbase.h>    // CComPtr (COMオブジェクトのスマートポインタ) 用
+#include <string>       // 文字列変換用
+#include <algorithm>    // std::max/min (例: ボリュームのクランプ) 用
 #include <iomanip>
 
 // Media Foundation Headers
@@ -120,26 +124,59 @@ uint32_t AudioManager::LoadAudio(const std::string& filePath)
         assert(0);
     }
 
-    // 音声データがどんな形式(MP3,WAV,AACとか)で保存されているかを調べる
-    Microsoft::WRL::ComPtr<IMFMediaType> pMediaType;
-    hr = pSourceReader->GetCurrentMediaType((DWORD)MF_SOURCE_READER_FIRST_AUDIO_STREAM, &pMediaType);
+    // Media Foundation に対して、オーディオストリームをPCM形式にデコードするように要求
+    Microsoft::WRL::ComPtr<IMFMediaType> pOutputMediaType;
+    hr = MFCreateMediaType(&pOutputMediaType);
     if (FAILED(hr))
     {
-        Log("オーディオフォーマットの取得に失敗しました: 0x%X", hr);
-        assert(0);
+        Log("PCM出力用MFMediaTypeの作成に失敗しました: 0x%X", hr);
+        return UINT32_MAX;
+    }
+
+    hr = pOutputMediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
+    if (FAILED(hr))
+    {
+        Log("PCM出力の主要タイプ設定に失敗しました: 0x%X", hr);
+        return UINT32_MAX;
+    }
+
+    hr = pOutputMediaType->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_PCM); // ★ここが重要: PCM形式を要求
+    if (FAILED(hr))
+    {
+        Log("サブタイプをPCMに設定できませんでした: 0x%X", hr);
+        return UINT32_MAX;
+    }
+
+    // 音声データがどんな形式(MP3,WAV,AACとか)で保存されているかを調べる
+    hr = pSourceReader->SetCurrentMediaType((DWORD)MF_SOURCE_READER_FIRST_AUDIO_STREAM, nullptr, pOutputMediaType.Get());
+    if (FAILED(hr))
+    {
+        Log("ソースリーダーの出力タイプをPCMに設定できませんでした: 0x%X", hr);
+        return UINT32_MAX;
+    }
+
+    // ★ Media Foundationが実際に交渉して決定した（デコード後の）メディアタイプを取得します。
+    //    これはPCMフォーマットになっているはずです。
+    Microsoft::WRL::ComPtr<IMFMediaType> pActualMediaType;
+    hr = pSourceReader->GetCurrentMediaType((DWORD)MF_SOURCE_READER_FIRST_AUDIO_STREAM, &pActualMediaType);
+    if (FAILED(hr))
+    {
+        Log("PCM設定後に実際のメディアタイプを取得できませんでした: 0x%X", hr);
+        return UINT32_MAX;
     }
 
     // 上で取得した形式からWAVEFORMATEXに変換
     UINT32 formatSize = 0;
     WAVEFORMATEX* wfx = nullptr;
-    hr = MFCreateWaveFormatExFromMFMediaType(pMediaType.Get(), &wfx, &formatSize);
+    hr = MFCreateWaveFormatExFromMFMediaType(pActualMediaType.Get(), &wfx, &formatSize, 0);
     if (FAILED(hr))
     {
-        Log("メディアタイプの変換に失敗しました: 0x%X", hr);
+        Log("実際のメディアタイプのWAVEFORMATEX変換に失敗しました: 0x%X", hr);
         return UINT32_MAX;
     }
     memcpy(&entry.wfx, wfx, sizeof(WAVEFORMATEX));
     CoTaskMemFree(wfx); // 取得したメモリを解放
+
 
     Log("--- WAVEFORMATEX Debug Info ---");
     Log("wFormatTag: 0x%X", entry.wfx.wFormatTag);
@@ -253,6 +290,17 @@ uint32_t AudioManager::LoadAudio(const std::string& filePath)
         Log("XAudio2 engine not initialized when trying to create source voice.");
         return UINT32_MAX;
     }
+
+    Log("--- Debugging WAVEFORMATEX for CreateSourceVoice ---");
+    Log("filePath: %s", filePath.c_str());
+    Log("wFormatTag: 0x%X (0x1 = WAVE_FORMAT_PCM)", entry.wfx.wFormatTag);
+    Log("nChannels: %u", entry.wfx.nChannels);
+    Log("nSamplesPerSec: %u Hz", entry.wfx.nSamplesPerSec);
+    Log("nAvgBytesPerSec: %u bytes/sec", entry.wfx.nAvgBytesPerSec);
+    Log("nBlockAlign: %u bytes", entry.wfx.nBlockAlign);
+    Log("wBitsPerSample: %u bits", entry.wfx.wBitsPerSample);
+    Log("cbSize: %u bytes (extra info size)", entry.wfx.cbSize);
+    Log("--------------------------------------------------");
 
     hr = pXAudio2->CreateSourceVoice(&entry.pSourceVoice, &entry.wfx, 0, XAUDIO2_DEFAULT_FREQ_RATIO, &voiceCallback);
     if (FAILED(hr))
@@ -380,6 +428,42 @@ float AudioManager::GetMasterVolume()
     return 0.0f;
 }
 
+// 現在再生してるか？
+bool AudioManager::IsAudioPlaying(const uint32_t& audioId)
+{
+    auto it = loadedAudio.find(audioId);
+    if (it != loadedAudio.end())
+    {
+        AudioEntry& entry = it->second;
+        if (entry.pSourceVoice)
+        {
+            XAUDIO2_VOICE_STATE state;
+            entry.pSourceVoice->GetState(&state);
+
+            // キューにバッファがある場合、再生中または再生待ちと判断
+            if (state.BuffersQueued > 0)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else
+        {
+            Log("このIDのオーディンは存在しません", audioId);
+            return false;
+        }
+    }
+    else
+    {
+        Log("このIDのオーディンは存在しません", audioId);
+        return false;
+    }
+}
+
+
 // 解放のループ内でたくさん使う
 void AudioManager::CleanupAudioEntry(AudioEntry& entry)
 {
@@ -388,6 +472,7 @@ void AudioManager::CleanupAudioEntry(AudioEntry& entry)
         entry.pSourceVoice->DestroyVoice();
         entry.pSourceVoice = nullptr;
     }
+    entry.audioData.clear();
 }
 
 // なんかいずれ使えるらしいけどまだ理解できない・

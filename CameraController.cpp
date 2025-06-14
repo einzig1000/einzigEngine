@@ -142,7 +142,8 @@ void CameraController::Updata()
     ImGui::DragFloat3("cameraRotate", &transform_.rotate.x, 0.01f);
     ImGui::DragFloat("cameraDistance", &distance_, 0.01f);
 #endif
-    ImGui::Checkbox("cameraMode(SPACE key)", &cameraMode_);
+    ImGui::Text("push SPACE key : change cameraMode");
+    ImGui::Checkbox("cameraMode", &cameraMode_);
 
     //////////////////////////////////////////////
     ///               カメラ移動               ///
