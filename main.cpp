@@ -21,7 +21,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	blockPng = Game::LoadTexture("resources/map.png");
 	// モデル
 	int blockModel;
-	blockModel = Game::LoadOBJ("resources/OBJ", "map.obj");
+	blockModel = Game::LoadOBJ("resources/test", "map.obj");
 
 	// 現在のマスター音量
 	float masterVolume = Game::GetMasterVolume();
