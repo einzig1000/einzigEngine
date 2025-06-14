@@ -155,8 +155,7 @@ uint32_t AudioManager::LoadAudio(const std::string& filePath)
         return UINT32_MAX;
     }
 
-    // ★ Media Foundationが実際に交渉して決定した（デコード後の）メディアタイプを取得します。
-    //    これはPCMフォーマットになっているはずです。
+    // Media FoundationがPCMフォーマットに変えたはずなので確認
     Microsoft::WRL::ComPtr<IMFMediaType> pActualMediaType;
     hr = pSourceReader->GetCurrentMediaType((DWORD)MF_SOURCE_READER_FIRST_AUDIO_STREAM, &pActualMediaType);
     if (FAILED(hr))

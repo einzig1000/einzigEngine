@@ -22,8 +22,6 @@ DirectXManager::DirectXManager(HWND hwnd, int width, int height)
 
 DirectXManager::~DirectXManager()
 {
-    // 各マネージャーのデストラクタが解放を処理します
-    // 生ポインタの解放は忘れずに
     delete audioManager_;
     audioManager_ = nullptr;
     delete getHitKey;

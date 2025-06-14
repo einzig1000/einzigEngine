@@ -643,7 +643,6 @@ void Log(std::ofstream& os, const std::string& message)
 
 void VectorScreenPrintf(int x, int y, const Vector3& vector, const char* label)
 {
-    // ここではデバッグ出力に表示します（実際の画面描画は環境依存）
     char buffer[256];
     sprintf_s(buffer, "%s: (%.3f, %.3f, %.3f)\n", label, vector.x, vector.y, vector.z);
     OutputDebugStringA(buffer);
@@ -651,7 +650,6 @@ void VectorScreenPrintf(int x, int y, const Vector3& vector, const char* label)
 
 void MatrixScreenPrintf(int x, int y, const Matrix4x4& matrix, const char* label)
 {
-    // ここではデバッグ出力に表示します（実際の画面描画は環境依存）
     char buffer[256];
     OutputDebugStringA(label);
     OutputDebugStringA(":\n");

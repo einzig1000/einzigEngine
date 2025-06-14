@@ -77,9 +77,7 @@ private:
     };
     std::map<uint32_t, AudioEntry> loadedAudio;
 
-    // Media Foundation を使用してオーディオデータを読み込みます
-    //HRESULT ReadAudioData(const std::string& filePath, AudioEntry& entry);
-    // AudioEntryのリソースをクリーンアップします
+    // デストラクタで何回もつかう
     void CleanupAudioEntry(AudioEntry& entry);
 
     // VoiceCallbackからAudioManagerへのアクセスを許可（フレンドクラスやファクトリパターンも検討）

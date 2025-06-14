@@ -714,19 +714,15 @@ AABB Game::CreateLocalAABB(const ModelData& model)
     AABB localAABB;
 
     // 最小値と最大値を初期化
-    // 浮動小数点数の最大値で初期化することで、最初の頂点で確実に更新されるようにします
     localAABB.min.x = (std::numeric_limits<float>::max)();
     localAABB.min.y = (std::numeric_limits<float>::max)();
     localAABB.min.z = (std::numeric_limits<float>::max)();
 
-    // 浮動小数点数の最小値で初期化することで、最初の頂点で確実に更新されるようにします
-    localAABB.max.x = std::numeric_limits<float>::lowest(); // または -std::numeric_limits<float>::max()
+    localAABB.max.x = std::numeric_limits<float>::lowest(); 
 
-    // モデルの頂点が一つも無い場合（エラーハンドリング）
+    // 頂点データ空だったらエラー出すべきだけどunityシステムあるかもだから落とさない
     if (model.vertices.empty())
     {
-        // デフォルト値やエラーを返すなど、適切な処理を行う
-        // ここでは便宜上、中心0、サイズ0のAABBを返す
         localAABB.min = { 0.0f, 0.0f, 0.0f };
         localAABB.max = { 0.0f, 0.0f, 0.0f };
         return localAABB;
