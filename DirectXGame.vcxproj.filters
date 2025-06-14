@@ -31,6 +31,21 @@
     <Filter Include="WindowManager">
       <UniqueIdentifier>{a6f0f6c9-5841-4611-a8f4-25d2974af7b1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="CameraController">
+      <UniqueIdentifier>{8119ccfa-d6ad-4af0-83e5-034de74534f5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GetHitKey">
+      <UniqueIdentifier>{aa632014-e276-40cd-b8d2-109d728ee4ef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MouseController">
+      <UniqueIdentifier>{2dff2682-3b8b-491d-96a6-d1df4709d6a1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Easings">
+      <UniqueIdentifier>{5ce197b2-ab89-4348-961a-ba97c01444f9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="AudioManager">
+      <UniqueIdentifier>{d6981e3b-9d2e-4acf-aaf3-0a1a631f2860}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -68,6 +83,21 @@
     </ClCompile>
     <ClCompile Include="WindowManager.cpp">
       <Filter>WindowManager</Filter>
+    </ClCompile>
+    <ClCompile Include="CameraController.cpp">
+      <Filter>CameraController</Filter>
+    </ClCompile>
+    <ClCompile Include="GetHitKey.cpp">
+      <Filter>GetHitKey</Filter>
+    </ClCompile>
+    <ClCompile Include="MouseController.cpp">
+      <Filter>MouseController</Filter>
+    </ClCompile>
+    <ClCompile Include="Easings.cpp">
+      <Filter>Easings</Filter>
+    </ClCompile>
+    <ClCompile Include="AudioManager.cpp">
+      <Filter>AudioManager</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -113,6 +143,21 @@
     </ClInclude>
     <ClInclude Include="WindowManager.h">
       <Filter>WindowManager</Filter>
+    </ClInclude>
+    <ClInclude Include="CameraController.h">
+      <Filter>CameraController</Filter>
+    </ClInclude>
+    <ClInclude Include="GetHitKey.h">
+      <Filter>GetHitKey</Filter>
+    </ClInclude>
+    <ClInclude Include="MouseController.h">
+      <Filter>MouseController</Filter>
+    </ClInclude>
+    <ClInclude Include="Easings.h">
+      <Filter>Easings</Filter>
+    </ClInclude>
+    <ClInclude Include="AudioManager.h">
+      <Filter>AudioManager</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

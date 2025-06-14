@@ -8,9 +8,11 @@
 #include <cassert>          // assert 用
 
 #include "functions.h"
+#include "GetHitKey.h"
+#include "AudioManager.h"
 
-
-class DirectXManager {
+class DirectXManager
+{
 public:
     DirectXManager(HWND hwnd, int width, int height);
     ~DirectXManager();
@@ -20,13 +22,14 @@ public:
     ID3D12DescriptorHeap* GetsrvDescriptorHeap() const { return srvDescriptorHeap.Get(); }
     const DXGI_SWAP_CHAIN_DESC1& GetSwapChainDesc() const { return swapChainDesc; }
     const D3D12_RENDER_TARGET_VIEW_DESC& GetRtvDesc() const { return rtvDesc; }
-
+    AudioManager* GetAudioManager() const { return audioManager_; }
 
 
     void BeginFrame();
     void EndFrame();
 
 private:
+    AudioManager* audioManager_;
 
     // --- デバイス・コマンド関連 ---
     Microsoft::WRL::ComPtr<ID3D12Device> device; // DirectX 12 デバイスオブジェクト。GPUとのやり取りを管理。
@@ -74,5 +77,8 @@ private:
     void InitializePSO();
     void InitializeViewportAndScissor(int width, int height);
     void InitializeSRVDescriptorHeap();
+    void InitializeGetHitKey(HWND hwnd);
+    void InitializeAudioManager();
 
+    GetHitKey* getHitKey;
 };

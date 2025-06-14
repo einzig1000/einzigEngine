@@ -4,10 +4,11 @@
 
 // DirectXTexやD3D12拡張
 #include "externals/DirectXTex/d3dx12.h"
-//#include "externals/DirectXTex/DirectXTex.h"
 
 // Windows API
 #include <Windows.h>
+#include <sstream>
+
 
 // DXC API
 #include <dxcapi.h>
@@ -19,64 +20,27 @@
 #endif
 
 
-#pragma region Vector3
+template <typename T>
+constexpr const T& my_min(const T& a, const T& b)
+{
+    return (a < b) ? a : b;
+}
 
-/// <summary>
-/// Vector3の足し算
-/// </summary>
-/// <param name="v1">Vector3</param>
-/// <param name="v2">Vector3</param>
-/// <returns>v1とv2の和</returns>
-Vector3 Add(const Vector3& v1, const Vector3& v2);
-
-/// <summary>
-/// Vector3の引き算
-/// </summary>
-/// <param name="v1">Vector3</param>
-/// <param name="v2">Vector3</param>
-/// <returns>v1とv2の差</returns>
-Vector3 Sub(const Vector3& v1, const Vector3& v2);
-
-/// <summary>
-/// Vector3の掛け算
-/// </summary>
-/// <param name="v1">Vector3</param>
-/// <param name="v2">Vector3</param>
-/// <returns>v1とv2の積</returns>
-Vector3 Mul(float scalar, const Vector3& v);
-
-/// <summary>
-/// Vector3の内積
-/// </summary>
-/// <param name="v1">Vector3</param>
-/// <param name="v2">Vector3</param>
-/// <returns>v1とv2の内積</returns>
-float DotProduct(const Vector3& v1, const Vector3& v2);
-
-/// <summary>
-/// Vector3の外積
-/// </summary>
-/// <param name="v1">Vector3</param>
-/// <param name="v2">Vector3</param>
-/// <returns>v1とv2の外積</returns>
-Vector3 CrossProduct(const Vector3& v1, const Vector3& v2);
+template <typename T>
+constexpr const T& my_max(const T& a, const T& b)
+{
+    return (a > b) ? a : b;
+}
 
 /// <summary>
 /// Vector3の長さ
 /// </summary>
 /// <param name="v">Vector3</param>
 /// <returns>vの長さ</returns>
-float Length(const Vector3& v);
-
+//float Length(const Vector3& v);
+//
 // 3頂点から法線ベクトルを計算し、正規化して返す
 Vector3 CalculateNormal(const Vector4& v0, const Vector4& v1, const Vector4& v2);
-
-/// <summary>
-/// 正規化したVector3
-/// </summary>
-/// <param name="v">Vector3</param>
-/// <returns>正規化したv</returns>
-Vector3 Normalize(const Vector3& v);
 
 /// <summary>
 /// Vector3の表示
@@ -95,144 +59,19 @@ void VectorScreenPrintf(int x, int y, const Vector3& vector, const char* label);
 /// <returns>座標変換されたvector</returns>
 Vector3 Transform(const Vector3& vector, const Matrix4x4& matrix);
 
-#pragma endregion
-
-#pragma region Matrix4x4
-
-/// <summary>
-/// Matrix4x4の足し算
-/// </summary>
-/// <param name="m1">Matrix4x4</param>
-/// <param name="m2">Matrix4x4</param>
-/// <returns>"m1"と"m2"の和</returns>
-Matrix4x4 Add(const Matrix4x4& m1, const Matrix4x4& m2);
-
-/// <summary>
-/// Matrix4x4の引き算
-/// </summary>
-/// <param name="m1">Matrix4x4</param>
-/// <param name="m2">Matrix4x4</param>
-/// <returns>"m1"と"m2"の差</returns>
-Matrix4x4 Sub(const Matrix4x4& m1, const Matrix4x4& m2);
-
-/// <summary>
-/// Matrix4x4の掛け算
-/// </summary>
-/// <param name="m1">Matrix4x4</param>
-/// <param name="m2">Matrix4x4</param>
-/// <returns>"m1"と"m2"の積</returns>
-Matrix4x4 Mul(const Matrix4x4& m1, const Matrix4x4& m2);
-
-/// <summary>
-/// Matrix4x4の逆行列
-/// </summary>
-/// <param name="m">Matrix4x4</param>
-/// <returns>"m"の逆行列</returns>
-Matrix4x4 Inverse(const Matrix4x4& m);
-
-/// <summary>
-/// Matrix4x4の転置行列
-/// </summary>
-/// <param name="m">Matrix4x4</param>
-/// <returns>"m"の転置行列</returns>
-Matrix4x4 Transpose(const Matrix4x4& m);
-
-/// <summary>
-/// Matrix4x4の単位行列作成関数
-/// </summary>
-/// <returns>Matrix4x4の単位行列</returns>
-Matrix4x4 MakeIdentity4x4();
-
-/// <summary>
-/// Vector3の平行移動行列
-/// </summary>
-/// <param name="translate">移動させたいベクトル量</param>
-/// <returns>"translate"分移動させられる平行移動行列</returns>
-Matrix4x4 MakeTranslateMatrix(const Vector3& translate);
-
-/// <summary>
-/// Vector3の拡縮行列
-/// </summary>
-/// <param name="scale">拡縮したいベクトル量</param>
-/// <returns>"scale"分拡縮できる拡縮行列</returns>
-Matrix4x4 MakeScaleMatrix(const Vector3& scale);
-
-/// <summary>
-/// Matrix4x4の表示
-/// </summary>
-/// <param name="x">表示位置のX座標</param>
-/// <param name="y">表示位置のY座標</param>
-/// <param name="matrix">表示する行列</param>
-/// <param name="label">表示するラベル</param>
-void MatrixScreenPrintf(int x, int y, const Matrix4x4& matrix, const char* label);
-
-/// <summary>
-/// X軸回転行列を作成する関数
-/// </summary>
-/// <param name="radian">回転角度 (ラジアン)</param>
-/// <returns>X軸回転行列</returns>
-Matrix4x4 MakeRotateXMatrix(float radian);
-
-/// <summary>
-/// Y軸回転行列を作成する関数
-/// </summary>
-/// <param name="radian">回転角度 (ラジアン)</param>
-/// <returns>Y軸回転行列</returns>
-Matrix4x4 MakeRotateYMatrix(float radian);
-
-/// <summary>
-/// Z軸回転行列を作成する関数
-/// </summary>
-/// <param name="radian">回転角度 (ラジアン)</param>
-/// <returns>Z軸回転行列</returns>
-Matrix4x4 MakeRotateZMatrix(float radian);
-
-/// <summary>
-/// 3次元アフィン変換行列を作成する関数
-/// </summary>
-/// <param name="scale">スケールベクトル</param>
-/// <param name="rotate">回転ベクトル (XYZ軸の回転角度)</param>
-/// <param name="translate">平行移動ベクトル</param>
-/// <returns>アフィン変換行列</returns>
-Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Vector3& translate);
-
-/// <summary>
-/// 透視投影行列を作成する関数
-/// </summary>
-/// <param name="fovY">視野角 (ラジアン)</param>
-/// <param name="aspectRatio">アスペクト比</param>
-/// <param name="nearClip">近クリップ面</param>
-/// <param name="farClip">遠クリップ面</param>
-/// <returns>透視投影行列</returns>
-Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip, float farClip);
-
-/// <summary>
-/// 正射影行列を作成する関数
-/// </summary>
-/// <param name="left">左端</param>
-/// <param name="top">上端</param>
-/// <param name="right">右端</param>
-/// <param name="bottom">下端</param>
-/// <param name="nearClip">近クリップ面</param>
-/// <param name="farClip">遠クリップ面</param>
-/// <returns>正射影行列</returns>
-Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip);
-
-/// <summary>
-/// ビューポート変換行列を作成する関数
-/// </summary>
-/// <param name="left">ビューポートの左端</param>
-/// <param name="top">ビューポートの上端</param>
-/// <param name="width">ビューポートの幅</param>
-/// <param name="height">ビューポートの高さ</param>
-/// <param name="minD">最小深度</param>
-/// <param name="maxD">最大深度</param>
-/// <returns>ビューポート変換行列</returns>
-Matrix4x4 MakeViewPortMatrix(float left, float top, float width, float height, float minD, float maxD);
-
-#pragma endregion
+Vector4 Transform(const Vector4& v, const Matrix4x4& m);
 
 
+
+bool IsCollision(const Sphere& s1, const Sphere& s2);
+bool IsCollision(const Sphere& s, const Plane& p);
+bool IsCollision(const Segment& s, const Plane& p);
+bool IsCollision(const Segment& s, const Triangle& t);
+bool IsCollision(const Ray& r, const Plane& p);
+bool IsCollision(const Ray& r, const AABB& aabb);
+bool IsCollision(const Ray& r, const Triangle& t);
+
+bool IsCollision(const Ray& ray, const AABB& aabb, const std::vector<VertexData>& vertices, const Matrix4x4& worldMatrix);
 
 
 
@@ -303,6 +142,25 @@ void Log(const D3D12_ROOT_SIGNATURE_DESC& desc);
 /// <param name="os">出力先のファイルストリーム</param>
 /// <param name="message">出力するメッセージ</param>
 void Log(std::ofstream& os, const std::string& message);
+
+
+// printf形式のLog関数
+void Log(const char* format, ...);
+
+// std::string を受け取る Log 関数 (functions.cpp で定義される)
+void Log(const std::string& message);
+
+
+
+
+
+
+
+
+
+
+
+
 
 /// <summary>
 /// クラッシュ時にミニダンプを生成する関数
