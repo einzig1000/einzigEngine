@@ -47,20 +47,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		///
 		/// ↓更新処理ここから
 		///
-		if (GetHitKey::keys[DIK_1] && !GetHitKey::preKeys[DIK_1])
-		{
-			if (Game::IsAudioPlaying(alert))Game::StopAudio(alert);
-			Game::PlayAudio(alert, alertLoop);
-		}
-		if (GetHitKey::keys[DIK_2] && !GetHitKey::preKeys[DIK_2])
-		{
-			if (Game::IsAudioPlaying(buzzer))Game::StopAudio(buzzer);
-			Game::PlayAudio(buzzer, buzzerLoop);
-		}
-
-		Game::SetMasterVolume(masterVolume);
-		Game::SetAudioVolume(alert, alertVolume);
-		Game::SetAudioVolume(buzzer, buzzerVolume);
 
 		///
 		/// ↑更新処理ここまで
@@ -75,24 +61,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		ImGui::Text("push 2 key : buzzer.mp3");
 		ImGui::Text("-----------------------------------");
 
-		if (Game::IsAudioPlaying(alert))ImGui::Text("alert ON");
-		else ImGui::Text("alert OFF");
-		if (Game::IsAudioPlaying(buzzer))ImGui::Text("buzzer ON");
-		else ImGui::Text("buzzer OFF");
-		ImGui::Text("-----------------------------------");
-
-		ImGui::SliderFloat("masterVolume ", &masterVolume, 0.0f, 1.0f);
-		ImGui::SliderFloat("alertVolume  ", &alertVolume, 0.0f, 1.0f);
-		ImGui::SliderFloat("buzzerVolume ", &buzzerVolume, 0.0f, 1.0f);
-		ImGui::Text("-----------------------------------");
-
-		ImGui::Checkbox("loop alert ", &alertLoop);
-		ImGui::Checkbox("loop buzzer", &buzzerLoop);
-		ImGui::Text("-----------------------------------");
 
 
 
-		//ImGui::
 		Game::Drawobj(blockTransforms, {0,0,0}, blockModel, uvCheckerPng, 0xFFFFFFFF);
 		
 

@@ -31,7 +31,7 @@ x86/
 [Aa][Rr][Mm]64/
 bld/
 [Bb]in/
-[Oo]bj/
+[Oo]bj/ # ビルド成果物のobjフォルダを無視
 [Oo]ut/
 [Ll]og/
 [Ll]ogs/
@@ -79,6 +79,11 @@ StyleCopReport.xml
 *.ilk
 *.meta
 *.obj
+# ビルド成果物の.objファイルを無視
+!resources/*.obj     
+# resources直下の.objファイルは追跡
+!resources/**/*.obj  
+# resources以下のサブフォルダ内の.objファイルは全て追跡
 *.iobj
 *.pch
 *.pdb
@@ -101,10 +106,6 @@ StyleCopReport.xml
 *.svclog
 *.scc
 *.dmp
-
-!resources/*.obj
-!resources/**/*.obj
-
 
 # Chutzpah Test files
 _Chutzpah*
