@@ -1,17 +1,11 @@
-// DirectXManager.cpp
 #include "DirectXManager.h"
-#include <memory> // std::unique_ptr 用
+#include <memory>
 #include "externals/imgui/imgui_impl_dx12.h"
 #include "externals/imgui/imgui_impl_win32.h"
-
-// ImGuiのヘッダーをここにインクルードすることもできます
-// #include "externals/imgui/imgui_impl_dx12.h"
-// #include "externals/imgui/imgui_impl_win32.h"
 
 DirectXManager::DirectXManager(HWND hwnd, int width, int height)
 {
     // 各マネージャーの初期化
-    // 依存関係を考慮して初期化順序を決定します
     deviceManager = std::make_unique<DeviceManager>();
     commandContextManager = std::make_unique<CommandContextManager>(deviceManager->GetDevice());
     swapChainManager = std::make_unique<SwapChainManager>(deviceManager->GetDevice(), commandContextManager->GetCommandQueue(), hwnd, width, height);
@@ -89,7 +83,7 @@ void DirectXManager::BeginFrame()
 
 void DirectXManager::EndFrame()
 {
-    // ImGui 描画 (実際のコマンドはここに積まれる)
+    // ImGui の初期化みたいなもん
     ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandContextManager->GetCommandList());
 
     // ResourceStateをRENDER_TARGETからPRESENTへ遷移
@@ -104,7 +98,7 @@ void DirectXManager::EndFrame()
     HRESULT hr = commandContextManager->GetCommandList()->Close();
     if (FAILED(hr))
     {
-        // Log("Failed to close command list."); // Log関数が定義されていることを想定
+        Log("コマンドリストの確定・実行にしっぱイしました");
         assert(false);
     }
     ID3D12CommandList* commandLists[] = { commandContextManager->GetCommandList() };

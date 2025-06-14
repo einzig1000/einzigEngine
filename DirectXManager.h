@@ -46,8 +46,8 @@ private:
     std::unique_ptr<ViewportScissorManager> viewportScissorManager;
 
     // その他の外部依存クラス
-    AudioManager* audioManager_; // DirectXとは直接関係ないため、別途管理
-    GetHitKey* getHitKey;       // 同上
+    AudioManager* audioManager_;
+    GetHitKey* getHitKey;
 
     // フレームごとのバリア情報
     D3D12_RESOURCE_BARRIER barrier = {};

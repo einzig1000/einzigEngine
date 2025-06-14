@@ -47,7 +47,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		///
 		/// ↓更新処理ここから
 		///
+		if (GetHitKey::keys[DIK_1] && !GetHitKey::preKeys[DIK_1])
+		{
+			if (Game::IsAudioPlaying(alert))Game::StopAudio(alert);
+			Game::PlayAudio(alert, alertLoop);
+		}
+		if (GetHitKey::keys[DIK_2] && !GetHitKey::preKeys[DIK_2])
+		{
+			if (Game::IsAudioPlaying(buzzer))Game::StopAudio(buzzer);
+			Game::PlayAudio(buzzer, buzzerLoop);
+		}
 
+		Game::SetMasterVolume(masterVolume);
+		Game::SetAudioVolume(alert, alertVolume);
+		Game::SetAudioVolume(buzzer, buzzerVolume);
 		///
 		/// ↑更新処理ここまで
 		///
@@ -57,8 +70,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		///
 
 		ImGui::Text("-----------------------------------");
-		ImGui::Text("push 1 key : alert.wav");
-		ImGui::Text("push 2 key : buzzer.mp3");
 		ImGui::Text("-----------------------------------");
 
 

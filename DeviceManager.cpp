@@ -10,10 +10,7 @@ DeviceManager::DeviceManager()
     InitializeDeviceInternal();
 }
 
-DeviceManager::~DeviceManager()
-{
-    // デバイスの解放はComPtrが自動で行います
-}
+DeviceManager::~DeviceManager(){}
 
 void DeviceManager::EnableDebugLayer()
 {

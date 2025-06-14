@@ -10,7 +10,7 @@ public:
     ~DepthStencilManager();
 
     D3D12_CPU_DESCRIPTOR_HANDLE GetDSVHandle() const { return dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(); }
-    ID3D12DescriptorHeap* GetDSVDescriptorHeap() const { return dsvDescriptorHeap.Get(); } // 必要に応じて
+    ID3D12DescriptorHeap* GetDSVDescriptorHeap() const { return dsvDescriptorHeap.Get(); } 
 
 private:
     Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilBuffer;

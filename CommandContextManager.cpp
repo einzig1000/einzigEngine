@@ -15,10 +15,7 @@ CommandContextManager::CommandContextManager(ID3D12Device* device)
     assert(SUCCEEDED(hr));
 }
 
-CommandContextManager::~CommandContextManager()
-{
-    // ComPtrが自動で解放します
-}
+CommandContextManager::~CommandContextManager(){}
 
 void CommandContextManager::ResetCommandList()
 {

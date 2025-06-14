@@ -1,17 +1,13 @@
-// SwapChainManager.cpp
 #include "SwapChainManager.h"
 
 SwapChainManager::SwapChainManager(ID3D12Device* device, ID3D12CommandQueue* commandQueue, HWND hwnd, int width, int height)
 {
     InitializeSwapChainInternal(device, commandQueue, hwnd, width, height);
     InitializeRenderTargetView(device);
-    backBufferIndex = 0; // 初期値
+    backBufferIndex = 0;
 }
 
-SwapChainManager::~SwapChainManager()
-{
-    // ComPtrが自動で解放します
-}
+SwapChainManager::~SwapChainManager(){}
 
 void SwapChainManager::InitializeSwapChainInternal(ID3D12Device* device, ID3D12CommandQueue* commandQueue, HWND hwnd, int width, int height)
 {
@@ -44,7 +40,6 @@ void SwapChainManager::InitializeRenderTargetView(ID3D12Device* device)
     HRESULT hr = device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&rtvDescriptorHeap));
     assert(SUCCEEDED(hr));
 
-    // ローカル変数ではなく、メンバー変数 rtvDesc を初期化するように変更
     rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
     rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
 

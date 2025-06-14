@@ -2,12 +2,7 @@
 #include <d3d12.h>
 #include <wrl.h>
 #include <cassert>
-#include <dxcapi.h> // for shader compilation
 #include "functions.h"
-
-// GraphicsUtility.h (例: CompileShader関数が定義されていると仮定)
-// もし CompileShader を PipelineStateManager 内に持たせるなら、この行は不要
-// #include "GraphicsUtility.h" 
 
 class PipelineStateManager
 {

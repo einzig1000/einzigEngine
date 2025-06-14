@@ -2,7 +2,7 @@
 #include <d3d12.h>
 #include <wrl.h>
 #include <cassert>
-#include <windows.h> // HANDLE用
+#include <windows.h>
 
 class SynchronizationManager
 {

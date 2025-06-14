@@ -10,10 +10,7 @@ PipelineStateManager::PipelineStateManager(ID3D12Device* device)
     InitializePSOInternal(device);
 }
 
-PipelineStateManager::~PipelineStateManager()
-{
-    // ComPtrが自動で解放します
-}
+PipelineStateManager::~PipelineStateManager(){}
 
 void PipelineStateManager::InitializeDxc()
 {

@@ -26,7 +26,7 @@ private:
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvDescriptorHeap;
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[2];
     DXGI_SWAP_CHAIN_DESC1 swapChainDesc;
-    D3D12_RENDER_TARGET_VIEW_DESC rtvDesc; // rtvDesc をメンバー変数として保持するように修正
+    D3D12_RENDER_TARGET_VIEW_DESC rtvDesc;
     UINT backBufferIndex;
 
     void InitializeSwapChainInternal(ID3D12Device* device, ID3D12CommandQueue* commandQueue, HWND hwnd, int width, int height);

@@ -584,14 +584,14 @@ void Log(const D3D12_ROOT_SIGNATURE_DESC& desc)
 
 void Log(const char* format, ...)
 {
-    // 最大バッファサイズを設定 (printfが出力する文字列の最大長)
+    // 最大バッファサイズを設定 (文字列の最大長)
     const int BUFFER_SIZE = 256;
     char buffer[BUFFER_SIZE];
 
     // 可変引数リストを扱うためのポインタ
     va_list args;
 
-    // 可変引数リストの開始
+    // 知らない概念可変引数リストの開始
     va_start(args, format);
 
     // va_list を使ってフォーマットされた文字列をバッファに書き込む

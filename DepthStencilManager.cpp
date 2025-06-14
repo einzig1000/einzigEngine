@@ -45,7 +45,4 @@ DepthStencilManager::DepthStencilManager(ID3D12Device* device, int width, int he
     device->CreateDepthStencilView(depthStencilBuffer.Get(), &dsvDesc, dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 }
 
-DepthStencilManager::~DepthStencilManager()
-{
-    // ComPtrが自動で解放します
-}
+DepthStencilManager::~DepthStencilManager(){}
