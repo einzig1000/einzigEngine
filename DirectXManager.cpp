@@ -15,6 +15,7 @@ DirectXManager::DirectXManager(HWND hwnd, int width, int height)
     viewportScissorManager = std::make_unique<ViewportScissorManager>(width, height);
 
     InitializeGetHitKey(hwnd);
+    InitializeTextureManager(GetDevice(), GetsrvDescriptorHeap());
     InitializeAudioManager();
 }
 
@@ -22,6 +23,8 @@ DirectXManager::~DirectXManager()
 {
     delete audioManager_;
     audioManager_ = nullptr;
+    delete textureManager_;
+    textureManager_ = nullptr;
     delete getHitKey_;
     getHitKey_ = nullptr;
 }
@@ -31,6 +34,14 @@ void DirectXManager::InitializeGetHitKey(HWND hwnd)
     if (!getHitKey_)
     {
         getHitKey_ = new GetHitKey(hwnd);
+    }
+}
+
+void DirectXManager::InitializeTextureManager(ID3D12Device* device, ID3D12DescriptorHeap* srvDescriptorHeap)
+{
+    if (!textureManager_)
+    {
+        textureManager_ = new TextureManager(GetDevice(), GetsrvDescriptorHeap());
     }
 }
 

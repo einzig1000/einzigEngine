@@ -60,7 +60,7 @@ public:
 
 
 private:
-	static TextureData* GetTexture(uint32_t textureNumber);
+	//static TextureData* GetTexture(uint32_t textureNumber);
 	static void UpdateCamera();
 	static void UpdateLight();
 	static AABB CreateLocalAABB(const ModelData& model);
@@ -82,7 +82,6 @@ private:
 	/// <param name="world">ワールド行列</param>
 	/// <param name="wvpMatrix">WVP行列</param>
 	/// <param name="textureNumber">テクスチャ番号</param>
-	/// <param name="textures">テクスチャリスト</param>
 	/// <returns> Draw用データ</returns>
 	static DrawData SetupDrawData(
 		size_t dstBufferSize,
@@ -98,7 +97,6 @@ private:
 		const Matrix4x4& world,
 		const Matrix4x4& wvpMatrix,
 		uint32_t textureNumber,
-		const std::vector<TextureData>& textures);
 
 #pragma endregion
 
@@ -109,7 +107,7 @@ private:
 	static std::vector<Object3D> objects;
 
 	// 画像
-	static std::vector<TextureData> textures;
+	//static std::vector<TextureData> textures;
 
 	// 頂点リソースども
 	static Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceSprite;

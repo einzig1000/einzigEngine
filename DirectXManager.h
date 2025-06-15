@@ -13,6 +13,7 @@
 
 #include "GetHitKey.h"
 #include "AudioManager.h"
+#include "TextureManager.h"
 
 class DirectXManager
 {
@@ -23,10 +24,11 @@ public:
     ID3D12Device* GetDevice() const { return deviceManager->GetDevice(); }
     ID3D12GraphicsCommandList* GetCommandList() const { return commandContextManager->GetCommandList(); }
     ID3D12DescriptorHeap* GetsrvDescriptorHeap() const { return descriptorHeapManager->GetSRVDescriptorHeap(); }
-    AudioManager* GetAudioManager() const { return audioManager_; }
     const DXGI_SWAP_CHAIN_DESC1& GetSwapChainDesc() const { return swapChainManager->GetSwapChainDesc(); };
     const D3D12_RENDER_TARGET_VIEW_DESC& GetRtvDesc() const { return swapChainManager->GetRtvDesc(); }
-    
+
+    AudioManager* GetAudioManager() const { return audioManager_; }
+    TextureManager* GetTextureManager() const { return textureManager_; }
 
     void BeginFrame();
     void EndFrame();
@@ -42,10 +44,12 @@ private:
     std::unique_ptr<ViewportScissorManager> viewportScissorManager;
 
     AudioManager* audioManager_;
+    TextureManager* textureManager_;
     GetHitKey* getHitKey_;
 
     D3D12_RESOURCE_BARRIER barrier = {};
 
     void InitializeGetHitKey(HWND hwnd);
+    void InitializeTextureManager(ID3D12Device* device, ID3D12DescriptorHeap* srvDescriptorHeap);
     void InitializeAudioManager();
 };

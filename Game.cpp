@@ -9,7 +9,7 @@ DirectXManager* Game::dxManager = nullptr;
 
 std::vector<Object3D> Game::objects;
 
-std::vector<TextureData> Game::textures;
+//std::vector<TextureData> Game::textures;
 
 Microsoft::WRL::ComPtr<ID3D12Resource> Game::vertexResourceSprite;
 UINT Game::vertexResourceSizeSprite;
@@ -206,7 +206,7 @@ void Game::Finalize()
 }
 
 // Draw用データ作成するやつ
-DrawData Game::SetupDrawData(size_t dstBufferSize, const VertexData* srcVertexData, size_t vertexCount, Microsoft::WRL::ComPtr<ID3D12Resource>& vertexResource, UINT& vertexResourceSize, Material* material, const uint32_t& materialColor, bool enableLighting, const Matrix4x4& uvTransform, TransformationMatrix* wvp, const Matrix4x4& world, const Matrix4x4& wvpMatrix, uint32_t textureNumber, const std::vector<TextureData>& textures)
+DrawData Game::SetupDrawData(size_t dstBufferSize, const VertexData* srcVertexData, size_t vertexCount, Microsoft::WRL::ComPtr<ID3D12Resource>& vertexResource, UINT& vertexResourceSize, Material* material, const uint32_t& materialColor, bool enableLighting, const Matrix4x4& uvTransform, TransformationMatrix* wvp, const Matrix4x4& world, const Matrix4x4& wvpMatrix, uint32_t textureNumber)
 {
     // 描画回数上限
     if (drawCallIndex >= kMaxDrawCallPerFrame) return{};
@@ -239,7 +239,7 @@ DrawData Game::SetupDrawData(size_t dstBufferSize, const VertexData* srcVertexDa
     wvp->WVP = wvpMatrix;
 
     // テクスチャ
-    const TextureData* tex = GetTexture(textureNumber);
+    const TextureData* tex = dxManager->GetTextureManager()->GetTexture(textureNumber);
 
     return { vertexBufferView, tex };
 }
@@ -247,45 +247,46 @@ DrawData Game::SetupDrawData(size_t dstBufferSize, const VertexData* srcVertexDa
 // リソース読み込み
 uint32_t Game::LoadTexture(const std::string& filePath)
 {
-    // ボックスを作成
-    TextureData text;
-
-    // テクスチャファイルを読んでプログラムを扱えるようにする
-    DirectX::ScratchImage image{};
-    std::wstring filePathw = ConvertString(filePath);
-    HRESULT hr = DirectX::LoadFromWICFile(filePathw.c_str(), DirectX::WIC_FLAGS_FORCE_SRGB, nullptr, image);
-    assert(SUCCEEDED(hr));
-
-    // ミップマップの作成
-    DirectX::ScratchImage mipImageLocal;
-    hr = DirectX::GenerateMipMaps(image.GetImages(), image.GetImageCount(), image.GetMetadata(), DirectX::TEX_FILTER_SRGB, 0, mipImageLocal);
-    assert(SUCCEEDED(hr));
-
-    text.metadata = mipImageLocal.GetMetadata();
-    text.number = static_cast<uint32_t> (textures.size());
-    text.mipImage = std::move(mipImageLocal);
-
-
-    // テクスチャリソースとSRVの作成
-    text.textureResource = CreateTextureResource(dxManager->GetDevice(), text.metadata);
-    Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource = UploadTextureData(text.textureResource.Get(), text.mipImage, dxManager->GetDevice(), dxManager->GetCommandList());
-
-
-    const uint32_t descriptorSizeSRV = dxManager->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-    D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = GetCPUDescriptorHandle(dxManager->GetsrvDescriptorHeap(), descriptorSizeSRV, text.number + 1);
-    text.textureSrvHandleGPU = GetGPUDescriptorHandle(dxManager->GetsrvDescriptorHeap(), descriptorSizeSRV, text.number + 1);
-
-    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-    srvDesc.Format = text.metadata.format;
-    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-    srvDesc.Texture2D.MipLevels = UINT(text.metadata.mipLevels);
-
-    dxManager->GetDevice()->CreateShaderResourceView(text.textureResource.Get(), &srvDesc, textureSrvHandleCPU);
-
-    textures.push_back(std::move(text));
-
-    return text.number;
+    dxManager->GetTextureManager()->LoadTexture(filePath, dxManager->GetCommandList());
+    //// ボックスを作成
+    //TextureData text;
+    //
+    //// テクスチャファイルを読んでプログラムを扱えるようにする
+    //DirectX::ScratchImage image{};
+    //std::wstring filePathw = ConvertString(filePath);
+    //HRESULT hr = DirectX::LoadFromWICFile(filePathw.c_str(), DirectX::WIC_FLAGS_FORCE_SRGB, nullptr, image);
+    //assert(SUCCEEDED(hr));
+    //
+    //// ミップマップの作成
+    //DirectX::ScratchImage mipImageLocal;
+    //hr = DirectX::GenerateMipMaps(image.GetImages(), image.GetImageCount(), image.GetMetadata(), DirectX::TEX_FILTER_SRGB, 0, mipImageLocal);
+    //assert(SUCCEEDED(hr));
+    //
+    //text.metadata = mipImageLocal.GetMetadata();
+    //text.number = static_cast<uint32_t> (textures.size());
+    //text.mipImage = std::move(mipImageLocal);
+    //
+    //
+    //// テクスチャリソースとSRVの作成
+    //text.textureResource = CreateTextureResource(dxManager->GetDevice(), text.metadata);
+    //Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource = UploadTextureData(text.textureResource.Get(), text.mipImage, dxManager->GetDevice(), dxManager->GetCommandList());
+    //
+    //
+    //const uint32_t descriptorSizeSRV = dxManager->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    //D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = GetCPUDescriptorHandle(dxManager->GetsrvDescriptorHeap(), descriptorSizeSRV, text.number + 1);
+    //text.textureSrvHandleGPU = GetGPUDescriptorHandle(dxManager->GetsrvDescriptorHeap(), descriptorSizeSRV, text.number + 1);
+    //
+    //D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+    //srvDesc.Format = text.metadata.format;
+    //srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    //srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    //srvDesc.Texture2D.MipLevels = UINT(text.metadata.mipLevels);
+    //
+    //dxManager->GetDevice()->CreateShaderResourceView(text.textureResource.Get(), &srvDesc, textureSrvHandleCPU);
+    //
+    //textures.push_back(std::move(text));
+    //
+    //return text.number;
 }
 
 uint32_t Game::LoadOBJ(const std::string& directoryPath, const std::string& filename)
@@ -528,17 +529,6 @@ void Game::DrawSprite(const Transforms& localTransform, VertexData* vertexData, 
     drawCallIndex++;
 }
 
-TextureData* Game::GetTexture(uint32_t textureNumber)
-{
-    for (auto& t : textures)
-    {
-        if (t.number == textureNumber)
-        {
-            return &t;
-        }
-    }
-    return nullptr;
-}
 
 // 音
 void Game::PlayAudio(const uint32_t& audioId, bool loop)
