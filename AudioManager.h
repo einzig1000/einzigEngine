@@ -22,7 +22,7 @@ public:
     STDMETHOD_(void, OnVoiceProcessingPassStart)(UINT32 BytesRequired) override {}
     // ボイスの処理パスが終了したときに呼び出される
     STDMETHOD_(void, OnVoiceProcessingPassEnd)() override {}
-    // ストリームが終了したときに呼び出される（ループ再生時など）
+    // ストリームが終了したときに呼び出される（ループ再生時等）
     STDMETHOD_(void, OnStreamEnd)() override {}
     // バッファの再生が開始したときに呼び出される
     STDMETHOD_(void, OnBufferStart)(void* pBufferContext) override {}

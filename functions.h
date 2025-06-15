@@ -73,7 +73,10 @@ bool IsCollision(const Ray& r, const Triangle& t);
 
 bool IsCollision(const Ray& ray, const AABB& aabb, const std::vector<VertexData>& vertices, const Matrix4x4& worldMatrix);
 
-
+// ARGBをRGBA
+Vector4 ConvertARGBtoRGBA(const Vector4& argb);
+// int型のカラーをVector4型に
+Vector4 ConvertUintToVector4(uint32_t color);
 
 /// <summary>
 /// 球体の頂点データを生成する関数

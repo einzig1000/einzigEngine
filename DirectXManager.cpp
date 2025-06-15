@@ -5,7 +5,6 @@
 
 DirectXManager::DirectXManager(HWND hwnd, int width, int height)
 {
-    // 各マネージャーの初期化
     deviceManager = std::make_unique<DeviceManager>();
     commandContextManager = std::make_unique<CommandContextManager>(deviceManager->GetDevice());
     swapChainManager = std::make_unique<SwapChainManager>(deviceManager->GetDevice(), commandContextManager->GetCommandQueue(), hwnd, width, height);
@@ -15,7 +14,6 @@ DirectXManager::DirectXManager(HWND hwnd, int width, int height)
     synchronizationManager = std::make_unique<SynchronizationManager>(deviceManager->GetDevice());
     viewportScissorManager = std::make_unique<ViewportScissorManager>(width, height);
 
-    // DirectXとは直接関係ない初期化
     InitializeGetHitKey(hwnd);
     InitializeAudioManager();
 }
@@ -24,26 +22,29 @@ DirectXManager::~DirectXManager()
 {
     delete audioManager_;
     audioManager_ = nullptr;
-    delete getHitKey;
-    getHitKey = nullptr;
+    delete getHitKey_;
+    getHitKey_ = nullptr;
 }
 
 void DirectXManager::InitializeGetHitKey(HWND hwnd)
 {
-    if (!getHitKey)
+    if (!getHitKey_)
     {
-        getHitKey = new GetHitKey(hwnd);
+        getHitKey_ = new GetHitKey(hwnd);
     }
 }
 
 void DirectXManager::InitializeAudioManager()
 {
-    audioManager_ = new AudioManager;
+    if (!audioManager_)
+    {
+        audioManager_ = new AudioManager;
+    }
 }
 
 void DirectXManager::BeginFrame()
 {
-    getHitKey->Update();
+    getHitKey_->Update();
 
     // バックバッファのインデックスを更新
     swapChainManager->UpdateBackBufferIndex();

@@ -245,7 +245,7 @@ DrawData Game::SetupDrawData(size_t dstBufferSize, const VertexData* srcVertexDa
 }
 
 // リソース読み込み
-int Game::LoadTexture(const std::string& filePath)
+uint32_t Game::LoadTexture(const std::string& filePath)
 {
     // ボックスを作成
     TextureData text;
@@ -288,7 +288,7 @@ int Game::LoadTexture(const std::string& filePath)
     return text.number;
 }
 
-int Game::LoadOBJ(const std::string& directoryPath, const std::string& filename)
+uint32_t Game::LoadOBJ(const std::string& directoryPath, const std::string& filename)
 {
     // ボックスを作成
     Object3D obj;
@@ -318,6 +318,11 @@ int Game::LoadOBJ(const std::string& directoryPath, const std::string& filename)
     ref.vertexBufferView.StrideInBytes = sizeof(VertexData);
 
     return ref.number;
+}
+
+uint32_t Game::LoadAudio(const std::string& filePath)
+{
+    return dxManager->GetAudioManager()->LoadAudio(filePath);
 }
 
 // 描画
@@ -360,7 +365,6 @@ void Game::Drawobj(const Transforms& transform, const Vector3& center, uint32_t 
     if (!tex) return;
 
     Vector4 color = ConvertUintToVector4(materialColor);
-    //Vector4 rgbaColor = ConvertARGBtoRGBA(color);
     materialData[drawCallIndex]->color = color;
     materialData[drawCallIndex]->enableLighting = true;
     materialData[drawCallIndex]->uvTransform = Matrix4x4::MakeIdentity4x4();
@@ -537,10 +541,6 @@ TextureData* Game::GetTexture(uint32_t textureNumber)
 }
 
 // 音
-uint32_t Game::LoadAudio(const std::string& filePath)
-{
-    return dxManager->GetAudioManager()->LoadAudio(filePath);
-}
 
 void Game::PlayAudio(const uint32_t& audioId, bool loop)
 {
@@ -636,9 +636,9 @@ bool Game::IsPressMouse(int i)
     return false;
 }
 
-int Game::GetWheel()
+uint32_t Game::GetWheel()
 {
-    int delta = wheelDelta;
+    uint32_t delta = wheelDelta;
     wheelDelta = 0;
     return delta;
 }
@@ -659,56 +659,8 @@ void Game::MoveDistanceTarget(float target, int spendFrame)
     cameraController->SetDistanceTarget(target, spendFrame);
 }
 
-AABB Game::CreateAABB(const Transforms& transforms, uint32_t objectNumber)
-{
-    Matrix4x4 worldMatrix = Matrix4x4::MakeAffineMatrix(transforms.scale, transforms.rotate, transforms.translate);
 
-    Object3D& obj = objects[objectNumber];
-
-    // ローカルAABBの8頂点
-    Vector3 corners[8] = {
-        {obj.aabb.min.x, obj.aabb.min.y, obj.aabb.min.z},
-        {obj.aabb.max.x, obj.aabb.min.y, obj.aabb.min.z},
-        {obj.aabb.min.x, obj.aabb.max.y, obj.aabb.min.z},
-        {obj.aabb.max.x, obj.aabb.max.y, obj.aabb.min.z},
-        {obj.aabb.min.x, obj.aabb.min.y, obj.aabb.max.z},
-        {obj.aabb.max.x, obj.aabb.min.y, obj.aabb.max.z},
-        {obj.aabb.min.x, obj.aabb.max.y, obj.aabb.max.z},
-        {obj.aabb.max.x, obj.aabb.max.y, obj.aabb.max.z},
-    };
-
-    // 8頂点をワールド空間に変換
-    Vector3 worldMin = Transform(corners[0], worldMatrix);
-    Vector3 worldMax = worldMin;
-
-    for (int i = 1; i < 8; ++i)
-    {
-        Vector3 v = Transform(corners[i], worldMatrix);
-        worldMin.x = my_min(worldMin.x, v.x);
-        worldMin.y = my_min(worldMin.y, v.y);
-        worldMin.z = my_min(worldMin.z, v.z);
-        worldMax.x = my_max(worldMax.x, v.x);
-        worldMax.y = my_max(worldMax.y, v.y);
-        worldMax.z = my_max(worldMax.z, v.z);
-    }
-    return { worldMin, worldMax };
-}
-
-// int型のcolorをVector4に変換
-Vector4 Game::ConvertUintToVector4(uint32_t color)
-{
-    float r = ((color >> 24) & 0xFF) / 255.0f;
-    float g = ((color >> 16) & 0xFF) / 255.0f;
-    float b = ((color >> 8) & 0xFF) / 255.0f;
-    float a = (color & 0xFF) / 255.0f;
-    return { r, g, b, a };
-}
-
-Vector4 Game::ConvertARGBtoRGBA(const Vector4& argb)
-{
-    return { argb.y, argb.z, argb.w, argb.x };
-}
-
+// 座標とかない、本当にただモデルの形のAABBを作るだけの関数（LoadOBJの時のAABB初期化用）
 AABB Game::CreateLocalAABB(const ModelData& model)
 {
     AABB localAABB;
@@ -743,4 +695,40 @@ AABB Game::CreateLocalAABB(const ModelData& model)
     }
 
     return localAABB;
+}
+
+// CreateLocalAABBでつくったAABBに座標を適応させる（当たり判定の毎フレーム更新用）
+AABB Game::CreateAABB(const Transforms& transforms, uint32_t objectNumber)
+{
+    Matrix4x4 worldMatrix = Matrix4x4::MakeAffineMatrix(transforms.scale, transforms.rotate, transforms.translate);
+
+    Object3D& obj = objects[objectNumber];
+
+    // ローカルAABBの8頂点
+    Vector3 corners[8] = {
+        {obj.aabb.min.x, obj.aabb.min.y, obj.aabb.min.z},
+        {obj.aabb.max.x, obj.aabb.min.y, obj.aabb.min.z},
+        {obj.aabb.min.x, obj.aabb.max.y, obj.aabb.min.z},
+        {obj.aabb.max.x, obj.aabb.max.y, obj.aabb.min.z},
+        {obj.aabb.min.x, obj.aabb.min.y, obj.aabb.max.z},
+        {obj.aabb.max.x, obj.aabb.min.y, obj.aabb.max.z},
+        {obj.aabb.min.x, obj.aabb.max.y, obj.aabb.max.z},
+        {obj.aabb.max.x, obj.aabb.max.y, obj.aabb.max.z},
+    };
+
+    // 8頂点をワールド空間に変換
+    Vector3 worldMin = Transform(corners[0], worldMatrix);
+    Vector3 worldMax = worldMin;
+
+    for (int i = 1; i < 8; ++i)
+    {
+        Vector3 v = Transform(corners[i], worldMatrix);
+        worldMin.x = my_min(worldMin.x, v.x);
+        worldMin.y = my_min(worldMin.y, v.y);
+        worldMin.z = my_min(worldMin.z, v.z);
+        worldMax.x = my_max(worldMax.x, v.x);
+        worldMax.y = my_max(worldMax.y, v.y);
+        worldMax.z = my_max(worldMax.z, v.z);
+    }
+    return { worldMin, worldMax };
 }

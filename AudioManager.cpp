@@ -1,28 +1,28 @@
 #pragma comment(lib, "Mfplat.lib")
 #pragma comment(lib, "mfreadwrite.lib")
-#pragma comment(lib, "mfuuid.lib") // 新規追加: UUID定義のため、これも必要になる場合があります
+#pragma comment(lib, "mfuuid.lib")
 #pragma comment(lib, "Mfplat.lib")
 
 
 #include "AudioManager.h"
-#include <combaseapi.h> // CoInitializeEx, CoUninitialize のため
-#include <iostream>     // 基本的なエラー出力のため（任意、デバッグ用）
-#include <Windows.h>    // MultiByteToWideChar, WideCharToMultiByte のため
-#include <wrl/client.h> // Microsoft::WRL::ComPtr のため
-#include <atlbase.h>    // CComPtr (COMオブジェクトのスマートポインタ) 用
-#include <string>       // 文字列変換用
-#include <algorithm>    // std::max/min (例: ボリュームのクランプ) 用
+#include <combaseapi.h>
+#include <iostream>
+#include <Windows.h>
+#include <wrl/client.h>
+#include <atlbase.h>
+#include <string>
+#include <algorithm>
 #include <iomanip>
 
 // Media Foundation Headers
-#include <mfapi.h>      // MFStartup, MFShutdown など基本的なAPI
-#include <mfidl.h>      // IMFSourceReader, MF_MD_DURATION などインターフェースや属性キー
-#include <mfreadwrite.h> // MFCreateSourceReaderFromURL などリーダー/ライターAPI
+#include <mfapi.h>
+#include <mfidl.h>
+#include <mfreadwrite.h>
 
 // utilities for PROPVARIANT
-#include <propvarutil.h> // PropVariantInit, PropVariantClear のため (念のため追加)
+#include <propvarutil.h>
 
-#include "functions.h" // Log関数などの定義があるはず
+#include "functions.h"
 
 
 // x

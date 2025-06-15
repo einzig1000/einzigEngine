@@ -1,5 +1,5 @@
-#include "Game.h"           // ゲームロジック
-#include "functions.h"      // 関数s
+#include "Game.h"           // エンジン
+#include "functions.h"      // 便利関数s
 #include "Easings.h"
 
 

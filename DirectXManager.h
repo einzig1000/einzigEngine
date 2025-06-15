@@ -42,7 +42,7 @@ private:
     std::unique_ptr<ViewportScissorManager> viewportScissorManager;
 
     AudioManager* audioManager_;
-    GetHitKey* getHitKey;
+    GetHitKey* getHitKey_;
 
     D3D12_RESOURCE_BARRIER barrier = {};
 

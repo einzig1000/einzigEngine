@@ -338,6 +338,21 @@ bool IsCollision(const Ray& ray, const AABB& aabb, const std::vector<VertexData>
 #pragma endregion
 
 
+Vector4 ConvertUintToVector4(uint32_t color)
+{
+    float r = ((color >> 24) & 0xFF) / 255.0f;
+    float g = ((color >> 16) & 0xFF) / 255.0f;
+    float b = ((color >> 8) & 0xFF) / 255.0f;
+    float a = (color & 0xFF) / 255.0f;
+    return { r, g, b, a };
+}
+
+// ARGBをRGBA
+Vector4 ConvertARGBtoRGBA(const Vector4& argb)
+{
+    return { argb.y, argb.z, argb.w, argb.x };
+}
+
 void CreateSphere(VertexData* vertexData, uint32_t kSubdivision)
 {
     if (kSubdivision == 0 || vertexData == nullptr)

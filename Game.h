@@ -24,18 +24,17 @@ public:
 	static void Finalize();
 
 	// リソース読み込み
-	static int LoadOBJ(const std::string& directoryPath, const std::string& filename);
-	static int LoadTexture(const std::string& filePath);
+	static uint32_t LoadOBJ(const std::string& directoryPath, const std::string& filename);
+	static uint32_t LoadTexture(const std::string& filePath);
+	static uint32_t LoadAudio(const std::string& filePath);
 
 	// 描画
 	static void Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor);
 	static void DrawTriangle(const Transforms& localTransform, const Transforms& worldTransform, const VertexData* vertexData, uint32_t textureNumber, const uint32_t& materialColor);
 	static void DrawSphere(const Transforms& localTransform, VertexData* vertexData, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor);
 	static void DrawSprite(const Transforms& localTransform, VertexData* vertexData, uint32_t textureNumber, const uint32_t& materialColor);
-	static TextureData* GetTexture(uint32_t textureNumber);
 
 	// 音
-	static uint32_t LoadAudio(const std::string& filePath);
 	static void PlayAudio(const uint32_t& audioId, bool loop);
 	static void StopAudio(const uint32_t& audioId);
 	static void SetAudioVolume(const uint32_t& audioId, float volume);
@@ -49,7 +48,7 @@ public:
 	static void SetMouseRay();
 	static bool IsCollisionMouseRayAABB(AABB aabb, int objNum);
 	static bool IsPressMouse(int i);
-	static int GetWheel();
+	static uint32_t GetWheel();
 
 	// カメラ
 	static void MoveCenterTarget(Vector3 target, int spendFrame);
@@ -61,10 +60,9 @@ public:
 
 
 private:
+	static TextureData* GetTexture(uint32_t textureNumber);
 	static void UpdateCamera();
 	static void UpdateLight();
-	static Vector4 ConvertUintToVector4(uint32_t color);
-	static Vector4 ConvertARGBtoRGBA(const Vector4& argb);
 	static AABB CreateLocalAABB(const ModelData& model);
 
 #pragma region
