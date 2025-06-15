@@ -80,6 +80,6 @@ private:
     // デストラクタで何回もつかう
     void CleanupAudioEntry(AudioEntry& entry);
 
-    // VoiceCallbackからAudioManagerへのアクセスを許可（フレンドクラスやファクトリパターンも検討）
+    // VoiceCallbackからAudioManagerへのアクセスを許可
     friend class VoiceCallback;
 };

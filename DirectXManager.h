@@ -43,11 +43,11 @@ private:
     std::unique_ptr<SynchronizationManager> synchronizationManager;
     std::unique_ptr<ViewportScissorManager> viewportScissorManager;
 
+    D3D12_RESOURCE_BARRIER barrier = {};
+
     AudioManager* audioManager_;
     TextureManager* textureManager_;
     GetHitKey* getHitKey_;
-
-    D3D12_RESOURCE_BARRIER barrier = {};
 
     void InitializeGetHitKey(HWND hwnd);
     void InitializeTextureManager(ID3D12Device* device, ID3D12DescriptorHeap* srvDescriptorHeap);
