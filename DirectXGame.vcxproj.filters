@@ -70,6 +70,9 @@
     <Filter Include="DirectXManager\ViewportScissorManager">
       <UniqueIdentifier>{ac55dbcf-ddc4-45ce-9371-582fc7ac92a3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="TextureManager">
+      <UniqueIdentifier>{ed7ac647-ed94-43e8-abdb-459374cc9331}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -146,6 +149,9 @@
     </ClCompile>
     <ClCompile Include="ViewportScissorManager.cpp">
       <Filter>DirectXManager\ViewportScissorManager</Filter>
+    </ClCompile>
+    <ClCompile Include="TextureManager.cpp">
+      <Filter>TextureManager</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -230,6 +236,9 @@
     </ClInclude>
     <ClInclude Include="ViewportScissorManager.h">
       <Filter>DirectXManager\ViewportScissorManager</Filter>
+    </ClInclude>
+    <ClInclude Include="TextureManager.h">
+      <Filter>TextureManager</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

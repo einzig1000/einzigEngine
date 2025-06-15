@@ -2,19 +2,15 @@
 
 #include "definition.h"
 
-// DirectXTexやD3D12拡張
 #include "externals/DirectXTex/d3dx12.h"
 
-// Windows API
 #include <Windows.h>
 #include <sstream>
 
 
-// DXC API
 #include <dxcapi.h>
 #pragma comment(lib, "dxcompiler")
 
-// マクロ定義
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
@@ -33,36 +29,28 @@ constexpr const T& my_max(const T& a, const T& b)
 }
 
 /// <summary>
-/// Vector3の長さ
+/// 
+// 三角形の法線ベクトルを計算し、正規化して返す
 /// </summary>
-/// <param name="v">Vector3</param>
-/// <returns>vの長さ</returns>
-//float Length(const Vector3& v);
-//
-// 3頂点から法線ベクトルを計算し、正規化して返す
-Vector3 CalculateNormal(const Vector4& v0, const Vector4& v1, const Vector4& v2);
-
-/// <summary>
-/// Vector3の表示
-/// </summary>
-/// <param name="x">座標ｘ</param>
-/// <param name="y">座標ｙ</param>
-/// <param name="vector">表示したいVector3</param>
-/// <param name="label">表示したいコメント</param>
-void VectorScreenPrintf(int x, int y, const Vector3& vector, const char* label);
+/// <param name="v0">三角形の頂点0</param>
+/// <param name="v1">三角形の頂点1</param>
+/// <param name="v2">三角形の頂点2</param>
+/// <returns>正規化された三角形の法線ベクトル</returns>
+Vector3 TriangleNormal(const Vector4& v0, const Vector4& v1, const Vector4& v2);
 
 /// <summary>
 /// Vector3の座標変換
 /// </summary>
 /// <param name="vector">変換したいベクトル</param>
 /// <param name="matrix">適用したいマトリックス</param>
-/// <returns>座標変換されたvector</returns>
+/// <returns>座標変換されたvector3</returns>
 Vector3 Transform(const Vector3& vector, const Matrix4x4& matrix);
 
 Vector4 Transform(const Vector4& v, const Matrix4x4& m);
 
 
 
+#pragma region collision
 bool IsCollision(const Sphere& s1, const Sphere& s2);
 bool IsCollision(const Sphere& s, const Plane& p);
 bool IsCollision(const Segment& s, const Plane& p);
@@ -73,39 +61,10 @@ bool IsCollision(const Ray& r, const Triangle& t);
 
 bool IsCollision(const Ray& ray, const AABB& aabb, const std::vector<VertexData>& vertices, const Matrix4x4& worldMatrix);
 
-// ARGBをRGBA
-Vector4 ConvertARGBtoRGBA(const Vector4& argb);
-// int型のカラーをVector4型に
-Vector4 ConvertUintToVector4(uint32_t color);
+#pragma endregion
 
-/// <summary>
-/// 球体の頂点データを生成する関数
-/// </summary>
-/// <param name="vertexData">頂点データを格納する配列</param>
-/// <param name="kSubdivision">球体の分割数</param>
-void CreateSphere(VertexData* vertexData, uint32_t kSubdivision);
 
-/// <summary>
-/// UTF-8 文字列をワイド文字列 (UTF-16) に変換する関数
-/// </summary>
-/// <param name="str">変換する UTF-8 文字列</param>
-/// <returns>変換されたワイド文字列</returns>
-std::wstring ConvertString(const std::string& str);
-
-/// <summary>
-/// ワイド文字列 (UTF-16) を UTF-8 文字列に変換する関数
-/// </summary>
-/// <param name="str">変換するワイド文字列</param>
-/// <returns>変換された UTF-8 文字列</returns>
-std::string ConvertString(const std::wstring& str);
-
-/// <summary>
-/// D3D12_RESOURCE_STATES を文字列に変換する関数
-/// </summary>
-/// <param name="state">リソースの状態 (D3D12_RESOURCE_STATES)</param>
-/// <returns>リソース状態を表す文字列</returns>
-std::string ResourceStateToString(D3D12_RESOURCE_STATES state);
-
+#pragma region Log
 /// <summary>
 /// デバッグ用のログを出力する関数
 /// </summary>
@@ -140,6 +99,11 @@ void Log(const std::string& message, const D3D12_RESOURCE_BARRIER& barrier);
 void Log(const D3D12_ROOT_SIGNATURE_DESC& desc);
 
 /// <summary>
+/// printfみたいに使えるログ関数
+/// </summary>
+void Log(const char* format, ...);
+
+/// <summary>
 /// ログをファイルに書き出す関数
 /// </summary>
 /// <param name="os">出力先のファイルストリーム</param>
@@ -147,13 +111,42 @@ void Log(const D3D12_ROOT_SIGNATURE_DESC& desc);
 void Log(std::ofstream& os, const std::string& message);
 
 
-// printf形式のLog関数
-void Log(const char* format, ...);
 
-// std::string を受け取る Log 関数 (functions.cpp で定義される)
-void Log(const std::string& message);
+#pragma endregion
 
 
+// ARGBをRGBA
+Vector4 ConvertARGBtoRGBA(const Vector4& argb);
+// int型のカラーをVector4型に
+Vector4 ConvertUintToVector4(uint32_t color);
+
+/// <summary>
+/// 球体の頂点データを生成する関数
+/// </summary>
+/// <param name="vertexData">頂点データを格納する配列</param>
+/// <param name="kSubdivision">球体の分割数</param>
+void CreateSphere(VertexData* vertexData, uint32_t kSubdivision);
+
+/// <summary>
+/// UTF-8 文字列をワイド文字列 (UTF-16) に変換する関数
+/// </summary>
+/// <param name="str">変換する UTF-8 文字列</param>
+/// <returns>変換されたワイド文字列</returns>
+std::wstring ConvertString(const std::string& str);
+
+/// <summary>
+/// ワイド文字列 (UTF-16) を UTF-8 文字列に変換する関数
+/// </summary>
+/// <param name="str">変換するワイド文字列</param>
+/// <returns>変換された UTF-8 文字列</returns>
+std::string ConvertString(const std::wstring& str);
+
+/// <summary>
+/// D3D12_RESOURCE_STATES を文字列に変換する関数
+/// </summary>
+/// <param name="state">リソースの状態 (D3D12_RESOURCE_STATES)</param>
+/// <returns>リソース状態を表す文字列</returns>
+std::string ResourceStateToString(D3D12_RESOURCE_STATES state);
 
 
 
@@ -200,14 +193,6 @@ IDxcBlob* CompileShader(const std::wstring& filePath, const wchar_t* profile, ID
 /// <param name="shaderVisible">シェーダーからアクセス可能かどうか</param>
 /// <returns>作成されたディスクリプタヒープ</returns>
 ID3D12DescriptorHeap* CreateDescriptorHeap(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible);
-
-
-/// <summary>
-/// テクスチャファイルを読み込み、ミップマップを生成する関数
-/// </summary>
-/// <param name="filePath">テクスチャファイルのパス</param>
-/// <returns>読み込まれたテクスチャデータ</returns>
-///DirectX::ScratchImage LoadTexture(const std::string& filePath);
 
 /// <summary>
 /// テクスチャのメタデータを基に DirectX 12 のテクスチャリソースを作成する関数

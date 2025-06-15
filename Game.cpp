@@ -541,7 +541,6 @@ TextureData* Game::GetTexture(uint32_t textureNumber)
 }
 
 // 音
-
 void Game::PlayAudio(const uint32_t& audioId, bool loop)
 {
     dxManager->GetAudioManager()->PlayAudio(audioId, loop);

@@ -114,6 +114,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="PipelineStateManager.cpp" />
     <ClCompile Include="SwapChainManager.cpp" />
     <ClCompile Include="SynchronizationManager.cpp" />
+    <ClCompile Include="TextureManager.cpp" />
     <ClCompile Include="ViewportScissorManager.cpp" />
     <ClCompile Include="WindowManager.cpp" />
   </ItemGroup>
@@ -156,6 +157,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="PipelineStateManager.h" />
     <ClInclude Include="SwapChainManager.h" />
     <ClInclude Include="SynchronizationManager.h" />
+    <ClInclude Include="TextureManager.h" />
     <ClInclude Include="ViewportScissorManager.h" />
     <ClInclude Include="WindowManager.h" />
   </ItemGroup>

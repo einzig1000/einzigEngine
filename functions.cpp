@@ -23,21 +23,8 @@
 #pragma comment(lib, "Dbghelp.lib")
 
 
-template <typename T>
-constexpr T my_sub(const T& a, const T& b)
-{
-    return a - b;
-}
 
-template <typename T>
-constexpr T my_add(const T& a, const T& b)
-{
-    return a + b;
-}
-
-
-
-Vector3 CalculateNormal(const Vector4& v0, const Vector4& v1, const Vector4& v2)
+Vector3 TriangleNormal(const Vector4& v0, const Vector4& v1, const Vector4& v2)
 {
     Vector3 ab = { v1.x - v0.x, v1.y - v0.y, v1.z - v0.z };
     Vector3 ac = { v2.x - v0.x, v2.y - v0.y, v2.z - v0.z };
@@ -337,6 +324,174 @@ bool IsCollision(const Ray& ray, const AABB& aabb, const std::vector<VertexData>
 
 #pragma endregion
 
+#pragma region Log
+
+// ログを出す関数
+void Log(const std::string& message)
+{
+    // string型からchar*型に変換した文字列
+    OutputDebugStringA((message + "\n").c_str());
+}
+// Vector4型用のオーバーロード
+void Log(const std::string& message, const Vector4& vector)
+{
+    Log(message);
+    std::string a = std::format("x={}, y={}, z={}, w={}", vector.x, vector.y, vector.z, vector.w);
+    Log(a);
+}
+// Matrix4x4型用のオーバーロード
+void Log(const std::string& message, const Matrix4x4& matrix)
+{
+    Log(message);
+    std::string a = ":\n";
+    for (int i = 0; i < 4; ++i)
+    {
+        a += std::format("[{}, {}, {}, {}]\n", matrix.m[i][0], matrix.m[i][1], matrix.m[i][2], matrix.m[i][3]);
+    }
+    Log(a);
+}
+// barrier.Transitionの状態をログに出力する関数
+void Log(const std::string& message, const D3D12_RESOURCE_BARRIER& barrier)
+{
+    Log(message);
+    if (barrier.Type == D3D12_RESOURCE_BARRIER_TYPE_TRANSITION)
+    {
+        std::string stateBefore = ResourceStateToString(barrier.Transition.StateBefore);
+        std::string stateAfter = ResourceStateToString(barrier.Transition.StateAfter);
+        std::string a = std::format("Barrier Transition - StateBefore: {}, StateAfter: {}", stateBefore, stateAfter);
+        Log(a);
+    }
+    else
+    {
+        Log("Barrier is not of type TRANSITION.");
+    }
+}
+// RootSignatureの状態をログに出力する関数
+void Log(const D3D12_ROOT_SIGNATURE_DESC& desc)
+{
+    std::ostringstream oss;
+    oss << "[Root Signature]\n"
+        << "NumParameters: " << desc.NumParameters << "\n"
+        << "NumStaticSamplers: " << desc.NumStaticSamplers << "\n"
+        << "Flags: " << desc.Flags << "\n";
+
+    Log(oss.str());
+
+    for (UINT i = 0; i < desc.NumParameters; ++i)
+    {
+        const auto& param = desc.pParameters[i];
+        oss.str(""); // バッファをクリア
+        oss.clear(); // 状態をリセット
+        oss << "[Root Parameter " << i << "]\n"
+            << "Type: " << param.ParameterType << "\n"
+            << "ShaderVisibility: " << param.ShaderVisibility << "\n";
+        Log(oss.str());
+
+        if (param.ParameterType == D3D12_ROOT_PARAMETER_TYPE_CBV ||
+            param.ParameterType == D3D12_ROOT_PARAMETER_TYPE_SRV ||
+            param.ParameterType == D3D12_ROOT_PARAMETER_TYPE_UAV)
+        {
+            oss.str("");
+            oss.clear();
+            oss << "ShaderRegister: " << param.Descriptor.ShaderRegister << "\n"
+                << "RegisterSpace: " << param.Descriptor.RegisterSpace << "\n";
+            Log(oss.str());
+        }
+        else if (param.ParameterType == D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE)
+        {
+            oss.str("");
+            oss.clear();
+            oss << "NumDescriptorRanges: " << param.DescriptorTable.NumDescriptorRanges << "\n";
+            Log(oss.str());
+            for (UINT j = 0; j < param.DescriptorTable.NumDescriptorRanges; ++j)
+            {
+                const auto& range = param.DescriptorTable.pDescriptorRanges[j];
+                oss.str("");
+                oss.clear();
+                oss << "  [Descriptor Range " << j << "]\n"
+                    << "  RangeType: " << range.RangeType << "\n"
+                    << "  BaseShaderRegister: " << range.BaseShaderRegister << "\n"
+                    << "  NumDescriptors: " << range.NumDescriptors << "\n"
+                    << "  RegisterSpace: " << range.RegisterSpace << "\n";
+                Log(oss.str());
+            }
+        }
+    }
+
+    for (UINT i = 0; i < desc.NumStaticSamplers; ++i)
+    {
+        const auto& sampler = desc.pStaticSamplers[i];
+        oss.str("");
+        oss.clear();
+        oss << "[Static Sampler " << i << "]\n"
+            << "ShaderRegister: " << sampler.ShaderRegister << "\n"
+            << "Filter: " << sampler.Filter << "\n"
+            << "AddressU: " << sampler.AddressU << "\n"
+            << "AddressV: " << sampler.AddressV << "\n"
+            << "AddressW: " << sampler.AddressW << "\n"
+            << "ShaderVisibility: " << sampler.ShaderVisibility << "\n";
+        Log(oss.str());
+    }
+}
+// もはやこれしか使わないログ
+void Log(const char* format, ...)
+{
+    // 最大バッファサイズを設定 (文字列の最大長)
+    const int BUFFER_SIZE = 256;
+    char buffer[BUFFER_SIZE];
+
+    // 可変引数リストを扱うためのポインタ
+    va_list args;
+
+    // 知らない概念可変引数リストの開始
+    va_start(args, format);
+
+    // va_list を使ってフォーマットされた文字列をバッファに書き込む
+    // vsnprintf は、バッファオーバーフローを防ぐために最大サイズを指定できます。
+    // _vsnprintf_s (MSVC固有) の方がより安全ですが、vsnprintf (C標準) も使用できます。
+#ifdef _MSC_VER // Microsoft Visual C++ の場合
+    // _vsnprintf_s は、バッファサイズと最大文字数を引数に取ります
+    // snprintf の戻り値が書き込まれた文字数なので、それと比較して切り捨てを検知することも可能
+    int written = _vsnprintf_s(buffer, BUFFER_SIZE, _TRUNCATE, format, args);
+#else // その他のコンパイラの場合 (GCC, Clangなど)
+    int written = vsnprintf(buffer, BUFFER_SIZE, format, args);
+#endif
+
+    // 可変引数リストの終了
+    va_end(args);
+
+    // バッファに書き込まれた文字列に改行を追加してOutputDebugStringAで出力
+    // written が -1 になる場合 (エラーまたは切り捨て) も考慮
+    if (written >= 0 && written < BUFFER_SIZE - 1)
+    { // 最後に改行とNULL終端文字のスペースを確保
+        buffer[written] = '\n';
+        buffer[written + 1] = '\0';
+        OutputDebugStringA(buffer);
+    }
+    else if (written >= BUFFER_SIZE - 1)
+    { // バッファが足りなかった場合
+// バッファを拡張するか、切り捨てられたことをログに出すなど、エラーハンドリング
+// 現状は、バッファの最後の文字を改行にして、NULL終端する
+        buffer[BUFFER_SIZE - 2] = '\n';
+        buffer[BUFFER_SIZE - 1] = '\0';
+        OutputDebugStringA(buffer);
+        // 必要であれば、別のログメカニズムでバッファオーバーフローを警告
+        OutputDebugStringA("Log: Warning! Log buffer truncated.\n");
+    }
+    else
+    { // vsnprintf がエラーを返した場合
+        OutputDebugStringA("Log: Error in formatting log message.\n");
+    }
+}
+// ログをファイルに書き出す
+void Log(std::ofstream& os, const std::string& message)
+{
+    os << message << std::endl;
+    OutputDebugStringA(message.c_str());
+}
+
+#pragma endregion
+
 
 Vector4 ConvertUintToVector4(uint32_t color)
 {
@@ -489,192 +644,6 @@ std::string ResourceStateToString(D3D12_RESOURCE_STATES state)
     }
 }
 
-// ログを出す関数
-void Log(const std::string& message)
-{
-    // string型からchar*型に変換した文字列
-    OutputDebugStringA((message + "\n").c_str());
-}
-// Vector4型用のオーバーロード
-void Log(const std::string& message, const Vector4& vector)
-{
-    Log(message);
-    std::string a = std::format("x={}, y={}, z={}, w={}", vector.x, vector.y, vector.z, vector.w);
-    Log(a);
-}
-// Matrix4x4型用のオーバーロード
-void Log(const std::string& message, const Matrix4x4& matrix)
-{
-    Log(message);
-    std::string a = ":\n";
-    for (int i = 0; i < 4; ++i)
-    {
-        a += std::format("[{}, {}, {}, {}]\n", matrix.m[i][0], matrix.m[i][1], matrix.m[i][2], matrix.m[i][3]);
-    }
-    Log(a);
-}
-// barrier.Transitionの状態をログに出力する関数
-void Log(const std::string& message, const D3D12_RESOURCE_BARRIER& barrier)
-{
-    Log(message);
-    if (barrier.Type == D3D12_RESOURCE_BARRIER_TYPE_TRANSITION)
-    {
-        std::string stateBefore = ResourceStateToString(barrier.Transition.StateBefore);
-        std::string stateAfter = ResourceStateToString(barrier.Transition.StateAfter);
-        std::string a = std::format("Barrier Transition - StateBefore: {}, StateAfter: {}", stateBefore, stateAfter);
-        Log(a);
-    }
-    else
-    {
-        Log("Barrier is not of type TRANSITION.");
-    }
-}
-// RootSignatureの状態をログに出力する関数
-void Log(const D3D12_ROOT_SIGNATURE_DESC& desc)
-{
-    std::ostringstream oss;
-    oss << "[Root Signature]\n"
-        << "NumParameters: " << desc.NumParameters << "\n"
-        << "NumStaticSamplers: " << desc.NumStaticSamplers << "\n"
-        << "Flags: " << desc.Flags << "\n";
-
-    Log(oss.str());
-
-    for (UINT i = 0; i < desc.NumParameters; ++i)
-    {
-        const auto& param = desc.pParameters[i];
-        oss.str(""); // バッファをクリア
-        oss.clear(); // 状態をリセット
-        oss << "[Root Parameter " << i << "]\n"
-            << "Type: " << param.ParameterType << "\n"
-            << "ShaderVisibility: " << param.ShaderVisibility << "\n";
-        Log(oss.str());
-
-        if (param.ParameterType == D3D12_ROOT_PARAMETER_TYPE_CBV ||
-            param.ParameterType == D3D12_ROOT_PARAMETER_TYPE_SRV ||
-            param.ParameterType == D3D12_ROOT_PARAMETER_TYPE_UAV)
-        {
-            oss.str("");
-            oss.clear();
-            oss << "ShaderRegister: " << param.Descriptor.ShaderRegister << "\n"
-                << "RegisterSpace: " << param.Descriptor.RegisterSpace << "\n";
-            Log(oss.str());
-        }
-        else if (param.ParameterType == D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE)
-        {
-            oss.str("");
-            oss.clear();
-            oss << "NumDescriptorRanges: " << param.DescriptorTable.NumDescriptorRanges << "\n";
-            Log(oss.str());
-            for (UINT j = 0; j < param.DescriptorTable.NumDescriptorRanges; ++j)
-            {
-                const auto& range = param.DescriptorTable.pDescriptorRanges[j];
-                oss.str("");
-                oss.clear();
-                oss << "  [Descriptor Range " << j << "]\n"
-                    << "  RangeType: " << range.RangeType << "\n"
-                    << "  BaseShaderRegister: " << range.BaseShaderRegister << "\n"
-                    << "  NumDescriptors: " << range.NumDescriptors << "\n"
-                    << "  RegisterSpace: " << range.RegisterSpace << "\n";
-                Log(oss.str());
-            }
-        }
-    }
-
-    for (UINT i = 0; i < desc.NumStaticSamplers; ++i)
-    {
-        const auto& sampler = desc.pStaticSamplers[i];
-        oss.str("");
-        oss.clear();
-        oss << "[Static Sampler " << i << "]\n"
-            << "ShaderRegister: " << sampler.ShaderRegister << "\n"
-            << "Filter: " << sampler.Filter << "\n"
-            << "AddressU: " << sampler.AddressU << "\n"
-            << "AddressV: " << sampler.AddressV << "\n"
-            << "AddressW: " << sampler.AddressW << "\n"
-            << "ShaderVisibility: " << sampler.ShaderVisibility << "\n";
-        Log(oss.str());
-    }
-}
-
-void Log(const char* format, ...)
-{
-    // 最大バッファサイズを設定 (文字列の最大長)
-    const int BUFFER_SIZE = 256;
-    char buffer[BUFFER_SIZE];
-
-    // 可変引数リストを扱うためのポインタ
-    va_list args;
-
-    // 知らない概念可変引数リストの開始
-    va_start(args, format);
-
-    // va_list を使ってフォーマットされた文字列をバッファに書き込む
-    // vsnprintf は、バッファオーバーフローを防ぐために最大サイズを指定できます。
-    // _vsnprintf_s (MSVC固有) の方がより安全ですが、vsnprintf (C標準) も使用できます。
-#ifdef _MSC_VER // Microsoft Visual C++ の場合
-    // _vsnprintf_s は、バッファサイズと最大文字数を引数に取ります
-    // snprintf の戻り値が書き込まれた文字数なので、それと比較して切り捨てを検知することも可能
-    int written = _vsnprintf_s(buffer, BUFFER_SIZE, _TRUNCATE, format, args);
-#else // その他のコンパイラの場合 (GCC, Clangなど)
-    int written = vsnprintf(buffer, BUFFER_SIZE, format, args);
-#endif
-
-    // 可変引数リストの終了
-    va_end(args);
-
-    // バッファに書き込まれた文字列に改行を追加してOutputDebugStringAで出力
-    // written が -1 になる場合 (エラーまたは切り捨て) も考慮
-    if (written >= 0 && written < BUFFER_SIZE - 1)
-    { // 最後に改行とNULL終端文字のスペースを確保
-        buffer[written] = '\n';
-        buffer[written + 1] = '\0';
-        OutputDebugStringA(buffer);
-    }
-    else if (written >= BUFFER_SIZE - 1)
-    { // バッファが足りなかった場合
-// バッファを拡張するか、切り捨てられたことをログに出すなど、エラーハンドリング
-// 現状は、バッファの最後の文字を改行にして、NULL終端する
-        buffer[BUFFER_SIZE - 2] = '\n';
-        buffer[BUFFER_SIZE - 1] = '\0';
-        OutputDebugStringA(buffer);
-        // 必要であれば、別のログメカニズムでバッファオーバーフローを警告
-        OutputDebugStringA("Log: Warning! Log buffer truncated.\n");
-    }
-    else
-    { // vsnprintf がエラーを返した場合
-        OutputDebugStringA("Log: Error in formatting log message.\n");
-    }
-}
-
-
-// ログをファイルに書き出す
-void Log(std::ofstream& os, const std::string& message)
-{
-    os << message << std::endl;
-    OutputDebugStringA(message.c_str());
-}
-
-
-void VectorScreenPrintf(int x, int y, const Vector3& vector, const char* label)
-{
-    char buffer[256];
-    sprintf_s(buffer, "%s: (%.3f, %.3f, %.3f)\n", label, vector.x, vector.y, vector.z);
-    OutputDebugStringA(buffer);
-}
-
-void MatrixScreenPrintf(int x, int y, const Matrix4x4& matrix, const char* label)
-{
-    char buffer[256];
-    OutputDebugStringA(label);
-    OutputDebugStringA(":\n");
-    for (int i = 0; i < 4; ++i)
-    {
-        sprintf_s(buffer, "[%.3f, %.3f, %.3f, %.3f]\n",
-            matrix.m[i][0], matrix.m[i][1], matrix.m[i][2], matrix.m[i][3]);
-        OutputDebugStringA(buffer);
-    }
-}
 
 
 LONG WINAPI ExportDump(EXCEPTION_POINTERS* exception)
