@@ -187,7 +187,7 @@ void CameraController::Updata()
 
 void CameraController::Draw()
 {
-    Game::DrawSphere(transformSphere1, vertexData, kSubdivision, monsterBall, { 1.0f, 1.0f, 1.0f, 1.0f });
+    //Game::DrawSphere(transformSphere1, vertexData, kSubdivision, monsterBall, { 1.0f, 1.0f, 1.0f, 1.0f });
 }
 
 // 実際に動かす

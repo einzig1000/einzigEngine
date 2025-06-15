@@ -60,7 +60,6 @@ public:
 
 
 private:
-	//static TextureData* GetTexture(uint32_t textureNumber);
 	static void UpdateCamera();
 	static void UpdateLight();
 	static AABB CreateLocalAABB(const ModelData& model);
@@ -96,7 +95,7 @@ private:
 		TransformationMatrix* wvp,
 		const Matrix4x4& world,
 		const Matrix4x4& wvpMatrix,
-		uint32_t textureNumber,
+		uint32_t textureNumber);
 
 #pragma endregion
 

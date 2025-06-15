@@ -3,6 +3,7 @@
 #include <string>
 #include <d3d12.h>
 #include <vector>
+#include "definition.h"
 
 class TextureManager
 {

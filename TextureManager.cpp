@@ -1,10 +1,15 @@
 #include "TextureManager.h"
+#include "externals/DirectXTex/d3dx12.h"
+#include "externals/DirectXTex/DirectXTex.h"
 #include "functions.h"
-
+#include "cassert"
 
 TextureManager::TextureManager(ID3D12Device* device, ID3D12DescriptorHeap* srvDescriptorHeap)
     :device_(device), srvDescriptorHeap_(srvDescriptorHeap)
-{}
+{
+    assert(device_ != nullptr && "ID3D12Device* device cannot be null.");
+    assert(srvDescriptorHeap_ != nullptr && "ID3D12DescriptorHeap* srvDescriptorHeap cannot be null.");
+}
 
 
 uint32_t TextureManager::LoadTexture(const std::string& filePath, ID3D12GraphicsCommandList* commandList)
@@ -60,5 +65,5 @@ TextureData* TextureManager::GetTexture(uint32_t textureID)
         }
     }
     Log("存在しないテクスチャIDです:%d", textureID);
-    assert(0);
+    return nullptr;
 }

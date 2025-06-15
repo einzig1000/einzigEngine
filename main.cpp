@@ -75,7 +75,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 
 
-		Game::Drawobj(blockTransforms, {0,0,0}, blockModel, uvCheckerPng, 0xFFFFFFFF);
+		Game::Drawobj(blockTransforms, {0,0,0}, blockModel, blockPng, 0xFFFFFFFF);
 		
 
 		///
