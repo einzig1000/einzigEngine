@@ -1,6 +1,10 @@
 #include "DeviceManager.h"
 #include <vector>
+#include <d3d12sdklayers.h>
+#include <dxgi1_6.h> 
+
 #pragma comment(lib, "dxgi.lib") 
+#pragma comment(lib, "d3d12.lib") 
 
 DeviceManager::DeviceManager()
 {
@@ -14,12 +18,17 @@ DeviceManager::~DeviceManager(){}
 
 void DeviceManager::EnableDebugLayer()
 {
-    Microsoft::WRL::ComPtr<ID3D12Debug1> debugController;
+    Microsoft::WRL::ComPtr<ID3D12Debug> debugController;
     if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
     {
         debugController->EnableDebugLayer();
-        debugController->SetEnableGPUBasedValidation(TRUE);
+        Microsoft::WRL::ComPtr<ID3D12Debug3> debugController3;
+        if (SUCCEEDED(debugController.As(&debugController3)))
+        {
+            debugController3->SetEnableGPUBasedValidation(TRUE);
+        }
     }
+
 }
 
 void DeviceManager::InitializeDeviceInternal()

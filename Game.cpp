@@ -213,7 +213,12 @@ void Game::Finalize()
 
     // COMの終了処理
     CoUninitialize();
-    
+
+    std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>>().swap(materialResources);
+    std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>>().swap(wvpResources);
+    std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>>().swap(materialResourceLine);
+    std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>>().swap(wvpResourceLine);
+
     // 解放処理
     delete dxManager;
     dxManager = nullptr;
@@ -822,6 +827,7 @@ void Game::InitializeLineResources(ID3D12Device* device)
             nullptr,
             IID_PPV_ARGS(&materialResourceLine[i]));
         assert(SUCCEEDED(hr));
+        materialResourceLine[i]->SetName(L"materialResourceLine");
         materialResourceLine[i]->Map(0, nullptr, reinterpret_cast<void**>(&materialDataLine[i]));
 
         // WVPリソースの作成とマップ
@@ -833,6 +839,7 @@ void Game::InitializeLineResources(ID3D12Device* device)
             nullptr,
             IID_PPV_ARGS(&wvpResourceLine[i]));
         assert(SUCCEEDED(hr));
+        wvpResourceLine[i]->SetName(L"wvpResourceLine");
         wvpResourceLine[i]->Map(0, nullptr, reinterpret_cast<void**>(&wvpDataLine[i]));
     }
 }

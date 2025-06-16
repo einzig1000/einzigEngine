@@ -2,9 +2,9 @@
 #include "functions.h"      // 便利関数s
 #include "Easings.h"
 
-
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
+	//D3DResourceLeakChecker AAA;
 	// ウィンドウ、DrectX初期化
 	Game::Initialize(WIDTH, HEIGHT, L"CG2");
 
