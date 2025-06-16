@@ -25,7 +25,7 @@ VertexShaderOutput main(VertexShaderInput input)
     
     // 線にUV座標と法線は必要ないけど、VertexShaderOutput構造体に合わせて適当な値をうなら
     output.texcoord = float32_t2(0.0f, 0.0f);
-    output.normal = float32_t3(0.0f, 0.0f, 1.0f); // ダミーの法線 (正規化済み)
+    output.normal = float32_t3(0.0f, 0.0f, 1.0f); 
 
     return output;
 }
