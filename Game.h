@@ -33,6 +33,7 @@ public:
 	static void DrawTriangle(const Transforms& localTransform, const Transforms& worldTransform, const VertexData* vertexData, uint32_t textureNumber, const uint32_t& materialColor);
 	static void DrawSphere(const Transforms& localTransform, VertexData* vertexData, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor);
 	static void DrawSprite(const Transforms& localTransform, VertexData* vertexData, uint32_t textureNumber, const uint32_t& materialColor);
+	static void DrawLine(const Vector3& start, const Vector3& end, const uint32_t& materialColor);
 
 	// 音
 	static void PlayAudio(const uint32_t& audioId, bool loop);
@@ -63,6 +64,7 @@ private:
 	static void UpdateCamera();
 	static void UpdateLight();
 	static AABB CreateLocalAABB(const ModelData& model);
+	static void InitializeLineResources(ID3D12Device* device);
 
 #pragma region
 	/// <summary>
@@ -105,9 +107,6 @@ private:
 	// モデル
 	static std::vector<Object3D> objects;
 
-	// 画像
-	//static std::vector<TextureData> textures;
-
 	// 頂点リソースども
 	static Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceSprite;
 	static UINT vertexResourceSizeSprite;
@@ -121,9 +120,14 @@ private:
 	static Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceSphere;
 	static UINT vertexResourceSizeSphere;
 
+	static Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceLine;
+	static UINT vertexResourceSizeLine;
+
 
 	static Microsoft::WRL::ComPtr<ID3D12Resource> indexResource;
 	static D3D12_INDEX_BUFFER_VIEW indexBufferView;
+
+
 
 
 	// 使い回す定数バッファ（マテリアル/WVP）をフレーム数分用意
@@ -133,6 +137,12 @@ private:
 	static std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> wvpResources;
 	static std::vector<TransformationMatrix*> wvpData;
 	static size_t drawCallIndex;
+
+	// ラインはどう考えてもたくさん使うから別枠
+	static Microsoft::WRL::ComPtr<ID3D12Resource> materialResourceLine;
+	static Material* materialDataLine;
+	static Microsoft::WRL::ComPtr<ID3D12Resource> wvpResourceLine;
+	static TransformationMatrix* wvpDataLine;
 
 	// ライト
 	static Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource;

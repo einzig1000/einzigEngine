@@ -75,9 +75,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 
 
-		Game::Drawobj(blockTransforms, {0,0,0}, blockModel, blockPng, 0xFFFFFFFF);
-		
+		//Game::Drawobj(blockTransforms, {0,0,0}, blockModel, blockPng, 0xFFFFFFFF);
+		AABB aabb = Game::CreateAABB(blockTransforms, blockModel);
+		if (GetHitKey::keys[DIK_1])Game::DrawLine({ aabb.min.x, aabb.min.y, aabb.min.z }, { aabb.max.x, aabb.min.y, aabb.min.z }, 0xFFFFFFFF);
+		if (GetHitKey::keys[DIK_2])Game::DrawLine({ aabb.min.x, aabb.max.y, aabb.min.z }, { aabb.max.x, aabb.max.y, aabb.min.z }, 0xFFFFFFFF);
+		if (GetHitKey::keys[DIK_3])Game::DrawLine({ aabb.min.x, aabb.min.y, aabb.max.z }, { aabb.max.x, aabb.min.y, aabb.max.z }, 0xFFFFFFFF);
+		if (GetHitKey::keys[DIK_4])Game::DrawLine({ aabb.min.x, aabb.max.y, aabb.max.z }, { aabb.max.x, aabb.max.y, aabb.max.z }, 0xFFFFFFFF);
+		if (GetHitKey::keys[DIK_5])Game::DrawLine({ aabb.min.x, aabb.min.y, aabb.min.z }, { aabb.min.x, aabb.max.y, aabb.min.z }, 0xFFFFFFFF);
+		if (GetHitKey::keys[DIK_6])Game::DrawLine({ aabb.max.x, aabb.min.y, aabb.min.z }, { aabb.max.x, aabb.max.y, aabb.min.z }, 0xFFFFFFFF);
+		if (GetHitKey::keys[DIK_7])Game::DrawLine({ aabb.min.x, aabb.min.y, aabb.max.z }, { aabb.min.x, aabb.max.y, aabb.max.z }, 0xFFFFFFFF);
+		if (GetHitKey::keys[DIK_8])Game::DrawLine({ aabb.max.x, aabb.min.y, aabb.max.z }, { aabb.max.x, aabb.max.y, aabb.max.z }, 0xFFFFFFFF);
 
+		
+		
 		///
 		/// ↑描画処理ここまで
 		///

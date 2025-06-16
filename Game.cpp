@@ -9,7 +9,6 @@ DirectXManager* Game::dxManager = nullptr;
 
 std::vector<Object3D> Game::objects;
 
-//std::vector<TextureData> Game::textures;
 
 Microsoft::WRL::ComPtr<ID3D12Resource> Game::vertexResourceSprite;
 UINT Game::vertexResourceSizeSprite;
@@ -19,6 +18,8 @@ Microsoft::WRL::ComPtr<ID3D12Resource> Game::vertexResourceTriangle;
 UINT Game::vertexResourceSizeTriangle;
 Microsoft::WRL::ComPtr<ID3D12Resource> Game::vertexResourceSphere;
 UINT Game::vertexResourceSizeSphere;
+Microsoft::WRL::ComPtr<ID3D12Resource> Game::vertexResourceLine;
+UINT Game::vertexResourceSizeLine;
 Microsoft::WRL::ComPtr<ID3D12Resource> Game::indexResource;
 D3D12_INDEX_BUFFER_VIEW Game::indexBufferView;
 
@@ -27,6 +28,11 @@ std::vector<Material*> Game::materialData;
 std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> Game::wvpResources;
 std::vector<TransformationMatrix*> Game::wvpData;
 size_t Game::drawCallIndex = 0;
+
+Microsoft::WRL::ComPtr<ID3D12Resource> Game::materialResourceLine;
+Material* Game::materialDataLine; 
+Microsoft::WRL::ComPtr<ID3D12Resource> Game::wvpResourceLine;
+TransformationMatrix* Game::wvpDataLine; 
 
 Microsoft::WRL::ComPtr<ID3D12Resource> Game::directionalLightResource;
 DirectionalLight* Game::directionalLightData = nullptr;
@@ -87,6 +93,9 @@ void Game::Initialize(int width, int height, const std::wstring& title)
     vertexResourceSizeSphere = static_cast<UINT>(sizeof(VertexData) * 4096); // 球
     vertexResourceSphere = CreateBufferResource(dxManager->GetDevice(), vertexResourceSizeSphere);
 
+    vertexResourceSizeLine = static_cast<UINT>(sizeof(VertexData) * 2048); // 1024本の線
+    vertexResourceLine = CreateBufferResource(dxManager->GetDevice(), vertexResourceSizeLine);
+
     materialResources.resize(kMaxDrawCallPerFrame);
     materialData.resize(kMaxDrawCallPerFrame);
     wvpResources.resize(kMaxDrawCallPerFrame);
@@ -98,6 +107,9 @@ void Game::Initialize(int width, int height, const std::wstring& title)
         wvpResources[i] = CreateBufferResource(dxManager->GetDevice(), sizeof(TransformationMatrix));
         wvpResources[i]->Map(0, nullptr, reinterpret_cast<void**>(&wvpData[i]));
     }
+
+    // Line描画用リソースの初期化
+    InitializeLineResources(dxManager->GetDevice());
 
     // インデックスリソース
     indexResource = CreateBufferResource(dxManager->GetDevice(), sizeof(uint32_t) * 6);
@@ -193,6 +205,11 @@ void Game::Finalize()
 
     // COMの終了処理
     CoUninitialize();
+
+    // Line描画用リソースの解放
+    materialResourceLine.Reset();
+    wvpResourceLine.Reset();
+    vertexResourceLine.Reset();
 
     // 解放処理
     delete dxManager;
@@ -487,6 +504,73 @@ void Game::DrawSprite(const Transforms& localTransform, VertexData* vertexData, 
     drawCallIndex++;
 }
 
+void Game::DrawLine(const Vector3& start, const Vector3& end, const uint32_t& materialColor)
+{
+    ID3D12GraphicsCommandList* commandList = dxManager->GetCommandList();
+    ID3D12Device* device = dxManager->GetDevice();
+    PipelineStateManager* psoManager = dxManager->GetPipelineStateManager(); // Assume GetPipelineStateManager() exists
+
+    // PSOとルートシグネチャの設定
+    commandList->SetPipelineState(psoManager->GetLinePipelineState()); // ★Line用PSOを設定
+    commandList->SetGraphicsRootSignature(psoManager->GetRootSignature()); // ★共通のルートシグネチャ
+
+    // 頂点データの準備
+    VertexData vertices[2];
+    vertices[0].position = { start.x, start.y, start.z, 1.0f };
+    vertices[0].texcoord = { 0.0f, 0.0f };
+    vertices[0].normal = { 0.0f, 0.0f, 1.0f }; // Line描画では通常不要だが、構造体に合わせる
+
+    vertices[1].position = { end.x, end.y, end.z, 1.0f };
+    vertices[1].texcoord = { 0.0f, 0.0f };
+    vertices[1].normal = { 0.0f, 0.0f, 1.0f }; // Line描画では通常不要だが、構造体に合わせる
+
+    // 頂点バッファへのデータ書き込み
+    // Mapして直接書き込む
+    VertexData* mappedVertexData = nullptr;
+    HRESULT hr = vertexResourceLine->Map(0, nullptr, reinterpret_cast<void**>(&mappedVertexData));
+    assert(SUCCEEDED(hr));
+    memcpy(mappedVertexData, vertices, sizeof(VertexData) * 2);
+    vertexResourceLine->Unmap(0, nullptr);
+
+    // 頂点バッファビューの設定
+    D3D12_VERTEX_BUFFER_VIEW vertexBufferViewLine{};
+    vertexBufferViewLine.BufferLocation = vertexResourceLine->GetGPUVirtualAddress();
+    vertexBufferViewLine.SizeInBytes = vertexResourceSizeLine;
+    vertexBufferViewLine.StrideInBytes = sizeof(VertexData);
+    commandList->IASetVertexBuffers(0, 1, &vertexBufferViewLine);
+
+    // プリミティブトポロジーの設定
+    commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST); // ★線リストを設定
+
+    // マテリアル定数バッファの更新
+    Vector4 color = ConvertUintToVector4(materialColor);
+    materialDataLine->color.x = color.x; // R
+    materialDataLine->color.y = color.y; // G
+    materialDataLine->color.z = color.z; // B
+    materialDataLine->color.w = color.w; // A
+    materialDataLine->enableLighting = 0; // Line描画ではライティング無効
+    materialDataLine->uvTransform = Matrix4x4::MakeIdentity4x4(); // Line描画ではUV変換不要
+    commandList->SetGraphicsRootConstantBufferView(1, materialResourceLine->GetGPUVirtualAddress()); // b1にバインド
+
+    // WVP行列定数バッファの更新 (カメラのWVP行列を使用)
+    Matrix4x4 wvpMatrix = CameraController::viewProjectionMatrix; // カメラのViewProjection行列
+    wvpDataLine->WVP = wvpMatrix;
+    wvpDataLine->World = Matrix4x4::MakeIdentity4x4(); // Line描画では通常World行列は単位行列で十分
+    commandList->SetGraphicsRootConstantBufferView(0, wvpResourceLine->GetGPUVirtualAddress()); // b0にバインド
+
+    // DirectionalLight (b2) はLine描画では不要だが、ルートシグネチャに存在するためダミーをバインドするか、
+    // シェーダーでアクセスしないようにするか、ルートシグネチャを分けるかを検討。
+    // 今回は共有ルートシグネチャなので、DrawObjでバインドされているものをそのまま使うか、
+    // もしくはダミーの値をバインドし直す（ただし現状はlightのデータはGameクラスで管理していないため、ここでは触れない）
+
+    // 描画コマンドの発行
+    commandList->DrawInstanced(2, 1, 0, 0); // 2頂点を1インスタンス描画
+
+    // NOTE: DrawLineが頻繁に呼ばれる場合、vertexResourceLineへのMap/Unmapはオーバーヘッドが大きい可能性があります。
+    // その場合、単一の大きな動的頂点バッファを用意し、そこに複数Lineのデータを書き込み、
+    // オフセットと頂点数を指定して描画するような仕組みを検討する必要があります。
+    // ただし、まずはシンプルな実装から始めます。
+}
 
 // 音
 void Game::PlayAudio(const uint32_t& audioId, bool loop)
@@ -678,4 +762,75 @@ AABB Game::CreateAABB(const Transforms& transforms, uint32_t objectNumber)
         worldMax.z = my_max(worldMax.z, v.z);
     }
     return { worldMin, worldMax };
+}
+
+
+void Game::InitializeLineResources(ID3D12Device* device)
+{
+    HRESULT hr;
+
+    // Line描画用の頂点バッファを確保（2頂点分）
+    // 頻繁に更新されるため、Upload Heapに配置するのが適切
+    vertexResourceSizeLine = sizeof(VertexData) * 2; // 2点間の線なので2頂点
+    D3D12_HEAP_PROPERTIES uploadHeapProperties{};
+    uploadHeapProperties.Type = D3D12_HEAP_TYPE_UPLOAD; // アップロードヒープ
+
+    D3D12_RESOURCE_DESC vertexBufferDesc{};
+    vertexBufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    vertexBufferDesc.Width = vertexResourceSizeLine;
+    vertexBufferDesc.Height = 1;
+    vertexBufferDesc.DepthOrArraySize = 1;
+    vertexBufferDesc.MipLevels = 1;
+    vertexBufferDesc.Format = DXGI_FORMAT_UNKNOWN;
+    vertexBufferDesc.SampleDesc.Count = 1;
+    vertexBufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+    hr = device->CreateCommittedResource(
+        &uploadHeapProperties,
+        D3D12_HEAP_FLAG_NONE,
+        &vertexBufferDesc,
+        D3D12_RESOURCE_STATE_GENERIC_READ, // アップロードヒープはGENERIC_READが推奨
+        nullptr,
+        IID_PPV_ARGS(&vertexResourceLine));
+    assert(SUCCEEDED(hr));
+
+    // Line描画用のMaterial定数バッファを確保
+    D3D12_RESOURCE_DESC materialBufferDesc{};
+    materialBufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    materialBufferDesc.Width = (sizeof(Material) + 0xff) & ~0xff; // 256バイトアラインメント
+    materialBufferDesc.Height = 1;
+    materialBufferDesc.DepthOrArraySize = 1;
+    materialBufferDesc.MipLevels = 1;
+    materialBufferDesc.Format = DXGI_FORMAT_UNKNOWN;
+    materialBufferDesc.SampleDesc.Count = 1;
+    materialBufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+    hr = device->CreateCommittedResource(
+        &uploadHeapProperties,
+        D3D12_HEAP_FLAG_NONE,
+        &materialBufferDesc,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(&materialResourceLine));
+    assert(SUCCEEDED(hr));
+    materialResourceLine->Map(0, nullptr, reinterpret_cast<void**>(&materialDataLine));
+
+    // Line描画用のWVP定数バッファを確保
+    D3D12_RESOURCE_DESC wvpBufferDesc{};
+    wvpBufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    wvpBufferDesc.Width = (sizeof(TransformationMatrix) + 0xff) & ~0xff; // 256バイトアラインメント
+    wvpBufferDesc.Height = 1;
+    wvpBufferDesc.DepthOrArraySize = 1;
+    wvpBufferDesc.MipLevels = 1;
+    wvpBufferDesc.Format = DXGI_FORMAT_UNKNOWN;
+    wvpBufferDesc.SampleDesc.Count = 1;
+    wvpBufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+    hr = device->CreateCommittedResource(
+        &uploadHeapProperties,
+        D3D12_HEAP_FLAG_NONE,
+        &wvpBufferDesc,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(&wvpResourceLine));
+    assert(SUCCEEDED(hr));
+    wvpResourceLine->Map(0, nullptr, reinterpret_cast<void**>(&wvpDataLine));
 }

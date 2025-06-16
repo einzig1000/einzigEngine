@@ -26,6 +26,7 @@ public:
     ID3D12DescriptorHeap* GetsrvDescriptorHeap() const { return descriptorHeapManager->GetSRVDescriptorHeap(); }
     const DXGI_SWAP_CHAIN_DESC1& GetSwapChainDesc() const { return swapChainManager->GetSwapChainDesc(); };
     const D3D12_RENDER_TARGET_VIEW_DESC& GetRtvDesc() const { return swapChainManager->GetRtvDesc(); }
+    PipelineStateManager* GetPipelineStateManager() const { return pipelineStateManager.get(); }
 
     AudioManager* GetAudioManager() const { return audioManager_; }
     TextureManager* GetTextureManager() const { return textureManager_; }
