@@ -30,30 +30,35 @@ void PipelineStateManager::InitializeRootSignatureInternal(ID3D12Device* device)
     HRESULT hr;
     // DescriptorRange for SRV (t0)
     D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
-    descriptorRange[0].BaseShaderRegister = 0;
+    descriptorRange[0].BaseShaderRegister = 0; // t0 レジスタ
     descriptorRange[0].NumDescriptors = 1;
     descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
     descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
 
     D3D12_ROOT_PARAMETER rootParameters[4] = {};
-    // b0: TransformationMatrix (WVP, World)
+
+    // ルートパラメータ0: Material (register b0)
     rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-    rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+    rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL; // VS, PS 両方からアクセス可能
     rootParameters[0].Descriptor.ShaderRegister = 0; // b0
-    // b1: Material (color, enableLighting, uvTransform)
+
+    // ルートパラメータ1: TransformationMatrix (WVP, World) (register b1)
     rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-    rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+    rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL; // VS, PS 両方からアクセス可能
     rootParameters[1].Descriptor.ShaderRegister = 1; // b1
-    // b2: DirectionalLight (color, direction, intensity)
-    rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-    rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-    rootParameters[2].Descriptor.ShaderRegister = 2; // b2
-    // t0: Texture (SRV)
-    rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-    rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-    rootParameters[3].DescriptorTable.pDescriptorRanges = descriptorRange;
-    rootParameters[3].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
+
+    // ルートパラメータ2: Texture (SRV) Descriptor Table (register t0)
+    rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; // PSからのみアクセス
+    rootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRange;
+    rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
+
+    // ルートパラメータ3: DirectionalLight (color, direction, intensity) (register b2)
+    rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+    rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL; // VS, PS 両方からアクセス可能
+    rootParameters[3].Descriptor.ShaderRegister = 2; // b2
+
 
     D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};
     staticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
@@ -61,7 +66,7 @@ void PipelineStateManager::InitializeRootSignatureInternal(ID3D12Device* device)
     staticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
     staticSamplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
     staticSamplers[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
-    staticSamplers[0].ShaderRegister = 0;
+    staticSamplers[0].ShaderRegister = 0; // s0 レジスタ
     staticSamplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
     D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc{};
@@ -70,6 +75,7 @@ void PipelineStateManager::InitializeRootSignatureInternal(ID3D12Device* device)
     rootSignatureDesc.pStaticSamplers = staticSamplers;
     rootSignatureDesc.NumStaticSamplers = _countof(staticSamplers);
     rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+
 
     Microsoft::WRL::ComPtr<ID3DBlob> signatureBlob = nullptr;
     Microsoft::WRL::ComPtr<ID3DBlob> errorBlob = nullptr;

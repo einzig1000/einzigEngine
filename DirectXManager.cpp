@@ -85,10 +85,6 @@ void DirectXManager::BeginFrame()
     // ViewportとScissorを設定
     commandContextManager->GetCommandList()->RSSetViewports(1, &viewportScissorManager->GetViewport());
     commandContextManager->GetCommandList()->RSSetScissorRects(1, &viewportScissorManager->GetScissorRect());
-
-    // RootSignatureとPSOを設定
-    commandContextManager->GetCommandList()->SetGraphicsRootSignature(pipelineStateManager->GetRootSignature());
-    commandContextManager->GetCommandList()->SetPipelineState(pipelineStateManager->GetPipelineState());
 }
 
 void DirectXManager::EndFrame()

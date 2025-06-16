@@ -1,10 +1,19 @@
 #include "object3d.hlsli"
 
-SamplerState gSampler : register(s0); // サンプラーのレジスタ番号を s0 に設定
-Texture2D<float32_t4> gTexture0 : register(t0); // テクスチャのレジスタ番号を t0 に設定
-ConstantBuffer<Material> gMaterial0 : register(b0); // マテリアルのレジスタ番号を b0 に設定
-ConstantBuffer<DirectionalLight> gDirectionalLight : register(b1); 
+//SamplerState gSampler : register(s0); // サンプラーのレジスタ番号を s0 に設定
+//Texture2D<float32_t4> gTexture0 : register(t0); // テクスチャのレジスタ番号を t0 に設定
+//ConstantBuffer<Material> gMaterial0 : register(b0); // マテリアルのレジスタ番号を b0 に設定
+//ConstantBuffer<DirectionalLight> gDirectionalLight : register(b1); 
 
+
+// サンプラーのレジスタ番号を s0 に設定
+SamplerState gSampler : register(s0);
+// テクスチャのレジスタ番号を t0 に設定
+Texture2D<float32_t4> gTexture0 : register(t0);
+// Material: レジスタ b0 に設定
+ConstantBuffer<Material> gMaterial0 : register(b0); 
+// DirectionalLight: レジスタ b2 に設定
+ConstantBuffer<DirectionalLight> gDirectionalLight : register(b2); 
 
 PixelShaderOutput main(VertexShaderOutput input)
 {

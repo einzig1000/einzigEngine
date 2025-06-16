@@ -138,11 +138,13 @@ private:
 	static std::vector<TransformationMatrix*> wvpData;
 	static size_t drawCallIndex;
 
-	// ラインはどう考えてもたくさん使うから別枠
-	static Microsoft::WRL::ComPtr<ID3D12Resource> materialResourceLine;
-	static Material* materialDataLine;
-	static Microsoft::WRL::ComPtr<ID3D12Resource> wvpResourceLine;
-	static TransformationMatrix* wvpDataLine;
+	// ラインはその他の3Dオブジェクトと比べて必要な情報量が少ないから他のと一緒に扱ったら余計な容量使う。はず
+	static constexpr size_t kMaxDrawLineCallPerFrame = 1280;
+	static std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> materialResourceLine;
+	static std::vector<Material*> materialDataLine;
+	static std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> wvpResourceLine;
+	static std::vector<TransformationMatrix*> wvpDataLine;
+	static size_t drawLineCallIndex;
 
 	// ライト
 	static Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource;

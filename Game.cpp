@@ -29,10 +29,11 @@ std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> Game::wvpResources;
 std::vector<TransformationMatrix*> Game::wvpData;
 size_t Game::drawCallIndex = 0;
 
-Microsoft::WRL::ComPtr<ID3D12Resource> Game::materialResourceLine;
-Material* Game::materialDataLine; 
-Microsoft::WRL::ComPtr<ID3D12Resource> Game::wvpResourceLine;
-TransformationMatrix* Game::wvpDataLine; 
+std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> Game::materialResourceLine;
+std::vector<Material*> Game::materialDataLine;
+std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> Game::wvpResourceLine;
+std::vector<TransformationMatrix*> Game::wvpDataLine;
+size_t Game::drawLineCallIndex = 0;
 
 Microsoft::WRL::ComPtr<ID3D12Resource> Game::directionalLightResource;
 DirectionalLight* Game::directionalLightData = nullptr;
@@ -93,9 +94,6 @@ void Game::Initialize(int width, int height, const std::wstring& title)
     vertexResourceSizeSphere = static_cast<UINT>(sizeof(VertexData) * 4096); // 球
     vertexResourceSphere = CreateBufferResource(dxManager->GetDevice(), vertexResourceSizeSphere);
 
-    vertexResourceSizeLine = static_cast<UINT>(sizeof(VertexData) * 2048); // 1024本の線
-    vertexResourceLine = CreateBufferResource(dxManager->GetDevice(), vertexResourceSizeLine);
-
     materialResources.resize(kMaxDrawCallPerFrame);
     materialData.resize(kMaxDrawCallPerFrame);
     wvpResources.resize(kMaxDrawCallPerFrame);
@@ -108,8 +106,17 @@ void Game::Initialize(int width, int height, const std::wstring& title)
         wvpResources[i]->Map(0, nullptr, reinterpret_cast<void**>(&wvpData[i]));
     }
 
-    // Line描画用リソースの初期化
+
+    vertexResourceSizeLine = static_cast<UINT>(sizeof(VertexData) * 2048); // 1024本の線
+    vertexResourceLine = CreateBufferResource(dxManager->GetDevice(), vertexResourceSizeLine);
+ 
+    materialResourceLine.resize(kMaxDrawLineCallPerFrame);
+    materialDataLine.resize(kMaxDrawLineCallPerFrame);
+    wvpResourceLine.resize(kMaxDrawLineCallPerFrame);
+    wvpDataLine.resize(kMaxDrawLineCallPerFrame);
     InitializeLineResources(dxManager->GetDevice());
+
+
 
     // インデックスリソース
     indexResource = CreateBufferResource(dxManager->GetDevice(), sizeof(uint32_t) * 6);
@@ -193,6 +200,7 @@ void Game::EndFrame()
     dxManager->EndFrame();
 
     drawCallIndex = 0;
+    drawLineCallIndex = 0;
 }
 
 // 終了処理
@@ -205,12 +213,7 @@ void Game::Finalize()
 
     // COMの終了処理
     CoUninitialize();
-
-    // Line描画用リソースの解放
-    materialResourceLine.Reset();
-    wvpResourceLine.Reset();
-    vertexResourceLine.Reset();
-
+    
     // 解放処理
     delete dxManager;
     dxManager = nullptr;
@@ -309,6 +312,11 @@ void Game::Drawobj(const Transforms& transform, const Vector3& center, uint32_t 
 {
     if (objectNumber >= objects.size()) return;
 
+    // RootSignatureとPSOを設定 - Triangle
+    dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState()); // Triangle用PSOを設定
+    dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
+
+
     Object3D& obj = objects[objectNumber];
     const uint32_t kSumVertex = static_cast<uint32_t>(obj.modelData.vertices.size());
 
@@ -368,6 +376,10 @@ void Game::Drawobj(const Transforms& transform, const Vector3& center, uint32_t 
 
 void Game::DrawTriangle(const Transforms& localTransform, const Transforms& worldTransform, const VertexData* vertexData, uint32_t textureNumber, const uint32_t& materialColor)
 {
+    // RootSignatureとPSOを設定 - Triangle
+    dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState()); // Triangle用PSOを設定
+    dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
+
     Matrix4x4 world = (
         Matrix4x4::MakeAffineMatrix(localTransform.scale, localTransform.rotate, localTransform.translate) *
         Matrix4x4::MakeAffineMatrix(worldTransform.scale, worldTransform.rotate, worldTransform.translate)
@@ -413,6 +425,10 @@ void Game::DrawTriangle(const Transforms& localTransform, const Transforms& worl
 
 void Game::DrawSphere(const Transforms& localTransform, VertexData* vertexData, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor)
 {
+    // RootSignatureとPSOを設定 - Triangle
+    dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState()); // Triangle用PSOを設定
+    dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
+
     // 必要な頂点数
     const uint32_t kSumVertex = kSubdivision * kSubdivision * 6;
 
@@ -460,6 +476,10 @@ void Game::DrawSphere(const Transforms& localTransform, VertexData* vertexData, 
 
 void Game::DrawSprite(const Transforms& localTransform, VertexData* vertexData, uint32_t textureNumber, const uint32_t& materialColor)
 {
+    // RootSignatureとPSOを設定 - Triangle
+    dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState()); // Triangle用PSOを設定
+    dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
+
     Matrix4x4 orthoProjectionMatrix = Matrix4x4::MakeOrthographicMatrix(
         0.0f, 0.0f,
         static_cast<float>(windowManager->Getwidth()),
@@ -506,70 +526,60 @@ void Game::DrawSprite(const Transforms& localTransform, VertexData* vertexData, 
 
 void Game::DrawLine(const Vector3& start, const Vector3& end, const uint32_t& materialColor)
 {
-    ID3D12GraphicsCommandList* commandList = dxManager->GetCommandList();
-    ID3D12Device* device = dxManager->GetDevice();
-    PipelineStateManager* psoManager = dxManager->GetPipelineStateManager(); // Assume GetPipelineStateManager() exists
+    if (drawLineCallIndex >= kMaxDrawLineCallPerFrame) return;
 
-    // PSOとルートシグネチャの設定
-    commandList->SetPipelineState(psoManager->GetLinePipelineState()); // ★Line用PSOを設定
-    commandList->SetGraphicsRootSignature(psoManager->GetRootSignature()); // ★共通のルートシグネチャ
+    // RootSignatureとPSOを設定 - Line
+    dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetLinePipelineState()); // Line用PSOを設定
+    dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
 
     // 頂点データの準備
     VertexData vertices[2];
     vertices[0].position = { start.x, start.y, start.z, 1.0f };
     vertices[0].texcoord = { 0.0f, 0.0f };
-    vertices[0].normal = { 0.0f, 0.0f, 1.0f }; // Line描画では通常不要だが、構造体に合わせる
+    vertices[0].normal = { 0.0f, 0.0f, 1.0f };
 
     vertices[1].position = { end.x, end.y, end.z, 1.0f };
     vertices[1].texcoord = { 0.0f, 0.0f };
-    vertices[1].normal = { 0.0f, 0.0f, 1.0f }; // Line描画では通常不要だが、構造体に合わせる
+    vertices[1].normal = { 0.0f, 0.0f, 1.0f };
 
+    UINT currentLineVertexOffset = static_cast<UINT>(drawLineCallIndex * 2);
+   
     // 頂点バッファへのデータ書き込み
     // Mapして直接書き込む
     VertexData* mappedVertexData = nullptr;
     HRESULT hr = vertexResourceLine->Map(0, nullptr, reinterpret_cast<void**>(&mappedVertexData));
     assert(SUCCEEDED(hr));
-    memcpy(mappedVertexData, vertices, sizeof(VertexData) * 2);
+    memcpy(mappedVertexData + currentLineVertexOffset, vertices, sizeof(VertexData) * 2);
     vertexResourceLine->Unmap(0, nullptr);
 
     // 頂点バッファビューの設定
     D3D12_VERTEX_BUFFER_VIEW vertexBufferViewLine{};
-    vertexBufferViewLine.BufferLocation = vertexResourceLine->GetGPUVirtualAddress();
-    vertexBufferViewLine.SizeInBytes = vertexResourceSizeLine;
+    vertexBufferViewLine.BufferLocation = vertexResourceLine->GetGPUVirtualAddress() + sizeof(VertexData) * currentLineVertexOffset;;
+    vertexBufferViewLine.SizeInBytes = sizeof(VertexData) * 2;
     vertexBufferViewLine.StrideInBytes = sizeof(VertexData);
-    commandList->IASetVertexBuffers(0, 1, &vertexBufferViewLine);
+    dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferViewLine);
 
     // プリミティブトポロジーの設定
-    commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST); // ★線リストを設定
+    dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST); // 直線を設定
 
     // マテリアル定数バッファの更新
     Vector4 color = ConvertUintToVector4(materialColor);
-    materialDataLine->color.x = color.x; // R
-    materialDataLine->color.y = color.y; // G
-    materialDataLine->color.z = color.z; // B
-    materialDataLine->color.w = color.w; // A
-    materialDataLine->enableLighting = 0; // Line描画ではライティング無効
-    materialDataLine->uvTransform = Matrix4x4::MakeIdentity4x4(); // Line描画ではUV変換不要
-    commandList->SetGraphicsRootConstantBufferView(1, materialResourceLine->GetGPUVirtualAddress()); // b1にバインド
+    materialDataLine[drawLineCallIndex]->color = color;
+    materialDataLine[drawLineCallIndex]->enableLighting = 0; // 線にライト要らない
+    materialDataLine[drawLineCallIndex]->uvTransform = Matrix4x4::MakeIdentity4x4(); // 線にUV変換いらない
+    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResourceLine[drawLineCallIndex]->GetGPUVirtualAddress());// b1にバインド
 
     // WVP行列定数バッファの更新 (カメラのWVP行列を使用)
     Matrix4x4 wvpMatrix = CameraController::viewProjectionMatrix; // カメラのViewProjection行列
-    wvpDataLine->WVP = wvpMatrix;
-    wvpDataLine->World = Matrix4x4::MakeIdentity4x4(); // Line描画では通常World行列は単位行列で十分
-    commandList->SetGraphicsRootConstantBufferView(0, wvpResourceLine->GetGPUVirtualAddress()); // b0にバインド
+    wvpDataLine[drawLineCallIndex]->WVP = wvpMatrix;
+    wvpDataLine[drawLineCallIndex]->World = Matrix4x4::MakeIdentity4x4();
+    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResourceLine[drawLineCallIndex]->GetGPUVirtualAddress()); // b0にバインド
 
-    // DirectionalLight (b2) はLine描画では不要だが、ルートシグネチャに存在するためダミーをバインドするか、
-    // シェーダーでアクセスしないようにするか、ルートシグネチャを分けるかを検討。
-    // 今回は共有ルートシグネチャなので、DrawObjでバインドされているものをそのまま使うか、
-    // もしくはダミーの値をバインドし直す（ただし現状はlightのデータはGameクラスで管理していないため、ここでは触れない）
 
     // 描画コマンドの発行
-    commandList->DrawInstanced(2, 1, 0, 0); // 2頂点を1インスタンス描画
+    dxManager->GetCommandList()->DrawInstanced(2, 1, 0, 0);
 
-    // NOTE: DrawLineが頻繁に呼ばれる場合、vertexResourceLineへのMap/Unmapはオーバーヘッドが大きい可能性があります。
-    // その場合、単一の大きな動的頂点バッファを用意し、そこに複数Lineのデータを書き込み、
-    // オフセットと頂点数を指定して描画するような仕組みを検討する必要があります。
-    // ただし、まずはシンプルな実装から始めます。
+    drawLineCallIndex++;
 }
 
 // 音
@@ -765,72 +775,64 @@ AABB Game::CreateAABB(const Transforms& transforms, uint32_t objectNumber)
 }
 
 
+
 void Game::InitializeLineResources(ID3D12Device* device)
 {
     HRESULT hr;
 
     // Line描画用の頂点バッファを確保（2頂点分）
-    // 頻繁に更新されるため、Upload Heapに配置するのが適切
-    vertexResourceSizeLine = sizeof(VertexData) * 2; // 2点間の線なので2頂点
-    D3D12_HEAP_PROPERTIES uploadHeapProperties{};
-    uploadHeapProperties.Type = D3D12_HEAP_TYPE_UPLOAD; // アップロードヒープ
+    vertexResourceSizeLine = static_cast<UINT>(sizeof(VertexData) * 2 * kMaxDrawLineCallPerFrame);
+    vertexResourceLine = CreateBufferResource(device, vertexResourceSizeLine);
 
-    D3D12_RESOURCE_DESC vertexBufferDesc{};
-    vertexBufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-    vertexBufferDesc.Width = vertexResourceSizeLine;
-    vertexBufferDesc.Height = 1;
-    vertexBufferDesc.DepthOrArraySize = 1;
-    vertexBufferDesc.MipLevels = 1;
-    vertexBufferDesc.Format = DXGI_FORMAT_UNKNOWN;
-    vertexBufferDesc.SampleDesc.Count = 1;
-    vertexBufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+    D3D12_HEAP_PROPERTIES heapProperties{};
+    heapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
 
-    hr = device->CreateCommittedResource(
-        &uploadHeapProperties,
-        D3D12_HEAP_FLAG_NONE,
-        &vertexBufferDesc,
-        D3D12_RESOURCE_STATE_GENERIC_READ, // アップロードヒープはGENERIC_READが推奨
-        nullptr,
-        IID_PPV_ARGS(&vertexResourceLine));
-    assert(SUCCEEDED(hr));
 
-    // Line描画用のMaterial定数バッファを確保
-    D3D12_RESOURCE_DESC materialBufferDesc{};
-    materialBufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-    materialBufferDesc.Width = (sizeof(Material) + 0xff) & ~0xff; // 256バイトアラインメント
-    materialBufferDesc.Height = 1;
-    materialBufferDesc.DepthOrArraySize = 1;
-    materialBufferDesc.MipLevels = 1;
-    materialBufferDesc.Format = DXGI_FORMAT_UNKNOWN;
-    materialBufferDesc.SampleDesc.Count = 1;
-    materialBufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-    hr = device->CreateCommittedResource(
-        &uploadHeapProperties,
-        D3D12_HEAP_FLAG_NONE,
-        &materialBufferDesc,
-        D3D12_RESOURCE_STATE_GENERIC_READ,
-        nullptr,
-        IID_PPV_ARGS(&materialResourceLine));
-    assert(SUCCEEDED(hr));
-    materialResourceLine->Map(0, nullptr, reinterpret_cast<void**>(&materialDataLine));
-
-    // Line描画用のWVP定数バッファを確保
+    // WVPバッファの記述 (定数バッファは256バイトアライメントが必要)
     D3D12_RESOURCE_DESC wvpBufferDesc{};
     wvpBufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-    wvpBufferDesc.Width = (sizeof(TransformationMatrix) + 0xff) & ~0xff; // 256バイトアラインメント
+    wvpBufferDesc.Width = (sizeof(TransformationMatrix) + 0xff) & ~0xff; // 256バイトアライメント
     wvpBufferDesc.Height = 1;
     wvpBufferDesc.DepthOrArraySize = 1;
     wvpBufferDesc.MipLevels = 1;
     wvpBufferDesc.Format = DXGI_FORMAT_UNKNOWN;
     wvpBufferDesc.SampleDesc.Count = 1;
     wvpBufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-    hr = device->CreateCommittedResource(
-        &uploadHeapProperties,
-        D3D12_HEAP_FLAG_NONE,
-        &wvpBufferDesc,
-        D3D12_RESOURCE_STATE_GENERIC_READ,
-        nullptr,
-        IID_PPV_ARGS(&wvpResourceLine));
-    assert(SUCCEEDED(hr));
-    wvpResourceLine->Map(0, nullptr, reinterpret_cast<void**>(&wvpDataLine));
+
+    // マテリアルバッファの記述 (各マテリアルは小さい)
+    D3D12_RESOURCE_DESC materialBufferDesc{};
+    materialBufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    materialBufferDesc.Width = sizeof(Material); // 1つのMaterial構造体のサイズ
+    materialBufferDesc.Height = 1;
+    materialBufferDesc.DepthOrArraySize = 1;
+    materialBufferDesc.MipLevels = 1;
+    materialBufferDesc.Format = DXGI_FORMAT_UNKNOWN;
+    materialBufferDesc.SampleDesc.Count = 1;
+    materialBufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+
+    for (size_t i = 0; i < kMaxDrawLineCallPerFrame; ++i)
+    {
+        // マテリアルリソースの作成とマップ
+        hr = device->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &materialBufferDesc, // materialBufferDesc を使用
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&materialResourceLine[i]));
+        assert(SUCCEEDED(hr));
+        materialResourceLine[i]->Map(0, nullptr, reinterpret_cast<void**>(&materialDataLine[i]));
+
+        // WVPリソースの作成とマップ
+        hr = device->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &wvpBufferDesc, // wvpBufferDesc を使用
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&wvpResourceLine[i]));
+        assert(SUCCEEDED(hr));
+        wvpResourceLine[i]->Map(0, nullptr, reinterpret_cast<void**>(&wvpDataLine[i]));
+    }
 }

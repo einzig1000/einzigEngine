@@ -4,10 +4,10 @@
 //--------------------------------------------------------------------------------------
 // 定数バッファ
 //--------------------------------------------------------------------------------------
-// Material: レジスタ b1 (ここから直接色を取得)
-ConstantBuffer<Material> gMaterial : register(b1);
+// Material: レジスタ b0。これはルートパラメータ0に対応します。
+ConstantBuffer<Material> gMaterial : register(b0);
 
-// DirectionalLight: レジスタ b2 (線描画では通常使わないが、ルートシグネチャに合わせるため定義)
+// DirectionalLight: レジスタ b2
 ConstantBuffer<DirectionalLight> gDirectionalLight : register(b2);
 
 
