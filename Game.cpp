@@ -219,6 +219,16 @@ void Game::Finalize()
     std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>>().swap(materialResourceLine);
     std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>>().swap(wvpResourceLine);
 
+    vertexResourceSprite.Reset();
+    vertexResourceObj.Reset();
+    vertexResourceTriangle.Reset();
+    vertexResourceSphere.Reset();
+    vertexResourceLine.Reset();
+    indexResource.Reset();
+    directionalLightResource.Reset();
+
+    objects.clear();
+
     // 解放処理
     delete dxManager;
     dxManager = nullptr;

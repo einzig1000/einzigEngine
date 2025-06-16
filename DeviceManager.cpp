@@ -16,19 +16,28 @@ DeviceManager::DeviceManager()
 
 DeviceManager::~DeviceManager(){}
 
+//void DeviceManager::EnableDebugLayer()
+//{
+//    Microsoft::WRL::ComPtr<ID3D12Debug> debugController;
+//    if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
+//    {
+//        debugController->EnableDebugLayer();
+//        Microsoft::WRL::ComPtr<ID3D12Debug3> debugController3;
+//        if (SUCCEEDED(debugController.As(&debugController3)))
+//        {
+//            debugController3->SetEnableGPUBasedValidation(TRUE);
+//        }
+//    }
+//
+//}
 void DeviceManager::EnableDebugLayer()
 {
-    Microsoft::WRL::ComPtr<ID3D12Debug> debugController;
+    Microsoft::WRL::ComPtr<ID3D12Debug1> debugController;
     if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
     {
         debugController->EnableDebugLayer();
-        Microsoft::WRL::ComPtr<ID3D12Debug3> debugController3;
-        if (SUCCEEDED(debugController.As(&debugController3)))
-        {
-            debugController3->SetEnableGPUBasedValidation(TRUE);
-        }
+        debugController->SetEnableGPUBasedValidation(TRUE);
     }
-
 }
 
 void DeviceManager::InitializeDeviceInternal()

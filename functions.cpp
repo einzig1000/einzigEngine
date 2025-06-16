@@ -701,6 +701,7 @@ ID3D12Resource* CreateBufferResource(ID3D12Device* device, size_t sizeInBytes)
     );
 
     assert(SUCCEEDED(hr));
+    pResource->SetName(L"CreateBufferResource()");
 
     return pResource; // 作成したリソースを返す
 };
@@ -832,6 +833,7 @@ ID3D12Resource* CreateTextureResource(ID3D12Device* device, const DirectX::TexMe
         IID_PPV_ARGS(&resource) // 作成するResourceポインタへのポインタ
     );
     assert(SUCCEEDED(hr));
+    resource->SetName(L"CreateTextureResource()");
 
     return resource;
 }
