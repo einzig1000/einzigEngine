@@ -1,6 +1,7 @@
 #pragma once
 #define DIRECTINPUT_VERSION 0x0800
 #include <dinput.h>
+#include <wrl.h>
 
 #pragma comment(lib,"dinput8.lib")
 #pragma comment(lib,"dxguid.lib")
@@ -16,5 +17,5 @@ public:
 
 private:
 
-	IDirectInputDevice8* keyboard{};
+	Microsoft::WRL::ComPtr<IDirectInputDevice8> keyboard;
 };

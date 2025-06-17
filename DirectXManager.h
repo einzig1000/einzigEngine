@@ -28,8 +28,9 @@ public:
     const D3D12_RENDER_TARGET_VIEW_DESC& GetRtvDesc() const { return swapChainManager->GetRtvDesc(); }
     PipelineStateManager* GetPipelineStateManager() const { return pipelineStateManager.get(); }
 
-    AudioManager* GetAudioManager() const { return audioManager_; }
-    TextureManager* GetTextureManager() const { return textureManager_; }
+    AudioManager* GetAudioManager() const { return audioManager_.get(); }
+    TextureManager* GetTextureManager() const { return textureManager_.get(); }
+
 
     void BeginFrame();
     void EndFrame();
@@ -46,11 +47,7 @@ private:
 
     D3D12_RESOURCE_BARRIER barrier = {};
 
-    AudioManager* audioManager_;
-    TextureManager* textureManager_;
-    GetHitKey* getHitKey_;
-
-    void InitializeGetHitKey(HWND hwnd);
-    void InitializeTextureManager(ID3D12Device* device, ID3D12DescriptorHeap* srvDescriptorHeap);
-    void InitializeAudioManager();
+    std::unique_ptr<AudioManager> audioManager_;
+    std::unique_ptr<TextureManager> textureManager_;
+    std::unique_ptr<GetHitKey> getHitKey_;
 };

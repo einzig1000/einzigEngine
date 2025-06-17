@@ -206,13 +206,38 @@ void Game::EndFrame()
 // 終了処理
 void Game::Finalize()
 {
+    for (size_t i = 0; i < kMaxDrawCallPerFrame; ++i)
+    {
+        if (materialResources[i])
+        {
+            materialResources[i]->Unmap(0, nullptr);
+            materialData[i] = nullptr;
+        }
+        if (wvpResources[i])
+        {
+            wvpResources[i]->Unmap(0, nullptr);
+            wvpData[i] = nullptr;
+        }
+    }
+    for (size_t i = 0; i < kMaxDrawLineCallPerFrame; ++i)
+    {
+        if (materialResourceLine[i])
+        {
+            materialResourceLine[i]->Unmap(0, nullptr);
+            materialDataLine[i] = nullptr;
+        }
+        if (wvpResourceLine[i])
+        {
+            wvpResourceLine[i]->Unmap(0, nullptr);
+            wvpDataLine[i] = nullptr;
+        }
+    }
+
     // ImGuiの終了処理
     ImGui_ImplDX12_Shutdown();
     ImGui_ImplWin32_Shutdown();
     ImGui::DestroyContext();
 
-    // COMの終了処理
-    CoUninitialize();
 
     std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>>().swap(materialResources);
     std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>>().swap(wvpResources);
@@ -238,6 +263,9 @@ void Game::Finalize()
     cameraController = nullptr;
     delete mouseController;
     mouseController = nullptr;
+
+    // COMの終了処理
+    CoUninitialize();
 }
 
 // Draw用データ作成するやつ
