@@ -1,3 +1,5 @@
+// Object3d.VS.hlsl
+
 #include "object3d.hlsli"
 
 // TransformationMatrix: レジスタ b1 に設定
