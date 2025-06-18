@@ -206,16 +206,19 @@ void Game::EndFrame()
 // 終了処理
 void Game::Finalize()
 {
+    // 解放処理
     for (size_t i = 0; i < kMaxDrawCallPerFrame; ++i)
     {
         if (materialResources[i])
         {
             materialResources[i]->Unmap(0, nullptr);
+            materialResources[i].Reset();
             materialData[i] = nullptr;
         }
         if (wvpResources[i])
         {
             wvpResources[i]->Unmap(0, nullptr);
+            wvpResources[i].Reset();
             wvpData[i] = nullptr;
         }
     }
@@ -224,11 +227,13 @@ void Game::Finalize()
         if (materialResourceLine[i])
         {
             materialResourceLine[i]->Unmap(0, nullptr);
+            materialResourceLine[i].Reset();
             materialDataLine[i] = nullptr;
         }
         if (wvpResourceLine[i])
         {
             wvpResourceLine[i]->Unmap(0, nullptr);
+            wvpResourceLine[i].Reset();
             wvpDataLine[i] = nullptr;
         }
     }
@@ -254,7 +259,6 @@ void Game::Finalize()
 
     objects.clear();
 
-    // 解放処理
     delete dxManager;
     dxManager = nullptr;
     delete windowManager;
