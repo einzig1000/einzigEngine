@@ -69,6 +69,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		///
 
 		ImGui::Text("-----------------------------------");
+		ImGui::Begin("FPS");
+		ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+		ImGui::End();
 		ImGui::Text("-----------------------------------");
 
 

@@ -4,6 +4,7 @@
 #include "externals/DirectXTex/DirectXTex.h"
 #include <cstdint>
 
+
 WindowManager* Game::windowManager = nullptr;
 DirectXManager* Game::dxManager = nullptr;
 

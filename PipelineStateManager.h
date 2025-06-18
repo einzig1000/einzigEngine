@@ -11,8 +11,9 @@ public:
     ~PipelineStateManager();
 
     ID3D12RootSignature* GetRootSignature() const { return rootSignature.Get(); }
+    // Triangle描画PSO
     ID3D12PipelineState* GetPipelineState() const { return graphicsPipelineState.Get(); }
-    // Line描画用のPSOを取得する新しい関数
+    // Line描画PSO
     ID3D12PipelineState* GetLinePipelineState() const { return graphicsPipelineStateLine.Get(); }
 
 private:

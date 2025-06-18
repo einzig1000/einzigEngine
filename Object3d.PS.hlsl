@@ -2,12 +2,6 @@
 
 #include "object3d.hlsli"
 
-//SamplerState gSampler : register(s0); // サンプラーのレジスタ番号を s0 に設定
-//Texture2D<float32_t4> gTexture0 : register(t0); // テクスチャのレジスタ番号を t0 に設定
-//ConstantBuffer<Material> gMaterial0 : register(b0); // マテリアルのレジスタ番号を b0 に設定
-//ConstantBuffer<DirectionalLight> gDirectionalLight : register(b1); 
-
-
 // サンプラーのレジスタ番号を s0 に設定
 SamplerState gSampler : register(s0);
 // テクスチャのレジスタ番号を t0 に設定
@@ -31,7 +25,8 @@ PixelShaderOutput main(VertexShaderOutput input)
         // NdotL : NとLのdot(内積)
         float NdotL = dot(normalize(input.normal), -gDirectionalLight.direction);
         float cos = pow(NdotL * 0.5f + 0.5f, 2.0f);
-        output.color = gMaterial0.color * textureColor * gDirectionalLight.color * cos * gDirectionalLight.intensity;
+        output.color.rgb = gMaterial0.color.rgb * textureColor.rgb * gDirectionalLight.color.rgb * cos * gDirectionalLight.intensity;
+        output.color.a = gMaterial0.color.a * textureColor.a;
     }
     else
     {
