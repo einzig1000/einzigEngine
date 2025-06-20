@@ -240,13 +240,23 @@ DrawData Game::SetupDrawData(size_t dstBufferSize, const VertexData* srcVertexDa
     if (drawCallIndex >= kMaxDrawCallPerFrame) return{};
 
     // 頂点数
-    if (vertexCount == 0) return{};
-    if (vertexCount * sizeof(VertexData) > dstBufferSize) return {};
+    if (vertexCount == 0)
+    {
+        return;
+    }
+    if (vertexCount * sizeof(VertexData) > dstBufferSize)
+    {
+        return;
+    }
 
     // 頂点リソース
     VertexData* vData = nullptr;
     HRESULT hr = vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vData));
-    if (FAILED(hr) || vData == nullptr) return {};
+    if (FAILED(hr) || vData == nullptr)
+    {
+        return;
+    }
+    
     std::memcpy(vData, srcVertexData, sizeof(VertexData) * vertexCount);
     vertexResource->Unmap(0, nullptr);
 

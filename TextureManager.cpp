@@ -15,7 +15,7 @@ TextureManager::TextureManager(ID3D12Device* device, ID3D12DescriptorHeap* srvDe
 uint32_t TextureManager::LoadTexture(const std::string& filePath, ID3D12GraphicsCommandList* commandList)
 {
     // ボックスを作成
-    TextureData text;
+    TextureData& text = textures_.emplace_back();
 
     // テクスチャファイルを読んでプログラムを扱えるようにする
     DirectX::ScratchImage image{};
@@ -34,7 +34,7 @@ uint32_t TextureManager::LoadTexture(const std::string& filePath, ID3D12Graphics
 
 
     // テクスチャリソースとSRVの作成
-    text.textureResource = CreateTextureResource(device_, text.metadata);
+    text.textureResource = (CreateTextureResource(device_, text.metadata));
     Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource = UploadTextureData(text.textureResource.Get(), text.mipImage, device_, commandList);
 
 
@@ -49,8 +49,6 @@ uint32_t TextureManager::LoadTexture(const std::string& filePath, ID3D12Graphics
     srvDesc.Texture2D.MipLevels = UINT(text.metadata.mipLevels);
 
     device_->CreateShaderResourceView(text.textureResource.Get(), &srvDesc, textureSrvHandleCPU);
-
-    textures_.push_back(std::move(text));
 
     return text.number;
 }
