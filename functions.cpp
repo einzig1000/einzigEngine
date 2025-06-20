@@ -686,7 +686,6 @@ LONG WINAPI ExportDump(EXCEPTION_POINTERS* exception)
 }
 
 Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(ID3D12Device* device, size_t sizeInBytes)
-//ID3D12Resource* CreateBufferResource(ID3D12Device* device, size_t sizeInBytes)
 {
     // ID3D12Resourceを格納するポインタ
     Microsoft::WRL::ComPtr<ID3D12Resource> pResource = nullptr;

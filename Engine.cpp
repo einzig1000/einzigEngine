@@ -133,6 +133,7 @@ void Engine::BeginFrame()
 {
     ImGui_ImplDX12_NewFrame();
     ImGui_ImplWin32_NewFrame();
+    trianglesVertexDataUsed = 0;
     ImGui::NewFrame();
 
 
@@ -157,6 +158,7 @@ void Engine::UpdateCamera()
 }
 void Engine::EndFrame()
 {
+    cameraController->Draw();
     ImGui::Render();
 
     dxManager->EndFrame();
@@ -383,6 +385,101 @@ void Engine::Drawobj(const Transforms& transform, const Vector3& center, uint32_
     drawCallIndex++;
 }
 
+void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor)
+{
+    // RootSignatureとPSOを設定 - Triangle
+    dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState()); // Triangle用PSOを設定
+    dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
+
+    // 必要な頂点数
+    const uint32_t kSumVertex = kSubdivision * kSubdivision * 6;
+    // 必要な頂点数分配列を拡張
+    if (trianglesVertexDataUsed + kSumVertex > trianglesVertexData.size())
+    {
+        trianglesVertexData.resize(trianglesVertexDataUsed + kSumVertex);
+    }
+
+    // 頂点
+    CreateSphere(&trianglesVertexData[trianglesVertexDataUsed], kSubdivision);
+
+    // 1. centerを中心に拡縮・回転
+    Matrix4x4 toCenter = Matrix4x4::MakeTranslateMatrix({ -center.x, -center.y, -center.z });
+    Matrix4x4 rotateScale = Matrix4x4::MakeAffineMatrix(transform.scale, transform.rotate, { 0,0,0 });
+    Matrix4x4 fromCenter = Matrix4x4::MakeTranslateMatrix(center);
+    Matrix4x4 centerMatrix = (fromCenter * (rotateScale * toCenter));
+
+    // 2. 回転・拡縮後の原点座標を求める
+    Vector3 origin = { 0, 0, 0 };
+    Vector3 rotatedOrigin = Transform(origin, centerMatrix);
+
+    // 3. translateとの差分を補正移動として加える
+    Vector3 offset = {
+        transform.translate.x - rotatedOrigin.x,
+        transform.translate.y - rotatedOrigin.y,
+        transform.translate.z - rotatedOrigin.z
+    };
+    Matrix4x4 offsetMatrix = Matrix4x4::MakeTranslateMatrix(offset);
+
+    // 4. 最終ワールド行列
+    Matrix4x4 worldMatrix = (centerMatrix * offsetMatrix);
+
+    // WVP行列
+    Matrix4x4 wvpMatrix = (worldMatrix * cameraController->viewProjectionMatrix);
+
+    wvpData[drawCallIndex]->World = worldMatrix;
+    wvpData[drawCallIndex]->WVP = wvpMatrix;
+
+    // テクスチャ
+    const TextureData* tex = dxManager->GetTextureManager()->GetTexture(textureNumber);
+    if (!tex)
+    {
+        return;
+    }
+
+    // 色
+    Vector4 color = ConvertUintToVector4(materialColor);
+    materialData[drawCallIndex]->color = color;
+    materialData[drawCallIndex]->enableLighting = true;
+    materialData[drawCallIndex]->uvTransform = Matrix4x4::MakeIdentity4x4();
+
+    DrawData drawData = SetupDrawData(
+        vertexResourceSizeSphere,
+        &trianglesVertexData[trianglesVertexDataUsed],
+        kSumVertex,
+        vertexResourceSphere,
+        vertexResourceSizeSphere,
+        materialData[drawCallIndex],
+        materialColor,
+        false,
+        Matrix4x4::MakeIdentity4x4(),
+        wvpData[drawCallIndex],
+        worldMatrix,
+        wvpMatrix,
+        textureNumber
+    );
+
+    if (!drawData.texture) return;
+
+    // 描画処理
+    //dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
+    dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &drawData.vertexBufferView);
+    // 形状を設定
+    dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    // CBVを設定する マテリアル用のCBufferの場所を設定
+    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources[drawCallIndex]->GetGPUVirtualAddress());
+    // CBVを設定する wvp用のCBufferの場所を設定
+    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources[drawCallIndex]->GetGPUVirtualAddress());
+    // SRVのDescriptorTableの先頭を設定。２はrootParameters[2]。
+    //dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
+    dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, drawData.texture->textureSrvHandleGPU);
+    // CBVを設定する ディレクショナルライト用のCBufferの場所を設定
+    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
+
+    dxManager->GetCommandList()->DrawInstanced(kSumVertex, 1, 0, 0);
+
+    drawCallIndex++;
+}
+
 void Engine::DrawTriangle(const Transforms& localTransform, const Transforms& worldTransform, const VertexData* vertexData, uint32_t textureNumber, const uint32_t& materialColor)
 {
     // RootSignatureとPSOを設定 - Triangle
@@ -432,56 +529,56 @@ void Engine::DrawTriangle(const Transforms& localTransform, const Transforms& wo
     drawCallIndex++;
 }
 
-void Engine::DrawSphere(const Transforms& localTransform, VertexData* vertexData, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor)
-{
-    // RootSignatureとPSOを設定 - Triangle
-    dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState()); // Triangle用PSOを設定
-    dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
-
-    // 必要な頂点数
-    const uint32_t kSumVertex = kSubdivision * kSubdivision * 6;
-
-    // 頂点
-    CreateSphere(vertexData, kSubdivision);
-
-    Matrix4x4 world = Matrix4x4::MakeAffineMatrix(localTransform.scale, localTransform.rotate, localTransform.translate);
-    Matrix4x4 wvpMatrix = (world * cameraController->viewProjectionMatrix);
-
-    DrawData drawData = SetupDrawData(
-        vertexResourceSizeSphere,
-        vertexData,
-        kSumVertex,
-        vertexResourceSphere,
-        vertexResourceSizeSphere,
-        materialData[drawCallIndex],
-        materialColor,
-        true,
-        Matrix4x4::MakeIdentity4x4(),
-        wvpData[drawCallIndex],
-        world,
-        wvpMatrix,
-        textureNumber
-    );
-    if (!drawData.texture) return;
-
-
-    // 描画処理
-    dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &drawData.vertexBufferView);
-    // 形状を設定
-    dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    // CBVを設定する マテリアル用のCBufferの場所を設定
-    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources[drawCallIndex]->GetGPUVirtualAddress());
-    // CBVを設定する wvp用のCBufferの場所を設定
-    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources[drawCallIndex]->GetGPUVirtualAddress());
-    // SRVのDescriptorTableの先頭を設定。２はrootParameters[2]。
-    dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, drawData.texture->textureSrvHandleGPU);
-    // CBVを設定する ディレクショナルライト用のCBufferの場所を設定
-    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
-
-    dxManager->GetCommandList()->DrawInstanced(kSumVertex, 1, 0, 0);
-
-    drawCallIndex++;
-}
+//void Engine::DrawSphere(const Transforms& localTransform, VertexData* vertexData, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor)
+//{
+//    // RootSignatureとPSOを設定 - Triangle
+//    dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState()); // Triangle用PSOを設定
+//    dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
+//
+//    // 必要な頂点数
+//    const uint32_t kSumVertex = kSubdivision * kSubdivision * 6;
+//
+//    // 頂点
+//    CreateSphere(vertexData, kSubdivision);
+//
+//    Matrix4x4 world = Matrix4x4::MakeAffineMatrix(localTransform.scale, localTransform.rotate, localTransform.translate);
+//    Matrix4x4 wvpMatrix = (world * cameraController->viewProjectionMatrix);
+//
+//    DrawData drawData = SetupDrawData(
+//        vertexResourceSizeSphere,
+//        vertexData,
+//        kSumVertex,
+//        vertexResourceSphere,
+//        vertexResourceSizeSphere,
+//        materialData[drawCallIndex],
+//        materialColor,
+//        true,
+//        Matrix4x4::MakeIdentity4x4(),
+//        wvpData[drawCallIndex],
+//        world,
+//        wvpMatrix,
+//        textureNumber
+//    );
+//    if (!drawData.texture) return;
+//
+//
+//    // 描画処理
+//    dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &drawData.vertexBufferView);
+//    // 形状を設定
+//    dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+//    // CBVを設定する マテリアル用のCBufferの場所を設定
+//    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources[drawCallIndex]->GetGPUVirtualAddress());
+//    // CBVを設定する wvp用のCBufferの場所を設定
+//    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources[drawCallIndex]->GetGPUVirtualAddress());
+//    // SRVのDescriptorTableの先頭を設定。２はrootParameters[2]。
+//    dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, drawData.texture->textureSrvHandleGPU);
+//    // CBVを設定する ディレクショナルライト用のCBufferの場所を設定
+//    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
+//
+//    dxManager->GetCommandList()->DrawInstanced(kSumVertex, 1, 0, 0);
+//
+//    drawCallIndex++;
+//}
 
 void Engine::DrawSprite(const Transforms& localTransform, VertexData* vertexData, uint32_t textureNumber, const uint32_t& materialColor)
 {

@@ -48,17 +48,15 @@ void Game::Drawobj(const Transforms& transform, const Vector3& center, uint32_t 
 	engine->Drawobj(transform, center, objectNumber, textureNumber, materialColor);
 }
 
+void Game::DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor)
+{
+	engine->DrawSphere(transform, center, kSubdivision, textureNumber, materialColor);
+}
+
 void Game::DrawTriangle(const Transforms& localTransform, const Transforms& worldTransform, const VertexData* vertexData, uint32_t textureNumber, const uint32_t& materialColor)
 {
 	engine->DrawTriangle(localTransform, worldTransform, vertexData, textureNumber, materialColor);
 }
-
-
-void Game::DrawSphere(const Transforms& localTransform, VertexData* vertexData, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor)
-{
-	engine->DrawSphere(localTransform, vertexData, kSubdivision, textureNumber, materialColor);
-}
-
 
 void Game::DrawSprite(const Transforms& localTransform, VertexData* vertexData, uint32_t textureNumber, const uint32_t& materialColor)
 {

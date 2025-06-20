@@ -29,9 +29,9 @@ public:
 	uint32_t LoadAudio(const std::string& filePath);
 
 	// 描画
-	void Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor);
+	void Drawobj   (const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor);
+	void DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor);
 	void DrawTriangle(const Transforms& localTransform, const Transforms& worldTransform, const VertexData* vertexData, uint32_t textureNumber, const uint32_t& materialColor);
-	void DrawSphere(const Transforms& localTransform, VertexData* vertexData, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor);
 	void DrawSprite(const Transforms& localTransform, VertexData* vertexData, uint32_t textureNumber, const uint32_t& materialColor);
 	void DrawLine(const Vector3& start, const Vector3& end, const uint32_t& materialColor);
 
@@ -104,8 +104,10 @@ private:
 	WindowManager* windowManager;
 	DirectXManager* dxManager;
 
-	// モデル
+	// モデル・球
 	std::vector<Object3D> objects;
+	std::vector<VertexData> trianglesVertexData;
+	size_t trianglesVertexDataUsed = 0; // 使用済み頂点数
 
 	// 頂点リソースども
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceSprite;

@@ -13,13 +13,6 @@ struct easingSet
 class CameraController
 {
 public:
-    Transforms localTransform;
-    Transforms worldTransform;
-    VertexData vertexData;
-    uint32_t textureNumber;
-    uint32_t materialColor;
-
-
 
     CameraController();
     void Updata();
@@ -40,7 +33,6 @@ public:
     bool cameraMode_;
 
 private:
-
     //////////////////////////////////////////////
     ///              カメラ回転                ///
     //////////////////////////////////////////////

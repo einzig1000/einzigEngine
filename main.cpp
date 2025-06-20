@@ -59,7 +59,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			Game::PlayAudio(buzzer, buzzerLoop);
 		}
 
-		//Game::SetMasterVolume(masterVolume);
+		Game::SetMasterVolume(masterVolume);
 		//Game::SetAudioVolume(alert, alertVolume);
 		//Game::SetAudioVolume(buzzer, buzzerVolume);
 
@@ -80,7 +80,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 
 
-		Game::Drawobj(blockTransforms, {0,0,0}, blockModel, uvCheckerPng, 0xFFFFFFFFFF);
+		//Game::Drawobj(blockTransforms, {0,0,0}, blockModel, uvCheckerPng, 0xFFFFFFFFFF);
 		AABB aabb = Game::CreateAABB(blockTransforms, blockModel);
 
 		Game::DrawLine({ aabb.min.x, aabb.min.y, aabb.min.z }, { aabb.max.x, aabb.min.y, aabb.min.z }, 0xFFFFFFFF);
