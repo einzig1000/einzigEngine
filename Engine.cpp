@@ -529,57 +529,6 @@ void Engine::DrawTriangle(const Transforms& localTransform, const Transforms& wo
     drawCallIndex++;
 }
 
-//void Engine::DrawSphere(const Transforms& localTransform, VertexData* vertexData, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor)
-//{
-//    // RootSignatureとPSOを設定 - Triangle
-//    dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState()); // Triangle用PSOを設定
-//    dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
-//
-//    // 必要な頂点数
-//    const uint32_t kSumVertex = kSubdivision * kSubdivision * 6;
-//
-//    // 頂点
-//    CreateSphere(vertexData, kSubdivision);
-//
-//    Matrix4x4 world = Matrix4x4::MakeAffineMatrix(localTransform.scale, localTransform.rotate, localTransform.translate);
-//    Matrix4x4 wvpMatrix = (world * cameraController->viewProjectionMatrix);
-//
-//    DrawData drawData = SetupDrawData(
-//        vertexResourceSizeSphere,
-//        vertexData,
-//        kSumVertex,
-//        vertexResourceSphere,
-//        vertexResourceSizeSphere,
-//        materialData[drawCallIndex],
-//        materialColor,
-//        true,
-//        Matrix4x4::MakeIdentity4x4(),
-//        wvpData[drawCallIndex],
-//        world,
-//        wvpMatrix,
-//        textureNumber
-//    );
-//    if (!drawData.texture) return;
-//
-//
-//    // 描画処理
-//    dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &drawData.vertexBufferView);
-//    // 形状を設定
-//    dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-//    // CBVを設定する マテリアル用のCBufferの場所を設定
-//    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources[drawCallIndex]->GetGPUVirtualAddress());
-//    // CBVを設定する wvp用のCBufferの場所を設定
-//    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources[drawCallIndex]->GetGPUVirtualAddress());
-//    // SRVのDescriptorTableの先頭を設定。２はrootParameters[2]。
-//    dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, drawData.texture->textureSrvHandleGPU);
-//    // CBVを設定する ディレクショナルライト用のCBufferの場所を設定
-//    dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
-//
-//    dxManager->GetCommandList()->DrawInstanced(kSumVertex, 1, 0, 0);
-//
-//    drawCallIndex++;
-//}
-
 void Engine::DrawSprite(const Transforms& localTransform, VertexData* vertexData, uint32_t textureNumber, const uint32_t& materialColor)
 {
     // RootSignatureとPSOを設定 - Triangle
