@@ -1,9 +1,9 @@
+// Object3d.VS.hlsl
+
 #include "object3d.hlsli"
 
-//ConstantBuffer<TransformationMatrix> gTransformationMatrix : register(b1);
-ConstantBuffer<TransformationMatrix> gTransformationMatrix : register(b0);
-   
-
+// TransformationMatrix: レジスタ b1 に設定
+ConstantBuffer<TransformationMatrix> gTransformationMatrix : register(b1);
 
 VertexShaderOutput main(VertexShaderInput input)
 {

@@ -1,28 +1,20 @@
 #pragma comment(lib, "Mfplat.lib")
 #pragma comment(lib, "mfreadwrite.lib")
-#pragma comment(lib, "mfuuid.lib") // 新規追加: UUID定義のため、これも必要になる場合があります
-#pragma comment(lib, "Mfplat.lib")
+#pragma comment(lib, "mfuuid.lib")
 
 
 #include "AudioManager.h"
-#include <combaseapi.h> // CoInitializeEx, CoUninitialize のため
-#include <iostream>     // 基本的なエラー出力のため（任意、デバッグ用）
-#include <Windows.h>    // MultiByteToWideChar, WideCharToMultiByte のため
-#include <wrl/client.h> // Microsoft::WRL::ComPtr のため
-#include <atlbase.h>    // CComPtr (COMオブジェクトのスマートポインタ) 用
-#include <string>       // 文字列変換用
-#include <algorithm>    // std::max/min (例: ボリュームのクランプ) 用
+#include <iostream>
+#include <Windows.h>
+#include <string>
 #include <iomanip>
 
 // Media Foundation Headers
-#include <mfapi.h>      // MFStartup, MFShutdown など基本的なAPI
-#include <mfidl.h>      // IMFSourceReader, MF_MD_DURATION などインターフェースや属性キー
-#include <mfreadwrite.h> // MFCreateSourceReaderFromURL などリーダー/ライターAPI
 
 // utilities for PROPVARIANT
-#include <propvarutil.h> // PropVariantInit, PropVariantClear のため (念のため追加)
+#include <propvarutil.h>
 
-#include "functions.h" // Log関数などの定義があるはず
+#include "functions.h"
 
 
 // x
@@ -30,12 +22,12 @@ AudioManager::AudioManager()
     : pXAudio2(nullptr), pMasteringVoice(nullptr)
 {
     Initialize();
+    Log("コンストラクタ実行成功 : AudioManager");
 }
 
 // x
 AudioManager::~AudioManager()
 {
-    // 読み込まれた全てのオーディオエントリをクリーンアップ
     for (auto& pair : loadedAudio)
     {
         CleanupAudioEntry(pair.second);
@@ -48,15 +40,11 @@ AudioManager::~AudioManager()
         pMasteringVoice->DestroyVoice();
         pMasteringVoice = nullptr;
     }
-    // XAudio2エンジンを解放
-    if (pXAudio2)
-    {
-        pXAudio2->Release();
-        pXAudio2 = nullptr;
-    }
+    pXAudio2.Reset();
 
+    // Media Foundationを終了
     MFShutdown();
-    CoUninitialize();
+    Log("デストラクタ実行成功 : AudioManager");
 }
 
 // x
@@ -68,6 +56,7 @@ HRESULT AudioManager::Initialize()
     {
         Log("XAudio2エンジンの作成に失敗しました。HRESULT: 0x%X", hr);
         assert(0);
+        return hr;
     }
 
     // マスタリングボイスの作成
@@ -75,9 +64,8 @@ HRESULT AudioManager::Initialize()
     if (FAILED(hr))
     {
         Log("XAudio2マスタリングボイスの作成に失敗しました。HRESULT: 0x%X", hr);
-        if (pXAudio2) pXAudio2->Release();
-        pXAudio2 = nullptr;
         assert(0);
+        return hr;
     }
 
     // Media Foundationの初期化
@@ -87,10 +75,9 @@ HRESULT AudioManager::Initialize()
     {
         Log("Media Foundationの初期化に失敗しました。HRESULT: 0x%X", hr);
         if (pMasteringVoice) pMasteringVoice->DestroyVoice();
-        if (pXAudio2) pXAudio2->Release();
         pMasteringVoice = nullptr;
-        pXAudio2 = nullptr;
         assert(0);
+        return hr;
     }
 
     return S_OK;
@@ -114,6 +101,7 @@ uint32_t AudioManager::LoadAudio(const std::string& filePath)
     {
         Log("ソースリーダーの作成に失敗しました: 0x%X", hr);
         assert(0);
+        return UINT32_MAX;
     }
 
     // メディアファイルには 複数のストリーム（音声・動画・字幕など） が含まれていることがあるため音声を取得するよと設定しているらしい
@@ -122,6 +110,7 @@ uint32_t AudioManager::LoadAudio(const std::string& filePath)
     {
         Log("取得ストリームの設定に失敗しました: 0x%X", hr);
         assert(0);
+        return UINT32_MAX;
     }
 
     // Media Foundation に対して、オーディオストリームをPCM形式にデコードするように要求
@@ -130,6 +119,7 @@ uint32_t AudioManager::LoadAudio(const std::string& filePath)
     if (FAILED(hr))
     {
         Log("PCM出力用MFMediaTypeの作成に失敗しました: 0x%X", hr);
+        assert(0);
         return UINT32_MAX;
     }
 
@@ -137,13 +127,15 @@ uint32_t AudioManager::LoadAudio(const std::string& filePath)
     if (FAILED(hr))
     {
         Log("PCM出力の主要タイプ設定に失敗しました: 0x%X", hr);
+        assert(0);
         return UINT32_MAX;
     }
 
-    hr = pOutputMediaType->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_PCM); // ★ここが重要: PCM形式を要求
+    hr = pOutputMediaType->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_PCM);
     if (FAILED(hr))
     {
         Log("サブタイプをPCMに設定できませんでした: 0x%X", hr);
+        assert(0);
         return UINT32_MAX;
     }
 
@@ -152,16 +144,17 @@ uint32_t AudioManager::LoadAudio(const std::string& filePath)
     if (FAILED(hr))
     {
         Log("ソースリーダーの出力タイプをPCMに設定できませんでした: 0x%X", hr);
+        assert(0);
         return UINT32_MAX;
     }
 
-    // ★ Media Foundationが実際に交渉して決定した（デコード後の）メディアタイプを取得します。
-    //    これはPCMフォーマットになっているはずです。
+    // Media FoundationがPCMフォーマットに変えたはずなので確認
     Microsoft::WRL::ComPtr<IMFMediaType> pActualMediaType;
     hr = pSourceReader->GetCurrentMediaType((DWORD)MF_SOURCE_READER_FIRST_AUDIO_STREAM, &pActualMediaType);
     if (FAILED(hr))
     {
         Log("PCM設定後に実際のメディアタイプを取得できませんでした: 0x%X", hr);
+        assert(0);
         return UINT32_MAX;
     }
 
@@ -172,6 +165,7 @@ uint32_t AudioManager::LoadAudio(const std::string& filePath)
     if (FAILED(hr))
     {
         Log("実際のメディアタイプのWAVEFORMATEX変換に失敗しました: 0x%X", hr);
+        assert(0);
         return UINT32_MAX;
     }
     memcpy(&entry.wfx, wfx, sizeof(WAVEFORMATEX));
@@ -192,9 +186,8 @@ uint32_t AudioManager::LoadAudio(const std::string& filePath)
     DWORD currentBufferLength = 0;
     DWORD totalAudioDataSize = 0; // 実際に読み込んだ総バイト数を追跡
 
-    // 初期化時に適度な容量を予約 (例えば、1MB)。後で必要に応じて拡張される
-    // audioData.size() が250400とのことなので、それを目安に少し余裕を持たせる
-    entry.audioData.reserve(256 * 1024); // 256 KB を予約
+    // 初期化時にいい感じの容量を予約 。必要に応じて拡張する
+    entry.audioData.reserve(1024 * 1024); // 1 MB を予約
 
     while (true)
     {
@@ -270,14 +263,13 @@ uint32_t AudioManager::LoadAudio(const std::string& filePath)
 
     if (hr != S_OK && hr != MF_E_END_OF_STREAM)
     {
-        Log("Audio data loading encountered an unhandled error. HRESULT: 0x%X", hr);
+        Log("LoadAudioの失敗 HRESULT: 0x%X", hr);
         return UINT32_MAX;
     }
 
     // XAudio2Bufferの設定
     ZeroMemory(&entry.xAudioBuffer, sizeof(entry.xAudioBuffer));
-    // ここが非常に重要: 読み込んだバイト数をそのまま設定
-    entry.xAudioBuffer.AudioBytes = totalAudioDataSize; // entry.audioData.size() でも同じはず
+    entry.xAudioBuffer.AudioBytes = totalAudioDataSize;
     entry.xAudioBuffer.pAudioData = entry.audioData.data();
     entry.xAudioBuffer.LoopBegin = 0;
     entry.xAudioBuffer.LoopLength = 0;
@@ -312,7 +304,7 @@ uint32_t AudioManager::LoadAudio(const std::string& filePath)
     // マップに格納
     uint32_t id = nextAudioId++;
     loadedAudio[id] = std::move(entry);
-    Log("Audio loaded successfully. ID: %u Path: %s", id, filePath.c_str());
+    Log("オーディオの読み取り成功 ID: %u Path: %s", id, filePath.c_str());
 
     return id;
 }
@@ -380,8 +372,9 @@ void AudioManager::SetVolume(const uint32_t& audioId, float volume)
     // findできなかった場合はloadedAudio.end()がかえってくる。
     if (it != loadedAudio.end())
     {
-        it->second.pSourceVoice->SetVolume(volume);
-        Log("%uのボリュームを%fに設定しました", audioId, volume);
+        float clampedVolume = my_max(0.0f, my_min(1.0f, volume));
+        it->second.pSourceVoice->SetVolume(clampedVolume);
+        Log("%uのボリュームを%fに設定しました", audioId, clampedVolume);
     }
     else
     {
@@ -407,8 +400,9 @@ void AudioManager::SetMasterVolume(float volume)
 {
     if (pMasteringVoice)
     {
-        pMasteringVoice->SetVolume(volume);
-        Log("マスターボリューム: %f", volume);
+        float clampedVolume = my_max(0.0f, my_min(1.0f, volume));
+        pMasteringVoice->SetVolume(clampedVolume);
+        Log("マスターボリューム: %f", clampedVolume);
     }
     else
     {
@@ -469,8 +463,10 @@ void AudioManager::CleanupAudioEntry(AudioEntry& entry)
 {
     if (entry.pSourceVoice)
     {
+        entry.pSourceVoice->Stop(0); // 停止してからDestroyVoice
+        entry.pSourceVoice->FlushSourceBuffers(); // バッファもクリア
         entry.pSourceVoice->DestroyVoice();
-        entry.pSourceVoice = nullptr;
+        //entry.pSourceVoice.Reset(); // ComPtrなのでRelease()ではなくReset()
     }
     entry.audioData.clear();
 }

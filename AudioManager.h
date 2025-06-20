@@ -1,15 +1,19 @@
 #pragma once
-
+#include <sdkddkver.h>
 
 #include <xaudio2.h>
 #include <mfapi.h>
 #include <mfidl.h>
 #include <mferror.h>
+#include <mfreadwrite.h>
+
+#include <wrl/client.h> 
+
 #include <vector>
 #include <map>
 #include <string>
 #include <atomic>
-#include <sdkddkver.h>
+
 
 
 // XAudio2ボイスイベント用のカスタムコールバック
@@ -22,7 +26,7 @@ public:
     STDMETHOD_(void, OnVoiceProcessingPassStart)(UINT32 BytesRequired) override {}
     // ボイスの処理パスが終了したときに呼び出される
     STDMETHOD_(void, OnVoiceProcessingPassEnd)() override {}
-    // ストリームが終了したときに呼び出される（ループ再生時など）
+    // ストリームが終了したときに呼び出される（ループ再生時等）
     STDMETHOD_(void, OnStreamEnd)() override {}
     // バッファの再生が開始したときに呼び出される
     STDMETHOD_(void, OnBufferStart)(void* pBufferContext) override {}
@@ -59,29 +63,28 @@ public:
     bool IsAudioPlaying(const uint32_t& audioId);
 
 private:
-    // 初期化
-    HRESULT Initialize();
-
-    IXAudio2* pXAudio2;
-    IXAudio2MasteringVoice* pMasteringVoice;
-    VoiceCallback voiceCallback;
-
     // オーディオデータとソースボイスを保持する構造体
     struct AudioEntry
     {
-        IXAudio2SourceVoice* pSourceVoice;
         std::vector<BYTE> audioData;
+        UINT32 audioBytes;
         WAVEFORMATEX wfx;
+        //Microsoft::WRL::ComPtr<IXAudio2SourceVoice> pSourceVoice;
+        IXAudio2SourceVoice* pSourceVoice;
         XAUDIO2_BUFFER xAudioBuffer;
-        uint32_t audioId;
     };
     std::map<uint32_t, AudioEntry> loadedAudio;
 
-    // Media Foundation を使用してオーディオデータを読み込みます
-    //HRESULT ReadAudioData(const std::string& filePath, AudioEntry& entry);
-    // AudioEntryのリソースをクリーンアップします
+    // 初期化
+    HRESULT Initialize();
+    // デストラクタで何回もつかう
     void CleanupAudioEntry(AudioEntry& entry);
 
-    // VoiceCallbackからAudioManagerへのアクセスを許可（フレンドクラスやファクトリパターンも検討）
+    Microsoft::WRL::ComPtr<IXAudio2> pXAudio2;
+    IXAudio2MasteringVoice* pMasteringVoice;
+    VoiceCallback voiceCallback;
+
+
+    // VoiceCallbackからAudioManagerへのアクセスを許可
     friend class VoiceCallback;
 };

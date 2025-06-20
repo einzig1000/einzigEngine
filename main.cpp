@@ -1,20 +1,20 @@
-#include "Game.h"           // ゲームロジック
-#include "functions.h"      // 関数s
+#include "Game.h"           // エンジン
+#include "functions.h"      // 便利関数s
 #include "Easings.h"
-
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
+	D3DResourceLeakChecker c;
 	// ウィンドウ、DrectX初期化
 	Game::Initialize(WIDTH, HEIGHT, L"CG2");
 
 
-	// オーディオデータ
+	//// オーディオデータ
 	int alert = Game::LoadAudio("resources/sound/SE/alert.wav");
 	int buzzer = Game::LoadAudio("resources/sound/SE/buzzer.mp3");
 
 
-	// テクスチャ
+	//// テクスチャ
 	int uvCheckerPng;
 	uvCheckerPng = Game::LoadTexture("resources/uvChecker.png");
 	int blockPng;
@@ -47,6 +47,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		///
 		/// ↓更新処理ここから
 		///
+	
 		if (GetHitKey::keys[DIK_1] && !GetHitKey::preKeys[DIK_1])
 		{
 			if (Game::IsAudioPlaying(alert))Game::StopAudio(alert);
@@ -59,8 +60,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		}
 
 		Game::SetMasterVolume(masterVolume);
-		Game::SetAudioVolume(alert, alertVolume);
-		Game::SetAudioVolume(buzzer, buzzerVolume);
+		//Game::SetAudioVolume(alert, alertVolume);
+		//Game::SetAudioVolume(buzzer, buzzerVolume);
 
 		///
 		/// ↑更新処理ここまで
@@ -71,30 +72,30 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		///
 
 		ImGui::Text("-----------------------------------");
-		ImGui::Text("push 1 key : alert.wav");
-		ImGui::Text("push 2 key : buzzer.mp3");
-		ImGui::Text("-----------------------------------");
-
-		if (Game::IsAudioPlaying(alert))ImGui::Text("alert ON");
-		else ImGui::Text("alert OFF");
-		if (Game::IsAudioPlaying(buzzer))ImGui::Text("buzzer ON");
-		else ImGui::Text("buzzer OFF");
-		ImGui::Text("-----------------------------------");
-
-		ImGui::SliderFloat("masterVolume ", &masterVolume, 0.0f, 1.0f);
-		ImGui::SliderFloat("alertVolume  ", &alertVolume, 0.0f, 1.0f);
-		ImGui::SliderFloat("buzzerVolume ", &buzzerVolume, 0.0f, 1.0f);
-		ImGui::Text("-----------------------------------");
-
-		ImGui::Checkbox("loop alert ", &alertLoop);
-		ImGui::Checkbox("loop buzzer", &buzzerLoop);
+		ImGui::Begin("FPS");
+		ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+		ImGui::End();
 		ImGui::Text("-----------------------------------");
 
 
 
-		//ImGui::
-		Game::Drawobj(blockTransforms, {0,0,0}, blockModel, uvCheckerPng, 0xFFFFFFFF);
-		
+
+		//Game::Drawobj(blockTransforms, {0,0,0}, blockModel, uvCheckerPng, 0xFFFFFFFFFF);
+		AABB aabb = Game::CreateAABB(blockTransforms, blockModel);
+
+		Game::DrawLine({ aabb.min.x, aabb.min.y, aabb.min.z }, { aabb.max.x, aabb.min.y, aabb.min.z }, 0xFFFFFFFF);
+		Game::DrawLine({ aabb.min.x, aabb.max.y, aabb.min.z }, { aabb.max.x, aabb.max.y, aabb.min.z }, 0xFFFFFFFF);
+		Game::DrawLine({ aabb.min.x, aabb.min.y, aabb.max.z }, { aabb.max.x, aabb.min.y, aabb.max.z }, 0xFFFFFFFF);
+		Game::DrawLine({ aabb.min.x, aabb.max.y, aabb.max.z }, { aabb.max.x, aabb.max.y, aabb.max.z }, 0xFFFFFFFF);
+		Game::DrawLine({ aabb.min.x, aabb.min.y, aabb.min.z }, { aabb.min.x, aabb.max.y, aabb.min.z }, 0xFFFFFFFF);
+		Game::DrawLine({ aabb.max.x, aabb.min.y, aabb.min.z }, { aabb.max.x, aabb.max.y, aabb.min.z }, 0xFFFFFFFF);
+		Game::DrawLine({ aabb.min.x, aabb.min.y, aabb.max.z }, { aabb.min.x, aabb.max.y, aabb.max.z }, 0xFFFFFFFF);
+		Game::DrawLine({ aabb.max.x, aabb.min.y, aabb.max.z }, { aabb.max.x, aabb.max.y, aabb.max.z }, 0xFFFFFFFF);
+		Game::DrawLine({ aabb.min.x, aabb.min.y, aabb.min.z }, { aabb.min.x, aabb.min.y, aabb.max.z }, 0xFFFFFFFF);
+		Game::DrawLine({ aabb.max.x, aabb.min.y, aabb.min.z }, { aabb.max.x, aabb.min.y, aabb.max.z }, 0xFFFFFFFF);
+		Game::DrawLine({ aabb.min.x, aabb.max.y, aabb.min.z }, { aabb.min.x, aabb.max.y, aabb.max.z }, 0xFFFFFFFF);
+		Game::DrawLine({ aabb.max.x, aabb.max.y, aabb.min.z }, { aabb.max.x, aabb.max.y, aabb.max.z }, 0xFFFFFFFF);
+
 
 		///
 		/// ↑描画処理ここまで

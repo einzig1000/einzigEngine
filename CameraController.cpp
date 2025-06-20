@@ -11,6 +11,7 @@ CameraController::CameraController()
     mousePositionGap_ = { 0,0 };
     cameraMode_ = 0;
 
+    // カメラ
     transform_.translate = { 0.0f, 0.0f, 0.0f };
     transform_.rotate = { 1.26f, 0.0f, 0.0f };
     center_ = { 0.0f, 0.0f, 0.0f };
@@ -187,7 +188,7 @@ void CameraController::Updata()
 
 void CameraController::Draw()
 {
-    //Game::DrawSphere(transformSphere1, vertexData, kSubdivision, monsterBall, { 1.0f, 1.0f, 1.0f, 1.0f });
+    Game::DrawSphere({ {0.1f,0.1f,0.1f}, {5.0f,5.0f,5.0f}, center_ }, { 0,0,0 }, 12, 0, 0xFFFFFFFF);
 }
 
 // 実際に動かす

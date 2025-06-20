@@ -25,9 +25,6 @@
     <Filter Include="DirectXManager">
       <UniqueIdentifier>{22ffd2e0-0bae-47c8-b104-4729f9332def}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Game">
-      <UniqueIdentifier>{24c1e14d-3c15-48b9-9b53-6d5405a3ce02}</UniqueIdentifier>
-    </Filter>
     <Filter Include="WindowManager">
       <UniqueIdentifier>{a6f0f6c9-5841-4611-a8f4-25d2974af7b1}</UniqueIdentifier>
     </Filter>
@@ -45,6 +42,39 @@
     </Filter>
     <Filter Include="AudioManager">
       <UniqueIdentifier>{d6981e3b-9d2e-4acf-aaf3-0a1a631f2860}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DirectXManager\DeviceManager">
+      <UniqueIdentifier>{4ba5f70c-f353-4256-9a1e-edf4997f4439}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DirectXManager\CommandContextManager">
+      <UniqueIdentifier>{54925815-6ffb-4240-be73-f394010b765b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DirectXManager\SwapChainManager">
+      <UniqueIdentifier>{56021724-6ea3-49c5-be4a-63c96ae01e72}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DirectXManager\DepthStencilManager">
+      <UniqueIdentifier>{d1b66a19-8be3-4ce5-81e5-1cc183c0b2d4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DirectXManager\PipelineStateManager">
+      <UniqueIdentifier>{6dd3f47c-5319-43a0-bb64-8153594849a6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DirectXManager\DescriptorHeapManager">
+      <UniqueIdentifier>{3d34e5a9-1927-43e1-831c-2a1090e84234}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DirectXManager\SynchronizationManager">
+      <UniqueIdentifier>{fea8c078-7dcd-4f48-b566-efea0a565046}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DirectXManager\ViewportScissorManager">
+      <UniqueIdentifier>{ac55dbcf-ddc4-45ce-9371-582fc7ac92a3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="TextureManager">
+      <UniqueIdentifier>{ed7ac647-ed94-43e8-abdb-459374cc9331}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine">
+      <UniqueIdentifier>{24c1e14d-3c15-48b9-9b53-6d5405a3ce02}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game">
+      <UniqueIdentifier>{f318fca5-3d7c-49cd-bd1a-0bbb7dad65fe}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -78,8 +108,8 @@
     <ClCompile Include="DirectXManager.cpp">
       <Filter>DirectXManager</Filter>
     </ClCompile>
-    <ClCompile Include="Game.cpp">
-      <Filter>Game</Filter>
+    <ClCompile Include="Engine.cpp">
+      <Filter>Engine</Filter>
     </ClCompile>
     <ClCompile Include="WindowManager.cpp">
       <Filter>WindowManager</Filter>
@@ -99,10 +129,42 @@
     <ClCompile Include="AudioManager.cpp">
       <Filter>AudioManager</Filter>
     </ClCompile>
+    <ClCompile Include="DeviceManager.cpp">
+      <Filter>DirectXManager\DeviceManager</Filter>
+    </ClCompile>
+    <ClCompile Include="CommandContextManager.cpp">
+      <Filter>DirectXManager\CommandContextManager</Filter>
+    </ClCompile>
+    <ClCompile Include="SwapChainManager.cpp">
+      <Filter>DirectXManager\SwapChainManager</Filter>
+    </ClCompile>
+    <ClCompile Include="DepthStencilManager.cpp">
+      <Filter>DirectXManager\DepthStencilManager</Filter>
+    </ClCompile>
+    <ClCompile Include="PipelineStateManager.cpp">
+      <Filter>DirectXManager\PipelineStateManager</Filter>
+    </ClCompile>
+    <ClCompile Include="DescriptorHeapManager.cpp">
+      <Filter>DirectXManager\DescriptorHeapManager</Filter>
+    </ClCompile>
+    <ClCompile Include="SynchronizationManager.cpp">
+      <Filter>DirectXManager\SynchronizationManager</Filter>
+    </ClCompile>
+    <ClCompile Include="ViewportScissorManager.cpp">
+      <Filter>DirectXManager\ViewportScissorManager</Filter>
+    </ClCompile>
+    <ClCompile Include="TextureManager.cpp">
+      <Filter>TextureManager</Filter>
+    </ClCompile>
+    <ClCompile Include="Game.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Object3d.VS.hlsl" />
     <FxCompile Include="Object3d.PS.hlsl" />
+    <FxCompile Include="Line.VS.hlsl" />
+    <FxCompile Include="Line.PS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="externals\imgui\imconfig.h">
@@ -138,8 +200,8 @@
     <ClInclude Include="DirectXManager.h">
       <Filter>DirectXManager</Filter>
     </ClInclude>
-    <ClInclude Include="Game.h">
-      <Filter>Game</Filter>
+    <ClInclude Include="Engine.h">
+      <Filter>Engine</Filter>
     </ClInclude>
     <ClInclude Include="WindowManager.h">
       <Filter>WindowManager</Filter>
@@ -158,6 +220,36 @@
     </ClInclude>
     <ClInclude Include="AudioManager.h">
       <Filter>AudioManager</Filter>
+    </ClInclude>
+    <ClInclude Include="DeviceManager.h">
+      <Filter>DirectXManager\DeviceManager</Filter>
+    </ClInclude>
+    <ClInclude Include="CommandContextManager.h">
+      <Filter>DirectXManager\CommandContextManager</Filter>
+    </ClInclude>
+    <ClInclude Include="SwapChainManager.h">
+      <Filter>DirectXManager\SwapChainManager</Filter>
+    </ClInclude>
+    <ClInclude Include="DepthStencilManager.h">
+      <Filter>DirectXManager\DepthStencilManager</Filter>
+    </ClInclude>
+    <ClInclude Include="PipelineStateManager.h">
+      <Filter>DirectXManager\PipelineStateManager</Filter>
+    </ClInclude>
+    <ClInclude Include="DescriptorHeapManager.h">
+      <Filter>DirectXManager\DescriptorHeapManager</Filter>
+    </ClInclude>
+    <ClInclude Include="SynchronizationManager.h">
+      <Filter>DirectXManager\SynchronizationManager</Filter>
+    </ClInclude>
+    <ClInclude Include="ViewportScissorManager.h">
+      <Filter>DirectXManager\ViewportScissorManager</Filter>
+    </ClInclude>
+    <ClInclude Include="TextureManager.h">
+      <Filter>TextureManager</Filter>
+    </ClInclude>
+    <ClInclude Include="Game.h">
+      <Filter>Game</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

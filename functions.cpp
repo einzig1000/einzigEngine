@@ -10,6 +10,8 @@
 #include <string>
 #include <format>
 #include <algorithm>
+#include <cstdio>
+#include <cstdarg>
 
 #include <d3d12.h>
 #include <wrl.h>
@@ -23,21 +25,13 @@
 #pragma comment(lib, "Dbghelp.lib")
 
 
-template <typename T>
-constexpr T my_sub(const T& a, const T& b)
-{
-    return a - b;
-}
+#ifdef _MSC_VER
+#define VSNPRINTF_FUNC _vsnprintf_s
+#else
+#define VSNPRINTF_FUNC vsnprintf
+#endif
 
-template <typename T>
-constexpr T my_add(const T& a, const T& b)
-{
-    return a + b;
-}
-
-
-
-Vector3 CalculateNormal(const Vector4& v0, const Vector4& v1, const Vector4& v2)
+Vector3 TriangleNormal(const Vector4& v0, const Vector4& v1, const Vector4& v2)
 {
     Vector3 ab = { v1.x - v0.x, v1.y - v0.y, v1.z - v0.z };
     Vector3 ac = { v2.x - v0.x, v2.y - v0.y, v2.z - v0.z };
@@ -337,6 +331,198 @@ bool IsCollision(const Ray& ray, const AABB& aabb, const std::vector<VertexData>
 
 #pragma endregion
 
+#pragma region Log
+
+// ログを出す関数
+void Log(const std::string& message)
+{
+    // string型からchar*型に変換した文字列
+    OutputDebugStringA((message + "\n").c_str());
+}
+// Vector4型用のオーバーロード
+void Log(const std::string& message, const Vector4& vector)
+{
+    Log(message);
+    std::string a = std::format("x={}, y={}, z={}, w={}", vector.x, vector.y, vector.z, vector.w);
+    Log(a);
+}
+// Matrix4x4型用のオーバーロード
+void Log(const std::string& message, const Matrix4x4& matrix)
+{
+    Log(message);
+    std::string a = ":\n";
+    for (int i = 0; i < 4; ++i)
+    {
+        a += std::format("[{}, {}, {}, {}]\n", matrix.m[i][0], matrix.m[i][1], matrix.m[i][2], matrix.m[i][3]);
+    }
+    Log(a);
+}
+// barrier.Transitionの状態をログに出力する関数
+void Log(const std::string& message, const D3D12_RESOURCE_BARRIER& barrier)
+{
+    Log(message);
+    if (barrier.Type == D3D12_RESOURCE_BARRIER_TYPE_TRANSITION)
+    {
+        std::string stateBefore = ResourceStateToString(barrier.Transition.StateBefore);
+        std::string stateAfter = ResourceStateToString(barrier.Transition.StateAfter);
+        std::string a = std::format("Barrier Transition - StateBefore: {}, StateAfter: {}", stateBefore, stateAfter);
+        Log(a);
+    }
+    else
+    {
+        Log("Barrier is not of type TRANSITION.");
+    }
+}
+// RootSignatureの状態をログに出力する関数
+void Log(const D3D12_ROOT_SIGNATURE_DESC& desc)
+{
+    std::ostringstream oss;
+    oss << "[Root Signature]\n"
+        << "NumParameters: " << desc.NumParameters << "\n"
+        << "NumStaticSamplers: " << desc.NumStaticSamplers << "\n"
+        << "Flags: " << desc.Flags << "\n";
+
+    Log(oss.str());
+
+    for (UINT i = 0; i < desc.NumParameters; ++i)
+    {
+        const auto& param = desc.pParameters[i];
+        oss.str(""); // バッファをクリア
+        oss.clear(); // 状態をリセット
+        oss << "[Root Parameter " << i << "]\n"
+            << "Type: " << param.ParameterType << "\n"
+            << "ShaderVisibility: " << param.ShaderVisibility << "\n";
+        Log(oss.str());
+
+        if (param.ParameterType == D3D12_ROOT_PARAMETER_TYPE_CBV ||
+            param.ParameterType == D3D12_ROOT_PARAMETER_TYPE_SRV ||
+            param.ParameterType == D3D12_ROOT_PARAMETER_TYPE_UAV)
+        {
+            oss.str("");
+            oss.clear();
+            oss << "ShaderRegister: " << param.Descriptor.ShaderRegister << "\n"
+                << "RegisterSpace: " << param.Descriptor.RegisterSpace << "\n";
+            Log(oss.str());
+        }
+        else if (param.ParameterType == D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE)
+        {
+            oss.str("");
+            oss.clear();
+            oss << "NumDescriptorRanges: " << param.DescriptorTable.NumDescriptorRanges << "\n";
+            Log(oss.str());
+            for (UINT j = 0; j < param.DescriptorTable.NumDescriptorRanges; ++j)
+            {
+                const auto& range = param.DescriptorTable.pDescriptorRanges[j];
+                oss.str("");
+                oss.clear();
+                oss << "  [Descriptor Range " << j << "]\n"
+                    << "  RangeType: " << range.RangeType << "\n"
+                    << "  BaseShaderRegister: " << range.BaseShaderRegister << "\n"
+                    << "  NumDescriptors: " << range.NumDescriptors << "\n"
+                    << "  RegisterSpace: " << range.RegisterSpace << "\n";
+                Log(oss.str());
+            }
+        }
+    }
+
+    for (UINT i = 0; i < desc.NumStaticSamplers; ++i)
+    {
+        const auto& sampler = desc.pStaticSamplers[i];
+        oss.str("");
+        oss.clear();
+        oss << "[Static Sampler " << i << "]\n"
+            << "ShaderRegister: " << sampler.ShaderRegister << "\n"
+            << "Filter: " << sampler.Filter << "\n"
+            << "AddressU: " << sampler.AddressU << "\n"
+            << "AddressV: " << sampler.AddressV << "\n"
+            << "AddressW: " << sampler.AddressW << "\n"
+            << "ShaderVisibility: " << sampler.ShaderVisibility << "\n";
+        Log(oss.str());
+    }
+}
+// もはやこれしか使わないログ
+void Log(const char* format, ...)
+{
+    // 最大バッファサイズを設定 (文字列の最大長)
+    const int INITIAL_BUFFER_SIZE = 256;
+    std::vector<char> charBuffer(INITIAL_BUFFER_SIZE); // char 型の動的バッファ
+
+    va_list args;
+    va_start(args, format);
+
+    // 最初にバッファサイズを試行。BUFFER_SIZEが足りなければ、vsnprintf君は必要としているサイズをいつも返してくれる
+    int written = VSNPRINTF_FUNC(charBuffer.data(), charBuffer.size(), _TRUNCATE, format, args);
+    // _TRUNCATE は MSVC 固有のオプションで、バッファが足りない場合に切り詰める
+
+    if (written < 0 || written >= charBuffer.size())
+    {
+        // バッファが足りなかった、またはエラーが発生した場合
+        // 必要なサイズを計算してバッファをリサイズし再試行
+        size_t required_size = charBuffer.size() * 2; // ジャスト必要な分あるはずだけど一応2倍にするとよいらしい
+        if (written > 0)
+        {
+            required_size = static_cast<size_t>(written) + 1; // +1 for null terminator
+        }
+        charBuffer.resize(required_size);
+        // va_list をリセットして再利用 (va_copy を使うのがより堅牢)
+        va_end(args); // 一度終了
+        va_start(args, format); // 再度開始
+
+        written = VSNPRINTF_FUNC(charBuffer.data(), charBuffer.size(), _TRUNCATE, format, args);
+    }
+
+    va_end(args); // 可変引数リストの終了
+
+    // ここで charBuffer.data() にフォーマットされた文字列が入っている
+
+    // char (マルチバイト) から wchar_t (ワイド文字) に変換
+    // 変換に必要なバッファサイズを取得
+    int wlen = MultiByteToWideChar(CP_UTF8, 0, charBuffer.data(), written, nullptr, 0);
+    if (wlen > 0)
+    {
+        std::vector<wchar_t> wcharBuffer(wlen + 2); // 改行とNULL終端のために+2
+        MultiByteToWideChar(CP_UTF8, 0, charBuffer.data(), written, wcharBuffer.data(), wlen);
+
+        // ワイド文字バッファに改行とNULL終端を追加
+        wcharBuffer[wlen] = L'\n';
+        wcharBuffer[wlen + 1] = L'\0';
+
+        // OutputDebugStringW で出力
+        OutputDebugStringW(wcharBuffer.data());
+    }
+    else
+    {
+        // 変換エラーの場合
+        OutputDebugStringA("Log: Error converting multi-byte to wide-char.I can't speak Japanese hahaha Sushi\n");
+        // 元の charBuffer をそのまま出力 (文字化け覚悟)
+        OutputDebugStringA(charBuffer.data());
+        OutputDebugStringA("\n");
+    }
+}
+// ログをファイルに書き出す
+void Log(std::ofstream& os, const std::string& message)
+{
+    os << message << std::endl;
+    OutputDebugStringA(message.c_str());
+}
+
+#pragma endregion
+
+
+Vector4 ConvertUintToVector4(uint32_t color)
+{
+    float r = ((color >> 24) & 0xFF) / 255.0f;
+    float g = ((color >> 16) & 0xFF) / 255.0f;
+    float b = ((color >> 8) & 0xFF) / 255.0f;
+    float a = (color & 0xFF) / 255.0f;
+    return { r, g, b, a };
+}
+
+// ARGBをRGBA
+Vector4 ConvertARGBtoRGBA(const Vector4& argb)
+{
+    return { argb.y, argb.z, argb.w, argb.x };
+}
 
 void CreateSphere(VertexData* vertexData, uint32_t kSubdivision)
 {
@@ -474,194 +660,6 @@ std::string ResourceStateToString(D3D12_RESOURCE_STATES state)
     }
 }
 
-// ログを出す関数
-void Log(const std::string& message)
-{
-    // string型からchar*型に変換した文字列
-    OutputDebugStringA((message + "\n").c_str());
-}
-// Vector4型用のオーバーロード
-void Log(const std::string& message, const Vector4& vector)
-{
-    Log(message);
-    std::string a = std::format("x={}, y={}, z={}, w={}", vector.x, vector.y, vector.z, vector.w);
-    Log(a);
-}
-// Matrix4x4型用のオーバーロード
-void Log(const std::string& message, const Matrix4x4& matrix)
-{
-    Log(message);
-    std::string a = ":\n";
-    for (int i = 0; i < 4; ++i)
-    {
-        a += std::format("[{}, {}, {}, {}]\n", matrix.m[i][0], matrix.m[i][1], matrix.m[i][2], matrix.m[i][3]);
-    }
-    Log(a);
-}
-// barrier.Transitionの状態をログに出力する関数
-void Log(const std::string& message, const D3D12_RESOURCE_BARRIER& barrier)
-{
-    Log(message);
-    if (barrier.Type == D3D12_RESOURCE_BARRIER_TYPE_TRANSITION)
-    {
-        std::string stateBefore = ResourceStateToString(barrier.Transition.StateBefore);
-        std::string stateAfter = ResourceStateToString(barrier.Transition.StateAfter);
-        std::string a = std::format("Barrier Transition - StateBefore: {}, StateAfter: {}", stateBefore, stateAfter);
-        Log(a);
-    }
-    else
-    {
-        Log("Barrier is not of type TRANSITION.");
-    }
-}
-// RootSignatureの状態をログに出力する関数
-void Log(const D3D12_ROOT_SIGNATURE_DESC& desc)
-{
-    std::ostringstream oss;
-    oss << "[Root Signature]\n"
-        << "NumParameters: " << desc.NumParameters << "\n"
-        << "NumStaticSamplers: " << desc.NumStaticSamplers << "\n"
-        << "Flags: " << desc.Flags << "\n";
-
-    Log(oss.str());
-
-    for (UINT i = 0; i < desc.NumParameters; ++i)
-    {
-        const auto& param = desc.pParameters[i];
-        oss.str(""); // バッファをクリア
-        oss.clear(); // 状態をリセット
-        oss << "[Root Parameter " << i << "]\n"
-            << "Type: " << param.ParameterType << "\n"
-            << "ShaderVisibility: " << param.ShaderVisibility << "\n";
-        Log(oss.str());
-
-        if (param.ParameterType == D3D12_ROOT_PARAMETER_TYPE_CBV ||
-            param.ParameterType == D3D12_ROOT_PARAMETER_TYPE_SRV ||
-            param.ParameterType == D3D12_ROOT_PARAMETER_TYPE_UAV)
-        {
-            oss.str("");
-            oss.clear();
-            oss << "ShaderRegister: " << param.Descriptor.ShaderRegister << "\n"
-                << "RegisterSpace: " << param.Descriptor.RegisterSpace << "\n";
-            Log(oss.str());
-        }
-        else if (param.ParameterType == D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE)
-        {
-            oss.str("");
-            oss.clear();
-            oss << "NumDescriptorRanges: " << param.DescriptorTable.NumDescriptorRanges << "\n";
-            Log(oss.str());
-            for (UINT j = 0; j < param.DescriptorTable.NumDescriptorRanges; ++j)
-            {
-                const auto& range = param.DescriptorTable.pDescriptorRanges[j];
-                oss.str("");
-                oss.clear();
-                oss << "  [Descriptor Range " << j << "]\n"
-                    << "  RangeType: " << range.RangeType << "\n"
-                    << "  BaseShaderRegister: " << range.BaseShaderRegister << "\n"
-                    << "  NumDescriptors: " << range.NumDescriptors << "\n"
-                    << "  RegisterSpace: " << range.RegisterSpace << "\n";
-                Log(oss.str());
-            }
-        }
-    }
-
-    for (UINT i = 0; i < desc.NumStaticSamplers; ++i)
-    {
-        const auto& sampler = desc.pStaticSamplers[i];
-        oss.str("");
-        oss.clear();
-        oss << "[Static Sampler " << i << "]\n"
-            << "ShaderRegister: " << sampler.ShaderRegister << "\n"
-            << "Filter: " << sampler.Filter << "\n"
-            << "AddressU: " << sampler.AddressU << "\n"
-            << "AddressV: " << sampler.AddressV << "\n"
-            << "AddressW: " << sampler.AddressW << "\n"
-            << "ShaderVisibility: " << sampler.ShaderVisibility << "\n";
-        Log(oss.str());
-    }
-}
-
-void Log(const char* format, ...)
-{
-    // 最大バッファサイズを設定 (printfが出力する文字列の最大長)
-    const int BUFFER_SIZE = 256;
-    char buffer[BUFFER_SIZE];
-
-    // 可変引数リストを扱うためのポインタ
-    va_list args;
-
-    // 可変引数リストの開始
-    va_start(args, format);
-
-    // va_list を使ってフォーマットされた文字列をバッファに書き込む
-    // vsnprintf は、バッファオーバーフローを防ぐために最大サイズを指定できます。
-    // _vsnprintf_s (MSVC固有) の方がより安全ですが、vsnprintf (C標準) も使用できます。
-#ifdef _MSC_VER // Microsoft Visual C++ の場合
-    // _vsnprintf_s は、バッファサイズと最大文字数を引数に取ります
-    // snprintf の戻り値が書き込まれた文字数なので、それと比較して切り捨てを検知することも可能
-    int written = _vsnprintf_s(buffer, BUFFER_SIZE, _TRUNCATE, format, args);
-#else // その他のコンパイラの場合 (GCC, Clangなど)
-    int written = vsnprintf(buffer, BUFFER_SIZE, format, args);
-#endif
-
-    // 可変引数リストの終了
-    va_end(args);
-
-    // バッファに書き込まれた文字列に改行を追加してOutputDebugStringAで出力
-    // written が -1 になる場合 (エラーまたは切り捨て) も考慮
-    if (written >= 0 && written < BUFFER_SIZE - 1)
-    { // 最後に改行とNULL終端文字のスペースを確保
-        buffer[written] = '\n';
-        buffer[written + 1] = '\0';
-        OutputDebugStringA(buffer);
-    }
-    else if (written >= BUFFER_SIZE - 1)
-    { // バッファが足りなかった場合
-// バッファを拡張するか、切り捨てられたことをログに出すなど、エラーハンドリング
-// 現状は、バッファの最後の文字を改行にして、NULL終端する
-        buffer[BUFFER_SIZE - 2] = '\n';
-        buffer[BUFFER_SIZE - 1] = '\0';
-        OutputDebugStringA(buffer);
-        // 必要であれば、別のログメカニズムでバッファオーバーフローを警告
-        OutputDebugStringA("Log: Warning! Log buffer truncated.\n");
-    }
-    else
-    { // vsnprintf がエラーを返した場合
-        OutputDebugStringA("Log: Error in formatting log message.\n");
-    }
-}
-
-
-// ログをファイルに書き出す
-void Log(std::ofstream& os, const std::string& message)
-{
-    os << message << std::endl;
-    OutputDebugStringA(message.c_str());
-}
-
-
-void VectorScreenPrintf(int x, int y, const Vector3& vector, const char* label)
-{
-    // ここではデバッグ出力に表示します（実際の画面描画は環境依存）
-    char buffer[256];
-    sprintf_s(buffer, "%s: (%.3f, %.3f, %.3f)\n", label, vector.x, vector.y, vector.z);
-    OutputDebugStringA(buffer);
-}
-
-void MatrixScreenPrintf(int x, int y, const Matrix4x4& matrix, const char* label)
-{
-    // ここではデバッグ出力に表示します（実際の画面描画は環境依存）
-    char buffer[256];
-    OutputDebugStringA(label);
-    OutputDebugStringA(":\n");
-    for (int i = 0; i < 4; ++i)
-    {
-        sprintf_s(buffer, "[%.3f, %.3f, %.3f, %.3f]\n",
-            matrix.m[i][0], matrix.m[i][1], matrix.m[i][2], matrix.m[i][3]);
-        OutputDebugStringA(buffer);
-    }
-}
 
 
 LONG WINAPI ExportDump(EXCEPTION_POINTERS* exception)
@@ -687,10 +685,11 @@ LONG WINAPI ExportDump(EXCEPTION_POINTERS* exception)
     return EXCEPTION_EXECUTE_HANDLER;
 }
 
-ID3D12Resource* CreateBufferResource(ID3D12Device* device, size_t sizeInBytes)
+Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(ID3D12Device* device, size_t sizeInBytes)
 {
     // ID3D12Resourceを格納するポインタ
-    ID3D12Resource* pResource = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12Resource> pResource = nullptr;
+    //ID3D12Resource* pResource = nullptr;
 
     D3D12_HEAP_PROPERTIES heapProperties{};
     heapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
@@ -699,7 +698,7 @@ ID3D12Resource* CreateBufferResource(ID3D12Device* device, size_t sizeInBytes)
     D3D12_RESOURCE_DESC resourceDesc{};
     // バッファリソース。テクスチャの場合はまた別の設定をする
     resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-    resourceDesc.Width = sizeInBytes; // Vector4を３頂点分
+    resourceDesc.Width = sizeInBytes;
     // バッファの場合はこれらは１にする決まり
     resourceDesc.Height = 1;
     resourceDesc.DepthOrArraySize = 1;
@@ -719,11 +718,12 @@ ID3D12Resource* CreateBufferResource(ID3D12Device* device, size_t sizeInBytes)
     );
 
     assert(SUCCEEDED(hr));
+    pResource->SetName(L"CreateBufferResource()");
 
     return pResource; // 作成したリソースを返す
 };
 
-ID3D12DescriptorHeap* CreateDescriptorHeap(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible)
+Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible)
 {
     // ディスクリプタヒープの生成
     ID3D12DescriptorHeap* DescriptorHeap = nullptr;
@@ -742,7 +742,7 @@ ID3D12DescriptorHeap* CreateDescriptorHeap(ID3D12Device* device, D3D12_DESCRIPTO
 }
 
 // DXCを使ってShaderをCompileする関数
-IDxcBlob* CompileShader(
+Microsoft::WRL::ComPtr<IDxcBlob> CompileShader(
     // CompileするShaderファイルへのパス
     const std::wstring& filePath,
     // Compilerに仕様するProfile
@@ -823,7 +823,7 @@ IDxcBlob* CompileShader(
 
 
 // 2,
-ID3D12Resource* CreateTextureResource(ID3D12Device* device, const DirectX::TexMetadata& metadata)
+Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource(ID3D12Device* device, const DirectX::TexMetadata& metadata)
 {
     // 1,metadataを基にResourceの設定
     D3D12_RESOURCE_DESC resourceDesc{};
@@ -832,6 +832,7 @@ ID3D12Resource* CreateTextureResource(ID3D12Device* device, const DirectX::TexMe
     resourceDesc.MipLevels = UINT16(metadata.mipLevels); // mipmapの数
     resourceDesc.DepthOrArraySize = UINT16(metadata.arraySize); // 奥行き or 配列Textureの配列数
     resourceDesc.Format = metadata.format; // TextureのFormat
+
     resourceDesc.SampleDesc.Count = 1; // サンプリングカウント。１固定
     resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION(metadata.dimension); // Textureの次元数。普段使ってるのは２次元
 
@@ -840,7 +841,7 @@ ID3D12Resource* CreateTextureResource(ID3D12Device* device, const DirectX::TexMe
     heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
 
     // 3,Resourceを生成する
-    ID3D12Resource* resource = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12Resource> resource = nullptr;
     HRESULT hr = device->CreateCommittedResource(
         &heapProperties, // Heapの設定
         D3D12_HEAP_FLAG_NONE, // Heapの特殊な設定
@@ -850,19 +851,20 @@ ID3D12Resource* CreateTextureResource(ID3D12Device* device, const DirectX::TexMe
         IID_PPV_ARGS(&resource) // 作成するResourceポインタへのポインタ
     );
     assert(SUCCEEDED(hr));
+    resource->SetName(L"CreateTextureResource()");
 
     return resource;
 }
 
 // 3,TextureResourceにデータを転送する
 [[nodiscard]]
-ID3D12Resource* UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages, ID3D12Device* device, ID3D12GraphicsCommandList* commandList)
+Microsoft::WRL::ComPtr<ID3D12Resource> UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages, ID3D12Device* device, ID3D12GraphicsCommandList* commandList)
 {
     std::vector<D3D12_SUBRESOURCE_DATA> subresources;
     DirectX::PrepareUpload(device, mipImages.GetImages(), mipImages.GetImageCount(), mipImages.GetMetadata(), subresources);
     uint64_t intermediateSize = GetRequiredIntermediateSize(texture, 0, UINT(subresources.size()));
-    ID3D12Resource* intermediateResource = CreateBufferResource(device, intermediateSize);
-    UpdateSubresources(commandList, texture, intermediateResource, 0, 0, UINT(subresources.size()), subresources.data());
+    Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource = CreateBufferResource(device, intermediateSize);
+    UpdateSubresources(commandList, texture, intermediateResource.Get(), 0, 0, UINT(subresources.size()), subresources.data());
     // Tetureへの転送後は利用できるよう、D3D12_RESOURCE_STATE_COPY_DESTからD3D12_RESOURCE_STATE_GENERIC_READ ResourceStateを変更する
     D3D12_RESOURCE_BARRIER barrier{};
     barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
@@ -876,7 +878,7 @@ ID3D12Resource* UploadTextureData(ID3D12Resource* texture, const DirectX::Scratc
 }
 
 // DepthStencilTextureを作る
-ID3D12Resource* CreateDepthStencilTextureResource(ID3D12Device* device, int32_t width, int32_t height)
+Microsoft::WRL::ComPtr<ID3D12Resource> CreateDepthStencilTextureResource(ID3D12Device* device, int32_t width, int32_t height)
 {
     // 生成するResourceの設定
     D3D12_RESOURCE_DESC resourceDesc{};
@@ -899,7 +901,7 @@ ID3D12Resource* CreateDepthStencilTextureResource(ID3D12Device* device, int32_t 
     depthClearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT; // フォーマット。Resourceろあわせる
 
     // Resourceの生成
-    ID3D12Resource* resource = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12Resource> resource = nullptr;
     HRESULT hr = device->CreateCommittedResource(
         &heapProperties,
         D3D12_HEAP_FLAG_NONE,

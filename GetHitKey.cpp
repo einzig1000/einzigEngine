@@ -6,20 +6,16 @@ BYTE GetHitKey::preKeys[256];
 
 GetHitKey::GetHitKey(HWND hwnd)
 {
-	IDirectInput8* directInput{};
-	HINSTANCE hInstance = GetModuleHandle(nullptr); // Define hInstance to fix the undefined "w" issue  
+	Microsoft::WRL::ComPtr<IDirectInput8> directInput;
+	HINSTANCE hInstance = GetModuleHandle(nullptr);
 	HRESULT result = DirectInput8Create(
 		hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8,
-		(void**)&directInput, nullptr
+		reinterpret_cast<void**>(directInput.GetAddressOf()),
+		nullptr
 	);
-
-	//HRESULT result = DirectInput8Create(
-	//	w.hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8,
-	//	(void**)&directInput, nullptr
-	//);
 	assert(SUCCEEDED(result));
 
-	result = directInput->CreateDevice(GUID_SysKeyboard, &keyboard, NULL);
+	result = directInput->CreateDevice(GUID_SysKeyboard, keyboard.GetAddressOf(), NULL);
 	assert(SUCCEEDED(result));
 
 	result = keyboard->SetDataFormat(&c_dfDIKeyboard);
