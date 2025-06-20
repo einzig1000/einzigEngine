@@ -11,6 +11,11 @@ TextureManager::TextureManager(ID3D12Device* device, ID3D12DescriptorHeap* srvDe
     assert(srvDescriptorHeap_ != nullptr && "ID3D12DescriptorHeap* srvDescriptorHeap cannot be null.");
 }
 
+TextureManager::~TextureManager()
+{
+    intermediateUploadResources_.clear();
+}
+
 
 uint32_t TextureManager::LoadTexture(const std::string& filePath, ID3D12GraphicsCommandList* commandList)
 {
@@ -35,7 +40,8 @@ uint32_t TextureManager::LoadTexture(const std::string& filePath, ID3D12Graphics
 
     // テクスチャリソースとSRVの作成
     text.textureResource = CreateTextureResource(device_, text.metadata);
-    Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource = UploadTextureData(text.textureResource.Get(), text.mipImage, device_, commandList);
+    Microsoft::WRL::ComPtr<ID3D12Resource> tempIntermediateResource = UploadTextureData(text.textureResource.Get(), text.mipImage, device_, commandList);
+    intermediateUploadResources_.push_back(tempIntermediateResource);
 
 
     const uint32_t descriptorSizeSRV = device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);

@@ -4,16 +4,17 @@
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
+	D3DResourceLeakChecker c;
 	// ウィンドウ、DrectX初期化
 	Game::Initialize(WIDTH, HEIGHT, L"CG2");
 
 
-	// オーディオデータ
+	//// オーディオデータ
 	int alert = Game::LoadAudio("resources/sound/SE/alert.wav");
 	int buzzer = Game::LoadAudio("resources/sound/SE/buzzer.mp3");
 
 
-	// テクスチャ
+	//// テクスチャ
 	int uvCheckerPng;
 	uvCheckerPng = Game::LoadTexture("resources/uvChecker.png");
 	int blockPng;
@@ -46,6 +47,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		///
 		/// ↓更新処理ここから
 		///
+	
 		if (GetHitKey::keys[DIK_1] && !GetHitKey::preKeys[DIK_1])
 		{
 			if (Game::IsAudioPlaying(alert))Game::StopAudio(alert);
@@ -60,6 +62,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		Game::SetMasterVolume(masterVolume);
 		Game::SetAudioVolume(alert, alertVolume);
 		Game::SetAudioVolume(buzzer, buzzerVolume);
+
 		///
 		/// ↑更新処理ここまで
 		///

@@ -1,13 +1,4 @@
-#pragma once
-#include "WindowManager.h"
-#include "DirectXManager.h"
-#include "definition.h"
-#include "CameraController.h"
-#include "MouseController.h"
-#include <array>
-#include <vector>
-#include <string>
-#include <wrl/client.h>
+#include "Engine.h"
 
 class Game
 {
@@ -59,101 +50,10 @@ public:
 	// AABBの作成
 	static AABB CreateAABB(const Transforms& transforms, uint32_t objectNumber);
 
-
 private:
-	static void UpdateCamera();
-	static void UpdateLight();
-	static AABB CreateLocalAABB(const ModelData& model);
-	static void InitializeLineResources(ID3D12Device* device);
-
-#pragma region
-	/// <summary>
-	/// Draw用データ作成するやつ
-	/// </summary>
-	/// <param name="dstBufferSize">Map先バッファサイズ</param>
-	/// <param name="srcVertexData">コピー元頂点データ</param>
-	/// <param name="vertexCount">頂点数</param>
-	/// <param name="vertexResource">頂点リソース</param>
-	/// <param name="vertexResourceSize">頂点リソースサイズ</param>
-	/// <param name="material">マテリアル</param>
-	/// <param name="materialColor">マテリアル色</param>
-	/// <param name="enableLighting">ライティングするか</param>
-	/// <param name="uvTransform">UV変換</param>
-	/// <param name="wvp">WVP</param>
-	/// <param name="world">ワールド行列</param>
-	/// <param name="wvpMatrix">WVP行列</param>
-	/// <param name="textureNumber">テクスチャ番号</param>
-	/// <returns> Draw用データ</returns>
-	static DrawData SetupDrawData(
-		size_t dstBufferSize,
-		const VertexData* srcVertexData,
-		size_t vertexCount,
-		Microsoft::WRL::ComPtr<ID3D12Resource>& vertexResource,
-		UINT& vertexResourceSize,
-		Material* material,
-		const uint32_t& materialColor,
-		bool enableLighting,
-		const Matrix4x4& uvTransform,
-		TransformationMatrix* wvp,
-		const Matrix4x4& world,
-		const Matrix4x4& wvpMatrix,
-		uint32_t textureNumber);
-
-#pragma endregion
-
-	static WindowManager* windowManager;
-	static DirectXManager* dxManager;
-
-	// モデル
-	static std::vector<Object3D> objects;
-
-	// 頂点リソースども
-	static Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceSprite;
-	static UINT vertexResourceSizeSprite;
-
-	static Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceObj;
-	static UINT vertexResourceSizeObj;
-
-	static Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceTriangle;
-	static UINT vertexResourceSizeTriangle;
-
-	static Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceSphere;
-	static UINT vertexResourceSizeSphere;
-
-	static Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceLine;
-	static UINT vertexResourceSizeLine;
+	//inline static D3DResourceLeakChecker checker;
+	//static Game* game;
 
 
-	static Microsoft::WRL::ComPtr<ID3D12Resource> indexResource;
-	static D3D12_INDEX_BUFFER_VIEW indexBufferView;
-
-
-
-
-	// 使い回す定数バッファ（マテリアル/WVP）をフレーム数分用意
-	static constexpr size_t kMaxDrawCallPerFrame = 256;
-	static std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> materialResources;
-	static std::vector<Material*> materialData;
-	static std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> wvpResources;
-	static std::vector<TransformationMatrix*> wvpData;
-	static size_t drawCallIndex;
-
-	// ラインはその他の3Dオブジェクトと比べて必要な情報量が少ないから他のと一緒に扱ったら余計な容量使う。はず
-	static constexpr size_t kMaxDrawLineCallPerFrame = 1280;
-	static std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> materialResourceLine;
-	static std::vector<Material*> materialDataLine;
-	static std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> wvpResourceLine;
-	static std::vector<TransformationMatrix*> wvpDataLine;
-	static size_t drawLineCallIndex;
-
-	// ライト
-	static Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource;
-	static DirectionalLight* directionalLightData;
-
-	// カメラ
-	static CameraController* cameraController;
-
-	// マウスホイール量
-	static MouseController* mouseController;
-	static int wheelDelta;
 };
+

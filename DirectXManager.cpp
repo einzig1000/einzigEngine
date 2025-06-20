@@ -63,11 +63,14 @@ void DirectXManager::EndFrame()
     // ResourceStateをRENDER_TARGETからPRESENTへ遷移
     UINT backBufferIndex = swapChainManager->GetCurrentBackBufferIndex();
     barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
     barrier.Transition.pResource = swapChainManager->GetCurrentBackBufferResource();
     barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
     barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
     commandContextManager->GetCommandList()->ResourceBarrier(1, &barrier);
 
+    // --- ここにGPU-CPU同期の待機処理を追加 ---
+    
     // コマンドリストを確定・実行
     HRESULT hr = commandContextManager->GetCommandList()->Close();
     if (FAILED(hr))
@@ -78,12 +81,12 @@ void DirectXManager::EndFrame()
     ID3D12CommandList* commandLists[] = { commandContextManager->GetCommandList() };
     commandContextManager->GetCommandQueue()->ExecuteCommandLists(1, commandLists);
 
-    // スワップチェーンをプレゼンテーション
-    swapChainManager->Present();
-
     // GPU同期
     synchronizationManager->Signal(commandContextManager->GetCommandQueue());
     synchronizationManager->WaitForGPU();
+
+    // スワップチェーンをプレゼンテーション
+    swapChainManager->Present();
 
     // コマンドリストをリセット
     commandContextManager->ResetCommandList();

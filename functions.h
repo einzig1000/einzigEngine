@@ -171,7 +171,8 @@ LONG WINAPI ExportDump(EXCEPTION_POINTERS* exception);
 /// <param name="device">DirectX 12 デバイス</param>
 /// <param name="sizeInBytes">バッファのサイズ (バイト単位)</param>
 /// <returns>作成されたバッファリソース</returns>
-ID3D12Resource* CreateBufferResource(ID3D12Device* device, size_t sizeInBytes);
+Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(ID3D12Device* device, size_t sizeInBytes);
+//ID3D12Resource* CreateBufferResource(ID3D12Device* device, size_t sizeInBytes);
 
 /// <summary>
 /// HLSL シェーダーをコンパイルする関数
@@ -182,7 +183,7 @@ ID3D12Resource* CreateBufferResource(ID3D12Device* device, size_t sizeInBytes);
 /// <param name="dxcCompiler">DXC コンパイラ</param>
 /// <param name="includeHandler">インクルードハンドラ</param>
 /// <returns>コンパイルされたシェーダーバイナリ</returns>
-IDxcBlob* CompileShader(const std::wstring& filePath, const wchar_t* profile, IDxcUtils* dxcUtils, IDxcCompiler3* dxcCompiler, IDxcIncludeHandler* includeHandler);
+Microsoft::WRL::ComPtr<IDxcBlob> CompileShader(const std::wstring& filePath, const wchar_t* profile, IDxcUtils* dxcUtils, IDxcCompiler3* dxcCompiler, IDxcIncludeHandler* includeHandler);
 
 /// <summary>
 /// 指定されたタイプと数のディスクリプタヒープを作成する関数
@@ -192,7 +193,7 @@ IDxcBlob* CompileShader(const std::wstring& filePath, const wchar_t* profile, ID
 /// <param name="numDescriptors">ディスクリプタの数</param>
 /// <param name="shaderVisible">シェーダーからアクセス可能かどうか</param>
 /// <returns>作成されたディスクリプタヒープ</returns>
-ID3D12DescriptorHeap* CreateDescriptorHeap(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible);
+Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible);
 
 /// <summary>
 /// テクスチャのメタデータを基に DirectX 12 のテクスチャリソースを作成する関数
@@ -200,7 +201,7 @@ ID3D12DescriptorHeap* CreateDescriptorHeap(ID3D12Device* device, D3D12_DESCRIPTO
 /// <param name="device">DirectX 12 デバイス</param>
 /// <param name="metadata">テクスチャのメタデータ</param>
 /// <returns>作成されたテクスチャリソース</returns>
-ID3D12Resource* CreateTextureResource(ID3D12Device* device, const DirectX::TexMetadata& metadata);
+Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource(ID3D12Device* device, const DirectX::TexMetadata& metadata);
 
 /// <summary>
 /// テクスチャデータを GPU にアップロードする関数
@@ -211,7 +212,7 @@ ID3D12Resource* CreateTextureResource(ID3D12Device* device, const DirectX::TexMe
 /// <param name="commandList">コマンドリスト</param>
 /// <returns>アップロードに使用した中間リソース</returns>
 [[nodiscard]]
-ID3D12Resource* UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages, ID3D12Device* device, ID3D12GraphicsCommandList* commandList);
+Microsoft::WRL::ComPtr<ID3D12Resource> UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages, ID3D12Device* device, ID3D12GraphicsCommandList* commandList);
 
 /// <summary>
 /// 深度ステンシルテクスチャリソースを作成する関数
@@ -220,7 +221,7 @@ ID3D12Resource* UploadTextureData(ID3D12Resource* texture, const DirectX::Scratc
 /// <param name="width">テクスチャの幅</param>
 /// <param name="height">テクスチャの高さ</param>
 /// <returns>作成された深度ステンシルテクスチャリソース</returns>
-ID3D12Resource* CreateDepthStencilTextureResource(ID3D12Device* device, int32_t width, int32_t height);
+Microsoft::WRL::ComPtr<ID3D12Resource> CreateDepthStencilTextureResource(ID3D12Device* device, int32_t width, int32_t height);
 
 
 /// <summary>
