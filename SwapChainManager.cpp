@@ -1,10 +1,13 @@
 #include "SwapChainManager.h"
+#include "functions.h"
 
 SwapChainManager::SwapChainManager(ID3D12Device* device, ID3D12CommandQueue* commandQueue, HWND hwnd, int width, int height)
 {
     InitializeSwapChainInternal(device, commandQueue, hwnd, width, height);
     InitializeRenderTargetView(device);
     backBufferIndex = 0;
+
+    Log("コンストラクタ実行成功 : SwapChainManager");
 }
 
 SwapChainManager::~SwapChainManager(){}
@@ -30,6 +33,8 @@ void SwapChainManager::InitializeSwapChainInternal(ID3D12Device* device, ID3D12C
     assert(SUCCEEDED(hr));
     hr = swapChain->GetBuffer(1, IID_PPV_ARGS(&swapChainResources[1]));
     assert(SUCCEEDED(hr));
+
+    Log("デストラクタ実行成功 : SwapChainManager");
 }
 
 void SwapChainManager::InitializeRenderTargetView(ID3D12Device* device)

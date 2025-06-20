@@ -10,9 +10,14 @@ PipelineStateManager::PipelineStateManager(ID3D12Device* device)
     InitializeRootSignatureInternal(device); // ルートシグネチャは共有
     InitializePSOInternal(device); // オブジェクト描画用
     InitializeLinePSOInternal(device); // ライン   描画用
+
+    Log("コンストラクタ実行成功 : PipelineStateManager");
 }
 
-PipelineStateManager::~PipelineStateManager(){}
+PipelineStateManager::~PipelineStateManager()
+{
+    Log("デストラクタ実行成功 : PipelineStateManager");
+}
 
 void PipelineStateManager::InitializeDxc()
 {

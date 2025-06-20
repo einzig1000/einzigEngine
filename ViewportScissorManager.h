@@ -5,7 +5,7 @@ class ViewportScissorManager
 {
 public:
     ViewportScissorManager(int width, int height);
-    ~ViewportScissorManager() = default;
+    ~ViewportScissorManager();
 
     const D3D12_VIEWPORT& GetViewport() const { return viewport; }
     const D3D12_RECT& GetScissorRect() const { return scissorRect; }

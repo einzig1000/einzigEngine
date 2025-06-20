@@ -10,6 +10,8 @@
 #include <string>
 #include <format>
 #include <algorithm>
+#include <cstdio>
+#include <cstdarg>
 
 #include <d3d12.h>
 #include <wrl.h>
@@ -23,6 +25,11 @@
 #pragma comment(lib, "Dbghelp.lib")
 
 
+#ifdef _MSC_VER
+#define VSNPRINTF_FUNC _vsnprintf_s
+#else
+#define VSNPRINTF_FUNC vsnprintf
+#endif
 
 Vector3 TriangleNormal(const Vector4& v0, const Vector4& v1, const Vector4& v2)
 {
@@ -437,50 +444,59 @@ void Log(const D3D12_ROOT_SIGNATURE_DESC& desc)
 void Log(const char* format, ...)
 {
     // 最大バッファサイズを設定 (文字列の最大長)
-    const int BUFFER_SIZE = 256;
-    char buffer[BUFFER_SIZE];
+    const int INITIAL_BUFFER_SIZE = 256;
+    std::vector<char> charBuffer(INITIAL_BUFFER_SIZE); // char 型の動的バッファ
 
-    // 可変引数リストを扱うためのポインタ
     va_list args;
-
-    // 知らない概念可変引数リストの開始
     va_start(args, format);
 
-    // va_list を使ってフォーマットされた文字列をバッファに書き込む
-    // vsnprintf は、バッファオーバーフローを防ぐために最大サイズを指定できます。
-    // _vsnprintf_s (MSVC固有) の方がより安全ですが、vsnprintf (C標準) も使用できます。
-#ifdef _MSC_VER // Microsoft Visual C++ の場合
-    // _vsnprintf_s は、バッファサイズと最大文字数を引数に取ります
-    // snprintf の戻り値が書き込まれた文字数なので、それと比較して切り捨てを検知することも可能
-    int written = _vsnprintf_s(buffer, BUFFER_SIZE, _TRUNCATE, format, args);
-#else // その他のコンパイラの場合 (GCC, Clangなど)
-    int written = vsnprintf(buffer, BUFFER_SIZE, format, args);
-#endif
+    // 最初にバッファサイズを試行。BUFFER_SIZEが足りなければ、vsnprintf君は必要としているサイズをいつも返してくれる
+    int written = VSNPRINTF_FUNC(charBuffer.data(), charBuffer.size(), _TRUNCATE, format, args);
+    // _TRUNCATE は MSVC 固有のオプションで、バッファが足りない場合に切り詰める
 
-    // 可変引数リストの終了
-    va_end(args);
+    if (written < 0 || written >= charBuffer.size())
+    {
+        // バッファが足りなかった、またはエラーが発生した場合
+        // 必要なサイズを計算してバッファをリサイズし再試行
+        size_t required_size = charBuffer.size() * 2; // ジャスト必要な分あるはずだけど一応2倍にするとよいらしい
+        if (written > 0)
+        {
+            required_size = static_cast<size_t>(written) + 1; // +1 for null terminator
+        }
+        charBuffer.resize(required_size);
+        // va_list をリセットして再利用 (va_copy を使うのがより堅牢)
+        va_end(args); // 一度終了
+        va_start(args, format); // 再度開始
 
-    // バッファに書き込まれた文字列に改行を追加してOutputDebugStringAで出力
-    // written が -1 になる場合 (エラーまたは切り捨て) も考慮
-    if (written >= 0 && written < BUFFER_SIZE - 1)
-    { // 最後に改行とNULL終端文字のスペースを確保
-        buffer[written] = '\n';
-        buffer[written + 1] = '\0';
-        OutputDebugStringA(buffer);
+        written = VSNPRINTF_FUNC(charBuffer.data(), charBuffer.size(), _TRUNCATE, format, args);
     }
-    else if (written >= BUFFER_SIZE - 1)
-    { // バッファが足りなかった場合
-// バッファを拡張するか、切り捨てられたことをログに出すなど、エラーハンドリング
-// 現状は、バッファの最後の文字を改行にして、NULL終端する
-        buffer[BUFFER_SIZE - 2] = '\n';
-        buffer[BUFFER_SIZE - 1] = '\0';
-        OutputDebugStringA(buffer);
-        // 必要であれば、別のログメカニズムでバッファオーバーフローを警告
-        OutputDebugStringA("Log: Warning! Log buffer truncated.\n");
+
+    va_end(args); // 可変引数リストの終了
+
+    // ここで charBuffer.data() にフォーマットされた文字列が入っている
+
+    // char (マルチバイト) から wchar_t (ワイド文字) に変換
+    // 変換に必要なバッファサイズを取得
+    int wlen = MultiByteToWideChar(CP_UTF8, 0, charBuffer.data(), written, nullptr, 0);
+    if (wlen > 0)
+    {
+        std::vector<wchar_t> wcharBuffer(wlen + 2); // 改行とNULL終端のために+2
+        MultiByteToWideChar(CP_UTF8, 0, charBuffer.data(), written, wcharBuffer.data(), wlen);
+
+        // ワイド文字バッファに改行とNULL終端を追加
+        wcharBuffer[wlen] = L'\n';
+        wcharBuffer[wlen + 1] = L'\0';
+
+        // OutputDebugStringW で出力
+        OutputDebugStringW(wcharBuffer.data());
     }
     else
-    { // vsnprintf がエラーを返した場合
-        OutputDebugStringA("Log: Error in formatting log message.\n");
+    {
+        // 変換エラーの場合
+        OutputDebugStringA("Log: Error converting multi-byte to wide-char.I can't speak Japanese hahaha Sushi\n");
+        // 元の charBuffer をそのまま出力 (文字化け覚悟)
+        OutputDebugStringA(charBuffer.data());
+        OutputDebugStringA("\n");
     }
 }
 // ログをファイルに書き出す

@@ -1,4 +1,5 @@
 #include "ViewportScissorManager.h"
+#include "functions.h"
 
 ViewportScissorManager::ViewportScissorManager(int width, int height)
 {
@@ -13,4 +14,11 @@ ViewportScissorManager::ViewportScissorManager(int width, int height)
     scissorRect.right = width;
     scissorRect.top = 0;
     scissorRect.bottom = height;
+
+    Log("コンストラクタ実行成功 : ViewportScissorManager");
+}
+
+ViewportScissorManager::~ViewportScissorManager()
+{
+    Log("デストラクタ実行成功 : ViewportScissorManager");
 }

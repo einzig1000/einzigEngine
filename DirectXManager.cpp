@@ -3,6 +3,7 @@
 #include "externals/imgui/imgui_impl_dx12.h"
 #include "externals/imgui/imgui_impl_win32.h"
 
+
 DirectXManager::DirectXManager(HWND hwnd, int width, int height)
 {
     deviceManager = std::make_unique<DeviceManager>();
@@ -17,9 +18,14 @@ DirectXManager::DirectXManager(HWND hwnd, int width, int height)
     audioManager_ = std::make_unique<AudioManager>(); // もし引数がない場合
     textureManager_ = std::make_unique<TextureManager>(GetDevice(), GetsrvDescriptorHeap());
     getHitKey_ = std::make_unique<GetHitKey>(hwnd);
+
+    Log("コンストラクタ実行成功 : DirectXManager");
 }
 
-DirectXManager::~DirectXManager(){}
+DirectXManager::~DirectXManager()
+{
+    Log("デストラクタ実行成功 : DirectXManager");
+}
 
 void DirectXManager::BeginFrame()
 {

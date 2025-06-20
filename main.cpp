@@ -59,9 +59,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			Game::PlayAudio(buzzer, buzzerLoop);
 		}
 
-		Game::SetMasterVolume(masterVolume);
-		Game::SetAudioVolume(alert, alertVolume);
-		Game::SetAudioVolume(buzzer, buzzerVolume);
+		//Game::SetMasterVolume(masterVolume);
+		//Game::SetAudioVolume(alert, alertVolume);
+		//Game::SetAudioVolume(buzzer, buzzerVolume);
 
 		///
 		/// ↑更新処理ここまで

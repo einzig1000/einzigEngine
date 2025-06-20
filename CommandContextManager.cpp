@@ -1,4 +1,5 @@
 #include "CommandContextManager.h"
+#include "functions.h"
 
 CommandContextManager::CommandContextManager(ID3D12Device* device)
 {
@@ -13,9 +14,14 @@ CommandContextManager::CommandContextManager(ID3D12Device* device)
 
     hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator.Get(), nullptr, IID_PPV_ARGS(&commandList));
     assert(SUCCEEDED(hr));
+
+    Log("コンストラクタ実行成功 : CommandContextManager");
 }
 
-CommandContextManager::~CommandContextManager(){}
+CommandContextManager::~CommandContextManager()
+{
+    Log("デストラクタ実行成功 : CommandContextManager");
+}
 
 void CommandContextManager::ResetCommandList()
 {

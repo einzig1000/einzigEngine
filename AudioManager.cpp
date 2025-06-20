@@ -22,6 +22,7 @@ AudioManager::AudioManager()
     : pXAudio2(nullptr), pMasteringVoice(nullptr)
 {
     Initialize();
+    Log("コンストラクタ実行成功 : AudioManager");
 }
 
 // x
@@ -43,7 +44,7 @@ AudioManager::~AudioManager()
 
     // Media Foundationを終了
     MFShutdown();
-    Log("AudioManager::デストラクタ実行完了。");
+    Log("デストラクタ実行成功 : AudioManager");
 }
 
 // x

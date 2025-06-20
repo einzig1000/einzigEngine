@@ -1,4 +1,5 @@
 #include "DepthStencilManager.h"
+#include "functions.h"
 
 DepthStencilManager::DepthStencilManager(ID3D12Device* device, int width, int height)
 {
@@ -43,6 +44,10 @@ DepthStencilManager::DepthStencilManager(ID3D12Device* device, int width, int he
     dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
 
     device->CreateDepthStencilView(depthStencilBuffer.Get(), &dsvDesc, dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+    Log("コンストラクタ実行成功 : DepthStencilManager");
 }
 
-DepthStencilManager::~DepthStencilManager(){}
+DepthStencilManager::~DepthStencilManager()
+{
+    Log("デストラクタ実行成功 : DepthStencilManager");
+}

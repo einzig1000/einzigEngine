@@ -2,6 +2,7 @@
 #include <vector>
 #include <d3d12sdklayers.h>
 #include <dxgi1_6.h> 
+#include "functions.h"
 
 #pragma comment(lib, "dxgi.lib") 
 #pragma comment(lib, "d3d12.lib") 
@@ -12,9 +13,14 @@ DeviceManager::DeviceManager()
     EnableDebugLayer();
 #endif
     InitializeDeviceInternal();
+
+    Log("コンストラクタ実行成功 : DeviceManager");
 }
 
-DeviceManager::~DeviceManager(){}
+DeviceManager::~DeviceManager()
+{
+    Log("デストラクタ実行成功 : DeviceManager");
+}
 
 void DeviceManager::EnableDebugLayer()
 {

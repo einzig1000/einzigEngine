@@ -1,4 +1,5 @@
 #include "DescriptorHeapManager.h"
+#include "functions.h"
 
 DescriptorHeapManager::DescriptorHeapManager(ID3D12Device* device)
 {
@@ -8,6 +9,11 @@ DescriptorHeapManager::DescriptorHeapManager(ID3D12Device* device)
     DescriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     HRESULT hr = device->CreateDescriptorHeap(&DescriptorHeapDesc, IID_PPV_ARGS(&srvDescriptorHeap));
     assert(SUCCEEDED(hr));
+
+    Log("コンストラクタ実行成功 : DescriptorHeapManager");
 }
 
-DescriptorHeapManager::~DescriptorHeapManager(){}
+DescriptorHeapManager::~DescriptorHeapManager()
+{
+    Log("デストラクタ実行成功 : DescriptorHeapManager");
+}

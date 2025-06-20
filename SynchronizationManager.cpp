@@ -1,4 +1,5 @@
 #include "SynchronizationManager.h"
+#include "functions.h"
 
 SynchronizationManager::SynchronizationManager(ID3D12Device* device) : fenceValue(0)
 {
@@ -11,6 +12,8 @@ SynchronizationManager::SynchronizationManager(ID3D12Device* device) : fenceValu
 
     fenceEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
     assert(fenceEvent != nullptr);
+
+    Log("コンストラクタ実行成功 : SynchronizationManager");
 }
 
 SynchronizationManager::~SynchronizationManager()
@@ -19,6 +22,7 @@ SynchronizationManager::~SynchronizationManager()
     {
         CloseHandle(fenceEvent);
     }
+    Log("デストラクタ実行成功 : SynchronizationManager");
 }
 
 void SynchronizationManager::Signal(ID3D12CommandQueue* commandQueue)
