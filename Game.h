@@ -13,58 +13,58 @@ class Game
 {
 public:
 	// 初期化
-	static void Initialize(int width, int height, const std::wstring& title);
+	void Initialize(int width, int height, const std::wstring& title);
 
 	// メインループ用
-	static bool ProcessMessage();
-	static void BeginFrame();
-	static void EndFrame();
+	bool ProcessMessage();
+	void BeginFrame();
+	void EndFrame();
 
 	// 終了処理
-	static void Finalize();
+	void Finalize();
 
 	// リソース読み込み
-	static uint32_t LoadOBJ(const std::string& directoryPath, const std::string& filename);
-	static uint32_t LoadTexture(const std::string& filePath);
-	static uint32_t LoadAudio(const std::string& filePath);
+	uint32_t LoadOBJ(const std::string& directoryPath, const std::string& filename);
+	uint32_t LoadTexture(const std::string& filePath);
+	uint32_t LoadAudio(const std::string& filePath);
 
 	// 描画
-	static void Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor);
-	static void DrawTriangle(const Transforms& localTransform, const Transforms& worldTransform, const VertexData* vertexData, uint32_t textureNumber, const uint32_t& materialColor);
-	static void DrawSphere(const Transforms& localTransform, VertexData* vertexData, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor);
-	static void DrawSprite(const Transforms& localTransform, VertexData* vertexData, uint32_t textureNumber, const uint32_t& materialColor);
-	static void DrawLine(const Vector3& start, const Vector3& end, const uint32_t& materialColor);
+	void Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor);
+	void DrawTriangle(const Transforms& localTransform, const Transforms& worldTransform, const VertexData* vertexData, uint32_t textureNumber, const uint32_t& materialColor);
+	void DrawSphere(const Transforms& localTransform, VertexData* vertexData, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor);
+	void DrawSprite(const Transforms& localTransform, VertexData* vertexData, uint32_t textureNumber, const uint32_t& materialColor);
+	void DrawLine(const Vector3& start, const Vector3& end, const uint32_t& materialColor);
 
 	// 音
-	static void PlayAudio(const uint32_t& audioId, bool loop);
-	static void StopAudio(const uint32_t& audioId);
-	static void SetAudioVolume(const uint32_t& audioId, float volume);
-	static void SetMasterVolume(float volume);
-	static float GetVolume(const uint32_t& audioId);
-	static float GetMasterVolume();
-	static bool IsAudioPlaying(const uint32_t& audioId);
+	void PlayAudio(const uint32_t& audioId, bool loop);
+	void StopAudio(const uint32_t& audioId);
+	void SetAudioVolume(const uint32_t& audioId, float volume);
+	void SetMasterVolume(float volume);
+	float GetVolume(const uint32_t& audioId);
+	float GetMasterVolume();
+	bool IsAudioPlaying(const uint32_t& audioId);
 
 	// マウス
-	static void GetMousePosition(Vector2* position);
-	static void SetMouseRay();
-	static bool IsCollisionMouseRayAABB(AABB aabb, int objNum);
-	static bool IsPressMouse(int i);
-	static uint32_t GetWheel();
+	void GetMousePosition(Vector2* position);
+	void SetMouseRay();
+	bool IsCollisionMouseRayAABB(AABB aabb, int objNum);
+	bool IsPressMouse(int i);
+	uint32_t GetWheel();
 
 	// カメラ
-	static void MoveCenterTarget(Vector3 target, int spendFrame);
-	static void MoveRotateTarget(Vector3 target, int spendFrame);
-	static void MoveDistanceTarget(float target, int spendFrame);
+	void MoveCenterTarget(Vector3 target, int spendFrame);
+	void MoveRotateTarget(Vector3 target, int spendFrame);
+	void MoveDistanceTarget(float target, int spendFrame);
 
 	// AABBの作成
-	static AABB CreateAABB(const Transforms& transforms, uint32_t objectNumber);
+	AABB CreateAABB(const Transforms& transforms, uint32_t objectNumber);
 
 
 private:
-	static void UpdateCamera();
-	static void UpdateLight();
-	static AABB CreateLocalAABB(const ModelData& model);
-	static void InitializeLineResources(ID3D12Device* device);
+	void UpdateCamera();
+	void UpdateLight();
+	AABB CreateLocalAABB(const ModelData& model);
+	void InitializeLineResources(ID3D12Device* device);
 
 #pragma region
 	/// <summary>
@@ -84,7 +84,7 @@ private:
 	/// <param name="wvpMatrix">WVP行列</param>
 	/// <param name="textureNumber">テクスチャ番号</param>
 	/// <returns> Draw用データ</returns>
-	static DrawData SetupDrawData(
+	DrawData SetupDrawData(
 		size_t dstBufferSize,
 		const VertexData* srcVertexData,
 		size_t vertexCount,
@@ -101,59 +101,59 @@ private:
 
 #pragma endregion
 
-	static WindowManager* windowManager;
-	static DirectXManager* dxManager;
+	WindowManager* windowManager;
+	DirectXManager* dxManager;
 
 	// モデル
-	static std::vector<Object3D> objects;
+	std::vector<Object3D> objects;
 
 	// 頂点リソースども
-	static Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceSprite;
-	static UINT vertexResourceSizeSprite;
+	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceSprite;
+	UINT vertexResourceSizeSprite;
 
-	static Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceObj;
-	static UINT vertexResourceSizeObj;
+	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceObj;
+	UINT vertexResourceSizeObj;
 
-	static Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceTriangle;
-	static UINT vertexResourceSizeTriangle;
+	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceTriangle;
+	UINT vertexResourceSizeTriangle;
 
-	static Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceSphere;
-	static UINT vertexResourceSizeSphere;
+	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceSphere;
+	UINT vertexResourceSizeSphere;
 
-	static Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceLine;
-	static UINT vertexResourceSizeLine;
+	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceLine;
+	UINT vertexResourceSizeLine;
 
 
-	static Microsoft::WRL::ComPtr<ID3D12Resource> indexResource;
-	static D3D12_INDEX_BUFFER_VIEW indexBufferView;
+	Microsoft::WRL::ComPtr<ID3D12Resource> indexResource;
+	D3D12_INDEX_BUFFER_VIEW indexBufferView;
 
 
 
 
 	// 使い回す定数バッファ（マテリアル/WVP）をフレーム数分用意
-	static constexpr size_t kMaxDrawCallPerFrame = 256;
-	static std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> materialResources;
-	static std::vector<Material*> materialData;
-	static std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> wvpResources;
-	static std::vector<TransformationMatrix*> wvpData;
-	static size_t drawCallIndex;
+	size_t kMaxDrawCallPerFrame = 256;
+	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> materialResources;
+	std::vector<Material*> materialData;
+	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> wvpResources;
+	std::vector<TransformationMatrix*> wvpData;
+	size_t drawCallIndex;
 
 	// ラインはその他の3Dオブジェクトと比べて必要な情報量が少ないから他のと一緒に扱ったら余計な容量使う。はず
-	static constexpr size_t kMaxDrawLineCallPerFrame = 1280;
-	static std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> materialResourceLine;
-	static std::vector<Material*> materialDataLine;
-	static std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> wvpResourceLine;
-	static std::vector<TransformationMatrix*> wvpDataLine;
-	static size_t drawLineCallIndex;
+	size_t kMaxDrawLineCallPerFrame = 1280;
+	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> materialResourceLine;
+	std::vector<Material*> materialDataLine;
+	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> wvpResourceLine;
+	std::vector<TransformationMatrix*> wvpDataLine;
+	size_t drawLineCallIndex;
 
 	// ライト
-	static Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource;
-	static DirectionalLight* directionalLightData;
+	Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource;
+	DirectionalLight* directionalLightData;
 
 	// カメラ
-	static CameraController* cameraController;
+	CameraController* cameraController;
 
 	// マウスホイール量
-	static MouseController* mouseController;
-	static int wheelDelta;
+	MouseController* mouseController;
+	int wheelDelta;
 };

@@ -22,6 +22,7 @@ AudioManager::AudioManager()
     : pXAudio2(nullptr), pMasteringVoice(nullptr)
 {
     Initialize();
+    Log("AudioManager::コンストラクタ実行完了。");
 }
 
 // x
@@ -465,6 +466,7 @@ void AudioManager::CleanupAudioEntry(AudioEntry& entry)
         entry.pSourceVoice->Stop(0); // 停止してからDestroyVoice
         entry.pSourceVoice->FlushSourceBuffers(); // バッファもクリア
         entry.pSourceVoice->DestroyVoice();
+        
         //entry.pSourceVoice.Reset(); // ComPtrなのでRelease()ではなくReset()
     }
     entry.audioData.clear();

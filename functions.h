@@ -171,7 +171,7 @@ LONG WINAPI ExportDump(EXCEPTION_POINTERS* exception);
 /// <param name="device">DirectX 12 デバイス</param>
 /// <param name="sizeInBytes">バッファのサイズ (バイト単位)</param>
 /// <returns>作成されたバッファリソース</returns>
-ID3D12Resource* CreateBufferResource(ID3D12Device* device, size_t sizeInBytes);
+Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(ID3D12Device* device, size_t sizeInBytes);
 
 /// <summary>
 /// HLSL シェーダーをコンパイルする関数
@@ -211,7 +211,7 @@ ID3D12Resource* CreateTextureResource(ID3D12Device* device, const DirectX::TexMe
 /// <param name="commandList">コマンドリスト</param>
 /// <returns>アップロードに使用した中間リソース</returns>
 [[nodiscard]]
-ID3D12Resource* UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages, ID3D12Device* device, ID3D12GraphicsCommandList* commandList);
+Microsoft::WRL::ComPtr<ID3D12Resource> UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages, ID3D12Device* device, ID3D12GraphicsCommandList* commandList);
 
 /// <summary>
 /// 深度ステンシルテクスチャリソースを作成する関数

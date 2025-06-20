@@ -111,6 +111,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MouseController.cpp" />
     <ClCompile Include="AudioManager.cpp" />
+    <ClCompile Include="Novice.cpp" />
     <ClCompile Include="PipelineStateManager.cpp" />
     <ClCompile Include="SwapChainManager.cpp" />
     <ClCompile Include="SynchronizationManager.cpp" />
@@ -166,6 +167,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="GetHitKey.h" />
     <ClInclude Include="MouseController.h" />
     <ClInclude Include="AudioManager.h" />
+    <ClInclude Include="Novice.h" />
     <ClInclude Include="PipelineStateManager.h" />
     <ClInclude Include="SwapChainManager.h" />
     <ClInclude Include="SynchronizationManager.h" />

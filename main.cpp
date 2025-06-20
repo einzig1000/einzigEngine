@@ -1,32 +1,41 @@
-#include "Game.h"           // エンジン
-#include "functions.h"      // 便利関数s
+#include "Novice.h"
+#include "functions.h"
 #include "Easings.h"
+
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
+	//D3DResourceLeakChecker checker_;
+	//Game game_;
+
+	//checker = &checker_;
+	//game = &game_;
+
+
+
 	// ウィンドウ、DrectX初期化
-	Game::Initialize(WIDTH, HEIGHT, L"CG2");
+	Novice::Initialize(WIDTH, HEIGHT, L"CG2");
 
 
 	// オーディオデータ
-	int alert = Game::LoadAudio("resources/sound/SE/alert.wav");
-	int buzzer = Game::LoadAudio("resources/sound/SE/buzzer.mp3");
+	int alert = Novice::LoadAudio("resources/sound/SE/alert.wav");
+	int buzzer = Novice::LoadAudio("resources/sound/SE/buzzer.mp3");
 
 
 	// テクスチャ
 	int uvCheckerPng;
-	uvCheckerPng = Game::LoadTexture("resources/uvChecker.png");
+	uvCheckerPng = Novice::LoadTexture("resources/uvChecker.png");
 	int blockPng;
-	blockPng = Game::LoadTexture("resources/map.png");
+	blockPng = Novice::LoadTexture("resources/map.png");
 	// モデル
 	int blockModel;
-	blockModel = Game::LoadOBJ("resources/model", "map.obj");
+	blockModel = Novice::LoadOBJ("resources/model", "map.obj");
 
 	// 現在のマスター音量
-	float masterVolume = Game::GetMasterVolume();
+	float masterVolume = Novice::GetMasterVolume();
 	// 現在のそれぞれの音量
-	float alertVolume = Game::GetVolume(alert);
-	float buzzerVolume = Game::GetVolume(buzzer);
+	float alertVolume = Novice::GetVolume(alert);
+	float buzzerVolume = Novice::GetVolume(buzzer);
 
 	bool alertLoop = false;
 	bool buzzerLoop = false;
@@ -36,11 +45,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	blockTransforms.translate = { 0,0,0 };
 	blockTransforms.rotate = { 0.0f,0.0f,0.0f };
 
-	while (Game::ProcessMessage())
+	while (Novice::ProcessMessage())
 	{
 		// フレームの開始
-		Game::BeginFrame();
-		Game::SetMouseRay();
+		Novice::BeginFrame();
+		Novice::SetMouseRay();
 
 
 		///
@@ -48,18 +57,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		///
 		if (GetHitKey::keys[DIK_1] && !GetHitKey::preKeys[DIK_1])
 		{
-			if (Game::IsAudioPlaying(alert))Game::StopAudio(alert);
-			Game::PlayAudio(alert, alertLoop);
+			if (Novice::IsAudioPlaying(alert))Novice::StopAudio(alert);
+			Novice::PlayAudio(alert, alertLoop);
 		}
 		if (GetHitKey::keys[DIK_2] && !GetHitKey::preKeys[DIK_2])
 		{
-			if (Game::IsAudioPlaying(buzzer))Game::StopAudio(buzzer);
-			Game::PlayAudio(buzzer, buzzerLoop);
+			if (Novice::IsAudioPlaying(buzzer))Novice::StopAudio(buzzer);
+			Novice::PlayAudio(buzzer, buzzerLoop);
 		}
 
-		Game::SetMasterVolume(masterVolume);
-		Game::SetAudioVolume(alert, alertVolume);
-		Game::SetAudioVolume(buzzer, buzzerVolume);
+		Novice::SetMasterVolume(masterVolume);
+		Novice::SetAudioVolume(alert, alertVolume);
+		Novice::SetAudioVolume(buzzer, buzzerVolume);
 		///
 		/// ↑更新処理ここまで
 		///
@@ -77,21 +86,21 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 
 
-		Game::Drawobj(blockTransforms, {0,0,0}, blockModel, uvCheckerPng, 0xFFFFFFFFFF);
-		AABB aabb = Game::CreateAABB(blockTransforms, blockModel);
+		Novice::Drawobj(blockTransforms, {0,0,0}, blockModel, uvCheckerPng, 0xFFFFFFFFFF);
+		AABB aabb = Novice::CreateAABB(blockTransforms, blockModel);
 
-		Game::DrawLine({ aabb.min.x, aabb.min.y, aabb.min.z }, { aabb.max.x, aabb.min.y, aabb.min.z }, 0xFFFFFFFF);
-		Game::DrawLine({ aabb.min.x, aabb.max.y, aabb.min.z }, { aabb.max.x, aabb.max.y, aabb.min.z }, 0xFFFFFFFF);
-		Game::DrawLine({ aabb.min.x, aabb.min.y, aabb.max.z }, { aabb.max.x, aabb.min.y, aabb.max.z }, 0xFFFFFFFF);
-		Game::DrawLine({ aabb.min.x, aabb.max.y, aabb.max.z }, { aabb.max.x, aabb.max.y, aabb.max.z }, 0xFFFFFFFF);
-		Game::DrawLine({ aabb.min.x, aabb.min.y, aabb.min.z }, { aabb.min.x, aabb.max.y, aabb.min.z }, 0xFFFFFFFF);
-		Game::DrawLine({ aabb.max.x, aabb.min.y, aabb.min.z }, { aabb.max.x, aabb.max.y, aabb.min.z }, 0xFFFFFFFF);
-		Game::DrawLine({ aabb.min.x, aabb.min.y, aabb.max.z }, { aabb.min.x, aabb.max.y, aabb.max.z }, 0xFFFFFFFF);
-		Game::DrawLine({ aabb.max.x, aabb.min.y, aabb.max.z }, { aabb.max.x, aabb.max.y, aabb.max.z }, 0xFFFFFFFF);
-		Game::DrawLine({ aabb.min.x, aabb.min.y, aabb.min.z }, { aabb.min.x, aabb.min.y, aabb.max.z }, 0xFFFFFFFF);
-		Game::DrawLine({ aabb.max.x, aabb.min.y, aabb.min.z }, { aabb.max.x, aabb.min.y, aabb.max.z }, 0xFFFFFFFF);
-		Game::DrawLine({ aabb.min.x, aabb.max.y, aabb.min.z }, { aabb.min.x, aabb.max.y, aabb.max.z }, 0xFFFFFFFF);
-		Game::DrawLine({ aabb.max.x, aabb.max.y, aabb.min.z }, { aabb.max.x, aabb.max.y, aabb.max.z }, 0xFFFFFFFF);
+		Novice::DrawLine({ aabb.min.x, aabb.min.y, aabb.min.z }, { aabb.max.x, aabb.min.y, aabb.min.z }, 0xFFFFFFFF);
+		Novice::DrawLine({ aabb.min.x, aabb.max.y, aabb.min.z }, { aabb.max.x, aabb.max.y, aabb.min.z }, 0xFFFFFFFF);
+		Novice::DrawLine({ aabb.min.x, aabb.min.y, aabb.max.z }, { aabb.max.x, aabb.min.y, aabb.max.z }, 0xFFFFFFFF);
+		Novice::DrawLine({ aabb.min.x, aabb.max.y, aabb.max.z }, { aabb.max.x, aabb.max.y, aabb.max.z }, 0xFFFFFFFF);
+		Novice::DrawLine({ aabb.min.x, aabb.min.y, aabb.min.z }, { aabb.min.x, aabb.max.y, aabb.min.z }, 0xFFFFFFFF);
+		Novice::DrawLine({ aabb.max.x, aabb.min.y, aabb.min.z }, { aabb.max.x, aabb.max.y, aabb.min.z }, 0xFFFFFFFF);
+		Novice::DrawLine({ aabb.min.x, aabb.min.y, aabb.max.z }, { aabb.min.x, aabb.max.y, aabb.max.z }, 0xFFFFFFFF);
+		Novice::DrawLine({ aabb.max.x, aabb.min.y, aabb.max.z }, { aabb.max.x, aabb.max.y, aabb.max.z }, 0xFFFFFFFF);
+		Novice::DrawLine({ aabb.min.x, aabb.min.y, aabb.min.z }, { aabb.min.x, aabb.min.y, aabb.max.z }, 0xFFFFFFFF);
+		Novice::DrawLine({ aabb.max.x, aabb.min.y, aabb.min.z }, { aabb.max.x, aabb.min.y, aabb.max.z }, 0xFFFFFFFF);
+		Novice::DrawLine({ aabb.min.x, aabb.max.y, aabb.min.z }, { aabb.min.x, aabb.max.y, aabb.max.z }, 0xFFFFFFFF);
+		Novice::DrawLine({ aabb.max.x, aabb.max.y, aabb.min.z }, { aabb.max.x, aabb.max.y, aabb.max.z }, 0xFFFFFFFF);
 
 
 		///
@@ -101,9 +110,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 
 		// フレームの終了
-		Game::EndFrame();
+		Novice::EndFrame();
 	}
-	Game::Finalize();
+	Novice::Finalize();
 
 
 	return 0;

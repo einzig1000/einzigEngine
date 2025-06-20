@@ -1,48 +1,8 @@
-#include "Game.h"
+#include "game.h"
 #include "functions.h"
 #include "externals/DirectXTex/d3dx12.h"
 #include "externals/DirectXTex/DirectXTex.h"
 #include <cstdint>
-
-
-WindowManager* Game::windowManager = nullptr;
-DirectXManager* Game::dxManager = nullptr;
-
-std::vector<Object3D> Game::objects;
-
-
-Microsoft::WRL::ComPtr<ID3D12Resource> Game::vertexResourceSprite;
-UINT Game::vertexResourceSizeSprite;
-Microsoft::WRL::ComPtr<ID3D12Resource> Game::vertexResourceObj;
-UINT Game::vertexResourceSizeObj;
-Microsoft::WRL::ComPtr<ID3D12Resource> Game::vertexResourceTriangle;
-UINT Game::vertexResourceSizeTriangle;
-Microsoft::WRL::ComPtr<ID3D12Resource> Game::vertexResourceSphere;
-UINT Game::vertexResourceSizeSphere;
-Microsoft::WRL::ComPtr<ID3D12Resource> Game::vertexResourceLine;
-UINT Game::vertexResourceSizeLine;
-Microsoft::WRL::ComPtr<ID3D12Resource> Game::indexResource;
-D3D12_INDEX_BUFFER_VIEW Game::indexBufferView;
-
-std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> Game::materialResources;
-std::vector<Material*> Game::materialData;
-std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> Game::wvpResources;
-std::vector<TransformationMatrix*> Game::wvpData;
-size_t Game::drawCallIndex = 0;
-
-std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> Game::materialResourceLine;
-std::vector<Material*> Game::materialDataLine;
-std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> Game::wvpResourceLine;
-std::vector<TransformationMatrix*> Game::wvpDataLine;
-size_t Game::drawLineCallIndex = 0;
-
-Microsoft::WRL::ComPtr<ID3D12Resource> Game::directionalLightResource;
-DirectionalLight* Game::directionalLightData = nullptr;
-
-CameraController* Game::cameraController;
-MouseController* Game::mouseController;
-
-int Game::wheelDelta = 0;
 
 // 初期化用
 void Game::Initialize(int width, int height, const std::wstring& title)
@@ -84,16 +44,16 @@ void Game::Initialize(int width, int height, const std::wstring& title)
 
     // 頂点リソース
     vertexResourceSizeSprite = static_cast<UINT>(sizeof(VertexData) * 256); // スプライト 
-    vertexResourceSprite = CreateBufferResource(dxManager->GetDevice(), vertexResourceSizeSprite);
+    vertexResourceSprite = (CreateBufferResource(dxManager->GetDevice(), vertexResourceSizeSprite));
 
     vertexResourceSizeObj = static_cast<UINT>(sizeof(VertexData) * 4096); // オブジェクト
-    vertexResourceObj = CreateBufferResource(dxManager->GetDevice(), vertexResourceSizeObj);
+    vertexResourceObj = (CreateBufferResource(dxManager->GetDevice(), vertexResourceSizeObj));
 
     vertexResourceSizeTriangle = static_cast<UINT>(sizeof(VertexData) * 1024); // 三角形
-    vertexResourceTriangle = CreateBufferResource(dxManager->GetDevice(), vertexResourceSizeTriangle);
+    vertexResourceTriangle = (CreateBufferResource(dxManager->GetDevice(), vertexResourceSizeTriangle));
 
     vertexResourceSizeSphere = static_cast<UINT>(sizeof(VertexData) * 4096); // 球
-    vertexResourceSphere = CreateBufferResource(dxManager->GetDevice(), vertexResourceSizeSphere);
+    vertexResourceSphere = (CreateBufferResource(dxManager->GetDevice(), vertexResourceSizeSphere));
 
     materialResources.resize(kMaxDrawCallPerFrame);
     materialData.resize(kMaxDrawCallPerFrame);
@@ -101,15 +61,15 @@ void Game::Initialize(int width, int height, const std::wstring& title)
     wvpData.resize(kMaxDrawCallPerFrame);
     for (size_t i = 0; i < kMaxDrawCallPerFrame; ++i)
     {
-        materialResources[i] = CreateBufferResource(dxManager->GetDevice(), sizeof(Material));
+        materialResources[i] = (CreateBufferResource(dxManager->GetDevice(), sizeof(Material)));
         materialResources[i]->Map(0, nullptr, reinterpret_cast<void**>(&materialData[i]));
-        wvpResources[i] = CreateBufferResource(dxManager->GetDevice(), sizeof(TransformationMatrix));
+        wvpResources[i] = (CreateBufferResource(dxManager->GetDevice(), sizeof(TransformationMatrix)));
         wvpResources[i]->Map(0, nullptr, reinterpret_cast<void**>(&wvpData[i]));
     }
 
 
     vertexResourceSizeLine = static_cast<UINT>(sizeof(VertexData) * 2048); // 1024本の線
-    vertexResourceLine = CreateBufferResource(dxManager->GetDevice(), vertexResourceSizeLine);
+    vertexResourceLine = (CreateBufferResource(dxManager->GetDevice(), vertexResourceSizeLine));
  
     materialResourceLine.resize(kMaxDrawLineCallPerFrame);
     materialDataLine.resize(kMaxDrawLineCallPerFrame);
@@ -120,7 +80,7 @@ void Game::Initialize(int width, int height, const std::wstring& title)
 
 
     // インデックスリソース
-    indexResource = CreateBufferResource(dxManager->GetDevice(), sizeof(uint32_t) * 6);
+    indexResource = (CreateBufferResource(dxManager->GetDevice(), sizeof(uint32_t) * 6));
     uint32_t* indexData = nullptr;
     indexResource->Map(0, nullptr, reinterpret_cast<void**>(&indexData));
     indexData[0] = 0;
@@ -140,7 +100,7 @@ void Game::Initialize(int width, int height, const std::wstring& title)
 
 
     // 光源の設定
-    directionalLightResource = CreateBufferResource(dxManager->GetDevice(), sizeof(DirectionalLight));
+    directionalLightResource = (CreateBufferResource(dxManager->GetDevice(), sizeof(DirectionalLight)));
     directionalLightData = nullptr;
     directionalLightResource->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData));
     directionalLightData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -245,18 +205,18 @@ void Game::Finalize()
     ImGui::DestroyContext();
 
 
-    std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>>().swap(materialResources);
-    std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>>().swap(wvpResources);
-    std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>>().swap(materialResourceLine);
-    std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>>().swap(wvpResourceLine);
+    //std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>>().swap(materialResources);
+    //std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>>().swap(wvpResources);
+    //std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>>().swap(materialResourceLine);
+    //std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>>().swap(wvpResourceLine);
 
-    vertexResourceSprite.Reset();
+    /*vertexResourceSprite.Reset();
     vertexResourceObj.Reset();
     vertexResourceTriangle.Reset();
     vertexResourceSphere.Reset();
     vertexResourceLine.Reset();
     indexResource.Reset();
-    directionalLightResource.Reset();
+    directionalLightResource.Reset();*/
 
     objects.clear();
 
@@ -274,7 +234,7 @@ void Game::Finalize()
 }
 
 // Draw用データ作成するやつ
-DrawData Game::SetupDrawData(size_t dstBufferSize, const VertexData* srcVertexData, size_t vertexCount, Microsoft::WRL::ComPtr<ID3D12Resource>& vertexResource, UINT& vertexResourceSize, Material* material, const uint32_t& materialColor, bool enableLighting, const Matrix4x4& uvTransform, TransformationMatrix* wvp, const Matrix4x4& world, const Matrix4x4& wvpMatrix, uint32_t textureNumber)
+DrawData Game::SetupDrawData(size_t dstBufferSize, const VertexData* srcVertexData, size_t vertexCount, const Microsoft::WRL::ComPtr<ID3D12Resource>& vertexResource, UINT& vertexResourceSize, Material* material, const uint32_t& materialColor, bool enableLighting, const Matrix4x4& uvTransform, TransformationMatrix* wvp, const Matrix4x4& world, const Matrix4x4& wvpMatrix, uint32_t textureNumber)
 {
     // 描画回数上限
     if (drawCallIndex >= kMaxDrawCallPerFrame) return{};
@@ -337,7 +297,7 @@ uint32_t Game::LoadOBJ(const std::string& directoryPath, const std::string& file
 
     // 頂点バッファ作成
     ref.vertexBufferSize = sizeof(VertexData) * UINT(ref.modelData.vertices.size());
-    ref.vertexBuffer = CreateBufferResource(dxManager->GetDevice(), ref.vertexBufferSize);
+    ref.vertexBuffer = (CreateBufferResource(dxManager->GetDevice(), ref.vertexBufferSize));
     VertexData* vData = nullptr;
     ref.vertexBuffer->Map(0, nullptr, reinterpret_cast<void**>(&vData));
     std::memcpy(vData, ref.modelData.vertices.data(), ref.vertexBufferSize);
@@ -830,7 +790,7 @@ void Game::InitializeLineResources(ID3D12Device* device)
 
     // Line描画用の頂点バッファを確保（2頂点分）
     vertexResourceSizeLine = static_cast<UINT>(sizeof(VertexData) * 2 * kMaxDrawLineCallPerFrame);
-    vertexResourceLine = CreateBufferResource(device, vertexResourceSizeLine);
+    vertexResourceLine = (CreateBufferResource(device, vertexResourceSizeLine));
 
     D3D12_HEAP_PROPERTIES heapProperties{};
     heapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;

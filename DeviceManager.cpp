@@ -9,7 +9,7 @@
 DeviceManager::DeviceManager()
 {
 #ifdef _DEBUG
-    EnableDebugLayer();
+    //EnableDebugLayer();
 #endif
     InitializeDeviceInternal();
 }

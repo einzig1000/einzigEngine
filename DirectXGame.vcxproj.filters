@@ -73,6 +73,9 @@
     <Filter Include="TextureManager">
       <UniqueIdentifier>{ed7ac647-ed94-43e8-abdb-459374cc9331}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Novice">
+      <UniqueIdentifier>{d1fc99dd-4951-40b7-8a76-fe3cfc07027a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -152,6 +155,9 @@
     </ClCompile>
     <ClCompile Include="TextureManager.cpp">
       <Filter>TextureManager</Filter>
+    </ClCompile>
+    <ClCompile Include="Novice.cpp">
+      <Filter>Novice</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -241,6 +247,9 @@
     </ClInclude>
     <ClInclude Include="TextureManager.h">
       <Filter>TextureManager</Filter>
+    </ClInclude>
+    <ClInclude Include="Novice.h">
+      <Filter>Novice</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

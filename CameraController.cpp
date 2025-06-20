@@ -1,6 +1,6 @@
 #include "CameraController.h"
 #include "functions.h"
-#include "Game.h"
+#include "Novice.h"
 #include "Easings.h"
 Matrix4x4 CameraController::viewportMatrix;
 Matrix4x4 CameraController::viewProjectionMatrix;
@@ -27,11 +27,11 @@ void CameraController::Updata()
     if (cameraMode_)
     {
         prePressMouse0_ = pressMouse0_;
-        pressMouse0_ = Game::IsPressMouse(0);
+        pressMouse0_ = Novice::IsPressMouse(0);
         prePressMouse2_ = pressMouse2_;
-        pressMouse2_ = Game::IsPressMouse(2);
+        pressMouse2_ = Novice::IsPressMouse(2);
 
-        mouseWheel_ = Game::GetWheel();
+        mouseWheel_ = Novice::GetWheel();
 
         //////////////////////////////////////////////
         ///              カメラ回転                ///
@@ -40,12 +40,12 @@ void CameraController::Updata()
         // クリックした瞬間
         if (prePressMouse0_ == 0 && pressMouse0_)
         {
-            Game::GetMousePosition(&preMousePosition_);
+            Novice::GetMousePosition(&preMousePosition_);
         }
         // クリックしている最中
         if (pressMouse0_)
         {
-            Game::GetMousePosition(&mousePosition_);
+            Novice::GetMousePosition(&mousePosition_);
             mousePositionGap_.x = mousePosition_.x - preMousePosition_.x;
             mousePositionGap_.y = mousePosition_.y - preMousePosition_.y;
             transform_.rotate.x = (mousePositionGap_.y / 100.0f + 0.26f) + (preRotate_.x);
@@ -64,11 +64,11 @@ void CameraController::Updata()
 #pragma region
         if (prePressMouse2_ == 0 && pressMouse2_)
         {
-            Game::GetMousePosition(&preMousePosition_);
+            Novice::GetMousePosition(&preMousePosition_);
         }
         if (pressMouse2_)
         {
-            Game::GetMousePosition(&mousePosition_);
+            Novice::GetMousePosition(&mousePosition_);
             mousePositionGap_.x = float(mousePosition_.x - preMousePosition_.x);
             mousePositionGap_.y = float(mousePosition_.y - preMousePosition_.y);
 
