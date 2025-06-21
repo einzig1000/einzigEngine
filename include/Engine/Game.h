@@ -54,8 +54,6 @@ public:
 	static void togglePrimitiveMode();
 
 private:
-	//inline static D3DResourceLeakChecker checker;
-	//static Game* game;
 
 
 };

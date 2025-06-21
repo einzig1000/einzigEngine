@@ -408,7 +408,6 @@ void Engine::Drawobj(const Transforms& transform, const Vector3& center, uint32_
 
 		drawCallIndex++;
 	}
-
 }
 
 void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor)
