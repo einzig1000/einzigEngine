@@ -48,6 +48,11 @@ void Game::Drawobj(const Transforms& transform, const Vector3& center, uint32_t 
 	engine->Drawobj(transform, center, objectNumber, textureNumber, materialColor);
 }
 
+void Game::Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor, const bool enablePrimitiveMode)
+{
+	engine->Drawobj(transform, center, objectNumber, textureNumber, materialColor, enablePrimitiveMode);
+}
+
 void Game::DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor)
 {
 	engine->DrawSphere(transform, center, kSubdivision, textureNumber, materialColor);
@@ -146,4 +151,9 @@ void Game::MoveDistanceTarget(float target, int spendFrame)
 AABB Game::CreateAABB(const Transforms& transforms, uint32_t objectNumber)
 {
 	return engine->CreateAABB(transforms, objectNumber);
+}
+
+void Game::togglePrimitiveMode()
+{
+	engine->togglePrimitiveMode();
 }

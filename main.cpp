@@ -4,7 +4,7 @@
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
-	D3DResourceLeakChecker c;
+	D3DResourceLeakChecker checker;
 	// ウィンドウ、DrectX初期化
 	Game::Initialize(WIDTH, HEIGHT, L"CG2");
 
@@ -58,6 +58,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			if (Game::IsAudioPlaying(buzzer))Game::StopAudio(buzzer);
 			Game::PlayAudio(buzzer, buzzerLoop);
 		}
+		if (GetHitKey::keys[DIK_3] && !GetHitKey::preKeys[DIK_3])
+		{
+			Game::togglePrimitiveMode();
+		}
 
 		Game::SetMasterVolume(masterVolume);
 		//Game::SetAudioVolume(alert, alertVolume);
@@ -80,21 +84,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 
 
-		//Game::Drawobj(blockTransforms, {0,0,0}, blockModel, uvCheckerPng, 0xFFFFFFFFFF);
+		Game::Drawobj(blockTransforms, {0,0,0}, blockModel, uvCheckerPng, 0xFFFFFFFFFF);
 		AABB aabb = Game::CreateAABB(blockTransforms, blockModel);
 
-		Game::DrawLine({ aabb.min.x, aabb.min.y, aabb.min.z }, { aabb.max.x, aabb.min.y, aabb.min.z }, 0xFFFFFFFF);
-		Game::DrawLine({ aabb.min.x, aabb.max.y, aabb.min.z }, { aabb.max.x, aabb.max.y, aabb.min.z }, 0xFFFFFFFF);
-		Game::DrawLine({ aabb.min.x, aabb.min.y, aabb.max.z }, { aabb.max.x, aabb.min.y, aabb.max.z }, 0xFFFFFFFF);
-		Game::DrawLine({ aabb.min.x, aabb.max.y, aabb.max.z }, { aabb.max.x, aabb.max.y, aabb.max.z }, 0xFFFFFFFF);
-		Game::DrawLine({ aabb.min.x, aabb.min.y, aabb.min.z }, { aabb.min.x, aabb.max.y, aabb.min.z }, 0xFFFFFFFF);
-		Game::DrawLine({ aabb.max.x, aabb.min.y, aabb.min.z }, { aabb.max.x, aabb.max.y, aabb.min.z }, 0xFFFFFFFF);
-		Game::DrawLine({ aabb.min.x, aabb.min.y, aabb.max.z }, { aabb.min.x, aabb.max.y, aabb.max.z }, 0xFFFFFFFF);
-		Game::DrawLine({ aabb.max.x, aabb.min.y, aabb.max.z }, { aabb.max.x, aabb.max.y, aabb.max.z }, 0xFFFFFFFF);
-		Game::DrawLine({ aabb.min.x, aabb.min.y, aabb.min.z }, { aabb.min.x, aabb.min.y, aabb.max.z }, 0xFFFFFFFF);
-		Game::DrawLine({ aabb.max.x, aabb.min.y, aabb.min.z }, { aabb.max.x, aabb.min.y, aabb.max.z }, 0xFFFFFFFF);
-		Game::DrawLine({ aabb.min.x, aabb.max.y, aabb.min.z }, { aabb.min.x, aabb.max.y, aabb.max.z }, 0xFFFFFFFF);
-		Game::DrawLine({ aabb.max.x, aabb.max.y, aabb.min.z }, { aabb.max.x, aabb.max.y, aabb.max.z }, 0xFFFFFFFF);
 
 
 		///
