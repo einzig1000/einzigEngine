@@ -1,260 +1,249 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="ソース ファイル">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    <Filter Include="GameEngine">
+      <UniqueIdentifier>{bfbe60e0-01c6-4389-b429-37fece9f4c2a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ヘッダー ファイル">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
-    <Filter Include="リソース ファイル">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
-    <Filter Include="imgui">
-      <UniqueIdentifier>{de365176-a23e-4aa1-b692-75dc75ada7eb}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="definition">
-      <UniqueIdentifier>{2d11e023-36d8-40a2-a5cd-ac9aef762785}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="DirectXManager">
-      <UniqueIdentifier>{22ffd2e0-0bae-47c8-b104-4729f9332def}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="WindowManager">
-      <UniqueIdentifier>{a6f0f6c9-5841-4611-a8f4-25d2974af7b1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="CameraController">
-      <UniqueIdentifier>{8119ccfa-d6ad-4af0-83e5-034de74534f5}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="AudioManager">
-      <UniqueIdentifier>{d6981e3b-9d2e-4acf-aaf3-0a1a631f2860}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="DirectXManager\DeviceManager">
-      <UniqueIdentifier>{4ba5f70c-f353-4256-9a1e-edf4997f4439}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="DirectXManager\CommandContextManager">
-      <UniqueIdentifier>{54925815-6ffb-4240-be73-f394010b765b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="DirectXManager\SwapChainManager">
-      <UniqueIdentifier>{56021724-6ea3-49c5-be4a-63c96ae01e72}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="DirectXManager\DepthStencilManager">
-      <UniqueIdentifier>{d1b66a19-8be3-4ce5-81e5-1cc183c0b2d4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="DirectXManager\PipelineStateManager">
-      <UniqueIdentifier>{6dd3f47c-5319-43a0-bb64-8153594849a6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="DirectXManager\DescriptorHeapManager">
-      <UniqueIdentifier>{3d34e5a9-1927-43e1-831c-2a1090e84234}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="DirectXManager\SynchronizationManager">
-      <UniqueIdentifier>{fea8c078-7dcd-4f48-b566-efea0a565046}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="DirectXManager\ViewportScissorManager">
-      <UniqueIdentifier>{ac55dbcf-ddc4-45ce-9371-582fc7ac92a3}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="TextureManager">
+    <Filter Include="GameEngine\TextureManager">
       <UniqueIdentifier>{ed7ac647-ed94-43e8-abdb-459374cc9331}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Engine">
-      <UniqueIdentifier>{24c1e14d-3c15-48b9-9b53-6d5405a3ce02}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Engine\Game">
-      <UniqueIdentifier>{f318fca5-3d7c-49cd-bd1a-0bbb7dad65fe}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="input">
-      <UniqueIdentifier>{debd2fd4-6801-480a-97ea-81cb1b63a910}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="input\MouseController">
-      <UniqueIdentifier>{2dff2682-3b8b-491d-96a6-d1df4709d6a1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="input\GetHitKey">
-      <UniqueIdentifier>{aa632014-e276-40cd-b8d2-109d728ee4ef}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Utilities">
+    <Filter Include="GameEngine\Utilities">
       <UniqueIdentifier>{25a66c38-75c8-4dae-8e78-1d7b5c01cf2e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Utilities\Easings">
+    <Filter Include="GameEngine\Utilities\Easings">
       <UniqueIdentifier>{5ce197b2-ab89-4348-961a-ba97c01444f9}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Utilities\functions">
+    <Filter Include="GameEngine\Utilities\functions">
       <UniqueIdentifier>{d4ba2a51-2d9b-4adf-b9e8-66fd5ef268cf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GameEngine\WindowManager">
+      <UniqueIdentifier>{a6f0f6c9-5841-4611-a8f4-25d2974af7b1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GameEngine\input">
+      <UniqueIdentifier>{debd2fd4-6801-480a-97ea-81cb1b63a910}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GameEngine\input\MouseController">
+      <UniqueIdentifier>{2dff2682-3b8b-491d-96a6-d1df4709d6a1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GameEngine\input\GetHitKey">
+      <UniqueIdentifier>{aa632014-e276-40cd-b8d2-109d728ee4ef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GameEngine\imgui">
+      <UniqueIdentifier>{de365176-a23e-4aa1-b692-75dc75ada7eb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GameEngine\Engine">
+      <UniqueIdentifier>{24c1e14d-3c15-48b9-9b53-6d5405a3ce02}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GameEngine\Engine\Game">
+      <UniqueIdentifier>{f318fca5-3d7c-49cd-bd1a-0bbb7dad65fe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GameEngine\DirectXManager">
+      <UniqueIdentifier>{22ffd2e0-0bae-47c8-b104-4729f9332def}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GameEngine\DirectXManager\DeviceManager">
+      <UniqueIdentifier>{4ba5f70c-f353-4256-9a1e-edf4997f4439}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GameEngine\DirectXManager\CommandContextManager">
+      <UniqueIdentifier>{54925815-6ffb-4240-be73-f394010b765b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GameEngine\DirectXManager\SwapChainManager">
+      <UniqueIdentifier>{56021724-6ea3-49c5-be4a-63c96ae01e72}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GameEngine\DirectXManager\DepthStencilManager">
+      <UniqueIdentifier>{d1b66a19-8be3-4ce5-81e5-1cc183c0b2d4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GameEngine\DirectXManager\PipelineStateManager">
+      <UniqueIdentifier>{6dd3f47c-5319-43a0-bb64-8153594849a6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GameEngine\DirectXManager\DescriptorHeapManager">
+      <UniqueIdentifier>{3d34e5a9-1927-43e1-831c-2a1090e84234}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GameEngine\DirectXManager\SynchronizationManager">
+      <UniqueIdentifier>{fea8c078-7dcd-4f48-b566-efea0a565046}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GameEngine\DirectXManager\ViewportScissorManager">
+      <UniqueIdentifier>{ac55dbcf-ddc4-45ce-9371-582fc7ac92a3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GameEngine\definition">
+      <UniqueIdentifier>{2d11e023-36d8-40a2-a5cd-ac9aef762785}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GameEngine\CameraController">
+      <UniqueIdentifier>{8119ccfa-d6ad-4af0-83e5-034de74534f5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GameEngine\AudioManager">
+      <UniqueIdentifier>{d6981e3b-9d2e-4acf-aaf3-0a1a631f2860}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="externals\imgui\imgui.cpp">
-      <Filter>imgui</Filter>
+      <Filter>GameEngine\imgui</Filter>
     </ClCompile>
     <ClCompile Include="externals\imgui\imgui_demo.cpp">
-      <Filter>imgui</Filter>
+      <Filter>GameEngine\imgui</Filter>
     </ClCompile>
     <ClCompile Include="externals\imgui\imgui_draw.cpp">
-      <Filter>imgui</Filter>
+      <Filter>GameEngine\imgui</Filter>
     </ClCompile>
     <ClCompile Include="externals\imgui\imgui_impl_dx12.cpp">
-      <Filter>imgui</Filter>
+      <Filter>GameEngine\imgui</Filter>
     </ClCompile>
     <ClCompile Include="externals\imgui\imgui_impl_win32.cpp">
-      <Filter>imgui</Filter>
+      <Filter>GameEngine\imgui</Filter>
     </ClCompile>
     <ClCompile Include="externals\imgui\imgui_tables.cpp">
-      <Filter>imgui</Filter>
+      <Filter>GameEngine\imgui</Filter>
     </ClCompile>
     <ClCompile Include="externals\imgui\imgui_widgets.cpp">
-      <Filter>imgui</Filter>
+      <Filter>GameEngine\imgui</Filter>
     </ClCompile>
     <ClCompile Include="include\Audio\AudioManager.cpp">
-      <Filter>AudioManager</Filter>
+      <Filter>GameEngine\AudioManager</Filter>
     </ClCompile>
     <ClCompile Include="include\Camera\CameraController.cpp">
-      <Filter>CameraController</Filter>
+      <Filter>GameEngine\CameraController</Filter>
     </ClCompile>
     <ClCompile Include="include\DirectX\CommandContextManager.cpp">
-      <Filter>DirectXManager\CommandContextManager</Filter>
+      <Filter>GameEngine\DirectXManager\CommandContextManager</Filter>
     </ClCompile>
     <ClCompile Include="include\DirectX\DepthStencilManager.cpp">
-      <Filter>DirectXManager\DepthStencilManager</Filter>
+      <Filter>GameEngine\DirectXManager\DepthStencilManager</Filter>
     </ClCompile>
     <ClCompile Include="include\DirectX\DescriptorHeapManager.cpp">
-      <Filter>DirectXManager\DescriptorHeapManager</Filter>
+      <Filter>GameEngine\DirectXManager\DescriptorHeapManager</Filter>
     </ClCompile>
     <ClCompile Include="include\DirectX\DeviceManager.cpp">
-      <Filter>DirectXManager\DeviceManager</Filter>
+      <Filter>GameEngine\DirectXManager\DeviceManager</Filter>
     </ClCompile>
     <ClCompile Include="include\DirectX\DirectXManager.cpp">
-      <Filter>DirectXManager</Filter>
+      <Filter>GameEngine\DirectXManager</Filter>
     </ClCompile>
     <ClCompile Include="include\Engine\Engine.cpp">
-      <Filter>Engine</Filter>
+      <Filter>GameEngine\Engine</Filter>
     </ClCompile>
     <ClCompile Include="include\Engine\Game.cpp">
-      <Filter>Engine\Game</Filter>
+      <Filter>GameEngine\Engine\Game</Filter>
     </ClCompile>
     <ClCompile Include="include\input\GetHitKey.cpp">
-      <Filter>input\GetHitKey</Filter>
+      <Filter>GameEngine\input\GetHitKey</Filter>
     </ClCompile>
     <ClCompile Include="include\input\MouseController.cpp">
-      <Filter>input\MouseController</Filter>
+      <Filter>GameEngine\input\MouseController</Filter>
     </ClCompile>
     <ClCompile Include="include\DirectX\PipelineStateManager.cpp">
-      <Filter>DirectXManager\PipelineStateManager</Filter>
+      <Filter>GameEngine\DirectXManager\PipelineStateManager</Filter>
     </ClCompile>
     <ClCompile Include="include\DirectX\SwapChainManager.cpp">
-      <Filter>DirectXManager\SwapChainManager</Filter>
+      <Filter>GameEngine\DirectXManager\SwapChainManager</Filter>
     </ClCompile>
     <ClCompile Include="include\DirectX\SynchronizationManager.cpp">
-      <Filter>DirectXManager\SynchronizationManager</Filter>
+      <Filter>GameEngine\DirectXManager\SynchronizationManager</Filter>
     </ClCompile>
     <ClCompile Include="include\Texture\TextureManager.cpp">
-      <Filter>TextureManager</Filter>
+      <Filter>GameEngine\TextureManager</Filter>
     </ClCompile>
     <ClCompile Include="include\DirectX\ViewportScissorManager.cpp">
-      <Filter>DirectXManager\ViewportScissorManager</Filter>
+      <Filter>GameEngine\DirectXManager\ViewportScissorManager</Filter>
     </ClCompile>
     <ClCompile Include="include\Utilities\Easings.cpp">
-      <Filter>Utilities\Easings</Filter>
+      <Filter>GameEngine\Utilities\Easings</Filter>
     </ClCompile>
     <ClCompile Include="include\Utilities\functions.cpp">
-      <Filter>Utilities\functions</Filter>
+      <Filter>GameEngine\Utilities\functions</Filter>
     </ClCompile>
     <ClCompile Include="include\Window\WindowManager.cpp">
-      <Filter>WindowManager</Filter>
+      <Filter>GameEngine\WindowManager</Filter>
     </ClCompile>
+    <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="externals\imgui\imconfig.h">
-      <Filter>imgui</Filter>
+      <Filter>GameEngine\imgui</Filter>
     </ClInclude>
     <ClInclude Include="externals\imgui\imgui.h">
-      <Filter>imgui</Filter>
+      <Filter>GameEngine\imgui</Filter>
     </ClInclude>
     <ClInclude Include="externals\imgui\imgui_impl_dx12.h">
-      <Filter>imgui</Filter>
+      <Filter>GameEngine\imgui</Filter>
     </ClInclude>
     <ClInclude Include="externals\imgui\imgui_impl_win32.h">
-      <Filter>imgui</Filter>
+      <Filter>GameEngine\imgui</Filter>
     </ClInclude>
     <ClInclude Include="externals\imgui\imgui_internal.h">
-      <Filter>imgui</Filter>
+      <Filter>GameEngine\imgui</Filter>
     </ClInclude>
     <ClInclude Include="externals\imgui\imstb_rectpack.h">
-      <Filter>imgui</Filter>
+      <Filter>GameEngine\imgui</Filter>
     </ClInclude>
     <ClInclude Include="externals\imgui\imstb_textedit.h">
-      <Filter>imgui</Filter>
+      <Filter>GameEngine\imgui</Filter>
     </ClInclude>
     <ClInclude Include="externals\imgui\imstb_truetype.h">
-      <Filter>imgui</Filter>
+      <Filter>GameEngine\imgui</Filter>
     </ClInclude>
     <ClInclude Include="include\Audio\AudioManager.h">
-      <Filter>AudioManager</Filter>
+      <Filter>GameEngine\AudioManager</Filter>
     </ClInclude>
     <ClInclude Include="include\Camera\CameraController.h">
-      <Filter>CameraController</Filter>
+      <Filter>GameEngine\CameraController</Filter>
     </ClInclude>
     <ClInclude Include="include\definition\definition.h">
-      <Filter>definition</Filter>
+      <Filter>GameEngine\definition</Filter>
     </ClInclude>
     <ClInclude Include="include\DirectX\CommandContextManager.h">
-      <Filter>DirectXManager\CommandContextManager</Filter>
+      <Filter>GameEngine\DirectXManager\CommandContextManager</Filter>
     </ClInclude>
     <ClInclude Include="include\DirectX\DepthStencilManager.h">
-      <Filter>DirectXManager\DepthStencilManager</Filter>
+      <Filter>GameEngine\DirectXManager\DepthStencilManager</Filter>
     </ClInclude>
     <ClInclude Include="include\DirectX\DescriptorHeapManager.h">
-      <Filter>DirectXManager\DescriptorHeapManager</Filter>
+      <Filter>GameEngine\DirectXManager\DescriptorHeapManager</Filter>
     </ClInclude>
     <ClInclude Include="include\DirectX\DeviceManager.h">
-      <Filter>DirectXManager\DeviceManager</Filter>
+      <Filter>GameEngine\DirectXManager\DeviceManager</Filter>
     </ClInclude>
     <ClInclude Include="include\DirectX\DirectXManager.h">
-      <Filter>DirectXManager</Filter>
+      <Filter>GameEngine\DirectXManager</Filter>
     </ClInclude>
     <ClInclude Include="include\Engine\Engine.h">
-      <Filter>Engine</Filter>
+      <Filter>GameEngine\Engine</Filter>
     </ClInclude>
     <ClInclude Include="include\Engine\Game.h">
-      <Filter>Engine\Game</Filter>
+      <Filter>GameEngine\Engine\Game</Filter>
     </ClInclude>
     <ClInclude Include="include\input\GetHitKey.h">
-      <Filter>input\GetHitKey</Filter>
+      <Filter>GameEngine\input\GetHitKey</Filter>
     </ClInclude>
     <ClInclude Include="include\input\MouseController.h">
-      <Filter>input\MouseController</Filter>
+      <Filter>GameEngine\input\MouseController</Filter>
     </ClInclude>
     <ClInclude Include="include\DirectX\PipelineStateManager.h">
-      <Filter>DirectXManager\PipelineStateManager</Filter>
+      <Filter>GameEngine\DirectXManager\PipelineStateManager</Filter>
     </ClInclude>
     <ClInclude Include="include\DirectX\SwapChainManager.h">
-      <Filter>DirectXManager\SwapChainManager</Filter>
+      <Filter>GameEngine\DirectXManager\SwapChainManager</Filter>
     </ClInclude>
     <ClInclude Include="include\DirectX\SynchronizationManager.h">
-      <Filter>DirectXManager\SynchronizationManager</Filter>
+      <Filter>GameEngine\DirectXManager\SynchronizationManager</Filter>
     </ClInclude>
     <ClInclude Include="include\Texture\TextureManager.h">
-      <Filter>TextureManager</Filter>
+      <Filter>GameEngine\TextureManager</Filter>
     </ClInclude>
     <ClInclude Include="include\DirectX\ViewportScissorManager.h">
-      <Filter>DirectXManager\ViewportScissorManager</Filter>
+      <Filter>GameEngine\DirectXManager\ViewportScissorManager</Filter>
     </ClInclude>
     <ClInclude Include="include\Utilities\Easings.h">
-      <Filter>Utilities\Easings</Filter>
+      <Filter>GameEngine\Utilities\Easings</Filter>
     </ClInclude>
     <ClInclude Include="include\Utilities\functions.h">
-      <Filter>Utilities\functions</Filter>
+      <Filter>GameEngine\Utilities\functions</Filter>
     </ClInclude>
     <ClInclude Include="include\Window\WindowManager.h">
-      <Filter>WindowManager</Filter>
+      <Filter>GameEngine\WindowManager</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt">
-      <Filter>imgui</Filter>
+      <Filter>GameEngine\imgui</Filter>
     </Text>
   </ItemGroup>
 </Project>
