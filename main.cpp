@@ -1,5 +1,5 @@
-#include "Engine/Game.h"           // エンジン
-#include "Utilities/functions.h"      // 便利関数s
+#include "Engine/Game.h"
+#include "Utilities/functions.h"
 #include "Utilities/Easings.h"
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)

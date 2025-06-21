@@ -1,4 +1,5 @@
-#include "Engine.h"
+#pragma once
+#include "Engine/Engine.h"
 
 class Game
 {
