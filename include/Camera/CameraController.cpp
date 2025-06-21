@@ -49,7 +49,7 @@ void CameraController::Updata()
             Game::GetMousePosition(&mousePosition_);
             mousePositionGap_.x = mousePosition_.x - preMousePosition_.x;
             mousePositionGap_.y = mousePosition_.y - preMousePosition_.y;
-            transform_.rotate.x = (mousePositionGap_.y / 100.0f + 0.26f) + (preRotate_.x);
+            transform_.rotate.x = (mousePositionGap_.y / 100.0f) + (preRotate_.x);
             transform_.rotate.y = (mousePositionGap_.x / 100.0f) + (preRotate_.y);
         }
         // クリックやめた瞬間
