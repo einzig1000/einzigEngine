@@ -147,3 +147,8 @@ AABB Game::CreateAABB(const Transforms& transforms, uint32_t objectNumber)
 {
 	return engine->CreateAABB(transforms, objectNumber);
 }
+
+void Game::togglePrimitiveMode()
+{
+	engine->togglePrimitiveMode();
+}

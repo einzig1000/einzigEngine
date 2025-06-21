@@ -50,6 +50,9 @@ public:
 	// AABBの作成
 	static AABB CreateAABB(const Transforms& transforms, uint32_t objectNumber);
 
+	// プリミティブモードの設定
+	static void togglePrimitiveMode();
+
 private:
 	//inline static D3DResourceLeakChecker checker;
 	//static Game* game;

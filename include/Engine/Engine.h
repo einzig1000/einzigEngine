@@ -59,6 +59,8 @@ public:
 	// AABBの作成
 	AABB CreateAABB(const Transforms& transforms, uint32_t objectNumber);
 
+	// プリミティブモードの設定
+	void togglePrimitiveMode();
 
 private:
 	void UpdateCamera();
@@ -158,4 +160,7 @@ private:
 	// マウスホイール量
 	MouseController* mouseController;
 	int wheelDelta;
+
+	// プリミティブモード
+	bool primitiveMode;
 };
