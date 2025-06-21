@@ -1,6 +1,6 @@
-#include "Game.h"           // エンジン
-#include "functions.h"      // 便利関数s
-#include "Easings.h"
+#include "Engine/Game.h"           // エンジン
+#include "Utilities/functions.h"      // 便利関数s
+#include "Utilities/Easings.h"
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {

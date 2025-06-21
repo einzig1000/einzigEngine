@@ -16,9 +16,6 @@
     <Filter Include="imgui">
       <UniqueIdentifier>{de365176-a23e-4aa1-b692-75dc75ada7eb}</UniqueIdentifier>
     </Filter>
-    <Filter Include="functions">
-      <UniqueIdentifier>{d4ba2a51-2d9b-4adf-b9e8-66fd5ef268cf}</UniqueIdentifier>
-    </Filter>
     <Filter Include="definition">
       <UniqueIdentifier>{2d11e023-36d8-40a2-a5cd-ac9aef762785}</UniqueIdentifier>
     </Filter>
@@ -30,15 +27,6 @@
     </Filter>
     <Filter Include="CameraController">
       <UniqueIdentifier>{8119ccfa-d6ad-4af0-83e5-034de74534f5}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="GetHitKey">
-      <UniqueIdentifier>{aa632014-e276-40cd-b8d2-109d728ee4ef}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="MouseController">
-      <UniqueIdentifier>{2dff2682-3b8b-491d-96a6-d1df4709d6a1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Easings">
-      <UniqueIdentifier>{5ce197b2-ab89-4348-961a-ba97c01444f9}</UniqueIdentifier>
     </Filter>
     <Filter Include="AudioManager">
       <UniqueIdentifier>{d6981e3b-9d2e-4acf-aaf3-0a1a631f2860}</UniqueIdentifier>
@@ -73,8 +61,26 @@
     <Filter Include="Engine">
       <UniqueIdentifier>{24c1e14d-3c15-48b9-9b53-6d5405a3ce02}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Game">
+    <Filter Include="Engine\Game">
       <UniqueIdentifier>{f318fca5-3d7c-49cd-bd1a-0bbb7dad65fe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="input">
+      <UniqueIdentifier>{debd2fd4-6801-480a-97ea-81cb1b63a910}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="input\MouseController">
+      <UniqueIdentifier>{2dff2682-3b8b-491d-96a6-d1df4709d6a1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="input\GetHitKey">
+      <UniqueIdentifier>{aa632014-e276-40cd-b8d2-109d728ee4ef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utilities">
+      <UniqueIdentifier>{25a66c38-75c8-4dae-8e78-1d7b5c01cf2e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utilities\Easings">
+      <UniqueIdentifier>{5ce197b2-ab89-4348-961a-ba97c01444f9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utilities\functions">
+      <UniqueIdentifier>{d4ba2a51-2d9b-4adf-b9e8-66fd5ef268cf}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -102,69 +108,63 @@
     <ClCompile Include="externals\imgui\imgui_widgets.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
-    <ClCompile Include="functions.cpp">
-      <Filter>functions</Filter>
-    </ClCompile>
-    <ClCompile Include="DirectXManager.cpp">
-      <Filter>DirectXManager</Filter>
-    </ClCompile>
-    <ClCompile Include="Engine.cpp">
-      <Filter>Engine</Filter>
-    </ClCompile>
-    <ClCompile Include="WindowManager.cpp">
-      <Filter>WindowManager</Filter>
-    </ClCompile>
-    <ClCompile Include="CameraController.cpp">
-      <Filter>CameraController</Filter>
-    </ClCompile>
-    <ClCompile Include="GetHitKey.cpp">
-      <Filter>GetHitKey</Filter>
-    </ClCompile>
-    <ClCompile Include="MouseController.cpp">
-      <Filter>MouseController</Filter>
-    </ClCompile>
-    <ClCompile Include="Easings.cpp">
-      <Filter>Easings</Filter>
-    </ClCompile>
-    <ClCompile Include="AudioManager.cpp">
+    <ClCompile Include="include\Audio\AudioManager.cpp">
       <Filter>AudioManager</Filter>
     </ClCompile>
-    <ClCompile Include="DeviceManager.cpp">
-      <Filter>DirectXManager\DeviceManager</Filter>
+    <ClCompile Include="include\Camera\CameraController.cpp">
+      <Filter>CameraController</Filter>
     </ClCompile>
-    <ClCompile Include="CommandContextManager.cpp">
+    <ClCompile Include="include\DirectX\CommandContextManager.cpp">
       <Filter>DirectXManager\CommandContextManager</Filter>
     </ClCompile>
-    <ClCompile Include="SwapChainManager.cpp">
-      <Filter>DirectXManager\SwapChainManager</Filter>
-    </ClCompile>
-    <ClCompile Include="DepthStencilManager.cpp">
+    <ClCompile Include="include\DirectX\DepthStencilManager.cpp">
       <Filter>DirectXManager\DepthStencilManager</Filter>
     </ClCompile>
-    <ClCompile Include="PipelineStateManager.cpp">
-      <Filter>DirectXManager\PipelineStateManager</Filter>
-    </ClCompile>
-    <ClCompile Include="DescriptorHeapManager.cpp">
+    <ClCompile Include="include\DirectX\DescriptorHeapManager.cpp">
       <Filter>DirectXManager\DescriptorHeapManager</Filter>
     </ClCompile>
-    <ClCompile Include="SynchronizationManager.cpp">
+    <ClCompile Include="include\DirectX\DeviceManager.cpp">
+      <Filter>DirectXManager\DeviceManager</Filter>
+    </ClCompile>
+    <ClCompile Include="include\DirectX\DirectXManager.cpp">
+      <Filter>DirectXManager</Filter>
+    </ClCompile>
+    <ClCompile Include="include\Engine\Engine.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="include\Engine\Game.cpp">
+      <Filter>Engine\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="include\input\GetHitKey.cpp">
+      <Filter>input\GetHitKey</Filter>
+    </ClCompile>
+    <ClCompile Include="include\input\MouseController.cpp">
+      <Filter>input\MouseController</Filter>
+    </ClCompile>
+    <ClCompile Include="include\DirectX\PipelineStateManager.cpp">
+      <Filter>DirectXManager\PipelineStateManager</Filter>
+    </ClCompile>
+    <ClCompile Include="include\DirectX\SwapChainManager.cpp">
+      <Filter>DirectXManager\SwapChainManager</Filter>
+    </ClCompile>
+    <ClCompile Include="include\DirectX\SynchronizationManager.cpp">
       <Filter>DirectXManager\SynchronizationManager</Filter>
     </ClCompile>
-    <ClCompile Include="ViewportScissorManager.cpp">
-      <Filter>DirectXManager\ViewportScissorManager</Filter>
-    </ClCompile>
-    <ClCompile Include="TextureManager.cpp">
+    <ClCompile Include="include\Texture\TextureManager.cpp">
       <Filter>TextureManager</Filter>
     </ClCompile>
-    <ClCompile Include="Game.cpp">
-      <Filter>Game</Filter>
+    <ClCompile Include="include\DirectX\ViewportScissorManager.cpp">
+      <Filter>DirectXManager\ViewportScissorManager</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="Object3d.VS.hlsl" />
-    <FxCompile Include="Object3d.PS.hlsl" />
-    <FxCompile Include="Line.VS.hlsl" />
-    <FxCompile Include="Line.PS.hlsl" />
+    <ClCompile Include="include\Utilities\Easings.cpp">
+      <Filter>Utilities\Easings</Filter>
+    </ClCompile>
+    <ClCompile Include="include\Utilities\functions.cpp">
+      <Filter>Utilities\functions</Filter>
+    </ClCompile>
+    <ClCompile Include="include\Window\WindowManager.cpp">
+      <Filter>WindowManager</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="externals\imgui\imconfig.h">
@@ -191,73 +191,70 @@
     <ClInclude Include="externals\imgui\imstb_truetype.h">
       <Filter>imgui</Filter>
     </ClInclude>
-    <ClInclude Include="functions.h">
-      <Filter>functions</Filter>
-    </ClInclude>
-    <ClInclude Include="definition.h">
-      <Filter>definition</Filter>
-    </ClInclude>
-    <ClInclude Include="DirectXManager.h">
-      <Filter>DirectXManager</Filter>
-    </ClInclude>
-    <ClInclude Include="Engine.h">
-      <Filter>Engine</Filter>
-    </ClInclude>
-    <ClInclude Include="WindowManager.h">
-      <Filter>WindowManager</Filter>
-    </ClInclude>
-    <ClInclude Include="CameraController.h">
-      <Filter>CameraController</Filter>
-    </ClInclude>
-    <ClInclude Include="GetHitKey.h">
-      <Filter>GetHitKey</Filter>
-    </ClInclude>
-    <ClInclude Include="MouseController.h">
-      <Filter>MouseController</Filter>
-    </ClInclude>
-    <ClInclude Include="Easings.h">
-      <Filter>Easings</Filter>
-    </ClInclude>
-    <ClInclude Include="AudioManager.h">
+    <ClInclude Include="include\Audio\AudioManager.h">
       <Filter>AudioManager</Filter>
     </ClInclude>
-    <ClInclude Include="DeviceManager.h">
-      <Filter>DirectXManager\DeviceManager</Filter>
+    <ClInclude Include="include\Camera\CameraController.h">
+      <Filter>CameraController</Filter>
     </ClInclude>
-    <ClInclude Include="CommandContextManager.h">
+    <ClInclude Include="include\definition\definition.h">
+      <Filter>definition</Filter>
+    </ClInclude>
+    <ClInclude Include="include\DirectX\CommandContextManager.h">
       <Filter>DirectXManager\CommandContextManager</Filter>
     </ClInclude>
-    <ClInclude Include="SwapChainManager.h">
-      <Filter>DirectXManager\SwapChainManager</Filter>
-    </ClInclude>
-    <ClInclude Include="DepthStencilManager.h">
+    <ClInclude Include="include\DirectX\DepthStencilManager.h">
       <Filter>DirectXManager\DepthStencilManager</Filter>
     </ClInclude>
-    <ClInclude Include="PipelineStateManager.h">
-      <Filter>DirectXManager\PipelineStateManager</Filter>
-    </ClInclude>
-    <ClInclude Include="DescriptorHeapManager.h">
+    <ClInclude Include="include\DirectX\DescriptorHeapManager.h">
       <Filter>DirectXManager\DescriptorHeapManager</Filter>
     </ClInclude>
-    <ClInclude Include="SynchronizationManager.h">
+    <ClInclude Include="include\DirectX\DeviceManager.h">
+      <Filter>DirectXManager\DeviceManager</Filter>
+    </ClInclude>
+    <ClInclude Include="include\DirectX\DirectXManager.h">
+      <Filter>DirectXManager</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Engine\Engine.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Engine\Game.h">
+      <Filter>Engine\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="include\input\GetHitKey.h">
+      <Filter>input\GetHitKey</Filter>
+    </ClInclude>
+    <ClInclude Include="include\input\MouseController.h">
+      <Filter>input\MouseController</Filter>
+    </ClInclude>
+    <ClInclude Include="include\DirectX\PipelineStateManager.h">
+      <Filter>DirectXManager\PipelineStateManager</Filter>
+    </ClInclude>
+    <ClInclude Include="include\DirectX\SwapChainManager.h">
+      <Filter>DirectXManager\SwapChainManager</Filter>
+    </ClInclude>
+    <ClInclude Include="include\DirectX\SynchronizationManager.h">
       <Filter>DirectXManager\SynchronizationManager</Filter>
     </ClInclude>
-    <ClInclude Include="ViewportScissorManager.h">
-      <Filter>DirectXManager\ViewportScissorManager</Filter>
-    </ClInclude>
-    <ClInclude Include="TextureManager.h">
+    <ClInclude Include="include\Texture\TextureManager.h">
       <Filter>TextureManager</Filter>
     </ClInclude>
-    <ClInclude Include="Game.h">
-      <Filter>Game</Filter>
+    <ClInclude Include="include\DirectX\ViewportScissorManager.h">
+      <Filter>DirectXManager\ViewportScissorManager</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Utilities\Easings.h">
+      <Filter>Utilities\Easings</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Utilities\functions.h">
+      <Filter>Utilities\functions</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Window\WindowManager.h">
+      <Filter>WindowManager</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt">
       <Filter>imgui</Filter>
     </Text>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Object3d.hlsli" />
   </ItemGroup>
 </Project>
