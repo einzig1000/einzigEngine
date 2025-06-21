@@ -2,7 +2,7 @@
 #include <vector>
 #include <d3d12sdklayers.h>
 #include <dxgi1_6.h> 
-#include "functions.h"
+#include "Utilities/functions.h"
 
 #pragma comment(lib, "dxgi.lib") 
 #pragma comment(lib, "d3d12.lib") 

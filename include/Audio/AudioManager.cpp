@@ -3,7 +3,7 @@
 #pragma comment(lib, "mfuuid.lib")
 
 
-#include "AudioManager.h"
+#include "Audio/AudioManager.h"
 #include <iostream>
 #include <Windows.h>
 #include <string>
@@ -14,7 +14,7 @@
 // utilities for PROPVARIANT
 #include <propvarutil.h>
 
-#include "functions.h"
+#include "Utilities/functions.h"
 
 
 // x

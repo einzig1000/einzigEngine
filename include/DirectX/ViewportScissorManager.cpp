@@ -1,5 +1,5 @@
-#include "ViewportScissorManager.h"
-#include "functions.h"
+#include "DirectX/ViewportScissorManager.h"
+#include "Utilities/functions.h"
 
 ViewportScissorManager::ViewportScissorManager(int width, int height)
 {

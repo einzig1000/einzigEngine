@@ -1,5 +1,5 @@
-#include "functions.h"
-#include "definition.h"
+#include "Utilities/functions.h"
+#include "definition/definition.h"
 
 #include <cassert>
 #include <cmath>

@@ -1,7 +1,7 @@
-#include "CameraController.h"
-#include "functions.h"
-#include "Game.h"
-#include "Easings.h"
+#include "Camera/CameraController.h"
+#include "Utilities/functions.h"
+#include "Engine/Game.h"
+#include "Utilities/Easings.h"
 Matrix4x4 CameraController::viewportMatrix;
 Matrix4x4 CameraController::viewProjectionMatrix;
 

@@ -1,5 +1,5 @@
-#include "DepthStencilManager.h"
-#include "functions.h"
+#include "DirectX/DepthStencilManager.h"
+#include "Utilities/functions.h"
 
 DepthStencilManager::DepthStencilManager(ID3D12Device* device, int width, int height)
 {

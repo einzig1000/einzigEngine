@@ -1,4 +1,4 @@
-#include "WindowManager.h"
+#include "Window/WindowManager.h"
 
 // ウィンドウプロシージャ(クリックした、×を押した等のイベントを処理する関数)
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)

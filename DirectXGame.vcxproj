@@ -53,7 +53,7 @@
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir)include;$(SolutionDir)codes\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)include;$(SolutionDir)codes\include;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -77,7 +77,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)include;$(SolutionDir)codes\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)include;$(SolutionDir)codes\include;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -91,13 +91,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="CameraController.cpp" />
-    <ClCompile Include="CommandContextManager.cpp" />
-    <ClCompile Include="DepthStencilManager.cpp" />
-    <ClCompile Include="DescriptorHeapManager.cpp" />
-    <ClCompile Include="DeviceManager.cpp" />
-    <ClCompile Include="DirectXManager.cpp" />
-    <ClCompile Include="Easings.cpp" />
     <ClCompile Include="externals\imgui\imgui.cpp" />
     <ClCompile Include="externals\imgui\imgui_demo.cpp" />
     <ClCompile Include="externals\imgui\imgui_draw.cpp" />
@@ -105,19 +98,26 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="externals\imgui\imgui_impl_win32.cpp" />
     <ClCompile Include="externals\imgui\imgui_tables.cpp" />
     <ClCompile Include="externals\imgui\imgui_widgets.cpp" />
-    <ClCompile Include="functions.cpp" />
-    <ClCompile Include="Engine.cpp" />
-    <ClCompile Include="Game.cpp" />
-    <ClCompile Include="GetHitKey.cpp" />
+    <ClCompile Include="include\Audio\AudioManager.cpp" />
+    <ClCompile Include="include\Camera\CameraController.cpp" />
+    <ClCompile Include="include\DirectX\CommandContextManager.cpp" />
+    <ClCompile Include="include\DirectX\DepthStencilManager.cpp" />
+    <ClCompile Include="include\DirectX\DescriptorHeapManager.cpp" />
+    <ClCompile Include="include\DirectX\DeviceManager.cpp" />
+    <ClCompile Include="include\DirectX\DirectXManager.cpp" />
+    <ClCompile Include="include\DirectX\PipelineStateManager.cpp" />
+    <ClCompile Include="include\DirectX\SwapChainManager.cpp" />
+    <ClCompile Include="include\DirectX\SynchronizationManager.cpp" />
+    <ClCompile Include="include\DirectX\ViewportScissorManager.cpp" />
+    <ClCompile Include="include\Engine\Engine.cpp" />
+    <ClCompile Include="include\Engine\Game.cpp" />
+    <ClCompile Include="include\input\GetHitKey.cpp" />
+    <ClCompile Include="include\input\MouseController.cpp" />
+    <ClCompile Include="include\Texture\TextureManager.cpp" />
+    <ClCompile Include="include\Utilities\Easings.cpp" />
+    <ClCompile Include="include\Utilities\functions.cpp" />
+    <ClCompile Include="include\Window\WindowManager.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="MouseController.cpp" />
-    <ClCompile Include="AudioManager.cpp" />
-    <ClCompile Include="PipelineStateManager.cpp" />
-    <ClCompile Include="SwapChainManager.cpp" />
-    <ClCompile Include="SynchronizationManager.cpp" />
-    <ClCompile Include="TextureManager.cpp" />
-    <ClCompile Include="ViewportScissorManager.cpp" />
-    <ClCompile Include="WindowManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Line.PS.hlsl">
@@ -146,14 +146,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CameraController.h" />
-    <ClInclude Include="CommandContextManager.h" />
-    <ClInclude Include="definition.h" />
-    <ClInclude Include="DepthStencilManager.h" />
-    <ClInclude Include="DescriptorHeapManager.h" />
-    <ClInclude Include="DeviceManager.h" />
-    <ClInclude Include="DirectXManager.h" />
-    <ClInclude Include="Easings.h" />
     <ClInclude Include="externals\imgui\imconfig.h" />
     <ClInclude Include="externals\imgui\imgui.h" />
     <ClInclude Include="externals\imgui\imgui_impl_dx12.h" />
@@ -162,18 +154,26 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="externals\imgui\imstb_rectpack.h" />
     <ClInclude Include="externals\imgui\imstb_textedit.h" />
     <ClInclude Include="externals\imgui\imstb_truetype.h" />
-    <ClInclude Include="functions.h" />
-    <ClInclude Include="Engine.h" />
-    <ClInclude Include="Game.h" />
-    <ClInclude Include="GetHitKey.h" />
-    <ClInclude Include="MouseController.h" />
-    <ClInclude Include="AudioManager.h" />
-    <ClInclude Include="PipelineStateManager.h" />
-    <ClInclude Include="SwapChainManager.h" />
-    <ClInclude Include="SynchronizationManager.h" />
-    <ClInclude Include="TextureManager.h" />
-    <ClInclude Include="ViewportScissorManager.h" />
-    <ClInclude Include="WindowManager.h" />
+    <ClInclude Include="include\Audio\AudioManager.h" />
+    <ClInclude Include="include\Camera\CameraController.h" />
+    <ClInclude Include="include\definition\definition.h" />
+    <ClInclude Include="include\DirectX\CommandContextManager.h" />
+    <ClInclude Include="include\DirectX\DepthStencilManager.h" />
+    <ClInclude Include="include\DirectX\DescriptorHeapManager.h" />
+    <ClInclude Include="include\DirectX\DeviceManager.h" />
+    <ClInclude Include="include\DirectX\DirectXManager.h" />
+    <ClInclude Include="include\DirectX\PipelineStateManager.h" />
+    <ClInclude Include="include\DirectX\SwapChainManager.h" />
+    <ClInclude Include="include\DirectX\SynchronizationManager.h" />
+    <ClInclude Include="include\DirectX\ViewportScissorManager.h" />
+    <ClInclude Include="include\Engine\Engine.h" />
+    <ClInclude Include="include\Engine\Game.h" />
+    <ClInclude Include="include\input\GetHitKey.h" />
+    <ClInclude Include="include\input\MouseController.h" />
+    <ClInclude Include="include\Texture\TextureManager.h" />
+    <ClInclude Include="include\Utilities\Easings.h" />
+    <ClInclude Include="include\Utilities\functions.h" />
+    <ClInclude Include="include\Window\WindowManager.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

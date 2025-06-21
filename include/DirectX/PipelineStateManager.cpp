@@ -1,6 +1,6 @@
-#include "PipelineStateManager.h"
+#include "DirectX/PipelineStateManager.h"
 #include <string>
-#include "functions.h"
+#include "Utilities/functions.h"
 
 #pragma comment(lib, "dxcompiler.lib")
 

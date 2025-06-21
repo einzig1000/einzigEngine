@@ -1,9 +1,9 @@
 #pragma once
-#include "WindowManager.h"
-#include "DirectXManager.h"
-#include "definition.h"
-#include "CameraController.h"
-#include "MouseController.h"
+#include "Window/WindowManager.h"
+#include "DirectX/DirectXManager.h"
+#include "definition/definition.h"
+#include "Camera/CameraController.h"
+#include "input/MouseController.h"
 #include <array>
 #include <vector>
 #include <string>

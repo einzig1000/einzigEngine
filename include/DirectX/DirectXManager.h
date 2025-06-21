@@ -3,17 +3,18 @@
 #include <wrl.h>
 
 #include "DeviceManager.h"
-#include "CommandContextManager.h"
-#include "SwapChainManager.h"
-#include "DepthStencilManager.h"
-#include "PipelineStateManager.h"
-#include "DescriptorHeapManager.h"
-#include "SynchronizationManager.h"
-#include "ViewportScissorManager.h"
+#include "DirectX/CommandContextManager.h"
+#include "DirectX/SwapChainManager.h"
+#include "DirectX/DepthStencilManager.h"
+#include "DirectX/PipelineStateManager.h"
+#include "DirectX/DescriptorHeapManager.h"
+#include "DirectX/SynchronizationManager.h"
+#include "DirectX/ViewportScissorManager.h"
 
-#include "GetHitKey.h"
-#include "AudioManager.h"
-#include "TextureManager.h"
+#include "input/GetHitKey.h"
+#include "Audio/AudioManager.h"
+#include "Texture/TextureManager.h"
+#include <memory>
 
 class DirectXManager
 {

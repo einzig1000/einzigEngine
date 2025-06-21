@@ -1,5 +1,5 @@
-#include "DescriptorHeapManager.h"
-#include "functions.h"
+#include "DirectX/DescriptorHeapManager.h"
+#include "Utilities/functions.h"
 
 DescriptorHeapManager::DescriptorHeapManager(ID3D12Device* device)
 {

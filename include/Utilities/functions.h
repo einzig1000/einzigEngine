@@ -1,6 +1,6 @@
 #pragma once
 
-#include "definition.h"
+#include "definition/definition.h"
 
 #include "externals/DirectXTex/d3dx12.h"
 

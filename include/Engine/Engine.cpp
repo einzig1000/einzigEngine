@@ -1,5 +1,5 @@
-#include "Game.h"
-#include "functions.h"
+#include "Engine/Game.h"
+#include "Utilities/functions.h"
 #include "externals/DirectXTex/d3dx12.h"
 #include "externals/DirectXTex/DirectXTex.h"
 #include <cstdint>

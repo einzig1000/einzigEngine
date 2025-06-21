@@ -1,4 +1,4 @@
-#include "GetHitKey.h"
+#include "input/GetHitKey.h"
 #include <cassert>
 
 BYTE GetHitKey::keys[256];

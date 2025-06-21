@@ -1,5 +1,5 @@
-#include "SwapChainManager.h"
-#include "functions.h"
+#include "DirectX/SwapChainManager.h"
+#include "Utilities/functions.h"
 
 SwapChainManager::SwapChainManager(ID3D12Device* device, ID3D12CommandQueue* commandQueue, HWND hwnd, int width, int height)
 {

@@ -1,5 +1,5 @@
-#include "MouseController.h"
-#include "functions.h"
+#include "input/MouseController.h"
+#include "Utilities/functions.h"
 
 void MouseController::SetMouseRay(const uint32_t width, const uint32_t height, const Matrix4x4 viewProjectionMatrix)
 {

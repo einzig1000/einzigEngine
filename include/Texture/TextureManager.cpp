@@ -1,7 +1,7 @@
-#include "TextureManager.h"
+#include "Texture/TextureManager.h"
 #include "externals/DirectXTex/d3dx12.h"
 #include "externals/DirectXTex/DirectXTex.h"
-#include "functions.h"
+#include "Utilities/functions.h"
 #include "cassert"
 
 TextureManager::TextureManager(ID3D12Device* device, ID3D12DescriptorHeap* srvDescriptorHeap)

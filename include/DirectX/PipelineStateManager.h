@@ -2,7 +2,7 @@
 #include <d3d12.h>
 #include <wrl.h>
 #include <cassert>
-#include "functions.h"
+#include "Utilities/functions.h"
 
 class PipelineStateManager
 {

@@ -1,5 +1,5 @@
 #pragma once
-#include "definition.h"
+#include "definition/definition.h"
 
 struct easingSet
 {
