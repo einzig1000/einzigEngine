@@ -109,7 +109,7 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 	directionalLightData->intensity = 1.0f;
 
 	// プリミティブモードの設定
-	primitiveMode = false;
+	WireframeMode = false;
 }
 
 // メインループ用
@@ -327,88 +327,77 @@ void Engine::Drawobj(const Transforms& transform, const Vector3& center, uint32_
 	Drawobj( transform, center, objectNumber, textureNumber, materialColor, true);
 }
 
-void Engine::Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor, const bool enablePrimitiveMode)
+void Engine::Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor, const bool enableWireframeMode)
 {
 	if (objectNumber >= objects.size()) return;
 
-	if (enablePrimitiveMode && primitiveMode) 
-	{
-		AABB aabb = Game::CreateAABB(transform, objectNumber);
-
-		Game::DrawLine({ aabb.min.x, aabb.min.y, aabb.min.z }, { aabb.max.x, aabb.min.y, aabb.min.z }, materialColor);
-		Game::DrawLine({ aabb.min.x, aabb.max.y, aabb.min.z }, { aabb.max.x, aabb.max.y, aabb.min.z }, materialColor);
-		Game::DrawLine({ aabb.min.x, aabb.min.y, aabb.max.z }, { aabb.max.x, aabb.min.y, aabb.max.z }, materialColor);
-		Game::DrawLine({ aabb.min.x, aabb.max.y, aabb.max.z }, { aabb.max.x, aabb.max.y, aabb.max.z }, materialColor);
-		Game::DrawLine({ aabb.min.x, aabb.min.y, aabb.min.z }, { aabb.min.x, aabb.max.y, aabb.min.z }, materialColor);
-		Game::DrawLine({ aabb.max.x, aabb.min.y, aabb.min.z }, { aabb.max.x, aabb.max.y, aabb.min.z }, materialColor);
-		Game::DrawLine({ aabb.min.x, aabb.min.y, aabb.max.z }, { aabb.min.x, aabb.max.y, aabb.max.z }, materialColor);
-		Game::DrawLine({ aabb.max.x, aabb.min.y, aabb.max.z }, { aabb.max.x, aabb.max.y, aabb.max.z }, materialColor);
-		Game::DrawLine({ aabb.min.x, aabb.min.y, aabb.min.z }, { aabb.min.x, aabb.min.y, aabb.max.z }, materialColor);
-		Game::DrawLine({ aabb.max.x, aabb.min.y, aabb.min.z }, { aabb.max.x, aabb.min.y, aabb.max.z }, materialColor);
-		Game::DrawLine({ aabb.min.x, aabb.max.y, aabb.min.z }, { aabb.min.x, aabb.max.y, aabb.max.z }, materialColor);
-		Game::DrawLine({ aabb.max.x, aabb.max.y, aabb.min.z }, { aabb.max.x, aabb.max.y, aabb.max.z }, materialColor);
+	// RootSignatureとPSOを設定
+	if (enableWireframeMode && WireframeMode)
+	{	// Wireframe
+		dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetWireframePipelineState()); // ワイヤーフレーム用PSOを設定
 	}
 	else
-	{
-		// RootSignatureとPSOを設定 - Triangle
+	{	// Triangle
 		dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState()); // Triangle用PSOを設定
-		dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
-
-		Object3D& obj = objects[objectNumber];
-		const uint32_t kSumVertex = static_cast<uint32_t>(obj.modelData.vertices.size());
-
-		// 1. centerを中心に拡縮・回転
-		Matrix4x4 toCenter = Matrix4x4::MakeTranslateMatrix({ -center.x, -center.y, -center.z });
-		Matrix4x4 rotateScale = Matrix4x4::MakeAffineMatrix(transform.scale, transform.rotate, { 0,0,0 });
-		Matrix4x4 fromCenter = Matrix4x4::MakeTranslateMatrix(center);
-		Matrix4x4 centerMatrix = (fromCenter * (rotateScale * toCenter));
-
-		// 2. 回転・拡縮後の原点座標を求める
-		Vector3 origin = { 0, 0, 0 };
-		Vector3 rotatedOrigin = Transform(origin, centerMatrix);
-
-		// 3. translateとの差分を補正移動として加える
-		Vector3 offset = {
-			transform.translate.x - rotatedOrigin.x,
-			transform.translate.y - rotatedOrigin.y,
-			transform.translate.z - rotatedOrigin.z
-		};
-		Matrix4x4 offsetMatrix = Matrix4x4::MakeTranslateMatrix(offset);
-
-		// 4. 最終ワールド行列
-		Matrix4x4 worldMatrix = (centerMatrix * offsetMatrix);
-
-		// WVP行列
-		Matrix4x4 wvpMatrix = (worldMatrix * cameraController->viewProjectionMatrix);
-
-		wvpData[drawCallIndex]->World = worldMatrix;
-		wvpData[drawCallIndex]->WVP = wvpMatrix;
-
-		const TextureData* tex = dxManager->GetTextureManager()->GetTexture(textureNumber);
-		if (!tex) return;
-
-		Vector4 color = ConvertUintToVector4(materialColor);
-		materialData[drawCallIndex]->color = color;
-		materialData[drawCallIndex]->enableLighting = true;
-		materialData[drawCallIndex]->uvTransform = Matrix4x4::MakeIdentity4x4();
-
-		// 頂点バッファをバインド（描画に使う頂点データを指定）
-		dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &obj.vertexBufferView);
-		// プリミティブトポロジ（描画する形状の種類：三角形リスト）を設定
-		dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		// ルートパラメータ0にマテリアル用定数バッファ（色・ライティング情報など）をバインド
-		dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources[drawCallIndex]->GetGPUVirtualAddress());
-		// ルートパラメータ1にWVP（ワールド・ビュー・プロジェクション）用定数バッファをバインド
-		dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources[drawCallIndex]->GetGPUVirtualAddress());
-		// ルートパラメータ2にテクスチャのSRV（シェーダリソースビュー）をバインド
-		dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
-		// ルートパラメータ3にディレクショナルライト用定数バッファをバインド
-		dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
-		// 頂点数分のインスタンス描画を実行（実際に描画コマンドを発行）
-		dxManager->GetCommandList()->DrawInstanced(kSumVertex, 1, 0, 0);
-
-		drawCallIndex++;
 	}
+	dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
+	
+	// 描画するモデルの検索
+	Object3D& obj = objects[objectNumber];
+	// 頂点数の取得
+	const uint32_t kSumVertex = static_cast<uint32_t>(obj.modelData.vertices.size());
+
+	// 1. centerを中心に拡縮・回転
+	Matrix4x4 toCenter = Matrix4x4::MakeTranslateMatrix({ -center.x, -center.y, -center.z });
+	Matrix4x4 rotateScale = Matrix4x4::MakeAffineMatrix(transform.scale, transform.rotate, { 0,0,0 });
+	Matrix4x4 fromCenter = Matrix4x4::MakeTranslateMatrix(center);
+	Matrix4x4 centerMatrix = (fromCenter * (rotateScale * toCenter));
+
+	// 2. 回転・拡縮後の原点座標を求める
+	Vector3 origin = { 0, 0, 0 };
+	Vector3 rotatedOrigin = Transform(origin, centerMatrix);
+
+	// 3. translateとの差分を補正移動として加える
+	Vector3 offset = {
+		transform.translate.x - rotatedOrigin.x,
+		transform.translate.y - rotatedOrigin.y,
+		transform.translate.z - rotatedOrigin.z
+	};
+	Matrix4x4 offsetMatrix = Matrix4x4::MakeTranslateMatrix(offset);
+
+	// 4. 最終ワールド行列
+	Matrix4x4 worldMatrix = (centerMatrix * offsetMatrix);
+
+	// WVP行列
+	Matrix4x4 wvpMatrix = (worldMatrix * cameraController->viewProjectionMatrix);
+
+	wvpData[drawCallIndex]->World = worldMatrix;
+	wvpData[drawCallIndex]->WVP = wvpMatrix;
+
+	const TextureData* tex = dxManager->GetTextureManager()->GetTexture(textureNumber);
+	if (!tex) return;
+
+	Vector4 color = ConvertUintToVector4(materialColor);
+	materialData[drawCallIndex]->color = color;
+	materialData[drawCallIndex]->enableLighting = true;
+	materialData[drawCallIndex]->uvTransform = Matrix4x4::MakeIdentity4x4();
+
+	// 頂点バッファをバインド（描画に使う頂点データを指定）
+	dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &obj.vertexBufferView);
+	// プリミティブトポロジ（描画する形状の種類：三角形リスト）を設定
+	dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);	
+	// ルートパラメータ0にマテリアル用定数バッファ（色・ライティング情報など）をバインド
+	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources[drawCallIndex]->GetGPUVirtualAddress());
+	// ルートパラメータ1にWVP（ワールド・ビュー・プロジェクション）用定数バッファをバインド
+	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources[drawCallIndex]->GetGPUVirtualAddress());
+	// ルートパラメータ2にテクスチャのSRV（シェーダリソースビュー）をバインド
+	dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
+	// ルートパラメータ3にディレクショナルライト用定数バッファをバインド
+	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
+	// 頂点数分のインスタンス描画を実行（実際に描画コマンドを発行）
+	dxManager->GetCommandList()->DrawInstanced(kSumVertex, 1, 0, 0);
+
+	drawCallIndex++;
 }
 
 void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor)
@@ -855,10 +844,10 @@ AABB Engine::CreateAABB(const Transforms& transforms, uint32_t objectNumber)
 	return { worldMin, worldMax };
 }
 
-void Engine::togglePrimitiveMode()
+void Engine::toggleWireframeMode()
 {
-	if (primitiveMode)primitiveMode = false;
-	else primitiveMode = true;
+	if (WireframeMode)WireframeMode = false;
+	else WireframeMode = true;
 }
 
 

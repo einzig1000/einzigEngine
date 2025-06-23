@@ -48,9 +48,9 @@ void Game::Drawobj(const Transforms& transform, const Vector3& center, uint32_t 
 	engine->Drawobj(transform, center, objectNumber, textureNumber, materialColor);
 }
 
-void Game::Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor, const bool enablePrimitiveMode)
+void Game::Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor, const bool enableWireframeMode)
 {
-	engine->Drawobj(transform, center, objectNumber, textureNumber, materialColor, enablePrimitiveMode);
+	engine->Drawobj(transform, center, objectNumber, textureNumber, materialColor, enableWireframeMode);
 }
 
 void Game::DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor)
@@ -153,7 +153,7 @@ AABB Game::CreateAABB(const Transforms& transforms, uint32_t objectNumber)
 	return engine->CreateAABB(transforms, objectNumber);
 }
 
-void Game::togglePrimitiveMode()
+void Game::toggleWireframeMode()
 {
-	engine->togglePrimitiveMode();
+	engine->toggleWireframeMode();
 }

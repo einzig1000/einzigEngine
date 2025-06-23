@@ -36,6 +36,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	blockTransforms.scale = { 1.2f, 1.2f, 1.2f };
 	blockTransforms.translate = { 0,0,0 };
 	blockTransforms.rotate = { 0.0f,0.0f,0.0f };
+	Vector3 blockPivot = { 0,0,0 };
 
 	while (Game::ProcessMessage())
 	{
@@ -60,7 +61,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		}
 		if (GetHitKey::keys[DIK_3] && !GetHitKey::preKeys[DIK_3])
 		{
-			Game::togglePrimitiveMode();
+			Game::toggleWireframeMode();
 		}
 
 		Game::SetMasterVolume(masterVolume);
@@ -76,16 +77,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		///
 
 		ImGui::Text("-----------------------------------");
-		ImGui::Begin("FPS");
 		ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
-		ImGui::End();
+		ImGui::Text("-----------------------------------");
+		ImGui::DragFloat3("blockTransforms.scale	", &blockTransforms.scale.x, 0.01f);
+		ImGui::DragFloat3("blockTransforms.rotate	", &blockTransforms.rotate.x, 0.01f);
+		ImGui::DragFloat3("blockTransforms.pivot	", &blockPivot.x, 0.01f);
+		ImGui::DragFloat3("blockTransforms.translate", &blockTransforms.translate.x, 0.01f);
+		ImGui::Text("-----------------------------------");
 		ImGui::Text("-----------------------------------");
 
 
 
 
-		Game::Drawobj(blockTransforms, {0,0,0}, blockModel, uvCheckerPng, 0xFFFFFFFFFF);
-		AABB aabb = Game::CreateAABB(blockTransforms, blockModel);
+		//Game::Drawobj(blockTransforms, blockPivot, blockModel, uvCheckerPng, 0xFFFFFFFFFF);
+		Game::Drawobj(blockTransforms, {100.0f,0.0f,0.0f}, blockModel, uvCheckerPng, 0xFFFFFFFFFF);
 
 
 
