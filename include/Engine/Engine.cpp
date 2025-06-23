@@ -324,7 +324,7 @@ uint32_t Engine::LoadAudio(const std::string& filePath)
 // 描画
 void Engine::Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor)
 {
-	Drawobj( transform, center, objectNumber, textureNumber, materialColor, true);
+	Drawobj(transform, center, objectNumber, textureNumber, materialColor, true);
 }
 
 void Engine::Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor, const bool enableWireframeMode)
@@ -341,32 +341,40 @@ void Engine::Drawobj(const Transforms& transform, const Vector3& center, uint32_
 		dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState()); // Triangle用PSOを設定
 	}
 	dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
-	
+
 	// 描画するモデルの検索
 	Object3D& obj = objects[objectNumber];
 	// 頂点数の取得
 	const uint32_t kSumVertex = static_cast<uint32_t>(obj.modelData.vertices.size());
 
-	// 1. centerを中心に拡縮・回転
-	Matrix4x4 toCenter = Matrix4x4::MakeTranslateMatrix({ -center.x, -center.y, -center.z });
-	Matrix4x4 rotateScale = Matrix4x4::MakeAffineMatrix(transform.scale, transform.rotate, { 0,0,0 });
-	Matrix4x4 fromCenter = Matrix4x4::MakeTranslateMatrix(center);
-	Matrix4x4 centerMatrix = (fromCenter * (rotateScale * toCenter));
 
-	// 2. 回転・拡縮後の原点座標を求める
-	Vector3 origin = { 0, 0, 0 };
-	Vector3 rotatedOrigin = Transform(origin, centerMatrix);
 
-	// 3. translateとの差分を補正移動として加える
-	Vector3 offset = {
-		transform.translate.x - rotatedOrigin.x,
-		transform.translate.y - rotatedOrigin.y,
-		transform.translate.z - rotatedOrigin.z
-	};
-	Matrix4x4 offsetMatrix = Matrix4x4::MakeTranslateMatrix(offset);
 
-	// 4. 最終ワールド行列
-	Matrix4x4 worldMatrix = (centerMatrix * offsetMatrix);
+	// 1. オブジェクトのスケール行列
+	Matrix4x4 scaleMatrix = Matrix4x4::MakeScaleMatrix(transform.scale);
+
+	// 2. ワールド空間での最終的な位置への移動行列
+	Matrix4x4 translateMatrix = Matrix4x4::MakeTranslateMatrix(transform.translate);
+
+	// 3. 回転の中心への移動 (centerを原点に移動)
+	Matrix4x4 toRotationCenter = Matrix4x4::MakeTranslateMatrix({ -center.x, -center.y, -center.z });
+
+	// 4. 回転行列 (transform.rotate を center を中心とする回転として使う)
+	Matrix4x4 rotateXMatrix = Matrix4x4::MakeRotateXMatrix(transform.rotate.x);
+	Matrix4x4 rotateYMatrix = Matrix4x4::MakeRotateYMatrix(transform.rotate.y);
+	Matrix4x4 rotateZMatrix = Matrix4x4::MakeRotateZMatrix(transform.rotate.z);
+	Matrix4x4 rotationMatrix = rotateZMatrix * rotateXMatrix * rotateYMatrix;
+
+	// 5. 回転後、元の回転中心の位置に戻す
+	Matrix4x4 fromRotationCenter = Matrix4x4::MakeTranslateMatrix(center);
+
+	// 最終的なワールド行列の構築
+	Matrix4x4 worldMatrix =
+		scaleMatrix *		 // 1. 拡縮はどうでもいい
+		toRotationCenter *	 // 2. 回転中心を原点に移動
+		rotationMatrix *	 // 3. 原点で回転 (centerを中心とした回転)
+		fromRotationCenter * // 4. 回転したものを元の回転中心に戻す
+		translateMatrix;	 // 5. 最終的なワールド位置へ移動
 
 	// WVP行列
 	Matrix4x4 wvpMatrix = (worldMatrix * cameraController->viewProjectionMatrix);
@@ -385,7 +393,7 @@ void Engine::Drawobj(const Transforms& transform, const Vector3& center, uint32_
 	// 頂点バッファをバインド（描画に使う頂点データを指定）
 	dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &obj.vertexBufferView);
 	// プリミティブトポロジ（描画する形状の種類：三角形リスト）を設定
-	dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);	
+	dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	// ルートパラメータ0にマテリアル用定数バッファ（色・ライティング情報など）をバインド
 	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources[drawCallIndex]->GetGPUVirtualAddress());
 	// ルートパラメータ1にWVP（ワールド・ビュー・プロジェクション）用定数バッファをバインド
@@ -417,26 +425,32 @@ void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint
 	// 頂点
 	CreateSphere(&trianglesVertexData[trianglesVertexDataUsed], kSubdivision);
 
-	// 1. centerを中心に拡縮・回転
-	Matrix4x4 toCenter = Matrix4x4::MakeTranslateMatrix({ -center.x, -center.y, -center.z });
-	Matrix4x4 rotateScale = Matrix4x4::MakeAffineMatrix(transform.scale, transform.rotate, { 0,0,0 });
-	Matrix4x4 fromCenter = Matrix4x4::MakeTranslateMatrix(center);
-	Matrix4x4 centerMatrix = (fromCenter * (rotateScale * toCenter));
 
-	// 2. 回転・拡縮後の原点座標を求める
-	Vector3 origin = { 0, 0, 0 };
-	Vector3 rotatedOrigin = Transform(origin, centerMatrix);
+	// 1. オブジェクトのスケール行列
+	Matrix4x4 scaleMatrix = Matrix4x4::MakeScaleMatrix(transform.scale);
 
-	// 3. translateとの差分を補正移動として加える
-	Vector3 offset = {
-		transform.translate.x - rotatedOrigin.x,
-		transform.translate.y - rotatedOrigin.y,
-		transform.translate.z - rotatedOrigin.z
-	};
-	Matrix4x4 offsetMatrix = Matrix4x4::MakeTranslateMatrix(offset);
+	// 2. ワールド空間での最終的な位置への移動行列
+	Matrix4x4 translateMatrix = Matrix4x4::MakeTranslateMatrix(transform.translate);
 
-	// 4. 最終ワールド行列
-	Matrix4x4 worldMatrix = (centerMatrix * offsetMatrix);
+	// 3. 回転の中心への移動 (centerを原点に移動)
+	Matrix4x4 toRotationCenter = Matrix4x4::MakeTranslateMatrix({ -center.x, -center.y, -center.z });
+
+	// 4. 回転行列 (transform.rotate を center を中心とする回転として使う)
+	Matrix4x4 rotateXMatrix = Matrix4x4::MakeRotateXMatrix(transform.rotate.x);
+	Matrix4x4 rotateYMatrix = Matrix4x4::MakeRotateYMatrix(transform.rotate.y);
+	Matrix4x4 rotateZMatrix = Matrix4x4::MakeRotateZMatrix(transform.rotate.z);
+	Matrix4x4 rotationMatrix = rotateZMatrix * rotateXMatrix * rotateYMatrix;
+
+	// 5. 回転後、元の回転中心の位置に戻す
+	Matrix4x4 fromRotationCenter = Matrix4x4::MakeTranslateMatrix(center);
+
+	// 最終的なワールド行列の構築
+	Matrix4x4 worldMatrix =
+		scaleMatrix *		 // 1. 拡縮はどうでもいい
+		toRotationCenter *	 // 2. 回転中心を原点に移動
+		rotationMatrix *	 // 3. 原点で回転 (centerを中心とした回転)
+		fromRotationCenter * // 4. 回転したものを元の回転中心に戻す
+		translateMatrix;	 // 5. 最終的なワールド位置へ移動
 
 	// WVP行列
 	Matrix4x4 wvpMatrix = (worldMatrix * cameraController->viewProjectionMatrix);
