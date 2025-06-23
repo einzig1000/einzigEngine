@@ -42,9 +42,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	skyDomeOptions.enableWireframeMode = false;
 	// スプライト
 	Transforms spriteTransforms;
-	spriteTransforms.scale = { 1.0f, 1.0f, 1.0f };
+	spriteTransforms.scale = { 10.0f, 10.0f, 10.0f };
 	spriteTransforms.rotate = { 0.0f, 0.0f, 0.0f };
-	spriteTransforms.translate = { 0.0f, 0.0f, 0.0f };
+	spriteTransforms.translate = { 10.0f, 10.0f, 10.0f };
 	Transforms uvTransform;
 
 
@@ -97,10 +97,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		///
 		/// ↓描画処理ここから
 		///
+		
 		Game::Drawobj(skyDomeTransforms, {0,0,0}, skyDomeModel, skyDomePng, 0xFFFFFFFFFF, skyDomeOptions);
 		Game::Drawobj(blockTransforms, blockPivot, blockModel, blockPng, 0xFFFFFFFFFF, blockOptions);
+		Game::DrawSprite(spriteTransforms, {100,100}, uvCheckerPng, 0xFFFFFFFF, uvTransform);
 		Game::DrawSphere(sphereTransforms, spherePivot, 12, uvCheckerPng, 0xFFFFFFFFFF, sphereOptions);
-		Game::DrawSprite(spriteTransforms, uvCheckerPng, 0xFFFFFFFF, uvTransform);
+		
 
 
 
@@ -134,8 +136,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		ImGui::DragFloat3("sphereTransforms.translate", &sphereTransforms.translate.x, 0.01f);
 		ImGui::Text("--------------SkyDome--------------");
 		ImGui::DragFloat2("skyDome.uvTransform.scale	", &skyDomeOptions.uvTransform.scale.x, 0.01f);
-		ImGui::DragFloat ("skyDome.uvTransform.rotate	", &skyDomeOptions.uvTransform.rotate.z, 0.01f);
+		ImGui::DragFloat("skyDome.uvTransform.rotate	", &skyDomeOptions.uvTransform.rotate.z, 0.01f);
 		ImGui::DragFloat2("skyDome.uvTransform.translate", &skyDomeOptions.uvTransform.translate.x, 0.01f);
+		ImGui::Text("--------------sprite---------------");
+		ImGui::DragFloat3("spriteTransforms.scale	", &spriteTransforms.scale.x, 0.01f);
+		ImGui::DragFloat3("spriteTransforms.rotate	", &spriteTransforms.rotate.x, 0.01f);
+		ImGui::DragFloat3("spriteTransforms.pivot	", &spriteTransforms.translate.x, 0.01f);
+		ImGui::DragFloat3("uvTransform.scale	", &uvTransform.scale.x, 0.01f);
+		ImGui::DragFloat3("uvTransform.rotate	", &uvTransform.rotate.z, 0.01f);
+		ImGui::DragFloat3("uvTransform.translate", &uvTransform.translate.x, 0.01f);
 
 
 
