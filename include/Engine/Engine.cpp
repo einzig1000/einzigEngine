@@ -331,21 +331,20 @@ void Engine::Drawobj(const Transforms& transform, const Vector3& center, uint32_
 {
 	if (objectNumber >= objects.size()) return;
 
+	// RootSignatureとPSOを設定
 	if (enableWireframeMode && WireframeMode)
-	{
-		// RootSignatureとPSOを設定 - Triangle
+	{	// Wireframe
 		dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetWireframePipelineState()); // ワイヤーフレーム用PSOを設定
 	}
 	else
-	{
-		// RootSignatureとPSOを設定 - Wireframe
+	{	// Triangle
 		dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState()); // Triangle用PSOを設定
 	}
 	dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
 	
 	// 描画するモデルの検索
 	Object3D& obj = objects[objectNumber];
-	// 
+	// 頂点数の取得
 	const uint32_t kSumVertex = static_cast<uint32_t>(obj.modelData.vertices.size());
 
 	// 1. centerを中心に拡縮・回転
