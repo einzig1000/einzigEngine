@@ -89,8 +89,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 
 
-		//Game::Drawobj(blockTransforms, blockPivot, blockModel, uvCheckerPng, 0xFFFFFFFFFF);
-		Game::Drawobj(blockTransforms, {100.0f,0.0f,0.0f}, blockModel, uvCheckerPng, 0xFFFFFFFFFF);
+		Game::Drawobj(blockTransforms, blockPivot, blockModel, uvCheckerPng, 0xFFFFFFFFFF);
+		Game::DrawSphere(blockTransforms, blockPivot, 12, uvCheckerPng, 0xFFFFFFFFFF);
 
 
 
