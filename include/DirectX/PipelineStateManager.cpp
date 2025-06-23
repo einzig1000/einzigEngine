@@ -228,9 +228,13 @@ void PipelineStateManager::InitializeWireframePSOInternal(ID3D12Device* device)
 {
     HRESULT hr;
 
-    Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = CompileShader(L"include/Shaders/Object3D.PS.hlsl", L"ps_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
+    //Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = CompileShader(L"include/Shaders/Object3D.PS.hlsl", L"ps_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
+    //assert(pixelShaderBlob != nullptr);
+    //Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = CompileShader(L"include/Shaders/Object3D.VS.hlsl", L"vs_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
+    //assert(vertexShaderBlob != nullptr);
+    Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = CompileShader(L"include/Shaders/Line.PS.hlsl", L"ps_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
     assert(pixelShaderBlob != nullptr);
-    Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = CompileShader(L"include/Shaders/Object3D.VS.hlsl", L"vs_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
+    Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = CompileShader(L"include/Shaders/Line.VS.hlsl", L"vs_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
     assert(vertexShaderBlob != nullptr);
 
     // InputLayout は object3d.hlsli の VertexShaderInput と同じなので流用

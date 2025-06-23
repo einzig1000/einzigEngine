@@ -109,7 +109,7 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 	directionalLightData->intensity = 1.0f;
 
 	// プリミティブモードの設定
-	primitiveMode = false;
+	WireframeMode = false;
 }
 
 // メインループ用
@@ -327,11 +327,11 @@ void Engine::Drawobj(const Transforms& transform, const Vector3& center, uint32_
 	Drawobj( transform, center, objectNumber, textureNumber, materialColor, true);
 }
 
-void Engine::Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor, const bool enablePrimitiveMode)
+void Engine::Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor, const bool enableWireframeMode)
 {
 	if (objectNumber >= objects.size()) return;
 
-	if (enablePrimitiveMode && primitiveMode)
+	if (enableWireframeMode && WireframeMode)
 	{
 		// RootSignatureとPSOを設定 - Triangle
 		dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetWireframePipelineState()); // ワイヤーフレーム用PSOを設定
@@ -345,7 +345,7 @@ void Engine::Drawobj(const Transforms& transform, const Vector3& center, uint32_
 	
 	// 描画するモデルの検索
 	Object3D& obj = objects[objectNumber];
-	// 頂点数の検索
+	// 
 	const uint32_t kSumVertex = static_cast<uint32_t>(obj.modelData.vertices.size());
 
 	// 1. centerを中心に拡縮・回転
@@ -845,10 +845,10 @@ AABB Engine::CreateAABB(const Transforms& transforms, uint32_t objectNumber)
 	return { worldMin, worldMax };
 }
 
-void Engine::togglePrimitiveMode()
+void Engine::toggleWireframeMode()
 {
-	if (primitiveMode)primitiveMode = false;
-	else primitiveMode = true;
+	if (WireframeMode)WireframeMode = false;
+	else WireframeMode = true;
 }
 
 

@@ -22,7 +22,7 @@ public:
 
 	// 描画
 	static void Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor);
-	static void Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor, const bool enablePrimitiveMode);
+	static void Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor, const bool enableWireframeMode);
 	static void DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor);
 	static void DrawTriangle(const Transforms& localTransform, const Transforms& worldTransform, const VertexData* vertexData, uint32_t textureNumber, const uint32_t& materialColor);
 	static void DrawSprite(const Transforms& localTransform, VertexData* vertexData, uint32_t textureNumber, const uint32_t& materialColor);
@@ -53,7 +53,7 @@ public:
 	static AABB CreateAABB(const Transforms& transforms, uint32_t objectNumber);
 
 	// プリミティブモードの設定
-	static void togglePrimitiveMode();
+	static void toggleWireframeMode();
 
 };
 

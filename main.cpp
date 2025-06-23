@@ -61,7 +61,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		}
 		if (GetHitKey::keys[DIK_3] && !GetHitKey::preKeys[DIK_3])
 		{
-			Game::togglePrimitiveMode();
+			Game::toggleWireframeMode();
 		}
 
 		Game::SetMasterVolume(masterVolume);
@@ -89,8 +89,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 
 
-		Game::Drawobj(blockTransforms, blockPivot, blockModel, uvCheckerPng, 0xFFFFFFFFFF);
-		AABB aabb = Game::CreateAABB(blockTransforms, blockModel);
+		//Game::Drawobj(blockTransforms, blockPivot, blockModel, uvCheckerPng, 0xFFFFFFFFFF);
+		Game::Drawobj(blockTransforms, {100.0f,0.0f,0.0f}, blockModel, uvCheckerPng, 0xFFFFFFFFFF);
 
 
 

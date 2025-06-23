@@ -30,7 +30,7 @@ public:
 
 	// 描画
 	void Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor);
-	void Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor, const bool enablePrimitiveMode);
+	void Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor, const bool enableWireframeMode);
 	void DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor);
 	void DrawTriangle(const Transforms& localTransform, const Transforms& worldTransform, const VertexData* vertexData, uint32_t textureNumber, const uint32_t& materialColor);
 	void DrawSprite(const Transforms& localTransform, VertexData* vertexData, uint32_t textureNumber, const uint32_t& materialColor);
@@ -61,7 +61,7 @@ public:
 	AABB CreateAABB(const Transforms& transforms, uint32_t objectNumber);
 
 	// プリミティブモードの設定
-	void togglePrimitiveMode();
+	void toggleWireframeMode();
 
 private:
 	void UpdateCamera();
@@ -163,5 +163,5 @@ private:
 	int wheelDelta;
 
 	// プリミティブモード
-	bool primitiveMode;
+	bool WireframeMode;
 };
