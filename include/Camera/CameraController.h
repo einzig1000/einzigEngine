@@ -54,6 +54,7 @@ private:
     Vector3 normalize_;
     // 演出による回転中心の変更中
     easingSet easeCenter_;
+    DrawOptions sphereOptions;
 
     //////////////////////////////////////////////
     ///               カメラ距離               ///

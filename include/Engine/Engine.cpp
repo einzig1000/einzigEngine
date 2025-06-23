@@ -324,15 +324,16 @@ uint32_t Engine::LoadAudio(const std::string& filePath)
 // 描画
 void Engine::Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor)
 {
-	Drawobj(transform, center, objectNumber, textureNumber, materialColor, true);
+	DrawOptions drawOptions;
+	Drawobj(transform, center, objectNumber, textureNumber, materialColor, drawOptions);
 }
 
-void Engine::Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor, const bool enableWireframeMode)
+void Engine::Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions)
 {
 	if (objectNumber >= objects.size()) return;
 
 	// RootSignatureとPSOを設定
-	if (enableWireframeMode && WireframeMode)
+	if (drawOptions.enableWireframeMode && WireframeMode)
 	{	// Wireframe
 		dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetWireframePipelineState()); // ワイヤーフレーム用PSOを設定
 	}
@@ -387,8 +388,13 @@ void Engine::Drawobj(const Transforms& transform, const Vector3& center, uint32_
 
 	Vector4 color = ConvertUintToVector4(materialColor);
 	materialData[drawCallIndex]->color = color;
-	materialData[drawCallIndex]->enableLighting = true;
-	materialData[drawCallIndex]->uvTransform = Matrix4x4::MakeIdentity4x4();
+	materialData[drawCallIndex]->enableLighting = drawOptions.enableLighting;
+	Matrix4x4 uvTransformMatrix = Matrix4x4::MakeIdentity4x4();
+	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeScaleMatrix(drawOptions.uvTransform.scale));
+	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(drawOptions.uvTransform.rotate.z));
+	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(drawOptions.uvTransform.translate));
+	materialData[drawCallIndex]->uvTransform = uvTransformMatrix;
+
 
 	// 頂点バッファをバインド（描画に使う頂点データを指定）
 	dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &obj.vertexBufferView);
@@ -409,6 +415,12 @@ void Engine::Drawobj(const Transforms& transform, const Vector3& center, uint32_
 }
 
 void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor)
+{
+	DrawOptions drawOptions;
+	DrawSphere(transform, center, kSubdivision, textureNumber, materialColor, drawOptions);
+}
+
+void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions)
 {
 	// RootSignatureとPSOを設定 - Triangle
 	dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState()); // Triangle用PSOを設定
@@ -468,8 +480,12 @@ void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint
 	// 色
 	Vector4 color = ConvertUintToVector4(materialColor);
 	materialData[drawCallIndex]->color = color;
-	materialData[drawCallIndex]->enableLighting = true;
-	materialData[drawCallIndex]->uvTransform = Matrix4x4::MakeIdentity4x4();
+	materialData[drawCallIndex]->enableLighting = drawOptions.enableLighting;
+	Matrix4x4 uvTransformMatrix = Matrix4x4::MakeIdentity4x4();
+	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeScaleMatrix(drawOptions.uvTransform.scale));
+	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(drawOptions.uvTransform.rotate.z));
+	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(drawOptions.uvTransform.translate));
+	materialData[drawCallIndex]->uvTransform = uvTransformMatrix;
 
 	DrawData drawData = SetupDrawData(
 		vertexResourceSizeSphere,
@@ -479,7 +495,7 @@ void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint
 		vertexResourceSizeSphere,
 		materialData[drawCallIndex],
 		materialColor,
-		false,
+		true,
 		Matrix4x4::MakeIdentity4x4(),
 		wvpData[drawCallIndex],
 		worldMatrix,
@@ -499,9 +515,9 @@ void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint
 	// CBVを設定する wvp用のCBufferの場所を設定
 	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources[drawCallIndex]->GetGPUVirtualAddress());
 	// SRVのDescriptorTableの先頭を設定。２はrootParameters[2]。
-	//dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
-	dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, drawData.texture->textureSrvHandleGPU);
-	// CBVを設定する ディレクショナルライト用のCBufferの場所を設定
+	dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
+	//dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, drawData.texture->textureSrvHandleGPU);
+	//// CBVを設定する ディレクショナルライト用のCBufferの場所を設定
 	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 
 	dxManager->GetCommandList()->DrawInstanced(kSumVertex, 1, 0, 0);

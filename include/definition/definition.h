@@ -895,3 +895,13 @@ struct D3DResourceLeakChecker
         }
     }
 };
+
+struct DrawOptions
+{
+    // ワイヤーフレームにしてもいいか（天球なんかはワイヤーフレームになってほしくない）
+    bool enableWireframeMode = false;
+    // UV座標
+    Transforms uvTransform;
+    // ライティングするか
+    bool enableLighting = true;
+};

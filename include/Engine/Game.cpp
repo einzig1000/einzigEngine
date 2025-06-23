@@ -48,14 +48,19 @@ void Game::Drawobj(const Transforms& transform, const Vector3& center, uint32_t 
 	engine->Drawobj(transform, center, objectNumber, textureNumber, materialColor);
 }
 
-void Game::Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor, const bool enableWireframeMode)
+void Game::Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions)
 {
-	engine->Drawobj(transform, center, objectNumber, textureNumber, materialColor, enableWireframeMode);
+	engine->Drawobj(transform, center, objectNumber, textureNumber, materialColor, drawOptions);
 }
 
 void Game::DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor)
 {
 	engine->DrawSphere(transform, center, kSubdivision, textureNumber, materialColor);
+}
+
+void Game::DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions)
+{
+	engine->DrawSphere(transform, center, kSubdivision, textureNumber, materialColor, drawOptions);
 }
 
 void Game::DrawTriangle(const Transforms& localTransform, const Transforms& worldTransform, const VertexData* vertexData, uint32_t textureNumber, const uint32_t& materialColor)

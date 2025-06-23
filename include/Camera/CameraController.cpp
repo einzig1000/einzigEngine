@@ -20,6 +20,8 @@ CameraController::CameraController()
     preCenter_ = center_;
     preRotate_.x = transform_.rotate.x;
     preRotate_.y = transform_.rotate.y;
+
+    sphereOptions.enableLighting = false;
 }
 
 void CameraController::Updata()
@@ -188,7 +190,7 @@ void CameraController::Updata()
 
 void CameraController::Draw()
 {
-    Game::DrawSphere({ {0.1f,0.1f,0.1f}, {0.0f,0.0f,0.0f}, center_ }, { 0,0,0 }, 12, 0, 0xFFFFFFFF);
+    Game::DrawSphere({ {0.1f,0.1f,0.1f}, {0.0f,0.0f,0.0f}, center_ }, { 0,0,0 }, 12, 0, 0xFFFFFFFF, sphereOptions);
 }
 
 // 実際に動かす

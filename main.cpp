@@ -15,23 +15,30 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 
 	// 球
-	int uvCheckerPng;
-	uvCheckerPng = Game::LoadTexture("resources/uvChecker.png");
+	int uvCheckerPng = Game::LoadTexture("resources/uvChecker.png");
 	Transforms sphereTransforms;
 	sphereTransforms.scale = { 1.0f, 1.0f, 1.0f };
 	sphereTransforms.translate = { 0.0f,0.0f,0.0f };
 	sphereTransforms.rotate = { 0.0f,0.0f,0.0f };
 	Vector3 spherePivot = { 0,0,0 };
+	DrawOptions sphereOptions;
 	// ブロック
-	int blockModel;
-	blockModel = Game::LoadOBJ("resources/model", "map.obj");
-	int blockPng;
-	blockPng = Game::LoadTexture("resources/map.png");
+	int blockModel = Game::LoadOBJ("resources/block", "map.obj");
+	int blockPng = Game::LoadTexture("resources/block/map.png");
 	Transforms blockTransforms;
 	blockTransforms.scale = { 1.2f, 1.2f, 1.2f };
 	blockTransforms.translate = { 0.0f,0.0f,0.0f };
 	blockTransforms.rotate = { 0.0f,0.0f,0.0f };
 	Vector3 blockPivot = { 0,0,0 };
+	// 天球
+	int skyDomeModel = Game::LoadOBJ("resources/skyDome", "skyDome.obj");
+	int skyDomePng = Game::LoadTexture("resources/skyDome/skyDome.png");
+	Transforms skyDomeTransforms;
+	skyDomeTransforms.scale = { 120.0f, 120.0f, 120.0f };
+	skyDomeTransforms.translate = { 0.0f,0.0f,0.0f };
+	skyDomeTransforms.rotate = { 0.0f,0.0f,0.0f };
+
+
 
 	// 現在のマスター音量
 	float masterVolume = Game::GetMasterVolume();
@@ -80,11 +87,31 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		///
 		/// ↓描画処理ここから
 		///
+		Game::Drawobj(skyDomeTransforms, {0,0,0}, skyDomeModel, skyDomePng, 0xFFFFFFFFFF);
+		Game::Drawobj(blockTransforms, blockPivot, blockModel, blockPng, 0xFFFFFFFFFF);
+		Game::DrawSphere(sphereTransforms, spherePivot, 12, uvCheckerPng, 0xFFFFFFFFFF);
+
+
+
+
+
+
+
 
 		ImGui::Text("----------------FPS----------------");
 		ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
 		ImGui::Text("---------------Audio---------------");
-		ImGui::
+		ImGui::Text("push 1 key : alert.wav");
+		ImGui::Text("push 2 key : buzzer.mp3");
+		if (Game::IsAudioPlaying(alert))ImGui::Text("alert ON");
+		else ImGui::Text("alert OFF");
+		if (Game::IsAudioPlaying(buzzer))ImGui::Text("buzzer ON");
+		else ImGui::Text("buzzer OFF");
+		ImGui::SliderFloat("masterVolume ", &masterVolume, 0.0f, 1.0f);
+		ImGui::SliderFloat("alertVolume  ", &alertVolume, 0.0f, 1.0f);
+		ImGui::SliderFloat("buzzerVolume ", &buzzerVolume, 0.0f, 1.0f);
+		ImGui::Checkbox("loop alert ", &alertLoop);
+		ImGui::Checkbox("loop buzzer", &buzzerLoop);
 		ImGui::Text("---------------block---------------");
 		ImGui::DragFloat3("blockTransforms.scale	", &blockTransforms.scale.x, 0.01f);
 		ImGui::DragFloat3("blockTransforms.rotate	", &blockTransforms.rotate.x, 0.01f);
@@ -95,12 +122,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		ImGui::DragFloat3("sphereTransforms.rotate	", &sphereTransforms.rotate.x, 0.01f);
 		ImGui::DragFloat3("sphereTransforms.pivot	", &spherePivot.x, 0.01f);
 		ImGui::DragFloat3("sphereTransforms.translate", &sphereTransforms.translate.x, 0.01f);
-
-
-
-
-		Game::Drawobj(blockTransforms, blockPivot, blockModel, blockPng, 0xFFFFFFFFFF);
-		Game::DrawSphere(sphereTransforms, spherePivot, 12, uvCheckerPng, 0xFFFFFFFFFF);
 
 
 
