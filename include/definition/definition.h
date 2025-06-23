@@ -899,7 +899,7 @@ struct D3DResourceLeakChecker
 struct DrawOptions
 {
     // ワイヤーフレームにしてもいいか（天球なんかはワイヤーフレームになってほしくない）
-    bool enableWireframeMode = false;
+    bool enableWireframeMode = true;
     // UV座標
     Transforms uvTransform;
     // ライティングするか

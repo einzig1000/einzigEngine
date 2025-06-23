@@ -56,6 +56,9 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 	vertexResourceSizeSphere = static_cast<UINT>(sizeof(VertexData) * 4096); // 球
 	vertexResourceSphere = CreateBufferResource(dxManager->GetDevice(), vertexResourceSizeSphere);
 
+	vertexResourceSizeLine = static_cast<UINT>(sizeof(VertexData) * 2048); // 1024本の線
+	vertexResourceLine = CreateBufferResource(dxManager->GetDevice(), vertexResourceSizeLine);
+
 	materialResources.resize(kMaxDrawCallPerFrame);
 	materialData.resize(kMaxDrawCallPerFrame);
 	wvpResources.resize(kMaxDrawCallPerFrame);
@@ -68,9 +71,6 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 		wvpResources[i]->Map(0, nullptr, reinterpret_cast<void**>(&wvpData[i]));
 	}
 
-
-	vertexResourceSizeLine = static_cast<UINT>(sizeof(VertexData) * 2048); // 1024本の線
-	vertexResourceLine = CreateBufferResource(dxManager->GetDevice(), vertexResourceSizeLine);
 
 	materialResourceLine.resize(kMaxDrawLineCallPerFrame);
 	materialDataLine.resize(kMaxDrawLineCallPerFrame);
@@ -330,6 +330,9 @@ void Engine::Drawobj(const Transforms& transform, const Vector3& center, uint32_
 
 void Engine::Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions)
 {
+	// 描画回数上限
+	if (drawCallIndex >= kMaxDrawCallPerFrame) return;
+
 	if (objectNumber >= objects.size()) return;
 
 	// RootSignatureとPSOを設定
@@ -422,6 +425,9 @@ void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint
 
 void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions)
 {
+	// 描画回数上限
+	if (drawCallIndex >= kMaxDrawCallPerFrame) return;
+
 	// RootSignatureとPSOを設定 - Triangle
 	dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState()); // Triangle用PSOを設定
 	dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
@@ -472,12 +478,9 @@ void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint
 
 	// テクスチャ
 	const TextureData* tex = dxManager->GetTextureManager()->GetTexture(textureNumber);
-	if (!tex)
-	{
-		return;
-	}
+	if (!tex)return;
 
-	// 色
+	// マテリアル
 	Vector4 color = ConvertUintToVector4(materialColor);
 	materialData[drawCallIndex]->color = color;
 	materialData[drawCallIndex]->enableLighting = drawOptions.enableLighting;
@@ -487,27 +490,22 @@ void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint
 	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(drawOptions.uvTransform.translate));
 	materialData[drawCallIndex]->uvTransform = uvTransformMatrix;
 
-	DrawData drawData = SetupDrawData(
-		vertexResourceSizeSphere,
-		&trianglesVertexData[trianglesVertexDataUsed],
-		kSumVertex,
-		vertexResourceSphere,
-		vertexResourceSizeSphere,
-		materialData[drawCallIndex],
-		materialColor,
-		true,
-		Matrix4x4::MakeIdentity4x4(),
-		wvpData[drawCallIndex],
-		worldMatrix,
-		wvpMatrix,
-		textureNumber
-	);
 
-	if (!drawData.texture) return;
+	// 頂点リソース
+	VertexData* vData = nullptr;
+	HRESULT hr = vertexResourceSphere->Map(0, nullptr, reinterpret_cast<void**>(&vData));
+	if (FAILED(hr) || vData == nullptr) return;
+	std::memcpy(vData, &trianglesVertexData[trianglesVertexDataUsed], sizeof(VertexData) * kSumVertex);
+	vertexResourceSphere->Unmap(0, nullptr);
+
+	// 頂点バッファビュー
+	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
+	vertexBufferView.BufferLocation = vertexResourceSphere->GetGPUVirtualAddress();
+	vertexBufferView.SizeInBytes = sizeof(VertexData) * static_cast<UINT>(kSumVertex);
+	vertexBufferView.StrideInBytes = sizeof(VertexData);
 
 	// 描画処理
-	//dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
-	dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &drawData.vertexBufferView);
+	dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
 	// 形状を設定
 	dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	// CBVを設定する マテリアル用のCBufferの場所を設定
@@ -516,8 +514,7 @@ void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint
 	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources[drawCallIndex]->GetGPUVirtualAddress());
 	// SRVのDescriptorTableの先頭を設定。２はrootParameters[2]。
 	dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
-	//dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, drawData.texture->textureSrvHandleGPU);
-	//// CBVを設定する ディレクショナルライト用のCBufferの場所を設定
+	// CBVを設定する ディレクショナルライト用のCBufferの場所を設定
 	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 
 	dxManager->GetCommandList()->DrawInstanced(kSumVertex, 1, 0, 0);
@@ -574,38 +571,64 @@ void Engine::DrawTriangle(const Transforms& localTransform, const Transforms& wo
 	drawCallIndex++;
 }
 
-void Engine::DrawSprite(const Transforms& localTransform, VertexData* vertexData, uint32_t textureNumber, const uint32_t& materialColor)
+void Engine::DrawSprite(const Transforms& transform, uint32_t textureNumber, const uint32_t& materialColor, const Transforms& uvTransform)
 {
+	// 描画回数上限
+	if (drawCallIndex >= kMaxDrawCallPerFrame) return;
+
 	// RootSignatureとPSOを設定 - Triangle
 	dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState()); // Triangle用PSOを設定
 	dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
 
+	// 必要な頂点数
+	const uint32_t kSumVertex = 4;
+	// 必要な頂点数分配列を拡張
+	if (trianglesVertexDataUsed + kSumVertex > trianglesVertexData.size())
+	{
+		trianglesVertexData.resize(trianglesVertexDataUsed + kSumVertex);
+	}
+
+	// 頂点リソース
+	VertexData* vData = nullptr;
+	HRESULT hr = vertexResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&vData));
+	if (FAILED(hr) || vData == nullptr) return;
+	std::memcpy(vData, &trianglesVertexData[trianglesVertexDataUsed], sizeof(VertexData) * kSumVertex);
+	vertexResourceSprite->Unmap(0, nullptr);
+
+	// 頂点バッファビュー
+	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
+	vertexBufferView.BufferLocation = vertexResourceSprite->GetGPUVirtualAddress();
+	vertexBufferView.SizeInBytes = sizeof(VertexData) * static_cast<UINT>(kSumVertex);
+	vertexBufferView.StrideInBytes = sizeof(VertexData);
+
+	// マテリアル
+	Vector4 color = ConvertUintToVector4(materialColor);
+	materialData[drawCallIndex]->color = color;
+	materialData[drawCallIndex]->enableLighting = false;
+	Matrix4x4 uvTransformMatrix = Matrix4x4::MakeIdentity4x4();
+	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeScaleMatrix(uvTransform.scale));
+	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(uvTransform.rotate.z));
+	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(uvTransform.translate));
+	materialData[drawCallIndex]->uvTransform = uvTransformMatrix;
+
+	// テクスチャ
+	const TextureData* tex = dxManager->GetTextureManager()->GetTexture(textureNumber);
+	if (!tex)return;
+
+	// WVP行列
 	Matrix4x4 orthoProjectionMatrix = Matrix4x4::MakeOrthographicMatrix(
 		0.0f, 0.0f,
 		static_cast<float>(windowManager->Getwidth()),
 		static_cast<float>(windowManager->Getheight()),
 		0.0f, 100.0f);
-	Matrix4x4 world = Matrix4x4::MakeAffineMatrix(localTransform.scale, localTransform.rotate, localTransform.translate);
+	Matrix4x4 world = Matrix4x4::MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 	Matrix4x4 wvpMatrix = (world * orthoProjectionMatrix);
 
-	DrawData drawData = SetupDrawData(
-		vertexResourceSizeSprite,
-		vertexData,
-		4,
-		vertexResourceSprite,
-		vertexResourceSizeSprite,
-		materialData[drawCallIndex],
-		materialColor,
-		false,
-		Matrix4x4::MakeIdentity4x4(),
-		wvpData[drawCallIndex],
-		world,
-		wvpMatrix,
-		textureNumber
-	);
+	wvpData[drawCallIndex]->World = world;
+	wvpData[drawCallIndex]->WVP = wvpMatrix;
 
 	// Spriteの描画
-	dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &drawData.vertexBufferView);
+	dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
 	dxManager->GetCommandList()->IASetIndexBuffer(&indexBufferView);
 	// 形状を設定
 	dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -614,7 +637,7 @@ void Engine::DrawSprite(const Transforms& localTransform, VertexData* vertexData
 	// CBVを設定する wvp用のCBufferの場所を設定
 	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources[drawCallIndex]->GetGPUVirtualAddress());
 	// SRVのDescriptorTableの先頭を設定。２はrootParameters[2]。
-	dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, drawData.texture->textureSrvHandleGPU);
+	dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
 	// CBVを設定する ディレクショナルライト用のCBufferの場所を設定
 	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 

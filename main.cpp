@@ -30,6 +30,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	blockTransforms.translate = { 0.0f,0.0f,0.0f };
 	blockTransforms.rotate = { 0.0f,0.0f,0.0f };
 	Vector3 blockPivot = { 0,0,0 };
+	DrawOptions blockOptions;
 	// 天球
 	int skyDomeModel = Game::LoadOBJ("resources/skyDome", "skyDome.obj");
 	int skyDomePng = Game::LoadTexture("resources/skyDome/skyDome.png");
@@ -37,7 +38,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	skyDomeTransforms.scale = { 120.0f, 120.0f, 120.0f };
 	skyDomeTransforms.translate = { 0.0f,0.0f,0.0f };
 	skyDomeTransforms.rotate = { 0.0f,0.0f,0.0f };
-
+	DrawOptions skyDomeOptions;
+	skyDomeOptions.enableWireframeMode = false;
+	// スプライト
+	Transforms spriteTransforms;
+	spriteTransforms.scale = { 1.0f, 1.0f, 1.0f };
+	spriteTransforms.rotate = { 0.0f, 0.0f, 0.0f };
+	spriteTransforms.translate = { 0.0f, 0.0f, 0.0f };
+	Transforms uvTransform;
 
 
 	// 現在のマスター音量
@@ -80,6 +88,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		Game::SetAudioVolume(alert, alertVolume);
 		Game::SetAudioVolume(buzzer, buzzerVolume);
 
+
+		skyDomeOptions.uvTransform.translate.y += 0.001f;
 		///
 		/// ↑更新処理ここまで
 		///
@@ -87,10 +97,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		///
 		/// ↓描画処理ここから
 		///
-		Game::Drawobj(skyDomeTransforms, {0,0,0}, skyDomeModel, skyDomePng, 0xFFFFFFFFFF);
-		Game::Drawobj(blockTransforms, blockPivot, blockModel, blockPng, 0xFFFFFFFFFF);
-		Game::DrawSphere(sphereTransforms, spherePivot, 12, uvCheckerPng, 0xFFFFFFFFFF);
-
+		Game::Drawobj(skyDomeTransforms, {0,0,0}, skyDomeModel, skyDomePng, 0xFFFFFFFFFF, skyDomeOptions);
+		Game::Drawobj(blockTransforms, blockPivot, blockModel, blockPng, 0xFFFFFFFFFF, blockOptions);
+		Game::DrawSphere(sphereTransforms, spherePivot, 12, uvCheckerPng, 0xFFFFFFFFFF, sphereOptions);
+		Game::DrawSprite(spriteTransforms, uvCheckerPng, 0xFFFFFFFF, uvTransform);
 
 
 
@@ -122,6 +132,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		ImGui::DragFloat3("sphereTransforms.rotate	", &sphereTransforms.rotate.x, 0.01f);
 		ImGui::DragFloat3("sphereTransforms.pivot	", &spherePivot.x, 0.01f);
 		ImGui::DragFloat3("sphereTransforms.translate", &sphereTransforms.translate.x, 0.01f);
+		ImGui::Text("--------------SkyDome--------------");
+		ImGui::DragFloat2("skyDome.uvTransform.scale	", &skyDomeOptions.uvTransform.scale.x, 0.01f);
+		ImGui::DragFloat ("skyDome.uvTransform.rotate	", &skyDomeOptions.uvTransform.rotate.z, 0.01f);
+		ImGui::DragFloat2("skyDome.uvTransform.translate", &skyDomeOptions.uvTransform.translate.x, 0.01f);
 
 
 

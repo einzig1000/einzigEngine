@@ -68,9 +68,9 @@ void Game::DrawTriangle(const Transforms& localTransform, const Transforms& worl
 	engine->DrawTriangle(localTransform, worldTransform, vertexData, textureNumber, materialColor);
 }
 
-void Game::DrawSprite(const Transforms& localTransform, VertexData* vertexData, uint32_t textureNumber, const uint32_t& materialColor)
+void Game::DrawSprite(const Transforms& transform, uint32_t textureNumber, const uint32_t& materialColor, const Transforms& uvTransform)
 {
-	engine->DrawSprite(localTransform, vertexData, textureNumber, materialColor);
+	engine->DrawSprite(transform, textureNumber, materialColor, uvTransform);
 }
 
 void Game::DrawLine(const Vector3& start, const Vector3& end, const uint32_t& materialColor)
