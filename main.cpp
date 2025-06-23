@@ -14,14 +14,24 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	int buzzer = Game::LoadAudio("resources/sound/SE/buzzer.mp3");
 
 
-	//// テクスチャ
+	// 球
 	int uvCheckerPng;
 	uvCheckerPng = Game::LoadTexture("resources/uvChecker.png");
-	int blockPng;
-	blockPng = Game::LoadTexture("resources/map.png");
-	// モデル
+	Transforms sphereTransforms;
+	sphereTransforms.scale = { 1.0f, 1.0f, 1.0f };
+	sphereTransforms.translate = { 0.0f,0.0f,0.0f };
+	sphereTransforms.rotate = { 0.0f,0.0f,0.0f };
+	Vector3 spherePivot = { 0,0,0 };
+	// ブロック
 	int blockModel;
 	blockModel = Game::LoadOBJ("resources/model", "map.obj");
+	int blockPng;
+	blockPng = Game::LoadTexture("resources/map.png");
+	Transforms blockTransforms;
+	blockTransforms.scale = { 1.2f, 1.2f, 1.2f };
+	blockTransforms.translate = { 0.0f,0.0f,0.0f };
+	blockTransforms.rotate = { 0.0f,0.0f,0.0f };
+	Vector3 blockPivot = { 0,0,0 };
 
 	// 現在のマスター音量
 	float masterVolume = Game::GetMasterVolume();
@@ -32,11 +42,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	bool alertLoop = false;
 	bool buzzerLoop = false;
 
-	Transforms blockTransforms;
-	blockTransforms.scale = { 1.2f, 1.2f, 1.2f };
-	blockTransforms.translate = { 0,0,0 };
-	blockTransforms.rotate = { 0.0f,0.0f,0.0f };
-	Vector3 blockPivot = { 0,0,0 };
 
 	while (Game::ProcessMessage())
 	{
@@ -65,8 +70,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		}
 
 		Game::SetMasterVolume(masterVolume);
-		//Game::SetAudioVolume(alert, alertVolume);
-		//Game::SetAudioVolume(buzzer, buzzerVolume);
+		Game::SetAudioVolume(alert, alertVolume);
+		Game::SetAudioVolume(buzzer, buzzerVolume);
 
 		///
 		/// ↑更新処理ここまで
@@ -76,21 +81,26 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		/// ↓描画処理ここから
 		///
 
-		ImGui::Text("-----------------------------------");
+		ImGui::Text("----------------FPS----------------");
 		ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
-		ImGui::Text("-----------------------------------");
+		ImGui::Text("---------------Audio---------------");
+		ImGui::
+		ImGui::Text("---------------block---------------");
 		ImGui::DragFloat3("blockTransforms.scale	", &blockTransforms.scale.x, 0.01f);
 		ImGui::DragFloat3("blockTransforms.rotate	", &blockTransforms.rotate.x, 0.01f);
 		ImGui::DragFloat3("blockTransforms.pivot	", &blockPivot.x, 0.01f);
 		ImGui::DragFloat3("blockTransforms.translate", &blockTransforms.translate.x, 0.01f);
-		ImGui::Text("-----------------------------------");
-		ImGui::Text("-----------------------------------");
+		ImGui::Text("--------------sphere---------------");
+		ImGui::DragFloat3("sphereTransforms.scale	", &sphereTransforms.scale.x, 0.01f);
+		ImGui::DragFloat3("sphereTransforms.rotate	", &sphereTransforms.rotate.x, 0.01f);
+		ImGui::DragFloat3("sphereTransforms.pivot	", &spherePivot.x, 0.01f);
+		ImGui::DragFloat3("sphereTransforms.translate", &sphereTransforms.translate.x, 0.01f);
 
 
 
 
-		Game::Drawobj(blockTransforms, blockPivot, blockModel, uvCheckerPng, 0xFFFFFFFFFF);
-		Game::DrawSphere(blockTransforms, blockPivot, 12, uvCheckerPng, 0xFFFFFFFFFF);
+		Game::Drawobj(blockTransforms, blockPivot, blockModel, blockPng, 0xFFFFFFFFFF);
+		Game::DrawSphere(sphereTransforms, spherePivot, 12, uvCheckerPng, 0xFFFFFFFFFF);
 
 
 
