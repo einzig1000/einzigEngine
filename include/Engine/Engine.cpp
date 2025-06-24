@@ -44,7 +44,7 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 	mouseController = new MouseController;
 
 	// 頂点リソース
-	vertexResourceSizeSprite = static_cast<UINT>(sizeof(VertexData) * 256); // スプライト 
+	vertexResourceSizeSprite = static_cast<UINT>(sizeof(VertexData) * 1536); // スプライト 
 	vertexResourceSprite = CreateBufferResource(dxManager->GetDevice(), vertexResourceSizeSprite);
 
 	vertexResourceSizeObj = static_cast<UINT>(sizeof(VertexData) * 4096); // オブジェクト
@@ -136,7 +136,8 @@ void Engine::BeginFrame()
 {
 	ImGui_ImplDX12_NewFrame();
 	ImGui_ImplWin32_NewFrame();
-	trianglesVertexDataUsed = 0;
+	sphereVertexDataUsed = 0;
+	spriteVertexDataUsed = 0;
 	ImGui::NewFrame();
 
 
@@ -435,13 +436,13 @@ void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint
 	// 必要な頂点数
 	const uint32_t kSumVertex = kSubdivision * kSubdivision * 6;
 	// 必要な頂点数分配列を拡張
-	if (trianglesVertexDataUsed + kSumVertex > trianglesVertexData.size())
+	if (sphereVertexDataUsed + kSumVertex > sphereVertexData.size())
 	{
-		trianglesVertexData.resize(trianglesVertexDataUsed + kSumVertex);
+		sphereVertexData.resize(sphereVertexDataUsed + kSumVertex);
 	}
 
 	// 頂点
-	CreateSphere(&trianglesVertexData[trianglesVertexDataUsed], kSubdivision);
+	CreateSphere(&sphereVertexData[sphereVertexDataUsed], kSubdivision);
 
 
 	// 1. オブジェクトのスケール行列
@@ -495,17 +496,18 @@ void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint
 	VertexData* vData = nullptr;
 	HRESULT hr = vertexResourceSphere->Map(0, nullptr, reinterpret_cast<void**>(&vData));
 	if (FAILED(hr) || vData == nullptr) return;
-	std::memcpy(vData, &trianglesVertexData[trianglesVertexDataUsed], sizeof(VertexData) * kSumVertex);
+	std::memcpy(vData + sphereVertexDataUsed, &sphereVertexData[sphereVertexDataUsed], sizeof(VertexData) * kSumVertex);
 	vertexResourceSphere->Unmap(0, nullptr);
 
 	// 頂点バッファビュー
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
-	vertexBufferView.BufferLocation = vertexResourceSphere->GetGPUVirtualAddress();
+	vertexBufferView.BufferLocation = vertexResourceSphere->GetGPUVirtualAddress() + sizeof(VertexData) * sphereVertexDataUsed;
 	vertexBufferView.SizeInBytes = sizeof(VertexData) * static_cast<UINT>(kSumVertex);
 	vertexBufferView.StrideInBytes = sizeof(VertexData);
 
 	// 描画処理
 	dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
+	dxManager->GetCommandList()->IASetIndexBuffer(&indexBufferView);
 	// 形状を設定
 	dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	// CBVを設定する マテリアル用のCBufferの場所を設定
@@ -520,7 +522,7 @@ void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint
 	dxManager->GetCommandList()->DrawInstanced(kSumVertex, 1, 0, 0);
 
 	drawCallIndex++;
-	trianglesVertexDataUsed += kSumVertex;
+	sphereVertexDataUsed += kSumVertex;
 }
 
 //void Engine::DrawSprite(const Transforms& localTransform, VertexData* vertexData, uint32_t textureNumber, const uint32_t& materialColor)
@@ -634,60 +636,34 @@ void Engine::DrawSprite(const Transforms& transform, const Vector2& size, uint32
 	// 必要な頂点数
 	const uint32_t kSumVertex = 6;
 	// 必要な頂点数分配列を拡張
-	if (trianglesVertexDataUsed + kSumVertex > trianglesVertexData.size())
+	if (spriteVertexDataUsed + kSumVertex > spriteVertexData.size())
 	{
-		trianglesVertexData.resize(trianglesVertexDataUsed + kSumVertex);
+		spriteVertexData.resize(spriteVertexDataUsed + kSumVertex);
 	}
 
+	// 頂点
 	const float halfWidth = size.x * 0.5f;
 	const float halfHeight = size.y * 0.5f;
+	// 左下 (index 0)
+	spriteVertexData[spriteVertexDataUsed + 0].position = { -halfWidth, -halfHeight, 0.0f, 1.0f };
+	spriteVertexData[spriteVertexDataUsed + 0].texcoord = { 0.0f, 1.0f };
+	spriteVertexData[spriteVertexDataUsed + 0].normal = { 0.0f, 0.0f, -1.0f };
 
-	// 頂点リソース
-	VertexData* vData = nullptr;
-	HRESULT hr = vertexResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&vData));
-	if (FAILED(hr) || vData == nullptr) return;
-	std::memcpy(vData, &trianglesVertexData[trianglesVertexDataUsed], sizeof(VertexData) * kSumVertex);
+	// 左上 (index 1)
+	spriteVertexData[spriteVertexDataUsed + 1].position = { -halfWidth, halfHeight, 0.0f, 1.0f };
+	spriteVertexData[spriteVertexDataUsed + 1].texcoord = { 0.0f, 0.0f };
+	spriteVertexData[spriteVertexDataUsed + 1].normal = { 0.0f, 0.0f, -1.0f };
 
-	// 左下
-	vData[0].position = { -halfWidth, -halfHeight, 0.0f, 1.0f };
-	vData[0].texcoord = { 0.0f, 1.0f };
-	// 左上
-	vData[1].position = { -halfWidth, halfHeight, 0.0f, 1.0f };
-	vData[1].texcoord = { 0.0f, 0.0f };
-	// 右下
-	vData[2].position = { halfWidth, -halfHeight, 0.0f, 1.0f };
-	vData[2].texcoord = { 1.0f, 1.0f };
-	// 右下
-	vData[3].position = { halfWidth, -halfHeight, 0.0f, 1.0f };
-	vData[3].texcoord = { 1.0f, 1.0f };
-	// 左上
-	vData[4].position = { -halfWidth, halfHeight, 0.0f, 1.0f };
-	vData[4].texcoord = { 0.0f, 0.0f };
-	// 右上
-	vData[5].position = { halfWidth, halfHeight, 0.0f, 1.0f };
-	vData[5].texcoord = { 1.0f, 0.0f };
+	// 右下 (index 2)
+	spriteVertexData[spriteVertexDataUsed + 2].position = { halfWidth, -halfHeight, 0.0f, 1.0f };
+	spriteVertexData[spriteVertexDataUsed + 2].texcoord = { 1.0f, 1.0f };
+	spriteVertexData[spriteVertexDataUsed + 2].normal = { 0.0f, 0.0f, -1.0f };
 
-	vertexResourceSprite->Unmap(0, nullptr);
+	// 右上 (index 3)
+	spriteVertexData[spriteVertexDataUsed + 3].position = { halfWidth, halfHeight, 0.0f, 1.0f };
+	spriteVertexData[spriteVertexDataUsed + 3].texcoord = { 1.0f, 0.0f };
+	spriteVertexData[spriteVertexDataUsed + 3].normal = { 0.0f, 0.0f, -1.0f }; 
 
-	// 頂点バッファビュー
-	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
-	vertexBufferView.BufferLocation = vertexResourceSprite->GetGPUVirtualAddress();
-	vertexBufferView.SizeInBytes = sizeof(VertexData) * static_cast<UINT>(kSumVertex);
-	vertexBufferView.StrideInBytes = sizeof(VertexData);
-
-	// マテリアル
-	Vector4 color = ConvertUintToVector4(materialColor);
-	materialData[drawCallIndex]->color = color;
-	materialData[drawCallIndex]->enableLighting = false;
-	Matrix4x4 uvTransformMatrix = Matrix4x4::MakeIdentity4x4();
-	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeScaleMatrix(uvTransform.scale));
-	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(uvTransform.rotate.z));
-	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(uvTransform.translate));
-	materialData[drawCallIndex]->uvTransform = uvTransformMatrix;
-
-	// テクスチャ
-	const TextureData* tex = dxManager->GetTextureManager()->GetTexture(textureNumber);
-	if (!tex)return;
 
 	// WVP行列
 	Matrix4x4 orthoProjectionMatrix = Matrix4x4::MakeOrthographicMatrix(
@@ -700,6 +676,36 @@ void Engine::DrawSprite(const Transforms& transform, const Vector2& size, uint32
 
 	wvpData[drawCallIndex]->World = world;
 	wvpData[drawCallIndex]->WVP = wvpMatrix;
+
+	// テクスチャ
+	const TextureData* tex = dxManager->GetTextureManager()->GetTexture(textureNumber);
+	if (!tex)return;
+
+	// マテリアル
+	Vector4 color = ConvertUintToVector4(materialColor);
+	materialData[drawCallIndex]->color = color;
+	materialData[drawCallIndex]->enableLighting = false;
+	Matrix4x4 uvTransformMatrix = Matrix4x4::MakeIdentity4x4();
+	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeScaleMatrix(uvTransform.scale));
+	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(uvTransform.rotate.z));
+	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(uvTransform.translate));
+	materialData[drawCallIndex]->uvTransform = uvTransformMatrix;
+
+
+	// 頂点リソース
+	VertexData* vData = nullptr;
+	HRESULT hr = vertexResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&vData));
+	if (FAILED(hr) || vData == nullptr) return;
+	std::memcpy(vData + spriteVertexDataUsed, &spriteVertexData[spriteVertexDataUsed], sizeof(VertexData) * 4);
+	vertexResourceSprite->Unmap(0, nullptr);
+
+	// 頂点バッファビュー
+	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
+	vertexBufferView.BufferLocation = vertexResourceSprite->GetGPUVirtualAddress() + sizeof(VertexData) * spriteVertexDataUsed;
+	vertexBufferView.SizeInBytes = sizeof(VertexData) * static_cast<UINT>(4);
+	vertexBufferView.StrideInBytes = sizeof(VertexData);
+
+
 
 	// Spriteの描画
 	dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
@@ -716,10 +722,11 @@ void Engine::DrawSprite(const Transforms& transform, const Vector2& size, uint32
 	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 
 	// 描画
-	dxManager->GetCommandList()->DrawIndexedInstanced(kSumVertex, 1, 0, 0, 0);
+	//dxManager->GetCommandList()->DrawIndexedInstanced(kSumVertex, 1, 0, 0, 0);
+	dxManager->GetCommandList()->DrawIndexedInstanced(kSumVertex, 1, 0, static_cast<UINT>(spriteVertexDataUsed), 0);
 
 	drawCallIndex++;
-	trianglesVertexDataUsed += kSumVertex;
+	spriteVertexDataUsed += 4;
 }
 
 void Engine::DrawLine(const Vector3& start, const Vector3& end, const uint32_t& materialColor)

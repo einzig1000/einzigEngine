@@ -39,12 +39,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	skyDomeTransforms.translate = { 0.0f,0.0f,0.0f };
 	skyDomeTransforms.rotate = { 0.0f,0.0f,0.0f };
 	DrawOptions skyDomeOptions;
-	skyDomeOptions.enableWireframeMode = false;
+	//skyDomeOptions.enableWireframeMode = false;
 	// スプライト
 	Transforms spriteTransforms;
 	spriteTransforms.scale = { 10.0f, 10.0f, 10.0f };
 	spriteTransforms.rotate = { 0.0f, 0.0f, 0.0f };
-	spriteTransforms.translate = { 10.0f, 10.0f, 10.0f };
+	spriteTransforms.translate = { 10.0f, 10.0f, 0.0f };
 	Transforms uvTransform;
 
 
@@ -84,9 +84,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			Game::toggleWireframeMode();
 		}
 
-		Game::SetMasterVolume(masterVolume);
-		Game::SetAudioVolume(alert, alertVolume);
-		Game::SetAudioVolume(buzzer, buzzerVolume);
+		//Game::SetMasterVolume(masterVolume);
+		//Game::SetAudioVolume(alert, alertVolume);
+		//Game::SetAudioVolume(buzzer, buzzerVolume);
 
 
 		skyDomeOptions.uvTransform.translate.y += 0.001f;
@@ -99,10 +99,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		///
 		
 		Game::Drawobj(skyDomeTransforms, {0,0,0}, skyDomeModel, skyDomePng, 0xFFFFFFFFFF, skyDomeOptions);
-		Game::Drawobj(blockTransforms, blockPivot, blockModel, blockPng, 0xFFFFFFFFFF, blockOptions);
+		//Game::Drawobj(blockTransforms, blockPivot, blockModel, blockPng, 0xFFFFFFFFFF, blockOptions);
 		Game::DrawSprite(spriteTransforms, {100,100}, uvCheckerPng, 0xFFFFFFFF, uvTransform);
 		Game::DrawSphere(sphereTransforms, spherePivot, 12, uvCheckerPng, 0xFFFFFFFFFF, sphereOptions);
-		
+
+		Game::DrawSphere(blockTransforms, blockPivot, 12, blockPng, 0xFFFFFFFFFF, blockOptions);
+
 
 
 
@@ -139,9 +141,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		ImGui::DragFloat("skyDome.uvTransform.rotate	", &skyDomeOptions.uvTransform.rotate.z, 0.01f);
 		ImGui::DragFloat2("skyDome.uvTransform.translate", &skyDomeOptions.uvTransform.translate.x, 0.01f);
 		ImGui::Text("--------------sprite---------------");
-		ImGui::DragFloat3("spriteTransforms.scale	", &spriteTransforms.scale.x, 0.01f);
-		ImGui::DragFloat3("spriteTransforms.rotate	", &spriteTransforms.rotate.x, 0.01f);
-		ImGui::DragFloat3("spriteTransforms.pivot	", &spriteTransforms.translate.x, 0.01f);
+		ImGui::DragFloat3("spriteTransforms.scale	 ", &spriteTransforms.scale.x, 0.01f);
+		ImGui::DragFloat3("spriteTransforms.rotate	 ", &spriteTransforms.rotate.x, 0.01f);
+		ImGui::DragFloat3("spriteTransforms.translate", &spriteTransforms.translate.x, 0.01f);
 		ImGui::DragFloat3("uvTransform.scale	", &uvTransform.scale.x, 0.01f);
 		ImGui::DragFloat3("uvTransform.rotate	", &uvTransform.rotate.z, 0.01f);
 		ImGui::DragFloat3("uvTransform.translate", &uvTransform.translate.x, 0.01f);

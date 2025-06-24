@@ -108,24 +108,31 @@ private:
 	WindowManager* windowManager;
 	DirectXManager* dxManager;
 
-	// モデル・球
-	std::vector<Object3D> objects;
-	std::vector<VertexData> trianglesVertexData;
-	size_t trianglesVertexDataUsed = 0; // 使用済み頂点数
 
-	// 頂点リソースども
-	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceSprite;
-	UINT vertexResourceSizeSprite;
+	// 頂点リソースと頂点データと使用済み頂点数
 
+	// モデル
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceObj;
+	std::vector<Object3D> objects;
 	UINT vertexResourceSizeObj;
 
-	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceTriangle;
-	UINT vertexResourceSizeTriangle;
-
+	// 球
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceSphere;
 	UINT vertexResourceSizeSphere;
+	std::vector<VertexData> sphereVertexData;
+	size_t sphereVertexDataUsed = 0;
 
+	// スプライト
+	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceSprite;
+	UINT vertexResourceSizeSprite;
+	std::vector<VertexData> spriteVertexData;
+	size_t spriteVertexDataUsed = 0;
+
+	// 三角形
+	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceTriangle;
+	UINT vertexResourceSizeTriangle; 
+
+	// 線
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceLine;
 	UINT vertexResourceSizeLine;
 
