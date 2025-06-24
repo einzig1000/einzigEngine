@@ -525,55 +525,6 @@ void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint
 	sphereVertexDataUsed += kSumVertex;
 }
 
-//void Engine::DrawSprite(const Transforms& localTransform, VertexData* vertexData, uint32_t textureNumber, const uint32_t& materialColor)
-//{
-//	// RootSignatureとPSOを設定 - Triangle
-//	dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState()); // Triangle用PSOを設定
-//	dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
-//
-//	Matrix4x4 orthoProjectionMatrix = Matrix4x4::MakeOrthographicMatrix(
-//		0.0f, 0.0f,
-//		static_cast<float>(windowManager->Getwidth()),
-//		static_cast<float>(windowManager->Getheight()),
-//		0.0f, 100.0f);
-//	Matrix4x4 world = Matrix4x4::MakeAffineMatrix(localTransform.scale, localTransform.rotate, localTransform.translate);
-//	Matrix4x4 wvpMatrix = (world * orthoProjectionMatrix);
-//
-//	DrawData drawData = SetupDrawData(
-//		vertexResourceSizeSprite,
-//		vertexData,
-//		4,
-//		vertexResourceSprite,
-//		vertexResourceSizeSprite,
-//		materialData[drawCallIndex],
-//		materialColor,
-//		false,
-//		Matrix4x4::MakeIdentity4x4(),
-//		wvpData[drawCallIndex],
-//		world,
-//		wvpMatrix,
-//		textureNumber
-//	);
-//
-//	// Spriteの描画
-//	dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &drawData.vertexBufferView);
-//	dxManager->GetCommandList()->IASetIndexBuffer(&indexBufferView);
-//	// 形状を設定
-//	dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-//	// CBVを設定する マテリアル用のCBufferの場所を設定
-//	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources[drawCallIndex]->GetGPUVirtualAddress());
-//	// CBVを設定する wvp用のCBufferの場所を設定
-//	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources[drawCallIndex]->GetGPUVirtualAddress());
-//	// SRVのDescriptorTableの先頭を設定。２はrootParameters[2]。
-//	dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, drawData.texture->textureSrvHandleGPU);
-//	// CBVを設定する ディレクショナルライト用のCBufferの場所を設定
-//	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
-//
-//	// 描画
-//	dxManager->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
-//
-//	drawCallIndex++;
-//}
 
 void Engine::DrawTriangle(const Transforms& localTransform, const Transforms& worldTransform, const VertexData* vertexData, uint32_t textureNumber, const uint32_t& materialColor)
 {
@@ -624,91 +575,38 @@ void Engine::DrawTriangle(const Transforms& localTransform, const Transforms& wo
 	drawCallIndex++;
 }
 
-void Engine::DrawSprite(const Transforms& transform, const Vector2& size, uint32_t textureNumber, const uint32_t& materialColor, const Transforms& uvTransform)
+void Engine::DrawSprite(const Transforms& localTransform, VertexData* vertexData, uint32_t textureNumber, const uint32_t& materialColor)
 {
-	// 描画回数上限
-	if (drawCallIndex >= kMaxDrawCallPerFrame) return;
-
 	// RootSignatureとPSOを設定 - Triangle
 	dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState()); // Triangle用PSOを設定
 	dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
 
-	// 必要な頂点数
-	const uint32_t kSumVertex = 6;
-	// 必要な頂点数分配列を拡張
-	if (spriteVertexDataUsed + kSumVertex > spriteVertexData.size())
-	{
-		spriteVertexData.resize(spriteVertexDataUsed + kSumVertex);
-	}
-
-	// 頂点
-	const float halfWidth = size.x * 0.5f;
-	const float halfHeight = size.y * 0.5f;
-	// 左下 (index 0)
-	spriteVertexData[spriteVertexDataUsed + 0].position = { -halfWidth, -halfHeight, 0.0f, 1.0f };
-	spriteVertexData[spriteVertexDataUsed + 0].texcoord = { 0.0f, 1.0f };
-	spriteVertexData[spriteVertexDataUsed + 0].normal = { 0.0f, 0.0f, -1.0f };
-
-	// 左上 (index 1)
-	spriteVertexData[spriteVertexDataUsed + 1].position = { -halfWidth, halfHeight, 0.0f, 1.0f };
-	spriteVertexData[spriteVertexDataUsed + 1].texcoord = { 0.0f, 0.0f };
-	spriteVertexData[spriteVertexDataUsed + 1].normal = { 0.0f, 0.0f, -1.0f };
-
-	// 右下 (index 2)
-	spriteVertexData[spriteVertexDataUsed + 2].position = { halfWidth, -halfHeight, 0.0f, 1.0f };
-	spriteVertexData[spriteVertexDataUsed + 2].texcoord = { 1.0f, 1.0f };
-	spriteVertexData[spriteVertexDataUsed + 2].normal = { 0.0f, 0.0f, -1.0f };
-
-	// 右上 (index 3)
-	spriteVertexData[spriteVertexDataUsed + 3].position = { halfWidth, halfHeight, 0.0f, 1.0f };
-	spriteVertexData[spriteVertexDataUsed + 3].texcoord = { 1.0f, 0.0f };
-	spriteVertexData[spriteVertexDataUsed + 3].normal = { 0.0f, 0.0f, -1.0f }; 
-
-
-	// WVP行列
 	Matrix4x4 orthoProjectionMatrix = Matrix4x4::MakeOrthographicMatrix(
 		0.0f, 0.0f,
 		static_cast<float>(windowManager->Getwidth()),
 		static_cast<float>(windowManager->Getheight()),
 		0.0f, 100.0f);
-	Matrix4x4 world = Matrix4x4::MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+	Matrix4x4 world = Matrix4x4::MakeAffineMatrix(localTransform.scale, localTransform.rotate, localTransform.translate);
 	Matrix4x4 wvpMatrix = (world * orthoProjectionMatrix);
 
-	wvpData[drawCallIndex]->World = world;
-	wvpData[drawCallIndex]->WVP = wvpMatrix;
-
-	// テクスチャ
-	const TextureData* tex = dxManager->GetTextureManager()->GetTexture(textureNumber);
-	if (!tex)return;
-
-	// マテリアル
-	Vector4 color = ConvertUintToVector4(materialColor);
-	materialData[drawCallIndex]->color = color;
-	materialData[drawCallIndex]->enableLighting = false;
-	Matrix4x4 uvTransformMatrix = Matrix4x4::MakeIdentity4x4();
-	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeScaleMatrix(uvTransform.scale));
-	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(uvTransform.rotate.z));
-	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(uvTransform.translate));
-	materialData[drawCallIndex]->uvTransform = uvTransformMatrix;
-
-
-	// 頂点リソース
-	VertexData* vData = nullptr;
-	HRESULT hr = vertexResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&vData));
-	if (FAILED(hr) || vData == nullptr) return;
-	std::memcpy(vData + spriteVertexDataUsed, &spriteVertexData[spriteVertexDataUsed], sizeof(VertexData) * 4);
-	vertexResourceSprite->Unmap(0, nullptr);
-
-	// 頂点バッファビュー
-	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
-	vertexBufferView.BufferLocation = vertexResourceSprite->GetGPUVirtualAddress() + sizeof(VertexData) * spriteVertexDataUsed;
-	vertexBufferView.SizeInBytes = sizeof(VertexData) * static_cast<UINT>(4);
-	vertexBufferView.StrideInBytes = sizeof(VertexData);
-
-
+	DrawData drawData = SetupDrawData(
+		vertexResourceSizeSprite,
+		vertexData,
+		4,
+		vertexResourceSprite,
+		vertexResourceSizeSprite,
+		materialData[drawCallIndex],
+		materialColor,
+		false,
+		Matrix4x4::MakeIdentity4x4(),
+		wvpData[drawCallIndex],
+		world,
+		wvpMatrix,
+		textureNumber
+	);
 
 	// Spriteの描画
-	dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
+	dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &drawData.vertexBufferView);
 	dxManager->GetCommandList()->IASetIndexBuffer(&indexBufferView);
 	// 形状を設定
 	dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -717,17 +615,120 @@ void Engine::DrawSprite(const Transforms& transform, const Vector2& size, uint32
 	// CBVを設定する wvp用のCBufferの場所を設定
 	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources[drawCallIndex]->GetGPUVirtualAddress());
 	// SRVのDescriptorTableの先頭を設定。２はrootParameters[2]。
-	dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
+	dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, drawData.texture->textureSrvHandleGPU);
 	// CBVを設定する ディレクショナルライト用のCBufferの場所を設定
 	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 
 	// 描画
-	//dxManager->GetCommandList()->DrawIndexedInstanced(kSumVertex, 1, 0, 0, 0);
-	dxManager->GetCommandList()->DrawIndexedInstanced(kSumVertex, 1, 0, static_cast<UINT>(spriteVertexDataUsed), 0);
+	dxManager->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
 	drawCallIndex++;
-	spriteVertexDataUsed += 4;
 }
+
+//void Engine::DrawSprite(const Transforms& transform, const Vector2& size, uint32_t textureNumber, const uint32_t& materialColor, const Transforms& uvTransform)
+//{
+//	// 描画回数上限
+//	if (drawCallIndex >= kMaxDrawCallPerFrame) return;
+//
+//	// RootSignatureとPSOを設定 - Triangle
+//	dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState()); // Triangle用PSOを設定
+//	dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
+//
+//	// 必要な頂点数
+//	const uint32_t kSumVertex = 6;
+//	// 必要な頂点数分配列を拡張
+//	if (spriteVertexDataUsed + kSumVertex > spriteVertexData.size())
+//	{
+//		spriteVertexData.resize(spriteVertexDataUsed + kSumVertex);
+//	}
+//
+//	// 頂点
+//	const float halfWidth = size.x * 0.5f;
+//	const float halfHeight = size.y * 0.5f;
+//	// 左下 (index 0)
+//	spriteVertexData[spriteVertexDataUsed + 0].position = { -halfWidth, -halfHeight, 0.0f, 1.0f };
+//	spriteVertexData[spriteVertexDataUsed + 0].texcoord = { 0.0f, 1.0f };
+//	spriteVertexData[spriteVertexDataUsed + 0].normal = { 0.0f, 0.0f, -1.0f };
+//
+//	// 左上 (index 1)
+//	spriteVertexData[spriteVertexDataUsed + 1].position = { -halfWidth, halfHeight, 0.0f, 1.0f };
+//	spriteVertexData[spriteVertexDataUsed + 1].texcoord = { 0.0f, 0.0f };
+//	spriteVertexData[spriteVertexDataUsed + 1].normal = { 0.0f, 0.0f, -1.0f };
+//
+//	// 右下 (index 2)
+//	spriteVertexData[spriteVertexDataUsed + 2].position = { halfWidth, -halfHeight, 0.0f, 1.0f };
+//	spriteVertexData[spriteVertexDataUsed + 2].texcoord = { 1.0f, 1.0f };
+//	spriteVertexData[spriteVertexDataUsed + 2].normal = { 0.0f, 0.0f, -1.0f };
+//
+//	// 右上 (index 3)
+//	spriteVertexData[spriteVertexDataUsed + 3].position = { halfWidth, halfHeight, 0.0f, 1.0f };
+//	spriteVertexData[spriteVertexDataUsed + 3].texcoord = { 1.0f, 0.0f };
+//	spriteVertexData[spriteVertexDataUsed + 3].normal = { 0.0f, 0.0f, -1.0f }; 
+//
+//
+//	// WVP行列
+//	Matrix4x4 orthoProjectionMatrix = Matrix4x4::MakeOrthographicMatrix(
+//		0.0f, 0.0f,
+//		static_cast<float>(windowManager->Getwidth()),
+//		static_cast<float>(windowManager->Getheight()),
+//		0.0f, 100.0f);
+//	Matrix4x4 world = Matrix4x4::MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+//	Matrix4x4 wvpMatrix = (world * orthoProjectionMatrix);
+//
+//	wvpData[drawCallIndex]->World = world;
+//	wvpData[drawCallIndex]->WVP = wvpMatrix;
+//
+//	// テクスチャ
+//	const TextureData* tex = dxManager->GetTextureManager()->GetTexture(textureNumber);
+//	if (!tex)return;
+//
+//	// マテリアル
+//	Vector4 color = ConvertUintToVector4(materialColor);
+//	materialData[drawCallIndex]->color = color;
+//	materialData[drawCallIndex]->enableLighting = false;
+//	Matrix4x4 uvTransformMatrix = Matrix4x4::MakeIdentity4x4();
+//	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeScaleMatrix(uvTransform.scale));
+//	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(uvTransform.rotate.z));
+//	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(uvTransform.translate));
+//	materialData[drawCallIndex]->uvTransform = uvTransformMatrix;
+//
+//
+//	// 頂点リソース
+//	VertexData* vData = nullptr;
+//	HRESULT hr = vertexResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&vData));
+//	if (FAILED(hr) || vData == nullptr) return;
+//	std::memcpy(vData + spriteVertexDataUsed, &spriteVertexData[spriteVertexDataUsed], sizeof(VertexData) * 4);
+//	vertexResourceSprite->Unmap(0, nullptr);
+//
+//	// 頂点バッファビュー
+//	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
+//	vertexBufferView.BufferLocation = vertexResourceSprite->GetGPUVirtualAddress() + sizeof(VertexData) * spriteVertexDataUsed;
+//	vertexBufferView.SizeInBytes = sizeof(VertexData) * static_cast<UINT>(4);
+//	vertexBufferView.StrideInBytes = sizeof(VertexData);
+//
+//
+//
+//	// Spriteの描画
+//	dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
+//	dxManager->GetCommandList()->IASetIndexBuffer(&indexBufferView);
+//	// 形状を設定
+//	dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+//	// CBVを設定する マテリアル用のCBufferの場所を設定
+//	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources[drawCallIndex]->GetGPUVirtualAddress());
+//	// CBVを設定する wvp用のCBufferの場所を設定
+//	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources[drawCallIndex]->GetGPUVirtualAddress());
+//	// SRVのDescriptorTableの先頭を設定。２はrootParameters[2]。
+//	dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
+//	// CBVを設定する ディレクショナルライト用のCBufferの場所を設定
+//	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
+//
+//	// 描画
+//	//dxManager->GetCommandList()->DrawIndexedInstanced(kSumVertex, 1, 0, 0, 0);
+//	dxManager->GetCommandList()->DrawIndexedInstanced(kSumVertex, 1, 0, static_cast<UINT>(spriteVertexDataUsed), 0);
+//
+//	drawCallIndex++;
+//	spriteVertexDataUsed += 4;
+//}
 
 void Engine::DrawLine(const Vector3& start, const Vector3& end, const uint32_t& materialColor)
 {

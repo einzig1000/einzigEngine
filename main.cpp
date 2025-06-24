@@ -46,7 +46,33 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	spriteTransforms.rotate = { 0.0f, 0.0f, 0.0f };
 	spriteTransforms.translate = { 10.0f, 10.0f, 0.0f };
 	Transforms uvTransform;
+	float halfWidth = 50.0f;
+	float halfHeight = 50.0f;
+	VertexData vertexData[6];
 
+	vertexData[0].position = { -halfWidth, -halfHeight, 0.0f, 1.0f };
+	vertexData[0].texcoord = { 0.0f, 1.0f };
+	vertexData[0].normal = { 0.0f, 0.0f, -1.0f };
+
+	vertexData[1].position = { -halfWidth, halfHeight, 0.0f, 1.0f };
+	vertexData[1].texcoord = { 0.0f, 0.0f };
+	vertexData[1].normal = { 0.0f, 0.0f, -1.0f };
+
+	vertexData[2].position = { halfWidth, -halfHeight, 0.0f, 1.0f };
+	vertexData[2].texcoord = { 1.0f, 1.0f };
+	vertexData[2].normal = { 0.0f, 0.0f, -1.0f };
+
+	vertexData[3].position = { -halfWidth, halfHeight, 0.0f, 1.0f };
+	vertexData[3].texcoord = { 0.0f, 0.0f };
+	vertexData[3].normal = { 0.0f, 0.0f, -1.0f };
+
+	vertexData[4].position = { halfWidth, halfHeight, 0.0f, 1.0f };
+	vertexData[4].texcoord = { 1.0f, 0.0f };
+	vertexData[4].normal = { 0.0f, 0.0f, -1.0f };
+
+	vertexData[5].position = { halfWidth, -halfHeight, 0.0f, 1.0f };
+	vertexData[5].texcoord = { 1.0f, 1.0f };
+	vertexData[5].normal = { 0.0f, 0.0f, -1.0f };
 
 	// 現在のマスター音量
 	float masterVolume = Game::GetMasterVolume();
@@ -100,7 +126,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		
 		Game::Drawobj(skyDomeTransforms, {0,0,0}, skyDomeModel, skyDomePng, 0xFFFFFFFFFF, skyDomeOptions);
 		//Game::Drawobj(blockTransforms, blockPivot, blockModel, blockPng, 0xFFFFFFFFFF, blockOptions);
-		Game::DrawSprite(spriteTransforms, {100,100}, uvCheckerPng, 0xFFFFFFFF, uvTransform);
+		//Game::DrawSprite(spriteTransforms, { 100,100 }, uvCheckerPng, 0xFFFFFFFF, uvTransform);
+		Game::DrawSprite(spriteTransforms, vertexData, uvCheckerPng, 0xFFFFFFFF);
+		
 		Game::DrawSphere(sphereTransforms, spherePivot, 12, uvCheckerPng, 0xFFFFFFFFFF, sphereOptions);
 
 		Game::DrawSphere(blockTransforms, blockPivot, 12, blockPng, 0xFFFFFFFFFF, blockOptions);

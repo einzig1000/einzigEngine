@@ -26,7 +26,8 @@ public:
 	static void DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor);
 	static void DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
 	static void DrawTriangle(const Transforms& localTransform, const Transforms& worldTransform, const VertexData* vertexData, uint32_t textureNumber, const uint32_t& materialColor);
-	static void DrawSprite(const Transforms& transform, const Vector2& size, uint32_t textureNumber, const uint32_t& materialColor, const Transforms& uvTransform);
+	//static void DrawSprite(const Transforms& transform, const Vector2& size, uint32_t textureNumber, const uint32_t& materialColor, const Transforms& uvTransform);
+	static void DrawSprite(const Transforms& localTransform, VertexData* vertexData, uint32_t textureNumber, const uint32_t& materialColor);
 	static void DrawLine(const Vector3& start, const Vector3& end, const uint32_t& materialColor);
 
 	// 音
