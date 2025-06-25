@@ -110,7 +110,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		
 		Game::DrawSphere(sphereTransforms, spherePivot, 12, uvCheckerPng, 0xFFFFFFFF, sphereOptions);
 
-		Game::DrawSphere(blockTransforms, blockPivot, 12, skyDomePng, 0xFFFFFFFF, blockOptions);
+		//Game::DrawSphere(blockTransforms, blockPivot, 12, skyDomePng, 0xFFFFFFFF, blockOptions);
 
 
 
@@ -151,6 +151,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		ImGui::DragFloat2("spriteTransforms.scale	 ", &spriteTransforms.scale.x, 0.01f);
 		ImGui::DragFloat3("spriteTransforms.rotate	 ", &spriteTransforms.rotate.x, 0.01f);
 		ImGui::DragFloat2("spriteTransforms.translate", &spriteTransforms.translate.x, 1.0f);
+		ImGui::DragFloat2("uvTransform.spritePivot	", &spritePivot.x, 0.1f);
 		ImGui::DragFloat2("uvTransform.scale	", &uvTransform.scale.x, 0.01f);
 		ImGui::DragFloat("uvTransform.rotate	", &uvTransform.rotate.z, 0.01f);
 		ImGui::DragFloat2("uvTransform.translate", &uvTransform.translate.x, 0.01f);
