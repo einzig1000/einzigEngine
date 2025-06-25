@@ -372,9 +372,13 @@ void AudioManager::SetVolume(const uint32_t& audioId, float volume)
     // findできなかった場合はloadedAudio.end()がかえってくる。
     if (it != loadedAudio.end())
     {
-        float clampedVolume = my_max(0.0f, my_min(1.0f, volume));
-        it->second.pSourceVoice->SetVolume(clampedVolume);
-        Log("%uのボリュームを%fに設定しました", audioId, clampedVolume);
+        if (volume != GetVolume(audioId))
+        {
+            float clampedVolume = my_max(0.0f, my_min(1.0f, volume));
+            it->second.pSourceVoice->SetVolume(clampedVolume);
+            Log("%uのボリュームを%fに設定しました", audioId, clampedVolume);
+        }
+
     }
     else
     {
@@ -400,9 +404,12 @@ void AudioManager::SetMasterVolume(float volume)
 {
     if (pMasteringVoice)
     {
-        float clampedVolume = my_max(0.0f, my_min(1.0f, volume));
-        pMasteringVoice->SetVolume(clampedVolume);
-        Log("マスターボリューム: %f", clampedVolume);
+        if (volume != GetMasterVolume())
+        {
+            float clampedVolume = my_max(0.0f, my_min(1.0f, volume));
+            pMasteringVoice->SetVolume(clampedVolume);
+            Log("マスターボリューム: %f", clampedVolume);
+        }
     }
     else
     {
