@@ -39,10 +39,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	skyDomeTransforms.translate = { 0.0f,0.0f,0.0f };
 	skyDomeTransforms.rotate = { 0.0f,0.0f,0.0f };
 	DrawOptions skyDomeOptions;
-	//skyDomeOptions.enableWireframeMode = false;
+	skyDomeOptions.enableWireframeMode = false;
 	// スプライト
 	Transforms spriteTransforms;
-	spriteTransforms.scale = { 10.0f, 10.0f, 10.0f };
+	spriteTransforms.scale = { 1000.0f, 1000.0f, 1000.0f };
 	spriteTransforms.rotate = { 0.0f, 0.0f, 0.0f };
 	spriteTransforms.translate = { 10.0f, 10.0f, 0.0f };
 	Transforms uvTransform;
@@ -52,28 +52,35 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 	vertexData[0].position = { -halfWidth, -halfHeight, 0.0f, 1.0f };
 	vertexData[0].texcoord = { 0.0f, 1.0f };
-	vertexData[0].normal = { 0.0f, 0.0f, -1.0f };
+	vertexData[0].normal = { 0.0f, 0.0f, 1.0f };
 
 	vertexData[1].position = { -halfWidth, halfHeight, 0.0f, 1.0f };
 	vertexData[1].texcoord = { 0.0f, 0.0f };
-	vertexData[1].normal = { 0.0f, 0.0f, -1.0f };
+	vertexData[1].normal = { 0.0f, 0.0f, 1.0f };
 
 	vertexData[2].position = { halfWidth, -halfHeight, 0.0f, 1.0f };
 	vertexData[2].texcoord = { 1.0f, 1.0f };
-	vertexData[2].normal = { 0.0f, 0.0f, -1.0f };
+	vertexData[2].normal = { 0.0f, 0.0f, 1.0f };
 
-	vertexData[3].position = { -halfWidth, halfHeight, 0.0f, 1.0f };
-	vertexData[3].texcoord = { 0.0f, 0.0f };
-	vertexData[3].normal = { 0.0f, 0.0f, -1.0f };
+	vertexData[3].position = { halfWidth, halfHeight, 0.0f, 1.0f };
+	vertexData[3].texcoord = { 1.0f, 0.0f };
+	vertexData[3].normal = { 0.0f, 0.0f, 1.0f };
 
-	vertexData[4].position = { halfWidth, halfHeight, 0.0f, 1.0f };
-	vertexData[4].texcoord = { 1.0f, 0.0f };
-	vertexData[4].normal = { 0.0f, 0.0f, -1.0f };
+	vertexData[4].position = { -halfWidth, halfHeight, 0.0f, 1.0f };
+	vertexData[4].texcoord = { 0.0f, 0.0f };
+	vertexData[4].normal = { 0.0f, 0.0f, 1.0f };
 
 	vertexData[5].position = { halfWidth, -halfHeight, 0.0f, 1.0f };
 	vertexData[5].texcoord = { 1.0f, 1.0f };
-	vertexData[5].normal = { 0.0f, 0.0f, -1.0f };
+	vertexData[5].normal = { 0.0f, 0.0f, 1.0f };
 
+
+	/*indexData[0] = 0;
+	indexData[1] = 1;
+	indexData[2] = 2;
+	indexData[3] = 1;
+	indexData[4] = 3;
+	indexData[5] = 2;*/
 	// 現在のマスター音量
 	float masterVolume = Game::GetMasterVolume();
 	// 現在のそれぞれの音量
@@ -116,6 +123,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 
 		skyDomeOptions.uvTransform.translate.y += 0.001f;
+		skyDomeOptions.uvTransform.translate.x += 0.0001f;
 		///
 		/// ↑更新処理ここまで
 		///
@@ -124,14 +132,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		/// ↓描画処理ここから
 		///
 		
-		Game::Drawobj(skyDomeTransforms, {0,0,0}, skyDomeModel, skyDomePng, 0xFFFFFFFFFF, skyDomeOptions);
+		//Game::Drawobj(skyDomeTransforms, {0,0,0}, skyDomeModel, skyDomePng, 0xFFFFFFFFFF, skyDomeOptions);
 		//Game::Drawobj(blockTransforms, blockPivot, blockModel, blockPng, 0xFFFFFFFFFF, blockOptions);
 		//Game::DrawSprite(spriteTransforms, { 100,100 }, uvCheckerPng, 0xFFFFFFFF, uvTransform);
 		Game::DrawSprite(spriteTransforms, vertexData, uvCheckerPng, 0xFFFFFFFF);
 		
-		Game::DrawSphere(sphereTransforms, spherePivot, 12, uvCheckerPng, 0xFFFFFFFFFF, sphereOptions);
+		//Game::DrawSphere(sphereTransforms, spherePivot, 12, uvCheckerPng, 0xFFFFFFFFFF, sphereOptions);
 
-		Game::DrawSphere(blockTransforms, blockPivot, 12, blockPng, 0xFFFFFFFFFF, blockOptions);
+		//Game::DrawSphere(blockTransforms, blockPivot, 12, skyDomePng, 0xFFFFFFFFFF, blockOptions);
 
 
 
