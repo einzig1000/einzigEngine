@@ -42,45 +42,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	skyDomeOptions.enableWireframeMode = false;
 	// スプライト
 	Transforms spriteTransforms;
-	spriteTransforms.scale = { 1000.0f, 1000.0f, 1000.0f };
+	spriteTransforms.scale = { 2.0f, 2.0f, 2.0f };
 	spriteTransforms.rotate = { 0.0f, 0.0f, 0.0f };
-	spriteTransforms.translate = { 10.0f, 10.0f, 0.0f };
+	spriteTransforms.translate = { 300.0f, 300.0f, 0.0f };
+	Vector2 spriteSize = { 100,100 };
+	//Vector2 spritePivot = { -50,-50 };
+	Vector2 spritePivot = { 0,0 };
 	Transforms uvTransform;
-	float halfWidth = 50.0f;
-	float halfHeight = 50.0f;
-	VertexData vertexData[6];
-
-	vertexData[0].position = { -halfWidth, -halfHeight, 0.0f, 1.0f };
-	vertexData[0].texcoord = { 0.0f, 1.0f };
-	vertexData[0].normal = { 0.0f, 0.0f, 1.0f };
-
-	vertexData[1].position = { -halfWidth, halfHeight, 0.0f, 1.0f };
-	vertexData[1].texcoord = { 0.0f, 0.0f };
-	vertexData[1].normal = { 0.0f, 0.0f, 1.0f };
-
-	vertexData[2].position = { halfWidth, -halfHeight, 0.0f, 1.0f };
-	vertexData[2].texcoord = { 1.0f, 1.0f };
-	vertexData[2].normal = { 0.0f, 0.0f, 1.0f };
-
-	vertexData[3].position = { halfWidth, halfHeight, 0.0f, 1.0f };
-	vertexData[3].texcoord = { 1.0f, 0.0f };
-	vertexData[3].normal = { 0.0f, 0.0f, 1.0f };
-
-	vertexData[4].position = { -halfWidth, halfHeight, 0.0f, 1.0f };
-	vertexData[4].texcoord = { 0.0f, 0.0f };
-	vertexData[4].normal = { 0.0f, 0.0f, 1.0f };
-
-	vertexData[5].position = { halfWidth, -halfHeight, 0.0f, 1.0f };
-	vertexData[5].texcoord = { 1.0f, 1.0f };
-	vertexData[5].normal = { 0.0f, 0.0f, 1.0f };
 
 
-	/*indexData[0] = 0;
-	indexData[1] = 1;
-	indexData[2] = 2;
-	indexData[3] = 1;
-	indexData[4] = 3;
-	indexData[5] = 2;*/
 	// 現在のマスター音量
 	float masterVolume = Game::GetMasterVolume();
 	// 現在のそれぞれの音量
@@ -124,6 +94,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 		skyDomeOptions.uvTransform.translate.y += 0.001f;
 		skyDomeOptions.uvTransform.translate.x += 0.0001f;
+		uvTransform.rotate.z += 0.01f;
 		///
 		/// ↑更新処理ここまで
 		///
@@ -132,14 +103,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		/// ↓描画処理ここから
 		///
 		
-		//Game::Drawobj(skyDomeTransforms, {0,0,0}, skyDomeModel, skyDomePng, 0xFFFFFFFFFF, skyDomeOptions);
-		//Game::Drawobj(blockTransforms, blockPivot, blockModel, blockPng, 0xFFFFFFFFFF, blockOptions);
-		//Game::DrawSprite(spriteTransforms, { 100,100 }, uvCheckerPng, 0xFFFFFFFF, uvTransform);
-		Game::DrawSprite(spriteTransforms, vertexData, uvCheckerPng, 0xFFFFFFFF);
+		Game::Drawobj(skyDomeTransforms, {0,0,0}, skyDomeModel, skyDomePng, 0xFFFFFFFF, skyDomeOptions);
+		Game::Drawobj(blockTransforms, blockPivot, blockModel, blockPng, 0xFFFFFFFF, blockOptions);
+		Game::DrawSprite(spriteTransforms, spriteSize, spritePivot, uvCheckerPng, 0xFFFFFFFF, uvTransform);
+		Game::DrawSprite(blockTransforms, {100,100}, {0,0}, skyDomePng, 0xFFFFFFFF, uvTransform);
 		
-		//Game::DrawSphere(sphereTransforms, spherePivot, 12, uvCheckerPng, 0xFFFFFFFFFF, sphereOptions);
+		Game::DrawSphere(sphereTransforms, spherePivot, 12, uvCheckerPng, 0xFFFFFFFF, sphereOptions);
 
-		//Game::DrawSphere(blockTransforms, blockPivot, 12, skyDomePng, 0xFFFFFFFFFF, blockOptions);
+		Game::DrawSphere(blockTransforms, blockPivot, 12, skyDomePng, 0xFFFFFFFF, blockOptions);
 
 
 
@@ -177,12 +148,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		ImGui::DragFloat("skyDome.uvTransform.rotate	", &skyDomeOptions.uvTransform.rotate.z, 0.01f);
 		ImGui::DragFloat2("skyDome.uvTransform.translate", &skyDomeOptions.uvTransform.translate.x, 0.01f);
 		ImGui::Text("--------------sprite---------------");
-		ImGui::DragFloat3("spriteTransforms.scale	 ", &spriteTransforms.scale.x, 0.01f);
+		ImGui::DragFloat2("spriteTransforms.scale	 ", &spriteTransforms.scale.x, 0.01f);
 		ImGui::DragFloat3("spriteTransforms.rotate	 ", &spriteTransforms.rotate.x, 0.01f);
-		ImGui::DragFloat3("spriteTransforms.translate", &spriteTransforms.translate.x, 0.01f);
-		ImGui::DragFloat3("uvTransform.scale	", &uvTransform.scale.x, 0.01f);
-		ImGui::DragFloat3("uvTransform.rotate	", &uvTransform.rotate.z, 0.01f);
-		ImGui::DragFloat3("uvTransform.translate", &uvTransform.translate.x, 0.01f);
+		ImGui::DragFloat2("spriteTransforms.translate", &spriteTransforms.translate.x, 1.0f);
+		ImGui::DragFloat2("uvTransform.scale	", &uvTransform.scale.x, 0.01f);
+		ImGui::DragFloat("uvTransform.rotate	", &uvTransform.rotate.z, 0.01f);
+		ImGui::DragFloat2("uvTransform.translate", &uvTransform.translate.x, 0.01f);
 
 
 
