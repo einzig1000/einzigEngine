@@ -41,12 +41,12 @@ void CameraController::Updata()
         ////////////////////////////////////////////// 
 #pragma region
         // クリックした瞬間
-        if (prePressMouse0_ == 0 && pressMouse0_)
+        if (prePressMouse2_ == 0 && pressMouse2_ && GetHitKey::keys[DIK_LSHIFT])
         {
             Game::GetMousePosition(&preMousePosition_);
         }
         // クリックしている最中
-        if (pressMouse0_)
+        if (pressMouse2_ && GetHitKey::keys[DIK_LSHIFT])
         {
             Game::GetMousePosition(&mousePosition_);
             mousePositionGap_.x = mousePosition_.x - preMousePosition_.x;
@@ -55,7 +55,7 @@ void CameraController::Updata()
             transform_.rotate.y = (mousePositionGap_.x / 100.0f) + (preRotate_.y);
         }
         // クリックやめた瞬間
-        if (prePressMouse0_ && pressMouse0_ == 0)
+        if (prePressMouse2_ && pressMouse2_ == 0 && GetHitKey::keys[DIK_LSHIFT])
         {
             preRotate_ = transform_.rotate;
         }
@@ -65,11 +65,11 @@ void CameraController::Updata()
         ///                回転中心                ///
         ////////////////////////////////////////////// 
 #pragma region
-        if (prePressMouse2_ == 0 && pressMouse2_)
+        if ((prePressMouse2_ == 0 && pressMouse2_) && !GetHitKey::keys[DIK_LSHIFT])
         {
             Game::GetMousePosition(&preMousePosition_);
         }
-        if (pressMouse2_)
+        if (pressMouse2_ && !GetHitKey::keys[DIK_LSHIFT])
         {
             Game::GetMousePosition(&mousePosition_);
             mousePositionGap_.x = float(mousePosition_.x - preMousePosition_.x);
@@ -103,13 +103,10 @@ void CameraController::Updata()
             //center_ = preCenter_ + (((right * -1) * (mousePositionGap_.x / 100.0f)) + ((up * -1) * (-mousePositionGap_.y / 100.0f)));
             center_ = preCenter_ + (((right * -1) * (mousePositionGap_.x / 100.0f)) + ((up * 1) * (-mousePositionGap_.y / 100.0f)));
         }
-        if (prePressMouse2_ && pressMouse2_ == 0)
+        if ((prePressMouse2_ && pressMouse2_ == 0) && !GetHitKey::keys[DIK_LSHIFT])
         {
             preCenter_ = center_;
         }
-
-
-
 #pragma endregion
 
         //////////////////////////////////////////////
