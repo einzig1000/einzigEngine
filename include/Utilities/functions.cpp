@@ -289,6 +289,81 @@ bool IsCollision(const Ray& r, const Triangle& t)
     return allSame;
 }
 
+bool IsCollision(const AABB& aabb1, const AABB& aabb2)
+{
+    // 各軸で分離していれば衝突していない
+    if (aabb1.max.x < aabb2.min.x || aabb1.min.x > aabb2.max.x) return false;
+    if (aabb1.max.y < aabb2.min.y || aabb1.min.y > aabb2.max.y) return false;
+    if (aabb1.max.z < aabb2.min.z || aabb1.min.z > aabb2.max.z) return false;
+    // どの軸でも分離していなければ衝突
+    return true;
+}
+
+bool IsCollision(const AABB& aabb, const Sphere& s)
+{
+    // 最近接点を求めるf
+    Vector3 closest{};
+    // 各軸ごとにAABBの範囲内にクランプ
+    closest.x = my_max(aabb.min.x, my_min(s.center.x, aabb.max.x));
+    closest.y = my_max(aabb.min.y, my_min(s.center.y, aabb.max.y));
+    closest.z = my_max(aabb.min.z, my_min(s.center.z, aabb.max.z));
+
+    // 最近接点と球の中心の距離を計算
+    Vector3 diff = s.center - closest;
+    float dist = diff.Length();
+
+    // 距離が半径以下なら衝突
+    return dist <= s.radius;
+}
+
+bool IsCollision(const AABB& aabb, const Segment& s)
+{
+    // 線分の始点と終点
+    Vector3 start = s.origin;
+    Vector3 end = s.origin + s.diff;
+
+    // min軸と線分の交点の{線分の割合}とmax軸ver
+    float tmin = 0.0f;
+    float tmax = 1.0f;
+
+    // x,y,z三回の計算をforループで行う悪魔的所業
+    for (int i = 0; i < 3; ++i)
+    {
+        float segStart, segEnd, boxMin, boxMax;
+        // X軸から見た線分の始点と終点 ＆ AABBのmin.xとmax.x
+        if (i == 0) { segStart = start.x; segEnd = end.x; boxMin = aabb.min.x; boxMax = aabb.max.x; }
+        // Y軸から見た線分の始点と終点 ＆ AABBのmin.yとmax.y
+        else if (i == 1) { segStart = start.y; segEnd = end.y; boxMin = aabb.min.y; boxMax = aabb.max.y; }
+        // Z軸から見た線分の始点と終点 ＆ AABBのmin.zとmax.z
+        else { segStart = start.z; segEnd = end.z; boxMin = aabb.min.z; boxMax = aabb.max.z; }
+
+        // 線分の長さ
+        float d = segEnd - segStart;
+        // 長さが限りなく０に近い時は点として扱う
+        if (std::abs(d) < 1e-6f)
+        {
+            // 点がmin以上max以下ではないなら当たる見込みなし
+            if (segStart < boxMin || segStart > boxMax) return false;
+        }
+        // 点じゃなかった
+        else
+        {
+            // dを１として tを計算
+            float t1 = (boxMin - segStart) / d;
+            float t2 = (boxMax - segStart) / d;
+            // 線分の方向によってはmax側から入ることもあるのでt1とt2を入れ替える
+            if (t1 > t2) std::swap(t1, t2);
+            // tは線分の割合なので、tが小さい方がtNear,tが大きい方がtFarになる
+            // 貫通している場合「Near.XorY → Near.XorY → Far.XorY → Far.XorY」の順になるはずなので
+            // tNearの大きい方 < tFarの小さい方になっていれば貫通している
+            tmin = my_max(tmin, t1);
+            tmax = my_min(tmax, t2);
+            if (tmin > tmax) return false;
+        }
+    }
+    return true;
+}
+
 // モデルのAABBと三角形配列で詳細判定
 bool IsCollision(const Ray& ray, const AABB& aabb, const std::vector<VertexData>& vertices, const Matrix4x4& worldMatrix)
 {
