@@ -1,6 +1,8 @@
 #pragma once
 
 #include "definition/definition.h"
+#include <algorithm>
+#include <numbers>
 
 #include "externals/DirectXTex/d3dx12.h"
 

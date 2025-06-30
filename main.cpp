@@ -47,7 +47,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	skyDomeTransforms.translate = { 0.0f,0.0f,0.0f };
 	skyDomeTransforms.rotate = { 0.0f,0.0f,0.0f };
 	DrawOptions skyDomeOptions;
-	//skyDomeOptions.enableWireframeMode = false;
+	skyDomeOptions.enableWireframeMode = false;
 	
 	// スプライト
 	Transforms spriteTransforms;
@@ -58,6 +58,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	Vector2 spritePivot = { 0,0 };
 	Transforms uvTransform;
 
+	// テスト用
 
 	// 現在のマスター音量
 	float masterVolume = Game::GetMasterVolume();
@@ -94,6 +95,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		{
 			Game::toggleWireframeMode();
 		}
+		if (GetHitKey::keys[DIK_4] && !GetHitKey::preKeys[DIK_4])
+		{
+			Game::toggleObjectMovableMode();
+		}
 
 		Game::SetMasterVolume(masterVolume);
 		Game::SetAudioVolume(alert, alertVolume);
@@ -124,6 +129,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		Game::DrawSphere(sphereTransforms, spherePivot, 16, uvCheckerPng, 0xFFFFFFFF, sphereOptions);
 
 
+		//Game::Drawobj(arrowTransforms, { 0,0,0 }, arrowModel, arrowPng, 0xFFFFFFFF, arrowOptions);
 
 
 

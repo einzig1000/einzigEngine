@@ -59,5 +59,7 @@ public:
 	// プリミティブモードの設定
 	static void toggleWireframeMode();
 
+	// オブジェクトトランスフォーム編集モードの設定
+	static void toggleObjectMovableMode();
 };
 

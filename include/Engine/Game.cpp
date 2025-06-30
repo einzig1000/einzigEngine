@@ -167,3 +167,8 @@ void Game::toggleWireframeMode()
 {
 	engine->toggleWireframeMode();
 }
+
+void Game::toggleObjectMovableMode()
+{
+	engine->toggleObjectMovableMode();
+}

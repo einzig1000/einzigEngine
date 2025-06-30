@@ -67,9 +67,13 @@ public:
 	// プリミティブモードの設定
 	void toggleWireframeMode();
 
+	// オブジェクトトランスフォーム編集モードの設定
+	void toggleObjectMovableMode();
+
 private:
 	void UpdateCamera();
 	void UpdateLight();
+	void collisionAllObject();
 	AABB CreateLocalAABB(const ModelData& model);
 	void InitializeLineResources(ID3D12Device* device);
 
@@ -175,4 +179,12 @@ private:
 
 	// プリミティブモード
 	bool WireframeMode;
+
+	// オブジェクトトランスフォーム編集モード
+	bool isObjectMovableMode;
+	int arrowModel;
+	int arrowPng;
+	Transforms arrowTransforms;
+	DrawOptions arrowOptions;
+	std::vector<ObjectCollsionInfo> objectCollsionInfo_;
 };

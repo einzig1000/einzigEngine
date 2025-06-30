@@ -866,6 +866,18 @@ struct Object3D
     uint32_t number;
 };
 
+struct ObjectCollsionInfo
+{
+    // 変換行列
+    Transforms transform;
+
+    // AABB
+    AABB aabb;
+
+    // 識別ナンバー
+    uint32_t number;
+};
+
 struct TextureData
 {
     DirectX::TexMetadata metadata;

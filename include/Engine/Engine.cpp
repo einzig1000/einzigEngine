@@ -3,7 +3,6 @@
 #include "externals/DirectXTex/DirectXTex.h"
 #include <cstdint>
 
-
 // 初期化用
 void Engine::Initialize(int width, int height, const std::wstring& title)
 {
@@ -110,6 +109,17 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 
 	// プリミティブモードの設定
 	WireframeMode = false;
+
+	// オブジェクトトランスフォーム編集モードの設定
+	isObjectMovableMode = false;
+
+	arrowModel = Game::LoadOBJ("resources/mesh", "arrow.obj");
+	arrowPng = Game::LoadTexture("resources/white1x1.png");
+	arrowTransforms.scale = { 1.0f, 1.0f, 1.0f };
+	arrowTransforms.translate = { 0.0f,0.0f,0.0f };
+	arrowTransforms.rotate = { 0.0f,0.0f,0.0f };
+	arrowOptions.enableLighting = false;
+	arrowOptions.enableWireframeMode = false;
 }
 
 // メインループ用
@@ -144,6 +154,12 @@ void Engine::BeginFrame()
 	UpdateLight();
 	UpdateCamera();
 	dxManager->BeginFrame();
+	if (isObjectMovableMode)
+	{
+		SetMouseRay();
+		collisionAllObject();
+	}
+	objectCollsionInfo_.clear();
 }
 void Engine::UpdateLight()
 {
@@ -159,6 +175,36 @@ void Engine::UpdateCamera()
 	}
 	// カメラの更新
 	cameraController->Updata();
+}
+void Engine::collisionAllObject()
+{
+	for (int i = 0; i < objectCollsionInfo_.size(); ++i)
+	{
+		if (IsCollisionMouseRayAABB(objectCollsionInfo_[i].aabb, objectCollsionInfo_[i].number) && objectCollsionInfo_[i].number != 0)
+		{
+			Vector3 transform = objectCollsionInfo_[i].transform.translate;
+			arrowTransforms.rotate = { 0,0,0 };
+			Game::Drawobj(arrowTransforms, { 0,0,0 }, arrowModel, arrowPng, 0xFF0000FF, arrowOptions);
+			arrowTransforms.rotate.x = 3.1415926535f / 2.0f;
+			Game::Drawobj(arrowTransforms, { 0,0,0 }, arrowModel, arrowPng, 0x00FF00FF, arrowOptions);
+			arrowTransforms.rotate.y = 3.1415926535f / 2.0f;
+			Game::Drawobj(arrowTransforms, { 0,0,0 }, arrowModel, arrowPng, 0x0000FFFF, arrowOptions);
+		}
+	}
+
+	//for (int i = 1; i < objects.size(); ++i)
+	//{
+	//	if (IsCollisionMouseRayAABB(objects[i].aabb, i))
+	//	{
+	//		Vector3 transform = objects[i].transform.translate;
+	//		arrowTransforms.rotate = { 0,0,0 };
+	//		Game::Drawobj(arrowTransforms, { 0,0,0 }, arrowModel, arrowPng, 0xFF0000FF, arrowOptions);
+	//		arrowTransforms.rotate.x = 3.1415926535f / 2.0f;
+	//		Game::Drawobj(arrowTransforms, { 0,0,0 }, arrowModel, arrowPng, 0x00FF00FF, arrowOptions);
+	//		arrowTransforms.rotate.y = 3.1415926535f / 2.0f;
+	//		Game::Drawobj(arrowTransforms, { 0,0,0 }, arrowModel, arrowPng, 0x0000FFFF, arrowOptions);
+	//	}
+	//}
 }
 void Engine::EndFrame()
 {
@@ -353,8 +399,6 @@ void Engine::Drawobj(const Transforms& transform, const Vector3& center, uint32_
 	const uint32_t kSumVertex = static_cast<uint32_t>(obj.modelData.vertices.size());
 
 
-
-
 	// 1. オブジェクトのスケール行列
 	Matrix4x4 scaleMatrix = Matrix4x4::MakeScaleMatrix(transform.scale);
 
@@ -415,6 +459,12 @@ void Engine::Drawobj(const Transforms& transform, const Vector3& center, uint32_
 	// 頂点数分のインスタンス描画を実行（実際に描画コマンドを発行）
 	dxManager->GetCommandList()->DrawInstanced(kSumVertex, 1, 0, 0);
 
+	ObjectCollsionInfo objectCollsionInfo;
+	objectCollsionInfo.aabb = CreateAABB(transform, objectNumber);
+	objectCollsionInfo.transform = transform;
+	objectCollsionInfo.number = objectNumber;
+	objectCollsionInfo_.push_back(objectCollsionInfo);
+
 	drawCallIndex++;
 }
 
@@ -428,10 +478,6 @@ void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint
 {
 	// 描画回数上限
 	if (drawCallIndex >= kMaxDrawCallPerFrame) return;
-
-	//// RootSignatureとPSOを設定 - Triangle
-	//dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState()); // Triangle用PSOを設定
-	//dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
 
 	// RootSignatureとPSOを設定
 	if (drawOptions.enableWireframeMode && WireframeMode)
@@ -1012,6 +1058,12 @@ void Engine::toggleWireframeMode()
 {
 	if (WireframeMode)WireframeMode = false;
 	else WireframeMode = true;
+}
+
+void Engine::toggleObjectMovableMode()
+{
+	if (isObjectMovableMode)isObjectMovableMode = false;
+	else isObjectMovableMode = true;
 }
 
 
