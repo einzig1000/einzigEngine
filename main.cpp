@@ -1,6 +1,4 @@
 #include "Engine/Game.h"
-#include "Utilities/functions.h"
-#include "Utilities/Easings.h"
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
@@ -49,7 +47,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	skyDomeTransforms.translate = { 0.0f,0.0f,0.0f };
 	skyDomeTransforms.rotate = { 0.0f,0.0f,0.0f };
 	DrawOptions skyDomeOptions;
-	skyDomeOptions.enableWireframeMode = false;
+	//skyDomeOptions.enableWireframeMode = false;
 	
 	// スプライト
 	Transforms spriteTransforms;

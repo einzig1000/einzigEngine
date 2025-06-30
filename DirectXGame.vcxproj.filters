@@ -43,12 +43,6 @@
     <Filter Include="GameEngine\imgui">
       <UniqueIdentifier>{de365176-a23e-4aa1-b692-75dc75ada7eb}</UniqueIdentifier>
     </Filter>
-    <Filter Include="GameEngine\Engine">
-      <UniqueIdentifier>{24c1e14d-3c15-48b9-9b53-6d5405a3ce02}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="GameEngine\Engine\Game">
-      <UniqueIdentifier>{f318fca5-3d7c-49cd-bd1a-0bbb7dad65fe}</UniqueIdentifier>
-    </Filter>
     <Filter Include="GameEngine\DirectXManager">
       <UniqueIdentifier>{22ffd2e0-0bae-47c8-b104-4729f9332def}</UniqueIdentifier>
     </Filter>
@@ -84,6 +78,12 @@
     </Filter>
     <Filter Include="GameEngine\AudioManager">
       <UniqueIdentifier>{d6981e3b-9d2e-4acf-aaf3-0a1a631f2860}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GameEngine\Application">
+      <UniqueIdentifier>{24c1e14d-3c15-48b9-9b53-6d5405a3ce02}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GameEngine\Application\Application">
+      <UniqueIdentifier>{f318fca5-3d7c-49cd-bd1a-0bbb7dad65fe}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -133,10 +133,10 @@
       <Filter>GameEngine\DirectXManager</Filter>
     </ClCompile>
     <ClCompile Include="include\Engine\Engine.cpp">
-      <Filter>GameEngine\Engine</Filter>
+      <Filter>GameEngine\Application</Filter>
     </ClCompile>
     <ClCompile Include="include\Engine\Game.cpp">
-      <Filter>GameEngine\Engine\Game</Filter>
+      <Filter>GameEngine\Application\Application</Filter>
     </ClCompile>
     <ClCompile Include="include\input\GetHitKey.cpp">
       <Filter>GameEngine\input\GetHitKey</Filter>
@@ -219,10 +219,10 @@
       <Filter>GameEngine\DirectXManager</Filter>
     </ClInclude>
     <ClInclude Include="include\Engine\Engine.h">
-      <Filter>GameEngine\Engine</Filter>
+      <Filter>GameEngine\Application</Filter>
     </ClInclude>
     <ClInclude Include="include\Engine\Game.h">
-      <Filter>GameEngine\Engine\Game</Filter>
+      <Filter>GameEngine\Application\Application</Filter>
     </ClInclude>
     <ClInclude Include="include\input\GetHitKey.h">
       <Filter>GameEngine\input\GetHitKey</Filter>

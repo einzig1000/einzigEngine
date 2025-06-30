@@ -8,6 +8,8 @@
 #include <vector>
 #include <string>
 #include <wrl/client.h>
+#include "Utilities/Easings.h"
+#include "Utilities/functions.h"
 
 class Engine
 {

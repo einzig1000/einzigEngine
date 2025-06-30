@@ -1,5 +1,4 @@
 #include "Game.h"
-#include "Utilities/functions.h"
 #include "externals/DirectXTex/d3dx12.h"
 #include "externals/DirectXTex/DirectXTex.h"
 #include <cstdint>
@@ -430,8 +429,19 @@ void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint
 	// 描画回数上限
 	if (drawCallIndex >= kMaxDrawCallPerFrame) return;
 
-	// RootSignatureとPSOを設定 - Triangle
-	dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState()); // Triangle用PSOを設定
+	//// RootSignatureとPSOを設定 - Triangle
+	//dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState()); // Triangle用PSOを設定
+	//dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
+
+	// RootSignatureとPSOを設定
+	if (drawOptions.enableWireframeMode && WireframeMode)
+	{	// Wireframe
+		dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetWireframePipelineState()); // ワイヤーフレーム用PSOを設定
+	}
+	else
+	{	// Triangle
+		dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState()); // Triangle用PSOを設定
+	}
 	dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
 
 	// 必要な頂点数
@@ -631,55 +641,6 @@ void Engine::DrawTriangle(const Transforms& transform, const Vector3& pos1, cons
 	drawCallIndex++;
 	spriteVertexDataUsed += kSumVertex;
 }
-
-//void Engine::DrawTriangle(const Transforms& localTransform, const Transforms& worldTransform, const VertexData* vertexData, uint32_t textureNumber, const uint32_t& materialColor)
-//{
-//	// RootSignatureとPSOを設定 - Triangle
-//	dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState()); // Triangle用PSOを設定
-//	dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
-//
-//	Matrix4x4 world = (
-//		Matrix4x4::MakeAffineMatrix(localTransform.scale, localTransform.rotate, localTransform.translate) *
-//		Matrix4x4::MakeAffineMatrix(worldTransform.scale, worldTransform.rotate, worldTransform.translate)
-//		);
-//	Matrix4x4 wvpMatrix = (world * cameraController->viewProjectionMatrix);
-//
-//	DrawData drawData = SetupDrawData(
-//		vertexResourceSizeTriangle,
-//		vertexData,
-//		3,
-//		vertexResourceTriangle,
-//		vertexResourceSizeTriangle,
-//		materialData[drawCallIndex],
-//		materialColor,
-//		true,
-//		Matrix4x4::MakeIdentity4x4(),
-//		wvpData[drawCallIndex],
-//		world,
-//		wvpMatrix,
-//		textureNumber
-//	);
-//	if (!drawData.texture) return;
-//
-//
-//	// RootSignatureを設定。
-//	dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &drawData.vertexBufferView);
-//	// 形状を設定
-//	dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-//	// CBVを設定する マテリアル用のCBufferの場所を設定
-//	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources[drawCallIndex]->GetGPUVirtualAddress());
-//	// CBVを設定する wvp用のCBufferの場所を設定
-//	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources[drawCallIndex]->GetGPUVirtualAddress());
-//	// SRVのDescriptorTableの先頭を設定。２はrootParameters[2]。
-//	dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, drawData.texture->textureSrvHandleGPU);
-//	// CBVを設定する ディレクショナルライト用のCBufferの場所を設定
-//	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
-//
-//	// 描画
-//	dxManager->GetCommandList()->DrawInstanced(3, 1, 0, 0);
-//
-//	drawCallIndex++;
-//}
 
 void Engine::DrawSprite(const Transforms& transform, const Vector2& center, const Vector2& textureSize, uint32_t textureNumber, const uint32_t& materialColor, const Transforms& uvTransform)
 {

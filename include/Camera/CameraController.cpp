@@ -1,7 +1,5 @@
 #include "Camera/CameraController.h"
-#include "Utilities/functions.h"
 #include "Engine/Game.h"
-#include "Utilities/Easings.h"
 Matrix4x4 CameraController::viewportMatrix;
 Matrix4x4 CameraController::viewProjectionMatrix;
 
@@ -196,9 +194,11 @@ void CameraController::Draw()
 // 実際に動かす
 void CameraController::MovingCenter()
 {
-    center_.x = Easings::OUT_QUART(easeCenter_.flame, easeCenter_.maxFrame, easeCenter_.start.x, easeCenter_.end.x);
-    center_.y = Easings::OUT_QUART(easeCenter_.flame, easeCenter_.maxFrame, easeCenter_.start.y, easeCenter_.end.y);
-    center_.z = Easings::OUT_QUART(easeCenter_.flame, easeCenter_.maxFrame, easeCenter_.start.z, easeCenter_.end.z);
+    float t = float(easeCenter_.flame) / float(easeCenter_.maxFrame);
+
+    center_.x = Easings::OUT_QUART(easeCenter_.start.x, easeCenter_.end.x, t);
+    center_.y = Easings::OUT_QUART(easeCenter_.start.y, easeCenter_.end.y, t);
+    center_.z = Easings::OUT_QUART(easeCenter_.start.z, easeCenter_.end.z, t);
     preCenter_ = center_;
 
     easeCenter_.flame++;
@@ -210,9 +210,11 @@ void CameraController::MovingCenter()
 
 void CameraController::MovingRotate()
 {
-    transform_.rotate.x = Easings::OUT_QUART(easeRotate_.flame, easeRotate_.maxFrame, easeRotate_.start.x, easeRotate_.end.x);
-    transform_.rotate.y = Easings::OUT_QUART(easeRotate_.flame, easeRotate_.maxFrame, easeRotate_.start.y, easeRotate_.end.y);
-    transform_.rotate.z = Easings::OUT_QUART(easeRotate_.flame, easeRotate_.maxFrame, easeRotate_.start.z, easeRotate_.end.z);
+    float t = float(easeCenter_.flame) / float(easeCenter_.maxFrame);
+
+    center_.x = Easings::OUT_QUART(easeRotate_.start.x, easeRotate_.end.x, t);
+    center_.y = Easings::OUT_QUART(easeRotate_.start.y, easeRotate_.end.y, t);
+    center_.z = Easings::OUT_QUART(easeRotate_.start.z, easeRotate_.end.z, t);
     preRotate_ = transform_.rotate;
 
     easeRotate_.flame++;
@@ -225,7 +227,9 @@ void CameraController::MovingRotate()
 
 void CameraController::MovingDistance()
 {
-    distance_ = Easings::OUT_QUART(easeDistance_.flame, easeDistance_.maxFrame, easeDistance_.start.x, easeDistance_.end.x);
+    float t = float(easeCenter_.flame) / float(easeCenter_.maxFrame);
+
+    distance_ = Easings::OUT_QUART(easeDistance_.start.x, easeDistance_.end.x, t);
 
     easeDistance_.flame++;
 
