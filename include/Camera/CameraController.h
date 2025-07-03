@@ -40,6 +40,7 @@ private:
     Vector2 preMousePosition_;
     Vector2 mousePositionGap_;
     Vector3 preRotate_;
+    bool rotateTime_;
     // 演出による回転中
     easingSet easeRotate_;
 
@@ -52,6 +53,7 @@ private:
     bool prePressMouse2_ = 0;
     Vector3 preCenter_;
     Vector3 normalize_;
+    bool centerTime_;
     // 演出による回転中心の変更中
     easingSet easeCenter_;
     DrawOptions sphereOptions;
