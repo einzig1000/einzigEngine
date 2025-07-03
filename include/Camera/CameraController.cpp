@@ -27,8 +27,10 @@ void CameraController::Updata()
     // カメラ操作可能
     if (cameraMode_)
     {
+        // 左クリック
         prePressMouse0_ = pressMouse0_;
         pressMouse0_ = Game::IsPressMouse(0);
+        // ミドルボタン
         prePressMouse2_ = pressMouse2_;
         pressMouse2_ = Game::IsPressMouse(2);
 

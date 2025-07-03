@@ -45,6 +45,7 @@ public:
 	static void GetMousePosition(Vector2* position);
 	static void SetMouseRay();
 	static bool IsCollisionMouseRayAABB(AABB aabb, int objNum);
+	// 0 = 左クリック  1 = 右クリック  2 = ミドルボタン
 	static bool IsPressMouse(int i);
 	static uint32_t GetWheel();
 
