@@ -1,4 +1,5 @@
-#include "Engine/Game.h"
+#include "Game.h"
+#include "TR2Class.h"
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
@@ -6,6 +7,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	// ウィンドウ、DrectX初期化
 	Game::Initialize(WIDTH, HEIGHT, L"CG2");
 
+	TR2Class* TR2Class_ = new TR2Class();
+	TR2Class_->Initialize();
 
 	while (Game::ProcessMessage())
 	{
@@ -14,29 +17,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		Game::SetMouseRay();
 
 
-		///
-		/// ↓更新処理ここから
-		///
-	
-		///
-		/// ↑更新処理ここまで
-		///
+		// ↓更新処理ここから
+		TR2Class_->Update();
 
-		///
-		/// ↓描画処理ここから
-		///
-
-		///
-		/// ↑描画処理ここまで
-		///
-
+		// ↓描画処理ここから
+		TR2Class_->Draw();
 
 
 		// フレームの終了
 		Game::EndFrame();
 	}
+	delete TR2Class_;
 	Game::Finalize();
-
 
 	return 0;
 }

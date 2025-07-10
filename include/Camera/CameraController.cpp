@@ -11,9 +11,9 @@ CameraController::CameraController()
 
     // カメラ
     transform_.translate = { 0.0f, 0.0f, 0.0f };
-    transform_.rotate = { 0.43f, 0.0f, 0.0f };
-    center_ = { 0.0f, 0.0f, 0.0f };
-    distance_ = 39.60f;
+    transform_.rotate = { 0.58f, 0.0f, 0.0f };
+    center_ = { -8.42f, 0.0f, -9.57f };
+    distance_ = 30.00f;
 
     preCenter_ = center_;
     preRotate_.x = transform_.rotate.x;
@@ -140,10 +140,10 @@ void CameraController::Updata()
         MovingDistance();
     }
 
-#ifdef DEBUG
     ImGui::DragFloat3("cameraCenter", &center_.x, 0.01f);
     ImGui::DragFloat3("cameraRotate", &transform_.rotate.x, 0.01f);
     ImGui::DragFloat("cameraDistance", &distance_, 0.01f);
+#ifdef DEBUG
 #endif
     ImGui::Text("push SPACE key : change cameraMode");
     ImGui::Checkbox("cameraMode", &cameraMode_);

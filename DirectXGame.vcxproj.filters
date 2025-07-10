@@ -85,6 +85,9 @@
     <Filter Include="GameEngine\Application\Application">
       <UniqueIdentifier>{f318fca5-3d7c-49cd-bd1a-0bbb7dad65fe}</UniqueIdentifier>
     </Filter>
+    <Filter Include="TR2Class">
+      <UniqueIdentifier>{c0e4dca2-78ee-451b-8a69-e6373485606e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -167,6 +170,9 @@
     </ClCompile>
     <ClCompile Include="include\Window\WindowManager.cpp">
       <Filter>GameEngine\WindowManager</Filter>
+    </ClCompile>
+    <ClCompile Include="TR2Class.cpp">
+      <Filter>TR2Class</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -253,6 +259,9 @@
     </ClInclude>
     <ClInclude Include="include\Window\WindowManager.h">
       <Filter>GameEngine\WindowManager</Filter>
+    </ClInclude>
+    <ClInclude Include="TR2Class.h">
+      <Filter>TR2Class</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

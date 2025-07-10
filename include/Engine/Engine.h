@@ -10,6 +10,7 @@
 #include <wrl/client.h>
 #include "Utilities/Easings.h"
 #include "Utilities/functions.h"
+#include <algorithm>
 
 class Engine
 {

@@ -120,6 +120,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="include\Utilities\functions.cpp" />
     <ClCompile Include="include\Window\WindowManager.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="TR2Class.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="externals\imgui\imconfig.h" />
@@ -150,6 +151,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="include\Utilities\Easings.h" />
     <ClInclude Include="include\Utilities\functions.h" />
     <ClInclude Include="include\Window\WindowManager.h" />
+    <ClInclude Include="TR2Class.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

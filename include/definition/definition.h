@@ -23,6 +23,12 @@
 #define WIDTH 1280
 #define HEIGHT 720
 
+#define MAP_WIDTH 15
+#define MAP_HEIGHT 15
+
+#define BLOCK_WIDTH 1.2f
+#define BLOCK_HEIGHT 1.2f
+
 enum class Direction
 {
     None = -1,
