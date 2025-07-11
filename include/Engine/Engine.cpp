@@ -322,6 +322,12 @@ uint32_t Engine::LoadAudio(const std::string& filePath)
 	return dxManager->GetAudioManager()->LoadAudio(filePath);
 }
 
+TextureData* Engine::GetTexture(uint32_t textureNumber)
+{
+	TextureData* tex = dxManager->GetTextureManager()->GetTexture(textureNumber);
+	return tex;
+}
+
 // 描画
 void Engine::Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor)
 {

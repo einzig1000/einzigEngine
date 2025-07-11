@@ -372,6 +372,8 @@ bool IsCollision(const Ray& ray, const AABB& aabb, const std::vector<VertexData>
     {
         return false;
     }
+    // 下の行を消して修正を再開
+    return true;
 
     // AABBに当たっていた場合のみ、三角形ごとに詳細判定
     for (size_t i = 0; i + 2 < vertices.size(); i += 3)
@@ -399,7 +401,6 @@ bool IsCollision(const Ray& ray, const AABB& aabb, const std::vector<VertexData>
     }
     return false;
 }
-
 
 
 

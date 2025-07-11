@@ -14,7 +14,7 @@ enum class BlockType
 {
 	Empty = 0,		// 空（通行可能）
 	Wall = 1,		// 壁（通行不可）
-	Asid = 2,		// 毒（歩行コスト倍増）
+	Slope = 2,		// 坂（Wallへの階段）
 	WarpIn = 3,		// ワープ入口
 	WarpOut = 4,	// ワープ出口
 };
@@ -41,7 +41,7 @@ struct Block
 	int cost = 0;
 	// 壁？
 	BlockType type = BlockType::Empty;
-	// 壁？
+	// A*判定
 	AstarBlockState state = AstarBlockState::None;
 	// タイプ変更後
 	bool changeFlag = 0;
@@ -64,6 +64,7 @@ struct Node
 	int fCost; // gCost + hCost (合計コスト)
 	Vector2int parentIndex; // 経路再構築のための親ノードのインデックス
 	Direction fromDir = Direction::None; // 親から見た方向
+	bool fromSlope = false; // 直前がAsidかどうか
 
 	// 優先度キューのための比較演算子（fCostが小さい方が優先されるようにする）
 	bool operator>(const Node& other) const
@@ -75,8 +76,28 @@ struct Node
 	}
 };
 
-struct ActPattern
+enum Environment
 {
+	高台,	// 高低差無視攻撃が可能なキャラ
+	細道,	// 直線長距離攻撃が可能なキャラ
+	壁際,	// 壁貫通攻撃が可能なキャラ
+};
+
+struct ActPattern_Attaker
+{
+	//// いきたいところリスト
+	// 敵の方
+	// 高台の方
+	// 細道
+	// 
+	// 
+	////
+
+
+	//有利ポジに向かって最短経路;
+
+
+
 	//敵１に向かって最短経路、
 	//敵２に向かって最短経路、
 	//・・・
@@ -90,13 +111,21 @@ struct ActPattern
 	//味方へのバフ
 
 };
+struct ActPattern_Buffer
+{
+
+};
+struct ActPattern_Healer
+{
+
+};
 
 struct SkillInfo
 {
 	uint32_t cost; // 使用するために必要なコスト
 	uint32_t delayCost; // 使用できない期間(必殺技のみ)
 
-	uint32_t 〇〇;// 効果範囲
+	uint32_t range;// 効果範囲
 
 	uint32_t skillType;		// 攻撃、回復、バフ、etc...スキルのタイプ
 	uint32_t skillOdds;		// スキルそのものの倍率
@@ -142,8 +171,9 @@ struct Charactor
 
 	uint32_t moveRange; //移動可能範囲
 
-	uint32_t actionDelay; //（技を使用する度に技コスト分加算される。場にいるキャラでこの数字が最も少ないキャラが最初に行動する）;
+	uint32_t actionDelay; //（技を使用する度に技コスト分加算される。場にいるキャラでこの数字が最も少ないキャラが最初に行動する
 
+	Environment advantagePosition; // 有利ポジション
 
 	uint32_t HP;
 	uint32_t Attack;
@@ -182,6 +212,8 @@ public:
 	// マップ上のインデックスから座標を求める関数
 	Vector3 IndexToPosition(Vector2int index);
 
+	bool CanMove(const Vector2int& from, const Vector2int& to) const;
+
 	// A*変数初期化
 	void AstarSet(const Vector3& pos, const Vector3& target);
 
@@ -198,6 +230,7 @@ private:
 	// 移動経路
 	std::vector<Vector2int> pathNodes;
 	int pathStepIndex = 0;
+	int enemyMoveActCounter; // 敵のそのターンにおける移動回数
 	// 移動先選択中
 	Vector3 moveTarget;
 	Vector2int moveFrom;
@@ -207,11 +240,10 @@ private:
 	float movementTmax;
 	// 移動先
 	Vector2int nextIndex;
-	Vector3 nextBlockTranslate;
+	Transforms nextBlockTransforms;
 	// 移動元
 	Vector2int fromIndex;
-	Vector3 fromBlockTranslate;
-	Vector3 fromBlockRotate;
+	Transforms fromBlockTransforms;
 	// 移動方向
 	Direction direction;
 
@@ -239,6 +271,27 @@ private:
 	int skyDomeModel = Game::LoadOBJ("resources/skyDome", "skyDome.obj");
 	int skyDomePng = Game::LoadTexture("resources/skyDome/skyDome.png");
 
+
+
+
+	//-----------------------------マップ編集----------------------------
+	bool editMode;
+	int selectBlock;
+	bool PrePressMouse;
+
+	int warpInBlockPng = Game::LoadTexture("resources/block/map_warpIn.png");
+	int warpOutBlockPng = Game::LoadTexture("resources/block/map_warpOut.png");
+
+	int emptyPng = Game::LoadTexture("resources/blockType/empty.png");
+	int wallPng = Game::LoadTexture("resources/blockType/wall.png");
+	int asidPng = Game::LoadTexture("resources/blockType/asid.png");
+	int warpInPng = Game::LoadTexture("resources/blockType/warpIn.png");
+	int warpOutPng = Game::LoadTexture("resources/blockType/warpOut.png");
+	int SelectemptyPng = Game::LoadTexture("resources/blockType/Selectempty.png");
+	int SelectwallPng = Game::LoadTexture("resources/blockType/Selectwall.png");
+	int SelectasidPng = Game::LoadTexture("resources/blockType/Selectasid.png");
+	int SelectwarpInPng = Game::LoadTexture("resources/blockType/SelectwarpIn.png");
+	int SelectwarpOutPng = Game::LoadTexture("resources/blockType/SelectwarpOut.png");
 
 	//------------------------------skill----------------------------
 	std::vector<SkillInfo>skillList;

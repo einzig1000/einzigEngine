@@ -28,6 +28,7 @@ void TR2Class::Initialize()
 	enemy_.pivot = { 0,0,0 };
 	enemy_.color = 0xFFFFFFFF;
 	enemy_.moveRange = 4;
+	player_.advantagePosition = Environment::高台;
 
 
 	// ブロック
@@ -42,6 +43,9 @@ void TR2Class::Initialize()
 			block[y][x].transforms.rotate = { 0.0f,0.0f,0.0f };
 			block[y][x].pivot = { 0,0,0 };
 			block[y][x].color = 0xFFFFFFFF;
+			block[y][x].AABB = Game::CreateAABB(block[y][x].transforms, block[y][x].model);
+			block[y][x].cost = 0;
+			block[y][x].type = BlockType::Empty;
 		}
 	}
 
@@ -61,6 +65,11 @@ void TR2Class::Initialize()
 	// ターン
 	turn = Turn::None;
 	turnRepuest = Turn::Player;
+
+	// マップ編集モード
+	editMode = true;
+	selectBlock = 0;
+	PrePressMouse = false;
 }
 
 void TR2Class::Update()
@@ -104,6 +113,126 @@ void TR2Class::Update()
 		break;
 	}
 
+	// マップ編集
+	if (editMode)
+	{
+		// ブロックAABB
+		for (int y = 0; y < MAP_HEIGHT; ++y)
+		{
+			for (int x = 0; x < MAP_WIDTH; ++x)
+			{
+				block[y][x].AABB = Game::CreateAABB(block[y][x].transforms, block[y][x].model);
+			}
+		}
+		// ブロックとマウス
+		for (int y = 0; y < MAP_HEIGHT; ++y)
+		{
+			for (int x = 0; x < MAP_WIDTH; ++x)
+			{
+				if (Game::IsCollisionMouseRayAABB(block[y][x].AABB, block[y][x].model))
+				{
+					block[y][x].mouseTarget = true;
+				}
+				else
+				{
+					block[y][x].mouseTarget = false;
+				}
+			}
+		}
+		// ブロック変更
+		for (int y = 0; y < MAP_HEIGHT; ++y)
+		{
+			for (int x = 0; x < MAP_WIDTH; ++x)
+			{
+				if (block[y][x].mouseTarget && Game::IsPressMouse(0))
+				{
+					if (selectBlock == 0 && !block[y][x].changeFlag)
+					{
+						block[y][x].changeFlag = true;
+						block[y][x].type = BlockType::Empty;
+						block[y][x].transforms.scale.x = 1.0f;
+						block[y][x].transforms.scale.y = 1.0f;
+						block[y][x].transforms.scale.z = 1.0f;
+						block[y][x].transforms.translate.y = 0.0f;
+						block[y][x].cost = 0;
+					}
+					else if (selectBlock == 1 && !block[y][x].changeFlag)
+					{
+						block[y][x].changeFlag = true;
+						block[y][x].type = BlockType::Wall;
+						//block[y][x].transforms.scale.x = 1.0f;
+						//block[y][x].transforms.scale.y = 5.0f;
+						//block[y][x].transforms.scale.z = 1.0f;
+						block[y][x].transforms.translate.y = 1.0f;
+					}
+					else if (selectBlock == 2 && !block[y][x].changeFlag)
+					{
+						block[y][x].changeFlag = true;
+						block[y][x].type = BlockType::Slope;
+						//block[y][x].transforms.scale.x = 1.0f;
+						//block[y][x].transforms.scale.y = 2.5f;
+						//block[y][x].transforms.scale.z = 1.0f;
+						block[y][x].transforms.translate.y = 0.5f;
+						block[y][x].cost = 0;
+					}
+					else if (selectBlock == 3 && !block[y][x].changeFlag)
+					{
+						for (int y = 0; y < MAP_HEIGHT; ++y)
+						{
+							for (int x = 0; x < MAP_WIDTH; ++x)
+							{
+								if (block[y][x].type == BlockType::WarpIn)
+								{
+									block[y][x].type = BlockType::Empty;
+									break;
+								}
+							}
+						}
+						block[y][x].changeFlag = true;
+						block[y][x].type = BlockType::WarpIn;
+						block[y][x].transforms.scale.x = 1.0f;
+						block[y][x].transforms.scale.y = 1.0f;
+						block[y][x].transforms.scale.z = 1.0f;
+						block[y][x].transforms.translate.y = 0.0f;
+						block[y][x].cost = 0;
+					}
+					else if (selectBlock == 4 && !block[y][x].changeFlag)
+					{
+						for (int y = 0; y < MAP_HEIGHT; ++y)
+						{
+							for (int x = 0; x < MAP_WIDTH; ++x)
+							{
+								if (block[y][x].type == BlockType::WarpOut)
+								{
+									block[y][x].type = BlockType::Empty;
+									break;
+								}
+							}
+						}
+						block[y][x].changeFlag = true;
+						block[y][x].type = BlockType::WarpOut;
+						block[y][x].transforms.scale.x = 1.0f;
+						block[y][x].transforms.scale.y = 1.0f;
+						block[y][x].transforms.scale.z = 1.0f;
+						block[y][x].transforms.translate.y = 0.0f;
+						block[y][x].cost = 0;
+					}
+				}
+			}
+		}
+
+		if (!Game::IsPressMouse(0) && PrePressMouse)
+		{
+			for (int y = 0; y < MAP_HEIGHT; ++y)
+			{
+				for (int x = 0; x < MAP_WIDTH; ++x)
+				{
+					block[y][x].changeFlag = false;
+				}
+			}
+		}
+	}
+
 
 
 
@@ -138,7 +267,7 @@ void TR2Class::Draw()
 			{
 				block[y][x].color = 0x6B6B6BFF; // グレー
 			}
-			else if (block[y][x].type == BlockType::Asid)
+			else if (block[y][x].type == BlockType::Slope)
 			{
 				block[y][x].color = 0x76428aFF; // 毒
 			}
@@ -170,7 +299,7 @@ void TR2Class::Draw()
 	// エネミー
 	enemy_.Draw();
 
-	// ブロックオーラ実験
+	// ブロックオーラ
 	//Game::Drawobj({ {1,1,1},{0.0f,0.0f,3.141592f},block[8][8].transforms.translate }, { 0,0,0 }, blockParticleModel, blockParticlePng, 0xFFFFFFFF);
 
 	switch (turn)
@@ -189,14 +318,52 @@ void TR2Class::Draw()
 	}
 
 	ImGui::Text("---------------block---------------");
-	std::string label = std::format("block[{}][{}].scale", fromIndex.y, fromIndex.x);
-	ImGui::DragFloat3(label.c_str(), &block[fromIndex.y][fromIndex.x].transforms.scale.x, 0.01f);
-	label = std::format("block[{}][{}].rotate", fromIndex.y, fromIndex.x);
-	ImGui::DragFloat3(label.c_str(), &block[fromIndex.y][fromIndex.x].transforms.rotate.x, 0.01f);
-	label = std::format("block[{}][{}].translate", fromIndex.y, fromIndex.x);
-	ImGui::DragFloat3(label.c_str(), &block[fromIndex.y][fromIndex.x].transforms.translate.x, 0.01f);
-	label = std::format("block[{}][{}].pivot", fromIndex.y, fromIndex.x);
-	ImGui::DragFloat3(label.c_str(), &block[fromIndex.y][fromIndex.x].pivot.x, 0.01f);
+	std::string label = std::format("block[{}][{}].scale", nextIndex.y, nextIndex.x);
+	ImGui::DragFloat3(label.c_str(), &block[nextIndex.y][nextIndex.x].transforms.scale.x, 0.01f);
+	label = std::format("block[{}][{}].rotate", nextIndex.y, nextIndex.x);
+	ImGui::DragFloat3(label.c_str(), &block[nextIndex.y][nextIndex.x].transforms.rotate.x, 0.01f);
+	label = std::format("block[{}][{}].translate", nextIndex.y, nextIndex.x);
+	ImGui::DragFloat3(label.c_str(), &block[nextIndex.y][nextIndex.x].transforms.translate.x, 0.01f);
+	label = std::format("block[{}][{}].pivot", nextIndex.y, nextIndex.x);
+	ImGui::DragFloat3(label.c_str(), &block[nextIndex.y][nextIndex.x].pivot.x, 0.01f);
+
+
+	ImGui::Text("R:Map&Camera Reset");
+	ImGui::Checkbox("mapEditMode", &editMode);
+
+	const TextureData* tex{};
+	
+	if (selectBlock == 0)tex = Game::GetTexture(SelectemptyPng);
+	else tex = Game::GetTexture(emptyPng);
+	ImGui::Image(static_cast<ImTextureID>(tex->textureSrvHandleGPU.ptr), ImVec2(32, 32));
+	if (ImGui::IsItemClicked())selectBlock = 0;
+	ImGui::SameLine();
+
+	if (selectBlock == 1)tex = Game::GetTexture(SelectwallPng);
+	else tex = Game::GetTexture(wallPng);
+	ImGui::Image(static_cast<ImTextureID>(tex->textureSrvHandleGPU.ptr), ImVec2(32, 32));
+	if (ImGui::IsItemClicked())selectBlock = 1;
+	ImGui::SameLine();
+
+	if (selectBlock == 2)tex = Game::GetTexture(SelectasidPng);
+	else tex = Game::GetTexture(asidPng);
+	ImGui::Image(static_cast<ImTextureID>(tex->textureSrvHandleGPU.ptr), ImVec2(32, 32));
+	if (ImGui::IsItemClicked())selectBlock = 2;
+	ImGui::SameLine();
+
+	if (selectBlock == 3)tex = Game::GetTexture(SelectwarpInPng);
+	else tex = Game::GetTexture(warpInPng);
+	ImGui::Image(static_cast<ImTextureID>(tex->textureSrvHandleGPU.ptr), ImVec2(32, 32));
+	if (ImGui::IsItemClicked())selectBlock = 3;
+	ImGui::SameLine();
+
+	if (selectBlock == 4)tex = Game::GetTexture(SelectwarpOutPng);
+	else tex = Game::GetTexture(warpOutPng);
+	ImGui::Image(static_cast<ImTextureID>(tex->textureSrvHandleGPU.ptr), ImVec2(32, 32));
+	if (ImGui::IsItemClicked())selectBlock = 4;
+	ImGui::SameLine();
+
+	PrePressMouse = Game::IsPressMouse(0);
 }
 
 void TR2Class::Initialize_PlayerTurn()
@@ -206,23 +373,44 @@ void TR2Class::Initialize_PlayerTurn()
 
 void TR2Class::Update_PlayerTurn()
 {
-	if ((GetHitKey::keys[DIK_S] && !GetHitKey::preKeys[DIK_S] && !movement) && GetShortestPathLength(IndexToPosition({ moveFrom.x ,moveFrom.y+1 }), player_.transforms.translate) <= player_.moveRange)
+	Vector2int candidate = moveFrom;
+
+	if (GetHitKey::keys[DIK_S] && !GetHitKey::preKeys[DIK_S] && !movement)
 	{
-		moveFrom.y += 1;
+		candidate.y += 1;
+		if (CanMove(moveFrom, candidate) && GetShortestPathLength(player_.transforms.translate, IndexToPosition(candidate)) <= player_.moveRange)
+		{
+			moveFrom = candidate;
+		}
 	}
-	if ((GetHitKey::keys[DIK_W] && !GetHitKey::preKeys[DIK_W] && !movement) && GetShortestPathLength(IndexToPosition({ moveFrom.x ,moveFrom.y-1 }), player_.transforms.translate) <= player_.moveRange)
+	if (GetHitKey::keys[DIK_W] && !GetHitKey::preKeys[DIK_W] && !movement)
 	{
-		moveFrom.y -= 1;
+		candidate = moveFrom;
+		candidate.y -= 1;
+		if (CanMove(moveFrom, candidate) && GetShortestPathLength(player_.transforms.translate, IndexToPosition(candidate)) <= player_.moveRange)
+		{
+			moveFrom = candidate;
+		}
 	}
-	if ((GetHitKey::keys[DIK_A] && !GetHitKey::preKeys[DIK_A] && !movement) && GetShortestPathLength(IndexToPosition({ moveFrom.x+1 ,moveFrom.y }), player_.transforms.translate) <= player_.moveRange)
+	if (GetHitKey::keys[DIK_A] && !GetHitKey::preKeys[DIK_A] && !movement)
 	{
-		moveFrom.x += 1;
+		candidate = moveFrom;
+		candidate.x += 1;
+		if (CanMove(moveFrom, candidate) && GetShortestPathLength(player_.transforms.translate, IndexToPosition(candidate)) <= player_.moveRange)
+		{
+			moveFrom = candidate;
+		}
 	}
-	if ((GetHitKey::keys[DIK_D] && !GetHitKey::preKeys[DIK_D] && !movement) && GetShortestPathLength(IndexToPosition({ moveFrom.x-1 ,moveFrom.y }), player_.transforms.translate) <= player_.moveRange)
+	if (GetHitKey::keys[DIK_D] && !GetHitKey::preKeys[DIK_D] && !movement)
 	{
-		moveFrom.x -= 1;
+		candidate = moveFrom;
+		candidate.x -= 1;
+		if (CanMove(moveFrom, candidate) && GetShortestPathLength(player_.transforms.translate, IndexToPosition(candidate)) <= player_.moveRange)
+		{
+			moveFrom = candidate;
+		}
 	}
-	if (GetHitKey::keys[DIK_SPACE])
+	if (GetHitKey::keys[DIK_SPACE] && !GetHitKey::preKeys[DIK_SPACE] && !movement)
 	{
 		Astar(player_.transforms.translate, IndexToPosition(moveFrom));
 		startIndex = PositionToIndex(player_.transforms.translate);
@@ -245,41 +433,73 @@ void TR2Class::Update_PlayerTurn()
 				tempPathStep = it->second;
 			}
 		}
+		std::reverse(pathNodes.begin(), pathNodes.end());
 		if (!pathNodes.empty())
 		{
 			movement = true;
-			pathStepIndex = 1;
+			pathStepIndex = 0;
 			fromIndex = PositionToIndex(player_.transforms.translate);
 			nextIndex = pathNodes[pathStepIndex];
 
-			fromBlockTranslate = block[fromIndex.y][fromIndex.x].transforms.translate;
-			nextBlockTranslate = block[nextIndex.y][nextIndex.x].transforms.translate;
-			fromBlockRotate = block[fromIndex.y][fromIndex.x].transforms.rotate;
+			fromBlockTransforms = block[fromIndex.y][fromIndex.x].transforms;
+			nextBlockTransforms = block[nextIndex.y][nextIndex.x].transforms;
 
-			if (fromIndex.x < nextIndex.x) direction = Direction::Right;
-			else if (fromIndex.x > nextIndex.x) direction = Direction::Left;
-			else if (fromIndex.y < nextIndex.y) direction = Direction::Down;
-			else if (fromIndex.y > nextIndex.y) direction = Direction::Up;
+			if (fromIndex.x < nextIndex.x)
+			{
+				direction = Direction::Right;
+				block[nextIndex.y][nextIndex.x].pivot.x += BLOCK_WIDTH / 2.0f;
+			}
+			else if (fromIndex.x > nextIndex.x)
+			{
+				direction = Direction::Left;
+				block[nextIndex.y][nextIndex.x].pivot.x -= BLOCK_WIDTH / 2.0f;
+			}
+			else if (fromIndex.y < nextIndex.y)
+			{
+				direction = Direction::Down;
+				block[nextIndex.y][nextIndex.x].pivot.z += BLOCK_WIDTH / 2.0f;
+			}
+			else if (fromIndex.y > nextIndex.y)
+			{
+				direction = Direction::Up;
+				block[nextIndex.y][nextIndex.x].pivot.z -= BLOCK_WIDTH / 2.0f;
+			}
 		}
 	}
 
 	if (movement)
 	{
-		if (translateBlock(3.5f, player_.transforms))
+		if (translateBlock(0.5f, player_.transforms))
 		{
 			fromIndex = nextIndex;
 			pathStepIndex++;
 			if (pathStepIndex < pathNodes.size())
 			{
 				nextIndex = pathNodes[pathStepIndex];
-				fromBlockTranslate = block[fromIndex.y][fromIndex.x].transforms.translate;
-				nextBlockTranslate = block[nextIndex.y][nextIndex.x].transforms.translate;
-				fromBlockRotate = block[fromIndex.y][fromIndex.x].transforms.rotate;
+				fromBlockTransforms = block[fromIndex.y][fromIndex.x].transforms;
+				nextBlockTransforms = block[nextIndex.y][nextIndex.x].transforms;
+				block[nextIndex.y][nextIndex.x].pivot = { 0,0,0 };
 
-				if (fromIndex.x < nextIndex.x) direction = Direction::Right;
-				else if (fromIndex.x > nextIndex.x) direction = Direction::Left;
-				else if (fromIndex.y < nextIndex.y) direction = Direction::Down;
-				else if (fromIndex.y > nextIndex.y) direction = Direction::Up;
+				if (fromIndex.x < nextIndex.x)
+				{
+					direction = Direction::Right;
+					block[nextIndex.y][nextIndex.x].pivot.x += BLOCK_WIDTH / 2.0f;
+				}
+				else if (fromIndex.x > nextIndex.x)
+				{
+					direction = Direction::Left;
+					block[nextIndex.y][nextIndex.x].pivot.x -= BLOCK_WIDTH / 2.0f;
+				}
+				else if (fromIndex.y < nextIndex.y)
+				{
+					direction = Direction::Down;
+					block[nextIndex.y][nextIndex.x].pivot.z += BLOCK_WIDTH / 2.0f;
+				}
+				else if (fromIndex.y > nextIndex.y)
+				{
+					direction = Direction::Up;
+					block[nextIndex.y][nextIndex.x].pivot.z -= BLOCK_WIDTH / 2.0f;
+				}
 			}
 			else
 			{
@@ -294,21 +514,32 @@ void TR2Class::Update_PlayerTurn()
 
 void TR2Class::Draw_PlayerTurn()
 {
-	Game::Drawobj({ player_.transforms.scale,player_.transforms.rotate,IndexToPosition(moveFrom) }, player_.pivot, player_.model, player_.texture, 0xFFFFFF55, player_.options);
+	Game::Drawobj(block[moveFrom.y][moveFrom.x].transforms, player_.pivot, player_.model, player_.texture, 0xFFFFFF55, player_.options);
+	ImGui::Text("[moveFrom.x = %d][moveFrom.y = %d]", moveFrom.x, moveFrom.y);
 }
 
 
 void TR2Class::Initialize_EnemyConsiderTurn()
 {
-	Astar(enemy_.transforms.translate, player_.transforms.translate);
+	moveFrom = PositionToIndex(enemy_.transforms.translate);
+
+	// 移動先優先度決定戦
+
+
+
+	moveFrom.x -= 1;
+	moveFrom.y -= 1;
+
+
+
+
+
+	Astar(enemy_.transforms.translate, IndexToPosition(moveFrom));
 }
 
 void TR2Class::Update_EnemyConsiderTurn()
 {
-	if (GetHitKey::keys[DIK_SPACE] && GetHitKey::preKeys[DIK_SPACE])
-	{
-		turnRepuest = Turn::Enemy;
-	}
+	turnRepuest = Turn::Enemy;
 }
 
 void TR2Class::Draw_EnemyConsiderTurn()
@@ -317,72 +548,173 @@ void TR2Class::Draw_EnemyConsiderTurn()
 
 void TR2Class::Initialize_EnemyTurn()
 {
-	fromIndex = PositionToIndex(enemy_.transforms.translate);
-	nextIndex = fromIndex;
-	nextIndex.x -= 3;
+	Astar(enemy_.transforms.translate, IndexToPosition(moveFrom));
+	startIndex = PositionToIndex(enemy_.transforms.translate);
+	targetIndex = moveFrom;
+	pathNodes.clear();
+
+	if (!parentMap.empty() && startIndex != targetIndex)
+	{ // パスが見つかり、スタートとゴールが異なる場合
+		Vector2int tempPathStep = targetIndex;
+		while (tempPathStep != startIndex)
+		{
+			auto it = parentMap.find(tempPathStep);
+			if (it == parentMap.end() || (it->second.x == -1 && it->second.y == -1))
+			{
+				// 経路が見つからない場合
+				pathNodes.clear();
+				break;
+			}
+			pathNodes.push_back(tempPathStep);
+			tempPathStep = it->second;
+		}
+	}
+	std::reverse(pathNodes.begin(), pathNodes.end());
+	if (!pathNodes.empty())
+	{
+		movement = true;
+		pathStepIndex = 0;
+		fromIndex = PositionToIndex(enemy_.transforms.translate);
+		nextIndex = pathNodes[pathStepIndex];
+
+		fromBlockTransforms = block[fromIndex.y][fromIndex.x].transforms;
+		nextBlockTransforms = block[nextIndex.y][nextIndex.x].transforms;
+
+		if (fromIndex.x < nextIndex.x)
+		{
+			direction = Direction::Right;
+			block[nextIndex.y][nextIndex.x].pivot.x += BLOCK_WIDTH / 2.0f;
+		}
+		else if (fromIndex.x > nextIndex.x)
+		{
+			direction = Direction::Left;
+			block[nextIndex.y][nextIndex.x].pivot.x -= BLOCK_WIDTH / 2.0f;
+		}
+		else if (fromIndex.y < nextIndex.y)
+		{
+			direction = Direction::Down;
+			block[nextIndex.y][nextIndex.x].pivot.z += BLOCK_WIDTH / 2.0f;
+		}
+		else if (fromIndex.y > nextIndex.y)
+		{
+			direction = Direction::Up;
+			block[nextIndex.y][nextIndex.x].pivot.z -= BLOCK_WIDTH / 2.0f;
+		}
+	}
 }
 
 void TR2Class::Update_EnemyTurn()
 {
-	if (GetHitKey::keys[DIK_SPACE] && GetHitKey::preKeys[DIK_SPACE])
+	if (movement && enemyMoveActCounter <= enemy_.moveRange)
 	{
-		turnRepuest = Turn::Player;
+		if (translateBlock(0.5f, enemy_.transforms))
+		{
+			enemyMoveActCounter++;
+			fromIndex = nextIndex;
+			pathStepIndex++;
+			if (pathStepIndex < pathNodes.size())
+			{
+				nextIndex = pathNodes[pathStepIndex];
+				fromBlockTransforms = block[fromIndex.y][fromIndex.x].transforms;
+				nextBlockTransforms = block[nextIndex.y][nextIndex.x].transforms;
+
+				if (fromIndex.x < nextIndex.x)
+				{
+					direction = Direction::Right;
+					block[nextIndex.y][nextIndex.x].pivot.x += BLOCK_WIDTH / 2.0f;
+				}
+				else if (fromIndex.x > nextIndex.x)
+				{
+					direction = Direction::Left;
+					block[nextIndex.y][nextIndex.x].pivot.x -= BLOCK_WIDTH / 2.0f;
+				}
+				else if (fromIndex.y < nextIndex.y)
+				{
+					direction = Direction::Down;
+					block[nextIndex.y][nextIndex.x].pivot.z += BLOCK_WIDTH / 2.0f;
+				}
+				else if (fromIndex.y > nextIndex.y)
+				{
+					direction = Direction::Up;
+					block[nextIndex.y][nextIndex.x].pivot.z -= BLOCK_WIDTH / 2.0f;
+				}
+			}
+			else
+			{
+				// ゴール到達
+				movement = false;
+				enemyMoveActCounter = 0;
+				pathNodes.clear();
+				turnRepuest = Turn::Player;
+			}
+		}
 	}
 }
 
 void TR2Class::Draw_EnemyTurn()
 {}
 
+
 bool TR2Class::translateBlock(float EasingMax, Transforms& transforms)
 {
 	movementTmax = EasingMax;
-	block[fromIndex.y][fromIndex.x].transforms.translate.x = Easings::OUT_SINE(fromBlockTranslate.x, nextBlockTranslate.x, movementT / movementTmax);
-	block[fromIndex.y][fromIndex.x].transforms.translate.y = Easings::OUT_SINE(fromBlockTranslate.y, nextBlockTranslate.y, movementT / movementTmax);
-	block[fromIndex.y][fromIndex.x].transforms.translate.z = Easings::OUT_SINE(fromBlockTranslate.z, nextBlockTranslate.z, movementT / movementTmax);
-	transforms.translate.x = Easings::OUT_SINE(fromBlockTranslate.x, nextBlockTranslate.x, movementT / movementTmax);
-	transforms.translate.y = Easings::OUT_SINE(fromBlockTranslate.y, nextBlockTranslate.y, movementT / movementTmax);
-	transforms.translate.z = Easings::OUT_SINE(fromBlockTranslate.z, nextBlockTranslate.z, movementT / movementTmax);
+	//// S
+	//block[fromIndex.y][fromIndex.x].transforms.scale.x = Easings::OUT_SINE(fromBlockTransforms.scale.x, nextBlockTransforms.scale.x, movementT / movementTmax);
+	//block[fromIndex.y][fromIndex.x].transforms.scale.y = Easings::OUT_SINE(fromBlockTransforms.scale.y, nextBlockTransforms.scale.y, movementT / movementTmax);
+	//block[fromIndex.y][fromIndex.x].transforms.scale.z = Easings::OUT_SINE(fromBlockTransforms.scale.z, nextBlockTransforms.scale.z, movementT / movementTmax);
+	//block[nextIndex.y][nextIndex.x].transforms.scale.x = Easings::OUT_SINE(nextBlockTransforms.scale.x, fromBlockTransforms.scale.x, movementT / movementTmax);
+	//block[nextIndex.y][nextIndex.x].transforms.scale.y = Easings::OUT_SINE(nextBlockTransforms.scale.y, fromBlockTransforms.scale.y, movementT / movementTmax);
+	//block[nextIndex.y][nextIndex.x].transforms.scale.z = Easings::OUT_SINE(nextBlockTransforms.scale.z, fromBlockTransforms.scale.z, movementT / movementTmax);
+	//// R
+	//if (direction == Direction::Right)	block[nextIndex.y][nextIndex.x].transforms.rotate.z = Easings::OUT_SINE(fromBlockTransforms.rotate.z, fromBlockTransforms.rotate.z + 3.1415926f, movementT / movementTmax);
+	//if (direction == Direction::Left)	block[nextIndex.y][nextIndex.x].transforms.rotate.z = Easings::OUT_SINE(fromBlockTransforms.rotate.z, fromBlockTransforms.rotate.z - 3.1415926f, movementT / movementTmax);
+	//if (direction == Direction::Down)	block[nextIndex.y][nextIndex.x].transforms.rotate.x = Easings::OUT_SINE(fromBlockTransforms.rotate.x, fromBlockTransforms.rotate.x - 3.1415926f, movementT / movementTmax);
+	//if (direction == Direction::Up)		block[nextIndex.y][nextIndex.x].transforms.rotate.x = Easings::OUT_SINE(fromBlockTransforms.rotate.x, fromBlockTransforms.rotate.x + 3.1415926f, movementT / movementTmax);
+	//// T
+	//block[fromIndex.y][fromIndex.x].transforms.translate.x = Easings::OUT_SINE(fromBlockTransforms.translate.x, nextBlockTransforms.translate.x, movementT / movementTmax);
+	//block[fromIndex.y][fromIndex.x].transforms.translate.y = Easings::OUT_SINE(fromBlockTransforms.translate.y, nextBlockTransforms.translate.y, movementT / movementTmax);
+	//block[fromIndex.y][fromIndex.x].transforms.translate.z = Easings::OUT_SINE(fromBlockTransforms.translate.z, nextBlockTransforms.translate.z, movementT / movementTmax);
+	
+	// player
+	transforms.translate.x = Easings::OUT_SINE(fromBlockTransforms.translate.x, nextBlockTransforms.translate.x, movementT / movementTmax);
+	transforms.translate.y = Easings::OUT_SINE(fromBlockTransforms.translate.y, nextBlockTransforms.translate.y, movementT / movementTmax);
+	transforms.translate.z = Easings::OUT_SINE(fromBlockTransforms.translate.z, nextBlockTransforms.translate.z, movementT / movementTmax);
 
-	if (direction == Direction::Right)	block[nextIndex.y][nextIndex.x].transforms.rotate.z = Easings::OUT_SINE(fromBlockRotate.z, fromBlockRotate.z - 3.1415926f, movementT / movementTmax);
-	if (direction == Direction::Left)	block[nextIndex.y][nextIndex.x].transforms.rotate.z = Easings::OUT_SINE(fromBlockRotate.z, fromBlockRotate.z + 3.1415926f, movementT / movementTmax);
-	if (direction == Direction::Down)	block[nextIndex.y][nextIndex.x].transforms.rotate.x = Easings::OUT_SINE(fromBlockRotate.x, fromBlockRotate.x - 3.1415926f, movementT / movementTmax);
-	if (direction == Direction::Up)		block[nextIndex.y][nextIndex.x].transforms.rotate.x = Easings::OUT_SINE(fromBlockRotate.x, fromBlockRotate.x + 3.1415926f, movementT / movementTmax);
 
 	movementT += 1.0f / 60.0f;
 	if (movementT > movementTmax)
 	{
-		for (int y = 0; y < MAP_HEIGHT; ++y)
-		{
-			for (int x = 0; x < MAP_WIDTH; ++x)
-			{
-				block[y][x].transforms.scale = { 1.0f, 1.0f, 1.0f };
-				block[y][x].transforms.translate = IndexToPosition({ x,y });
-				block[y][x].transforms.rotate = { 0.0f,0.0f,0.0f };
-				block[y][x].pivot = { 0,0,0 };
-			}
-		}
-		movement = false;
-		movementT = 0;
-		direction = Direction::None;
-
-		//Block box = block[nextIndex.y][nextIndex.x];
-		//block[nextIndex.y][nextIndex.x] = block[fromIndex.y][fromIndex.x];
-		//block[fromIndex.y][fromIndex.x] = box;
-
 		//for (int y = 0; y < MAP_HEIGHT; ++y)
 		//{
 		//	for (int x = 0; x < MAP_WIDTH; ++x)
 		//	{
 		//		block[y][x].transforms.scale = { 1.0f, 1.0f, 1.0f };
 		//		block[y][x].transforms.translate = IndexToPosition({ x,y });
-		//		//block[y][x].transforms.rotate = { 0.0f,0.0f,0.0f };
+		//		block[y][x].transforms.rotate = { 0.0f,0.0f,0.0f };
 		//		block[y][x].pivot = { 0,0,0 };
 		//	}
 		//}
-		////movement = false;
-		//movementT = 0;
-		//direction = Direction::None;
-		//return true;
+
+		//Transforms box = block[nextIndex.y][nextIndex.x].transforms;
+		//block[nextIndex.y][nextIndex.x].transforms = block[fromIndex.y][fromIndex.x].transforms;
+		//block[fromIndex.y][fromIndex.x].transforms = box;
+
+		//Block tmp = block[nextIndex.y][nextIndex.x];
+		//block[nextIndex.y][nextIndex.x] = block[fromIndex.y][fromIndex.x];
+		//block[fromIndex.y][fromIndex.x] = tmp;
+
+		//for (int y = 0; y < MAP_HEIGHT; ++y)
+		//{
+		//	for (int x = 0; x < MAP_WIDTH; ++x)
+		//	{
+		//		block[y][x].pivot = { 0,0,0 };
+		//	}
+		//}
+
+
+		movementT = 0;
+		direction = Direction::None;
+		return true;
 	}
 	else
 	{
@@ -412,6 +744,27 @@ Vector3 TR2Class::IndexToPosition(Vector2int index)
 
 	return pos;
 }
+
+// fromIndex, toIndex間の移動がルール上可能か判定
+bool TR2Class::CanMove(const Vector2int& from, const Vector2int& to) const
+{
+	if (to.x < 0 || to.x >= MAP_WIDTH || to.y < 0 || to.y >= MAP_HEIGHT) return false;
+	BlockType fromType = block[from.y][from.x].type;
+	BlockType toType = block[to.y][to.x].type;
+
+	if (fromType == BlockType::Empty && toType == BlockType::Slope) return true;
+	if (fromType == BlockType::Slope && toType == BlockType::Empty) return true;
+
+	if (fromType == BlockType::Slope && toType == BlockType::Wall) return true;
+	if (fromType == BlockType::Wall && toType == BlockType::Slope) return true;
+
+	if (fromType == BlockType::Empty && toType == BlockType::Empty) return true;
+	if (fromType == BlockType::Slope && toType == BlockType::Slope) return true;
+	if (fromType == BlockType::Wall && toType == BlockType::Wall) return true;
+	if (fromType == BlockType::WarpIn || toType == BlockType::WarpOut) return true;
+	return false;
+}
+
 
 void TR2Class::AstarSet(const Vector3& pos, const Vector3& target)
 {
@@ -444,8 +797,9 @@ void TR2Class::AstarSet(const Vector3& pos, const Vector3& target)
 
 	// スタートまたはターゲットが壁、またはマップ範囲外ならA*をアクティブにしない
 	if (startIndex.x < 0 || startIndex.x >= MAP_WIDTH || startIndex.y < 0 || startIndex.y >= MAP_HEIGHT ||
-		targetIndex.x < 0 || targetIndex.x >= MAP_WIDTH || targetIndex.y < 0 || targetIndex.y >= MAP_HEIGHT ||
-		block[startIndex.y][startIndex.x].type == BlockType::Wall || block[targetIndex.y][targetIndex.x].type == BlockType::Wall)
+		targetIndex.x < 0 || targetIndex.x >= MAP_WIDTH || targetIndex.y < 0 || targetIndex.y >= MAP_HEIGHT 
+		//|| block[startIndex.y][startIndex.x].type == BlockType::Wall || block[targetIndex.y][targetIndex.x].type == BlockType::Wall
+		)
 	{
 		aStarActive = false;
 		return;
@@ -468,7 +822,7 @@ void TR2Class::AstarSet(const Vector3& pos, const Vector3& target)
 void TR2Class::Astar(const Vector3& pos, const Vector3& target)
 {
 	// 最初にAstarSetを呼び出して初期化
-	if (!aStarActive)AstarSet(pos, target);
+	if (!aStarActive) AstarSet(pos, target);
 
 	// ワープ出口の座標を事前に探索
 	Vector2int warpOutIndex = { -1, -1 };
@@ -525,7 +879,7 @@ void TR2Class::Astar(const Vector3& pos, const Vector3& target)
 						}
 						if (warpInIndex.x != -1) break;
 					}
-					if (warpInIndex.x != -1)block[warpInIndex.y][warpInIndex.x].state = AstarBlockState::Path;
+					if (warpInIndex.x != -1) block[warpInIndex.y][warpInIndex.x].state = AstarBlockState::Path;
 				}
 				// 親ノードがマップに存在しない場合の安全対策
 				auto it = parentMap.find(pathStep);
@@ -540,68 +894,51 @@ void TR2Class::Astar(const Vector3& pos, const Vector3& target)
 			return; // 経路が見つかったので関数を終了
 		}
 
-		Direction dir[] = { Direction::Left, Direction::Down, Direction::Right, Direction::Up }; // 対応する方向
-
-
+		Direction dir[] = { Direction::Left, Direction::Down, Direction::Right, Direction::Up };
 		int dx[4] = { -1, 0, 1, 0 };
 		int dy[4] = { 0, 1, 0, -1 };
 
+		// --- ここからA*探索の隣接ノード判定部 ---
 		for (int i = 0; i < 4; ++i)
 		{
 			Vector2int neighborIndex = { current.index.x + dx[i], current.index.y + dy[i] };
 
-			// マップの境界チェック
 			if (neighborIndex.x < 0 || neighborIndex.x >= MAP_WIDTH ||
 				neighborIndex.y < 0 || neighborIndex.y >= MAP_HEIGHT)
 			{
 				continue;
 			}
 
-			// 壁であるか、すでにクローズリストにある場合はスキップ
-			// Explored はすでに処理済みなので、基本的に再評価しない
-			if (block[neighborIndex.y][neighborIndex.x].type == BlockType::Wall ||
-				block[neighborIndex.y][neighborIndex.x].state == AstarBlockState::Explored)
+			BlockType fromType = block[current.index.y][current.index.x].type;
+			BlockType toType = block[neighborIndex.y][neighborIndex.x].type;
+
+			// --- ルール適用 ---
+			if (!CanMove(current.index, neighborIndex))
 			{
 				continue;
 			}
 
-			// --- ワープ処理 ---
-			if (block[neighborIndex.y][neighborIndex.x].type == BlockType::WarpIn && warpOutIndex.x != -1)
+			// 既に探索済みはスキップ
+			if (block[neighborIndex.y][neighborIndex.x].state == AstarBlockState::Explored)
 			{
-				// ワープ先が壁や探索済みでなければワープ
-				if (block[warpOutIndex.y][warpOutIndex.x].state != AstarBlockState::Explored)
-				{
-					int newGCost = current.gCost + 1; // ワープは1コストでOK
-					if (newGCost < gCostMap[warpOutIndex.y][warpOutIndex.x])
-					{
-						gCostMap[warpOutIndex.y][warpOutIndex.x] = newGCost;
-						int neighborHCost = static_cast<int>(std::fabs(warpOutIndex.x - targetIndex.x) + std::fabs(warpOutIndex.y - targetIndex.y));
-						int neighborFCost = newGCost + neighborHCost;
-						openList.push({ warpOutIndex, newGCost, neighborHCost, neighborFCost, current.index, dir[i] });
-						block[warpOutIndex.y][warpOutIndex.x].state = AstarBlockState::Frontier;
-					}
-				}
-				continue; // WarpIn自体は通過しない
+				continue;
 			}
 
+			// Slopeを通過したかどうか
+			bool nextFromSlope = (toType == BlockType::Slope);
 
-			// 新しいgCostを計算（隣接ノードへの移動コストは1と仮定）
 			int newGCost = current.gCost + block[neighborIndex.y][neighborIndex.x].cost + 1;
 
-			// より良い経路が見つかった場合、またはまだオープンリストにない場合
-			// gCostMapに記録されている値よりnewGCostが小さい場合、より良い経路が見つかった
 			if (newGCost < gCostMap[neighborIndex.y][neighborIndex.x])
 			{
-				gCostMap[neighborIndex.y][neighborIndex.x] = newGCost; // gCostを更新
+				gCostMap[neighborIndex.y][neighborIndex.x] = newGCost;
 				int neighborHCost = static_cast<int>(std::fabs(neighborIndex.x - targetIndex.x) + std::fabs(neighborIndex.y - targetIndex.y));
 				int neighborFCost = newGCost + neighborHCost + block[neighborIndex.y][neighborIndex.x].cost;
-
-				// オープンリストにノードを追加（または更新）
-				openList.push({ neighborIndex, newGCost, neighborHCost, neighborFCost, current.index, dir[i] });
-				// 探索待ちとしてマーク
+				openList.push({ neighborIndex, newGCost, neighborHCost, neighborFCost, current.index, dir[i], nextFromSlope });
 				block[neighborIndex.y][neighborIndex.x].state = AstarBlockState::Frontier;
 			}
 		}
+
 	}
 
 	aStarActive = false; // 探索終了
@@ -609,24 +946,34 @@ void TR2Class::Astar(const Vector3& pos, const Vector3& target)
 
 int TR2Class::GetShortestPathLength(const Vector3& pos, const Vector3& target)
 {
-	// ローカルA*用データ構造
 	std::vector<std::vector<int>> localGCostMap(MAP_HEIGHT, std::vector<int>(MAP_WIDTH, (std::numeric_limits<int>::max)()));
 	std::map<Vector2int, Vector2int> localParentMap;
-	std::priority_queue<Node, std::vector<Node>, std::greater<Node>> localOpenList;
+	struct LocalNode
+	{
+		Vector2int index;
+		int gCost;
+		int hCost;
+		int fCost;
+		Vector2int parentIndex;
+		bool fromSlope;
+		bool operator>(const LocalNode& other) const
+		{
+			if (fCost != other.fCost) return fCost > other.fCost;
+			if (gCost != other.gCost) return gCost > other.gCost;
+			return false;
+		}
+	};
+	std::priority_queue<LocalNode, std::vector<LocalNode>, std::greater<LocalNode>> localOpenList;
 
 	Vector2int localStartIndex = PositionToIndex(pos);
 	Vector2int localTargetIndex = PositionToIndex(target);
 
-	// 範囲・壁チェック
 	if (localStartIndex.x < 0 || localStartIndex.x >= MAP_WIDTH || localStartIndex.y < 0 || localStartIndex.y >= MAP_HEIGHT ||
-		localTargetIndex.x < 0 || localTargetIndex.x >= MAP_WIDTH || localTargetIndex.y < 0 || localTargetIndex.y >= MAP_HEIGHT ||
-		block[localStartIndex.y][localStartIndex.x].type == BlockType::Wall ||
-		block[localTargetIndex.y][localTargetIndex.x].type == BlockType::Wall)
+		localTargetIndex.x < 0 || localTargetIndex.x >= MAP_WIDTH || localTargetIndex.y < 0 || localTargetIndex.y >= MAP_HEIGHT)
 	{
 		return 1000;
 	}
 
-	// ワープ出口の座標を事前に探索
 	Vector2int warpOutIndex = { -1, -1 };
 	for (int y = 0; y < MAP_HEIGHT; ++y)
 	{
@@ -641,25 +988,20 @@ int TR2Class::GetShortestPathLength(const Vector3& pos, const Vector3& target)
 		if (warpOutIndex.x != -1) break;
 	}
 
-	// 初期化
 	localGCostMap[localStartIndex.y][localStartIndex.x] = 0;
 	int hCost = static_cast<int>(std::fabs(localStartIndex.x - localTargetIndex.x) + std::fabs(localStartIndex.y - localTargetIndex.y));
-	localOpenList.push({ localStartIndex, 0, hCost, hCost, {-1, -1} });
+	localOpenList.push({ localStartIndex, 0, hCost, hCost, {-1, -1}, false });
 
-	// 探索
 	while (!localOpenList.empty())
 	{
-		Node current = localOpenList.top();
+		LocalNode current = localOpenList.top();
 		localOpenList.pop();
 
-		// 既に探索済みならスキップ
 		if (localParentMap.count(current.index)) continue;
-
 		localParentMap[current.index] = current.parentIndex;
 
 		if (current.index == localTargetIndex)
 		{
-			// 経路の長さをカウント
 			int pathLength = 0;
 			Vector2int pathStep = localTargetIndex;
 			while (pathStep != localStartIndex)
@@ -668,7 +1010,7 @@ int TR2Class::GetShortestPathLength(const Vector3& pos, const Vector3& target)
 				auto it = localParentMap.find(pathStep);
 				if (it == localParentMap.end() || (it->second.x == -1 && it->second.y == -1))
 				{
-					return 1000; // 経路が不完全
+					return 1000;
 				}
 				pathStep = it->second;
 			}
@@ -688,28 +1030,14 @@ int TR2Class::GetShortestPathLength(const Vector3& pos, const Vector3& target)
 				continue;
 			}
 
-			if (block[neighborIndex.y][neighborIndex.x].type == BlockType::Wall ||
-				localParentMap.count(neighborIndex))
+			if (!CanMove(current.index, neighborIndex))
 			{
 				continue;
 			}
 
-			// ワープ処理
-			if (block[neighborIndex.y][neighborIndex.x].type == BlockType::WarpIn && warpOutIndex.x != -1)
-			{
-				if (!localParentMap.count(warpOutIndex))
-				{
-					int newGCost = current.gCost + 1;
-					if (newGCost < localGCostMap[warpOutIndex.y][warpOutIndex.x])
-					{
-						localGCostMap[warpOutIndex.y][warpOutIndex.x] = newGCost;
-						int neighborHCost = static_cast<int>(std::fabs(warpOutIndex.x - localTargetIndex.x) + std::fabs(warpOutIndex.y - localTargetIndex.y));
-						int neighborFCost = newGCost + neighborHCost;
-						localOpenList.push({ warpOutIndex, newGCost, neighborHCost, neighborFCost, current.index });
-					}
-				}
-				continue;
-			}
+			if (localParentMap.count(neighborIndex)) continue;
+
+			bool nextFromSlope = (block[neighborIndex.y][neighborIndex.x].type == BlockType::Slope);
 
 			int newGCost = current.gCost + block[neighborIndex.y][neighborIndex.x].cost + 1;
 
@@ -718,11 +1046,11 @@ int TR2Class::GetShortestPathLength(const Vector3& pos, const Vector3& target)
 				localGCostMap[neighborIndex.y][neighborIndex.x] = newGCost;
 				int neighborHCost = static_cast<int>(std::fabs(neighborIndex.x - localTargetIndex.x) + std::fabs(neighborIndex.y - localTargetIndex.y));
 				int neighborFCost = newGCost + neighborHCost + block[neighborIndex.y][neighborIndex.x].cost;
-				localOpenList.push({ neighborIndex, newGCost, neighborHCost, neighborFCost, current.index });
+				localOpenList.push({ neighborIndex, newGCost, neighborHCost, neighborFCost, current.index, nextFromSlope });
 			}
 		}
+
 	}
 
-	// 経路が見つからなかった場合
 	return 1000;
 }
