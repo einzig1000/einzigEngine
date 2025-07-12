@@ -26,7 +26,7 @@ TR2Class::TR2Class()
 
 	advancedSkill.cost = 40;
 	advancedSkill.delayCost = 0;
-	advancedSkill.range = 4;
+	advancedSkill.range = 3;
 	advancedSkill.skillName = "つよすきる１";
 	advancedSkill.skillOdds = 3.0f;
 	advancedSkill.skillType = SkillType::Attack;
@@ -867,11 +867,21 @@ void TR2Class::DecideAction(Charactor & self, const Charactor & enemy)
 	{
 		self.actPattern.UltimateSkill *= 10.0f;
 	}
+	else
+	{
+		self.actPattern.UltimateSkill *= 0.0f;
+	}
 	///  強スキル  ///
 	// 改善pt：強スキルのデメリットは？スキルとの差分化要素は？使いどころは？
 	if (advancedSkillList[self.advancedSkill].range >= enemyToPlayerDist)	// 強スキル射程圏内に敵がいる
 	{
 		self.actPattern.AdvancedSkill *= 9.0f;
+	}
+
+	///  スキル  ///
+	if (skillList[self.skill].range >= enemyToPlayerDist)	// 強スキル射程圏内に敵がいる
+	{
+		self.actPattern.Skill *= 9.0f;
 	}
 
 	///  有利ポジ移動  ///
