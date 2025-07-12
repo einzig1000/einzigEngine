@@ -46,8 +46,7 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 	vertexResourceSizeSprite = static_cast<UINT>(sizeof(VertexData) * 1536); // スプライト 
 	vertexResourceSprite = CreateBufferResource(dxManager->GetDevice(), vertexResourceSizeSprite);
 
-	vertexResourceSizeObj = static_cast<UINT>(sizeof(VertexData) * 4096); // オブジェクト
-	//vertexResourceSizeObj = static_cast<UINT>(sizeof(VertexData) * 8192); // オブジェクト
+	vertexResourceSizeObj = static_cast<UINT>(sizeof(VertexData) * 8192); // オブジェクト
 	vertexResourceObj = CreateBufferResource(dxManager->GetDevice(), vertexResourceSizeObj);
 
 	vertexResourceSizeTriangle = static_cast<UINT>(sizeof(VertexData) * 1024); // 三角形
@@ -338,7 +337,10 @@ void Engine::Drawobj(const Transforms& transform, const Vector3& center, uint32_
 void Engine::Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions)
 {
 	// 描画回数上限
-	if (drawCallIndex >= kMaxDrawCallPerFrame) return;
+	if (drawCallIndex >= kMaxDrawCallPerFrame)
+	{
+		return;
+	}
 
 	if (objectNumber >= objects.size()) return;
 

@@ -48,6 +48,10 @@ struct Block
 	// マウスのターゲットか否か
 	bool mouseTarget = 0;
 
+	bool isAttackTarget = false;// 攻撃予定地;
+	bool isHealTarget = false;	// 回復予定地;
+	bool isBuffTarget = false;	// バフ予定地;
+
 	void Draw()
 	{
 		Game::Drawobj(transforms, pivot, model, texture, color, options);
@@ -85,53 +89,52 @@ enum Environment
 
 struct ActPattern_Attaker
 {
-	//// いきたいところリスト
-	// 敵の方
-	// 高台の方
-	// 細道
-	// 
-	// 
-	////
+	float MoveToAdvantage = 1.0f;	//有利ポジに向かう
+	float MoveToEnemy = 1.0f;		//敵に向かう
+	float Skill = 1.0f;				//スキル
+	float AdvancedSkill = 1.0f;		//
+	float UltimateSkill = 1.0f;		//
+	int __MAX__ = 5;
 
-
-	//有利ポジに向かって最短経路;
-
-
-
-	//敵１に向かって最短経路、
-	//敵２に向かって最短経路、
-	//・・・
-	//有利ポジ１に向かって最短経路、
-	//有利ポジ２に向かって最短経路、
-	//・・・
-	//より複数にあたる攻撃
-	//・・・
-	//単体への攻撃、
-	//・・・
-	//味方へのバフ
-
+	float GetHighestPriority() const
+	{
+		float maxPriority = 0;
+		if (maxPriority < MoveToAdvantage)	maxPriority = MoveToAdvantage;
+		if (maxPriority < MoveToEnemy)		maxPriority = MoveToEnemy;
+		if (maxPriority < Skill)			maxPriority = Skill;
+		if (maxPriority < AdvancedSkill)	maxPriority = AdvancedSkill;
+		if (maxPriority < UltimateSkill)	maxPriority = UltimateSkill;
+		
+		return maxPriority;
+	}
 };
-struct ActPattern_Buffer
+enum class ActPattern_Buffer
 {
 
 };
-struct ActPattern_Healer
+enum class ActPattern_Healer
 {
 
 };
 
+enum class SkillType
+{
+	Attack = 0,
+	Heal,
+	Buff,
+};
 struct SkillInfo
 {
+	std::string skillName;	// スキル識別タグ
 	uint32_t cost; // 使用するために必要なコスト
 	uint32_t delayCost; // 使用できない期間(必殺技のみ)
 
 	uint32_t range;// 効果範囲
 
-	uint32_t skillType;		// 攻撃、回復、バフ、etc...スキルのタイプ
-	uint32_t skillOdds;		// スキルそのものの倍率
-	uint32_t skillLevel;	// ゲーム外で上げれるパラメータ。上げる程効果アップ。レベル＊効果量
+	SkillType skillType;	// 攻撃、回復、バフ、etc...スキルのタイプ
+	float skillOdds = 1.0f;		// スキルそのものの倍率
+	uint32_t skillLevel = 1;// ゲーム外で上げれるパラメータ。上げる程効果アップ。レベル＊効果量
 	// スキル効果量(回復量、ダメージ量等) = キャラ攻撃力 * skillOdds * skillLevel * キャラバフ + 固定値バフ
-	std::string skillName;	// スキル識別タグ
 };
 
 // 名前
@@ -168,12 +171,17 @@ struct Charactor
 	uint32_t advancedSkill;
 	uint32_t passiveSkill;
 	uint32_t ultimateSkill;
+	uint32_t delayCost; // 使用できない期間(必殺技のみ)
 
 	uint32_t moveRange; //移動可能範囲
 
 	uint32_t actionDelay; //（技を使用する度に技コスト分加算される。場にいるキャラでこの数字が最も少ないキャラが最初に行動する
 
 	Environment advantagePosition; // 有利ポジション
+
+	ActPattern_Attaker actPattern;	// 行動パターン 
+	ActPattern_Attaker priority;	// 行動優先度初期値
+	void priorityReset() { actPattern = priority; }
 
 	uint32_t HP;
 	uint32_t Attack;
@@ -205,6 +213,8 @@ public:
 	void Draw_EnemyConsiderTurn();
 	void Draw_EnemyTurn();
 
+	void DecideAction(Charactor& self, const Charactor& enemy);
+
 	bool translateBlock(float EasingMax, Transforms& transforms);
 
 	// 座標からマップ上のインデックスを求める関数
@@ -217,10 +227,16 @@ public:
 	// A*変数初期化
 	void AstarSet(const Vector3& pos, const Vector3& target);
 
-	// A*
+	// Vector3→Vector3　最短経路構築　moveFromの更新あり
 	void Astar(const Vector3& pos, const Vector3& target);
-	// 最短経路のマス数
+	// Vector3→Vector3　最短経路のマス数　moveFromの更新なし
 	int GetShortestPathLength(const Vector3& pos, const Vector3& target);
+	// Vector3→Vector3　最短経路のマスindex　moveFromの更新あり
+	void GetShortestPosition(const Vector3& pos, const Vector3& target);
+	// Environment→Vector3　最短経路のマス数　moveFromの更新なし
+	int GetShortestPathLength(const Vector3& pos, const Environment& target);
+	// Environment→Vector3　最短経路のマスindex　moveFromの更新あり
+	void GetShortestPosition(const Vector3& pos, const Environment& target);
 
 private:
 	// ターン
@@ -257,6 +273,7 @@ private:
 
 	// ブロック
 	Block block[MAP_HEIGHT][MAP_WIDTH];
+	
 
 	// 天球
 	Transforms skyDomeTransforms;
@@ -270,7 +287,7 @@ private:
 	int blockPng = Game::LoadTexture("resources/block/map.png");
 	int skyDomeModel = Game::LoadOBJ("resources/skyDome", "skyDome.obj");
 	int skyDomePng = Game::LoadTexture("resources/skyDome/skyDome.png");
-
+	int torusModel = Game::LoadOBJ("resources/Mesh", "torus.obj");
 
 
 

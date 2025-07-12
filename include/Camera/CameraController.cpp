@@ -11,7 +11,7 @@ CameraController::CameraController()
 
     // カメラ
     transform_.translate = { 0.0f, 0.0f, 0.0f };
-    transform_.rotate = { 0.58f, 0.0f, 0.0f };
+    transform_.rotate = { 0.92f, 0.0f, 0.0f };
     center_ = { -8.42f, 0.0f, -9.57f };
     distance_ = 30.00f;
 

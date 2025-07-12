@@ -4,6 +4,62 @@
 TR2Class::TR2Class()
 	:gCostMap(MAP_HEIGHT, std::vector<int>(MAP_WIDTH, (std::numeric_limits<int>::max)()))
 {
+	SkillInfo skill;
+
+	skill.cost = 12;
+	skill.delayCost = 0;
+	skill.range = 5;
+	skill.skillName = "すきる１";
+	skill.skillOdds = 1.2f;
+	skill.skillType = SkillType::Attack;
+	skillList.push_back(skill);
+
+	skill.cost = 16;
+	skill.delayCost = 0;
+	skill.range = 2;
+	skill.skillName = "すきる２";
+	skill.skillOdds = 1.6f;
+	skill.skillType = SkillType::Attack;
+	skillList.push_back(skill);
+
+	SkillInfo advancedSkill;
+
+	advancedSkill.cost = 40;
+	advancedSkill.delayCost = 0;
+	advancedSkill.range = 4;
+	advancedSkill.skillName = "つよすきる１";
+	advancedSkill.skillOdds = 3.0f;
+	advancedSkill.skillType = SkillType::Attack;
+	advancedSkillList.push_back(advancedSkill);
+
+	advancedSkill.cost = 4;
+	advancedSkill.delayCost = 0;
+	advancedSkill.range = 1;
+	advancedSkill.skillName = "つよすきる２";
+	advancedSkill.skillOdds = 10.0f;
+	advancedSkill.skillType = SkillType::Attack;
+	advancedSkillList.push_back(advancedSkill);
+
+
+
+	SkillInfo ultimateSkill;
+
+	ultimateSkill.cost = 120;
+	ultimateSkill.delayCost = 100;
+	ultimateSkill.range = 15;
+	ultimateSkill.skillName = "うると１";
+	ultimateSkill.skillOdds = 50.0f;
+	ultimateSkill.skillType = SkillType::Attack;
+	ultimateSkillList.push_back(ultimateSkill);
+
+	ultimateSkill.cost = 10;
+	ultimateSkill.delayCost = 0;
+	ultimateSkill.range = 15;
+	ultimateSkill.skillName = "うると２";
+	ultimateSkill.skillOdds = 1.0f;
+	ultimateSkill.skillType = SkillType::Attack;
+	ultimateSkillList.push_back(ultimateSkill);
+
 
 }
 
@@ -18,18 +74,36 @@ void TR2Class::Initialize()
 	player_.pivot = { 0,0,0 };
 	player_.color = 0xFFFFFFFF;
 	player_.moveRange = 5;
-
-	// エネミー
+	/*////////////////////////////////////////
+					エネミー
+	////////////////////////////////////////*/
+#pragma region
+	// 見た目
 	enemy_.model = playerModel;
 	enemy_.texture = uvCheckerPng;
+	// 描画用
 	enemy_.transforms.scale = { 0.5f, 0.5f, 0.5f };
 	enemy_.transforms.translate = IndexToPosition({ 10,10 });
 	enemy_.transforms.rotate = { 0.0f,0.0f,0.0f };
 	enemy_.pivot = { 0,0,0 };
 	enemy_.color = 0xFFFFFFFF;
-	enemy_.moveRange = 4;
-	player_.advantagePosition = Environment::高台;
-
+	// 戦闘判断用
+	enemy_.HP = 100;
+	enemy_.Attack = 10;
+	enemy_.moveRange = 4;	// 移動可能範囲
+	enemy_.advantagePosition = Environment::高台;	// 自身にとっての有利ポジ（※伴ったスキル構成にすること）
+	enemy_.skill = 0;			// スキル識別用　いずれは
+	enemy_.advancedSkill = 0;	// スキル識別用　スキルの名前で
+	enemy_.passiveSkill = 0;	// スキル識別用　設定できるように
+	enemy_.ultimateSkill = 0;	// スキル識別用　変更
+	enemy_.delayCost = ultimateSkillList[enemy_.ultimateSkill].delayCost;// ウルト使用制限
+	enemy_.priority.MoveToAdvantage = 1.6f;
+	enemy_.priority.MoveToEnemy = 1.8f;
+	enemy_.priority.Skill = 1.0f;
+	enemy_.priority.AdvancedSkill = 1.5f;
+	enemy_.priority.UltimateSkill = 2.0f;
+	enemy_.priorityReset();
+#pragma endregion
 
 	// ブロック
 	for (int y = 0; y < MAP_HEIGHT; ++y)
@@ -368,6 +442,17 @@ void TR2Class::Draw()
 
 void TR2Class::Initialize_PlayerTurn()
 {
+	for (int y = 0; y < MAP_HEIGHT; ++y)
+	{
+		for (int x = 0; x < MAP_WIDTH; ++x)
+		{
+			block[y][x].isAttackTarget = false;
+			block[y][x].isBuffTarget = false;
+			block[y][x].isHealTarget = false;
+		}
+	}
+
+
 	moveFrom = PositionToIndex(player_.transforms.translate);
 }
 
@@ -521,26 +606,106 @@ void TR2Class::Draw_PlayerTurn()
 
 void TR2Class::Initialize_EnemyConsiderTurn()
 {
+	// ブロック演出ポイントのリセット
+	for (int y = 0; y < MAP_HEIGHT; ++y)
+	{
+		for (int x = 0; x < MAP_WIDTH; ++x)
+		{
+			block[y][x].isAttackTarget = false;
+			block[y][x].isBuffTarget = false;
+			block[y][x].isHealTarget = false;
+		}
+	}
+
+	// 行動優先順位のリセット
+	enemy_.priorityReset();
+	// 移動開始地点の記録
 	moveFrom = PositionToIndex(enemy_.transforms.translate);
 
 	// 移動先優先度決定戦
+	DecideAction(enemy_, player_);
 
+	// 優勝者の確認
+	float maxPriority = enemy_.actPattern.GetHighestPriority();
 
+	// 移動系（移動先の設定）
+	if (maxPriority == enemy_.actPattern.MoveToAdvantage || maxPriority == enemy_.actPattern.MoveToEnemy)
+	{
+		if (maxPriority == enemy_.actPattern.MoveToAdvantage)
+		{
+			// moveFromを最短有利ポジに
+ 			GetShortestPosition(IndexToPosition(moveFrom), Environment::高台);
+		}
+		else if (maxPriority == enemy_.actPattern.MoveToEnemy)
+		{
+			// moveFromを敵ポジに
+			GetShortestPosition(IndexToPosition(moveFrom), player_.transforms.translate);
+		}
 
-	moveFrom.x -= 1;
-	moveFrom.y -= 1;
+		Astar(enemy_.transforms.translate, IndexToPosition(moveFrom));
+	}
+	
+	// スキル系（スキル適応範囲のフラグ）
+	else if (maxPriority == enemy_.actPattern.Skill || maxPriority == enemy_.actPattern.AdvancedSkill || maxPriority == enemy_.actPattern.UltimateSkill)
+	{
+		if (maxPriority == enemy_.actPattern.Skill)
+		{
+			for (int y = 0; y < MAP_HEIGHT; ++y)
+			{
+				for (int x = 0; x < MAP_WIDTH; ++x)
+				{
+					int dx = abs(x - moveFrom.x);
+					int dy = abs(y - moveFrom.y);
+					int distance = dx + dy;
 
+					if (distance <= skillList[enemy_.skill].range)
+					{
+						block[y][x].isAttackTarget = true;
+					}
+				}
+			}
+		}
+		else if (maxPriority == enemy_.actPattern.AdvancedSkill)
+		{
+			for (int y = 0; y < MAP_HEIGHT; ++y)
+			{
+				for (int x = 0; x < MAP_WIDTH; ++x)
+				{
+					int dx = abs(x - moveFrom.x);
+					int dy = abs(y - moveFrom.y);
+					int distance = dx + dy;
 
+					if (distance <= advancedSkillList[enemy_.advancedSkill].range)
+					{
+						block[y][x].isAttackTarget = true;
+					}
+				}
+			}
+		}
+		else if (maxPriority == enemy_.actPattern.UltimateSkill)
+		{
+			for (int y = 0; y < MAP_HEIGHT; ++y)
+			{
+				for (int x = 0; x < MAP_WIDTH; ++x)
+				{
+					int dx = abs(x - moveFrom.x);
+					int dy = abs(y - moveFrom.y);
+					int distance = dx + dy;
 
-
-
-	Astar(enemy_.transforms.translate, IndexToPosition(moveFrom));
+					if (distance <= ultimateSkillList[enemy_.ultimateSkill].range)
+					{
+						block[y][x].isAttackTarget = true;
+					}
+				}
+			}
+		}
+	}
 }
 
 void TR2Class::Update_EnemyConsiderTurn()
 {
 	turnRepuest = Turn::Enemy;
-}
+} 
 
 void TR2Class::Draw_EnemyConsiderTurn()
 {}
@@ -548,9 +713,9 @@ void TR2Class::Draw_EnemyConsiderTurn()
 
 void TR2Class::Initialize_EnemyTurn()
 {
-	Astar(enemy_.transforms.translate, IndexToPosition(moveFrom));
 	startIndex = PositionToIndex(enemy_.transforms.translate);
 	targetIndex = moveFrom;
+	Astar(enemy_.transforms.translate, IndexToPosition(moveFrom));
 	pathNodes.clear();
 
 	if (!parentMap.empty() && startIndex != targetIndex)
@@ -601,10 +766,14 @@ void TR2Class::Initialize_EnemyTurn()
 			block[nextIndex.y][nextIndex.x].pivot.z -= BLOCK_WIDTH / 2.0f;
 		}
 	}
+
 }
 
 void TR2Class::Update_EnemyTurn()
 {
+	/*/////////////////////////////////////////////////////
+		移動処理(移動しない時も０マスの移動と表す)
+	*//////////////////////////////////////////////////////
 	if (movement && enemyMoveActCounter <= enemy_.moveRange)
 	{
 		if (translateBlock(0.5f, enemy_.transforms))
@@ -645,15 +814,82 @@ void TR2Class::Update_EnemyTurn()
 				movement = false;
 				enemyMoveActCounter = 0;
 				pathNodes.clear();
-				turnRepuest = Turn::Player;
+			}
+		}
+	}
+	else
+	{
+		// ゴール到達
+		movement = false;
+		enemyMoveActCounter = 0;
+		pathNodes.clear();
+	}
+	/*/////////////////////////////////////////////////////
+					スキルの使用
+	*//////////////////////////////////////////////////////
+
+
+	if (GetHitKey::keys[DIK_SPACE] && !movement)turnRepuest = Turn::Player;
+	//if (!movement)turnRepuest = Turn::Player;
+}
+
+void TR2Class::Draw_EnemyTurn()
+{
+	for (int y = 0; y < MAP_HEIGHT; ++y)
+	{
+		for (int x = 0; x < MAP_WIDTH; ++x)
+		{
+			if (block[y][x].isAttackTarget)
+			{
+				Game::Drawobj({ block[y][x].transforms.scale,block[y][x].transforms.rotate,{block[y][x].transforms.translate.x,block[y][x].transforms.translate.y + 1,block[y][x].transforms.translate.z} }, { 0,0,0 }, playerModel, uvCheckerPng, 0xFFFFFFFF);
 			}
 		}
 	}
 }
 
-void TR2Class::Draw_EnemyTurn()
-{}
 
+void TR2Class::DecideAction(Charactor & self, const Charactor & enemy)
+{
+	int enemyToPlayerDist = GetShortestPathLength(self.transforms.translate, enemy.transforms.translate);
+	int enemyToAdvantageDist = GetShortestPathLength(self.transforms.translate, Environment::高台);
+
+
+
+	///////   アタッカー用の行動パターン
+
+
+	///  ウルト  ///
+	// 改善pt：より複数の敵にあてれるように移動、移動した後狙いの敵が移動したら意味ない
+	if (
+		self.delayCost < 0 && 										// ウルトたまってる
+		skillList[self.skill].range >= enemyToPlayerDist			// ウルト射程圏内に敵がいる
+		)
+	{
+		self.actPattern.UltimateSkill *= 10.0f;
+	}
+	///  強スキル  ///
+	// 改善pt：強スキルのデメリットは？スキルとの差分化要素は？使いどころは？
+	if (advancedSkillList[self.advancedSkill].range >= enemyToPlayerDist)	// 強スキル射程圏内に敵がいる
+	{
+		self.actPattern.AdvancedSkill *= 9.0f;
+	}
+
+	///  有利ポジ移動  ///
+	// 改善pt：敵から有利ポジの距離 > 自身から有利ポジの距離　なら悩め
+	if (
+		enemyToAdvantageDist < enemyToPlayerDist	// 有利ポジまでの距離　＜　敵までの距離
+		)
+	{
+		self.actPattern.MoveToAdvantage *= 8.0f;
+	}
+
+
+
+
+
+
+
+}
 
 bool TR2Class::translateBlock(float EasingMax, Transforms& transforms)
 {
@@ -1053,4 +1289,67 @@ int TR2Class::GetShortestPathLength(const Vector3& pos, const Vector3& target)
 	}
 
 	return 1000;
+}
+
+void TR2Class::GetShortestPosition(const Vector3& pos, const Vector3& target)
+{
+	moveFrom = PositionToIndex(target);
+}
+
+int TR2Class::GetShortestPathLength(const Vector3& pos, const Environment& target)
+{
+	// 最短距離とその座標を初期化
+	int minPathLength = 1234;
+	Vector2int bestWall = PositionToIndex(pos);
+
+	if (target == Environment::高台)
+	{
+		for (int y = 0; y < MAP_HEIGHT; ++y)
+		{
+			for (int x = 0; x < MAP_WIDTH; ++x)
+			{
+				if (block[y][x].type == BlockType::Wall)
+				{
+					int pathLen = GetShortestPathLength(IndexToPosition(bestWall), IndexToPosition({x, y}));
+					if (pathLen < minPathLength)
+					{
+						minPathLength = pathLen;
+						bestWall = { x, y };
+					}
+				}
+			}
+		}
+	}
+
+	return minPathLength;
+}
+
+void TR2Class::GetShortestPosition(const Vector3& pos, const Environment& target)
+{
+	// 最短距離とその座標を初期化
+	int minPathLength = 1234;
+	Vector2int bestWall = PositionToIndex(pos);
+
+	if (target == Environment::高台)
+	{
+		for (int y = 0; y < MAP_HEIGHT; ++y)
+		{
+			for (int x = 0; x < MAP_WIDTH; ++x)
+			{
+				if (block[y][x].type == BlockType::Wall)
+				{
+					int pathLen = GetShortestPathLength(IndexToPosition(bestWall), IndexToPosition({ x, y }));
+					if (pathLen < minPathLength)
+					{
+						minPathLength = pathLen;
+						bestWall = { x, y };
+					}
+				}
+			}
+		}
+	}
+	if (minPathLength < 1234)
+	{
+		moveFrom = bestWall;
+	}
 }

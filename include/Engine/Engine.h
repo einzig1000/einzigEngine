@@ -149,7 +149,7 @@ private:
 
 
 	// 使い回す定数バッファ（マテリアル/WVP）をフレーム数分用意
-	size_t kMaxDrawCallPerFrame = 256;
+	size_t kMaxDrawCallPerFrame = 1280;
 	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> materialResources;
 	std::vector<Material*> materialData;
 	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> wvpResources;
