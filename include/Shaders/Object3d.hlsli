@@ -36,3 +36,16 @@ struct DirectionalLight
     float32_t3 direction;
     float intensity;
 };
+
+struct GridConstants
+{
+    float4 gridColor; // グリッドのメインカラー (RGBA)
+    float4 subGridColor; // サブグリッドのカラー (RGBA)
+    float gridSize; // メイングリッドのサイズ (例: 1.0fで1m間隔)
+    float subGridSize; // サブグリッドのサイズ (例: 0.1fで10cm間隔)
+    float lineThickness; // メイングリッドの線の太さの乗数
+    float subLineThickness; // サブグリッドの線の太さの乗数
+    float minDistance; // グリッドの描画開始距離
+    float maxDistance; // グリッドの描画終了距離
+    float4 padding; // 16バイトアラインメントのためのパディング
+};

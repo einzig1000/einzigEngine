@@ -8,9 +8,10 @@ PipelineStateManager::PipelineStateManager(ID3D12Device* device)
 {
     InitializeDxc();
     InitializeRootSignatureInternal(device);// ルートシグネチャは共有
-    InitializePSOInternal(device);          // オブジェクト描画用
     InitializeLinePSOInternal(device);      // ライン   描画用
+    InitializePSOInternal(device);          // オブジェクト描画用
     InitializeWireframePSOInternal(device); // ワイヤーフレーム　描画用
+    InitializeGridPSOInternal(device);      // グリッド　描画用
 
     Log("コンストラクタ実行成功 : PipelineStateManager");
 }
@@ -42,7 +43,7 @@ void PipelineStateManager::InitializeRootSignatureInternal(ID3D12Device* device)
     descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
 
-    D3D12_ROOT_PARAMETER rootParameters[4] = {};
+    D3D12_ROOT_PARAMETER rootParameters[5] = {};
 
     // ルートパラメータ0: Material (register b0)
     rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
@@ -65,6 +66,10 @@ void PipelineStateManager::InitializeRootSignatureInternal(ID3D12Device* device)
     rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL; // VS, PS 両方からアクセス可能
     rootParameters[3].Descriptor.ShaderRegister = 2; // b2
 
+    // ルートパラメータ4: GridConstants (register b3)
+    rootParameters[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+    rootParameters[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; // ピクセルシェーダーからアクセス
+    rootParameters[4].Descriptor.ShaderRegister = 3; // b3
 
     D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};
     staticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
@@ -287,5 +292,71 @@ void PipelineStateManager::InitializeWireframePSOInternal(ID3D12Device* device)
     graphicsPipelineStateDesc.SampleDesc.Count = 1;
     graphicsPipelineStateDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
     hr = device->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&graphicsPipelineStateWireframe)); // Wireframe用PSOに代入
+    assert(SUCCEEDED(hr));
+}
+
+void PipelineStateManager::InitializeGridPSOInternal(ID3D12Device* device)
+{
+    HRESULT hr;
+
+    // GridShaderのコンパイル
+    Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = CompileShader(L"include/Shaders/Grid.PS.hlsl", L"ps_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
+    assert(pixelShaderBlob != nullptr);
+    Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = CompileShader(L"include/Shaders/Grid.VS.hlsl", L"vs_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
+    assert(vertexShaderBlob != nullptr);
+
+    // グリッド描画はフルスクリーンクアッドを想定するため、特別な頂点レイアウトは不要（またはPOSITIONのみ）
+    // フルスクリーンクアッドは通常、頂点シェーダー内で生成されるため、InputLayoutは空で良いことが多い
+    D3D12_INPUT_ELEMENT_DESC inputElementDescs[] = {
+        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+    };
+    D3D12_INPUT_LAYOUT_DESC inputLayoutDesc{};
+    inputLayoutDesc.pInputElementDescs = inputElementDescs;
+    inputLayoutDesc.NumElements = _countof(inputElementDescs);
+
+    // ブレンドステート (オブジェクトと同じ)
+    D3D12_BLEND_DESC blendDesc{};
+    blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL; // 全ての要素を書き込む
+    blendDesc.RenderTarget[0].BlendEnable = TRUE;
+    blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+    blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+    blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+    blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+    blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+    blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+
+    // ラスタライザステート (オブジェクトと同じ)
+    D3D12_RASTERIZER_DESC rasterizerDesc{};
+    rasterizerDesc.CullMode = D3D12_CULL_MODE_BACK; // 背面カリング
+    rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID; // ポリゴン内を塗りつぶす
+
+    // 深度ステンシルステート (グリッドは床として描画されるため、深度テストは行うが書き込みはしない)
+    D3D12_DEPTH_STENCIL_DESC depthStencilDesc{};
+    depthStencilDesc.DepthEnable = true;
+    depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO; // ここをZEROに変更 (グリッドは深度バッファに書き込まない)
+    depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL; // 通常の深度テスト
+
+    // PSO (Grid)
+    D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc{};
+    graphicsPipelineStateDesc.pRootSignature = rootSignature.Get();
+    graphicsPipelineStateDesc.InputLayout = inputLayoutDesc; // 空のInputLayout
+    graphicsPipelineStateDesc.BlendState = blendDesc;
+    graphicsPipelineStateDesc.RasterizerState = rasterizerDesc;
+    graphicsPipelineStateDesc.VS = { vertexShaderBlob->GetBufferPointer(), vertexShaderBlob->GetBufferSize() };
+    graphicsPipelineStateDesc.PS = { pixelShaderBlob->GetBufferPointer(), pixelShaderBlob->GetBufferSize() };
+    graphicsPipelineStateDesc.DepthStencilState = depthStencilDesc;
+    graphicsPipelineStateDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT; // 深度ステンシルビューフォーマット
+    graphicsPipelineStateDesc.NumRenderTargets = 1;
+    graphicsPipelineStateDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB; // レンダーターゲットビューフォーマット
+    graphicsPipelineStateDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE; // フルスクリーンクアッドは三角形
+    graphicsPipelineStateDesc.SampleDesc.Count = 1;
+    graphicsPipelineStateDesc.NodeMask = 0;
+    graphicsPipelineStateDesc.CachedPSO.pCachedBlob = nullptr;
+    graphicsPipelineStateDesc.CachedPSO.CachedBlobSizeInBytes = 0;
+    graphicsPipelineStateDesc.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
+
+    hr = device->CreateGraphicsPipelineState(
+        &graphicsPipelineStateDesc,
+        IID_PPV_ARGS(&graphicsPipelineStateGrid));
     assert(SUCCEEDED(hr));
 }

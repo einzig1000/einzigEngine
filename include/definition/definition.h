@@ -905,3 +905,13 @@ struct DrawOptions
     // ライティングするか
     bool enableLighting = true;
 };
+
+// グリッド描画用の定数バッファ
+// HLSLのGridConstantsと対応
+struct GridConstants
+{
+    Vector4 gridColor1; // グリッドの1つ目の色
+    Vector4 gridColor2; // グリッドの2つ目の色
+    float  gridScale;  // グリッドのスケール
+    float  padding;    // 16バイトアラインメントのためのパディング
+};

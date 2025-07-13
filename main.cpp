@@ -111,6 +111,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		/// ↓描画処理ここから
 		///
 		
+		Game::DrawGrid({ 0,0,0 }, 100, 5.0f, 0xFFFFFFFF);
+
 		Game::Drawobj(skyDomeTransforms, {0,0,0}, skyDomeModel, skyDomePng, 0xFFFFFFFF, skyDomeOptions);
 		for (int y = 0; y < 20; ++y)
 		{

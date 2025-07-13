@@ -36,6 +36,7 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 		dxManager->GetsrvDescriptorHeap()->GetGPUDescriptorHandleForHeapStart()
 	);
 
+
 	// カメラ
 	cameraController = new CameraController;
 
@@ -140,7 +141,6 @@ void Engine::BeginFrame()
 	spriteVertexDataUsed = 0;
 	ImGui::NewFrame();
 
-
 	UpdateLight();
 	UpdateCamera();
 	dxManager->BeginFrame();
@@ -205,6 +205,7 @@ void Engine::Finalize()
 			wvpDataLine[i] = nullptr;
 		}
 	}
+	// ReleaseはComPtrが自動で行うので不要
 
 	// ImGuiの終了処理
 	ImGui_ImplDX12_Shutdown();
@@ -815,6 +816,29 @@ void Engine::DrawLine(const Vector3& start, const Vector3& end, const uint32_t& 
 
 	drawLineCallIndex++;
 }
+
+void Engine::DrawGrid(const Vector3& center, float size, float spacing, uint32_t color)
+{
+	float halfSize = size / 2.0f;
+	int numLines = static_cast<int>(size / spacing + 0.5f) + 1;
+
+	for (int i = 0; i < numLines; ++i)
+	{
+		float x = -halfSize + i * spacing;
+		Vector3 start = { center.x + x, center.y, center.z - halfSize };
+		Vector3 end = { center.x + x, center.y, center.z + halfSize };
+		DrawLine(start, end, color);
+	}
+
+	for (int i = 0; i < numLines; ++i)
+	{
+		float z = -halfSize + i * spacing;
+		Vector3 start = { center.x - halfSize, center.y, center.z + z };
+		Vector3 end = { center.x + halfSize, center.y, center.z + z };
+		DrawLine(start, end, color);
+	}
+}
+
 
 // 音
 void Engine::PlayAudio(const uint32_t& audioId, bool loop)
