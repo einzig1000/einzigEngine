@@ -174,44 +174,6 @@ public:
 	void Draw();
 
 
-
-	//void Initialize_PlayerTurn();
-	//void Initialize_EnemyConsiderTurn();
-	//void Initialize_EnemyTurn();
-
-	//void Update_PlayerTurn();
-	//void Update_EnemyConsiderTurn();
-	//void Update_EnemyTurn();
-
-	//void Draw_PlayerTurn();
-	//void Draw_EnemyConsiderTurn();
-	//void Draw_EnemyTurn();
-
-	//void DecideAction(Charactor& self, const Charactor& enemy);
-
-	//bool translateBlock(float EasingMax, Transforms& transforms);
-
-	//// 座標からマップ上のインデックスを求める関数
-	//Vector2int PositionToIndex(Vector3 pos);
-	//// マップ上のインデックスから座標を求める関数
-	//Vector3 IndexToPosition(Vector2int index);
-
-	//bool CanMove(const Vector2int& from, const Vector2int& to) const;
-
-	//// A*変数初期化
-	//void AstarSet(const Vector3& pos, const Vector3& target);
-
-	//// Vector3→Vector3　最短経路構築　moveFromの更新あり
-	//void Astar(const Vector3& pos, const Vector3& target);
-	//// Vector3→Vector3　最短経路のマス数　moveFromの更新なし
-	//int GetShortestPathLength(const Vector3& pos, const Vector3& target);
-	//// Vector3→Vector3　最短経路のマスindex　moveFromの更新あり
-	//void GetShortestPosition(const Vector3& pos, const Vector3& target);
-	//// Environment→Vector3　最短経路のマス数　moveFromの更新なし
-	//int GetShortestPathLength(const Vector3& pos, const Environment& target);
-	//// Environment→Vector3　最短経路のマスindex　moveFromの更新あり
-	//void GetShortestPosition(const Vector3& pos, const Environment& target);
-
 private:
 	// ====== モデル・テクスチャ ======
 	uint32_t playerModel;

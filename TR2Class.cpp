@@ -57,6 +57,35 @@ TR2Class::TR2Class()
 	ultimateSkill.skillOdds = 1.0f;
 	ultimateSkill.skillType = SkillType::Attack;
 	ultimateSkillList.push_back(ultimateSkill);
+
+
+
+
+	//---------------------------model&texture------------------------
+	uvCheckerPng = Game::LoadTexture("resources/uvChecker.png");
+	playerModel = Game::LoadOBJ("resources/player", "player.obj");
+	blockModel = Game::LoadOBJ("resources/block", "map.obj");
+	blockPng = Game::LoadTexture("resources/block/map.png");
+	skyDomeModel = Game::LoadOBJ("resources/skyDome", "skyDome.obj");
+	skyDomePng = Game::LoadTexture("resources/skyDome/skyDome.png");
+	blockParticleModel = Game::LoadOBJ("resources/Mesh", "torus.obj");
+
+
+
+	//-----------------------------マップ編集----------------------------
+	//warpInBlockPng = Game::LoadTexture("resources/block/map_warpIn.png");
+	//warpOutBlockPng = Game::LoadTexture("resources/block/map_warpOut.png");
+
+	emptyPng = Game::LoadTexture("resources/blockType/empty.png");
+	wallPng = Game::LoadTexture("resources/blockType/wall.png");
+	asidPng = Game::LoadTexture("resources/blockType/asid.png");
+	warpInPng = Game::LoadTexture("resources/blockType/warpIn.png");
+	warpOutPng = Game::LoadTexture("resources/blockType/warpOut.png");
+	SelectemptyPng = Game::LoadTexture("resources/blockType/Selectempty.png");
+	SelectwallPng = Game::LoadTexture("resources/blockType/Selectwall.png");
+	SelectasidPng = Game::LoadTexture("resources/blockType/Selectasid.png");
+	SelectwarpInPng = Game::LoadTexture("resources/blockType/SelectwarpIn.png");
+	SelectwarpOutPng = Game::LoadTexture("resources/blockType/SelectwarpOut.png");
 }
 
 void TR2Class::Initialize()
@@ -710,6 +739,7 @@ void TR2Class::Update_EnemyTurn()
 	/*/////////////////////////////////////////////////////
 		移動処理
 	*//////////////////////////////////////////////////////
+
 	if (movement && enemyMoveActCounter < enemy_.moveRange) // 移動可能範囲内である限り移動を続ける
 	{
 		if (translateBlock(0.5f, enemy_.transforms))
@@ -756,22 +786,15 @@ void TR2Class::Update_EnemyTurn()
 				pathNodes.clear();
 				enemy_.pivot = { 0,0,0 }; // 移動終了後のpivotリセット
 			}
+			if (enemyMoveActCounter >= enemy_.moveRange)
+			{
+				movement = false;
+				turnRepuest = Turn::Player;
+			}
 		}
 	}
-	else
-	{
-		// 移動が完了した、または移動しない場合
-		// ここにスキルの使用ロジックなどを追加
-		// 現状では移動後すぐにプレイヤーターンへ
-		if (GetHitKey::keys[DIK_SPACE] && !movement) // デバッグ用: スペースキーで手動ターン終了
-		{
-			turnRepuest = Turn::Player;
-		}
-		else if (!movement) // 移動が終わったら自動でターン終了 (開発中は手動切り替えの方が便利かも)
-		{
-			turnRepuest = Turn::Player;
-		}
-	}
+
+
 	/*/////////////////////////////////////////////////////
 					スキルの使用
 	*//////////////////////////////////////////////////////
@@ -1030,6 +1053,7 @@ bool TR2Class::_RunAstar(
 		// 目的地に到達したらパスを再構築して返す
 		if (current.index == target)
 		{
+			outParentMap[current.index] = current.parentIndex;
 			if (outPathNodes)
 			{ // パスが必要な場合のみ再構築
 				outPathNodes->clear();
