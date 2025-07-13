@@ -114,7 +114,7 @@ void TR2Class::Initialize()
 			block[y][x].transforms.rotate = { 0.0f,0.0f,0.0f };
 			block[y][x].pivot = { 0,0,0 };
 			block[y][x].color = 0xFFFFFFFF;
-			block[y][x].AABB = Game::CreateAABB(block[y][x].transforms, block[y][x].model);
+			block[y][x].AABB = Game::CreateAABB(block[y][x].transforms, blockModel);
 			block[y][x].cost = 0;
 			block[y][x].type = BlockType::Empty;
 		}
@@ -531,7 +531,7 @@ void TR2Class::Update_PlayerTurn()
 	// 移動アニメーション中
 	if (movement)
 	{
-		if (translateBlock(CHARACTER_MOVE_EASING_TIME, player_.transforms))
+		if (translateBlock(0.5f, player_.transforms))
 		{
 			// 1ステップの移動が完了
 			astarStartIndex = astarTargetIndex; // 現在の終点が次の開始点になる
@@ -712,7 +712,7 @@ void TR2Class::Update_EnemyTurn()
 	*//////////////////////////////////////////////////////
 	if (movement && enemyMoveActCounter < enemy_.moveRange) // 移動可能範囲内である限り移動を続ける
 	{
-		if (translateBlock(CHARACTER_MOVE_EASING_TIME, enemy_.transforms))
+		if (translateBlock(0.5f, enemy_.transforms))
 		{
 			// 1ステップの移動が完了
 			enemyMoveActCounter++; // 移動回数をカウント
