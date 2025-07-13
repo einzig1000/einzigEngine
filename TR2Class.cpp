@@ -40,8 +40,6 @@ TR2Class::TR2Class()
 	advancedSkill.skillType = SkillType::Attack;
 	advancedSkillList.push_back(advancedSkill);
 
-
-
 	SkillInfo ultimateSkill;
 
 	ultimateSkill.cost = 120;
@@ -59,13 +57,13 @@ TR2Class::TR2Class()
 	ultimateSkill.skillOdds = 1.0f;
 	ultimateSkill.skillType = SkillType::Attack;
 	ultimateSkillList.push_back(ultimateSkill);
-
-
 }
 
 void TR2Class::Initialize()
 {
-	// プレイヤー
+	/*////////////////////////////////////////
+					プレイヤー
+	////////////////////////////////////////*/
 	player_.model = playerModel;
 	player_.texture = uvCheckerPng;
 	player_.transforms.scale = { 0.5f, 0.5f, 0.5f };
@@ -74,10 +72,10 @@ void TR2Class::Initialize()
 	player_.pivot = { 0,0,0 };
 	player_.color = 0xFFFFFFFF;
 	player_.moveRange = 5;
+
 	/*////////////////////////////////////////
 					エネミー
 	////////////////////////////////////////*/
-#pragma region
 	// 見た目
 	enemy_.model = playerModel;
 	enemy_.texture = uvCheckerPng;
@@ -103,7 +101,6 @@ void TR2Class::Initialize()
 	enemy_.priority.AdvancedSkill = 1.5f;
 	enemy_.priority.UltimateSkill = 2.0f;
 	enemy_.priorityReset();
-#pragma endregion
 
 	// ブロック
 	for (int y = 0; y < MAP_HEIGHT; ++y)
@@ -124,10 +121,10 @@ void TR2Class::Initialize()
 	}
 
 	// 天球
-	skyDomeTransforms.scale = { 120.0f, 120.0f, 120.0f };
-	skyDomeTransforms.translate = { 0.0f,0.0f,0.0f };
-	skyDomeTransforms.rotate = { 0.0f,0.0f,0.0f };
-	skyDomeOptions.enableWireframeMode = false;
+	skyDome.transforms.scale = { 120.0f, 120.0f, 120.0f };
+	skyDome.transforms.translate = { 0.0f,0.0f,0.0f };
+	skyDome.transforms.rotate = { 0.0f,0.0f,0.0f };
+	skyDome.options.enableWireframeMode = false;
 
 	// 移動中ではない
 	movement = false;
@@ -315,14 +312,14 @@ void TR2Class::Update()
 		Game::toggleWireframeMode();
 	}
 
-	skyDomeOptions.uvTransform.translate.y += 0.001f;
-	skyDomeOptions.uvTransform.translate.x += 0.0001f;
+	skyDome.options.uvTransform.translate.y += 0.001f;
+	skyDome.options.uvTransform.translate.x += 0.0001f;
 }
 
 void TR2Class::Draw()
 {
 	// 天球
-	Game::Drawobj(skyDomeTransforms, { 0,0,0 }, skyDomeModel, skyDomePng, 0xFFFFFFFF, skyDomeOptions);
+	skyDome.Draw();
 
 	// ブロック
 	for (int y = 0; y < MAP_HEIGHT; ++y)
@@ -391,17 +388,7 @@ void TR2Class::Draw()
 		break;
 	}
 
-	ImGui::Text("---------------block---------------");
-	std::string label = std::format("block[{}][{}].scale", nextIndex.y, nextIndex.x);
-	ImGui::DragFloat3(label.c_str(), &block[nextIndex.y][nextIndex.x].transforms.scale.x, 0.01f);
-	label = std::format("block[{}][{}].rotate", nextIndex.y, nextIndex.x);
-	ImGui::DragFloat3(label.c_str(), &block[nextIndex.y][nextIndex.x].transforms.rotate.x, 0.01f);
-	label = std::format("block[{}][{}].translate", nextIndex.y, nextIndex.x);
-	ImGui::DragFloat3(label.c_str(), &block[nextIndex.y][nextIndex.x].transforms.translate.x, 0.01f);
-	label = std::format("block[{}][{}].pivot", nextIndex.y, nextIndex.x);
-	ImGui::DragFloat3(label.c_str(), &block[nextIndex.y][nextIndex.x].pivot.x, 0.01f);
-
-
+	ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
 	ImGui::Text("R:Map&Camera Reset");
 	ImGui::Checkbox("mapEditMode", &editMode);
 
@@ -436,12 +423,11 @@ void TR2Class::Draw()
 	ImGui::Image(static_cast<ImTextureID>(tex->textureSrvHandleGPU.ptr), ImVec2(32, 32));
 	if (ImGui::IsItemClicked())selectBlock = 4;
 	ImGui::SameLine();
-
-	PrePressMouse = Game::IsPressMouse(0);
 }
 
 void TR2Class::Initialize_PlayerTurn()
 {
+	// ブロック演出ポイントのリセット
 	for (int y = 0; y < MAP_HEIGHT; ++y)
 	{
 		for (int x = 0; x < MAP_WIDTH; ++x)
@@ -449,149 +435,146 @@ void TR2Class::Initialize_PlayerTurn()
 			block[y][x].isAttackTarget = false;
 			block[y][x].isBuffTarget = false;
 			block[y][x].isHealTarget = false;
+			block[y][x].state = AstarBlockState::None; // A*表示のリセット
 		}
 	}
 
-
-	moveFrom = PositionToIndex(player_.transforms.translate);
+	// 移動目標をプレイヤーが現在いる場所で初期化
+	playerSelectedMoveTarget = PositionToIndex(player_.transforms.translate);
 }
+
 
 void TR2Class::Update_PlayerTurn()
 {
-	Vector2int candidate = moveFrom;
+	Vector2int candidateTarget = playerSelectedMoveTarget; // プレイヤーの入力による一時的な候補
+
 
 	if (GetHitKey::keys[DIK_S] && !GetHitKey::preKeys[DIK_S] && !movement)
 	{
-		candidate.y += 1;
-		if (CanMove(moveFrom, candidate) && GetShortestPathLength(player_.transforms.translate, IndexToPosition(candidate)) <= player_.moveRange)
+		Vector2int nextCandidate = candidateTarget;
+		nextCandidate.y += 1;
+		if (GetShortestPathLength(player_.transforms.translate, IndexToPosition(nextCandidate)) <= player_.moveRange)
 		{
-			moveFrom = candidate;
+			playerSelectedMoveTarget = nextCandidate;
 		}
 	}
 	if (GetHitKey::keys[DIK_W] && !GetHitKey::preKeys[DIK_W] && !movement)
 	{
-		candidate = moveFrom;
-		candidate.y -= 1;
-		if (CanMove(moveFrom, candidate) && GetShortestPathLength(player_.transforms.translate, IndexToPosition(candidate)) <= player_.moveRange)
+		Vector2int nextCandidate = candidateTarget;
+		nextCandidate.y -= 1;
+		if (GetShortestPathLength(player_.transforms.translate, IndexToPosition(nextCandidate)) <= player_.moveRange)
 		{
-			moveFrom = candidate;
+			playerSelectedMoveTarget = nextCandidate;
 		}
 	}
 	if (GetHitKey::keys[DIK_A] && !GetHitKey::preKeys[DIK_A] && !movement)
 	{
-		candidate = moveFrom;
-		candidate.x += 1;
-		if (CanMove(moveFrom, candidate) && GetShortestPathLength(player_.transforms.translate, IndexToPosition(candidate)) <= player_.moveRange)
+		Vector2int nextCandidate = candidateTarget;
+		nextCandidate.x += 1;
+		if (GetShortestPathLength(player_.transforms.translate, IndexToPosition(nextCandidate)) <= player_.moveRange)
 		{
-			moveFrom = candidate;
+			playerSelectedMoveTarget = nextCandidate;
 		}
 	}
 	if (GetHitKey::keys[DIK_D] && !GetHitKey::preKeys[DIK_D] && !movement)
 	{
-		candidate = moveFrom;
-		candidate.x -= 1;
-		if (CanMove(moveFrom, candidate) && GetShortestPathLength(player_.transforms.translate, IndexToPosition(candidate)) <= player_.moveRange)
+		Vector2int nextCandidate = candidateTarget;
+		nextCandidate.x -= 1;
+		if (GetShortestPathLength(player_.transforms.translate, IndexToPosition(nextCandidate)) <= player_.moveRange)
 		{
-			moveFrom = candidate;
+			playerSelectedMoveTarget = nextCandidate;
 		}
 	}
+
 	if (GetHitKey::keys[DIK_SPACE] && !GetHitKey::preKeys[DIK_SPACE] && !movement)
 	{
-		Astar(player_.transforms.translate, IndexToPosition(moveFrom));
-		startIndex = PositionToIndex(player_.transforms.translate);
-		targetIndex = moveFrom;
-		pathNodes.clear();
+		// プレイヤーの現在の位置から選択された移動目標地点までのパスを計算
+		Astar(player_.transforms.translate, IndexToPosition(playerSelectedMoveTarget));
 
-		if (!parentMap.empty() && startIndex != targetIndex)
-		{ // パスが見つかり、スタートとゴールが異なる場合
-			Vector2int tempPathStep = targetIndex;
-			while (tempPathStep != startIndex)
-			{
-				auto it = parentMap.find(tempPathStep);
-				if (it == parentMap.end() || (it->second.x == -1 && it->second.y == -1))
-				{
-					// 経路が見つからない場合
-					pathNodes.clear();
-					break;
-				}
-				pathNodes.push_back(tempPathStep);
-				tempPathStep = it->second;
-			}
-		}
-		std::reverse(pathNodes.begin(), pathNodes.end());
-		if (!pathNodes.empty())
+		if (!pathNodes.empty()) // パスが見つかった場合
 		{
 			movement = true;
 			pathStepIndex = 0;
-			fromIndex = PositionToIndex(player_.transforms.translate);
-			nextIndex = pathNodes[pathStepIndex];
+			// 最初の移動ステップの開始点と終了点を設定
+			astarStartIndex = PositionToIndex(player_.transforms.translate); // A*で計算されたパスの最初のノード（現地点）
+			astarTargetIndex = pathNodes[pathStepIndex]; // パスの次のノード
 
-			fromBlockTransforms = block[fromIndex.y][fromIndex.x].transforms;
-			nextBlockTransforms = block[nextIndex.y][nextIndex.x].transforms;
+			// アニメーション用のTransform情報を設定
+			fromBlockTransforms = block[astarStartIndex.y][astarStartIndex.x].transforms;
+			nextBlockTransforms = block[astarTargetIndex.y][astarTargetIndex.x].transforms;
 
-			if (fromIndex.x < nextIndex.x)
+			// 移動方向に応じてpivotを調整 (キャラクターの向き用)
+			block[astarTargetIndex.y][astarTargetIndex.x].pivot = { 0,0,0 }; // 次のブロックのpivotを初期化
+			if (astarStartIndex.x < astarTargetIndex.x)
 			{
 				direction = Direction::Right;
-				block[nextIndex.y][nextIndex.x].pivot.x += BLOCK_WIDTH / 2.0f;
+				player_.pivot.x = -BLOCK_WIDTH / 2.0f; // キャラクターのpivotを調整
 			}
-			else if (fromIndex.x > nextIndex.x)
+			else if (astarStartIndex.x > astarTargetIndex.x)
 			{
 				direction = Direction::Left;
-				block[nextIndex.y][nextIndex.x].pivot.x -= BLOCK_WIDTH / 2.0f;
+				player_.pivot.x = BLOCK_WIDTH / 2.0f;
 			}
-			else if (fromIndex.y < nextIndex.y)
+			else if (astarStartIndex.y < astarTargetIndex.y)
 			{
 				direction = Direction::Down;
-				block[nextIndex.y][nextIndex.x].pivot.z += BLOCK_WIDTH / 2.0f;
+				player_.pivot.z = -BLOCK_HEIGHT / 2.0f;
 			}
-			else if (fromIndex.y > nextIndex.y)
+			else if (astarStartIndex.y > astarTargetIndex.y)
 			{
 				direction = Direction::Up;
-				block[nextIndex.y][nextIndex.x].pivot.z -= BLOCK_WIDTH / 2.0f;
+				player_.pivot.z = BLOCK_HEIGHT / 2.0f;
 			}
 		}
 	}
 
+	// 移動アニメーション中
 	if (movement)
 	{
-		if (translateBlock(0.5f, player_.transforms))
+		if (translateBlock(CHARACTER_MOVE_EASING_TIME, player_.transforms))
 		{
-			fromIndex = nextIndex;
+			// 1ステップの移動が完了
+			astarStartIndex = astarTargetIndex; // 現在の終点が次の開始点になる
 			pathStepIndex++;
 			if (pathStepIndex < pathNodes.size())
 			{
-				nextIndex = pathNodes[pathStepIndex];
-				fromBlockTransforms = block[fromIndex.y][fromIndex.x].transforms;
-				nextBlockTransforms = block[nextIndex.y][nextIndex.x].transforms;
-				block[nextIndex.y][nextIndex.x].pivot = { 0,0,0 };
+				// 次の移動ステップを設定
+				astarTargetIndex = pathNodes[pathStepIndex];
 
-				if (fromIndex.x < nextIndex.x)
+				// アニメーション用のTransform情報を更新
+				fromBlockTransforms = block[astarStartIndex.y][astarStartIndex.x].transforms;
+				nextBlockTransforms = block[astarTargetIndex.y][astarTargetIndex.x].transforms;
+
+				// 移動方向に応じてpivotを調整
+				player_.pivot = { 0,0,0 }; // pivotをリセットしてから設定
+				if (astarStartIndex.x < astarTargetIndex.x)
 				{
 					direction = Direction::Right;
-					block[nextIndex.y][nextIndex.x].pivot.x += BLOCK_WIDTH / 2.0f;
+					player_.pivot.x = -BLOCK_WIDTH / 2.0f;
 				}
-				else if (fromIndex.x > nextIndex.x)
+				else if (astarStartIndex.x > astarTargetIndex.x)
 				{
 					direction = Direction::Left;
-					block[nextIndex.y][nextIndex.x].pivot.x -= BLOCK_WIDTH / 2.0f;
+					player_.pivot.x = BLOCK_WIDTH / 2.0f;
 				}
-				else if (fromIndex.y < nextIndex.y)
+				else if (astarStartIndex.y < astarTargetIndex.y)
 				{
 					direction = Direction::Down;
-					block[nextIndex.y][nextIndex.x].pivot.z += BLOCK_WIDTH / 2.0f;
+					player_.pivot.z = -BLOCK_HEIGHT / 2.0f;
 				}
-				else if (fromIndex.y > nextIndex.y)
+				else if (astarStartIndex.y > astarTargetIndex.y)
 				{
 					direction = Direction::Up;
-					block[nextIndex.y][nextIndex.x].pivot.z -= BLOCK_WIDTH / 2.0f;
+					player_.pivot.z = BLOCK_HEIGHT / 2.0f;
 				}
 			}
 			else
 			{
-				// ゴール到達
+				// ゴール到達 (全ステップ完了)
 				movement = false;
 				pathNodes.clear();
-				turnRepuest = Turn::EnemyConsider;
+				player_.pivot = { 0,0,0 }; // 移動終了後のpivotリセット
+				turnRepuest = Turn::EnemyConsider; // 敵の検討ターンへ
 			}
 		}
 	}
@@ -599,8 +582,10 @@ void TR2Class::Update_PlayerTurn()
 
 void TR2Class::Draw_PlayerTurn()
 {
-	Game::Drawobj(block[moveFrom.y][moveFrom.x].transforms, player_.pivot, player_.model, player_.texture, 0xFFFFFF55, player_.options);
-	ImGui::Text("[moveFrom.x = %d][moveFrom.y = %d]", moveFrom.x, moveFrom.y);
+	Game::Drawobj(block[playerSelectedMoveTarget.y][playerSelectedMoveTarget.x].transforms,
+		player_.pivot, player_.model, player_.texture, 0xFFFFFF55, player_.options);
+	ImGui::Text("[playerSelectedMoveTarget.x = %d][playerSelectedMoveTarget.y = %d]",
+		playerSelectedMoveTarget.x, playerSelectedMoveTarget.y);
 }
 
 
@@ -614,16 +599,15 @@ void TR2Class::Initialize_EnemyConsiderTurn()
 			block[y][x].isAttackTarget = false;
 			block[y][x].isBuffTarget = false;
 			block[y][x].isHealTarget = false;
+			block[y][x].state = AstarBlockState::None; // A*表示のリセット
 		}
 	}
 
 	// 行動優先順位のリセット
 	enemy_.priorityReset();
-	// 移動開始地点の記録
-	moveFrom = PositionToIndex(enemy_.transforms.translate);
 
 	// 移動先優先度決定戦
-	DecideAction(enemy_, player_);
+	DecideAction(enemy_, player_); // enemyActionTarget が設定される
 
 	// 優勝者の確認
 	float maxPriority = enemy_.actPattern.GetHighestPriority();
@@ -631,71 +615,41 @@ void TR2Class::Initialize_EnemyConsiderTurn()
 	// 移動系（移動先の設定）
 	if (maxPriority == enemy_.actPattern.MoveToAdvantage || maxPriority == enemy_.actPattern.MoveToEnemy)
 	{
-		if (maxPriority == enemy_.actPattern.MoveToAdvantage)
-		{
-			// moveFromを最短有利ポジに
- 			GetShortestPosition(IndexToPosition(moveFrom), Environment::高台);
-		}
-		else if (maxPriority == enemy_.actPattern.MoveToEnemy)
-		{
-			// moveFromを敵ポジに
-			GetShortestPosition(IndexToPosition(moveFrom), player_.transforms.translate);
-		}
-
-		Astar(enemy_.transforms.translate, IndexToPosition(moveFrom));
+		// 決定された移動目標地点までパスを計算し、グローバルなpathNodesに格納
+		Astar(enemy_.transforms.translate, IndexToPosition(enemyActionTarget));
 	}
+
 	
 	// スキル系（スキル適応範囲のフラグ）
 	else if (maxPriority == enemy_.actPattern.Skill || maxPriority == enemy_.actPattern.AdvancedSkill || maxPriority == enemy_.actPattern.UltimateSkill)
 	{
+		// スキルの種類に応じて範囲を計算し、ブロックをマーク
+		int skillRange = 0;
 		if (maxPriority == enemy_.actPattern.Skill)
 		{
-			for (int y = 0; y < MAP_HEIGHT; ++y)
-			{
-				for (int x = 0; x < MAP_WIDTH; ++x)
-				{
-					int dx = abs(x - moveFrom.x);
-					int dy = abs(y - moveFrom.y);
-					int distance = dx + dy;
-
-					if (distance <= skillList[enemy_.skill].range)
-					{
-						block[y][x].isAttackTarget = true;
-					}
-				}
-			}
+			skillRange = skillList[enemy_.skill].range;
 		}
 		else if (maxPriority == enemy_.actPattern.AdvancedSkill)
 		{
-			for (int y = 0; y < MAP_HEIGHT; ++y)
-			{
-				for (int x = 0; x < MAP_WIDTH; ++x)
-				{
-					int dx = abs(x - moveFrom.x);
-					int dy = abs(y - moveFrom.y);
-					int distance = dx + dy;
-
-					if (distance <= advancedSkillList[enemy_.advancedSkill].range)
-					{
-						block[y][x].isAttackTarget = true;
-					}
-				}
-			}
+			skillRange = advancedSkillList[enemy_.advancedSkill].range;
 		}
 		else if (maxPriority == enemy_.actPattern.UltimateSkill)
 		{
-			for (int y = 0; y < MAP_HEIGHT; ++y)
-			{
-				for (int x = 0; x < MAP_WIDTH; ++x)
-				{
-					int dx = abs(x - moveFrom.x);
-					int dy = abs(y - moveFrom.y);
-					int distance = dx + dy;
+			skillRange = ultimateSkillList[enemy_.ultimateSkill].range;
+		}
 
-					if (distance <= ultimateSkillList[enemy_.ultimateSkill].range)
-					{
-						block[y][x].isAttackTarget = true;
-					}
+		Vector2int enemyPos = PositionToIndex(enemy_.transforms.translate);
+		for (int y = 0; y < MAP_HEIGHT; ++y)
+		{
+			for (int x = 0; x < MAP_WIDTH; ++x)
+			{
+				int dx = abs(x - enemyPos.x);
+				int dy = abs(y - enemyPos.y);
+				int distance = dx + dy; // マンハッタン距離
+
+				if (distance <= skillRange)
+				{
+					block[y][x].isAttackTarget = true; // 攻撃対象としてマーク
 				}
 			}
 		}
@@ -713,116 +667,110 @@ void TR2Class::Draw_EnemyConsiderTurn()
 
 void TR2Class::Initialize_EnemyTurn()
 {
-	startIndex = PositionToIndex(enemy_.transforms.translate);
-	targetIndex = moveFrom;
-	Astar(enemy_.transforms.translate, IndexToPosition(moveFrom));
-	pathNodes.clear();
+	enemyMoveActCounter = 0; // そのターンの移動回数をリセット
+	movement = false; // 移動フラグをリセット
 
-	if (!parentMap.empty() && startIndex != targetIndex)
-	{ // パスが見つかり、スタートとゴールが異なる場合
-		Vector2int tempPathStep = targetIndex;
-		while (tempPathStep != startIndex)
-		{
-			auto it = parentMap.find(tempPathStep);
-			if (it == parentMap.end() || (it->second.x == -1 && it->second.y == -1))
-			{
-				// 経路が見つからない場合
-				pathNodes.clear();
-				break;
-			}
-			pathNodes.push_back(tempPathStep);
-			tempPathStep = it->second;
-		}
-	}
-	std::reverse(pathNodes.begin(), pathNodes.end());
 	if (!pathNodes.empty())
 	{
 		movement = true;
 		pathStepIndex = 0;
-		fromIndex = PositionToIndex(enemy_.transforms.translate);
-		nextIndex = pathNodes[pathStepIndex];
+		astarStartIndex = PositionToIndex(enemy_.transforms.translate);
+		astarTargetIndex = pathNodes[pathStepIndex];
 
-		fromBlockTransforms = block[fromIndex.y][fromIndex.x].transforms;
-		nextBlockTransforms = block[nextIndex.y][nextIndex.x].transforms;
+		fromBlockTransforms = block[astarStartIndex.y][astarStartIndex.x].transforms;
+		nextBlockTransforms = block[astarTargetIndex.y][astarTargetIndex.x].transforms;
 
-		if (fromIndex.x < nextIndex.x)
+		enemy_.pivot = { 0,0,0 }; // pivotをリセット
+		if (astarStartIndex.x < astarTargetIndex.x)
 		{
 			direction = Direction::Right;
-			block[nextIndex.y][nextIndex.x].pivot.x += BLOCK_WIDTH / 2.0f;
+			enemy_.pivot.x = -BLOCK_WIDTH / 2.0f;
 		}
-		else if (fromIndex.x > nextIndex.x)
+		else if (astarStartIndex.x > astarTargetIndex.x)
 		{
 			direction = Direction::Left;
-			block[nextIndex.y][nextIndex.x].pivot.x -= BLOCK_WIDTH / 2.0f;
+			enemy_.pivot.x = BLOCK_WIDTH / 2.0f;
 		}
-		else if (fromIndex.y < nextIndex.y)
+		else if (astarStartIndex.y < astarTargetIndex.y)
 		{
 			direction = Direction::Down;
-			block[nextIndex.y][nextIndex.x].pivot.z += BLOCK_WIDTH / 2.0f;
+			enemy_.pivot.z = -BLOCK_HEIGHT / 2.0f;
 		}
-		else if (fromIndex.y > nextIndex.y)
+		else if (astarStartIndex.y > astarTargetIndex.y)
 		{
 			direction = Direction::Up;
-			block[nextIndex.y][nextIndex.x].pivot.z -= BLOCK_WIDTH / 2.0f;
+			enemy_.pivot.z = BLOCK_HEIGHT / 2.0f;
 		}
 	}
-
+	// パスがない場合は、移動アニメーションは行われない (スキル使用など)
 }
 
 void TR2Class::Update_EnemyTurn()
 {
 	/*/////////////////////////////////////////////////////
-		移動処理(移動しない時も０マスの移動と表す)
+		移動処理
 	*//////////////////////////////////////////////////////
-	if (movement && enemyMoveActCounter <= enemy_.moveRange)
+	if (movement && enemyMoveActCounter < enemy_.moveRange) // 移動可能範囲内である限り移動を続ける
 	{
-		if (translateBlock(0.5f, enemy_.transforms))
+		if (translateBlock(CHARACTER_MOVE_EASING_TIME, enemy_.transforms))
 		{
-			enemyMoveActCounter++;
-			fromIndex = nextIndex;
+			// 1ステップの移動が完了
+			enemyMoveActCounter++; // 移動回数をカウント
+			astarStartIndex = astarTargetIndex;
 			pathStepIndex++;
+
 			if (pathStepIndex < pathNodes.size())
 			{
-				nextIndex = pathNodes[pathStepIndex];
-				fromBlockTransforms = block[fromIndex.y][fromIndex.x].transforms;
-				nextBlockTransforms = block[nextIndex.y][nextIndex.x].transforms;
+				// 次の移動ステップを設定
+				astarTargetIndex = pathNodes[pathStepIndex];
+				fromBlockTransforms = block[astarStartIndex.y][astarStartIndex.x].transforms;
+				nextBlockTransforms = block[astarTargetIndex.y][astarTargetIndex.x].transforms;
 
-				if (fromIndex.x < nextIndex.x)
+				// 移動方向に応じてpivotを調整
+				enemy_.pivot = { 0,0,0 };
+				if (astarStartIndex.x < astarTargetIndex.x)
 				{
 					direction = Direction::Right;
-					block[nextIndex.y][nextIndex.x].pivot.x += BLOCK_WIDTH / 2.0f;
+					enemy_.pivot.x = -BLOCK_WIDTH / 2.0f;
 				}
-				else if (fromIndex.x > nextIndex.x)
+				else if (astarStartIndex.x > astarTargetIndex.x)
 				{
 					direction = Direction::Left;
-					block[nextIndex.y][nextIndex.x].pivot.x -= BLOCK_WIDTH / 2.0f;
+					enemy_.pivot.x = BLOCK_WIDTH / 2.0f;
 				}
-				else if (fromIndex.y < nextIndex.y)
+				else if (astarStartIndex.y < astarTargetIndex.y)
 				{
 					direction = Direction::Down;
-					block[nextIndex.y][nextIndex.x].pivot.z += BLOCK_WIDTH / 2.0f;
+					enemy_.pivot.z = -BLOCK_HEIGHT / 2.0f;
 				}
-				else if (fromIndex.y > nextIndex.y)
+				else if (astarStartIndex.y > astarTargetIndex.y)
 				{
 					direction = Direction::Up;
-					block[nextIndex.y][nextIndex.x].pivot.z -= BLOCK_WIDTH / 2.0f;
+					enemy_.pivot.z = BLOCK_HEIGHT / 2.0f;
 				}
 			}
 			else
 			{
-				// ゴール到達
+				// ゴール到達 (全ステップ完了) または移動可能範囲を使い切った
 				movement = false;
-				enemyMoveActCounter = 0;
 				pathNodes.clear();
+				enemy_.pivot = { 0,0,0 }; // 移動終了後のpivotリセット
 			}
 		}
 	}
 	else
 	{
-		// ゴール到達
-		movement = false;
-		enemyMoveActCounter = 0;
-		pathNodes.clear();
+		// 移動が完了した、または移動しない場合
+		// ここにスキルの使用ロジックなどを追加
+		// 現状では移動後すぐにプレイヤーターンへ
+		if (GetHitKey::keys[DIK_SPACE] && !movement) // デバッグ用: スペースキーで手動ターン終了
+		{
+			turnRepuest = Turn::Player;
+		}
+		else if (!movement) // 移動が終わったら自動でターン終了 (開発中は手動切り替えの方が便利かも)
+		{
+			turnRepuest = Turn::Player;
+		}
 	}
 	/*/////////////////////////////////////////////////////
 					スキルの使用
@@ -853,8 +801,6 @@ void TR2Class::DecideAction(Charactor & self, const Charactor & enemy)
 	int enemyToPlayerDist = GetShortestPathLength(self.transforms.translate, enemy.transforms.translate);
 	int enemyToAdvantageDist = GetShortestPathLength(self.transforms.translate, Environment::高台);
 
-
-
 	///////   アタッカー用の行動パターン
 
 
@@ -871,17 +817,27 @@ void TR2Class::DecideAction(Charactor & self, const Charactor & enemy)
 	{
 		self.actPattern.UltimateSkill *= 0.0f;
 	}
+
+
 	///  強スキル  ///
 	// 改善pt：強スキルのデメリットは？スキルとの差分化要素は？使いどころは？
 	if (advancedSkillList[self.advancedSkill].range >= enemyToPlayerDist)	// 強スキル射程圏内に敵がいる
 	{
 		self.actPattern.AdvancedSkill *= 9.0f;
 	}
+	else
+	{
+		self.actPattern.AdvancedSkill *= 0.0f;
+	}
 
 	///  スキル  ///
 	if (skillList[self.skill].range >= enemyToPlayerDist)	// 強スキル射程圏内に敵がいる
 	{
 		self.actPattern.Skill *= 9.0f;
+	}
+	else
+	{
+		self.actPattern.Skill *= 0.0f;
 	}
 
 	///  有利ポジ移動  ///
@@ -892,9 +848,30 @@ void TR2Class::DecideAction(Charactor & self, const Charactor & enemy)
 	{
 		self.actPattern.MoveToAdvantage *= 8.0f;
 	}
+	else
+	{
+		self.actPattern.MoveToAdvantage *= 0.0f;
+	}
+
+	/// 敵へ移動 ///
+	// 有利ポジへの移動が選ばれず、敵が射程外の場合、敵へ近づく
+	if (self.actPattern.MoveToAdvantage == 0.0f && enemyToPlayerDist > 0 && enemyToPlayerDist != 1000) // 有利ポジ移動が優先されず、敵が到達可能
+	{
+		self.actPattern.MoveToEnemy *= 1.8f; // 基本優先度
+		SetEnemyActionTarget(enemy.transforms.translate); // 敵の現在地を目標に設定
+	}
+	else
+	{
+		self.actPattern.MoveToEnemy *= 0.0f;
+	}
 
 
-
+	// どの行動も選ばれなかった場合（全ての優先度が0の場合など）
+	if (self.actPattern.GetHighestPriority() == 0.0f)
+	{
+		// 何もしない、またはデフォルトの行動を設定する
+		SetEnemyActionTarget(self.transforms.translate); // その場に留まる
+	}
 
 
 
@@ -903,7 +880,8 @@ void TR2Class::DecideAction(Charactor & self, const Charactor & enemy)
 
 bool TR2Class::translateBlock(float EasingMax, Transforms& transforms)
 {
-	movementTmax = EasingMax;
+	movementT += 1.0f / 60.0f;
+
 	//// S
 	//block[fromIndex.y][fromIndex.x].transforms.scale.x = Easings::OUT_SINE(fromBlockTransforms.scale.x, nextBlockTransforms.scale.x, movementT / movementTmax);
 	//block[fromIndex.y][fromIndex.x].transforms.scale.y = Easings::OUT_SINE(fromBlockTransforms.scale.y, nextBlockTransforms.scale.y, movementT / movementTmax);
@@ -922,14 +900,14 @@ bool TR2Class::translateBlock(float EasingMax, Transforms& transforms)
 	//block[fromIndex.y][fromIndex.x].transforms.translate.z = Easings::OUT_SINE(fromBlockTransforms.translate.z, nextBlockTransforms.translate.z, movementT / movementTmax);
 	
 	// player
-	transforms.translate.x = Easings::OUT_SINE(fromBlockTransforms.translate.x, nextBlockTransforms.translate.x, movementT / movementTmax);
-	transforms.translate.y = Easings::OUT_SINE(fromBlockTransforms.translate.y, nextBlockTransforms.translate.y, movementT / movementTmax);
-	transforms.translate.z = Easings::OUT_SINE(fromBlockTransforms.translate.z, nextBlockTransforms.translate.z, movementT / movementTmax);
+	transforms.translate.x = Easings::OUT_SINE(fromBlockTransforms.translate.x, nextBlockTransforms.translate.x, movementT / EasingMax);
+	transforms.translate.y = Easings::OUT_SINE(fromBlockTransforms.translate.y, nextBlockTransforms.translate.y, movementT / EasingMax);
+	transforms.translate.z = Easings::OUT_SINE(fromBlockTransforms.translate.z, nextBlockTransforms.translate.z, movementT / EasingMax);
 
 
-	movementT += 1.0f / 60.0f;
-	if (movementT > movementTmax)
+	if (movementT > EasingMax)
 	{
+		transforms.translate = nextBlockTransforms.translate;
 		//for (int y = 0; y < MAP_HEIGHT; ++y)
 		//{
 		//	for (int x = 0; x < MAP_WIDTH; ++x)
@@ -959,7 +937,6 @@ bool TR2Class::translateBlock(float EasingMax, Transforms& transforms)
 
 
 		movementT = 0;
-		direction = Direction::None;
 		return true;
 	}
 	else
@@ -1011,10 +988,176 @@ bool TR2Class::CanMove(const Vector2int& from, const Vector2int& to) const
 	return false;
 }
 
-
-void TR2Class::AstarSet(const Vector3& pos, const Vector3& target)
+bool TR2Class::_RunAstar(
+	const Vector2int& start,
+	const Vector2int& target,
+	std::map<Vector2int, Vector2int>& outParentMap,
+	std::vector<std::vector<int>>& outGCostMap,
+	std::vector<Vector2int>* outPathNodes
+)
 {
-	// ブロックの状態をリセット
+	// マップとリストの初期化
+	for (auto& row : outGCostMap)
+	{
+		std::fill(row.begin(), row.end(), (std::numeric_limits<int>::max)());
+	}
+	outParentMap.clear();
+	std::priority_queue<Node, std::vector<Node>, std::greater<Node>> currentOpenList; // ローカルなOpenList
+
+	// スタート地点またはターゲット地点が不正なら終了
+	if (start.x < 0 || start.x >= MAP_WIDTH || start.y < 0 || start.y >= MAP_HEIGHT ||
+		target.x < 0 || target.x >= MAP_WIDTH || target.y < 0 || target.y >= MAP_HEIGHT ||
+		block[start.y][start.x].type == BlockType::Wall) // スタートが壁なら移動不可
+	{
+		return false;
+	}
+
+	outGCostMap[start.y][start.x] = 0;
+	int hCost = static_cast<int>(std::fabs(start.x - target.x) + std::fabs(start.y - target.y));
+	currentOpenList.push({ start, 0, hCost, hCost, {-1, -1} }); // 親はなしで初期化
+
+	while (!currentOpenList.empty())
+	{
+		Node current = currentOpenList.top();
+		currentOpenList.pop();
+
+		// すでに最適な経路で処理済みならスキップ (Fコストが同じでもGコストが低い方が優先)
+		if (current.gCost > outGCostMap[current.index.y][current.index.x])
+		{
+			continue;
+		}
+
+		// 目的地に到達したらパスを再構築して返す
+		if (current.index == target)
+		{
+			if (outPathNodes)
+			{ // パスが必要な場合のみ再構築
+				outPathNodes->clear();
+				Vector2int pathStep = target;
+				while (pathStep != start)
+				{
+					// ワープアウト地点の場合、ワープイン地点もパスに含める
+					if (block[pathStep.y][pathStep.x].type == BlockType::WarpOut)
+					{
+						Vector2int warpInIndex = { -1, -1 };
+						for (int y = 0; y < MAP_HEIGHT; ++y)
+						{
+							for (int x = 0; x < MAP_WIDTH; ++x)
+							{
+								if (block[y][x].type == BlockType::WarpIn)
+								{
+									warpInIndex = { x, y };
+									break;
+								}
+							}
+							if (warpInIndex.x != -1) break;
+						}
+						if (warpInIndex.x != -1)
+						{
+							outPathNodes->push_back(warpInIndex);
+						}
+					}
+
+					outPathNodes->push_back(pathStep);
+					auto it = outParentMap.find(pathStep);
+					if (it == outParentMap.end() || (it->second.x == -1 && it->second.y == -1))
+					{
+						// 経路構築エラー、または親が見つからない
+						outPathNodes->clear();
+						return false;
+					}
+					pathStep = it->second; // 親ノードへ移動
+				}
+				std::reverse(outPathNodes->begin(), outPathNodes->end()); // パスを逆順にする
+			}
+			return true; // パスが見つかった
+		}
+
+		// 親を記録 (これがないとパス再構築ができない)
+		// target以外でポップされたノードのみ親を記録
+		outParentMap[current.index] = current.parentIndex;
+
+		// 隣接ノードの探索 (上下左右)
+		int dx[4] = { -1, 0, 1, 0 };
+		int dy[4] = { 0, 1, 0, -1 };
+		Direction neighborDirections[4] = { Direction::Left, Direction::Down, Direction::Right, Direction::Up };
+
+		for (int i = 0; i < 4; ++i)
+		{
+			Vector2int neighborIndex = { current.index.x + dx[i], current.index.y + dy[i] };
+
+			// 境界チェックと移動可否チェック
+			if (!CanMove(current.index, neighborIndex))
+			{
+				continue;
+			}
+
+			// 新しいGコストの計算
+			// 現在のノードのGコスト + 隣接ノードへの移動コスト (ここでは1) + 隣接ノードの固有コスト
+			int newGCost = current.gCost + 1 + block[neighborIndex.y][neighborIndex.x].cost;
+
+			// ワープ入り口の場合の特別な処理
+			if (block[neighborIndex.y][neighborIndex.x].type == BlockType::WarpIn)
+			{
+				Vector2int warpOutIndex = { -1, -1 };
+				for (int y = 0; y < MAP_HEIGHT; ++y)
+				{
+					for (int x = 0; x < MAP_WIDTH; ++x)
+					{
+						if (block[y][x].type == BlockType::WarpOut)
+						{
+							warpOutIndex = { x, y };
+							break;
+						}
+					}
+					if (warpOutIndex.x != -1) break;
+				}
+				if (warpOutIndex.x != -1)
+				{
+					// ワープ出口への移動コストを加算
+					// この場合は、ワープ出口を隣接ノードとみなしてコストを計算し、openListに入れるべき
+					// ここでは簡略化のため、ワープ出口への移動コストを0と仮定し、新しいGコストを計算し直す
+					int costToWarpOut = 1; // ワープインからワープアウトへの移動コスト
+					newGCost = current.gCost + costToWarpOut; // current.gCostからワープ出口までのコスト
+					// ワープ出口をそのまま次のneighborIndexとして扱う
+					neighborIndex = warpOutIndex;
+				}
+				else
+				{
+					// ワープ出口がない場合、ワープ入り口は通常のEmptyブロックとして扱うか、移動不可にする
+					// ここでは通常のコスト計算を続ける
+				}
+			}
+
+
+			// より良い経路が見つかった場合
+			if (newGCost < outGCostMap[neighborIndex.y][neighborIndex.x])
+			{
+				outGCostMap[neighborIndex.y][neighborIndex.x] = newGCost; // Gコストを更新
+				// Hコスト（マンハッタン距離）
+				int neighborHCost = static_cast<int>(std::fabs(neighborIndex.x - target.x) + std::fabs(neighborIndex.y - target.y));
+				// Fコスト = Gコスト + Hコスト
+				int neighborFCost = newGCost + neighborHCost;
+
+				// OpenListにノードを追加
+				currentOpenList.push({ neighborIndex, newGCost, neighborHCost, neighborFCost, current.index, neighborDirections[i], (block[neighborIndex.y][neighborIndex.x].type == BlockType::Slope) });
+				// グローバルなA*実行の場合のみ、ブロックの状態をFrontierに設定
+				if (&outGCostMap == &gCostMap) // グローバルなgCostMapが使われている場合
+				{
+					block[neighborIndex.y][neighborIndex.x].state = AstarBlockState::Frontier;
+				}
+			}
+		}
+	}
+	return false; // パスが見つからなかった
+}
+
+void TR2Class::Astar(const Vector3& pos, const Vector3& target)
+{
+	astarStartIndex = PositionToIndex(pos);
+	astarTargetIndex = PositionToIndex(target);
+
+	// A*パス表示のためにブロックの状態をリセット
 	for (int y = 0; y < MAP_HEIGHT; ++y)
 	{
 		for (int x = 0; x < MAP_WIDTH; ++x)
@@ -1022,344 +1165,203 @@ void TR2Class::AstarSet(const Vector3& pos, const Vector3& target)
 			block[y][x].state = AstarBlockState::None;
 		}
 	}
-	// gCostMapを最大値で初期化
-	for (auto& row : gCostMap)
-	{
-		std::fill(row.begin(), row.end(), (std::numeric_limits<int>::max)());
-	}
-	// openListの初期化
-	openList = std::priority_queue<Node, std::vector<Node>, std::greater<Node>>();
-	// openListの初期化
-	while (!openList.empty()) // なんかclear()は危険らしい。知らんけど
-	{
-		openList.pop();
-	}
-	// parentMapの初期化
-	parentMap.clear();
 
-	// スタート地点とゴール地点を設定
-	startIndex = PositionToIndex(pos);
-	targetIndex = PositionToIndex(target);
-
-	// スタートまたはターゲットが壁、またはマップ範囲外ならA*をアクティブにしない
-	if (startIndex.x < 0 || startIndex.x >= MAP_WIDTH || startIndex.y < 0 || startIndex.y >= MAP_HEIGHT ||
-		targetIndex.x < 0 || targetIndex.x >= MAP_WIDTH || targetIndex.y < 0 || targetIndex.y >= MAP_HEIGHT 
-		//|| block[startIndex.y][startIndex.x].type == BlockType::Wall || block[targetIndex.y][targetIndex.x].type == BlockType::Wall
-		)
+	// グローバルなA*変数を使用してパスを計算し、pathNodesに結果を格納
+	if (_RunAstar(astarStartIndex, astarTargetIndex, parentMap, gCostMap, &pathNodes))
+	{
+		aStarActive = true;
+		// パス上のブロックをマーク
+		for (const auto& nodeIndex : pathNodes)
+		{
+			block[nodeIndex.y][nodeIndex.x].state = AstarBlockState::Path;
+		}
+		// 開始地点もパスとしてマーク
+		block[astarStartIndex.y][astarStartIndex.x].state = AstarBlockState::Path;
+	}
+	else
 	{
 		aStarActive = false;
-		return;
+		pathNodes.clear(); // パスが見つからなかった場合はクリア
 	}
-
-
-	// 最短経路に間違いなく組み込まれるからスタート地点は探索済みとして扱う。
-	block[startIndex.y][startIndex.x].state = AstarBlockState::Frontier;
-	// スタート地点からスタート地点の距離
-	gCostMap[startIndex.y][startIndex.x] = 0;
-	// スタート地点からゴール地点の推定距離
-	int hCost = static_cast<int>(std::fabs(startIndex.x - targetIndex.x) + std::fabs(startIndex.y - targetIndex.y));
-	// 親はいないなので適当に{-1, -1} でも入れておく
-	openList.push({ startIndex, 0, hCost, hCost, {-1, -1} });
-
-	// 初期化完了
-	aStarActive = true;
-}
-
-void TR2Class::Astar(const Vector3& pos, const Vector3& target)
-{
-	// 最初にAstarSetを呼び出して初期化
-	if (!aStarActive) AstarSet(pos, target);
-
-	// ワープ出口の座標を事前に探索
-	Vector2int warpOutIndex = { -1, -1 };
-	for (int y = 0; y < MAP_HEIGHT; ++y)
-	{
-		for (int x = 0; x < MAP_WIDTH; ++x)
-		{
-			if (block[y][x].type == BlockType::WarpOut)
-			{
-				warpOutIndex = { x, y };
-				break;
-			}
-		}
-		if (warpOutIndex.x != -1) break;
-	}
-
-	while (!openList.empty())
-	{
-		Node current = openList.top();
-		openList.pop();
-
-		// すでにクローズリストにある（Explored）ノードはスキップ
-		// OpenListに同じノードが複数入	っていた場合の対策、
-		// より良い経路で既に処理済みの場合に古いノードを無視するために必要
-		if (block[current.index.y][current.index.x].state == AstarBlockState::Explored)
-		{
-			continue;
-		}
-
-		// 現在のノードをクローズリストに追加
-		block[current.index.y][current.index.x].state = AstarBlockState::Explored;
-		parentMap[current.index] = current.parentIndex; // 親を記録
-
-		// 目的地に到達したらループを終了
-		if (current.index == targetIndex)
-		{
-			// 経路の再構築
-			Vector2int pathStep = targetIndex;
-			while (pathStep != startIndex)
-			{
-				block[pathStep.y][pathStep.x].state = AstarBlockState::Path;
-				if (block[pathStep.y][pathStep.x].type == BlockType::WarpOut)
-				{
-					Vector2int warpInIndex = { -1, -1 };
-					for (int y = 0; y < MAP_HEIGHT; ++y)
-					{
-						for (int x = 0; x < MAP_WIDTH; ++x)
-						{
-							if (block[y][x].type == BlockType::WarpIn)
-							{
-								warpInIndex = { x, y };
-								break;
-							}
-						}
-						if (warpInIndex.x != -1) break;
-					}
-					if (warpInIndex.x != -1) block[warpInIndex.y][warpInIndex.x].state = AstarBlockState::Path;
-				}
-				// 親ノードがマップに存在しない場合の安全対策
-				auto it = parentMap.find(pathStep);
-				if (it == parentMap.end() || (it->second.x == -1 && it->second.y == -1))
-				{
-					break;
-				}
-				pathStep = it->second; // 親ノードへ移動
-			}
-			block[startIndex.y][startIndex.x].state = AstarBlockState::Path; // スタート地点も経路としてマーク
-			aStarActive = false; // 探索終了
-			return; // 経路が見つかったので関数を終了
-		}
-
-		Direction dir[] = { Direction::Left, Direction::Down, Direction::Right, Direction::Up };
-		int dx[4] = { -1, 0, 1, 0 };
-		int dy[4] = { 0, 1, 0, -1 };
-
-		// --- ここからA*探索の隣接ノード判定部 ---
-		for (int i = 0; i < 4; ++i)
-		{
-			Vector2int neighborIndex = { current.index.x + dx[i], current.index.y + dy[i] };
-
-			if (neighborIndex.x < 0 || neighborIndex.x >= MAP_WIDTH ||
-				neighborIndex.y < 0 || neighborIndex.y >= MAP_HEIGHT)
-			{
-				continue;
-			}
-
-			BlockType fromType = block[current.index.y][current.index.x].type;
-			BlockType toType = block[neighborIndex.y][neighborIndex.x].type;
-
-			// --- ルール適用 ---
-			if (!CanMove(current.index, neighborIndex))
-			{
-				continue;
-			}
-
-			// 既に探索済みはスキップ
-			if (block[neighborIndex.y][neighborIndex.x].state == AstarBlockState::Explored)
-			{
-				continue;
-			}
-
-			// Slopeを通過したかどうか
-			bool nextFromSlope = (toType == BlockType::Slope);
-
-			int newGCost = current.gCost + block[neighborIndex.y][neighborIndex.x].cost + 1;
-
-			if (newGCost < gCostMap[neighborIndex.y][neighborIndex.x])
-			{
-				gCostMap[neighborIndex.y][neighborIndex.x] = newGCost;
-				int neighborHCost = static_cast<int>(std::fabs(neighborIndex.x - targetIndex.x) + std::fabs(neighborIndex.y - targetIndex.y));
-				int neighborFCost = newGCost + neighborHCost + block[neighborIndex.y][neighborIndex.x].cost;
-				openList.push({ neighborIndex, newGCost, neighborHCost, neighborFCost, current.index, dir[i], nextFromSlope });
-				block[neighborIndex.y][neighborIndex.x].state = AstarBlockState::Frontier;
-			}
-		}
-
-	}
-
-	aStarActive = false; // 探索終了
 }
 
 int TR2Class::GetShortestPathLength(const Vector3& pos, const Vector3& target)
 {
-	std::vector<std::vector<int>> localGCostMap(MAP_HEIGHT, std::vector<int>(MAP_WIDTH, (std::numeric_limits<int>::max)()));
+	// ローカルなA*変数を使用してパス長のみを計算
 	std::map<Vector2int, Vector2int> localParentMap;
-	struct LocalNode
-	{
-		Vector2int index;
-		int gCost;
-		int hCost;
-		int fCost;
-		Vector2int parentIndex;
-		bool fromSlope;
-		bool operator>(const LocalNode& other) const
-		{
-			if (fCost != other.fCost) return fCost > other.fCost;
-			if (gCost != other.gCost) return gCost > other.gCost;
-			return false;
-		}
-	};
-	std::priority_queue<LocalNode, std::vector<LocalNode>, std::greater<LocalNode>> localOpenList;
+	std::vector<std::vector<int>> localGCostMap(MAP_HEIGHT, std::vector<int>(MAP_WIDTH, (std::numeric_limits<int>::max)()));
+	std::vector<Vector2int> localPathNodes; // パス長計算用
 
 	Vector2int localStartIndex = PositionToIndex(pos);
 	Vector2int localTargetIndex = PositionToIndex(target);
 
-	if (localStartIndex.x < 0 || localStartIndex.x >= MAP_WIDTH || localStartIndex.y < 0 || localStartIndex.y >= MAP_HEIGHT ||
-		localTargetIndex.x < 0 || localTargetIndex.x >= MAP_WIDTH || localTargetIndex.y < 0 || localTargetIndex.y >= MAP_HEIGHT)
+	if (_RunAstar(localStartIndex, localTargetIndex, localParentMap, localGCostMap, &localPathNodes))
 	{
-		return 1000;
+		return static_cast<int>(localPathNodes.size());
 	}
+	return 1000; // パスが見つからなかった場合の大きな値（到達不能とみなす）
+}
+int TR2Class::GetShortestPathLength(const Vector3& pos, const Environment& targetType)
+{
+	int minPathLength = (std::numeric_limits<int>::max)(); // 無限大で初期化
+	Vector2int currentPosIndex = PositionToIndex(pos);
 
-	Vector2int warpOutIndex = { -1, -1 };
+	if (targetType == Environment::高台)
+	{
+		for (int y = 0; y < MAP_HEIGHT; ++y)
+		{
+			for (int x = 0; x < MAP_WIDTH; ++x)
+			{
+				if (block[y][x].type == BlockType::Wall) // 高台はWallブロックと定義
+				{
+					// 現在のキャラクター位置からこの高台までの距離を計算
+					int pathLen = GetShortestPathLength(pos, IndexToPosition({ x, y }));
+					if (pathLen < minPathLength)
+					{
+						minPathLength = pathLen;
+					}
+				}
+			}
+		}
+	}
+	// 他のEnvironmentタイプもここに追加可能
+
+	return minPathLength; // 最短パス長を返す (見つからなければmax_int)
+}
+
+void TR2Class::SetEnemyActionTarget(const Vector3& target)
+{
+	enemyActionTarget = PositionToIndex(target);
+}
+
+void TR2Class::SetEnemyActionTarget(const Vector3& pos, const Environment& targetType)
+{
+	int minPathLength = (std::numeric_limits<int>::max)();
+	Vector2int bestTargetIndex = PositionToIndex(pos); // 初期値は現在地
+
+	if (targetType == Environment::高台)
+	{
+		for (int y = 0; y < MAP_HEIGHT; ++y)
+		{
+			for (int x = 0; x < MAP_WIDTH; ++x)
+			{
+				if (block[y][x].type == BlockType::Wall) // 高台はWallブロックと定義
+				{
+					int pathLen = GetShortestPathLength(pos, IndexToPosition({ x, y }));
+					if (pathLen < minPathLength)
+					{
+						minPathLength = pathLen;
+						bestTargetIndex = { x, y };
+					}
+				}
+			}
+		}
+	}
+	// もし有効なターゲットが見つかれば、それを設定。見つからなければ現在地のまま。
+	if (minPathLength != (std::numeric_limits<int>::max)())
+	{
+		enemyActionTarget = bestTargetIndex;
+	}
+	else
+	{
+		// パスが見つからない場合は、現在の位置を目標とする（移動しない）
+		enemyActionTarget = PositionToIndex(pos);
+	}
+}
+
+
+void TR2Class::_UpdateMapEditMode()
+{
+	// ブロックAABBの更新とマウスとの衝突判定
 	for (int y = 0; y < MAP_HEIGHT; ++y)
 	{
 		for (int x = 0; x < MAP_WIDTH; ++x)
 		{
-			if (block[y][x].type == BlockType::WarpOut)
-			{
-				warpOutIndex = { x, y };
-				break;
-			}
+			block[y][x].AABB = Game::CreateAABB(block[y][x].transforms, block[y][x].model);
+			block[y][x].mouseTarget = Game::IsCollisionMouseRayAABB(block[y][x].AABB, block[y][x].model);
 		}
-		if (warpOutIndex.x != -1) break;
 	}
 
-	localGCostMap[localStartIndex.y][localStartIndex.x] = 0;
-	int hCost = static_cast<int>(std::fabs(localStartIndex.x - localTargetIndex.x) + std::fabs(localStartIndex.y - localTargetIndex.y));
-	localOpenList.push({ localStartIndex, 0, hCost, hCost, {-1, -1}, false });
-
-	while (!localOpenList.empty())
+	// ブロック変更ロジック
+	for (int y = 0; y < MAP_HEIGHT; ++y)
 	{
-		LocalNode current = localOpenList.top();
-		localOpenList.pop();
-
-		if (localParentMap.count(current.index)) continue;
-		localParentMap[current.index] = current.parentIndex;
-
-		if (current.index == localTargetIndex)
+		for (int x = 0; x < MAP_WIDTH; ++x)
 		{
-			int pathLength = 0;
-			Vector2int pathStep = localTargetIndex;
-			while (pathStep != localStartIndex)
+			// マウスがブロック上にあり、左クリックが押された「瞬間」のみ処理
+			if (block[y][x].mouseTarget && Game::IsPressMouse(0) && !PrePressMouse)
 			{
-				++pathLength;
-				auto it = localParentMap.find(pathStep);
-				if (it == localParentMap.end() || (it->second.x == -1 && it->second.y == -1))
+				switch (selectBlock)
 				{
-					return 1000;
+				case 0: // Empty
+					block[y][x].type = BlockType::Empty;
+					block[y][x].transforms.scale = { 1.0f, 1.0f, 1.0f };
+					block[y][x].transforms.translate.y = 0.0f;
+					block[y][x].cost = 0;
+					break;
+				case 1: // Wall
+					block[y][x].type = BlockType::Wall;
+					block[y][x].transforms.scale = { 1.0f, 5.0f, 1.0f }; // 壁なので高さを高く
+					block[y][x].transforms.translate.y = 1.0f;
+					block[y][x].cost = 1; // 壁の移動コストは高く設定する
+					break;
+				case 2: // Slope
+					block[y][x].type = BlockType::Slope;
+					block[y][x].transforms.scale = { 1.0f, 2.5f, 1.0f }; // 傾斜なので中間の高さ
+					block[y][x].transforms.translate.y = 0.5f;
+					block[y][x].cost = 0; // スロープの移動コストは低く
+					break;
+				case 3: // WarpIn
+					// 既存のWarpInをEmptyに戻す（唯一性を保証）
+					for (int wy = 0; wy < MAP_HEIGHT; ++wy)
+					{
+						for (int wx = 0; wx < MAP_WIDTH; ++wx)
+						{
+							if (block[wy][wx].type == BlockType::WarpIn)
+							{
+								block[wy][wx].type = BlockType::Empty;
+								block[wy][wx].transforms.translate.y = 0.0f;
+							}
+						}
+					}
+					block[y][x].type = BlockType::WarpIn;
+					block[y][x].transforms.scale = { 1.0f, 1.0f, 1.0f };
+					block[y][x].transforms.translate.y = 0.0f;
+					block[y][x].cost = 0;
+					break;
+				case 4: // WarpOut
+					// 既存のWarpOutをEmptyに戻す（唯一性を保証）
+					for (int wy = 0; wy < MAP_HEIGHT; ++wy)
+					{
+						for (int wx = 0; wx < MAP_WIDTH; ++wx)
+						{
+							if (block[wy][wx].type == BlockType::WarpOut)
+							{
+								block[wy][wx].type = BlockType::Empty;
+								block[wy][wx].transforms.translate.y = 0.0f;
+							}
+						}
+					}
+					block[y][x].type = BlockType::WarpOut;
+					block[y][x].transforms.scale = { 1.0f, 1.0f, 1.0f };
+					block[y][x].transforms.translate.y = 0.0f;
+					block[y][x].cost = 0;
+					break;
 				}
-				pathStep = it->second;
-			}
-			return pathLength;
-		}
-
-		int dx[4] = { -1, 0, 1, 0 };
-		int dy[4] = { 0, 1, 0, -1 };
-
-		for (int i = 0; i < 4; ++i)
-		{
-			Vector2int neighborIndex = { current.index.x + dx[i], current.index.y + dy[i] };
-
-			if (neighborIndex.x < 0 || neighborIndex.x >= MAP_WIDTH ||
-				neighborIndex.y < 0 || neighborIndex.y >= MAP_HEIGHT)
-			{
-				continue;
-			}
-
-			if (!CanMove(current.index, neighborIndex))
-			{
-				continue;
-			}
-
-			if (localParentMap.count(neighborIndex)) continue;
-
-			bool nextFromSlope = (block[neighborIndex.y][neighborIndex.x].type == BlockType::Slope);
-
-			int newGCost = current.gCost + block[neighborIndex.y][neighborIndex.x].cost + 1;
-
-			if (newGCost < localGCostMap[neighborIndex.y][neighborIndex.x])
-			{
-				localGCostMap[neighborIndex.y][neighborIndex.x] = newGCost;
-				int neighborHCost = static_cast<int>(std::fabs(neighborIndex.x - localTargetIndex.x) + std::fabs(neighborIndex.y - localTargetIndex.y));
-				int neighborFCost = newGCost + neighborHCost + block[neighborIndex.y][neighborIndex.x].cost;
-				localOpenList.push({ neighborIndex, newGCost, neighborHCost, neighborFCost, current.index, nextFromSlope });
+				block[y][x].changeFlag = true; // 変更フラグを設定（今回は単発クリックなので不要だが念のため）
 			}
 		}
-
 	}
 
-	return 1000;
-}
-
-void TR2Class::GetShortestPosition(const Vector3& pos, const Vector3& target)
-{
-	moveFrom = PositionToIndex(target);
-}
-
-int TR2Class::GetShortestPathLength(const Vector3& pos, const Environment& target)
-{
-	// 最短距離とその座標を初期化
-	int minPathLength = 1234;
-	Vector2int bestWall = PositionToIndex(pos);
-
-	if (target == Environment::高台)
+	// マウスボタンが離されたときにすべてのchangeFlagをリセット
+	if (!Game::IsPressMouse(0) && PrePressMouse)
 	{
 		for (int y = 0; y < MAP_HEIGHT; ++y)
 		{
 			for (int x = 0; x < MAP_WIDTH; ++x)
 			{
-				if (block[y][x].type == BlockType::Wall)
-				{
-					int pathLen = GetShortestPathLength(IndexToPosition(bestWall), IndexToPosition({x, y}));
-					if (pathLen < minPathLength)
-					{
-						minPathLength = pathLen;
-						bestWall = { x, y };
-					}
-				}
+				block[y][x].changeFlag = false;
 			}
 		}
 	}
-
-	return minPathLength;
-}
-
-void TR2Class::GetShortestPosition(const Vector3& pos, const Environment& target)
-{
-	// 最短距離とその座標を初期化
-	int minPathLength = 1234;
-	Vector2int bestWall = PositionToIndex(pos);
-
-	if (target == Environment::高台)
-	{
-		for (int y = 0; y < MAP_HEIGHT; ++y)
-		{
-			for (int x = 0; x < MAP_WIDTH; ++x)
-			{
-				if (block[y][x].type == BlockType::Wall)
-				{
-					int pathLen = GetShortestPathLength(IndexToPosition(bestWall), IndexToPosition({ x, y }));
-					if (pathLen < minPathLength)
-					{
-						minPathLength = pathLen;
-						bestWall = { x, y };
-					}
-				}
-			}
-		}
-	}
-	if (minPathLength < 1234)
-	{
-		moveFrom = bestWall;
-	}
+	PrePressMouse = Game::IsPressMouse(0); // 次のフレームのために現在のマウス状態を保存
 }

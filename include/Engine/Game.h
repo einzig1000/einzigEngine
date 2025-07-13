@@ -61,6 +61,21 @@ public:
 	// プリミティブモードの設定
 	static void toggleWireframeMode();
 
+	class DrawObject
+	{
+	public:
+		Transforms transforms;	// 位置、回転、スケール
+		Vector3 pivot;			// 回転の中心点
+		uint32_t color;			// 色
+		uint32_t model;         // 3Dモデル
+		uint32_t texture;       // テクスチャ
+		DrawOptions options;	// 描画オプション
+		AABB AABB;				// 衝突判定用AABB
 
+		void Draw() const
+		{
+			Game::Drawobj(this->transforms, this->pivot, this->model, this->texture, this->color, this->options);
+		}
+	};
 };
 
