@@ -1,6 +1,6 @@
 // Object3d.VS.hlsl
 
-//#include "Object3d.hlsli"
+#include "Object3d.hlsli"
 
 // TransformationMatrix: レジスタ b1 に設定
 ConstantBuffer<TransformationMatrix> gTransformationMatrix : register(b1);
