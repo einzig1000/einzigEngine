@@ -16,6 +16,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		Game::BeginFrame();
 		Game::SetMouseRay();
 
+		if (GetHitKey::keys[DIK_R] && !GetHitKey::preKeys[DIK_R])TR2Class_->Initialize();
 
 		// ↓更新処理ここから
 		TR2Class_->Update();

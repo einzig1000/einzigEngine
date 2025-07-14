@@ -153,8 +153,8 @@ void Engine::UpdateCamera()
 {
 	if (GetHitKey::keys[DIK_SPACE] && !GetHitKey::preKeys[DIK_SPACE])
 	{
-		if (cameraController->cameraMode_ == 1)cameraController->cameraMode_ = 0;
-		else cameraController->cameraMode_ = 1;
+		//if (cameraController->cameraMode_ == 1)cameraController->cameraMode_ = 0;
+		//else cameraController->cameraMode_ = 1;
 	}
 	// カメラの更新
 	cameraController->Updata();
