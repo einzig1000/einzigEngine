@@ -817,27 +817,55 @@ void Engine::DrawLine(const Vector3& start, const Vector3& end, const uint32_t& 
 	drawLineCallIndex++;
 }
 
-void Engine::DrawGrid(const Vector3& center, float size, float spacing, uint32_t color)
+void Engine::DrawGrid()
 {
-	float halfSize = size / 2.0f;
-	int numLines = static_cast<int>(size / spacing + 0.5f) + 1;
+	ID3D12GraphicsCommandList* commandList = dxManager->GetCommandList();
 
-	for (int i = 0; i < numLines; ++i)
-	{
-		float x = -halfSize + i * spacing;
-		Vector3 start = { center.x + x, center.y, center.z - halfSize };
-		Vector3 end = { center.x + x, center.y, center.z + halfSize };
-		DrawLine(start, end, color);
-	}
+	// グリッド描画用のPSOとルートシグネチャを設定
+	commandList->SetPipelineState(dxManager->GetPipelineStateManager()->GetGridPipelineState());
+	commandList->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature());
 
-	for (int i = 0; i < numLines; ++i)
-	{
-		float z = -halfSize + i * spacing;
-		Vector3 start = { center.x - halfSize, center.y, center.z + z };
-		Vector3 end = { center.x + halfSize, center.y, center.z + z };
-		DrawLine(start, end, color);
-	}
+	// 現在の描画コールインデックスのWVP定数バッファを更新
+	// グリッドはワールド座標の原点に描画されるため、World行列は単位行列とする
+	wvpData[drawCallIndex]->World = Matrix4x4::MakeIdentity4x4();
+	wvpData[drawCallIndex]->WVP = (wvpData[drawCallIndex]->World * cameraController->viewProjectionMatrix);
+
+	// Root Parameter 1 (b1) に TransformationMatrix の CBV (定数バッファビュー) を設定
+	commandList->SetGraphicsRootConstantBufferView(1, wvpResources[drawCallIndex]->GetGPUVirtualAddress());
+
+	// プリミティブトポロジーを三角形リストに設定
+	// グリッドシェーダーが頂点IDなどを使用してジオメトリを生成するため、頂点バッファは設定しない
+	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	// 3頂点のインスタンスを1つ描画 (フルスクリーンパスの場合)
+	// シェーダー内で画面全体をカバーする三角形を生成し、グリッドを描画する想定
+	commandList->DrawInstanced(3, 1, 0, 0);
+
+	// 描画コールインデックスを進める
+	drawCallIndex++;
 }
+
+//void Engine::DrawGrid(const Vector3& center, float size, float spacing, uint32_t color)
+//{
+//	float halfSize = size / 2.0f;
+//	int numLines = static_cast<int>(size / spacing + 0.5f) + 1;
+//
+//	for (int i = 0; i < numLines; ++i)
+//	{
+//		float x = -halfSize + i * spacing;
+//		Vector3 start = { center.x + x, center.y, center.z - halfSize };
+//		Vector3 end = { center.x + x, center.y, center.z + halfSize };
+//		DrawLine(start, end, color);
+//	}
+//
+//	for (int i = 0; i < numLines; ++i)
+//	{
+//		float z = -halfSize + i * spacing;
+//		Vector3 start = { center.x - halfSize, center.y, center.z + z };
+//		Vector3 end = { center.x + halfSize, center.y, center.z + z };
+//		DrawLine(start, end, color);
+//	}
+//}
 
 
 // 音

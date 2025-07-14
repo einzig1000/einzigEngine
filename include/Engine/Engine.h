@@ -39,7 +39,7 @@ public:
 	void DrawTriangle(const Transforms& transform, const Vector3& pos1, const Vector3& pos2, const Vector3& pos3, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
 	void DrawSprite(const Transforms& transform, const Vector2& center, const Vector2& textureSize, uint32_t textureNumber, const uint32_t& materialColor, const Transforms& uvTransform);
 	void DrawLine(const Vector3& start, const Vector3& end, const uint32_t& materialColor);
-	void DrawGrid(const Vector3& center, float size, float spacing, uint32_t color);
+	void DrawGrid();
 
 	// 音
 	void PlayAudio(const uint32_t& audioId, bool loop);

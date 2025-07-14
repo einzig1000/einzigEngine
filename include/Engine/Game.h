@@ -28,7 +28,7 @@ public:
 	static void DrawSprite (const Transforms& transform, const Vector2& center, const Vector2& textureSize, uint32_t textureNumber, const uint32_t& materialColor, const Transforms& uvTransform);
 	static void DrawTriangle(const Transforms& transform, const Vector3& pos1, const Vector3& pos2, const Vector3& pos3, uint32_t textureNumber, const uint32_t& materialColor);
 	static void DrawTriangle(const Transforms& transform, const Vector3& pos1, const Vector3& pos2, const Vector3& pos3, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
-	static void DrawGrid	(const Vector3& center, float size, float spacing, uint32_t color);
+	static void DrawGrid	();
 	
 	static void DrawLine   (const Vector3& start, const Vector3& end, const uint32_t& materialColor);
 

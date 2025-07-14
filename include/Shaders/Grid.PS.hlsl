@@ -1,5 +1,5 @@
 
-#include "object3d.hlsli"
+//#include "Object3d.hlsli"
 
 // 定数バッファ (ルートシグネチャのレジスタ0番に対応)
 ConstantBuffer<TransformationMatrix> gTransformationMatrix : register(b0);
@@ -17,7 +17,7 @@ float4 PSMain(VertexOutput input) : SV_TARGET
 {
     float3 worldPos = input.WorldPos;
 
-    float3 color = gGridConstants.gridColor.rgb; // グリッドの基本色
+    float3 color = gGridConstants.gridColor.rgb;
 
     // メイングリッド
     float2 mainGrid = 1.0f - abs(frac(worldPos.xz / gGridConstants.gridSize) * 2.0f - 1.0f);

@@ -1,5 +1,5 @@
 
-#include "object3d.hlsli"
+//#include "Object3d.hlsli"
 
 // 定数バッファ (ルートシグネチャのレジスタ0番に対応)
 ConstantBuffer<TransformationMatrix> gTransformationMatrix : register(b0);

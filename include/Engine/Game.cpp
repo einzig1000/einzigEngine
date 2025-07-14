@@ -73,9 +73,9 @@ void Game::DrawTriangle(const Transforms & transform, const Vector3 & pos1, cons
 	engine->DrawTriangle(transform, pos1, pos2, pos3, textureNumber, materialColor, drawOptions);
 }
 
-void Game::DrawGrid(const Vector3& center, float size, float spacing, uint32_t color)
+void Game::DrawGrid()
 {
-	engine->DrawGrid(center, size, spacing, color);
+	engine->DrawGrid();
 }
 
 void Game::DrawSprite(const Transforms& transform, const Vector2& center, const Vector2& textureSize, uint32_t textureNumber, const uint32_t& materialColor, const Transforms& uvTransform)

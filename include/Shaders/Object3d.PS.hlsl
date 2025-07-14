@@ -1,6 +1,6 @@
 // Object3d.PS.hlsl
 
-#include "object3d.hlsli"
+//#include "Object3d.hlsli"
 
 // サンプラーのレジスタ番号を s0 に設定
 SamplerState gSampler : register(s0);
