@@ -1,4 +1,5 @@
 #include "Engine/Game.h"
+#include "Game.h"
 
 
 static Engine* engine = new Engine;
@@ -71,6 +72,11 @@ void Game::DrawTriangle(const Transforms& transform, const Vector3& pos1, const 
 void Game::DrawTriangle(const Transforms & transform, const Vector3 & pos1, const Vector3 & pos2, const Vector3 & pos3, uint32_t textureNumber, const uint32_t & materialColor, const DrawOptions drawOptions)
 {
 	engine->DrawTriangle(transform, pos1, pos2, pos3, textureNumber, materialColor, drawOptions);
+}
+
+void Game::DrawGrid(const Vector3& center, float size, float spacing, uint32_t color)
+{
+	engine->DrawGrid(center, size, spacing, color);
 }
 
 void Game::DrawSprite(const Transforms& transform, const Vector2& center, const Vector2& textureSize, uint32_t textureNumber, const uint32_t& materialColor, const Transforms& uvTransform)
