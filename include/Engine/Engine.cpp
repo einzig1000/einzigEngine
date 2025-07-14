@@ -826,13 +826,17 @@ void Engine::DrawGrid(const Vector3& center, float size, float spacing, uint32_t
 		float x = -halfSize + i * spacing;
 		Vector3 start = { center.x + x, center.y, center.z - halfSize };
 		Vector3 end = { center.x + x, center.y, center.z + halfSize };
-		if (i != numLines / 2)
+		if (i == numLines / 2)
+		{
+			DrawLine(start, end, 0xFF0000FF);
+		}
+		else if ((i + numLines / 2) % 10 == 0)
 		{
 			DrawLine(start, end, 0xFFFFFFFF);
 		}
 		else
 		{
-			DrawLine(start, end, 0xFF0000FF);
+			DrawLine(start, end, 0x444444FF);
 		}
 	}
 
@@ -841,13 +845,17 @@ void Engine::DrawGrid(const Vector3& center, float size, float spacing, uint32_t
 		float z = -halfSize + i * spacing;
 		Vector3 start = { center.x - halfSize, center.y, center.z + z };
 		Vector3 end = { center.x + halfSize, center.y, center.z + z };
-		if (i != numLines / 2)
+		if (i == numLines / 2)
+		{
+			DrawLine(start, end, 0x00FF00FF);
+		}
+		else if ((i + numLines / 2) % 10 == 0)
 		{
 			DrawLine(start, end, 0xFFFFFFFF);
 		}
 		else
 		{
-			DrawLine(start, end, 0x00FF00FF);
+			DrawLine(start, end, 0x444444FF);
 		}
 	}
 }

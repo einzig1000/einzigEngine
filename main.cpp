@@ -71,7 +71,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 	// Grid
 	Vector3 GridCenter;
-	float gridWidth = 10.0f;
+	float gridWidth = 50.0f;
 	float cellWidth	= 1.0f;
 
 	while (Game::ProcessMessage())
@@ -140,8 +140,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		ImGui::Text("push 3 key : WireFrameMode");
 		ImGui::Text("----------------Grid---------------");
 		ImGui::DragFloat3("Grid.center", &GridCenter.x);
-		ImGui::DragFloat("Grid.gridWidth", &gridWidth);
-		ImGui::DragFloat("Grid.cellWidth", &cellWidth);
+		//ImGui::DragFloat("Grid.gridWidth", &gridWidth);
+		//ImGui::DragFloat("Grid.cellWidth", &cellWidth);
 		if (cellWidth > gridWidth)cellWidth = gridWidth;
 		if (cellWidth <= 0)cellWidth = 1;
 		ImGui::Text("---------------Audio---------------");
