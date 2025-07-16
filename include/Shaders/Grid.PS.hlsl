@@ -7,11 +7,7 @@ ConstantBuffer<TransformationMatrix> gTransformationMatrix : register(b0);
 // グリッド定数 (ルートシグネチャのレジスタ2番に対応)
 ConstantBuffer<GridConstants> gGridConstants : register(b2);
 
-struct VertexOutput
-{
-    float4 SV_Position : SV_POSITION;
-    float3 WorldPos : WORLD_POS;
-};
+
 
 float4 PSMain(VertexOutput input) : SV_TARGET
 {
