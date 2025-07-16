@@ -97,7 +97,7 @@ void TR2Class::Initialize()
 	enemy_.passiveSkill = 0;	// スキル識別用　設定できるように
 	enemy_.ultimateSkill = 0;	// スキル識別用　変更
 	enemy_.delayCost = ultimateSkillList[enemy_.ultimateSkill].delayCost;// ウルト使用制限
-	enemy_.priority.MoveToAdvantage = 1.0f;
+	enemy_.priority.MoveToAdvantage = 1.5f;
 	enemy_.priority.MoveToEnemy = 1.0f;
 	enemy_.priority.Skill = 1.0f;
 	enemy_.priority.AdvancedSkill = 1.0f;

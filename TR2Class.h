@@ -89,11 +89,11 @@ enum Environment
 
 struct ActPattern_Attaker
 {
-	float MoveToAdvantage = 1.0f;	//有利ポジに向かう
-	float MoveToEnemy = 1.0f;		//敵に向かう
+	float MoveToAdvantage = 1.5f;	//有利ポジに向かう
+	float MoveToEnemy = 1.4f;		//敵に向かう
 	float Skill = 1.0f;				//スキル
-	float AdvancedSkill = 1.0f;		//
-	float UltimateSkill = 1.0f;		//
+	float AdvancedSkill = 1.3f;		//
+	float UltimateSkill = 2.0f;		//
 	int __MAX__ = 5;
 
 	float GetHighestPriority() const
