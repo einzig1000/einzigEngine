@@ -97,11 +97,11 @@ void TR2Class::Initialize()
 	enemy_.passiveSkill = 0;	// スキル識別用　設定できるように
 	enemy_.ultimateSkill = 0;	// スキル識別用　変更
 	enemy_.delayCost = ultimateSkillList[enemy_.ultimateSkill].delayCost;// ウルト使用制限
-	enemy_.priority.MoveToAdvantage = 1.6f;
-	enemy_.priority.MoveToEnemy = 1.8f;
+	enemy_.priority.MoveToAdvantage = 1.0f;
+	enemy_.priority.MoveToEnemy = 1.0f;
 	enemy_.priority.Skill = 1.0f;
-	enemy_.priority.AdvancedSkill = 1.5f;
-	enemy_.priority.UltimateSkill = 2.0f;
+	enemy_.priority.AdvancedSkill = 1.0f;
+	enemy_.priority.UltimateSkill = 1.0f;
 	enemy_.priorityReset();
 #pragma endregion
 
@@ -120,6 +120,7 @@ void TR2Class::Initialize()
 			block[y][x].AABB = Game::CreateAABB(block[y][x].transforms, block[y][x].model);
 			block[y][x].cost = 0;
 			block[y][x].type = BlockType::Empty;
+			block[y][x].state = AstarBlockState::None; // A*表示のリセット
 		}
 	}
 
