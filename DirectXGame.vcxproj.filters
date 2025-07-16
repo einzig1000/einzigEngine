@@ -261,12 +261,12 @@
     </Text>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="include\Shaders\Grid.PS.hlsl" />
     <FxCompile Include="include\Shaders\Grid.VS.hlsl" />
     <FxCompile Include="include\Shaders\Line.PS.hlsl" />
     <FxCompile Include="include\Shaders\Line.VS.hlsl" />
     <FxCompile Include="include\Shaders\Object3d.PS.hlsl" />
     <FxCompile Include="include\Shaders\Object3d.VS.hlsl" />
+    <FxCompile Include="include\Shaders\Grid.PS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="include\Shaders\Object3d.hlsli" />

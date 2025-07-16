@@ -11,7 +11,7 @@ PipelineStateManager::PipelineStateManager(ID3D12Device* device)
     InitializePSOInternal(device);          // オブジェクト描画用
     InitializeLinePSOInternal(device);      // ライン   描画用
     InitializeWireframePSOInternal(device); // ワイヤーフレーム　描画用
-    InitializeGridPSOInternal(device);
+    //InitializeGridPSOInternal(device);
 
     Log("コンストラクタ実行成功 : PipelineStateManager");
 }
@@ -230,10 +230,6 @@ void PipelineStateManager::InitializeWireframePSOInternal(ID3D12Device* device)
 {
     HRESULT hr;
 
-    //Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = CompileShader(L"include/Shaders/Object3D.PS.hlsl", L"ps_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
-    //assert(pixelShaderBlob != nullptr);
-    //Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = CompileShader(L"include/Shaders/Object3D.VS.hlsl", L"vs_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
-    //assert(vertexShaderBlob != nullptr);
     Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = CompileShader(L"include/Shaders/Line.PS.hlsl", L"ps_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
     assert(pixelShaderBlob != nullptr);
     Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = CompileShader(L"include/Shaders/Line.VS.hlsl", L"vs_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
@@ -293,13 +289,9 @@ void PipelineStateManager::InitializeWireframePSOInternal(ID3D12Device* device)
 
 void PipelineStateManager::InitializeGridPSOInternal(ID3D12Device* device)
 {
-
     HRESULT hr;
 
-
-
     // GridShaderのコンパイル
-
     Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = CompileShader(L"include/Shaders/Grid.PS.hlsl", L"ps_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
     assert(pixelShaderBlob != nullptr);
     Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = CompileShader(L"include/Shaders/Grid.VS.hlsl", L"vs_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());

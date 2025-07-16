@@ -1,4 +1,3 @@
-
 #include "Object3d.hlsli"
 
 // 定数バッファ (ルートシグネチャのレジスタ0番に対応)
@@ -16,7 +15,7 @@ float4 PSMain(VertexOutput input) : SV_TARGET
     float3 color = gGridConstants.gridColor.rgb;
 
     // メイングリッド
-    float2 mainGrid = 1.0f - abs(frac(worldPos.xz / gGridConstants.gridSize) * 2.0f - 1.0f);
+    float32_t2 mainGrid = 1.0f - abs(frac(worldPos.xz / gGridConstants.gridSize) * 2.0f - 1.0f);
     float mainGridLine = saturate(min(mainGrid.x, mainGrid.y) * gGridConstants.lineThickness);
 
     // サブグリッド

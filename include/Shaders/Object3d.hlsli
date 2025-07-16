@@ -15,6 +15,7 @@ struct VertexShaderOutput
 };
 struct VertexOutput
 {
+  
     float32_t4 SV_Position : SV_POSITION;
     float32_t3 WorldPos : WORLD_POS;
 };
@@ -43,13 +44,13 @@ struct DirectionalLight
 
 struct GridConstants
 {
-    float32_t4 gridColor; // グリッドのメインカラー (RGBA)
-    float32_t4 subGridColor; // サブグリッドのカラー (RGBA)
-    float32_t gridSize; // メイングリッドのサイズ (例: 1.0fで1m間隔)
-    float32_t subGridSize; // サブグリッドのサイズ (例: 0.1fで10cm間隔)
-    float32_t lineThickness; // メイングリッドの線の太さの乗数
-    float32_t subLineThickness; // サブグリッドの線の太さの乗数
-    float32_t minDistance; // グリッドの描画開始距離
-    float32_t maxDistance; // グリッドの描画終了距離
-    float32_t4 padding; // 16バイトアラインメントのためのパディング
+    float32_t4 gridColor;
+    float32_t4 subGridColor;
+    float32_t gridSize;
+    float32_t subGridSize;
+    float32_t lineThickness; 
+    float32_t subLineThickness;
+    float32_t minDistance;
+    float32_t maxDistance;
+    float32_t4 padding;
 };
