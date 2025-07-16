@@ -322,6 +322,13 @@ uint32_t Engine::LoadAudio(const std::string& filePath)
 	return dxManager->GetAudioManager()->LoadAudio(filePath);
 }
 
+TextureData* Engine::GetTexture(uint32_t textureNumber)
+{
+	TextureData* tex = dxManager->GetTextureManager()->GetTexture(textureNumber);
+	return tex;
+}
+
+
 // 描画
 void Engine::Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor)
 {
@@ -1015,7 +1022,6 @@ void Engine::toggleWireframeMode()
 }
 
 
-
 void Engine::InitializeLineResources(ID3D12Device* device)
 {
 	HRESULT hr;
@@ -1049,7 +1055,6 @@ void Engine::InitializeLineResources(ID3D12Device* device)
 	materialBufferDesc.Format = DXGI_FORMAT_UNKNOWN;
 	materialBufferDesc.SampleDesc.Count = 1;
 	materialBufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-
 
 	for (size_t i = 0; i < kMaxDrawLineCallPerFrame; ++i)
 	{

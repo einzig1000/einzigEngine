@@ -43,6 +43,11 @@ uint32_t Game::LoadAudio(const std::string& filePath)
 	return engine->LoadAudio(filePath);
 }
 
+TextureData* Game::GetTexture(uint32_t textureNumber)
+{
+	return engine->GetTexture(textureNumber);
+}
+
 void Game::Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor)
 {
 	engine->Drawobj(transform, center, objectNumber, textureNumber, materialColor);

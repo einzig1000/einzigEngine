@@ -19,6 +19,7 @@ public:
 	static uint32_t LoadOBJ(const std::string& directoryPath, const std::string& filename);
 	static uint32_t LoadTexture(const std::string& filePath);
 	static uint32_t LoadAudio(const std::string& filePath);
+	TextureData* GetTexture(uint32_t textureNumber);
 
 	// 描画
 	static void Drawobj    (const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor);
