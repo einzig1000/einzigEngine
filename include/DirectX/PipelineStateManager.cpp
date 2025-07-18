@@ -11,7 +11,7 @@ PipelineStateManager::PipelineStateManager(ID3D12Device* device)
     InitializePSOInternal(device);          // オブジェクト描画用
     InitializeLinePSOInternal(device);      // ライン   描画用
     InitializeWireframePSOInternal(device); // ワイヤーフレーム　描画用
-    //InitializeGridPSOInternal(device);
+    InitializeGridPSOInternal(device);
 
     Log("コンストラクタ実行成功 : PipelineStateManager");
 }

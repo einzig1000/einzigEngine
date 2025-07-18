@@ -831,7 +831,9 @@ Microsoft::WRL::ComPtr<IDxcBlob> CompileShader(
     //// 1 hlslファイルを読む
     ///////////////////////////////////////
     // これからシェーダーをコンパイルする旨をログに出す
-    Log(ConvertString(std::format(L"Begin CompileShader, path:{}, profile:{}", filePath, profile)));
+    Log("シェーダーをコンパイル開始, path:%s, profile:%s",
+        ConvertString(filePath).c_str(),
+        ConvertString(profile).c_str());
     // hlslファイルを読む
     IDxcBlobEncoding* shaderSource = nullptr;
     HRESULT hr = dxcUtils->LoadFile(filePath.c_str(), nullptr, &shaderSource);

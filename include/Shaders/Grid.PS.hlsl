@@ -8,14 +8,14 @@ ConstantBuffer<GridConstants> gGridConstants : register(b2);
 
 
 
-float4 PSMain(VertexOutput input) : SV_TARGET
+float4 main(VertexOutput input) : SV_TARGET
 {
     float3 worldPos = input.WorldPos;
 
     float3 color = gGridConstants.gridColor.rgb;
 
     // メイングリッド
-    float32_t2 mainGrid = 1.0f - abs(frac(worldPos.xz / gGridConstants.gridSize) * 2.0f - 1.0f);
+    float2 mainGrid = 1.0f - abs(frac(worldPos.xz / gGridConstants.gridSize) * 2.0f - 1.0f);
     float mainGridLine = saturate(min(mainGrid.x, mainGrid.y) * gGridConstants.lineThickness);
 
     // サブグリッド
@@ -23,8 +23,8 @@ float4 PSMain(VertexOutput input) : SV_TARGET
     float subGridLine = saturate(min(subGrid.x, subGrid.y) * gGridConstants.subLineThickness);
 
     // 距離によるフェード
-    float dist = length(worldPos - gTransformationMatrix.cameraPos.xyz);
-    float fade = saturate((gGridConstants.maxDistance - dist) / (gGridConstants.maxDistance - gGridConstants.minDistance));
+    //float dist = length(worldPos - gTransformationMatrix.WVP);
+    float fade = saturate((gGridConstants.maxDistance - 1) / (gGridConstants.maxDistance - gGridConstants.minDistance));
 
     float finalAlpha = (mainGridLine * gGridConstants.gridColor.a + subGridLine * gGridConstants.subGridColor.a) * fade;
 
