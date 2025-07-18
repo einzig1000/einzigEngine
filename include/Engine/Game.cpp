@@ -80,7 +80,7 @@ void Game::DrawTriangle(const Transforms & transform, const Vector3 & pos1, cons
 
 void Game::DrawSprite(const Transforms& transform, const Vector2& center, const Vector2& textureSize, uint32_t textureNumber, const uint32_t& materialColor, const Transforms& uvTransform)
 {
-	engine->DrawSprite(transform, textureSize, center, textureNumber, materialColor, uvTransform);
+	engine->DrawSprite(transform, center, textureSize, textureNumber, materialColor, uvTransform);
 }
 
 void Game::DrawLine(const Vector3& start, const Vector3& end, const uint32_t& materialColor)

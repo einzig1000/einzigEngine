@@ -22,32 +22,31 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	DrawOptions sphereOptions;
 	
 	// ブロック
-	int blockModel = Game::LoadOBJ("resources/block", "map.obj");
-	int blockPng = Game::LoadTexture("resources/block/map.png");
-	Transforms blockTransforms[20][10];
-	Vector3 blockPivot[20][10];
-	DrawOptions blockOptions[20][10];
+	Game::DrawObject block[20][10];
+	int blockmodel = Game::LoadOBJ("resources/block", "map.obj");
+	int blockTextures = Game::LoadTexture("resources/block/map.png");
 	for (int y = 0; y < 20; ++y)
 	{
 		for (int x = 0; x < 10; ++x)
 		{
-			blockTransforms[y][x].scale = { 1.2f, 1.2f, 1.2f };
-			blockTransforms[y][x].translate = { 0.0f + x * 1.5f,0.0f,0.0f + y * 1.5f };
-			blockTransforms[y][x].rotate = { 0.0f,0.0f,0.0f };
-			blockPivot[y][x] = { 0,0,0 };
+			block[y][x].model = blockmodel;
+			block[y][x].texture = blockTextures;
+			block[y][x].transforms.scale = { 1.2f, 1.2f, 1.2f };
+			block[y][x].transforms.translate = { 0.0f + x * 1.5f,0.0f,0.0f + y * 1.5f };
+			block[y][x].transforms.rotate = { 0.0f,0.0f,0.0f };
 		}
 	}
 
 	
 	// 天球
-	int skyDomeModel = Game::LoadOBJ("resources/skyDome", "skyDome.obj");
-	int skyDomePng = Game::LoadTexture("resources/skyDome/skyDome.png");
-	Transforms skyDomeTransforms;
-	skyDomeTransforms.scale = { 120.0f, 120.0f, 120.0f };
-	skyDomeTransforms.translate = { 0.0f,0.0f,0.0f };
-	skyDomeTransforms.rotate = { 0.0f,0.0f,0.0f };
-	DrawOptions skyDomeOptions;
-	//skyDomeOptions.enableWireframeMode = false;
+
+	Game::DrawObject skyDome;
+	skyDome.model = Game::LoadOBJ("resources/skyDome", "skyDome.obj");
+	skyDome.texture = Game::LoadTexture("resources/skyDome/skyDome.png");
+	skyDome.transforms.scale = { 120.0f, 120.0f, 120.0f };
+	skyDome.transforms.translate = { 0.0f,0.0f,0.0f };
+	skyDome.transforms.rotate = { 0.0f,0.0f,0.0f };
+	skyDome.options.enableWireframeMode = false;
 	
 	// スプライト
 	Transforms spriteTransforms;
@@ -100,9 +99,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		Game::SetAudioVolume(buzzer, buzzerVolume);
 
 
-		skyDomeOptions.uvTransform.translate.y += 0.001f;
-		skyDomeOptions.uvTransform.translate.x += 0.0001f;
-		uvTransform.rotate.z += 0.01f;
+		skyDome.options.uvTransform.translate.y += 0.001f;
+		skyDome.options.uvTransform.translate.x += 0.0001f;
+		//uvTransform.rotate.z += 0.01f;
 		///
 		/// ↑更新処理ここまで
 		///
@@ -111,15 +110,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		/// ↓描画処理ここから
 		///
 		
-		Game::Drawobj(skyDomeTransforms, {0,0,0}, skyDomeModel, skyDomePng, 0xFFFFFFFF, skyDomeOptions);
+		skyDome.Draw();
 		for (int y = 0; y < 20; ++y)
 		{
 			for (int x = 0; x < 10; ++x)
 			{
-				Game::Drawobj(blockTransforms[y][x], blockPivot[y][x], blockModel, blockPng, 0xFFFFFFFF, blockOptions[y][x]);
+				block[y][x].Draw();
 			}
 		}
-		Game::DrawSprite(spriteTransforms, spriteSize, spritePivot, uvCheckerPng, 0xFFFFFFFF, uvTransform);
+		Game::DrawSprite(spriteTransforms, spritePivot, spriteSize, uvCheckerPng, 0xFFFFFFFF, uvTransform);
 
 		Game::DrawSphere(sphereTransforms, spherePivot, 16, uvCheckerPng, 0xFFFFFFFF, sphereOptions);
 
@@ -146,19 +145,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		ImGui::Checkbox("loop alert ", &alertLoop);
 		ImGui::Checkbox("loop buzzer", &buzzerLoop);
 		ImGui::Text("---------------block---------------");
-		ImGui::DragFloat3("blockTransforms.scale	", &blockTransforms[0][0].scale.x, 0.01f);
-		ImGui::DragFloat3("blockTransforms.rotate	", &blockTransforms[0][0].rotate.x, 0.01f);
-		ImGui::DragFloat3("blockTransforms.pivot	", &blockPivot[0][0].x, 0.01f);
-		ImGui::DragFloat3("blockTransforms.translate", &blockTransforms[0][0].translate.x, 0.01f);
+		ImGui::DragFloat3("blockTransforms.scale	", &block[0][0].transforms.scale.x, 0.01f);
+		ImGui::DragFloat3("blockTransforms.rotate	", &block[0][0].transforms.rotate.x, 0.01f);
+		ImGui::DragFloat3("blockTransforms.pivot	", &block[0][0].pivot.x, 0.01f);
+		ImGui::DragFloat3("blockTransforms.translate", &block[0][0].transforms.translate.x, 0.01f);
 		ImGui::Text("--------------sphere---------------");
 		ImGui::DragFloat3("sphereTransforms.scale	", &sphereTransforms.scale.x, 0.01f);
 		ImGui::DragFloat3("sphereTransforms.rotate	", &sphereTransforms.rotate.x, 0.01f);
 		ImGui::DragFloat3("sphereTransforms.pivot	", &spherePivot.x, 0.01f);
 		ImGui::DragFloat3("sphereTransforms.translate", &sphereTransforms.translate.x, 0.01f);
 		ImGui::Text("--------------SkyDome--------------");
-		ImGui::DragFloat2("skyDome.uvTransform.scale	", &skyDomeOptions.uvTransform.scale.x, 0.01f);
-		ImGui::DragFloat("skyDome.uvTransform.rotate	", &skyDomeOptions.uvTransform.rotate.z, 0.01f);
-		ImGui::DragFloat2("skyDome.uvTransform.translate", &skyDomeOptions.uvTransform.translate.x, 0.01f);
+		ImGui::DragFloat2("skyDome.uvTransform.scale	", &skyDome.options.uvTransform.scale.x, 0.01f);
+		ImGui::DragFloat("skyDome.uvTransform.rotate	", &skyDome.options.uvTransform.rotate.z, 0.01f);
+		ImGui::DragFloat2("skyDome.uvTransform.translate", &skyDome.options.uvTransform.translate.x, 0.01f);
 		ImGui::Text("--------------sprite---------------");
 		ImGui::DragFloat2("spriteTransforms.scale	 ", &spriteTransforms.scale.x, 0.01f);
 		ImGui::DragFloat3("spriteTransforms.rotate	 ", &spriteTransforms.rotate.x, 0.01f);
@@ -167,7 +166,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		ImGui::DragFloat2("uvTransform.scale	", &uvTransform.scale.x, 0.01f);
 		ImGui::DragFloat("uvTransform.rotate	", &uvTransform.rotate.z, 0.01f);
 		ImGui::DragFloat2("uvTransform.translate", &uvTransform.translate.x, 0.01f);
-
+		ImGui::DragFloat2("spriteSize.spriteSize", &spriteSize.x, 1.0f);
 
 
 		///
