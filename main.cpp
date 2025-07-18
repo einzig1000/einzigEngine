@@ -113,17 +113,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		
 		Game::DrawGrid();
 
-		Game::Drawobj(skyDomeTransforms, {0,0,0}, skyDomeModel, skyDomePng, 0xFFFFFFFF, skyDomeOptions);
-		for (int y = 0; y < 20; ++y)
-		{
-			for (int x = 0; x < 10; ++x)
-			{
-				Game::Drawobj(blockTransforms[y][x], blockPivot[y][x], blockModel, blockPng, 0xFFFFFFFF, blockOptions[y][x]);
-			}
-		}
-		Game::DrawSprite(spriteTransforms, spriteSize, spritePivot, uvCheckerPng, 0xFFFFFFFF, uvTransform);
-
-		Game::DrawSphere(sphereTransforms, spherePivot, 16, uvCheckerPng, 0xFFFFFFFF, sphereOptions);
+		//Game::Drawobj(skyDomeTransforms, {0,0,0}, skyDomeModel, skyDomePng, 0xFFFFFFFF, skyDomeOptions);
+		//for (int y = 0; y < 20; ++y)
+		//{
+		//	for (int x = 0; x < 10; ++x)
+		//	{
+		//		Game::Drawobj(blockTransforms[y][x], blockPivot[y][x], blockModel, blockPng, 0xFFFFFFFF, blockOptions[y][x]);
+		//	}
+		//}
+		//Game::DrawSprite(spriteTransforms, spriteSize, spritePivot, uvCheckerPng, 0xFFFFFFFF, uvTransform);
+		//
+		//Game::DrawSphere(sphereTransforms, spherePivot, 16, uvCheckerPng, 0xFFFFFFFF, sphereOptions);
 
 
 

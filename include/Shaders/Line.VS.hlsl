@@ -19,7 +19,7 @@ ConstantBuffer<DirectionalLight> gDirectionalLight : register(b2);
 //--------------------------------------------------------------------------------------
 VertexShaderOutput main(VertexShaderInput input)
 {
-    VertexShaderOutput output{};
+    VertexShaderOutput output;
     
     // WVP行列による座標変換
     output.position = mul(input.position, gTransformationMatrix.WVP);

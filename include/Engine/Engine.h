@@ -162,7 +162,11 @@ private:
 	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> wvpResourceLine;
 	std::vector<TransformationMatrix*> wvpDataLine;
 	size_t drawLineCallIndex;
-
+	
+	// Grid
+	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> gridResources;
+	std::vector<GridConstants*> gridData;
+	
 	// ライト
 	Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource;
 	DirectionalLight* directionalLightData;

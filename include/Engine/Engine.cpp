@@ -64,12 +64,16 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 	materialData.resize(kMaxDrawCallPerFrame);
 	wvpResources.resize(kMaxDrawCallPerFrame);
 	wvpData.resize(kMaxDrawCallPerFrame);
+	gridResources.resize(kMaxDrawCallPerFrame);
+	gridData.resize(kMaxDrawCallPerFrame);
 	for (size_t i = 0; i < kMaxDrawCallPerFrame; ++i)
 	{
 		materialResources[i] = CreateBufferResource(dxManager->GetDevice(), sizeof(Material));
 		materialResources[i]->Map(0, nullptr, reinterpret_cast<void**>(&materialData[i]));
 		wvpResources[i] = CreateBufferResource(dxManager->GetDevice(), sizeof(TransformationMatrix));
 		wvpResources[i]->Map(0, nullptr, reinterpret_cast<void**>(&wvpData[i]));
+		gridResources[i] = CreateBufferResource(dxManager->GetDevice(), sizeof(GridConstants));
+		gridResources[i]->Map(0, nullptr, reinterpret_cast<void**>(&gridData[i]));
 	}
 
 
@@ -344,9 +348,9 @@ void Engine::Drawobj(const Transforms& transform, const Vector3& center, uint32_
 	}
 	else
 	{	// Triangle
-		dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState()); // Triangle用PSOを設定
+		dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetTrianglePipelineState()); // Triangle用PSOを設定
 	}
-	dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
+	dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetTriangleRootSignature()); // Triangle用ルートシグネチャ
 
 	// 描画するモデルの検索
 	Object3D& obj = objects[objectNumber];
@@ -430,10 +434,6 @@ void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint
 	// 描画回数上限
 	if (drawCallIndex >= kMaxDrawCallPerFrame) return;
 
-	//// RootSignatureとPSOを設定 - Triangle
-	//dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState()); // Triangle用PSOを設定
-	//dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
-
 	// RootSignatureとPSOを設定
 	if (drawOptions.enableWireframeMode && WireframeMode)
 	{	// Wireframe
@@ -441,9 +441,9 @@ void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint
 	}
 	else
 	{	// Triangle
-		dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState()); // Triangle用PSOを設定
+		dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetTrianglePipelineState()); // Triangle用PSOを設定
 	}
-	dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
+	dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetTriangleRootSignature()); // Triangle用ルートシグネチャ
 
 	// 必要な頂点数
 	const uint32_t kSumVertex = kSubdivision * kSubdivision * 6;
@@ -555,9 +555,9 @@ void Engine::DrawTriangle(const Transforms& transform, const Vector3& pos1, cons
 	}
 	else
 	{	// Triangle
-		dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState()); // Triangle用PSOを設定
+		dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetTrianglePipelineState()); // Triangle用PSOを設定
 	}
-	dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
+	dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetTriangleRootSignature()); // Triangle用ルートシグネチャ
 
 	// 必要な頂点数
 	const uint32_t kSumVertex = 4;
@@ -649,8 +649,8 @@ void Engine::DrawSprite(const Transforms& transform, const Vector2& center, cons
 	if (drawCallIndex >= kMaxDrawCallPerFrame) return;
 
 	// RootSignatureとPSOを設定 - Triangle
-	dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState()); // Triangle用PSOを設定
-	dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
+	dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetTrianglePipelineState()); // Triangle用PSOを設定
+	dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetTriangleRootSignature()); // Triangle用ルートシグネチャ
 
 	// 必要な頂点数
 	const uint32_t kSumVertex = 4;
@@ -765,7 +765,7 @@ void Engine::DrawLine(const Vector3& start, const Vector3& end, const uint32_t& 
 
 	// RootSignatureとPSOを設定 - Line
 	dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetLinePipelineState()); // Line用PSOを設定
-	dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
+	dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetLineRootSignature()); // Line用ルートシグネチャ
 
 	// 頂点データの準備
 	VertexData vertices[2];
@@ -819,54 +819,36 @@ void Engine::DrawLine(const Vector3& start, const Vector3& end, const uint32_t& 
 
 void Engine::DrawGrid()
 {
-	ID3D12GraphicsCommandList* commandList = dxManager->GetCommandList();
+	// グリッド用PSOとルートシグネチャを設定
+	dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetGridPipelineState());
+	dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetGridRootSignature());
 
-	// グリッド描画用のPSOとルートシグネチャを設定
-	commandList->SetPipelineState(dxManager->GetPipelineStateManager()->GetGridPipelineState());
-	commandList->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature());
-
-	// 現在の描画コールインデックスのWVP定数バッファを更新
-	// グリッドはワールド座標の原点に描画されるため、World行列は単位行列とする
+	// TransformationMatrix（b1）をバインド（ルートパラメータ0）
 	wvpData[drawCallIndex]->World = Matrix4x4::MakeIdentity4x4();
 	wvpData[drawCallIndex]->WVP = (wvpData[drawCallIndex]->World * cameraController->viewProjectionMatrix);
 
-	// Root Parameter 1 (b1) に TransformationMatrix の CBV (定数バッファビュー) を設定
-	commandList->SetGraphicsRootConstantBufferView(1, wvpResources[drawCallIndex]->GetGPUVirtualAddress());
+	// GridConstants（b2）をバインド（ルートパラメータ1）
+	gridData[drawCallIndex]->gridColor = Vector4{ 1.0f,0.0f,0.0f,1.0f };
+	gridData[drawCallIndex]->subGridColor = Vector4{ 0.0f,1.0f,0.0f,1.0f };
+	gridData[drawCallIndex]->gridSize = 1.0f;
+	gridData[drawCallIndex]->maxDistance = 100.0f;
+	gridData[drawCallIndex]->minDistance = 10.0f;
+	gridData[drawCallIndex]->lineThickness = 5.0f; // ← 太くする
+	gridData[drawCallIndex]->subLineThickness = 2.0f; // ← 太くする
+	gridData[drawCallIndex]->gridSize = 1.0f;
+	gridData[drawCallIndex]->subGridSize = 0.5f;
 
-	// プリミティブトポロジーを三角形リストに設定
-	// グリッドシェーダーが頂点IDなどを使用してジオメトリを生成するため、頂点バッファは設定しない
-	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	// 3頂点のインスタンスを1つ描画 (フルスクリーンパスの場合)
-	// シェーダー内で画面全体をカバーする三角形を生成し、グリッドを描画する想定
-	commandList->DrawInstanced(3, 1, 0, 0);
+
+	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, wvpResources[drawCallIndex]->GetGPUVirtualAddress());
+	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, gridResources[drawCallIndex]->GetGPUVirtualAddress());
+	dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	dxManager->GetCommandList()->DrawInstanced(3, 1, 0, 0);
 
 	// 描画コールインデックスを進める
 	drawCallIndex++;
 }
-
-//void Engine::DrawGrid(const Vector3& center, float size, float spacing, uint32_t color)
-//{
-//	float halfSize = size / 2.0f;
-//	int numLines = static_cast<int>(size / spacing + 0.5f) + 1;
-//
-//	for (int i = 0; i < numLines; ++i)
-//	{
-//		float x = -halfSize + i * spacing;
-//		Vector3 start = { center.x + x, center.y, center.z - halfSize };
-//		Vector3 end = { center.x + x, center.y, center.z + halfSize };
-//		DrawLine(start, end, color);
-//	}
-//
-//	for (int i = 0; i < numLines; ++i)
-//	{
-//		float z = -halfSize + i * spacing;
-//		Vector3 start = { center.x - halfSize, center.y, center.z + z };
-//		Vector3 end = { center.x + halfSize, center.y, center.z + z };
-//		DrawLine(start, end, color);
-//	}
-//}
-
 
 // 音
 void Engine::PlayAudio(const uint32_t& audioId, bool loop)

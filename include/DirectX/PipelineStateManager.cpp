@@ -7,11 +7,15 @@
 PipelineStateManager::PipelineStateManager(ID3D12Device* device)
 {
     InitializeDxc();
-    InitializeRootSignatureInternal(device);// ルートシグネチャは共有
-    InitializePSOInternal(device);          // オブジェクト描画用
-    InitializeLinePSOInternal(device);      // ライン   描画用
+    InitializeTriangleRootSignatureInternal(device);// ルートシグネチャ
+    InitializeLineRootSignatureInternal(device);// ルートシグネチャ
+    InitializeWireframeRootSignatureInternal(device);// ルートシグネチャ
+    InitializeGridRootSignatureInternal(device);// ルートシグネチャ
+
+    InitializeTrianglePSOInternal(device);          // オブジェクト　描画用
+    InitializeLinePSOInternal(device);      // ライン  描画用
     InitializeWireframePSOInternal(device); // ワイヤーフレーム　描画用
-    InitializeGridPSOInternal(device);
+    InitializeGridPSOInternal(device);      // グリッド　描画用
 
     Log("コンストラクタ実行成功 : PipelineStateManager");
 }
@@ -32,40 +36,39 @@ void PipelineStateManager::InitializeDxc()
 }
 
 
-void PipelineStateManager::InitializeRootSignatureInternal(ID3D12Device* device)
+void PipelineStateManager::InitializeTriangleRootSignatureInternal(ID3D12Device* device)
 {
     HRESULT hr;
+
     // DescriptorRange for SRV (t0)
     D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
-    descriptorRange[0].BaseShaderRegister = 0; // t0 レジスタ
+    descriptorRange[0].BaseShaderRegister = 0;
     descriptorRange[0].NumDescriptors = 1;
     descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
     descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-
     D3D12_ROOT_PARAMETER rootParameters[4] = {};
 
-    // ルートパラメータ0: Material (register b0)
+    // b0: Material
     rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-    rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL; // VS, PS 両方からアクセス可能
-    rootParameters[0].Descriptor.ShaderRegister = 0; // b0
+    rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+    rootParameters[0].Descriptor.ShaderRegister = 0;
 
-    // ルートパラメータ1: TransformationMatrix (WVP, World) (register b1)
+    // b1: TransformationMatrix
     rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-    rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL; // VS, PS 両方からアクセス可能
-    rootParameters[1].Descriptor.ShaderRegister = 1; // b1
+    rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+    rootParameters[1].Descriptor.ShaderRegister = 1;
 
-    // ルートパラメータ2: Texture (SRV) Descriptor Table (register t0)
+    // t0: Texture
     rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-    rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; // PSからのみアクセス
+    rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
     rootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRange;
     rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
 
-    // ルートパラメータ3: DirectionalLight (color, direction, intensity) (register b2)
+    // b2: DirectionalLight
     rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-    rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL; // VS, PS 両方からアクセス可能
-    rootParameters[3].Descriptor.ShaderRegister = 2; // b2
-
+    rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+    rootParameters[3].Descriptor.ShaderRegister = 2;
 
     D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};
     staticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
@@ -73,7 +76,7 @@ void PipelineStateManager::InitializeRootSignatureInternal(ID3D12Device* device)
     staticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
     staticSamplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
     staticSamplers[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
-    staticSamplers[0].ShaderRegister = 0; // s0 レジスタ
+    staticSamplers[0].ShaderRegister = 0;
     staticSamplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
     D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc{};
@@ -82,7 +85,6 @@ void PipelineStateManager::InitializeRootSignatureInternal(ID3D12Device* device)
     rootSignatureDesc.pStaticSamplers = staticSamplers;
     rootSignatureDesc.NumStaticSamplers = _countof(staticSamplers);
     rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-
 
     Microsoft::WRL::ComPtr<ID3DBlob> signatureBlob = nullptr;
     Microsoft::WRL::ComPtr<ID3DBlob> errorBlob = nullptr;
@@ -95,11 +97,158 @@ void PipelineStateManager::InitializeRootSignatureInternal(ID3D12Device* device)
         }
         assert(false);
     }
-    hr = device->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
+    hr = device->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignatureTriangle));
     assert(SUCCEEDED(hr));
 }
 
-void PipelineStateManager::InitializePSOInternal(ID3D12Device* device)
+void PipelineStateManager::InitializeLineRootSignatureInternal(ID3D12Device* device)
+{
+    HRESULT hr;
+
+    D3D12_ROOT_PARAMETER rootParameters[3] = {};
+
+    // b0: Material
+    rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+    rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+    rootParameters[0].Descriptor.ShaderRegister = 0;
+
+    // b1: TransformationMatrix
+    rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+    rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+    rootParameters[1].Descriptor.ShaderRegister = 1;
+
+    // b2: DirectionalLight
+    rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+    rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+    rootParameters[2].Descriptor.ShaderRegister = 2;
+
+    D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc{};
+    rootSignatureDesc.pParameters = rootParameters;
+    rootSignatureDesc.NumParameters = _countof(rootParameters);
+    rootSignatureDesc.pStaticSamplers = nullptr;
+    rootSignatureDesc.NumStaticSamplers = 0;
+    rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+
+    Microsoft::WRL::ComPtr<ID3DBlob> signatureBlob = nullptr;
+    Microsoft::WRL::ComPtr<ID3DBlob> errorBlob = nullptr;
+    hr = D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1_0, &signatureBlob, &errorBlob);
+    if (FAILED(hr))
+    {
+        if (errorBlob)
+        {
+            Log(reinterpret_cast<char*>(errorBlob->GetBufferPointer()));
+        }
+        assert(false);
+    }
+    hr = device->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignatureLine));
+    assert(SUCCEEDED(hr));
+}
+
+void PipelineStateManager::InitializeWireframeRootSignatureInternal(ID3D12Device* device)
+{
+    HRESULT hr;
+
+    // DescriptorRange for SRV (t0)
+    D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
+    descriptorRange[0].BaseShaderRegister = 0;
+    descriptorRange[0].NumDescriptors = 1;
+    descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+    D3D12_ROOT_PARAMETER rootParameters[4] = {};
+
+    // b0: Material
+    rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+    rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+    rootParameters[0].Descriptor.ShaderRegister = 0;
+
+    // b1: TransformationMatrix
+    rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+    rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+    rootParameters[1].Descriptor.ShaderRegister = 1;
+
+    // t0: Texture
+    rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+    rootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRange;
+    rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
+
+    // b2: DirectionalLight
+    rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+    rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+    rootParameters[3].Descriptor.ShaderRegister = 2;
+
+    D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};
+    staticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+    staticSamplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    staticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    staticSamplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    staticSamplers[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+    staticSamplers[0].ShaderRegister = 0;
+    staticSamplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+    D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc{};
+    rootSignatureDesc.pParameters = rootParameters;
+    rootSignatureDesc.NumParameters = _countof(rootParameters);
+    rootSignatureDesc.pStaticSamplers = staticSamplers;
+    rootSignatureDesc.NumStaticSamplers = _countof(staticSamplers);
+    rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+
+    Microsoft::WRL::ComPtr<ID3DBlob> signatureBlob = nullptr;
+    Microsoft::WRL::ComPtr<ID3DBlob> errorBlob = nullptr;
+    hr = D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1_0, &signatureBlob, &errorBlob);
+    if (FAILED(hr))
+    {
+        if (errorBlob)
+        {
+            Log(reinterpret_cast<char*>(errorBlob->GetBufferPointer()));
+        }
+        assert(false);
+    }
+    hr = device->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignatureWireframe));
+    assert(SUCCEEDED(hr));
+}
+
+void PipelineStateManager::InitializeGridRootSignatureInternal(ID3D12Device* device)
+{
+    HRESULT hr;
+
+    D3D12_ROOT_PARAMETER rootParameters[2] = {};
+
+    // b1: TransformationMatrix
+    rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+    rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+    rootParameters[0].Descriptor.ShaderRegister = 1;
+
+    // b2: GridConstants
+    rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+    rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+    rootParameters[1].Descriptor.ShaderRegister = 2;
+
+    D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc{};
+    rootSignatureDesc.pParameters = rootParameters;
+    rootSignatureDesc.NumParameters = _countof(rootParameters);
+    rootSignatureDesc.pStaticSamplers = nullptr;
+    rootSignatureDesc.NumStaticSamplers = 0;
+    rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+
+    Microsoft::WRL::ComPtr<ID3DBlob> signatureBlob = nullptr;
+    Microsoft::WRL::ComPtr<ID3DBlob> errorBlob = nullptr;
+    hr = D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1_0, &signatureBlob, &errorBlob);
+    if (FAILED(hr))
+    {
+        if (errorBlob)
+        {
+            Log(reinterpret_cast<char*>(errorBlob->GetBufferPointer()));
+        }
+        assert(false);
+    }
+    hr = device->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignatureGrid));
+    assert(SUCCEEDED(hr));
+}
+
+
+void PipelineStateManager::InitializeTrianglePSOInternal(ID3D12Device* device)
 {
     HRESULT hr;
 
@@ -146,7 +295,7 @@ void PipelineStateManager::InitializePSOInternal(ID3D12Device* device)
 
     // PSO (Triangle)
     D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc{};
-    graphicsPipelineStateDesc.pRootSignature = rootSignature.Get();
+    graphicsPipelineStateDesc.pRootSignature = rootSignatureTriangle.Get();
     graphicsPipelineStateDesc.InputLayout = inputLayoutDesc;
     graphicsPipelineStateDesc.BlendState = blendDesc;
     graphicsPipelineStateDesc.RasterizerState = rasterizerDesc;
@@ -209,7 +358,7 @@ void PipelineStateManager::InitializeLinePSOInternal(ID3D12Device* device)
 
     // PSO (Line)
     D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc{};
-    graphicsPipelineStateDesc.pRootSignature = rootSignature.Get(); // 既存のルートシグネチャを流用
+    graphicsPipelineStateDesc.pRootSignature = rootSignatureLine.Get(); // 既存のルートシグネチャを流用
     graphicsPipelineStateDesc.InputLayout = inputLayoutDesc;
     graphicsPipelineStateDesc.BlendState = blendDesc;
     graphicsPipelineStateDesc.RasterizerState = rasterizerDesc;
@@ -270,7 +419,7 @@ void PipelineStateManager::InitializeWireframePSOInternal(ID3D12Device* device)
 
     // PSO (Wireframe)
     D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc{};
-    graphicsPipelineStateDesc.pRootSignature = rootSignature.Get(); // 既存のルートシグネチャを流用
+    graphicsPipelineStateDesc.pRootSignature = rootSignatureWireframe.Get(); // 既存のルートシグネチャを流用
     graphicsPipelineStateDesc.InputLayout = inputLayoutDesc;
     graphicsPipelineStateDesc.BlendState = blendDesc;
     graphicsPipelineStateDesc.RasterizerState = rasterizerDesc;
@@ -297,15 +446,19 @@ void PipelineStateManager::InitializeGridPSOInternal(ID3D12Device* device)
     Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = CompileShader(L"include/Shaders/Grid.VS.hlsl", L"vs_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
     assert(vertexShaderBlob != nullptr);
 
-
-    D3D12_INPUT_ELEMENT_DESC inputElementDescs[] = {
-
-        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-
+    // InputLayout を正しく設定
+    //D3D12_INPUT_ELEMENT_DESC inputElementDescs[] = {
+    //    { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+    //};
+    D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
+    {
+        {"POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+        {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+        {"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
     };
-    D3D12_INPUT_LAYOUT_DESC inputLayoutDesc{}; // 空のInputLayout
-    inputLayoutDesc.pInputElementDescs = nullptr; // nullptr に設定
-    inputLayoutDesc.NumElements = 0;              // 0 に設定
+    D3D12_INPUT_LAYOUT_DESC inputLayoutDesc{};
+    inputLayoutDesc.pInputElementDescs = inputElementDescs;
+    inputLayoutDesc.NumElements = _countof(inputElementDescs);
 
     D3D12_BLEND_DESC blendDesc{};
     blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
@@ -334,7 +487,7 @@ void PipelineStateManager::InitializeGridPSOInternal(ID3D12Device* device)
 
     // PSO (Grid)
     D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc{};
-    graphicsPipelineStateDesc.pRootSignature = rootSignature.Get();
+    graphicsPipelineStateDesc.pRootSignature = rootSignatureGrid.Get();
     graphicsPipelineStateDesc.InputLayout = inputLayoutDesc;
     graphicsPipelineStateDesc.BlendState = blendDesc;
     graphicsPipelineStateDesc.RasterizerState = rasterizerDesc;
@@ -350,8 +503,7 @@ void PipelineStateManager::InitializeGridPSOInternal(ID3D12Device* device)
     graphicsPipelineStateDesc.CachedPSO.pCachedBlob = nullptr;
     graphicsPipelineStateDesc.CachedPSO.CachedBlobSizeInBytes = 0;
     graphicsPipelineStateDesc.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
-
-
+    graphicsPipelineStateDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
 
     hr = device->CreateGraphicsPipelineState(
         &graphicsPipelineStateDesc,

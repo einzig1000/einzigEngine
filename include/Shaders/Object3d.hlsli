@@ -15,7 +15,6 @@ struct VertexShaderOutput
 };
 struct VertexOutput
 {
-  
     float4 SV_Position : SV_POSITION;
     float3 WorldPos : WORLD_POS;
 };
@@ -46,11 +45,10 @@ struct GridConstants
 {
     float4 gridColor;
     float4 subGridColor;
-    float32_t gridSize;
-    float32_t subGridSize;
-    float32_t lineThickness; 
-    float32_t subLineThickness;
-    float32_t minDistance;
-    float32_t maxDistance;
-    float4 padding;
+    float gridSize;
+    float subGridSize;
+    float lineThickness;
+    float subLineThickness;
+    float minDistance;
+    float maxDistance;
 };

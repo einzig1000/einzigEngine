@@ -1,32 +1,28 @@
 #include "Object3d.hlsli"
 
-// 定数バッファ (ルートシグネチャのレジスタ0番に対応)
-ConstantBuffer<TransformationMatrix> gTransformationMatrix : register(b0);
-
 // グリッド定数 (ルートシグネチャのレジスタ2番に対応)
 ConstantBuffer<GridConstants> gGridConstants : register(b2);
-
-
 
 float4 main(VertexOutput input) : SV_TARGET
 {
     float3 worldPos = input.WorldPos;
 
-    float3 color = gGridConstants.gridColor.rgb;
-
     // メイングリッド
     float2 mainGrid = 1.0f - abs(frac(worldPos.xz / gGridConstants.gridSize) * 2.0f - 1.0f);
-    float mainGridLine = saturate(min(mainGrid.x, mainGrid.y) * gGridConstants.lineThickness);
+    float mainLine = saturate(min(mainGrid.x, mainGrid.y) * gGridConstants.lineThickness);
 
     // サブグリッド
     float2 subGrid = 1.0f - abs(frac(worldPos.xz / gGridConstants.subGridSize) * 2.0f - 1.0f);
-    float subGridLine = saturate(min(subGrid.x, subGrid.y) * gGridConstants.subLineThickness);
+    float subLine = saturate(min(subGrid.x, subGrid.y) * gGridConstants.subLineThickness);
 
-    // 距離によるフェード
-    //float dist = length(worldPos - gTransformationMatrix.WVP);
-    float fade = saturate((gGridConstants.maxDistance - 1) / (gGridConstants.maxDistance - gGridConstants.minDistance));
+    // 距離によるフェード（cameraPosが必要なら別途追加）
+    float fade = 1.0f; // 仮にフェードなしとする
 
-    float finalAlpha = (mainGridLine * gGridConstants.gridColor.a + subGridLine * gGridConstants.subGridColor.a) * fade;
+    // 色とアルファの合成
+    float3 color = gGridConstants.gridColor.rgb;
+    float alpha = (mainLine * gGridConstants.gridColor.a + subLine * gGridConstants.subGridColor.a) * fade;
 
-    return float4(color, finalAlpha);
+    //color = float3(1.0f, 1.0f, 1.0f);
+    //alpha = 1.0f;
+    return float4(color, alpha);
 }
