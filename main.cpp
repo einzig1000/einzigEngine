@@ -99,8 +99,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		Game::SetAudioVolume(buzzer, buzzerVolume);
 
 
-		skyDome.options.uvTransform.translate.y += 0.001f;
-		skyDome.options.uvTransform.translate.x += 0.0001f;
+		//skyDome.options.uvTransform.translate.y += 0.001f;
+		//skyDome.options.uvTransform.translate.x += 0.0001f;
 		//uvTransform.rotate.z += 0.01f;
 		///
 		/// ↑更新処理ここまで

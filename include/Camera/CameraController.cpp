@@ -36,10 +36,7 @@ void CameraController::Updata()
 
         mouseWheel_ = Game::GetWheel();
 
-        //////////////////////////////////////////////
-        ///              カメラ回転                ///
-        ////////////////////////////////////////////// 
-#pragma region
+#pragma region カメラ回転
         // クリックした瞬間
         if (prePressMouse0_ == 0 && pressMouse0_)
         {
@@ -61,10 +58,7 @@ void CameraController::Updata()
         }
 #pragma endregion
 
-        //////////////////////////////////////////////
-        ///                回転中心                ///
-        ////////////////////////////////////////////// 
-#pragma region
+#pragma region 回転中心 
         if (prePressMouse2_ == 0 && pressMouse2_)
         {
             Game::GetMousePosition(&preMousePosition_);
@@ -112,10 +106,7 @@ void CameraController::Updata()
 
 #pragma endregion
 
-        //////////////////////////////////////////////
-        ///               カメラ距離               ///
-        ////////////////////////////////////////////// 
-#pragma region
+#pragma region カメラ距離
         if (mouseWheel_ > 0)
         {
             distance_ -= float(mouseWheel_) / 100;
@@ -141,39 +132,68 @@ void CameraController::Updata()
     }
 
 #ifdef DEBUG
+#endif
     ImGui::DragFloat3("cameraCenter", &center_.x, 0.01f);
     ImGui::DragFloat3("cameraRotate", &transform_.rotate.x, 0.01f);
     ImGui::DragFloat("cameraDistance", &distance_, 0.01f);
-#endif
+    ImGui::DragFloat3("cameratransform_.translate", &transform_.translate.x, 0.01f);
+    ImGui::DragFloat3("cameratransform_.rotate", &transform_.rotate.x, 0.01f);
     ImGui::Text("push SPACE key : change cameraMode");
     ImGui::Checkbox("cameraMode", &cameraMode_);
+    ImGui::Checkbox("cameraModeMode", &cameraModeMode_);
 
     //////////////////////////////////////////////
     ///               カメラ移動               ///
     ////////////////////////////////////////////// 
 
-    ////  カメラを原点で回転させた後に移動  ////（カメラのscaleとtranslateは動かさない）
+    if (cameraModeMode_)
+    {
+        ////  カメラを原点で回転させた後に移動  ////（カメラのscaleとtranslateは動かさない）
 
-    // カメラ初期値
-    Vector3 cameraLocalPos = { 0.0f, 0.0f, -distance_ };
+        // カメラ初期値
+        Vector3 cameraLocalPos = { 0.0f, 0.0f, -distance_ };
 
-    // カメラに回転適用（カメラのscaleとtranslateはマジで動かさない）
-    Matrix4x4 cameraRotateMatrix = Matrix4x4::MakeAffineMatrix(
-        { 1,1,1 },
-        transform_.rotate,
-        { 0,0,0 }
-    );
+        // カメラに回転適用（カメラのscaleとtranslateはマジで動かさない）
+        Matrix4x4 cameraRotateMatrix = Matrix4x4::MakeAffineMatrix(
+            { 1,1,1 },
+            transform_.rotate,
+            { 0,0,0 }
+        );
 
-    // cameraLocalPos　に　回転適用したマトリックスを適用させる　＝　原点上で回転
-    Vector3 rotatedCameraPos = {
-        cameraLocalPos.x * cameraRotateMatrix.m[0][0] + cameraLocalPos.y * cameraRotateMatrix.m[1][0] + cameraLocalPos.z * cameraRotateMatrix.m[2][0],
-        cameraLocalPos.x * cameraRotateMatrix.m[0][1] + cameraLocalPos.y * cameraRotateMatrix.m[1][1] + cameraLocalPos.z * cameraRotateMatrix.m[2][1],
-        cameraLocalPos.x * cameraRotateMatrix.m[0][2] + cameraLocalPos.y * cameraRotateMatrix.m[1][2] + cameraLocalPos.z * cameraRotateMatrix.m[2][2]
-    };
+        // cameraLocalPos　に　回転適用したマトリックスを適用させる　＝　原点上で回転
+        Vector3 rotatedCameraPos = {
+            cameraLocalPos.x * cameraRotateMatrix.m[0][0] + cameraLocalPos.y * cameraRotateMatrix.m[1][0] + cameraLocalPos.z * cameraRotateMatrix.m[2][0],
+            cameraLocalPos.x * cameraRotateMatrix.m[0][1] + cameraLocalPos.y * cameraRotateMatrix.m[1][1] + cameraLocalPos.z * cameraRotateMatrix.m[2][1],
+            cameraLocalPos.x * cameraRotateMatrix.m[0][2] + cameraLocalPos.y * cameraRotateMatrix.m[1][2] + cameraLocalPos.z * cameraRotateMatrix.m[2][2]
+        };
 
 
-    // 原点上で回転したrotatedCameraPosに　cameraCenterを足せば中心がcameraCenterに変わる
-    transform_.translate = (center_ + rotatedCameraPos);
+        // 原点上で回転したrotatedCameraPosに　cameraCenterを足せば中心がcameraCenterに変わる
+        transform_.translate = (center_ + rotatedCameraPos);
+        //transform_.translate = cameraLocalPos;
+    }
+    else
+    {
+        Vector3 cameraLocalPos = { center_.x - transform_.translate.x, center_.y - transform_.translate.y, center_.z - transform_.translate.z };
+
+        // カメラに回転適用（カメラのscaleとtranslateはマジで動かさない）
+        Matrix4x4 cameraRotateMatrix = Matrix4x4::MakeAffineMatrix(
+            { 1,1,1 },
+            transform_.rotate,
+            { 0,0,0 }
+        );
+
+        // cameraLocalPos　に　回転適用したマトリックスを適用させる　＝　カメラの座標で回転
+        Vector3 rotatedCameraPos = {
+            cameraLocalPos.x * cameraRotateMatrix.m[0][0] + cameraLocalPos.y * cameraRotateMatrix.m[1][0] + cameraLocalPos.z * cameraRotateMatrix.m[2][0],
+            cameraLocalPos.x * cameraRotateMatrix.m[0][1] + cameraLocalPos.y * cameraRotateMatrix.m[1][1] + cameraLocalPos.z * cameraRotateMatrix.m[2][1],
+            cameraLocalPos.x * cameraRotateMatrix.m[0][2] + cameraLocalPos.y * cameraRotateMatrix.m[1][2] + cameraLocalPos.z * cameraRotateMatrix.m[2][2]
+        };
+
+
+        // 原点上で回転したrotatedCameraPosに　cameraCenterを足せば中心がcameraCenterに変わる
+        center_ = rotatedCameraPos + transform_.translate;
+    }
 
     // カメラ行列を作成
     cameraMatrix_ = Matrix4x4::MakeAffineMatrix(

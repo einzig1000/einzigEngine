@@ -31,6 +31,7 @@ public:
     static Matrix4x4 viewProjectionMatrix;
 
     bool cameraMode_;
+    bool cameraModeMode_;
 
 private:
     //////////////////////////////////////////////
