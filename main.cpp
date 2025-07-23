@@ -37,9 +37,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		}
 	}
 
-	
 	// 天球
-
 	Game::DrawObject skyDome;
 	skyDome.model = Game::LoadOBJ("resources/skyDome", "skyDome.obj");
 	skyDome.texture = Game::LoadTexture("resources/skyDome/skyDome.png");
@@ -47,6 +45,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	skyDome.transforms.translate = { 0.0f,0.0f,0.0f };
 	skyDome.transforms.rotate = { 0.0f,0.0f,0.0f };
 	skyDome.options.enableWireframeMode = false;
+
+	// テスト
+	Game::DrawObject test;
+	test.model = Game::LoadOBJ("resources/", "multiMesh.obj");
+	test.texture = uvCheckerPng;
+	test.transforms.scale = { 1.0f, 1.0f, 1.0f };
+	test.transforms.translate = { 0.0f,0.0f,0.0f };
+	test.transforms.rotate = { 0.0f,0.0f,0.0f };
 	
 	// スプライト
 	Transforms spriteTransforms;
@@ -115,15 +121,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		{
 			for (int x = 0; x < 10; ++x)
 			{
-				block[y][x].Draw();
+				//block[y][x].Draw();
 			}
 		}
-		Game::DrawSprite(spriteTransforms, spritePivot, spriteSize, uvCheckerPng, 0xFFFFFFFF, uvTransform);
+		//Game::DrawSprite(spriteTransforms, spritePivot, spriteSize, uvCheckerPng, 0xFFFFFFFF, uvTransform);
 
-		Game::DrawSphere(sphereTransforms, spherePivot, 16, uvCheckerPng, 0xFFFFFFFF, sphereOptions);
+		//Game::DrawSphere(sphereTransforms, spherePivot, 16, uvCheckerPng, 0xFFFFFFFF, sphereOptions);
 
 
-
+		test.Draw();
 
 
 
@@ -158,6 +164,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		ImGui::DragFloat2("skyDome.uvTransform.scale	", &skyDome.options.uvTransform.scale.x, 0.01f);
 		ImGui::DragFloat("skyDome.uvTransform.rotate	", &skyDome.options.uvTransform.rotate.z, 0.01f);
 		ImGui::DragFloat2("skyDome.uvTransform.translate", &skyDome.options.uvTransform.translate.x, 0.01f);
+		ImGui::Text("----------------test---------------");
+		ImGui::DragFloat2("test.uvTransform.scale	", &test.options.uvTransform.scale.x, 0.01f);
+		ImGui::DragFloat("test.uvTransform.rotate	", &test.options.uvTransform.rotate.z, 0.01f);
+		ImGui::DragFloat2("test.uvTransform.translate", &test.options.uvTransform.translate.x, 0.01f);
 		ImGui::Text("--------------sprite---------------");
 		ImGui::DragFloat2("spriteTransforms.scale	 ", &spriteTransforms.scale.x, 0.01f);
 		ImGui::DragFloat3("spriteTransforms.rotate	 ", &spriteTransforms.rotate.x, 0.01f);
