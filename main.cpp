@@ -48,7 +48,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 	// テスト
 	Game::DrawObject test;
-	test.model = Game::LoadOBJ("resources/", "multiMesh.obj");
+	test.model = Game::LoadOBJ("resources/evaluationTask/", "bunny.obj");
 	test.texture = uvCheckerPng;
 	test.transforms.scale = { 1.0f, 1.0f, 1.0f };
 	test.transforms.translate = { 0.0f,0.0f,0.0f };

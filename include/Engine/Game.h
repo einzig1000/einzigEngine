@@ -64,13 +64,20 @@ public:
 	class DrawObject
 	{
 	public:
-		Transforms transforms;		// 位置、回転、スケール
-		Vector3 pivot;				// 回転の中心点
-		uint32_t color = 0xFFFFFFFF;// 色
-		uint32_t model = 0;			// 3Dモデル
-		uint32_t texture = 0;		// テクスチャ
-		DrawOptions options;		// 描画オプション
-		AABB AABB;					// 衝突判定用AABB
+		// 位置、回転、スケール
+		Transforms transforms;
+		// 回転の中心点
+		Vector3 pivot;
+		// 色
+		uint32_t color = 0xFFFFFFFF;
+		// 3Dモデル
+		uint32_t model = 0;
+		// テクスチャ
+		uint32_t texture = 0;
+		// 描画オプション
+		DrawOptions options;
+		// 衝突判定用AABB
+		AABB AABB;
 
 		void Draw() const
 		{
