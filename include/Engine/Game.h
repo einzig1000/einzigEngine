@@ -62,7 +62,7 @@ public:
 	static void toggleWireframeMode();
 
 
-	class DrawObj
+	class RenderDate_Model
 	{
 	public:
 		// 位置、回転、スケール
@@ -115,7 +115,7 @@ public:
 		}
 	};
 
-	class DrawSprite
+	class RenderDate_Sprite
 	{
 	public:
 		// 位置、回転、スケール
@@ -123,7 +123,7 @@ public:
 		// 親のワールドマトリックス
 		TransformationMatrix parentTransformationMatrix;
 		// 回転の中心点
-		Vector2 pivot;
+		Vector2 pivot = { 0,0 };
 		// 色
 		uint32_t color = 0xFFFFFFFF;
 		// テクスチャ

@@ -685,12 +685,12 @@ void Engine::DrawSprite(const Transforms& transform, const Vector2& center, uint
 	Matrix4x4 toCenter = Matrix4x4::MakeTranslateMatrix({ -uvCenterX, -uvCenterY, 0.0f });
 	Matrix4x4 fromCenter = Matrix4x4::MakeTranslateMatrix({ uvCenterX, uvCenterY, 0.0f });
 	Matrix4x4 uvTransformMatrix = Matrix4x4::MakeIdentity4x4();
-		uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeScaleMatrix(uvTransform.scale));
-		uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(uvTransform.rotate.z));
+		uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeScaleMatrix(drawOptions.uvTransform.scale));
+		uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(drawOptions.uvTransform.rotate.z));
 
 	uvTransformMatrix = (fromCenter * (uvTransformMatrix * toCenter));
 
-	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(uvTransform.translate));
+	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(drawOptions.uvTransform.translate));
 
 
 	Vector4 color = ConvertUintToVector4(materialColor);
