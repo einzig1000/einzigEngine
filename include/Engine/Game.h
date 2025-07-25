@@ -22,12 +22,9 @@ public:
 	TextureData* GetTexture(uint32_t textureNumber);
 
 	// 描画
-	static void Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor);
 	static void Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
-	static void DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor);
 	static void DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
 	static void DrawSprite(const Transforms& transform, const Vector2& center, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
-	static void DrawTriangle(const Transforms& transform, const Vector3& pos1, const Vector3& pos2, const Vector3& pos3, uint32_t textureNumber, const uint32_t& materialColor);
 	static void DrawTriangle(const Transforms& transform, const Vector3& pos1, const Vector3& pos2, const Vector3& pos3, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
 
 
@@ -67,8 +64,6 @@ public:
 	public:
 		// 位置、回転、スケール
 		Transforms transforms;
-		// 親のワールドマトリックス
-		TransformationMatrix parentTransformationMatrix;
 		// 回転の中心点
 		Vector3 pivot;
 		// 色
@@ -103,12 +98,25 @@ public:
 			Matrix4x4 fromRotationCenter = Matrix4x4::MakeTranslateMatrix(this->pivot);
 
 			// 最終的なワールド行列の構築
-			this->transforms.World =
-				scaleMatrix *		 // 1. 拡縮はどうでもいい
-				toRotationCenter *	 // 2. 回転中心を原点に移動
-				rotationMatrix *	 // 3. 原点で回転 (centerを中心とした回転)
-				fromRotationCenter * // 4. 回転したものを元の回転中心に戻す
-				translateMatrix;	 // 5. 最終的なワールド位置へ移動
+			if (transforms.parentWorld != nullptr)
+			{
+				this->transforms.World =
+					scaleMatrix *		 // 1. 拡縮はどうでもいい
+					toRotationCenter *	 // 2. 回転中心を原点に移動
+					rotationMatrix *	 // 3. 原点で回転 (centerを中心とした回転)
+					fromRotationCenter * // 4. 回転したものを元の回転中心に戻す
+					translateMatrix *	 // 5. 最終的なワールド位置へ移動
+					*transforms.parentWorld;// 親からもらう
+			}
+			else
+			{
+				this->transforms.World =
+					scaleMatrix *		 // 1. 拡縮はどうでもいい
+					toRotationCenter *	 // 2. 回転中心を原点に移動
+					rotationMatrix *	 // 3. 原点で回転 (centerを中心とした回転)
+					fromRotationCenter * // 4. 回転したものを元の回転中心に戻す
+					translateMatrix;	 // 5. 最終的なワールド位置へ移動
+			}
 
 
 			Game::Drawobj(this->transforms, this->pivot, this->model, this->texture, this->color, this->options);

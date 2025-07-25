@@ -48,29 +48,14 @@ TextureData* Game::GetTexture(uint32_t textureNumber)
 	return engine->GetTexture(textureNumber);
 }
 
-void Game::Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor)
-{
-	engine->Drawobj(transform, center, objectNumber, textureNumber, materialColor);
-}
-
 void Game::Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions)
 {
 	engine->Drawobj(transform, center, objectNumber, textureNumber, materialColor, drawOptions);
 }
 
-void Game::DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor)
-{
-	engine->DrawSphere(transform, center, kSubdivision, textureNumber, materialColor);
-}
-
 void Game::DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions)
 {
 	engine->DrawSphere(transform, center, kSubdivision, textureNumber, materialColor, drawOptions);
-}
-
-void Game::DrawTriangle(const Transforms& transform, const Vector3& pos1, const Vector3& pos2, const Vector3& pos3, uint32_t textureNumber, const uint32_t& materialColor)
-{
-	engine->DrawTriangle(transform, pos1, pos2, pos3, textureNumber, materialColor);
 }
 
 void Game::DrawTriangle(const Transforms & transform, const Vector3 & pos1, const Vector3 & pos2, const Vector3 & pos3, uint32_t textureNumber, const uint32_t & materialColor, const DrawOptions drawOptions)

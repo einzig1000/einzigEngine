@@ -421,10 +421,10 @@ struct Matrix3x3
 struct Matrix4x4
 {
     float m[4][4] = {
-    { 0,0,0,0 },
-    { 0,0,0,0 },
-    { 0,0,0,0 },
-    { 0,0,0,0 } };
+    { 1,0,0,0 },
+    { 0,1,0,0 },
+    { 0,0,1,0 },
+    { 0,0,0,1 } };
 
     Matrix4x4 operator+(const Matrix4x4& rhs) const
     {
@@ -780,6 +780,7 @@ struct Transforms
     Vector3 translate = { 0,0,0 };
     Matrix4x4 WVP;
     Matrix4x4 World;
+    Matrix4x4 *parentWorld = nullptr;
 };
 
 struct VertexData

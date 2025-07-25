@@ -330,12 +330,6 @@ TextureData* Engine::GetTexture(uint32_t textureNumber)
 
 
 // 描画
-void Engine::Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor)
-{
-	DrawOptions drawOptions;
-	Drawobj(transform, center, objectNumber, textureNumber, materialColor, drawOptions);
-}
-
 void Engine::Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions)
 {
 	// 描画回数上限
@@ -392,12 +386,6 @@ void Engine::Drawobj(const Transforms& transform, const Vector3& center, uint32_
 	dxManager->GetCommandList()->DrawInstanced(kSumVertex, 1, 0, 0);
 
 	drawCallIndex++;
-}
-
-void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor)
-{
-	DrawOptions drawOptions;
-	DrawSphere(transform, center, kSubdivision, textureNumber, materialColor, drawOptions);
 }
 
 void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions)
@@ -510,12 +498,6 @@ void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint
 
 	drawCallIndex++;
 	sphereVertexDataUsed += kSumVertex;
-}
-
-void Engine::DrawTriangle(const Transforms& transform, const Vector3& pos1, const Vector3& pos2, const Vector3& pos3, uint32_t textureNumber, const uint32_t& materialColor)
-{
-	DrawOptions drawOptions;
-	DrawTriangle(transform, pos1, pos2, pos3, textureNumber, materialColor, drawOptions);
 }
 
 void Engine::DrawTriangle(const Transforms& transform, const Vector3& pos1, const Vector3& pos2, const Vector3& pos3, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions)
@@ -679,8 +661,8 @@ void Engine::DrawSprite(const Transforms& transform, const Vector2& center, uint
 	// マテリアル
 	float uvCenterX = (center.x) - (halfWidth);
 	float uvCenterY = (center.y) - (halfHeight);
-	uvCenterX = uvCenterX / halfWidth;
-	uvCenterY = uvCenterY / halfHeight;
+	uvCenterX = uvCenterX / halfWidth / 2;
+	uvCenterY = uvCenterY / halfHeight / 2;
 
 	Matrix4x4 toCenter = Matrix4x4::MakeTranslateMatrix({ -uvCenterX, -uvCenterY, 0.0f });
 	Matrix4x4 fromCenter = Matrix4x4::MakeTranslateMatrix({ uvCenterX, uvCenterY, 0.0f });
