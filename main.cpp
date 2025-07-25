@@ -22,7 +22,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	DrawOptions sphereOptions;
 	
 	// ブロック
-	Game::DrawObject block[20][10];
+	Game::DrawObj block[20][10];
 	int blockmodel = Game::LoadOBJ("resources/block", "map.obj");
 	int blockTextures = Game::LoadTexture("resources/block/map.png");
 	for (int y = 0; y < 20; ++y)
@@ -38,7 +38,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	}
 
 	// 天球
-	Game::DrawObject skyDome;
+	Game::DrawObj skyDome;
 	skyDome.model = Game::LoadOBJ("resources/skyDome", "skyDome.obj");
 	skyDome.texture = Game::LoadTexture("resources/skyDome/skyDome.png");
 	skyDome.transforms.scale = { 120.0f, 120.0f, 120.0f };
@@ -47,8 +47,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	skyDome.options.enableWireframeMode = false;
 
 	// テスト
-	Game::DrawObject test;
-	test.model = Game::LoadOBJ("resources/evaluationTask/", "bunny.obj");
+	Game::DrawObj test;
+	//test.model = Game::LoadOBJ("resources/evaluationTask/", "bunny.obj");
 	test.texture = uvCheckerPng;
 	test.transforms.scale = { 1.0f, 1.0f, 1.0f };
 	test.transforms.translate = { 0.0f,0.0f,0.0f };
@@ -56,10 +56,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	
 	// スプライト
 	Transforms spriteTransforms;
-	spriteTransforms.scale = { 2.0f, 2.0f, 2.0f };
+	spriteTransforms.scale = { 0.5f, 0.5f, 0.5f };
 	spriteTransforms.rotate = { 0.0f, 0.0f, 0.0f };
 	spriteTransforms.translate = { 110.0f, 110.0f, 0.0f };
-	Vector2 spriteSize = { 100,100 };
 	Vector2 spritePivot = { 0,0 };
 	Transforms uvTransform;
 
@@ -121,15 +120,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		{
 			for (int x = 0; x < 10; ++x)
 			{
-				//block[y][x].Draw();
+				block[y][x].Draw();
 			}
 		}
-		//Game::DrawSprite(spriteTransforms, spritePivot, spriteSize, uvCheckerPng, 0xFFFFFFFF, uvTransform);
+		Game::DrawSprite(spriteTransforms, spritePivot, uvCheckerPng, 0xFFFFFFFF, uvTransform);
 
-		//Game::DrawSphere(sphereTransforms, spherePivot, 16, uvCheckerPng, 0xFFFFFFFF, sphereOptions);
+		Game::DrawSphere(sphereTransforms, spherePivot, 16, uvCheckerPng, 0xFFFFFFFF, sphereOptions);
 
 
-		test.Draw();
+		//test.Draw();
 
 
 

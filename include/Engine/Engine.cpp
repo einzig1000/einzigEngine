@@ -359,40 +359,9 @@ void Engine::Drawobj(const Transforms& transform, const Vector3& center, uint32_
 	// 頂点数の取得
 	const uint32_t kSumVertex = static_cast<uint32_t>(obj.modelData.vertices.size());
 
-
-
-
-	// 1. オブジェクトのスケール行列
-	Matrix4x4 scaleMatrix = Matrix4x4::MakeScaleMatrix(transform.scale);
-
-	// 2. ワールド空間での最終的な位置への移動行列
-	Matrix4x4 translateMatrix = Matrix4x4::MakeTranslateMatrix(transform.translate);
-
-	// 3. 回転の中心への移動 (centerを原点に移動)
-	Matrix4x4 toRotationCenter = Matrix4x4::MakeTranslateMatrix({ -center.x, -center.y, -center.z });
-
-	// 4. 回転行列 (transform.rotate を center を中心とする回転として使う)
-	Matrix4x4 rotateXMatrix = Matrix4x4::MakeRotateXMatrix(transform.rotate.x);
-	Matrix4x4 rotateYMatrix = Matrix4x4::MakeRotateYMatrix(transform.rotate.y);
-	Matrix4x4 rotateZMatrix = Matrix4x4::MakeRotateZMatrix(transform.rotate.z);
-	Matrix4x4 rotationMatrix = rotateZMatrix * rotateXMatrix * rotateYMatrix;
-
-	// 5. 回転後、元の回転中心の位置に戻す
-	Matrix4x4 fromRotationCenter = Matrix4x4::MakeTranslateMatrix(center);
-
-	// 最終的なワールド行列の構築
-	Matrix4x4 worldMatrix =
-		scaleMatrix *		 // 1. 拡縮はどうでもいい
-		toRotationCenter *	 // 2. 回転中心を原点に移動
-		rotationMatrix *	 // 3. 原点で回転 (centerを中心とした回転)
-		fromRotationCenter * // 4. 回転したものを元の回転中心に戻す
-		translateMatrix;	 // 5. 最終的なワールド位置へ移動
-
 	// WVP行列
-	Matrix4x4 wvpMatrix = (worldMatrix * cameraController->viewProjectionMatrix);
-
-	wvpData[drawCallIndex]->World = worldMatrix;
-	wvpData[drawCallIndex]->WVP = wvpMatrix;
+	wvpData[drawCallIndex]->World = transform.World;
+	wvpData[drawCallIndex]->WVP = transform.World * cameraController->viewProjectionMatrix;
 
 	const TextureData* tex = dxManager->GetTextureManager()->GetTexture(textureNumber);
 	if (!tex) return;
@@ -649,7 +618,7 @@ void Engine::DrawTriangle(const Transforms& transform, const Vector3& pos1, cons
 	spriteVertexDataUsed += kSumVertex;
 }
 
-void Engine::DrawSprite(const Transforms& transform, const Vector2& center, const Vector2& textureSize, uint32_t textureNumber, const uint32_t& materialColor, const Transforms& uvTransform)
+void Engine::DrawSprite(const Transforms& transform, const Vector2& center, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions)
 {
 	// 描画回数上限
 	if (drawCallIndex >= kMaxDrawCallPerFrame) return;
@@ -666,9 +635,14 @@ void Engine::DrawSprite(const Transforms& transform, const Vector2& center, cons
 		spriteVertexData.resize(spriteVertexDataUsed + kSumVertex);
 	}
 
+	// テクスチャ
+	const TextureData* tex = dxManager->GetTextureManager()->GetTexture(textureNumber);
+	if (!tex)return;
+
 	// 頂点
-	const float halfWidth = textureSize.x * 0.5f;
-	const float halfHeight = textureSize.y * 0.5f;
+	const float halfWidth = tex->metadata.width * 0.5f;
+	const float halfHeight = tex->metadata.height * 0.5f;
+
 	// 左下 (index 0)
 	spriteVertexData[spriteVertexDataUsed + 0].position = { -halfWidth, -halfHeight, 0.0f, 1.0f };
 	spriteVertexData[spriteVertexDataUsed + 0].texcoord = { 0.0f, 0.0f };
@@ -701,15 +675,12 @@ void Engine::DrawSprite(const Transforms& transform, const Vector2& center, cons
 	wvpData[drawCallIndex]->World = world;
 	wvpData[drawCallIndex]->WVP = wvpMatrix;
 
-	// テクスチャ
-	const TextureData* tex = dxManager->GetTextureManager()->GetTexture(textureNumber);
-	if (!tex)return;
-
+	
 	// マテリアル
-	float uvCenterX = (center.x) - (textureSize.x / 2);
-	float uvCenterY = (center.y) - (textureSize.y / 2);
-	uvCenterX = uvCenterX / textureSize.x;
-	uvCenterY = uvCenterY / textureSize.y;
+	float uvCenterX = (center.x) - (halfWidth);
+	float uvCenterY = (center.y) - (halfHeight);
+	uvCenterX = uvCenterX / halfWidth;
+	uvCenterY = uvCenterY / halfHeight;
 
 	Matrix4x4 toCenter = Matrix4x4::MakeTranslateMatrix({ -uvCenterX, -uvCenterY, 0.0f });
 	Matrix4x4 fromCenter = Matrix4x4::MakeTranslateMatrix({ uvCenterX, uvCenterY, 0.0f });

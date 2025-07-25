@@ -22,16 +22,16 @@ public:
 	TextureData* GetTexture(uint32_t textureNumber);
 
 	// 描画
-	static void Drawobj    (const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor);
-	static void Drawobj    (const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
-	static void DrawSphere (const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor);
-	static void DrawSphere (const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
-	static void DrawSprite (const Transforms& transform, const Vector2& center, const Vector2& textureSize, uint32_t textureNumber, const uint32_t& materialColor, const Transforms& uvTransform);
+	static void Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor);
+	static void Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
+	static void DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor);
+	static void DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
+	static void DrawSprite(const Transforms& transform, const Vector2& center, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
 	static void DrawTriangle(const Transforms& transform, const Vector3& pos1, const Vector3& pos2, const Vector3& pos3, uint32_t textureNumber, const uint32_t& materialColor);
 	static void DrawTriangle(const Transforms& transform, const Vector3& pos1, const Vector3& pos2, const Vector3& pos3, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
 
-	
-	static void DrawLine   (const Vector3& start, const Vector3& end, const uint32_t& materialColor);
+
+	static void DrawLine(const Vector3& start, const Vector3& end, const uint32_t& materialColor);
 
 	// 音
 	static void PlayAudio(const uint32_t& audioId, bool loop);
@@ -61,11 +61,14 @@ public:
 	// プリミティブモードの設定
 	static void toggleWireframeMode();
 
-	class DrawObject
+
+	class DrawObj
 	{
 	public:
 		// 位置、回転、スケール
 		Transforms transforms;
+		// 親のワールドマトリックス
+		TransformationMatrix parentTransformationMatrix;
 		// 回転の中心点
 		Vector3 pivot;
 		// 色
@@ -79,9 +82,58 @@ public:
 		// 衝突判定用AABB
 		AABB AABB;
 
+		void Draw()
+		{
+			// 1. オブジェクトのスケール行列
+			Matrix4x4 scaleMatrix = Matrix4x4::MakeScaleMatrix(this->transforms.scale);
+
+			// 2. ワールド空間での最終的な位置への移動行列
+			Matrix4x4 translateMatrix = Matrix4x4::MakeTranslateMatrix(this->transforms.translate);
+
+			// 3. 回転の中心への移動 (centerを原点に移動)
+			Matrix4x4 toRotationCenter = Matrix4x4::MakeTranslateMatrix(-this->pivot);
+
+			// 4. 回転行列 (transform.rotate を center を中心とする回転として使う)
+			Matrix4x4 rotateXMatrix = Matrix4x4::MakeRotateXMatrix(this->transforms.rotate.x);
+			Matrix4x4 rotateYMatrix = Matrix4x4::MakeRotateYMatrix(this->transforms.rotate.y);
+			Matrix4x4 rotateZMatrix = Matrix4x4::MakeRotateZMatrix(this->transforms.rotate.z);
+			Matrix4x4 rotationMatrix = rotateZMatrix * rotateXMatrix * rotateYMatrix;
+
+			// 5. 回転後、元の回転中心の位置に戻す
+			Matrix4x4 fromRotationCenter = Matrix4x4::MakeTranslateMatrix(this->pivot);
+
+			// 最終的なワールド行列の構築
+			this->transforms.World =
+				scaleMatrix *		 // 1. 拡縮はどうでもいい
+				toRotationCenter *	 // 2. 回転中心を原点に移動
+				rotationMatrix *	 // 3. 原点で回転 (centerを中心とした回転)
+				fromRotationCenter * // 4. 回転したものを元の回転中心に戻す
+				translateMatrix;	 // 5. 最終的なワールド位置へ移動
+
+
+			Game::Drawobj(this->transforms, this->pivot, this->model, this->texture, this->color, this->options);
+		}
+	};
+
+	class DrawSprite
+	{
+	public:
+		// 位置、回転、スケール
+		Transforms transforms;
+		// 親のワールドマトリックス
+		TransformationMatrix parentTransformationMatrix;
+		// 回転の中心点
+		Vector2 pivot;
+		// 色
+		uint32_t color = 0xFFFFFFFF;
+		// テクスチャ
+		uint32_t texture = 0;
+		// 描画オプション
+		DrawOptions options;
+
 		void Draw() const
 		{
-			Game::Drawobj(this->transforms, this->pivot, this->model, this->texture, this->color, this->options);
+			Game::DrawSprite(this->transforms, this->pivot, this->texture, this->color, this->options);
 		}
 	};
 };
