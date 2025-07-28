@@ -4,7 +4,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
 	D3DResourceLeakChecker checker;
 	// ウィンドウ、DrectX初期化
-	Game::Initialize(WIDTH, HEIGHT, L"CG2");
+	Game::Initialize(WIDTH, HEIGHT, L"LE2A_17_ヨコヤマ_タダノブ");
 
 
 	//// オーディオデータ
