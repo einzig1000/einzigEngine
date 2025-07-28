@@ -27,10 +27,9 @@ public:
     void SetDistanceTarget(float Center, int spendFrame);
 
 
-    static Matrix4x4 viewportMatrix;
-    static Matrix4x4 viewProjectionMatrix;
 
     bool cameraMode_;
+    bool cameraModeMode_;
 
 private:
     //////////////////////////////////////////////
@@ -72,6 +71,8 @@ private:
     ///               カメラ移動               ///
     ////////////////////////////////////////////// 
 public:
+    Matrix4x4 viewportMatrix;
+    Matrix4x4 viewProjectionMatrix;
     Matrix4x4 cameraMatrix_;
     Transforms transform_;
     Matrix4x4 projectionMatrix_;

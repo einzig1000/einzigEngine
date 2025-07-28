@@ -142,6 +142,10 @@ struct Vector3
     float y = 0;
     float z = 0;
 
+    Vector3 operator-() const
+    {
+        return Vector3(-x, -y, -z);
+    }
     Vector3 operator+(const Vector3& rhs) const
     {
         return Vector3(x + rhs.x, y + rhs.y, z + rhs.z);
@@ -417,10 +421,10 @@ struct Matrix3x3
 struct Matrix4x4
 {
     float m[4][4] = {
-    { 0,0,0,0 },
-    { 0,0,0,0 },
-    { 0,0,0,0 },
-    { 0,0,0,0 } };
+    { 1,0,0,0 },
+    { 0,1,0,0 },
+    { 0,0,1,0 },
+    { 0,0,0,1 } };
 
     Matrix4x4 operator+(const Matrix4x4& rhs) const
     {
@@ -774,6 +778,8 @@ struct Transforms
     Vector3 scale = { 1,1,1 };
     Vector3 rotate = { 0,0,0 };
     Vector3 translate = { 0,0,0 };
+    Matrix4x4 World;
+    Matrix4x4 *parentWorld = nullptr;
 };
 
 struct VertexData
