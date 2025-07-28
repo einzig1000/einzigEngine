@@ -1,7 +1,5 @@
 #include "Camera/CameraController.h"
 #include "Engine/Game.h"
-Matrix4x4 CameraController::viewportMatrix;
-Matrix4x4 CameraController::viewProjectionMatrix;
 
 
 CameraController::CameraController()

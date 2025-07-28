@@ -778,7 +778,6 @@ struct Transforms
     Vector3 scale = { 1,1,1 };
     Vector3 rotate = { 0,0,0 };
     Vector3 translate = { 0,0,0 };
-    Matrix4x4 WVP;
     Matrix4x4 World;
     Matrix4x4 *parentWorld = nullptr;
 };

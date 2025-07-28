@@ -55,6 +55,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	test.transforms.rotate = { 0.0f,0.0f,0.0f };
 
 	block[0][0].transforms.parentWorld = &test.transforms.World;
+	skyDome.transforms.parentWorld = &block[0][0].transforms.World;
 
 	// スプライト
 	Game::RenderDate_Sprite sprite;

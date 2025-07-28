@@ -764,7 +764,7 @@ void Engine::DrawLine(const Vector3& start, const Vector3& end, const uint32_t& 
 	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResourceLine[drawLineCallIndex]->GetGPUVirtualAddress());// b1にバインド
 
 	// WVP行列定数バッファの更新 (カメラのWVP行列を使用)
-	Matrix4x4 wvpMatrix = CameraController::viewProjectionMatrix; // カメラのViewProjection行列
+	Matrix4x4 wvpMatrix = cameraController->viewProjectionMatrix; // カメラのViewProjection行列
 	wvpDataLine[drawLineCallIndex]->WVP = wvpMatrix;
 	wvpDataLine[drawLineCallIndex]->World = Matrix4x4::MakeIdentity4x4();
 	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResourceLine[drawLineCallIndex]->GetGPUVirtualAddress()); // b0にバインド
