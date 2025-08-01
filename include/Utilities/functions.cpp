@@ -390,7 +390,11 @@ bool IsCollision(const Ray& ray, const AABB& aabb, const std::vector<VertexData>
             Vector3{ vertices[i + 2].position.x, vertices[i + 2].position.y, vertices[i + 2].position.z },
             worldMatrix
         );
-
+        //Log("Triangle[0].x : %f,Triangle[0].y : %f,Triangle[0].z : %f", t.vertices[0].x, t.vertices[0].y, t.vertices[0].z);
+        //Log("Triangle[1].x : %f,Triangle[1].y : %f,Triangle[1].z : %f", t.vertices[1].x, t.vertices[1].y, t.vertices[1].z);
+        //Log("Triangle[2].x : %f,Triangle[2].y : %f,Triangle[2].z : %f", t.vertices[2].x, t.vertices[2].y, t.vertices[2].z);
+        //Log("Ray.origin.x : %f,Ray.origin.y : %f,Ray.origin.z : %f", ray.origin.x, ray.origin.y, ray.origin.z);
+        //Log("Ray.diff.x : %f,Ray.diff.y : %f,Ray.diff.z : %f", ray.diff.x, ray.diff.y, ray.diff.z);
 
         if (IsCollision(ray, t))
         {

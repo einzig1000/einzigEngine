@@ -13,18 +13,19 @@ ConstantBuffer<DirectionalLight> gDirectionalLight : register(b2);
 
 PixelShaderOutput main(VertexShaderOutput input)
 {
+    // UV同次座標
+    float4 transformedUV = mul(float32_t4(input.texcoord, 0.0f, 1.0f), gMaterial0.uvTransform);
+    float2 uv = transformedUV.xy / transformedUV.w;
+
+    PixelShaderOutput output;
+    float32_t4 textureColor = gTexture0.Sample(gSampler, uv);
+
+
     if (gDirectionalLight.mode == 0)
     {
-        // UV同次座標
-        float4 transformedUV = mul(float32_t4(input.texcoord, 0.0f, 1.0f), gMaterial0.uvTransform);
-        // テクスチャカラーをサンプリング
-        float32_t4 textureColor = gTexture0.Sample(gSampler, transformedUV.xy);
-        // 出力カラーを計算
-        PixelShaderOutput output;
         // Lightingの計算
         if (gMaterial0.enableLighting != 0)
         {
-            // NdotL : NとLのdot(内積)
             float NdotL = dot(normalize(input.normal), -gDirectionalLight.direction);
             float cos = pow(NdotL * 0.5f + 0.5f, 2.0f);
             output.color.rgb = gMaterial0.color.rgb * textureColor.rgb * gDirectionalLight.color.rgb * cos * gDirectionalLight.intensity;
@@ -34,21 +35,13 @@ PixelShaderOutput main(VertexShaderOutput input)
         {
             output.color = gMaterial0.color * textureColor;
         }
-
         return output;
     }
     else if (gDirectionalLight.mode == 1)
     {
-        // UV同次座標
-        float4 transformedUV = mul(float32_t4(input.texcoord, 0.0f, 1.0f), gMaterial0.uvTransform);
-        // テクスチャカラーをサンプリング
-        float32_t4 textureColor = gTexture0.Sample(gSampler, transformedUV.xy);
-        // 出力カラーを計算
-        PixelShaderOutput output;
         // Lightingの計算
         if (gMaterial0.enableLighting != 0)
         {
-            // NdotL : NとLのdot(内積)
             float cos = saturate(dot(normalize(input.normal), -gDirectionalLight.direction));
             output.color.rgb = gMaterial0.color.rgb * textureColor.rgb * gDirectionalLight.color.rgb * cos * gDirectionalLight.intensity;
             output.color.a = gMaterial0.color.a * textureColor.a;
@@ -57,17 +50,10 @@ PixelShaderOutput main(VertexShaderOutput input)
         {
             output.color = gMaterial0.color * textureColor;
         }
-
         return output;
     }
     else
     {
-        // UV同次座標
-        float4 transformedUV = mul(float32_t4(input.texcoord, 0.0f, 1.0f), gMaterial0.uvTransform);
-        // テクスチャカラーをサンプリング
-        float32_t4 textureColor = gTexture0.Sample(gSampler, transformedUV);
-        // 出力カラーを計算
-        PixelShaderOutput output;
         output.color = gMaterial0.color * textureColor;
         return output;
     }

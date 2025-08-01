@@ -22,6 +22,8 @@ public:
 	void BeginFrame();
 	void EndFrame();
 
+	void UpdateTransforms();
+
 	// 終了処理
 	void Finalize();
 

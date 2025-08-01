@@ -143,6 +143,7 @@ void Engine::BeginFrame()
 
 	UpdateLight();
 	UpdateCamera();
+	UpdateTransforms();
 	dxManager->BeginFrame();
 }
 void Engine::UpdateLight()
@@ -169,6 +170,18 @@ void Engine::EndFrame()
 
 	drawCallIndex = 0;
 	drawLineCallIndex = 0;
+}
+
+void Engine::UpdateTransforms()
+{
+	//for (auto& obj : objects)
+	//{
+	//	obj.transform.World = Matrix4x4::MakeAffineMatrix(obj.transform.scale, obj.transform.rotate, obj.transform.translate);
+	//	if (obj.transform.parentWorld)
+	//	{
+	//		obj.transform.World = obj.transform.World * (*obj.transform.parentWorld);
+	//	}
+	//}
 }
 
 // 終了処理
@@ -846,7 +859,8 @@ void Engine::SetMouseRay()
 
 bool Engine::IsCollisionMouseRayAABB(AABB aabb, int objNum)
 {
-	return IsCollision(mouseController->GetMouseRay(), aabb, objects[objNum].modelData.vertices, Matrix4x4::MakeAffineMatrix(objects[objNum].transform.scale, objects[objNum].transform.rotate, objects[objNum].transform.translate));
+	return IsCollision(mouseController->GetMouseRay(), aabb, objects[objNum].modelData.vertices, objects[objNum].transform.World);
+	//return IsCollision(mouseController->GetMouseRay(), aabb, objects[objNum].modelData.vertices, Matrix4x4::MakeAffineMatrix(objects[objNum].transform.scale, objects[objNum].transform.rotate, objects[objNum].transform.translate));
 };
 
 bool Engine::IsPressMouse(int i)
@@ -937,7 +951,7 @@ AABB Engine::CreateLocalAABB(const ModelData& model)
 // CreateLocalAABBでつくったAABBに座標を適応させる（当たり判定の毎フレーム更新用）
 AABB Engine::CreateAABB(const Transforms& transforms, uint32_t objectNumber)
 {
-	Matrix4x4 worldMatrix = Matrix4x4::MakeAffineMatrix(transforms.scale, transforms.rotate, transforms.translate);
+	Matrix4x4 worldMatrix = transforms.World;
 
 	Object3D& obj = objects[objectNumber];
 

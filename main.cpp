@@ -125,17 +125,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 		sphere.transforms.rotate.y += 0.01f;
 
-		if (Game::IsCollisionMouseRayAABB(teapot.AABB, teapot.model))
-		{
-			teapot.color = 0x000000FF;
-		}
-		else teapot.color = 0xFFFFFFFF;
-		if (Game::IsCollisionMouseRayAABB(suzanne.AABB, suzanne.model))
-		{
-			suzanne.color = 0x000000FF;
-		}
-		else suzanne.color = 0xFFFFFFFF;
-
 		///
 		/// ↑更新処理ここまで
 		///
@@ -146,9 +135,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		skyDome.Draw();
 		sprite.Draw();
 
-		teapot.DrawAABB();
-		bunny.DrawAABB();
-		suzanne.DrawAABB();
+		//teapot.DrawAABB();
+		//bunny.DrawAABB();
+		//suzanne.DrawAABB();
+		//sphere.DrawAABB();
 
 		teapot.Draw();
 		bunny.Draw();
