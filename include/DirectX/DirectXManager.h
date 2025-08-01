@@ -12,6 +12,7 @@
 #include "DirectX/ViewportScissorManager.h"
 
 #include "input/GetHitKey.h"
+#include "input/GetPadState.h"
 #include "Audio/AudioManager.h"
 #include "Texture/TextureManager.h"
 #include <memory>
@@ -51,4 +52,5 @@ private:
     std::unique_ptr<AudioManager> audioManager_;
     std::unique_ptr<TextureManager> textureManager_;
     std::unique_ptr<GetHitKey> getHitKey_;
+    std::unique_ptr<GetPadState> getPadState_;
 };

@@ -131,14 +131,14 @@ void CameraController::Updata()
 
 #ifdef DEBUG
 #endif
-    ImGui::DragFloat3("cameraCenter", &center_.x, 0.01f);
-    ImGui::DragFloat3("cameraRotate", &transform_.rotate.x, 0.01f);
-    ImGui::DragFloat("cameraDistance", &distance_, 0.01f);
-    ImGui::DragFloat3("cameratransform_.translate", &transform_.translate.x, 0.01f);
-    ImGui::DragFloat3("cameratransform_.rotate", &transform_.rotate.x, 0.01f);
-    ImGui::Text("push SPACE key : change cameraMode");
+    //ImGui::DragFloat3("cameraCenter", &center_.x, 0.01f);
+    //ImGui::DragFloat3("cameraRotate", &transform_.rotate.x, 0.01f);
+    //ImGui::DragFloat("cameraDistance", &distance_, 0.01f);
+    //ImGui::DragFloat3("cameratransform_.translate", &transform_.translate.x, 0.01f);
+    //ImGui::DragFloat3("cameratransform_.rotate", &transform_.rotate.x, 0.01f);
+    //ImGui::Text("push SPACE key : change cameraMode");
     ImGui::Checkbox("cameraMode", &cameraMode_);
-    ImGui::Checkbox("cameraModeMode", &cameraModeMode_);
+    //ImGui::Checkbox("cameraModeMode", &cameraModeMode_);
 
     //////////////////////////////////////////////
     ///               カメラ移動               ///

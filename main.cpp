@@ -9,7 +9,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 	int uvCheckerPng = Game::LoadTexture("resources/uvChecker.png");
 
-	const char* objectName[] = { "sphere", "teapot", "bunny", "suzanne", "multiMesh" };
+	const char* objectName[] = { "nothing","sphere", "teapot", "bunny", "suzanne", "multiMesh" };
 
 	// 球
 	Game::RenderData_Model sphere;
@@ -92,17 +92,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 
 
-		if (GetHitKey::keys[DIK_1] && !GetHitKey::preKeys[DIK_1])
+		if ((GetHitKey::keys[DIK_1] && !GetHitKey::preKeys[DIK_1]) || (GetPadState::buttons[PAD_A] && !GetPadState::preButtons[PAD_A]))
 		{
 			if (Game::IsAudioPlaying(alert))Game::StopAudio(alert);
 			Game::PlayAudio(alert, alertLoop);
 		}
-		if (GetHitKey::keys[DIK_2] && !GetHitKey::preKeys[DIK_2])
+		if ((GetHitKey::keys[DIK_2] && !GetHitKey::preKeys[DIK_2]) || (GetPadState::buttons[PAD_B] && !GetPadState::preButtons[PAD_B]))
 		{
 			if (Game::IsAudioPlaying(buzzer))Game::StopAudio(buzzer);
 			Game::PlayAudio(buzzer, buzzerLoop);
 		}
-		if (GetHitKey::keys[DIK_3] && !GetHitKey::preKeys[DIK_3])
+		if ((GetHitKey::keys[DIK_3] && !GetHitKey::preKeys[DIK_3]) || (GetPadState::buttons[PAD_X] && !GetPadState::preButtons[PAD_X]))
 		{
 			Game::toggleWireframeMode();
 		}
@@ -131,24 +131,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		///
 		skyDome.Draw();
 		sprite.Draw();
-
-		//teapot.DrawAABB();
-		//bunny.DrawAABB();
-		//suzanne.DrawAABB();
-		//sphere.DrawAABB();
-
 		teapot.Draw();
 		bunny.Draw();
+		bunny.DrawAABB();
 		suzanne.Draw();
 		sphere.Draw();
 		multiMesh.Draw();
 		multiMaterial.Draw();
 
-		//sphere.DrawAABB();
-		//multiMesh.DrawAABB();
-		//multiMaterial.DrawAABB();
+		sphere.DrawAABB();
 
-
+		
 
 
 
@@ -156,11 +149,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		ImGui::Text("----------------FPS----------------");
 		ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
 		ImGui::Text("------------Primitive--------------");
-		ImGui::Text("push 3 key : WireFrameMode");
+		ImGui::Text("push 3 key    : WireFrameMode");
+		ImGui::Text("push X Button : WireFrameMode");
 		if (ImGui::TreeNode("---------------Audio----------------"))
 		{
-			ImGui::Text("push 1 key : alert.wav");
-			ImGui::Text("push 2 key : buzzer.mp3");
+			ImGui::Text("push 1 key    : alert.wav");
+			ImGui::Text("push A Button : alert.wav");
+			ImGui::Text("push 2 key    : buzzer.mp3");
+			ImGui::Text("push B Button : buzzer.mp3");
 			if (Game::IsAudioPlaying(alert))ImGui::Text("alert ON");
 			else ImGui::Text("alert OFF");
 			if (Game::IsAudioPlaying(buzzer))ImGui::Text("buzzer ON");
@@ -196,39 +192,31 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 			ImGui::TreePop();
 		}
-		if (ImGui::TreeNode("---------------sphere---------------"))
-		{
-			ImGui::DragFloat3("sphere.scale	", &sphere.transforms.scale.x, 0.01f);
-			ImGui::DragFloat3("sphere.rotate	", &sphere.transforms.rotate.x, 0.01f);
-			ImGui::DragFloat3("sphere.pivot	", &sphere.pivot.x, 0.01f);
-			ImGui::DragFloat3("sphere.translate", &sphere.transforms.translate.x, 0.01f);
-			static float floatColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-			ImGui::ColorEdit4("sphere.color", floatColor, 1);
-			Vector4 vector4Color = { floatColor[0], floatColor[1], floatColor[2], floatColor[3] };
-			sphere.color = ConvertVector4ToUint(vector4Color);
-			ImGui::TreePop();
-		}
 		if (ImGui::TreeNode("---------------bunny----------------"))
 		{
-			static int current_parent = 0;
+			static int current_parent = 1;
 			ImGui::Combo("parentObject", &current_parent, objectName, IM_ARRAYSIZE(objectName));
 			if (current_parent == 0)
 			{
-				bunny.transforms.parentWorld = &sphere.transforms.World;
+				bunny.transforms.parentWorld = nullptr;
 			}
 			else if (current_parent == 1)
 			{
-				bunny.transforms.parentWorld = &teapot.transforms.World;
+				bunny.transforms.parentWorld = &sphere.transforms.World;
 			}
 			else if (current_parent == 2)
 			{
-				bunny.transforms.parentWorld = &bunny.transforms.World;
+				bunny.transforms.parentWorld = &teapot.transforms.World;
 			}
 			else if (current_parent == 3)
 			{
-				bunny.transforms.parentWorld = &suzanne.transforms.World;
+				bunny.transforms.parentWorld = &bunny.transforms.World;
 			}
 			else if (current_parent == 4)
+			{
+				bunny.transforms.parentWorld = &suzanne.transforms.World;
+			}
+			else if (current_parent == 5)
 			{
 				bunny.transforms.parentWorld = &multiMesh.transforms.World;
 			}
@@ -248,25 +236,29 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		}
 		if (ImGui::TreeNode("---------------teapot---------------"))
 		{
-			static int current_parent = 0;
+			static int current_parent = 1;
 			ImGui::Combo("parentObject", &current_parent, objectName, IM_ARRAYSIZE(objectName));
 			if (current_parent == 0)
 			{
-				teapot.transforms.parentWorld = &sphere.transforms.World;
+				teapot.transforms.parentWorld = nullptr;
 			}
 			else if (current_parent == 1)
 			{
-				teapot.transforms.parentWorld = &teapot.transforms.World;
+				teapot.transforms.parentWorld = &sphere.transforms.World;
 			}
 			else if (current_parent == 2)
 			{
-				teapot.transforms.parentWorld = &bunny.transforms.World;
+				teapot.transforms.parentWorld = &teapot.transforms.World;
 			}
 			else if (current_parent == 3)
 			{
-				teapot.transforms.parentWorld = &suzanne.transforms.World;
+				teapot.transforms.parentWorld = &bunny.transforms.World;
 			}
 			else if (current_parent == 4)
+			{
+				teapot.transforms.parentWorld = &suzanne.transforms.World;
+			}
+			else if (current_parent == 5)
 			{
 				teapot.transforms.parentWorld = &multiMesh.transforms.World;
 			}
@@ -286,25 +278,29 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		}
 		if (ImGui::TreeNode("--------------suzanne---------------"))
 		{
-			static int current_parent = 0;
+			static int current_parent = 1;
 			ImGui::Combo("parentObject", &current_parent, objectName, IM_ARRAYSIZE(objectName));
 			if (current_parent == 0)
 			{
-				suzanne.transforms.parentWorld = &sphere.transforms.World;
+				suzanne.transforms.parentWorld = nullptr;
 			}
 			else if (current_parent == 1)
 			{
-				suzanne.transforms.parentWorld = &teapot.transforms.World;
+				suzanne.transforms.parentWorld = &sphere.transforms.World;
 			}
 			else if (current_parent == 2)
 			{
-				suzanne.transforms.parentWorld = &bunny.transforms.World;
+				suzanne.transforms.parentWorld = &teapot.transforms.World;
 			}
 			else if (current_parent == 3)
 			{
-				suzanne.transforms.parentWorld = &suzanne.transforms.World;
+				suzanne.transforms.parentWorld = &bunny.transforms.World;
 			}
 			else if (current_parent == 4)
+			{
+				suzanne.transforms.parentWorld = &suzanne.transforms.World;
+			}
+			else if (current_parent == 5)
 			{
 				suzanne.transforms.parentWorld = &multiMesh.transforms.World;
 			}
@@ -320,6 +316,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			Vector4 vector4Color = { floatColor[0], floatColor[1], floatColor[2], floatColor[3] };
 			suzanne.color = ConvertVector4ToUint(vector4Color);
 
+			ImGui::TreePop();
+		}
+		if (ImGui::TreeNode("---------------sphere---------------"))
+		{
+			ImGui::DragFloat3("sphere.scale	", &sphere.transforms.scale.x, 0.01f);
+			ImGui::DragFloat3("sphere.rotate	", &sphere.transforms.rotate.x, 0.01f);
+			ImGui::DragFloat3("sphere.pivot	", &sphere.pivot.x, 0.01f);
+			ImGui::DragFloat3("sphere.translate", &sphere.transforms.translate.x, 0.01f);
+			static float floatColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+			ImGui::ColorEdit4("sphere.color", floatColor, 1);
+			Vector4 vector4Color = { floatColor[0], floatColor[1], floatColor[2], floatColor[3] };
+			sphere.color = ConvertVector4ToUint(vector4Color);
 			ImGui::TreePop();
 		}
 		if (ImGui::TreeNode("---------------sprite---------------"))

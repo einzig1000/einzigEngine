@@ -85,6 +85,9 @@
     <Filter Include="GameEngine\Application\Application">
       <UniqueIdentifier>{f318fca5-3d7c-49cd-bd1a-0bbb7dad65fe}</UniqueIdentifier>
     </Filter>
+    <Filter Include="GameEngine\input\GetPadState">
+      <UniqueIdentifier>{6cdbe87c-683b-4dee-b8c3-f22dd1b10c44}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -167,6 +170,9 @@
     </ClCompile>
     <ClCompile Include="include\Window\WindowManager.cpp">
       <Filter>GameEngine\WindowManager</Filter>
+    </ClCompile>
+    <ClCompile Include="include\input\GetPadState.cpp">
+      <Filter>GameEngine\input\GetPadState</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -253,6 +259,9 @@
     </ClInclude>
     <ClInclude Include="include\Window\WindowManager.h">
       <Filter>GameEngine\WindowManager</Filter>
+    </ClInclude>
+    <ClInclude Include="include\input\GetPadState.h">
+      <Filter>GameEngine\input\GetPadState</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
