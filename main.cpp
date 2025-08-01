@@ -1,4 +1,5 @@
 #include "Engine/Game.h"
+#include <numbers>
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
@@ -9,16 +10,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	int alert = Game::LoadAudio("resources/sound/SE/alert.wav");
 	int buzzer = Game::LoadAudio("resources/sound/SE/buzzer.mp3");
 
+	int uvCheckerPng = Game::LoadTexture("resources/uvChecker.png");
+
+	const char* objectName[] = { "sphere", "teapot", "bunny", "suzanne", "multiMesh" };
 
 	// 球
-	int uvCheckerPng = Game::LoadTexture("resources/uvChecker.png");
-	Transforms sphereTransforms;
-	sphereTransforms.scale = { 1.0f, 1.0f, 1.0f };
-	sphereTransforms.translate = { 0.0f,0.0f,0.0f };
-	sphereTransforms.rotate = { 0.0f,0.0f,0.0f };
-	uint32_t sphereColor = 0xFFFFFFFF;
-	Vector3 spherePivot = { 0,0,0 };
-	DrawOptions sphereOptions;
+	Game::RenderDate_Model sphere;
+	sphere.model = Game::LoadOBJ("resources/evaluationTask", "sphere.obj");
+	sphere.texture = uvCheckerPng;
+	sphere.transforms.scale = { 2.0f, 2.0f, 2.0f };
 
 	// 天球
 	Game::RenderDate_Model skyDome;
@@ -32,26 +32,35 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	teapot.model = Game::LoadOBJ("resources/evaluationTask/", "teapot.obj");
 	teapot.texture = uvCheckerPng;
 	teapot.transforms.translate = { -3.0f,0.0f,0.0f };
-	teapot.pivot = { 3.0f,0.0f,0.0f };
+	teapot.transforms.parentWorld = &sphere.transforms.World;
 
 	// ばにー
 	Game::RenderDate_Model bunny;
 	bunny.model = Game::LoadOBJ("resources/evaluationTask/", "bunny.obj");
 	bunny.texture = uvCheckerPng;
 	bunny.transforms.translate = { 3.0f,0.0f,0.0f };
-	bunny.pivot = { -3.0f,0.0f,0.0f };
+	bunny.transforms.parentWorld = &sphere.transforms.World;
 
 	// スザンヌ
 	Game::RenderDate_Model suzanne;
 	suzanne.model = Game::LoadOBJ("resources/evaluationTask/", "suzanne.obj");
 	suzanne.texture = uvCheckerPng;
 	suzanne.transforms.translate = { 0.0f,3.0f,0.0f };
-	suzanne.pivot = { 0.0f,-3.0f,0.0f };
+	suzanne.transforms.parentWorld = &sphere.transforms.World;
 
 	// マルチメッシュ
 	Game::RenderDate_Model multiMesh;
 	multiMesh.model = Game::LoadOBJ("resources/evaluationTask/", "multiMesh.obj");
 	multiMesh.texture = uvCheckerPng;
+	multiMesh.transforms.translate = { -8.0f,0.0f,0.0f };
+	multiMesh.transforms.rotate = { 0.0f, float(std::numbers::pi), 0.0f };
+
+	// マルチマテリアル
+	Game::RenderDate_Model multiMaterial;
+	multiMaterial.model = Game::LoadOBJ("resources/evaluationTask/", "multiMaterial.obj");
+	multiMaterial.texture = uvCheckerPng;
+	multiMaterial.transforms.translate = { 8.0f,0.0f,0.0f };
+	multiMaterial.transforms.rotate = { 0.0f, float(std::numbers::pi), 0.0f };
 
 	// スプライト
 	Game::RenderDate_Sprite sprite;
@@ -108,10 +117,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		skyDome.options.uvTransform.translate.y += 0.001f;
 		skyDome.options.uvTransform.translate.x += 0.0001f;
 		sprite.options.uvTransform.rotate.z += 0.01f;
-
-		teapot.transforms.rotate.y += 0.01f;
+		
+		teapot.transforms.rotate.x += 0.01f;
 		suzanne.transforms.rotate.y += 0.01f;
-		bunny.transforms.rotate.y += 0.01f;
+		bunny.transforms.rotate.z += 0.01f;
+
+		sphere.transforms.rotate.y += 0.01f;
 
 		///
 		/// ↑更新処理ここまで
@@ -126,9 +137,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		suzanne.Draw();
 		skyDome.Draw();
 		sprite.Draw();
-		//multiMesh.Draw();
-
-		Game::DrawSphere(sphereTransforms, spherePivot, 16, uvCheckerPng, 0xFFFFFFFF, sphereOptions);
+		sphere.Draw();
+		multiMesh.Draw();
+		multiMaterial.Draw();
 
 
 
@@ -180,18 +191,41 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		}
 		if (ImGui::TreeNode("---------------sphere---------------"))
 		{
-			ImGui::DragFloat3("sphere.scale	", &sphereTransforms.scale.x, 0.01f);
-			ImGui::DragFloat3("sphere.rotate	", &sphereTransforms.rotate.x, 0.01f);
-			ImGui::DragFloat3("sphere.pivot	", &spherePivot.x, 0.01f);
-			ImGui::DragFloat3("sphere.translate", &sphereTransforms.translate.x, 0.01f);
+			ImGui::DragFloat3("sphere.scale	", &sphere.transforms.scale.x, 0.01f);
+			ImGui::DragFloat3("sphere.rotate	", &sphere.transforms.rotate.x, 0.01f);
+			ImGui::DragFloat3("sphere.pivot	", &sphere.pivot.x, 0.01f);
+			ImGui::DragFloat3("sphere.translate", &sphere.transforms.translate.x, 0.01f);
 			static float floatColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 			ImGui::ColorEdit4("sphere.color", floatColor, 1);
 			Vector4 vector4Color = { floatColor[0], floatColor[1], floatColor[2], floatColor[3] };
-			sphereColor = ConvertVector4ToUint(vector4Color);
+			sphere.color = ConvertVector4ToUint(vector4Color);
 			ImGui::TreePop();
 		}
 		if (ImGui::TreeNode("---------------bunny----------------"))
 		{
+			static int current_parent = 0;
+			ImGui::Combo("parentObject", &current_parent, objectName, IM_ARRAYSIZE(objectName));
+			if (current_parent == 0)
+			{
+				bunny.transforms.parentWorld = &sphere.transforms.World;
+			}
+			else if (current_parent == 1)
+			{
+				bunny.transforms.parentWorld = &teapot.transforms.World;
+			}
+			else if (current_parent == 2)
+			{
+				bunny.transforms.parentWorld = &bunny.transforms.World;
+			}
+			else if (current_parent == 3)
+			{
+				bunny.transforms.parentWorld = &suzanne.transforms.World;
+			}
+			else if (current_parent == 4)
+			{
+				bunny.transforms.parentWorld = &multiMesh.transforms.World;
+			}
+
 			ImGui::DragFloat3("bunny.scale	", &bunny.transforms.scale.x, 0.01f);
 			ImGui::DragFloat3("bunny.rotate	", &bunny.transforms.rotate.x, 0.01f);
 			ImGui::DragFloat3("bunny.pivot	", &bunny.pivot.x, 0.01f);
@@ -207,6 +241,28 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		}
 		if (ImGui::TreeNode("---------------teapot---------------"))
 		{
+			static int current_parent = 0;
+			ImGui::Combo("parentObject", &current_parent, objectName, IM_ARRAYSIZE(objectName));
+			if (current_parent == 0)
+			{
+				teapot.transforms.parentWorld = &sphere.transforms.World;
+			}
+			else if (current_parent == 1)
+			{
+				teapot.transforms.parentWorld = &teapot.transforms.World;
+			}
+			else if (current_parent == 2)
+			{
+				teapot.transforms.parentWorld = &bunny.transforms.World;
+			}
+			else if (current_parent == 3)
+			{
+				teapot.transforms.parentWorld = &suzanne.transforms.World;
+			}
+			else if (current_parent == 4)
+			{
+				teapot.transforms.parentWorld = &multiMesh.transforms.World;
+			}
 			ImGui::DragFloat3("teapot.scale	", &teapot.transforms.scale.x, 0.01f);
 			ImGui::DragFloat3("teapot.rotate	", &teapot.transforms.rotate.x, 0.01f);
 			ImGui::DragFloat3("teapot.pivot	", &teapot.pivot.x, 0.01f);
@@ -223,6 +279,28 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		}
 		if (ImGui::TreeNode("--------------suzanne---------------"))
 		{
+			static int current_parent = 0;
+			ImGui::Combo("parentObject", &current_parent, objectName, IM_ARRAYSIZE(objectName));
+			if (current_parent == 0)
+			{
+				suzanne.transforms.parentWorld = &sphere.transforms.World;
+			}
+			else if (current_parent == 1)
+			{
+				suzanne.transforms.parentWorld = &teapot.transforms.World;
+			}
+			else if (current_parent == 2)
+			{
+				suzanne.transforms.parentWorld = &bunny.transforms.World;
+			}
+			else if (current_parent == 3)
+			{
+				suzanne.transforms.parentWorld = &suzanne.transforms.World;
+			}
+			else if (current_parent == 4)
+			{
+				suzanne.transforms.parentWorld = &multiMesh.transforms.World;
+			}
 			ImGui::DragFloat3("suzanne.scale	", &suzanne.transforms.scale.x, 0.01f);
 			ImGui::DragFloat3("suzanne.rotate	", &suzanne.transforms.rotate.x, 0.01f);
 			ImGui::DragFloat3("suzanne.pivot	", &suzanne.pivot.x, 0.01f);

@@ -6,7 +6,6 @@ void Game::Initialize(int width, int height, const std::wstring& title)
 {
 	D3DResourceLeakChecker checker;
 	engine->Initialize(width, height, title);
-	//pad =
 }
 
 bool Game::ProcessMessage()
