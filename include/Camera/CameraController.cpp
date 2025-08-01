@@ -5,7 +5,7 @@
 CameraController::CameraController()
 {
     mousePositionGap_ = { 0,0 };
-    cameraMode_ = 0;
+    cameraMode_ = true;
 
     // カメラ
     transform_.translate = { 0.0f, 0.0f, 0.0f };
@@ -36,12 +36,12 @@ void CameraController::Updata()
 
 #pragma region カメラ回転
         // クリックした瞬間
-        if (prePressMouse0_ == 0 && pressMouse0_)
+        if (pressMouse2_ && prePressMouse2_ == 0 && !GetHitKey::keys[DIK_LSHIFT])
         {
             Game::GetMousePosition(&preMousePosition_);
         }
         // クリックしている最中
-        if (pressMouse0_)
+        if (pressMouse2_ && !GetHitKey::keys[DIK_LSHIFT])
         {
             Game::GetMousePosition(&mousePosition_);
             mousePositionGap_.x = mousePosition_.x - preMousePosition_.x;
@@ -50,18 +50,18 @@ void CameraController::Updata()
             transform_.rotate.y = (mousePositionGap_.x / 100.0f) + (preRotate_.y);
         }
         // クリックやめた瞬間
-        if (prePressMouse0_ && pressMouse0_ == 0)
+        if (prePressMouse2_ && pressMouse2_ == 0 && !GetHitKey::keys[DIK_LSHIFT])
         {
             preRotate_ = transform_.rotate;
         }
 #pragma endregion
 
 #pragma region 回転中心 
-        if (prePressMouse2_ == 0 && pressMouse2_)
+        if (prePressMouse2_ == 0 && pressMouse2_ && GetHitKey::keys[DIK_LSHIFT])
         {
             Game::GetMousePosition(&preMousePosition_);
         }
-        if (pressMouse2_)
+        if (pressMouse2_ && GetHitKey::keys[DIK_LSHIFT])
         {
             Game::GetMousePosition(&mousePosition_);
             mousePositionGap_.x = float(mousePosition_.x - preMousePosition_.x);
@@ -95,7 +95,7 @@ void CameraController::Updata()
             //center_ = preCenter_ + (((right * -1) * (mousePositionGap_.x / 100.0f)) + ((up * -1) * (-mousePositionGap_.y / 100.0f)));
             center_ = preCenter_ + (((right * -1) * (mousePositionGap_.x / 100.0f)) + ((up * 1) * (-mousePositionGap_.y / 100.0f)));
         }
-        if (prePressMouse2_ && pressMouse2_ == 0)
+        if (prePressMouse2_ && pressMouse2_ == 0 && GetHitKey::keys[DIK_LSHIFT])
         {
             preCenter_ = center_;
         }
@@ -131,14 +131,14 @@ void CameraController::Updata()
 
 #ifdef DEBUG
 #endif
-    ImGui::DragFloat3("cameraCenter", &center_.x, 0.01f);
-    ImGui::DragFloat3("cameraRotate", &transform_.rotate.x, 0.01f);
-    ImGui::DragFloat("cameraDistance", &distance_, 0.01f);
-    ImGui::DragFloat3("cameratransform_.translate", &transform_.translate.x, 0.01f);
-    ImGui::DragFloat3("cameratransform_.rotate", &transform_.rotate.x, 0.01f);
-    ImGui::Text("push SPACE key : change cameraMode");
+    //ImGui::DragFloat3("cameraCenter", &center_.x, 0.01f);
+    //ImGui::DragFloat3("cameraRotate", &transform_.rotate.x, 0.01f);
+    //ImGui::DragFloat("cameraDistance", &distance_, 0.01f);
+    //ImGui::DragFloat3("cameratransform_.translate", &transform_.translate.x, 0.01f);
+    //ImGui::DragFloat3("cameratransform_.rotate", &transform_.rotate.x, 0.01f);
+    //ImGui::Text("push SPACE key : change cameraMode");
     ImGui::Checkbox("cameraMode", &cameraMode_);
-    ImGui::Checkbox("cameraModeMode", &cameraModeMode_);
+    //ImGui::Checkbox("cameraModeMode", &cameraModeMode_);
 
     //////////////////////////////////////////////
     ///               カメラ移動               ///

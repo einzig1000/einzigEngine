@@ -22,6 +22,8 @@ public:
 	void BeginFrame();
 	void EndFrame();
 
+	void UpdateTransforms();
+
 	// 終了処理
 	void Finalize();
 
@@ -47,6 +49,12 @@ public:
 	float GetVolume(const uint32_t& audioId);
 	float GetMasterVolume();
 	bool IsAudioPlaying(const uint32_t& audioId);
+
+	// ライト
+	void SetLightColor(const Vector4 color) { directionalLightData->color = color; }
+	void SetLightDirection(const Vector3 direction) { directionalLightData->direction = direction; }
+	void SetLightIntensity(float intensity) { directionalLightData->intensity = intensity; }
+	void ToggleLightMode(const uint32_t mode) { directionalLightData->mode = mode; }
 
 	// マウス
 	void GetMousePosition(Vector2* position);
@@ -132,7 +140,7 @@ private:
 
 	// 三角形
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceTriangle;
-	UINT vertexResourceSizeTriangle; 
+	UINT vertexResourceSizeTriangle;
 
 	// 線
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceLine;

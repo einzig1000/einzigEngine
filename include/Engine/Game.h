@@ -1,5 +1,8 @@
 #pragma once
 #include "Engine/Engine.h"
+//#include "input/GetHitKey.h"
+//#include "input/GetPadState.h"
+//#include "input/MouseController.h"
 
 class Game
 {
@@ -26,8 +29,6 @@ public:
 	static void DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
 	static void DrawSprite(const Transforms& transform, const Vector2& center, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
 	static void DrawTriangle(const Transforms& transform, const Vector3& pos1, const Vector3& pos2, const Vector3& pos3, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
-
-
 	static void DrawLine(const Vector3& start, const Vector3& end, const uint32_t& materialColor);
 
 	// 音
@@ -38,6 +39,12 @@ public:
 	static float GetVolume(const uint32_t& audioId);
 	static float GetMasterVolume();
 	static bool IsAudioPlaying(const uint32_t& audioId);
+
+	// ライト
+	static void SetLightColor(const Vector4 color);
+	static void SetLightDirection(const Vector3 direction);
+	static void ToggleLightMode(const uint32_t mode);
+	static void SetLightIntensity(float intensity);
 
 	// マウス
 	static void GetMousePosition(Vector2* position);
@@ -58,7 +65,7 @@ public:
 	// プリミティブモードの設定
 	static void toggleWireframeMode();
 
-	class RenderDate_Model
+	class RenderData_Model
 	{
 	public:
 		// 位置、回転、スケール
@@ -195,7 +202,7 @@ public:
 		}
 	};
 
-	class RenderDate_Sprite
+	class RenderData_Sprite
 	{
 	public:
 		// 位置、回転、スケール
@@ -216,5 +223,5 @@ public:
 			Game::DrawSprite(this->transforms, this->pivot, this->texture, this->color, this->options);
 		}
 	};
-};
 
+};

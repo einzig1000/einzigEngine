@@ -256,6 +256,15 @@ struct Vector3
             x * rhs.y - y * rhs.x
         );
     }
+    // 反射角
+    Vector3 Reflect(const Vector3& input, const Vector3& normal)
+    {
+        Vector3 result;
+
+        result = input - ((normal * (input.Dot(normal))) * 2);
+
+        return result;
+    }
 };
 
 struct Vector4
@@ -832,6 +841,7 @@ struct DirectionalLight
     Vector4 color;
     Vector3 direction;
     float intensity;//輝度
+    int mode;
 };
 
 struct MaterialData

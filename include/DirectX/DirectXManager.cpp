@@ -15,9 +15,10 @@ DirectXManager::DirectXManager(HWND hwnd, int width, int height)
     synchronizationManager = std::make_unique<SynchronizationManager>(deviceManager->GetDevice());
     viewportScissorManager = std::make_unique<ViewportScissorManager>(width, height);
 
-    audioManager_ = std::make_unique<AudioManager>(); // もし引数がない場合
+    audioManager_ = std::make_unique<AudioManager>();
     textureManager_ = std::make_unique<TextureManager>(GetDevice(), GetsrvDescriptorHeap());
     getHitKey_ = std::make_unique<GetHitKey>(hwnd);
+    getPadState_ = std::make_unique<GetPadState>();
 
     Log("コンストラクタ実行成功 : DirectXManager");
 }
@@ -30,6 +31,7 @@ DirectXManager::~DirectXManager()
 void DirectXManager::BeginFrame()
 {
     getHitKey_->Update();
+    getPadState_->Update();
 
     // バックバッファのインデックスを更新
     swapChainManager->UpdateBackBufferIndex();
