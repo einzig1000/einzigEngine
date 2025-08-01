@@ -118,6 +118,12 @@ void Game::SetLightDirection(const Vector3 direction)
 	engine->SetLightDirection(direction);
 }
 
+void Game::ToggleLightMode(const uint32_t mode)
+{}
+
+void Game::SetLightIntensity(float intensity)
+{}
+
 void Game::GetMousePosition(Vector2* position)
 {
 	return engine->GetMousePosition(position);
