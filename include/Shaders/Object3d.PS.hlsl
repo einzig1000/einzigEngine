@@ -34,4 +34,11 @@ PixelShaderOutput main(VertexShaderOutput input)
     }
     
     return output;
+
+    //// テクスチャカラーをサンプリング
+    //float32_t4 textureColor = gTexture0.Sample(gSampler, input.texcoord);
+    //// 出力カラーを計算
+    //PixelShaderOutput output;
+    //output.color = gMaterial0.color * textureColor;
+    //return output;
 }
