@@ -65,7 +65,7 @@ public:
 	// プリミティブモードの設定
 	static void toggleWireframeMode();
 
-	class RenderDate_Model
+	class RenderData_Model
 	{
 	public:
 		// 位置、回転、スケール
@@ -202,7 +202,7 @@ public:
 		}
 	};
 
-	class RenderDate_Sprite
+	class RenderData_Sprite
 	{
 	public:
 		// 位置、回転、スケール

@@ -15,55 +15,55 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	const char* objectName[] = { "sphere", "teapot", "bunny", "suzanne", "multiMesh" };
 
 	// 球
-	Game::RenderDate_Model sphere;
+	Game::RenderData_Model sphere;
 	sphere.model = Game::LoadOBJ("resources/evaluationTask", "sphere.obj");
 	sphere.texture = uvCheckerPng;
 	sphere.transforms.scale = { 2.0f, 2.0f, 2.0f };
 
 	// 天球
-	Game::RenderDate_Model skyDome;
+	Game::RenderData_Model skyDome;
 	skyDome.model = Game::LoadOBJ("resources/skyDome", "skyDome.obj");
 	skyDome.texture = Game::LoadTexture("resources/skyDome/skyDome.png");
 	skyDome.transforms.scale = { 120.0f, 120.0f, 120.0f };
 	skyDome.options.enableWireframeMode = false;
 
 	// ティーポット
-	Game::RenderDate_Model teapot;
+	Game::RenderData_Model teapot;
 	teapot.model = Game::LoadOBJ("resources/evaluationTask/", "teapot.obj");
 	teapot.texture = uvCheckerPng;
 	teapot.transforms.translate = { -3.0f,0.0f,0.0f };
 	teapot.transforms.parentWorld = &sphere.transforms.World;
 
 	// ばにー
-	Game::RenderDate_Model bunny;
+	Game::RenderData_Model bunny;
 	bunny.model = Game::LoadOBJ("resources/evaluationTask/", "bunny.obj");
 	bunny.texture = uvCheckerPng;
 	bunny.transforms.translate = { 3.0f,0.0f,0.0f };
 	bunny.transforms.parentWorld = &sphere.transforms.World;
 
 	// スザンヌ
-	Game::RenderDate_Model suzanne;
+	Game::RenderData_Model suzanne;
 	suzanne.model = Game::LoadOBJ("resources/evaluationTask/", "suzanne.obj");
 	suzanne.texture = uvCheckerPng;
 	suzanne.transforms.translate = { 0.0f,3.0f,0.0f };
 	suzanne.transforms.parentWorld = &sphere.transforms.World;
 
 	// マルチメッシュ
-	Game::RenderDate_Model multiMesh;
+	Game::RenderData_Model multiMesh;
 	multiMesh.model = Game::LoadOBJ("resources/evaluationTask/", "multiMesh.obj");
 	multiMesh.texture = uvCheckerPng;
 	multiMesh.transforms.translate = { -8.0f,0.0f,0.0f };
 	multiMesh.transforms.rotate = { 0.0f, float(std::numbers::pi), 0.0f };
 
 	// マルチマテリアル
-	Game::RenderDate_Model multiMaterial;
+	Game::RenderData_Model multiMaterial;
 	multiMaterial.model = Game::LoadOBJ("resources/evaluationTask/", "multiMaterial.obj");
 	multiMaterial.texture = uvCheckerPng;
 	multiMaterial.transforms.translate = { 8.0f,0.0f,0.0f };
 	multiMaterial.transforms.rotate = { 0.0f, float(std::numbers::pi), 0.0f };
 
 	// スプライト
-	Game::RenderDate_Sprite sprite;
+	Game::RenderData_Sprite sprite;
 	sprite.texture = uvCheckerPng;
 	sprite.transforms.scale = { 0.3f, 0.3f, 0.3f };
 	sprite.transforms.rotate = { 0.0f, 0.0f, 0.0f };
@@ -91,6 +91,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		///
 		/// ↓更新処理ここから
 		///
+
 
 
 
@@ -124,6 +125,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 		sphere.transforms.rotate.y += 0.01f;
 
+		if (Game::IsCollisionMouseRayAABB(teapot.AABB, teapot.model))
+		{
+			teapot.color = 0x000000FF;
+		}
+		else teapot.color = 0xFFFFFFFF;
+		if (Game::IsCollisionMouseRayAABB(suzanne.AABB, suzanne.model))
+		{
+			suzanne.color = 0x000000FF;
+		}
+		else suzanne.color = 0xFFFFFFFF;
+
 		///
 		/// ↑更新処理ここまで
 		///
@@ -131,15 +143,23 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		///
 		/// ↓描画処理ここから
 		///
+		skyDome.Draw();
+		sprite.Draw();
+
+		teapot.DrawAABB();
+		bunny.DrawAABB();
+		suzanne.DrawAABB();
 
 		teapot.Draw();
 		bunny.Draw();
 		suzanne.Draw();
-		skyDome.Draw();
-		sprite.Draw();
 		sphere.Draw();
 		multiMesh.Draw();
 		multiMaterial.Draw();
+
+		//sphere.DrawAABB();
+		//multiMesh.DrawAABB();
+		//multiMaterial.DrawAABB();
 
 
 
