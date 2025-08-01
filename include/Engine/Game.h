@@ -26,8 +26,6 @@ public:
 	static void DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
 	static void DrawSprite(const Transforms& transform, const Vector2& center, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
 	static void DrawTriangle(const Transforms& transform, const Vector3& pos1, const Vector3& pos2, const Vector3& pos3, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
-
-
 	static void DrawLine(const Vector3& start, const Vector3& end, const uint32_t& materialColor);
 
 	// 音
@@ -38,6 +36,10 @@ public:
 	static float GetVolume(const uint32_t& audioId);
 	static float GetMasterVolume();
 	static bool IsAudioPlaying(const uint32_t& audioId);
+
+	// ライト
+	static void SetLightColor(const Vector4 color);
+	static void SetLightDirection(const Vector3 direction);
 
 	// マウス
 	static void GetMousePosition(Vector2* position);

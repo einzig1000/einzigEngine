@@ -122,6 +122,7 @@ void Log(std::ofstream& os, const std::string& message);
 Vector4 ConvertARGBtoRGBA(const Vector4& argb);
 // int型のカラーをVector4型に
 Vector4 ConvertUintToVector4(uint32_t color);
+uint32_t ConvertVector4ToUint(Vector4 color);
 
 /// <summary>
 /// 球体の頂点データを生成する関数

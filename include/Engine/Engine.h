@@ -47,6 +47,10 @@ public:
 	float GetVolume(const uint32_t& audioId);
 	float GetMasterVolume();
 	bool IsAudioPlaying(const uint32_t& audioId);
+	
+	// ライト
+	void SetLightColor(const Vector4 color) { directionalLightData->color = color; }
+	void SetLightDirection(const Vector3 direction) { directionalLightData->direction = direction; }
 
 	// マウス
 	void GetMousePosition(Vector2* position);

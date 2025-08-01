@@ -108,6 +108,16 @@ bool Game::IsAudioPlaying(const uint32_t& audioId)
 	return engine->IsAudioPlaying(audioId);
 }
 
+void Game::SetLightColor(const Vector4 color)
+{
+	engine->SetLightColor(color);
+}
+
+void Game::SetLightDirection(const Vector3 direction)
+{
+	engine->SetLightDirection(direction);
+}
+
 void Game::GetMousePosition(Vector2* position)
 {
 	return engine->GetMousePosition(position);

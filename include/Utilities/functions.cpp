@@ -593,6 +593,15 @@ Vector4 ConvertUintToVector4(uint32_t color)
     return { r, g, b, a };
 }
 
+uint32_t ConvertVector4ToUint(Vector4 color)
+{
+    uint32_t r = static_cast<uint32_t>(std::clamp(color.x * 255.0f, 0.0f, 255.0f));
+    uint32_t g = static_cast<uint32_t>(std::clamp(color.y * 255.0f, 0.0f, 255.0f));
+    uint32_t b = static_cast<uint32_t>(std::clamp(color.z * 255.0f, 0.0f, 255.0f));
+    uint32_t a = static_cast<uint32_t>(std::clamp(color.w * 255.0f, 0.0f, 255.0f));
+    return (r << 24) | (g << 16) | (b << 8) | a;
+}
+
 // ARGBをRGBA
 Vector4 ConvertARGBtoRGBA(const Vector4& argb)
 {
@@ -1114,27 +1123,35 @@ ModelData LoadOBJFile(const std::string& directoryPath, const std::string& filen
             {
                 VertexData triangle[3];
                 std::string vdefs[3] = { vertexDefs[0], vertexDefs[i], vertexDefs[i + 1] };
+
                 for (int faceVertex = 0; faceVertex < 3; ++faceVertex)
                 {
                     std::istringstream v(vdefs[faceVertex]);
-                    uint32_t elementIndices[3] = {};
-                    for (int element = 0; element < 3; ++element)
+                    std::vector<std::string> components;
+                    std::string index;
+                    while (std::getline(v, index, '/'))
                     {
-                        std::string index;
-                        std::getline(v, index, '/');
-                        elementIndices[element] = std::stoi(index);
+                        components.push_back(index);
                     }
+
+                    uint32_t posIndex = (components.size() > 0 && !components[0].empty()) ? std::stoi(components[0]) : 0;
+                    uint32_t uvIndex = (components.size() > 1 && !components[1].empty()) ? std::stoi(components[1]) : 0;
+                    uint32_t normIndex = (components.size() > 2 && !components[2].empty()) ? std::stoi(components[2]) : 0;
+
                     Vector4 position = { 0,0,0,1 };
                     Vector2 texcoord = { 0,0 };
                     Vector3 normal = { 0,0,0 };
-                    if (elementIndices[0] > 0 && elementIndices[0] <= positions.size())
-                        position = positions[elementIndices[0] - 1];
-                    if (elementIndices[1] > 0 && elementIndices[1] <= texcoords.size())
-                        texcoord = texcoords[elementIndices[1] - 1];
-                    if (elementIndices[2] > 0 && elementIndices[2] <= normals.size())
-                        normal = normals[elementIndices[2] - 1];
+
+                    if (posIndex > 0 && posIndex <= positions.size())
+                        position = positions[posIndex - 1];
+                    if (uvIndex > 0 && uvIndex <= texcoords.size())
+                        texcoord = texcoords[uvIndex - 1];
+                    if (normIndex > 0 && normIndex <= normals.size())
+                        normal = normals[normIndex - 1];
+
                     triangle[faceVertex] = { position, texcoord, normal };
                 }
+
                 // 頂点の順序を逆にして追加（右手系→左手系変換のため）
                 modelData.vertices.push_back(triangle[2]);
                 modelData.vertices.push_back(triangle[1]);
@@ -1152,7 +1169,6 @@ ModelData LoadOBJFile(const std::string& directoryPath, const std::string& filen
             modelData.material = LoadMaterialTemplateFile(directoryPath, materialFilename);
         }
     }
-
 
     /////////////////
     // 構築したModelDataをreturnする
