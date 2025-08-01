@@ -13,32 +13,62 @@ ConstantBuffer<DirectionalLight> gDirectionalLight : register(b2);
 
 PixelShaderOutput main(VertexShaderOutput input)
 {
-    // UV同次座標
-    float4 transformedUV = mul(float32_t4(input.texcoord, 0.0f, 1.0f), gMaterial0.uvTransform);
-    // テクスチャカラーをサンプリング
-    float32_t4 textureColor = gTexture0.Sample(gSampler, transformedUV.xy);
-    // 出力カラーを計算
-    PixelShaderOutput output;
-    // Lightingの計算
-    if (gMaterial0.enableLighting != 0)
+    if (gDirectionalLight.mode == 0)
     {
-        // NdotL : NとLのdot(内積)
-        float NdotL = dot(normalize(input.normal), -gDirectionalLight.direction);
-        float cos = pow(NdotL * 0.5f + 0.5f, 2.0f);
-        output.color.rgb = gMaterial0.color.rgb * textureColor.rgb * gDirectionalLight.color.rgb * cos * gDirectionalLight.intensity;
-        output.color.a = gMaterial0.color.a * textureColor.a;
+        // UV同次座標
+        float4 transformedUV = mul(float32_t4(input.texcoord, 0.0f, 1.0f), gMaterial0.uvTransform);
+        // テクスチャカラーをサンプリング
+        float32_t4 textureColor = gTexture0.Sample(gSampler, transformedUV.xy);
+        // 出力カラーを計算
+        PixelShaderOutput output;
+        // Lightingの計算
+        if (gMaterial0.enableLighting != 0)
+        {
+            // NdotL : NとLのdot(内積)
+            float NdotL = dot(normalize(input.normal), -gDirectionalLight.direction);
+            float cos = pow(NdotL * 0.5f + 0.5f, 2.0f);
+            output.color.rgb = gMaterial0.color.rgb * textureColor.rgb * gDirectionalLight.color.rgb * cos * gDirectionalLight.intensity;
+            output.color.a = gMaterial0.color.a * textureColor.a;
+        }
+        else
+        {
+            output.color = gMaterial0.color * textureColor;
+        }
+    
+        return output;
+    }
+    else if (gDirectionalLight.mode == 1)
+    {
+        // UV同次座標
+        float4 transformedUV = mul(float32_t4(input.texcoord, 0.0f, 1.0f), gMaterial0.uvTransform);
+        // テクスチャカラーをサンプリング
+        float32_t4 textureColor = gTexture0.Sample(gSampler, transformedUV.xy);
+        // 出力カラーを計算
+        PixelShaderOutput output;
+        // Lightingの計算
+        if (gMaterial0.enableLighting != 0)
+        {
+            // NdotL : NとLのdot(内積)
+            float cos = saturate(dot(normalize(input.normal), -gDirectionalLight.direction));
+            output.color.rgb = gMaterial0.color.rgb * textureColor.rgb * gDirectionalLight.color.rgb * cos * gDirectionalLight.intensity;
+            output.color.a = gMaterial0.color.a * textureColor.a;
+        }
+        else
+        {
+            output.color = gMaterial0.color * textureColor;
+        }
+
+        return output;
     }
     else
     {
+        // UV同次座標
+        float4 transformedUV = mul(float32_t4(input.texcoord, 0.0f, 1.0f), gMaterial0.uvTransform);
+        // テクスチャカラーをサンプリング
+        float32_t4 textureColor = gTexture0.Sample(gSampler, transformedUV);
+        // 出力カラーを計算
+        PixelShaderOutput output;
         output.color = gMaterial0.color * textureColor;
+        return output;
     }
-    
-    return output;
-
-    //// テクスチャカラーをサンプリング
-    //float32_t4 textureColor = gTexture0.Sample(gSampler, input.texcoord);
-    //// 出力カラーを計算
-    //PixelShaderOutput output;
-    //output.color = gMaterial0.color * textureColor;
-    //return output;
 }

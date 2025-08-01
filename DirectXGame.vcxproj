@@ -135,6 +135,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="include\Engine\Engine.cpp" />
     <ClCompile Include="include\Engine\Game.cpp" />
     <ClCompile Include="include\input\GetHitKey.cpp" />
+    <ClCompile Include="include\input\GetPadState.cpp" />
+    <ClCompile Include="include\input\InputManager.cpp" />
     <ClCompile Include="include\input\MouseController.cpp" />
     <ClCompile Include="include\Texture\TextureManager.cpp" />
     <ClCompile Include="include\Utilities\Easings.cpp" />
@@ -166,6 +168,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="include\Engine\Engine.h" />
     <ClInclude Include="include\Engine\Game.h" />
     <ClInclude Include="include\input\GetHitKey.h" />
+    <ClInclude Include="include\input\GetPadState.h" />
+    <ClInclude Include="include\input\InputManager.h" />
     <ClInclude Include="include\input\MouseController.h" />
     <ClInclude Include="include\Texture\TextureManager.h" />
     <ClInclude Include="include\Utilities\Easings.h" />
@@ -179,6 +183,9 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ProjectReference Include="externals\DirectXTex\DirectXTex_Desktop_2022_Win10.vcxproj">
       <Project>{371b9fa9-4c90-4ac6-a123-aced756d6c77}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="include\Shaders\Object3d.hlsli" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

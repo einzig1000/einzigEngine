@@ -85,6 +85,12 @@
     <Filter Include="GameEngine\Application\Application">
       <UniqueIdentifier>{f318fca5-3d7c-49cd-bd1a-0bbb7dad65fe}</UniqueIdentifier>
     </Filter>
+    <Filter Include="GameEngine\input\GetPadState">
+      <UniqueIdentifier>{a1b7a17e-c4b0-4a6f-885c-e1012cc9d664}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GameEngine\input\Input">
+      <UniqueIdentifier>{ea7ccccd-ccc3-4cf3-8e1c-6cfd26a0cfc6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -167,6 +173,12 @@
     </ClCompile>
     <ClCompile Include="include\Window\WindowManager.cpp">
       <Filter>GameEngine\WindowManager</Filter>
+    </ClCompile>
+    <ClCompile Include="include\input\GetPadState.cpp">
+      <Filter>GameEngine\input\GetPadState</Filter>
+    </ClCompile>
+    <ClCompile Include="include\input\InputManager.cpp">
+      <Filter>GameEngine\input\Input</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -254,10 +266,19 @@
     <ClInclude Include="include\Window\WindowManager.h">
       <Filter>GameEngine\WindowManager</Filter>
     </ClInclude>
+    <ClInclude Include="include\input\GetPadState.h">
+      <Filter>GameEngine\input\GetPadState</Filter>
+    </ClInclude>
+    <ClInclude Include="include\input\InputManager.h">
+      <Filter>GameEngine\input\Input</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt">
       <Filter>GameEngine\imgui</Filter>
     </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="include\Shaders\Object3d.hlsli" />
   </ItemGroup>
 </Project>

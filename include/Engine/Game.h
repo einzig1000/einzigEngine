@@ -1,5 +1,8 @@
 #pragma once
 #include "Engine/Engine.h"
+#include "input/GetHitKey.h"
+#include "input/GetPadState.h"
+#include "input/MouseController.h"
 
 class Game
 {
@@ -40,6 +43,8 @@ public:
 	// ライト
 	static void SetLightColor(const Vector4 color);
 	static void SetLightDirection(const Vector3 direction);
+	static void ToggleLightMode(const uint32_t mode);
+	static void SetLightIntensity(float intensity);
 
 	// マウス
 	static void GetMousePosition(Vector2* position);
@@ -218,5 +223,13 @@ public:
 			Game::DrawSprite(this->transforms, this->pivot, this->texture, this->color, this->options);
 		}
 	};
-};
 
+    class Input
+    {
+    public:
+        class key : public GetHitKey {};
+        class pad : public GetPadState {};
+        class mouse : public MouseController {};
+
+    };
+};

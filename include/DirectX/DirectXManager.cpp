@@ -15,9 +15,8 @@ DirectXManager::DirectXManager(HWND hwnd, int width, int height)
     synchronizationManager = std::make_unique<SynchronizationManager>(deviceManager->GetDevice());
     viewportScissorManager = std::make_unique<ViewportScissorManager>(width, height);
 
-    audioManager_ = std::make_unique<AudioManager>(); // もし引数がない場合
+    audioManager_ = std::make_unique<AudioManager>();
     textureManager_ = std::make_unique<TextureManager>(GetDevice(), GetsrvDescriptorHeap());
-    getHitKey_ = std::make_unique<GetHitKey>(hwnd);
 
     Log("コンストラクタ実行成功 : DirectXManager");
 }
@@ -74,8 +73,6 @@ void DirectXManager::EndFrame()
     barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
     barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
     commandContextManager->GetCommandList()->ResourceBarrier(1, &barrier);
-
-    // --- ここにGPU-CPU同期の待機処理を追加 ---
     
     // コマンドリストを確定・実行
     HRESULT hr = commandContextManager->GetCommandList()->Close();

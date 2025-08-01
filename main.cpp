@@ -2,10 +2,8 @@
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
-	D3DResourceLeakChecker checker;
 	// ウィンドウ、DrectX初期化
 	Game::Initialize(WIDTH, HEIGHT, L"LE2A_17_ヨコヤマ_タダノブ");
-
 
 	//// オーディオデータ
 	int alert = Game::LoadAudio("resources/sound/SE/alert.wav");
@@ -50,6 +48,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	suzanne.transforms.translate = { 0.0f,3.0f,0.0f };
 	suzanne.pivot = { 0.0f,-3.0f,0.0f };
 
+	// マルチメッシュ
+	Game::RenderDate_Model multiMesh;
+	multiMesh.model = Game::LoadOBJ("resources/evaluationTask/", "multiMesh.obj");
+	multiMesh.texture = uvCheckerPng;
+
 	// スプライト
 	Game::RenderDate_Sprite sprite;
 	sprite.texture = uvCheckerPng;
@@ -80,7 +83,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		/// ↓更新処理ここから
 		///
 
-		if (GetHitKey::keys[DIK_1] && !GetHitKey::preKeys[DIK_1])
+		
+
+		//if (GetHitKey::keys[DIK_1] && !GetHitKey::preKeys[DIK_1])
+		if (Game::Input::key::keys[DIK_1] && !GetHitKey::preKeys[DIK_1])
 		{
 			if (Game::IsAudioPlaying(alert))Game::StopAudio(alert);
 			Game::PlayAudio(alert, alertLoop);
@@ -121,7 +127,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		suzanne.Draw();
 		skyDome.Draw();
 		sprite.Draw();
-
+		//multiMesh.Draw();
 
 		Game::DrawSphere(sphereTransforms, spherePivot, 16, uvCheckerPng, 0xFFFFFFFF, sphereOptions);
 
@@ -153,14 +159,23 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		if (ImGui::TreeNode("--------------Lighting--------------"))
 		{
 			static float floatColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-			ImGui::ColorEdit4("light.color", floatColor, 1);
+			ImGui::ColorEdit4("Light.color", floatColor, 1);
 			Vector4 vector4Color = { floatColor[0], floatColor[1], floatColor[2], floatColor[3] };
 			Game::SetLightColor(vector4Color);
 
 			static Vector3 direction = { 0.0f, -1.0f, 0.0f };
-			ImGui::DragFloat3("light.direction", &direction.x, 0.01f);
+			ImGui::DragFloat3("Light.direction", &direction.x, 0.01f);
 			direction.Normalize();
 			Game::SetLightDirection(direction);
+
+			static float intensity = 1.0f;
+			ImGui::DragFloat("Light.intensity", &intensity, 0.01f);
+			Game::SetLightIntensity(intensity);
+
+			static const char* modeName[] = { "Half Lambert", "Lambert","Nothig" };
+			static int current_mode = 0;
+			ImGui::Combo("LightingMode", &current_mode, modeName, IM_ARRAYSIZE(modeName));
+			Game::ToggleLightMode(current_mode);
 
 			ImGui::TreePop();
 		}

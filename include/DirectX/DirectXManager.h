@@ -11,7 +11,6 @@
 #include "DirectX/SynchronizationManager.h"
 #include "DirectX/ViewportScissorManager.h"
 
-#include "input/GetHitKey.h"
 #include "Audio/AudioManager.h"
 #include "Texture/TextureManager.h"
 #include <memory>
@@ -21,7 +20,7 @@ class DirectXManager
 public:
     DirectXManager(HWND hwnd, int width, int height);
     ~DirectXManager();
-
+    
     ID3D12Device* GetDevice() const { return deviceManager->GetDevice(); }
     ID3D12GraphicsCommandList* GetCommandList() const { return commandContextManager->GetCommandList(); }
     ID3D12DescriptorHeap* GetsrvDescriptorHeap() const { return descriptorHeapManager->GetSRVDescriptorHeap(); }
@@ -50,5 +49,4 @@ private:
 
     std::unique_ptr<AudioManager> audioManager_;
     std::unique_ptr<TextureManager> textureManager_;
-    std::unique_ptr<GetHitKey> getHitKey_;
 };

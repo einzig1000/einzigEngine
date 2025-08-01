@@ -3,7 +3,7 @@
 #include "DirectX/DirectXManager.h"
 #include "definition/definition.h"
 #include "Camera/CameraController.h"
-#include "input/MouseController.h"
+//#include "input/MouseController.h"
 #include <array>
 #include <vector>
 #include <string>
@@ -51,6 +51,8 @@ public:
 	// ライト
 	void SetLightColor(const Vector4 color) { directionalLightData->color = color; }
 	void SetLightDirection(const Vector3 direction) { directionalLightData->direction = direction; }
+	void SetLightIntensity(float intensity) { directionalLightData->intensity = intensity; }
+	void ToggleLightMode(const uint32_t mode) { directionalLightData->mode = mode; }
 
 	// マウス
 	void GetMousePosition(Vector2* position);

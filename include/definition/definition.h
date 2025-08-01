@@ -228,7 +228,7 @@ struct Vector3
     {
         float len = Length();
         if (std::abs(len) > 0.00001f)
-        { // ゼロ除算は殺すって言わなかった？
+        {
             x /= len;
             y /= len;
             z /= len;
@@ -841,6 +841,7 @@ struct DirectionalLight
     Vector4 color;
     Vector3 direction;
     float intensity;//輝度
+    int mode;
 };
 
 struct MaterialData

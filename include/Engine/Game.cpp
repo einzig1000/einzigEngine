@@ -1,11 +1,12 @@
 #include "Engine/Game.h"
 
-
 static Engine* engine = new Engine;
 
 void Game::Initialize(int width, int height, const std::wstring& title)
 {
+	D3DResourceLeakChecker checker;
 	engine->Initialize(width, height, title);
+	pad = 
 }
 
 bool Game::ProcessMessage()
@@ -117,6 +118,17 @@ void Game::SetLightDirection(const Vector3 direction)
 {
 	engine->SetLightDirection(direction);
 }
+
+void Game::SetLightIntensity(float intensity)
+{
+	engine->SetLightIntensity(intensity);
+}
+
+void Game::ToggleLightMode(const uint32_t mode)
+{
+	engine->ToggleLightMode(mode);
+}
+
 
 void Game::GetMousePosition(Vector2* position)
 {
