@@ -1,8 +1,8 @@
 #pragma once
 #include "Engine/Engine.h"
-#include "input/GetHitKey.h"
-#include "input/GetPadState.h"
-#include "input/MouseController.h"
+//#include "input/GetHitKey.h"
+//#include "input/GetPadState.h"
+//#include "input/MouseController.h"
 
 class Game
 {
@@ -223,4 +223,5 @@ public:
 			Game::DrawSprite(this->transforms, this->pivot, this->texture, this->color, this->options);
 		}
 	};
-}
+
+};

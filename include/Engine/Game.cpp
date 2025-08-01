@@ -1,11 +1,12 @@
 #include "Engine/Game.h"
 
-
 static Engine* engine = new Engine;
 
 void Game::Initialize(int width, int height, const std::wstring& title)
 {
+	D3DResourceLeakChecker checker;
 	engine->Initialize(width, height, title);
+	//pad =
 }
 
 bool Game::ProcessMessage()
@@ -58,7 +59,7 @@ void Game::DrawSphere(const Transforms& transform, const Vector3& center, uint32
 	engine->DrawSphere(transform, center, kSubdivision, textureNumber, materialColor, drawOptions);
 }
 
-void Game::DrawTriangle(const Transforms & transform, const Vector3 & pos1, const Vector3 & pos2, const Vector3 & pos3, uint32_t textureNumber, const uint32_t & materialColor, const DrawOptions drawOptions)
+void Game::DrawTriangle(const Transforms& transform, const Vector3& pos1, const Vector3& pos2, const Vector3& pos3, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions)
 {
 	engine->DrawTriangle(transform, pos1, pos2, pos3, textureNumber, materialColor, drawOptions);
 }
@@ -118,11 +119,16 @@ void Game::SetLightDirection(const Vector3 direction)
 	engine->SetLightDirection(direction);
 }
 
-void Game::ToggleLightMode(const uint32_t mode)
-{}
-
 void Game::SetLightIntensity(float intensity)
-{}
+{
+	engine->SetLightIntensity(intensity);
+}
+
+void Game::ToggleLightMode(const uint32_t mode)
+{
+	engine->ToggleLightMode(mode);
+}
+
 
 void Game::GetMousePosition(Vector2* position)
 {

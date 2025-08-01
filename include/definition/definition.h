@@ -841,6 +841,7 @@ struct DirectionalLight
     Vector4 color;
     Vector3 direction;
     float intensity;//輝度
+    int mode;
 };
 
 struct MaterialData
