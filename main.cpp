@@ -6,9 +6,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	// ウィンドウ、DrectX初期化
 	Game::Initialize(WIDTH, HEIGHT, L"LE2A_17_ヨコヤマ_タダノブ");
 
-	//// オーディオデータ
-	int alert = Game::LoadAudio("resources/sound/SE/alert.wav");
-	int buzzer = Game::LoadAudio("resources/sound/SE/buzzer.mp3");
 
 	int uvCheckerPng = Game::LoadTexture("resources/uvChecker.png");
 
@@ -71,12 +68,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	sprite.pivot = { 0,0 };
 
 
-	// 現在のマスター音量
+	// オーディオ
+	int alert = Game::LoadAudio("resources/sound/SE/alert.wav");
+	int buzzer = Game::LoadAudio("resources/sound/SE/buzzer.mp3");
 	float masterVolume = Game::GetMasterVolume();
-	// 現在のそれぞれの音量
 	float alertVolume = Game::GetVolume(alert);
 	float buzzerVolume = Game::GetVolume(buzzer);
-
 	bool alertLoop = false;
 	bool buzzerLoop = false;
 
