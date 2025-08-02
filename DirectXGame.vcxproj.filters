@@ -73,9 +73,6 @@
     <Filter Include="GameEngine\definition">
       <UniqueIdentifier>{2d11e023-36d8-40a2-a5cd-ac9aef762785}</UniqueIdentifier>
     </Filter>
-    <Filter Include="GameEngine\CameraController">
-      <UniqueIdentifier>{8119ccfa-d6ad-4af0-83e5-034de74534f5}</UniqueIdentifier>
-    </Filter>
     <Filter Include="GameEngine\AudioManager">
       <UniqueIdentifier>{d6981e3b-9d2e-4acf-aaf3-0a1a631f2860}</UniqueIdentifier>
     </Filter>
@@ -87,6 +84,9 @@
     </Filter>
     <Filter Include="GameEngine\input\GetPadState">
       <UniqueIdentifier>{6cdbe87c-683b-4dee-b8c3-f22dd1b10c44}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GameEngine\CameraController">
+      <UniqueIdentifier>{8119ccfa-d6ad-4af0-83e5-034de74534f5}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
