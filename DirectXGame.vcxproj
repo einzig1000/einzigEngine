@@ -122,6 +122,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Disabled</Optimization>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MinSpace</Optimization>
     </ClCompile>
+    <ClCompile Include="GameManager.cpp" />
     <ClCompile Include="include\input\GetPadState.cpp" />
     <ClCompile Include="include\Audio\AudioManager.cpp" />
     <ClCompile Include="include\Camera\CameraController.cpp" />
@@ -143,6 +144,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="include\Utilities\functions.cpp" />
     <ClCompile Include="include\Window\WindowManager.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Map.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="externals\imgui\imconfig.h" />
@@ -153,6 +155,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="externals\imgui\imstb_rectpack.h" />
     <ClInclude Include="externals\imgui\imstb_textedit.h" />
     <ClInclude Include="externals\imgui\imstb_truetype.h" />
+    <ClInclude Include="GameManager.h" />
     <ClInclude Include="include\input\GetPadState.h" />
     <ClInclude Include="include\Audio\AudioManager.h" />
     <ClInclude Include="include\Camera\CameraController.h" />
@@ -174,6 +177,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="include\Utilities\Easings.h" />
     <ClInclude Include="include\Utilities\functions.h" />
     <ClInclude Include="include\Window\WindowManager.h" />
+    <ClInclude Include="Map.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
