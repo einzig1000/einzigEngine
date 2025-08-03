@@ -854,7 +854,7 @@ void Engine::SetMouseRay()
 	mouseController->SetMousePosition({ float(mousePosScreen.x) ,float(mousePosScreen.y) });
 	mouseController->SetMouseRay(windowManager->Getwidth(), windowManager->Getheight(), cameraController->viewProjectionMatrix);
 
-	DrawLine(mouseController->GetMouseRay().origin, mouseController->GetMouseRay().diff * 10000, 0xFFFF00FF);
+	//DrawLine(mouseController->GetMouseRay().origin, mouseController->GetMouseRay().diff * 10000, 0xFFFF00FF);
 }
 
 bool Engine::IsCollisionMouseRayAABB(AABB aabb, int objNum)

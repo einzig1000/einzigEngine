@@ -6,6 +6,7 @@ class GameManager
 {
 public:
 	GameManager();
+	~GameManager();
 	void Update();
 	void Draw();
 
@@ -13,8 +14,6 @@ public:
 private:
 
 
-
-	std::unique_ptr<Map> map_;
 
 
 

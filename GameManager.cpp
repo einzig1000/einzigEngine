@@ -2,9 +2,15 @@
 
 GameManager::GameManager()
 {
-    map_ = std::make_unique<Map>();
+    map_ = new Map();
 
     map_->LoadMap(0);
+}
+
+GameManager::~GameManager()
+{
+    delete map_;
+    map_ = nullptr;
 }
 
 void GameManager::Update()

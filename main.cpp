@@ -36,15 +36,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		gm->Draw();
 
 
-		if (ImGui::TreeNode("--------------Lighting--------------"))
-		{
-			static const char* modeName[] = { "Half Lambert", "Lambert","Nothig" };
-			static int current_mode = 0;
-			ImGui::Combo("LightingMode", &current_mode, modeName, IM_ARRAYSIZE(modeName));
-			Game::ToggleLightMode(current_mode);
-
-			ImGui::TreePop();
-		}
+		//if (ImGui::TreeNode("--------------Lighting--------------"))
+		//{
+		//	static const char* modeName[] = { "Half Lambert", "Lambert","Nothig" };
+		//	static int current_mode = 0;
+		//	ImGui::Combo("LightingMode", &current_mode, modeName, IM_ARRAYSIZE(modeName));
+		//	Game::ToggleLightMode(current_mode);
+		//
+		//	ImGui::TreePop();
+		//}
 
 		///
 		/// ↑描画処理ここまで
@@ -57,8 +57,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	}
 
 	delete gm;
-	Game::Finalize();
 
+	Game::Finalize();
 
 	return 0;
 }

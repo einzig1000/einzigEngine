@@ -25,11 +25,18 @@ void Map::Initialize()
 
 void Map::LoadMap(int stageNum)
 {
+	if (stageNum >= STAGE_MAX)return;
+
+	// 既に読み込み済だったらスキップ
 	if (mapCSV[stageNum].str().empty())
 	{
+		// パス作成
+		std::ostringstream path;
+		path << "resources/csv/map" << stageNum << ".csv";
+
 		// ファイルをひらく
 		std::ifstream file;
-		file.open("resources/csv/map1.csv");
+		file.open(path.str());
 		assert(file.is_open());
 
 		// ファイルの内容を丸ごとコピー
@@ -39,30 +46,52 @@ void Map::LoadMap(int stageNum)
 		file.close();
 	}
 
-	// 1行文
+	// 1行ずつ
 	std::string line;
 
-	// コマンド実行
+	// ブロックタイプ適用
+	int lineNumber = 0;
+	int wordNumber = 0;
 	while (getline(mapCSV[0], line))
 	{
 		std::istringstream line_stream(line);
 		std::string word;
-		int lineNumber = 0;
-		int wordNumber = 0;
+		wordNumber = 0;
 
 		while (getline(line_stream, word, ','))
 		{
 			if (word.find("0") == 0)
 			{
-				blockType[lineNumber][wordNumber];
+				blockType[lineNumber][wordNumber] = BloclType::Empty;
 			}
 			else if (word.find("1") == 0)
 			{
-				blockType[lineNumber][wordNumber];
+				blockType[lineNumber][wordNumber] = BloclType::Wall;
+			}
+			else if (word.find("2") == 0)
+			{
+				blockType[lineNumber][wordNumber] = BloclType::Asid;
+			}
+			else if (word.find("3") == 0)
+			{
+				blockType[lineNumber][wordNumber] = BloclType::WarpIn;
+			}
+			else if (word.find("4") == 0)
+			{
+				blockType[lineNumber][wordNumber] = BloclType::WarpOut;
 			}
 			wordNumber++;
 		}
 		lineNumber++;
+	}
+
+	// ブロックタイプごとのSRTやcolorの適用
+	for (int x = 0; x < MAP_WIDTH; ++x)
+	{
+		for (int y = 0; y < MAP_HEIGHT; ++y)
+		{
+			ShapeChangeByType(Vector2int(y, x));
+		}
 	}
 }
 
@@ -85,6 +114,32 @@ void Map::Draw()
 		{
 			data[y][x].Draw();
 		}
+	}
+}
+
+void Map::ShapeChangeByType(Vector2int index)
+{
+	if (blockType[index.y][index.x] == BloclType::Empty)
+	{
+		data[index.y][index.x].transforms.scale = Vector3{ 1.0f,1.0f,1.0f };
+		data[index.y][index.x].transforms.rotate = Vector3{ 0.0f,0.0f,0.0f };
+		data[index.y][index.x].transforms.translate = PositionByIndex(Vector2int(index.y, index.x));
+		data[index.y][index.x].color = 0xFFFFFFFF;
+	}
+	else if (blockType[index.y][index.x] == BloclType::Wall)
+	{
+		data[index.y][index.x].transforms.scale = Vector3{ 1.0f,5.0f,1.0f };
+		data[index.y][index.x].transforms.rotate = Vector3{ 0.0f,0.0f,0.0f };
+		data[index.y][index.x].transforms.translate = PositionByIndex(Vector2int(index.y, index.x));
+		data[index.y][index.x].transforms.translate.y += 0.4f;
+		data[index.y][index.x].color = 0xFFFFFFFF;
+	}
+	else if (blockType[index.y][index.x] == BloclType::Asid)
+	{
+		data[index.y][index.x].transforms.scale = Vector3{ 1.0f,1.0f,1.0f };
+		data[index.y][index.x].transforms.rotate = Vector3{ 0.0f,0.0f,0.0f };
+		data[index.y][index.x].transforms.translate = PositionByIndex(Vector2int(index.y, index.x));
+		data[index.y][index.x].color = 0xFF0000FF;
 	}
 }
 
@@ -111,7 +166,7 @@ Vector3 Map::PositionByIndex(Vector2int index)
 	return pos;
 }
 
-int Map::BlockTypeByIndex(Vector2int index)
+BloclType Map::BlockTypeByIndex(Vector2int index)
 {
 	return blockType[index.y][index.x];
 }

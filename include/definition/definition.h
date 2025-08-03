@@ -23,6 +23,8 @@
 #define WIDTH 1280
 #define HEIGHT 720
 
+#define STAGE_MAX 10
+
 enum class Direction
 {
     None = -1,
