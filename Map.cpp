@@ -1,6 +1,7 @@
 #include "Map.h"
 #include <fstream>
 #include <cassert>
+#include <algorithm>
 
 Map::Map()
 {
@@ -13,6 +14,7 @@ Map::Map()
 		{
 			data[y][x].model = model;
 			data[y][x].texture = texture;
+			data[y][x].transforms.translate = PositionByIndex(Vector2int(y, x));
 		}
 	}
 }
@@ -66,9 +68,14 @@ void Map::LoadMap(int stageNum)
 
 void Map::Update()
 {
-
+	for (int x = 0; x < MAP_WIDTH; ++x)
+	{
+		for (int y = 0; y < MAP_HEIGHT; ++y)
+		{
+	
+		}
+	}
 }
-
 
 void Map::Draw()
 {
@@ -79,8 +86,32 @@ void Map::Draw()
 			data[y][x].Draw();
 		}
 	}
+}
 
+Vector2int Map::IndexByPosition(Vector3 pos)
+{
+	Vector2int index;
+	// ブロック中心座標からインデックスを計算
+	index.x = static_cast<int>(std::round(-pos.x / BLOCK_WIDTH));
+	index.y = static_cast<int>(std::round(-pos.z / BLOCK_HEIGHT));
+	// 範囲外の値を制限
+	index.x = std::clamp(index.x, 0, MAP_WIDTH - 1);
+	index.y = std::clamp(index.y, 0, MAP_HEIGHT - 1);
+	return index;
+}
 
+Vector3 Map::PositionByIndex(Vector2int index)
+{
+	Vector3 pos;
 
+	pos.x = -static_cast<float>(index.x) * BLOCK_WIDTH;
+	pos.y = 0.0f;
+	pos.z = -static_cast<float>(index.y) * BLOCK_HEIGHT;
 
+	return pos;
+}
+
+int Map::BlockTypeByIndex(Vector2int index)
+{
+	return blockType[index.y][index.x];
 }
