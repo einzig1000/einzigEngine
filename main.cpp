@@ -9,7 +9,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 	GameManager* gm = new GameManager();
 
-
 	while (Game::ProcessMessage())
 	{
 		// フレームの開始
@@ -17,39 +16,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		Game::SetMouseRay();
 
 
-		///
-		/// ↓更新処理ここから
-		///
+		
+		// ↓更新処理ここから
+		
+		
 		gm->Update();
 
-
-
-		///
-		/// ↑更新処理ここまで
-		///
-
-		///
-		/// ↓描画処理ここから
-		///
+		
+		// ↓描画処理ここから
 
 
 		gm->Draw();
-
-
-		//if (ImGui::TreeNode("--------------Lighting--------------"))
-		//{
-		//	static const char* modeName[] = { "Half Lambert", "Lambert","Nothig" };
-		//	static int current_mode = 0;
-		//	ImGui::Combo("LightingMode", &current_mode, modeName, IM_ARRAYSIZE(modeName));
-		//	Game::ToggleLightMode(current_mode);
-		//
-		//	ImGui::TreePop();
-		//}
-
-		///
-		/// ↑描画処理ここまで
-		///
-
 
 
 		// フレームの終了

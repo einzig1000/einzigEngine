@@ -13,7 +13,7 @@ public:
 
 private:
 
-
+	Map* map_;
 
 
 
