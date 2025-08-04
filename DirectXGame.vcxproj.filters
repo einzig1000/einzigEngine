@@ -100,6 +100,21 @@
     <Filter Include="Game\Charactor">
       <UniqueIdentifier>{d1501cf6-0637-47e8-8cbc-43c73884362b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Game\1_ActSelect">
+      <UniqueIdentifier>{a130eac2-9f00-4b68-acf8-a379b4f05b0c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\0_Title">
+      <UniqueIdentifier>{80437ce6-8d3b-4c4d-b92f-66dd36614abc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\2[0]_StageSelect">
+      <UniqueIdentifier>{e79e663a-2058-4bfb-a8f7-ac951eb3dbd3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\2[1]_GameScene">
+      <UniqueIdentifier>{fb842c0b-13ef-426b-9a58-3ea083023241}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\3_UnitOverview">
+      <UniqueIdentifier>{64caef79-4688-463b-bee7-2861e3db674b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -194,6 +209,21 @@
     </ClCompile>
     <ClCompile Include="Charactor.cpp">
       <Filter>Game\Charactor</Filter>
+    </ClCompile>
+    <ClCompile Include="Title.cpp">
+      <Filter>Game\0_Title</Filter>
+    </ClCompile>
+    <ClCompile Include="ActSelect.cpp">
+      <Filter>Game\1_ActSelect</Filter>
+    </ClCompile>
+    <ClCompile Include="StageSelect.cpp">
+      <Filter>Game\2[0]_StageSelect</Filter>
+    </ClCompile>
+    <ClCompile Include="GameScene.cpp">
+      <Filter>Game\2[1]_GameScene</Filter>
+    </ClCompile>
+    <ClCompile Include="UnitOverview.cpp">
+      <Filter>Game\3_UnitOverview</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -292,6 +322,21 @@
     </ClInclude>
     <ClInclude Include="Charactor.h">
       <Filter>Game\Charactor</Filter>
+    </ClInclude>
+    <ClInclude Include="Title.h">
+      <Filter>Game\0_Title</Filter>
+    </ClInclude>
+    <ClInclude Include="ActSelect.h">
+      <Filter>Game\1_ActSelect</Filter>
+    </ClInclude>
+    <ClInclude Include="StageSelect.h">
+      <Filter>Game\2[0]_StageSelect</Filter>
+    </ClInclude>
+    <ClInclude Include="GameScene.h">
+      <Filter>Game\2[1]_GameScene</Filter>
+    </ClInclude>
+    <ClInclude Include="UnitOverview.h">
+      <Filter>Game\3_UnitOverview</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

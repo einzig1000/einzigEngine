@@ -94,6 +94,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ActSelect.cpp" />
     <ClCompile Include="Charactor.cpp" />
     <ClCompile Include="externals\imgui\imgui.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Disabled</Optimization>
@@ -124,6 +125,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MinSpace</Optimization>
     </ClCompile>
     <ClCompile Include="GameManager.cpp" />
+    <ClCompile Include="GameScene.cpp" />
     <ClCompile Include="include\input\GetPadState.cpp" />
     <ClCompile Include="include\Audio\AudioManager.cpp" />
     <ClCompile Include="include\Camera\CameraController.cpp" />
@@ -146,8 +148,12 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="include\Window\WindowManager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Map.cpp" />
+    <ClCompile Include="StageSelect.cpp" />
+    <ClCompile Include="Title.cpp" />
+    <ClCompile Include="UnitOverview.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ActSelect.h" />
     <ClInclude Include="Charactor.h" />
     <ClInclude Include="externals\imgui\imconfig.h" />
     <ClInclude Include="externals\imgui\imgui.h" />
@@ -158,6 +164,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="externals\imgui\imstb_textedit.h" />
     <ClInclude Include="externals\imgui\imstb_truetype.h" />
     <ClInclude Include="GameManager.h" />
+    <ClInclude Include="GameScene.h" />
     <ClInclude Include="include\input\GetPadState.h" />
     <ClInclude Include="include\Audio\AudioManager.h" />
     <ClInclude Include="include\Camera\CameraController.h" />
@@ -180,6 +187,9 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="include\Utilities\functions.h" />
     <ClInclude Include="include\Window\WindowManager.h" />
     <ClInclude Include="Map.h" />
+    <ClInclude Include="StageSelect.h" />
+    <ClInclude Include="Title.h" />
+    <ClInclude Include="UnitOverview.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
