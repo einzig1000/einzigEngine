@@ -21,16 +21,15 @@ class Map
 public:
 	Map();
 	void Initialize();
-
-	void LoadMap(int stageNum);
-
 	void Update();
 	void Draw();
 
-	/// <summary>
-	/// ブロックタイプ合った形状に変化させる
-	/// </summary>
+	// ブロックタイプに合った形状に変化させる
 	void ShapeChangeByType(Vector2int index);
+
+	// stageNum番号のステージを読み込む何回よみこんだっていい
+	void LoadMap(int stageNum);
+
 
 	Vector2int IndexByPosition(Vector3 pos);
 	Vector3 PositionByIndex(Vector2int index);
@@ -40,5 +39,5 @@ private:
 	Game::RenderData_Model data[MAP_HEIGHT][MAP_WIDTH];
 	BloclType blockType[MAP_HEIGHT][MAP_WIDTH];
 
-	std::stringstream mapCSV[STAGE_MAX];
+	std::string mapCSV[STAGE_MAX];
 };

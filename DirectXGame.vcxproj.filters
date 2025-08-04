@@ -88,11 +88,17 @@
     <Filter Include="GameEngine\CameraController">
       <UniqueIdentifier>{8119ccfa-d6ad-4af0-83e5-034de74534f5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Map">
+    <Filter Include="Game">
+      <UniqueIdentifier>{b502c716-2faa-4a81-9f38-86c17aaed018}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Map">
       <UniqueIdentifier>{e08240d2-da10-4f33-9c08-ad966fbccedc}</UniqueIdentifier>
     </Filter>
-    <Filter Include="GameManeger">
+    <Filter Include="Game\GameManeger">
       <UniqueIdentifier>{be7b0085-0de3-4d37-bc83-670da58a57b2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Charactor">
+      <UniqueIdentifier>{d1501cf6-0637-47e8-8cbc-43c73884362b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -181,10 +187,13 @@
       <Filter>GameEngine\input\GetPadState</Filter>
     </ClCompile>
     <ClCompile Include="GameManager.cpp">
-      <Filter>GameManeger</Filter>
+      <Filter>Game\GameManeger</Filter>
     </ClCompile>
     <ClCompile Include="Map.cpp">
-      <Filter>Map</Filter>
+      <Filter>Game\Map</Filter>
+    </ClCompile>
+    <ClCompile Include="Charactor.cpp">
+      <Filter>Game\Charactor</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -276,10 +285,13 @@
       <Filter>GameEngine\input\GetPadState</Filter>
     </ClInclude>
     <ClInclude Include="GameManager.h">
-      <Filter>GameManeger</Filter>
+      <Filter>Game\GameManeger</Filter>
     </ClInclude>
     <ClInclude Include="Map.h">
-      <Filter>Map</Filter>
+      <Filter>Game\Map</Filter>
+    </ClInclude>
+    <ClInclude Include="Charactor.h">
+      <Filter>Game\Charactor</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

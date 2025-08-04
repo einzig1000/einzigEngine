@@ -28,6 +28,27 @@ constexpr const T& my_max(const T& a, const T& b)
     return (a > b) ? a : b;
 }
 
+template <typename T, size_t Rows, size_t Cols>
+void FlipYAxis(T(&arr)[Rows][Cols])
+{
+	for (size_t i = 0; i < Rows / 2; ++i)
+	{
+		std::swap(arr[i], arr[Rows - 1 - i]);
+	}
+}
+
+template <typename T, size_t Rows, size_t Cols>
+void FlipXAxis(T(&arr)[Rows][Cols])
+{
+	for (size_t i = 0; i < Rows; ++i)
+	{
+		for (size_t j = 0; j < Cols / 2; ++j)
+		{
+			std::swap(arr[i][j], arr[i][Cols - 1 - j]);
+		}
+	}
+}
+
 /// <summary>
 /// 
 // 三角形の法線ベクトルを計算し、正規化して返す
