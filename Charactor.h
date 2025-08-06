@@ -8,26 +8,31 @@ enum class states
 
 enum class CharactorName
 {
-	King,
-	Queen,
-	Bishop,
-	Knight,
-	Rook,
-	Pawn,
+	King,		// 場に一体しかだせない最強キャラ。なんらかのチートスキル持ち
+	Queen,		// ヒーラー
+	Bishop,		// バッファー
+	Knight,		// アタッカー
+	Rook,		// タンク
+	Pawn,		// 
+	CharactorMAX
 };
 
 class Charactor
 {
 public:
-	Charactor(CharactorName name);
+	Charactor(TEXTURE name);
 	~Charactor();
 
 	void Update();
-	void Draw();
 
-private:
 
 	Game::RenderData_Model data;
+	int power_;
+	int hp_;
+	int actPoint_;
+	static int getCharactorSum_;
+	int serialNumber_;
 
-
+private:
 };
+

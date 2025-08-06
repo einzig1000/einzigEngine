@@ -61,7 +61,7 @@ public:
 	void SetMouseRay();
 	bool IsCollisionMouseRayAABB(AABB aabb, int objNum);
 	bool IsPressMouse(int i);
-	uint32_t GetWheel();
+	uint32_t GetMouseWheel();
 
 	// カメラ
 	void MoveCenterTarget(Vector3 target, int spendFrame);

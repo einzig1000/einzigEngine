@@ -49,6 +49,15 @@ void FlipXAxis(T(&arr)[Rows][Cols])
 	}
 }
 
+
+Vector2int IndexByPosition(Vector3 pos);
+Vector3 PositionByIndex(Vector2int index);
+
+
+
+
+
+
 /// <summary>
 /// 
 // 三角形の法線ベクトルを計算し、正規化して返す

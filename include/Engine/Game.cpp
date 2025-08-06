@@ -148,9 +148,9 @@ bool Game::IsPressMouse(int i)
 	return engine->IsPressMouse(i);
 }
 
-uint32_t Game::GetWheel()
+uint32_t Game::GetMouseWheel()
 {
-	return engine->GetWheel();
+	return engine->GetMouseWheel();
 }
 
 void Game::MoveCenterTarget(Vector3 target, int spendFrame)

@@ -6,15 +6,12 @@
 
 Map::Map()
 {
-	//int model = Game::LoadOBJ("resources/block", "map.obj");
-	//int texture = Game::LoadTexture("resources/block/map.png");
-
 	for (int x = 0; x < MAP_WIDTH; ++x)
 	{
 		for (int y = 0; y < MAP_HEIGHT; ++y)
 		{
-			data[y][x].model = uint32_t(Texture::Map_Block);
-			data[y][x].texture = uint32_t(Texture::Map_Block);
+			data[y][x].model = uint32_t(TEXTURE::Map_Block);
+			data[y][x].texture = uint32_t(TEXTURE::Map_Block);
 			data[y][x].transforms.translate = PositionByIndex(Vector2int(x, y));
 		}
 	}
@@ -68,23 +65,23 @@ void Map::LoadMap(int stageNum)
 			{
 				if (word.find("0") == 0)
 				{
-					blockType[lineNumber][wordNumber] = BloclType::Empty;
+					blockType[lineNumber][wordNumber] = BLOCK_TYPE::Empty;
 				}
 				else if (word.find("1") == 0)
 				{
-					blockType[lineNumber][wordNumber] = BloclType::Wall;
+					blockType[lineNumber][wordNumber] = BLOCK_TYPE::Wall;
 				}
 				else if (word.find("2") == 0)
 				{
-					blockType[lineNumber][wordNumber] = BloclType::Asid;
+					blockType[lineNumber][wordNumber] = BLOCK_TYPE::Asid;
 				}
 				else if (word.find("3") == 0)
 				{
-					blockType[lineNumber][wordNumber] = BloclType::WarpIn;
+					blockType[lineNumber][wordNumber] = BLOCK_TYPE::WarpIn;
 				}
 				else if (word.find("4") == 0)
 				{
-					blockType[lineNumber][wordNumber] = BloclType::WarpOut;
+					blockType[lineNumber][wordNumber] = BLOCK_TYPE::WarpOut;
 				}
 			}
 			wordNumber++;
@@ -134,14 +131,14 @@ void Map::ShapeChangeByType(Vector2int index)
 		return;
 	}
 
-	if (blockType[index.y][index.x] == BloclType::Empty)
+	if (blockType[index.y][index.x] == BLOCK_TYPE::Empty)
 	{
 		data[index.y][index.x].transforms.scale = Vector3{ 1.0f,1.0f,1.0f };
 		data[index.y][index.x].transforms.rotate = Vector3{ 0.0f,0.0f,0.0f };
 		data[index.y][index.x].transforms.translate = PositionByIndex(index);
 		data[index.y][index.x].color = 0xFFFFFFFF;
 	}
-	else if (blockType[index.y][index.x] == BloclType::Wall)
+	else if (blockType[index.y][index.x] == BLOCK_TYPE::Wall)
 	{
 		data[index.y][index.x].transforms.scale = Vector3{ 1.0f,5.0f,1.0f };
 		data[index.y][index.x].transforms.rotate = Vector3{ 0.0f,0.0f,0.0f };
@@ -149,7 +146,7 @@ void Map::ShapeChangeByType(Vector2int index)
 		data[index.y][index.x].transforms.translate.y += 0.4f;
 		data[index.y][index.x].color = 0xFFFFFFFF;
 	}
-	else if (blockType[index.y][index.x] == BloclType::Asid)
+	else if (blockType[index.y][index.x] == BLOCK_TYPE::Asid)
 	{
 		data[index.y][index.x].transforms.scale = Vector3{ 1.0f,1.0f,1.0f };
 		data[index.y][index.x].transforms.rotate = Vector3{ 0.0f,0.0f,0.0f };
@@ -158,30 +155,9 @@ void Map::ShapeChangeByType(Vector2int index)
 	}
 }
 
-Vector2int Map::IndexByPosition(Vector3 pos)
-{
-	Vector2int index;
-	// ブロック中心座標からインデックスを計算
-	index.x = static_cast<int>(std::round(-pos.x / BLOCK_WIDTH));
-	index.y = static_cast<int>(std::round(-pos.z / BLOCK_HEIGHT));
-	// 範囲外の値を制限
-	index.x = std::clamp(index.x, 0, MAP_WIDTH - 1);
-	index.y = std::clamp(index.y, 0, MAP_HEIGHT - 1);
-	return index;
-}
 
-Vector3 Map::PositionByIndex(Vector2int index)
-{
-	Vector3 pos;
 
-	pos.x = -static_cast<float>(index.x) * BLOCK_WIDTH;
-	pos.y = 0.0f;
-	pos.z = -static_cast<float>(index.y) * BLOCK_HEIGHT;
-
-	return pos;
-}
-
-BloclType Map::BlockTypeByIndex(Vector2int index)
+BLOCK_TYPE Map::BlockTypeByIndex(Vector2int index)
 {
 	return blockType[index.y][index.x];
 }

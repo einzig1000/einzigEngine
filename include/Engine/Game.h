@@ -1,5 +1,7 @@
 #pragma once
 #include "Engine/Engine.h"
+#include "enum.h"
+#include <numbers>
 //#include "input/GetHitKey.h"
 //#include "input/GetPadState.h"
 //#include "input/MouseController.h"
@@ -52,7 +54,7 @@ public:
 	static bool IsCollisionMouseRayAABB(AABB aabb, int objNum);
 	// 0 = 左クリック  1 = 右クリック  2 = ミドルボタン
 	static bool IsPressMouse(int i);
-	static uint32_t GetWheel();
+	static uint32_t GetMouseWheel();
 
 	// カメラ
 	static void MoveCenterTarget(Vector3 target, int spendFrame);

@@ -20,6 +20,7 @@
 #include <windows.h>
 #include <DbgHelp.h>
 #include <strsafe.h>
+#include "enum.h"
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "Dbghelp.lib")
@@ -30,6 +31,32 @@
 #else
 #define VSNPRINTF_FUNC vsnprintf
 #endif
+
+
+Vector2int IndexByPosition(Vector3 pos)
+{
+    Vector2int index;
+    // ブロック中心座標からインデックスを計算
+    index.x = static_cast<int>(std::round(-pos.x / BLOCK_WIDTH));
+    index.y = static_cast<int>(std::round(-pos.z / BLOCK_HEIGHT));
+    // 範囲外の値を制限
+    index.x = std::clamp(index.x, 0, MAP_WIDTH - 1);
+    index.y = std::clamp(index.y, 0, MAP_HEIGHT - 1);
+    return index;
+}
+Vector3 PositionByIndex(Vector2int index)
+{
+    Vector3 pos;
+
+    pos.x = -static_cast<float>(index.x) * BLOCK_WIDTH;
+    pos.y = 0.0f;
+    pos.z = -static_cast<float>(index.y) * BLOCK_HEIGHT;
+
+    return pos;
+}
+
+
+
 
 Vector3 TriangleNormal(const Vector4& v0, const Vector4& v1, const Vector4& v2)
 {

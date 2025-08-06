@@ -95,6 +95,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ActSelect.cpp" />
+    <ClCompile Include="CharacterManager.cpp" />
     <ClCompile Include="Charactor.cpp" />
     <ClCompile Include="externals\imgui\imgui.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Disabled</Optimization>
@@ -126,6 +127,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </ClCompile>
     <ClCompile Include="GameManager.cpp" />
     <ClCompile Include="GameScene.cpp" />
+    <ClCompile Include="Gatya.cpp" />
     <ClCompile Include="include\input\GetPadState.cpp" />
     <ClCompile Include="include\Audio\AudioManager.cpp" />
     <ClCompile Include="include\Camera\CameraController.cpp" />
@@ -148,13 +150,16 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="include\Window\WindowManager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Map.cpp" />
+    <ClCompile Include="PhaseParent.cpp" />
     <ClCompile Include="StageSelect.cpp" />
     <ClCompile Include="Title.cpp" />
     <ClCompile Include="UnitOverview.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ActSelect.h" />
+    <ClInclude Include="CharacterManager.h" />
     <ClInclude Include="Charactor.h" />
+    <ClInclude Include="enum.h" />
     <ClInclude Include="externals\imgui\imconfig.h" />
     <ClInclude Include="externals\imgui\imgui.h" />
     <ClInclude Include="externals\imgui\imgui_impl_dx12.h" />
@@ -165,6 +170,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="externals\imgui\imstb_truetype.h" />
     <ClInclude Include="GameManager.h" />
     <ClInclude Include="GameScene.h" />
+    <ClInclude Include="Gatya.h" />
     <ClInclude Include="include\input\GetPadState.h" />
     <ClInclude Include="include\Audio\AudioManager.h" />
     <ClInclude Include="include\Camera\CameraController.h" />
@@ -187,6 +193,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="include\Utilities\functions.h" />
     <ClInclude Include="include\Window\WindowManager.h" />
     <ClInclude Include="Map.h" />
+    <ClInclude Include="PhaseParent.h" />
     <ClInclude Include="StageSelect.h" />
     <ClInclude Include="Title.h" />
     <ClInclude Include="UnitOverview.h" />

@@ -20,27 +20,6 @@
 // 外部ライブラリ
 #include "externals/DirectXTex/DirectXTex.h"
 
-#define WIDTH 1280
-#define HEIGHT 720
-
-#define STAGE_MAX 10
-
-
-enum class Texture
-{
-    // ブロック
-    Map_Block = 0,
-
-    // 駒
-    Charactor_King = 1,
-    Charactor_Queen = 2,
-    Charactor_Bishop = 3,
-    Charactor_Knight = 4,
-    Charactor_Rook = 5,
-    Charactor_Pawn = 6,
-
-};
-
 
 enum class Direction
 {

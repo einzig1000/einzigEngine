@@ -91,9 +91,6 @@
     <Filter Include="Game">
       <UniqueIdentifier>{b502c716-2faa-4a81-9f38-86c17aaed018}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Game\Map">
-      <UniqueIdentifier>{e08240d2-da10-4f33-9c08-ad966fbccedc}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Game\GameManeger">
       <UniqueIdentifier>{be7b0085-0de3-4d37-bc83-670da58a57b2}</UniqueIdentifier>
     </Filter>
@@ -114,6 +111,18 @@
     </Filter>
     <Filter Include="Game\3_UnitOverview">
       <UniqueIdentifier>{64caef79-4688-463b-bee7-2861e3db674b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Phase親">
+      <UniqueIdentifier>{ddf3c7e6-8076-4b34-8616-e9b695baa7d0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\2[1]_GameScene\Map">
+      <UniqueIdentifier>{e08240d2-da10-4f33-9c08-ad966fbccedc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Charactor\CharacterManager">
+      <UniqueIdentifier>{deb25c83-b06f-4868-85e1-c574a6999d73}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\4_Gatya">
+      <UniqueIdentifier>{279a88d7-0875-4b42-922a-eaca93b92b0f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -205,7 +214,7 @@
       <Filter>Game\GameManeger</Filter>
     </ClCompile>
     <ClCompile Include="Map.cpp">
-      <Filter>Game\Map</Filter>
+      <Filter>Game\2[1]_GameScene\Map</Filter>
     </ClCompile>
     <ClCompile Include="Charactor.cpp">
       <Filter>Game\Charactor</Filter>
@@ -224,6 +233,15 @@
     </ClCompile>
     <ClCompile Include="UnitOverview.cpp">
       <Filter>Game\3_UnitOverview</Filter>
+    </ClCompile>
+    <ClCompile Include="PhaseParent.cpp">
+      <Filter>Game\Phase親</Filter>
+    </ClCompile>
+    <ClCompile Include="CharacterManager.cpp">
+      <Filter>Game\Charactor\CharacterManager</Filter>
+    </ClCompile>
+    <ClCompile Include="Gatya.cpp">
+      <Filter>Game\4_Gatya</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -318,7 +336,7 @@
       <Filter>Game\GameManeger</Filter>
     </ClInclude>
     <ClInclude Include="Map.h">
-      <Filter>Game\Map</Filter>
+      <Filter>Game\2[1]_GameScene\Map</Filter>
     </ClInclude>
     <ClInclude Include="Charactor.h">
       <Filter>Game\Charactor</Filter>
@@ -337,6 +355,18 @@
     </ClInclude>
     <ClInclude Include="UnitOverview.h">
       <Filter>Game\3_UnitOverview</Filter>
+    </ClInclude>
+    <ClInclude Include="PhaseParent.h">
+      <Filter>Game\Phase親</Filter>
+    </ClInclude>
+    <ClInclude Include="enum.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="CharacterManager.h">
+      <Filter>Game\Charactor\CharacterManager</Filter>
+    </ClInclude>
+    <ClInclude Include="Gatya.h">
+      <Filter>Game\4_Gatya</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

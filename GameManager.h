@@ -1,19 +1,17 @@
 #pragma once
-#include "Map.h"
 #include <memory>
 
-enum class Phase
-{
-	None,
-	Title,
-	ActSelect,//(ステージセレクト、キャラ一覧、から選択)
-	// ステージセレクト選択以降
-	StageSelect,
-	GameScene,
-	// キャラ一覧選択以降
-	UnitOverview,
-	// 
-};
+#include "Title.h"
+#include "ActSelect.h"
+#include "StageSelect.h"
+#include "GameScene.h"
+#include "UnitOverview.h"
+#include "Gatya.h"
+
+#include "CharacterManager.h"
+
+#include "enum.h"
+
 
 class GameManager
 {
@@ -26,11 +24,20 @@ public:
 
 
 private:
+	CharacterManager* characterManager_;
 
-	Map* map_;
 
-	Phase phase_ = Phase::None;
-	Phase requestPhase_ = Phase::None;
+
+	// フェーズ
+	PHASE phase_ = PHASE::Phase_None;
+	PHASE requestPhase_ = PHASE::Phase_None;
+
+	Title* title_;
+	ActSelect* actSelect_;
+	StageSelect* stageSelect_;
+	GameScene* gameScene_;
+	UnitOverview* unitOverview_;
+	Gatya* gatya_;
 
 
 };

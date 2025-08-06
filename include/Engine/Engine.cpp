@@ -153,11 +153,11 @@ void Engine::UpdateLight()
 }
 void Engine::UpdateCamera()
 {
-	if (GetHitKey::keys[DIK_SPACE] && !GetHitKey::preKeys[DIK_SPACE])
+	/*if (GetHitKey::keys[DIK_SPACE] && !GetHitKey::preKeys[DIK_SPACE])
 	{
 		if (cameraController->cameraMode_ == 1)cameraController->cameraMode_ = 0;
 		else cameraController->cameraMode_ = 1;
-	}
+	}*/
 	// カメラの更新
 	cameraController->Updata();
 }
@@ -887,7 +887,7 @@ bool Engine::IsPressMouse(int i)
 	return false;
 }
 
-uint32_t Engine::GetWheel()
+uint32_t Engine::GetMouseWheel()
 {
 	uint32_t delta = wheelDelta;
 	wheelDelta = 0;
