@@ -163,6 +163,8 @@ void Engine::UpdateCamera()
 }
 void Engine::EndFrame()
 {
+	wheelDelta = 0;
+
 	cameraController->Draw();
 	ImGui::Render();
 
@@ -890,7 +892,6 @@ bool Engine::IsPressMouse(int i)
 uint32_t Engine::GetMouseWheel()
 {
 	uint32_t delta = wheelDelta;
-	wheelDelta = 0;
 	return delta;
 }
 

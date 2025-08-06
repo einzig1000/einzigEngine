@@ -28,7 +28,8 @@ void UnitOverview::Initialize()
 	int y = 0;
 	for (uint32_t i = 0; i < characterManager_->GetAllCharactor().size(); ++i)
 	{
-		characterManager_->GetAllCharactor()[i]->data.transforms.translate = PositionByIndex({y,x});
+		characterManager_->GetAllCharactor()[i]->data.transforms.parentWorld = &map_->data[x][y].transforms.World;
+		characterManager_->GetAllCharactor()[i]->data.transforms.translate.z += BLOCK_HEIGHT * 5;
 		x++;
 		if (x >= MAP_HEIGHT)
 		{
@@ -41,8 +42,10 @@ void UnitOverview::Initialize()
 		}
 	}
 
+
+
 	Game::MoveCenterTarget({ 0.0f, -0.0f, -5.390f }, 200);
-	Game::MoveRotateTarget({ 0.3f, -std::numbers::pi / 2.0f, 0.0f }, 200);
+	Game::MoveRotateTarget({ 0.4f, -std::numbers::pi / 2.0f, 0.0f }, 200);
 	Game::MoveDistanceTarget(15.60f, 200);
 }
 
@@ -50,24 +53,40 @@ void UnitOverview::Update()
 {
 	map_->Update();
 
-	int pre = Game::GetMouseWheel();
+	preWheel = nowWheel;
+	nowWheel = Game::GetMouseWheel();
 
-	if (Game::GetMouseWheel() > 0 && pre == 0)
+	if (nowWheel > 0 && preWheel == 0)
 	{
 		for (int y = 0; y < MAP_HEIGHT; ++y)
 		{
 			for (int x = 0; x < MAP_WIDTH; ++x)
 			{
-				map_->data[y][x].transforms.translate.z -= 10;
+				map_->data[y][x].transforms.translate.x += BLOCK_HEIGHT;
 				if (x <= targetY)
 				{
-					map_->data[y][x].transforms.translate.z -= 30;
+					map_->data[y][x].transforms.translate.x += BLOCK_HEIGHT * 5;
 				}
 			}
 		}
+		targetY++;
+	}
+	if (nowWheel < 0 && preWheel == 0 && targetY > 0)
+	{
+		for (int y = 0; y < MAP_HEIGHT; ++y)
+		{
+			for (int x = 0; x < MAP_WIDTH; ++x)
+			{
+				map_->data[y][x].transforms.translate.x -= BLOCK_HEIGHT;
+				if (x < targetY)
+				{
+					map_->data[y][x].transforms.translate.x -= BLOCK_HEIGHT * 5;
+				}
+			}
+		}
+		targetY--;
 	}
 	ImGui::Begin("view");
-	ImGui::Text("%d", Game::GetMouseWheel());
 	ImGui::End();
 }
 

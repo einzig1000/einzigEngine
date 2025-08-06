@@ -26,5 +26,9 @@ private:
 
 	// 注目してる列
 	int targetY = 0;
+
+	// フレーム毎ホイール量
+	int preWheel = 0;
+	int nowWheel = 0;
 };
 
