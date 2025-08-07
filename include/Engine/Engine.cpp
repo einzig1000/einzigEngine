@@ -859,10 +859,9 @@ void Engine::SetMouseRay()
 	//DrawLine(mouseController->GetMouseRay().origin, mouseController->GetMouseRay().diff * 10000, 0xFFFF00FF);
 }
 
-bool Engine::IsCollisionMouseRayAABB(AABB aabb, int objNum)
+bool Engine::IsCollisionMouseRayAABB(Game::RenderData_Model renderData)
 {
-	return IsCollision(mouseController->GetMouseRay(), aabb, objects[objNum].modelData.vertices, objects[objNum].transform.World);
-	//return IsCollision(mouseController->GetMouseRay(), aabb, objects[objNum].modelData.vertices, Matrix4x4::MakeAffineMatrix(objects[objNum].transform.scale, objects[objNum].transform.rotate, objects[objNum].transform.translate));
+	return IsCollision(mouseController->GetMouseRay(), objects[renderData.model].modelData.vertices, renderData);
 };
 
 bool Engine::IsPressMouse(int i)

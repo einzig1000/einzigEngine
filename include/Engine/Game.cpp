@@ -138,9 +138,9 @@ void Game::SetMouseRay()
 	return engine->SetMouseRay();
 }
 
-bool Game::IsCollisionMouseRayAABB(AABB aabb, int objNum)
+bool Game::IsCollisionMouseRayAABB(Game::RenderData_Model renderData)
 {
-	return engine->IsCollisionMouseRayAABB(aabb, objNum);
+	return engine->IsCollisionMouseRayAABB(renderData);
 }
 
 bool Game::IsPressMouse(int i)

@@ -10,6 +10,7 @@
 #include <wrl/client.h>
 #include "Utilities/Easings.h"
 #include "Utilities/functions.h"
+#include "Game.h"
 
 class Engine
 {
@@ -59,7 +60,7 @@ public:
 	// マウス
 	void GetMousePosition(Vector2* position);
 	void SetMouseRay();
-	bool IsCollisionMouseRayAABB(AABB aabb, int objNum);
+	bool IsCollisionMouseRayAABB(Game::RenderData_Model renderData);
 	bool IsPressMouse(int i);
 	uint32_t GetMouseWheel();
 

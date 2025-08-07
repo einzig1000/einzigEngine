@@ -6,6 +6,7 @@
 
 #include <Windows.h>
 #include <sstream>
+#include "Game.h"
 
 
 #include <dxcapi.h>
@@ -49,13 +50,10 @@ void FlipXAxis(T(&arr)[Rows][Cols])
 	}
 }
 
+//class RenderData_Model;
 
 Vector2int IndexByPosition(Vector3 pos);
 Vector3 PositionByIndex(Vector2int index);
-
-
-
-
 
 
 /// <summary>
@@ -92,7 +90,8 @@ bool IsCollision(const AABB& aabb1, const AABB& aabb2);
 bool IsCollision(const AABB& aabb, const Sphere& s);
 bool IsCollision(const AABB& aabb, const Segment& s);
 
-bool IsCollision(const Ray& ray, const AABB& aabb, const std::vector<VertexData>& vertices, const Matrix4x4& worldMatrix);
+//bool IsCollision(const Ray& ray, const AABB& aabb, const std::vector<VertexData>& vertices, const Matrix4x4& worldMatrix);
+bool IsCollision(const Ray& ray, const std::vector<VertexData>& vertices, const Game::RenderData_Model& data);
 
 #pragma endregion
 

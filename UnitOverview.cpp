@@ -53,9 +53,9 @@ void UnitOverview::Update()
 {
 	map_->Update();
 
+	// マップ移動
 	preWheel = nowWheel;
 	nowWheel = Game::GetMouseWheel();
-
 	if (nowWheel > 0 && preWheel == 0)
 	{
 		for (int y = 0; y < MAP_HEIGHT; ++y)
@@ -86,6 +86,18 @@ void UnitOverview::Update()
 		}
 		targetY--;
 	}
+
+	// 駒とマウスの当たり判定
+	for (uint32_t i = 0; i < characterManager_->GetAllCharactor().size(); ++i)
+	{
+		if (Game::IsCollisionMouseRayAABB(characterManager_->GetAllCharactor()[i]->data))
+		{
+			characterManager_->GetAllCharactor()[i]->data.color = 0xFF0000FF;
+		}
+	}
+
+
+
 	ImGui::Begin("view");
 	ImGui::End();
 }
