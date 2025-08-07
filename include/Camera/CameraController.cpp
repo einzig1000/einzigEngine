@@ -27,10 +27,10 @@ void CameraController::Updata()
     {
         // 左クリック
         prePressMouse0_ = pressMouse0_;
-        pressMouse0_ = Game::IsPressMouse(0);
+        pressMouse0_ = Game::GetMousePress(0);
         // ミドルボタン
         prePressMouse2_ = pressMouse2_;
-        pressMouse2_ = Game::IsPressMouse(2);
+        pressMouse2_ = Game::GetMousePress(2);
 
         mouseWheel_ = Game::GetMouseWheel();
 

@@ -19,6 +19,7 @@ Map::Map()
 
 void Map::Initialize()
 {
+	//data[1][0].color = 0x000000FF;
 }
 
 void Map::LoadMap(int stageNum)
@@ -104,17 +105,26 @@ void Map::LoadMap(int stageNum)
 
 void Map::Update()
 {
-	for (int x = 0; x < MAP_WIDTH; ++x)
-	{
-		for (int y = 0; y < MAP_HEIGHT; ++y)
-		{
-	
-		}
-	}
+	//for (int x = 0; x < MAP_WIDTH; ++x)
+	//{
+	//	for (int y = 0; y < MAP_HEIGHT; ++y)
+	//	{
+	//		if (Game::IsCollisionMouseRayAABB(data[y][x].model, data[y][x].transforms))
+	//		{
+	//			data[y][x].color = 0xFF0000FF;
+	//		}
+	//		else
+	//		{
+	//			data[y][x].color = 0xFFFFFFFF;
+	//		}
+	//	}
+	//}
 }
 
 void Map::Draw()
 {
+	data[0][0].color = 0xFF0000FF;
+	data[0][1].color = 0xFFFF00FF;
 	for (int x = 0; x < MAP_WIDTH; ++x)
 	{
 		for (int y = 0; y < MAP_HEIGHT; ++y)

@@ -2,9 +2,16 @@
 #include "Engine/Engine.h"
 #include "enum.h"
 #include <numbers>
-//#include "input/GetHitKey.h"
-//#include "input/GetPadState.h"
-//#include "input/MouseController.h"
+
+#include "definition/definition.h"
+#include "input/GetHitKey.h"
+#include "input/GetPadState.h"
+#include "Utilities/Easings.h"
+#include "Utilities/functions.h"
+
+#include "externals/imgui/imgui.h"
+#include "externals/imgui/imgui_impl_dx12.h"
+#include "externals/imgui/imgui_impl_win32.h"
 
 class Game
 {
@@ -211,9 +218,10 @@ public:
 	// マウス
 	static void GetMousePosition(Vector2* position);
 	static void SetMouseRay();
-	static bool IsCollisionMouseRayAABB(Game::RenderData_Model renderData);
+	static Ray GetMouseRay();
+	static bool IsCollisionMouseRayAABB(uint32_t objectNumber, const Transforms& data);
 	// 0 = 左クリック  1 = 右クリック  2 = ミドルボタン
-	static bool IsPressMouse(int i);
+	static bool GetMousePress(int i);
 	static uint32_t GetMouseWheel();
 
 	// カメラ

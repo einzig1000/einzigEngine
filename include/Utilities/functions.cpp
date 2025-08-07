@@ -21,6 +21,7 @@
 #include <DbgHelp.h>
 #include <strsafe.h>
 #include "enum.h"
+#include "Game.h"
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "Dbghelp.lib")
@@ -392,15 +393,13 @@ bool IsCollision(const AABB& aabb, const Segment& s)
 }
 
 // モデルのAABBと三角形配列で詳細判定
-//bool IsCollision(const Ray& ray, const AABB& aabb, const std::vector<VertexData>& vertices, const Matrix4x4& worldMatrix)
-bool IsCollision(const Ray& ray, const std::vector<VertexData>& vertices, const Game::RenderData_Model& data)
+bool IsCollision(const Ray& ray, const std::vector<VertexData>& vertices, const AABB& aabb, const Transforms& data)
 {
     // まずAABBで大まかに判定
-    if (!IsCollision(ray, data.AABB))
+    if (!IsCollision(ray, aabb))
     {
         return false;
     }
-    //return true;
 
     // AABBに当たっていた場合のみ、三角形ごとに詳細判定
     for (size_t i = 0; i + 2 < vertices.size(); i += 3)
@@ -409,15 +408,15 @@ bool IsCollision(const Ray& ray, const std::vector<VertexData>& vertices, const 
         // 三角形の頂点をワールド座標に変換
         t.vertices[0] = Transform(
             Vector3{ vertices[i].position.x, vertices[i].position.y, vertices[i].position.z },
-            data.transforms.World
+            data.World
         );
         t.vertices[1] = Transform(
             Vector3{ vertices[i + 1].position.x, vertices[i + 1].position.y, vertices[i + 1].position.z },
-            data.transforms.World
+            data.World
         );
         t.vertices[2] = Transform(
             Vector3{ vertices[i + 2].position.x, vertices[i + 2].position.y, vertices[i + 2].position.z },
-            data.transforms.World
+            data.World
         );
         //Log("Triangle[0].x : %f,Triangle[0].y : %f,Triangle[0].z : %f", t.vertices[0].x, t.vertices[0].y, t.vertices[0].z);
         //Log("Triangle[1].x : %f,Triangle[1].y : %f,Triangle[1].z : %f", t.vertices[1].x, t.vertices[1].y, t.vertices[1].z);

@@ -1,16 +1,14 @@
 #pragma once
-#include "Window/WindowManager.h"
-#include "DirectX/DirectXManager.h"
 #include "definition/definition.h"
-#include "Camera/CameraController.h"
-#include "input/MouseController.h"
 #include <array>
 #include <vector>
 #include <string>
 #include <wrl/client.h>
-#include "Utilities/Easings.h"
-#include "Utilities/functions.h"
-#include "Game.h"
+
+class WindowManager;
+class DirectXManager;
+class CameraController;
+class MouseController;
 
 class Engine
 {
@@ -60,7 +58,8 @@ public:
 	// マウス
 	void GetMousePosition(Vector2* position);
 	void SetMouseRay();
-	bool IsCollisionMouseRayAABB(Game::RenderData_Model renderData);
+	Ray GetMouseRay();
+	bool IsCollisionMouseRayAABB(uint32_t objectNumber, const Transforms& data);
 	bool IsPressMouse(int i);
 	uint32_t GetMouseWheel();
 

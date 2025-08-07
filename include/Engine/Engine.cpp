@@ -1,8 +1,14 @@
-#include "Game.h"
+#include "Engine/Engine.h"
 #include "externals/DirectXTex/d3dx12.h"
 #include "externals/DirectXTex/DirectXTex.h"
+#include "Utilities/Easings.h"
+#include "Utilities/functions.h"
 #include <cstdint>
 
+#include "input/MouseController.h"
+#include "Camera/CameraController.h"
+#include "Window/WindowManager.h"
+#include "DirectX/DirectXManager.h"
 
 // 初期化用
 void Engine::Initialize(int width, int height, const std::wstring& title)
@@ -859,9 +865,15 @@ void Engine::SetMouseRay()
 	//DrawLine(mouseController->GetMouseRay().origin, mouseController->GetMouseRay().diff * 10000, 0xFFFF00FF);
 }
 
-bool Engine::IsCollisionMouseRayAABB(Game::RenderData_Model renderData)
+Ray Engine::GetMouseRay()
 {
-	return IsCollision(mouseController->GetMouseRay(), objects[renderData.model].modelData.vertices, renderData);
+	return mouseController->GetMouseRay();
+}
+
+bool Engine::IsCollisionMouseRayAABB(uint32_t objectNumber, const Transforms& data)
+{
+	AABB aabb = CreateAABB(data, objectNumber);
+	return IsCollision(mouseController->GetMouseRay(), objects[objectNumber].modelData.vertices, aabb, data);
 };
 
 bool Engine::IsPressMouse(int i)
