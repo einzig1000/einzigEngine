@@ -84,7 +84,7 @@ void ActSelect::Update()
 		easingFrameMAX = 60;
 	}
 
-	if (GetHitKey::keys[DIK_SPACE] && easingFrame > easingFrameMAX - 5)
+	if (GetHitKey::keys[DIK_SPACE] && !GetHitKey::preKeys[DIK_SPACE] && easingFrame > easingFrameMAX - 5)
 	{
 		// 演出ついksするならここ
 		if (selectIcon % iconSum_ == 0)nextPhase = PHASE::Phase_StageSelect;

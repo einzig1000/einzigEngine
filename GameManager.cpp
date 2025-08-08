@@ -35,7 +35,7 @@ GameManager::GameManager()
 	characterManager_ = new CharacterManager();
 
 	// フェーズ管理用
-	requestPhase_ = PHASE::Phase_UnitOverview;
+	requestPhase_ = PHASE::Phase_Title;
 	title_ = new Title();
 	actSelect_ = new ActSelect();
 	stageSelect_ = new StageSelect();

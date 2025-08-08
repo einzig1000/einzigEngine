@@ -18,7 +18,7 @@ void Title::Update()
 {
 	if (GetHitKey::keys[DIK_SPACE])
 	{
-		nextPhase = PHASE::Phase_GameScene;
+		nextPhase = PHASE::Phase_ActSelect;
 	}
 }
 
