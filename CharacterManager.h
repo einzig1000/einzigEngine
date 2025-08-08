@@ -8,10 +8,14 @@ class CharacterManager
 public:
 	CharacterManager();
 
-	void AddCharactor(Charactor* add);
+	// ガチャとかで獲得したキャラの追加
+	void AddCharactorList(Charactor* add);
 
-
+	// パワー順にソート
 	void Sort_Power();
+
+	// csvから読み取る
+	void LoadGetAllCharactor();
 
 
 	// 全保有キャラのゲッター
@@ -27,6 +31,7 @@ private:
 	std::vector<Charactor*> ButtleCharactor;
 
 
-
+	// Loadしたデータ置き場
+	std::string buf;
 };
 

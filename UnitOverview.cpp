@@ -50,8 +50,6 @@ void UnitOverview::Initialize()
 
 	phase_ = ViewPhase::None;
 	targetphase_ = ViewPhase::ALL;
-
-
 }
 
 void UnitOverview::Update()
@@ -106,12 +104,7 @@ void UnitOverview::Update()
 
 
 	ImGui::Begin("view");
-	ImGui::Text("rotate:%f", center.transforms.rotate.y);
-	ImGui::DragFloat("[0][0]", &map_->data[0][0].transforms.rotate.y ,0.01f);
-	ImGui::DragFloat("[1][0]", &map_->data[1][0].transforms.rotate.y ,0.01f);
-	ImGui::DragFloat("[2][0]", &map_->data[2][0].transforms.rotate.y ,0.01f);
-	ImGui::DragFloat("[3][0]", &map_->data[3][0].transforms.rotate.y ,0.01f);
-
+	ImGui::Text("targetChar:%d", targetChar);
 
 	ImGui::End();
 
@@ -212,11 +205,11 @@ void UnitOverview::Updata_ALL()
 			if (IsCollision(Game::GetMouseRay(), dex->data.AABB))
 			{
 				dex->data.color = 0xFF0000FF;
+				targetChar = i;
 				// 衝突したときにクリックされたら[i]を保存し演出に以降する
 				if (Game::GetMousePress(0))
 				{
 					targetphase_ = ViewPhase::ALL_UNIT;
-					targetChar = i;
 				}
 				break;
 			}
@@ -247,7 +240,8 @@ void UnitOverview::Initialize_ALL_UNIT()
 		float angle = deltaRotate * i;
 		IconSum[i].x = -std::sin(angle);
 		IconSum[i].z = -std::cos(angle);
-		IconSum[i] *= float(CharSum) / 2.0f;
+		//IconSum[i] *= float(CharSum);
+		IconSum[i] *= 10;
 		IconSum[i].y = 10.0f;
 
 
@@ -257,9 +251,11 @@ void UnitOverview::Initialize_ALL_UNIT()
 	}
 	center.transforms.translate = { 0,0,0 };
 
-	Game::MoveRotateTarget({ 0,-std::numbers::pi / 2.0f,0 }, tMAX);
+	//Game::MoveRotateTarget({ 0,-(std::numbers::pi / 2.0f),0 }, tMAX);
+	Game::MoveRotateTarget({ 0,float(-std::numbers::pi) + (deltaRotate * targetChar),0}, tMAX);
 	Game::MoveCenterTarget({ 0,11,0 }, tMAX + 60);
-	Game::MoveDistanceTarget( -0.0f, tMAX);
+	//Game::MoveCenterTarget({ 0,0,0 }, tMAX + 60);
+	Game::MoveDistanceTarget( -float(CharSum) / 10.0f, tMAX);
 }
 
 void UnitOverview::Updata_ALL_UNIT()
@@ -275,7 +271,21 @@ void UnitOverview::Updata_ALL_UNIT()
 		}
 	}
 
-	center.transforms.rotate.y = Easings::LINER(0, (deltaRotate * (targetChar + ((-2 * targetChar) + 3))) + (deltaRotate / 2), float(t) / tMAX);
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	//center.transforms.rotate.y = Easings::LINER(0, (deltaRotate * (targetChar + ((-2 * targetChar) + 3))) + (deltaRotate / 2), float(t) / tMAX);
+	//center.transforms.rotate.y = Easings::LINER(0, ((deltaRotate * targetChar) + (deltaRotate / 2)), float(t) / tMAX);
+	
+	//center.transforms.rotate.y = Easings::LINER(0, ((deltaRotate * (5 - targetChar)) + (deltaRotate / 2)), float(t) / tMAX);
+	
+	//center.transforms.rotate.y = Easings::LINER(0, (std::numbers::pi * 2.0f), float(t) / tMAX);
+	
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 	t++;
 
 	if (float(t) > tMAX)targetphase_ = ViewPhase::UNIT;
@@ -317,8 +327,6 @@ void UnitOverview::Updata_UNIT()
 	{
 		targetphase_ = ViewPhase::UNIT_ALL;
 	}
-
-
 }
 
 
@@ -351,7 +359,6 @@ void UnitOverview::Updata_UNIT_ALL()
 			map_->data[y][x].transforms.translate.z = Easings::LINER(preTransforms[y][x].translate.z, targetTransforms[y][x].translate.z, float(t) / tMAX);
 		}
 	}
-	center.transforms.rotate.y = Easings::LINER(2, 0, float(t) / tMAX);
 	t++;
 
 	if (t > tMAX)

@@ -124,6 +124,9 @@
     <Filter Include="Game\4_Gatya">
       <UniqueIdentifier>{279a88d7-0875-4b42-922a-eaca93b92b0f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Game\Item">
+      <UniqueIdentifier>{9c00815c-3c61-44eb-89b3-e2f7187be4a9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -242,6 +245,9 @@
     </ClCompile>
     <ClCompile Include="Gatya.cpp">
       <Filter>Game\4_Gatya</Filter>
+    </ClCompile>
+    <ClCompile Include="ItemManager.cpp">
+      <Filter>Game\Item</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -367,6 +373,9 @@
     </ClInclude>
     <ClInclude Include="Gatya.h">
       <Filter>Game\4_Gatya</Filter>
+    </ClInclude>
+    <ClInclude Include="ItemManager.h">
+      <Filter>Game\Item</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -31,7 +31,7 @@ void Map::LoadMap(int stageNum)
 	{
 		// パス作成
 		std::ostringstream path;
-		path << "resources/csv/map" << stageNum << ".csv";
+		path << "resources/csv/map/map" << stageNum << ".csv";
 
 		// ファイルをひらく
 		std::ifstream file(path.str());

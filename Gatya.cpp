@@ -26,5 +26,5 @@ void Gatya::Draw()
 
 void Gatya::AddCharactor(Charactor* newChar)
 {
-    characterManager_->AddCharactor(newChar);
+    characterManager_->AddCharactorList(newChar);
 }

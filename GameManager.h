@@ -24,7 +24,10 @@ public:
 
 
 private:
+	// 所持キャラ
 	CharacterManager* characterManager_;
+
+	// 所持アイテム
 
 
 

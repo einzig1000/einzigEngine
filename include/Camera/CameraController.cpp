@@ -6,6 +6,7 @@ CameraController::CameraController()
 {
     mousePositionGap_ = { 0,0 };
     cameraMode_ = false;
+    cameraModeMode_ = true;
 
     // カメラ
     transform_.translate = { 0.0f, 0.0f, 0.0f };
@@ -210,7 +211,7 @@ void CameraController::Updata()
 
 void CameraController::Draw()
 {
-    Game::DrawSphere({ {0.1f,0.1f,0.1f}, {0.0f,0.0f,0.0f}, center_ }, { 0,0,0 }, 12, 0, 0xFFFFFFFF, sphereOptions);
+    //Game::DrawSphere({ {0.1f,0.1f,0.1f}, {0.0f,0.0f,0.0f}, center_ }, { 0,0,0 }, 12, 0, 0xFFFFFFFF, sphereOptions);
 }
 
 // 実際に動かす

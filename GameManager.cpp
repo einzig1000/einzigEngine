@@ -35,7 +35,7 @@ GameManager::GameManager()
 	characterManager_ = new CharacterManager();
 
 	// フェーズ管理用
-	requestPhase_ = PHASE::Phase_Title;
+	requestPhase_ = PHASE::Phase_UnitOverview;
 	title_ = new Title();
 	actSelect_ = new ActSelect();
 	stageSelect_ = new StageSelect();
@@ -153,6 +153,10 @@ void GameManager::Update()
 	default:
 		break;
 	}
+
+	ImGui::Begin("FPS");
+	ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+	ImGui::End();
 }
 
 void GameManager::Draw()

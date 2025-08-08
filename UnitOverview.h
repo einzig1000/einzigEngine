@@ -68,5 +68,7 @@ private:
 	// 回転中心のイージング前と後
 	Transforms centerPreTransforms;
 	Transforms centerTargetTransforms;
+
+
 };
 
