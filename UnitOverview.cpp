@@ -106,8 +106,15 @@ void UnitOverview::Update()
 
 
 	ImGui::Begin("view");
-	ImGui::Text("targetY:%d", targetY);
+	ImGui::Text("rotate:%f", center.transforms.rotate.y);
+	ImGui::DragFloat("[0][0]", &map_->data[0][0].transforms.rotate.y ,0.01f);
+	ImGui::DragFloat("[1][0]", &map_->data[1][0].transforms.rotate.y ,0.01f);
+	ImGui::DragFloat("[2][0]", &map_->data[2][0].transforms.rotate.y ,0.01f);
+	ImGui::DragFloat("[3][0]", &map_->data[3][0].transforms.rotate.y ,0.01f);
+
+
 	ImGui::End();
+
 }
 
 void UnitOverview::Draw()
@@ -267,8 +274,8 @@ void UnitOverview::Updata_ALL_UNIT()
 			map_->data[y][x].transforms.translate.z = Easings::LINER(preTransforms[y][x].translate.z, targetTransforms[y][x].translate.z, float(t) / tMAX);
 		}
 	}
-	//center.transforms.rotate.y = Easings::LINER(0, 選択したキャラの方向, float(t) / tMAX);
-	center.transforms.rotate.y = Easings::LINER(0, 2, float(t) / tMAX);
+
+	center.transforms.rotate.y = Easings::LINER(0, (deltaRotate * (targetChar + ((-2 * targetChar) + 3))) + (deltaRotate / 2), float(t) / tMAX);
 	t++;
 
 	if (float(t) > tMAX)targetphase_ = ViewPhase::UNIT;
@@ -310,6 +317,8 @@ void UnitOverview::Updata_UNIT()
 	{
 		targetphase_ = ViewPhase::UNIT_ALL;
 	}
+
+
 }
 
 
@@ -317,6 +326,7 @@ void UnitOverview::Initialize_UNIT_ALL()
 {
 	tMAX = 100;
 	t = 0;
+	targetY = 0;
 	for (int y = 0; y < MAP_HEIGHT; ++y)
 	{
 		for (int x = 0; x < MAP_WIDTH; ++x)
