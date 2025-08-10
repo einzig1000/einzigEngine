@@ -10,6 +10,18 @@
 #define BLOCK_HEIGHT 1.2f
 #define BLOCK_WIDTH 1.2f
 
+enum class ITEM
+{
+	Item_KingsSeed = 0,
+	Item_QueensSeed = 1,
+	Item_BishopsSeed = 2,
+	Item_KnightsSeed = 3,
+	Item_RooksSeed = 4,
+	Item_PawnsSeed = 5,
+
+
+};
+
 enum class BLOCK_TYPE
 {
 	Empty = 0,		// 空（通行可能）
