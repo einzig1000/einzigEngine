@@ -105,7 +105,8 @@ void UnitOverview::Update()
 
 	ImGui::Begin("view");
 	ImGui::Text("targetChar:%d", targetChar);
-
+	ImGui::DragFloat3("target", &map_->data[1][1].target.x,0.01f);
+	ImGui::DragFloat3("rotate", &map_->data[1][1].transforms.rotate.x);
 	ImGui::End();
 
 }

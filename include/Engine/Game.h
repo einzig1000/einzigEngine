@@ -4,6 +4,7 @@
 #include <numbers>
 
 #include "definition/definition.h"
+#include "Utilities/Quaternion.h"
 #include "input/GetHitKey.h"
 #include "input/GetPadState.h"
 #include "Utilities/Easings.h"
@@ -25,7 +26,7 @@ public:
 		// 回転の中心点
 		Vector3 pivot;
 		// 向き
-		Vector3 target;
+		Vector3 target = { 0.0f,0.0f,0.0f };
 		// 色
 		uint32_t color = 0xFFFFFFFF;
 		// 3Dモデル
@@ -48,16 +49,20 @@ public:
 			// 3. 回転の中心への移動(centerを原点に移動)
 			Matrix4x4 toRotationCenter = Matrix4x4::MakeTranslateMatrix(-this->pivot);
 
-			// 4. ターゲット方向を向く回転クォータニオンを作成
-			Vector3 forward = (target - this->transforms.translate).Normalized();
-
-			// オブジェクトのデフォルトの向きがZ軸の正方向（{0, 0, 1}）であると仮定
+			// 4. ターゲット方向を向くクォータニオンを作成
+			Vector3 forward = (this->target - this->transforms.translate).Normalized();
 			Quaternion lookAtRotation = Quaternion::MakeFromToRotation({ 0, 0, 1 }, forward);
 
-			// 5. クォータニオンから回転行列を作成
-			Matrix4x4 rotationMatrix = Matrix4x4::MakeFromQuaternion(lookAtRotation);
+			// 5. ImGui等で調整するオイラー角から追加の回転クォータニオンを作成
+			Quaternion eulerRotation = Quaternion::MakeFromEulerAngles(this->transforms.rotate);
 
-			// 6. 回転後、元の回転中心の位置に戻す
+			// 6. ターゲットを向く回転と、オイラー角による追加回転を合成
+			Quaternion finalRotation = eulerRotation * lookAtRotation;
+
+			// 7. 最終的な回転クォータニオンから回転行列を作成
+			Matrix4x4 rotationMatrix = Matrix4x4::MakeFromQuaternion(finalRotation);
+
+			// 8. 回転後、元の回転中心の位置に戻す
 			Matrix4x4 fromRotationCenter = Matrix4x4::MakeTranslateMatrix(this->pivot);
 
 			// 最終的なワールド行列の構築
@@ -84,6 +89,9 @@ public:
 			this->AABB = Game::CreateAABB(this->transforms, this->model);
 
 			Game::Drawobj(this->transforms, this->pivot, this->model, this->texture, this->color, this->options);
+
+			// オブジェクト中心からターゲットまでのライン描画
+			Game::DrawLine(this->transforms.translate, this->target, 0xFF00FFFF);
 		}
 		void DrawAABB()
 		{
@@ -93,41 +101,49 @@ public:
 			// 2. ワールド空間での最終的な位置への移動行列
 			Matrix4x4 translateMatrix = Matrix4x4::MakeTranslateMatrix(this->transforms.translate);
 
-			// 3. 回転の中心への移動 (centerを原点に移動)
+			// 3. 回転の中心への移動(centerを原点に移動)
 			Matrix4x4 toRotationCenter = Matrix4x4::MakeTranslateMatrix(-this->pivot);
 
-			// 4. 回転行列 (transform.rotate を center を中心とする回転として使う)
-			Matrix4x4 rotateXMatrix = Matrix4x4::MakeRotateXMatrix(this->transforms.rotate.x);
-			Matrix4x4 rotateYMatrix = Matrix4x4::MakeRotateYMatrix(this->transforms.rotate.y);
-			Matrix4x4 rotateZMatrix = Matrix4x4::MakeRotateZMatrix(this->transforms.rotate.z);
-			Matrix4x4 rotationMatrix = rotateZMatrix * rotateXMatrix * rotateYMatrix;
+			// 4. ターゲット方向を向くクォータニオンを作成
+			Vector3 forward = (this->target - this->transforms.translate).Normalized();
+			Quaternion lookAtRotation = Quaternion::MakeFromToRotation({ 0, 0, 1 }, forward);
 
-			// 5. 回転後、元の回転中心の位置に戻す
+			// 5. ImGui等で調整するオイラー角から追加の回転クォータニオンを作成
+			Quaternion eulerRotation = Quaternion::MakeFromEulerAngles(this->transforms.rotate);
+
+			// 6. ターゲットを向く回転と、オイラー角による追加回転を合成
+			Quaternion finalRotation = eulerRotation * lookAtRotation;
+
+			// 7. 最終的な回転クォータニオンから回転行列を作成
+			Matrix4x4 rotationMatrix = Matrix4x4::MakeFromQuaternion(finalRotation);
+
+			// 8. 回転後、元の回転中心の位置に戻す
 			Matrix4x4 fromRotationCenter = Matrix4x4::MakeTranslateMatrix(this->pivot);
 
 			// 最終的なワールド行列の構築
 			if (transforms.parentWorld != nullptr)
 			{
 				this->transforms.World =
-					scaleMatrix *		 // 1. 拡縮はどうでもいい
-					toRotationCenter *	 // 2. 回転中心を原点に移動
-					rotationMatrix *	 // 3. 原点で回転 (centerを中心とした回転)
-					fromRotationCenter * // 4. 回転したものを元の回転中心に戻す
-					translateMatrix *	 // 5. 最終的なワールド位置へ移動
-					*transforms.parentWorld;// 親からもらう
+					scaleMatrix *
+					toRotationCenter *
+					rotationMatrix *
+					fromRotationCenter *
+					translateMatrix *
+					*transforms.parentWorld;
 			}
 			else
 			{
 				this->transforms.World =
-					scaleMatrix *		 // 1. 拡縮はどうでもいい
-					toRotationCenter *	 // 2. 回転中心を原点に移動
-					rotationMatrix *	 // 3. 原点で回転 (centerを中心とした回転)
-					fromRotationCenter * // 4. 回転したものを元の回転中心に戻す
-					translateMatrix;	 // 5. 最終的なワールド位置へ移動
+					scaleMatrix *
+					toRotationCenter *
+					rotationMatrix *
+					fromRotationCenter *
+					translateMatrix;
 			}
 
 			this->AABB = Game::CreateAABB(this->transforms, this->model);
 
+			// AABBのライン描画
 			Vector3 p[8];
 			p[0] = { this->AABB.min.x ,this->AABB.min.y, this->AABB.min.z };
 			p[1] = { this->AABB.max.x ,this->AABB.min.y, this->AABB.min.z };
@@ -152,6 +168,9 @@ public:
 			Game::DrawLine(p[1], p[5], 0xFF0000FF);
 			Game::DrawLine(p[2], p[6], 0xFF0000FF);
 			Game::DrawLine(p[3], p[7], 0xFF0000FF);
+
+			// オブジェクト中心からターゲットまでのライン描画
+			Game::DrawLine(this->transforms.translate, this->target, 0xFF00FFFF);
 		}
 		void CreateAABB()
 		{

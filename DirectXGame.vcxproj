@@ -128,6 +128,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="GameManager.cpp" />
     <ClCompile Include="GameScene.cpp" />
     <ClCompile Include="Gatya.cpp" />
+    <ClCompile Include="include\definition\definition.cpp" />
     <ClCompile Include="include\input\GetPadState.cpp" />
     <ClCompile Include="include\Audio\AudioManager.cpp" />
     <ClCompile Include="include\Camera\CameraController.cpp" />

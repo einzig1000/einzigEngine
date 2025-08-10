@@ -14,4 +14,10 @@ public:
 
     // 2つのベクトル間の回転を表すクォータニオンを生成
     static Quaternion MakeFromToRotation(const Vector3& from, const Vector3& to);
+
+    static Quaternion MakeFromEulerAngles(const Vector3& eulerAngles);
+
+
+
+    Quaternion operator*(const Quaternion& other) const;
 };

@@ -1,5 +1,5 @@
 //駒タイプ,攻撃力,HP,
-King,100,255,EOF
+King,200,200,EOF
 Queen,90,34,EOF
 Bishop,50,56,EOF
 Knight,255,77,EOF
