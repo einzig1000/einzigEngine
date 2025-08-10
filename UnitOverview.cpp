@@ -234,12 +234,12 @@ void UnitOverview::Initialize_ALL_UNIT()
 
 	Vector3 IconSum[100];
 	int CharSum = characterManager_->GetAllCharactor().size();
-	deltaRotate = 2.0f * std::numbers::pi / CharSum;
+	deltaRotate = (2.0f * std::numbers::pi) / CharSum;
 	for (int i = 0; i < CharSum; ++i)
 	{
 		float angle = deltaRotate * i;
-		IconSum[i].x = -std::sin(angle);
-		IconSum[i].z = -std::cos(angle);
+		IconSum[i].x = -std::sinf(angle);
+		IconSum[i].z = -std::cosf(angle);
 		//IconSum[i] *= float(CharSum);
 		IconSum[i] *= 10;
 		IconSum[i].y = 10.0f;
@@ -251,8 +251,14 @@ void UnitOverview::Initialize_ALL_UNIT()
 	}
 	center.transforms.translate = { 0,0,0 };
 
-	//Game::MoveRotateTarget({ 0,-(std::numbers::pi / 2.0f),0 }, tMAX);
-	Game::MoveRotateTarget({ 0,float(-std::numbers::pi) + (deltaRotate * targetChar),0}, tMAX);
+	//Game::MoveRotateTarget({ 0,-(std::numbers::pi),0 }, tMAX);
+	//Game::MoveRotateTarget({ 0,-(std::numbers::pi) * 5,0 }, tMAX);
+	Game::MoveRotateTarget({ 0,float(-std::numbers::pi) + (deltaRotate * float(targetChar)),0 }, tMAX);
+
+	//float aa = deltaRotate * float(targetChar);
+	//int rot = int(aa) % 360;
+	//Game::MoveRotateTarget({ 0,float(-std::numbers::pi) + float(rot),0 }, tMAX);
+
 	Game::MoveCenterTarget({ 0,11,0 }, tMAX + 60);
 	//Game::MoveCenterTarget({ 0,0,0 }, tMAX + 60);
 	Game::MoveDistanceTarget( -float(CharSum) / 10.0f, tMAX);
