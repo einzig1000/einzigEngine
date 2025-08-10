@@ -153,6 +153,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Map.cpp" />
     <ClCompile Include="PhaseParent.cpp" />
     <ClCompile Include="StageSelect.cpp" />
+    <ClCompile Include="include\Utilities\Quaternion.cpp" />
     <ClCompile Include="Title.cpp" />
     <ClCompile Include="UnitOverview.cpp" />
   </ItemGroup>
@@ -197,6 +198,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Map.h" />
     <ClInclude Include="PhaseParent.h" />
     <ClInclude Include="StageSelect.h" />
+    <ClInclude Include="include\Utilities\Quaternion.h" />
     <ClInclude Include="Title.h" />
     <ClInclude Include="UnitOverview.h" />
   </ItemGroup>

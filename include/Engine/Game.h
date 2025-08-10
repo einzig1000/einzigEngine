@@ -24,6 +24,8 @@ public:
 		Transforms transforms;
 		// 回転の中心点
 		Vector3 pivot;
+		// 向き
+		Vector3 target;
 		// 色
 		uint32_t color = 0xFFFFFFFF;
 		// 3Dモデル
@@ -43,37 +45,40 @@ public:
 			// 2. ワールド空間での最終的な位置への移動行列
 			Matrix4x4 translateMatrix = Matrix4x4::MakeTranslateMatrix(this->transforms.translate);
 
-			// 3. 回転の中心への移動 (centerを原点に移動)
+			// 3. 回転の中心への移動(centerを原点に移動)
 			Matrix4x4 toRotationCenter = Matrix4x4::MakeTranslateMatrix(-this->pivot);
 
-			// 4. 回転行列 (transform.rotate を center を中心とする回転として使う)
-			Matrix4x4 rotateXMatrix = Matrix4x4::MakeRotateXMatrix(this->transforms.rotate.x);
-			Matrix4x4 rotateYMatrix = Matrix4x4::MakeRotateYMatrix(this->transforms.rotate.y);
-			Matrix4x4 rotateZMatrix = Matrix4x4::MakeRotateZMatrix(this->transforms.rotate.z);
-			Matrix4x4 rotationMatrix = rotateZMatrix * rotateXMatrix * rotateYMatrix;
+			// 4. ターゲット方向を向く回転クォータニオンを作成
+			Vector3 forward = (target - this->transforms.translate).Normalized();
 
-			// 5. 回転後、元の回転中心の位置に戻す
+			// オブジェクトのデフォルトの向きがZ軸の正方向（{0, 0, 1}）であると仮定
+			Quaternion lookAtRotation = Quaternion::MakeFromToRotation({ 0, 0, 1 }, forward);
+
+			// 5. クォータニオンから回転行列を作成
+			Matrix4x4 rotationMatrix = Matrix4x4::MakeFromQuaternion(lookAtRotation);
+
+			// 6. 回転後、元の回転中心の位置に戻す
 			Matrix4x4 fromRotationCenter = Matrix4x4::MakeTranslateMatrix(this->pivot);
 
 			// 最終的なワールド行列の構築
 			if (transforms.parentWorld != nullptr)
 			{
 				this->transforms.World =
-					scaleMatrix *		 // 1. 拡縮はどうでもいい
-					toRotationCenter *	 // 2. 回転中心を原点に移動
-					rotationMatrix *	 // 3. 原点で回転 (centerを中心とした回転)
-					fromRotationCenter * // 4. 回転したものを元の回転中心に戻す
-					translateMatrix *	 // 5. 最終的なワールド位置へ移動
-					*transforms.parentWorld;// 親からもらう
+					scaleMatrix *
+					toRotationCenter *
+					rotationMatrix *
+					fromRotationCenter *
+					translateMatrix *
+					*transforms.parentWorld;
 			}
 			else
 			{
 				this->transforms.World =
-					scaleMatrix *		 // 1. 拡縮はどうでもいい
-					toRotationCenter *	 // 2. 回転中心を原点に移動
-					rotationMatrix *	 // 3. 原点で回転 (centerを中心とした回転)
-					fromRotationCenter * // 4. 回転したものを元の回転中心に戻す
-					translateMatrix;	 // 5. 最終的なワールド位置へ移動
+					scaleMatrix *
+					toRotationCenter *
+					rotationMatrix *
+					fromRotationCenter *
+					translateMatrix;
 			}
 
 			this->AABB = Game::CreateAABB(this->transforms, this->model);
