@@ -38,6 +38,10 @@ public:
 		// 衝突判定用AABB
 		AABB AABB;
 
+		void LookAtFront()
+		{
+			this->target = this->transforms.translate + Vector3(0, 0, 1);
+		}
 		void Draw()
 		{
 			// 1. オブジェクトのスケール行列

@@ -224,9 +224,9 @@ void CameraController::MovingCenter()
     }
     float t = float(easeCenter_.flame) / float(easeCenter_.maxFrame);
 
-    center_.x = Easings::OUT_QUART(easeCenter_.start.x, easeCenter_.end.x, t);
-    center_.y = Easings::OUT_QUART(easeCenter_.start.y, easeCenter_.end.y, t);
-    center_.z = Easings::OUT_QUART(easeCenter_.start.z, easeCenter_.end.z, t);
+    center_.x = Easings::F_OUT_QUART(easeCenter_.start.x, easeCenter_.end.x, t);
+    center_.y = Easings::F_OUT_QUART(easeCenter_.start.y, easeCenter_.end.y, t);
+    center_.z = Easings::F_OUT_QUART(easeCenter_.start.z, easeCenter_.end.z, t);
     preCenter_ = center_;
 
     easeCenter_.flame++;
@@ -245,9 +245,9 @@ void CameraController::MovingRotate()
     }
     float t = float(easeCenter_.flame) / float(easeCenter_.maxFrame);
 
-    transform_.rotate.x = Easings::OUT_QUART(easeRotate_.start.x, easeRotate_.end.x, t);
-    transform_.rotate.y = Easings::OUT_QUART(easeRotate_.start.y, easeRotate_.end.y, t);
-    transform_.rotate.z = Easings::OUT_QUART(easeRotate_.start.z, easeRotate_.end.z, t);
+    transform_.rotate.x = Easings::F_OUT_QUART(easeRotate_.start.x, easeRotate_.end.x, t);
+    transform_.rotate.y = Easings::F_OUT_QUART(easeRotate_.start.y, easeRotate_.end.y, t);
+    transform_.rotate.z = Easings::F_OUT_QUART(easeRotate_.start.z, easeRotate_.end.z, t);
     preRotate_ = transform_.rotate;
 
     easeRotate_.flame++;
@@ -267,7 +267,7 @@ void CameraController::MovingDistance()
     }
     float t = float(easeCenter_.flame) / float(easeCenter_.maxFrame);
 
-    distance_ = Easings::OUT_QUART(easeDistance_.start.x, easeDistance_.end.x, t);
+    distance_ = Easings::F_OUT_QUART(easeDistance_.start.x, easeDistance_.end.x, t);
 
     easeDistance_.flame++;
 

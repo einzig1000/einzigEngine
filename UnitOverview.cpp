@@ -185,9 +185,9 @@ void UnitOverview::Updata_ALL()
 	{
 		for (int x = 0; x < MAP_WIDTH; ++x)
 		{
-			map_->data[y][x].transforms.translate.x = Easings::LINER(preTransforms[y][x].translate.x, targetTransforms[y][x].translate.x, float(t) / tMAX);
-			map_->data[y][x].transforms.translate.y = Easings::LINER(preTransforms[y][x].translate.y, targetTransforms[y][x].translate.y, float(t) / tMAX);
-			map_->data[y][x].transforms.translate.z = Easings::LINER(preTransforms[y][x].translate.z, targetTransforms[y][x].translate.z, float(t) / tMAX);
+			map_->data[y][x].transforms.translate.x = Easings::F_LINEAR(preTransforms[y][x].translate.x, targetTransforms[y][x].translate.x, float(t) / tMAX);
+			map_->data[y][x].transforms.translate.y = Easings::F_LINEAR(preTransforms[y][x].translate.y, targetTransforms[y][x].translate.y, float(t) / tMAX);
+			map_->data[y][x].transforms.translate.z = Easings::F_LINEAR(preTransforms[y][x].translate.z, targetTransforms[y][x].translate.z, float(t) / tMAX);
 		}
 	}
 	t++;
@@ -272,9 +272,10 @@ void UnitOverview::Updata_ALL_UNIT()
 	{
 		for (int x = 0; x < MAP_WIDTH; ++x)
 		{
-			map_->data[y][x].transforms.translate.x = Easings::LINER(preTransforms[y][x].translate.x, targetTransforms[y][x].translate.x, float(t) / tMAX);
-			map_->data[y][x].transforms.translate.y = Easings::LINER(preTransforms[y][x].translate.y, targetTransforms[y][x].translate.y, float(t) / tMAX);
-			map_->data[y][x].transforms.translate.z = Easings::LINER(preTransforms[y][x].translate.z, targetTransforms[y][x].translate.z, float(t) / tMAX);
+			map_->data[y][x].transforms.translate.x = Easings::F_LINEAR(preTransforms[y][x].translate.x, targetTransforms[y][x].translate.x, float(t) / tMAX);
+			map_->data[y][x].transforms.translate.y = Easings::F_LINEAR(preTransforms[y][x].translate.y, targetTransforms[y][x].translate.y, float(t) / tMAX);
+			map_->data[y][x].transforms.translate.z = Easings::F_LINEAR(preTransforms[y][x].translate.z, targetTransforms[y][x].translate.z, float(t) / tMAX);
+			map_->data[y][x].target = center.transforms.translate;
 		}
 	}
 
@@ -325,7 +326,7 @@ void UnitOverview::Updata_UNIT()
 		t = 0;
 	}
 
-	center.transforms.rotate.y = Easings::LINER(centerPreTransforms.rotate.y, centerTargetTransforms.rotate.y, float(t) / tMAX);
+	center.transforms.rotate.y = Easings::F_LINEAR(centerPreTransforms.rotate.y, centerTargetTransforms.rotate.y, float(t) / tMAX);
 	t++;
 
 	bool escape = false;
@@ -361,9 +362,9 @@ void UnitOverview::Updata_UNIT_ALL()
 	{
 		for (int x = 0; x < MAP_WIDTH; ++x)
 		{
-			map_->data[y][x].transforms.translate.x = Easings::LINER(preTransforms[y][x].translate.x, targetTransforms[y][x].translate.x, float(t) / tMAX);
-			map_->data[y][x].transforms.translate.y = Easings::LINER(preTransforms[y][x].translate.y, targetTransforms[y][x].translate.y, float(t) / tMAX);
-			map_->data[y][x].transforms.translate.z = Easings::LINER(preTransforms[y][x].translate.z, targetTransforms[y][x].translate.z, float(t) / tMAX);
+			map_->data[y][x].transforms.translate.x = Easings::F_LINEAR(preTransforms[y][x].translate.x, targetTransforms[y][x].translate.x, float(t) / tMAX);
+			map_->data[y][x].transforms.translate.y = Easings::F_LINEAR(preTransforms[y][x].translate.y, targetTransforms[y][x].translate.y, float(t) / tMAX);
+			map_->data[y][x].transforms.translate.z = Easings::F_LINEAR(preTransforms[y][x].translate.z, targetTransforms[y][x].translate.z, float(t) / tMAX);
 		}
 	}
 	t++;

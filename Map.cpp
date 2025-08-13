@@ -146,6 +146,7 @@ void Map::ShapeChangeByType(Vector2int index)
 		data[index.y][index.x].transforms.scale = Vector3{ 1.0f,1.0f,1.0f };
 		data[index.y][index.x].transforms.rotate = Vector3{ 0.0f,0.0f,0.0f };
 		data[index.y][index.x].transforms.translate = PositionByIndex(index);
+		data[index.y][index.x].LookAtFront();
 		data[index.y][index.x].color = 0xFFFFFFFF;
 	}
 	else if (blockType[index.y][index.x] == BLOCK_TYPE::Wall)
@@ -154,6 +155,7 @@ void Map::ShapeChangeByType(Vector2int index)
 		data[index.y][index.x].transforms.rotate = Vector3{ 0.0f,0.0f,0.0f };
 		data[index.y][index.x].transforms.translate = PositionByIndex(index);
 		data[index.y][index.x].transforms.translate.y += 0.4f;
+		data[index.y][index.x].LookAtFront();
 		data[index.y][index.x].color = 0xFFFFFFFF;
 	}
 	else if (blockType[index.y][index.x] == BLOCK_TYPE::Asid)
@@ -161,8 +163,14 @@ void Map::ShapeChangeByType(Vector2int index)
 		data[index.y][index.x].transforms.scale = Vector3{ 1.0f,1.0f,1.0f };
 		data[index.y][index.x].transforms.rotate = Vector3{ 0.0f,0.0f,0.0f };
 		data[index.y][index.x].transforms.translate = PositionByIndex(index);
+		data[index.y][index.x].LookAtFront();
 		data[index.y][index.x].color = 0xFF0000FF;
 	}
+
+	Vector3 late = data[index.y][index.x].transforms.translate;
+	Vector3 get = data[index.y][index.x].target;
+	Vector3 de = late - get;
+	late *= 1;;
 }
 
 

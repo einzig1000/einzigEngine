@@ -94,8 +94,8 @@ void ActSelect::Update()
 
 
 	easingFrame++;
-	center.transforms.rotate.y = Easings::OUT_SINE(preCenterRotate.y, targetCenterRotate.y, easingFrame / easingFrameMAX);
-		
+	center.transforms.rotate.y = Easings::F_OUT_SINE(preCenterRotate.y, targetCenterRotate.y, easingFrame / easingFrameMAX);
+
 	ImGui::Begin("act");
 	ImGui::Text("%d", selectIcon);
 	ImGui::Text("%d", selectIcon % iconSum_);
