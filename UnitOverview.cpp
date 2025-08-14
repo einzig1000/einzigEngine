@@ -105,10 +105,10 @@ void UnitOverview::Update()
 
 	ImGui::Begin("view");
 	ImGui::Text("targetChar:%d", targetChar);
-	ImGui::DragFloat3("target", &map_->data[1][1].target.x,0.01f);
-	ImGui::DragFloat3("rotate", &map_->data[1][1].transforms.rotate.x);
+	ImGui::DragFloat3("translate", &center.transforms.translate.x,0.01f);
+	ImGui::DragFloat3("rotate", &center.transforms.rotate.x, 0.01f);
 	ImGui::End();
-
+	
 }
 
 void UnitOverview::Draw()
@@ -223,18 +223,30 @@ void UnitOverview::Initialize_ALL_UNIT()
 {
 	tMAX = 100;
 	t = 0;
+
+	
 	for (int y = 0; y < MAP_HEIGHT; ++y)
 	{
 		for (int x = 0; x < MAP_WIDTH; ++x)
 		{
 			preTransforms[y][x] = map_->data[y][x].transforms;
 			targetTransforms[y][x] = preTransforms[y][x];
-			map_->data[y][x].transforms.parentWorld = &center.transforms.World;
 		}
 	}
 
-	Vector3 IconSum[100];
+	int check = 0;
 	int CharSum = characterManager_->GetAllCharactor().size();
+	for (int x = 0; x < MAP_WIDTH; ++x)
+	{
+		for (int y = 0; y < MAP_HEIGHT; ++y)
+		{
+			if (check < CharSum)map_->data[y][x].transforms.parentWorld = &center.transforms.World;
+			check++;
+		}
+	}
+
+
+	Vector3 IconSum[100];
 	deltaRotate = (2.0f * std::numbers::pi) / CharSum;
 	for (int i = 0; i < CharSum; ++i)
 	{
@@ -243,14 +255,16 @@ void UnitOverview::Initialize_ALL_UNIT()
 		IconSum[i].z = -std::cosf(angle);
 		//IconSum[i] *= float(CharSum);
 		IconSum[i] *= 10;
-		IconSum[i].y = 10.0f;
+		//IconSum[i].y = 10.0f;
 
 
 		int x = i % MAP_HEIGHT;
 		int y = i / MAP_HEIGHT;
 		targetTransforms[x][y].translate = IconSum[i];
 	}
-	center.transforms.translate = { 0,0,0 };
+
+
+	// カメラの操作
 
 	//Game::MoveRotateTarget({ 0,-(std::numbers::pi),0 }, tMAX);
 	//Game::MoveRotateTarget({ 0,-(std::numbers::pi) * 5,0 }, tMAX);
@@ -263,25 +277,35 @@ void UnitOverview::Initialize_ALL_UNIT()
 	Game::MoveCenterTarget({ 0,11,0 }, tMAX + 60);
 	//Game::MoveCenterTarget({ 0,0,0 }, tMAX + 60);
 	Game::MoveDistanceTarget( -float(CharSum) / 10.0f, tMAX);
+
+
 }
 
 void UnitOverview::Updata_ALL_UNIT()
 {
 	// 常時イージング
-	for (int y = 0; y < MAP_HEIGHT; ++y)
+	int check = 0;
+	int CharSum = characterManager_->GetAllCharactor().size();
+	for (int x = 0; x < MAP_WIDTH; ++x)
 	{
-		for (int x = 0; x < MAP_WIDTH; ++x)
+		for (int y = 0; y < MAP_HEIGHT; ++y)
 		{
 			map_->data[y][x].transforms.translate.x = Easings::F_LINEAR(preTransforms[y][x].translate.x, targetTransforms[y][x].translate.x, float(t) / tMAX);
 			map_->data[y][x].transforms.translate.y = Easings::F_LINEAR(preTransforms[y][x].translate.y, targetTransforms[y][x].translate.y, float(t) / tMAX);
 			map_->data[y][x].transforms.translate.z = Easings::F_LINEAR(preTransforms[y][x].translate.z, targetTransforms[y][x].translate.z, float(t) / tMAX);
-			map_->data[y][x].target = center.transforms.translate;
+			if (check < CharSum)map_->data[y][x].target = center.transforms.translate;
+			check++;
 		}
 	}
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	// センターの操作
+	center.transforms.translate = { 0,0,0 };
+	center.transforms.translate = Easings::EasingVector3({ 0.0f,0.0f,0.0f }, { 0.0f,10.0f,0.0f }, EaseType::LINEAR, int(tMAX));
+	center.transforms.rotate = Easings::EasingVector3({ 0.0f,0.0f,0.0f }, { -std::numbers::pi / 2.0f,0.0f,0.0f }, EaseType::LINEAR, int(tMAX));
 	
 	//center.transforms.rotate.y = Easings::LINER(0, (deltaRotate * (targetChar + ((-2 * targetChar) + 3))) + (deltaRotate / 2), float(t) / tMAX);
 	//center.transforms.rotate.y = Easings::LINER(0, ((deltaRotate * targetChar) + (deltaRotate / 2)), float(t) / tMAX);

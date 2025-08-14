@@ -143,6 +143,12 @@ void Log(std::ofstream& os, const std::string& message);
 
 #pragma endregion
 
+/// <summary>
+/// 角度をラジアンに変換
+/// </summary>
+/// <param name="angle"></param>
+/// <returns></returns>
+float ToRadian(const float& angle);
 
 // ARGBをRGBA
 Vector4 ConvertARGBtoRGBA(const Vector4& argb);

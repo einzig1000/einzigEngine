@@ -46,29 +46,29 @@ public:
 		{
 			// 1. オブジェクトのスケール行列
 			Matrix4x4 scaleMatrix = Matrix4x4::MakeScaleMatrix(this->transforms.scale);
-
+			
 			// 2. ワールド空間での最終的な位置への移動行列
 			Matrix4x4 translateMatrix = Matrix4x4::MakeTranslateMatrix(this->transforms.translate);
-
+			
 			// 3. 回転の中心への移動(centerを原点に移動)
 			Matrix4x4 toRotationCenter = Matrix4x4::MakeTranslateMatrix(-this->pivot);
-
+			
 			// 4. ターゲット方向を向くクォータニオンを作成
 			Vector3 forward = (this->target - this->transforms.translate).Normalized();
 			Quaternion lookAtRotation = Quaternion::MakeFromToRotation({ 0, 0, 1 }, forward);
-
+			
 			// 5. ImGui等で調整するオイラー角から追加の回転クォータニオンを作成
 			Quaternion eulerRotation = Quaternion::MakeFromEulerAngles(this->transforms.rotate);
-
+			
 			// 6. ターゲットを向く回転と、オイラー角による追加回転を合成
 			Quaternion finalRotation = eulerRotation * lookAtRotation;
-
+			
 			// 7. 最終的な回転クォータニオンから回転行列を作成
 			Matrix4x4 rotationMatrix = Matrix4x4::MakeFromQuaternion(finalRotation);
-
+			
 			// 8. 回転後、元の回転中心の位置に戻す
 			Matrix4x4 fromRotationCenter = Matrix4x4::MakeTranslateMatrix(this->pivot);
-
+			
 			// 最終的なワールド行列の構築
 			if (transforms.parentWorld != nullptr)
 			{
@@ -89,9 +89,9 @@ public:
 					fromRotationCenter *
 					translateMatrix;
 			}
-
+			
 			this->AABB = Game::CreateAABB(this->transforms, this->model);
-
+			
 			Game::Drawobj(this->transforms, this->pivot, this->model, this->texture, this->color, this->options);
 
 			// オブジェクト中心からターゲットまでのライン描画
