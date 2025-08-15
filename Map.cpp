@@ -166,11 +166,6 @@ void Map::ShapeChangeByType(Vector2int index)
 		data[index.y][index.x].LookAtFront();
 		data[index.y][index.x].color = 0xFF0000FF;
 	}
-
-	Vector3 late = data[index.y][index.x].transforms.translate;
-	Vector3 get = data[index.y][index.x].target;
-	Vector3 de = late - get;
-	late *= 1;;
 }
 
 

@@ -106,7 +106,7 @@ void UnitOverview::Update()
 	ImGui::Begin("view");
 	ImGui::Text("targetChar:%d", targetChar);
 	ImGui::DragFloat3("translate", &center.transforms.translate.x,0.01f);
-	ImGui::DragFloat3("rotate", &center.transforms.rotate.x, 0.01f);
+	ImGui::DragFloat3("rotate", &map_->data[0][0].transforms.rotate.x, 0.01f);
 	ImGui::End();
 	
 }
@@ -120,7 +120,7 @@ void UnitOverview::Draw()
 	{
 		characterManager_->GetAllCharactor()[i]->data.Draw();
 	}
-	center.DrawAABB();
+	center.Draw();
 }
 
 
@@ -128,13 +128,17 @@ void UnitOverview::Initialize_ALL()
 {
 	tMAX = 10;
 	t = tMAX;
+	int check = 0;
+	int CharSum = characterManager_->GetAllCharactor().size();
 	for (int y = 0; y < MAP_HEIGHT; ++y)
 	{
 		for (int x = 0; x < MAP_WIDTH; ++x)
 		{
 			preTransforms[y][x] = map_->data[y][x].transforms;
 			targetTransforms[y][x] = preTransforms[y][x];
-			map_->data[y][x].transforms.parentWorld = nullptr;
+			map_->data[y][x].transforms.parentWorld = nullptr;;
+			if (check < CharSum)map_->data[y][x].LookAtFront();
+			check++;
 		}
 	}
 	Game::MoveCenterTarget({ 0.0f, -0.0f, -5.390f }, 200);
@@ -188,6 +192,7 @@ void UnitOverview::Updata_ALL()
 			map_->data[y][x].transforms.translate.x = Easings::F_LINEAR(preTransforms[y][x].translate.x, targetTransforms[y][x].translate.x, float(t) / tMAX);
 			map_->data[y][x].transforms.translate.y = Easings::F_LINEAR(preTransforms[y][x].translate.y, targetTransforms[y][x].translate.y, float(t) / tMAX);
 			map_->data[y][x].transforms.translate.z = Easings::F_LINEAR(preTransforms[y][x].translate.z, targetTransforms[y][x].translate.z, float(t) / tMAX);
+			map_->data[y][x].LookAtFront();
 		}
 	}
 	t++;
@@ -240,7 +245,10 @@ void UnitOverview::Initialize_ALL_UNIT()
 	{
 		for (int y = 0; y < MAP_HEIGHT; ++y)
 		{
-			if (check < CharSum)map_->data[y][x].transforms.parentWorld = &center.transforms.World;
+			if (check < CharSum)
+			{
+				map_->data[y][x].transforms.parentWorld = &center.transforms.World;
+			}
 			check++;
 		}
 	}
@@ -279,6 +287,7 @@ void UnitOverview::Initialize_ALL_UNIT()
 	Game::MoveDistanceTarget( -float(CharSum) / 10.0f, tMAX);
 
 
+	center.transforms.translate = { 0,0,0 };
 }
 
 void UnitOverview::Updata_ALL_UNIT()
@@ -293,7 +302,7 @@ void UnitOverview::Updata_ALL_UNIT()
 			map_->data[y][x].transforms.translate.x = Easings::F_LINEAR(preTransforms[y][x].translate.x, targetTransforms[y][x].translate.x, float(t) / tMAX);
 			map_->data[y][x].transforms.translate.y = Easings::F_LINEAR(preTransforms[y][x].translate.y, targetTransforms[y][x].translate.y, float(t) / tMAX);
 			map_->data[y][x].transforms.translate.z = Easings::F_LINEAR(preTransforms[y][x].translate.z, targetTransforms[y][x].translate.z, float(t) / tMAX);
-			if (check < CharSum)map_->data[y][x].target = center.transforms.translate;
+			if (check < CharSum)map_->data[y][x].LookAtOnce(center.transforms.translate);
 			check++;
 		}
 	}
@@ -303,9 +312,7 @@ void UnitOverview::Updata_ALL_UNIT()
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	// センターの操作
-	center.transforms.translate = { 0,0,0 };
-	center.transforms.translate = Easings::EasingVector3({ 0.0f,0.0f,0.0f }, { 0.0f,10.0f,0.0f }, EaseType::LINEAR, int(tMAX));
-	center.transforms.rotate = Easings::EasingVector3({ 0.0f,0.0f,0.0f }, { -std::numbers::pi / 2.0f,0.0f,0.0f }, EaseType::LINEAR, int(tMAX));
+	center.transforms.translate.y = Easings::F_LINEAR(0.0f, 10.0f, float(t) / tMAX);
 	
 	//center.transforms.rotate.y = Easings::LINER(0, (deltaRotate * (targetChar + ((-2 * targetChar) + 3))) + (deltaRotate / 2), float(t) / tMAX);
 	//center.transforms.rotate.y = Easings::LINER(0, ((deltaRotate * targetChar) + (deltaRotate / 2)), float(t) / tMAX);
@@ -350,6 +357,21 @@ void UnitOverview::Updata_UNIT()
 		t = 0;
 	}
 
+	if (t < tMAX)
+	{
+		int check = 0;
+		int CharSum = characterManager_->GetAllCharactor().size();
+		for (int x = 0; x < MAP_WIDTH; ++x)
+		{
+			for (int y = 0; y < MAP_HEIGHT; ++y)
+			{
+				if (check < CharSum)map_->data[y][x].LookAtOnce(center.transforms.translate);
+				check++;
+			}
+		}
+	}
+
+
 	center.transforms.rotate.y = Easings::F_LINEAR(centerPreTransforms.rotate.y, centerTargetTransforms.rotate.y, float(t) / tMAX);
 	t++;
 
@@ -382,6 +404,8 @@ void UnitOverview::Initialize_UNIT_ALL()
 
 void UnitOverview::Updata_UNIT_ALL()
 {
+	int check = 0;
+	int CharSum = characterManager_->GetAllCharactor().size();
 	for (int y = 0; y < MAP_HEIGHT; ++y)
 	{
 		for (int x = 0; x < MAP_WIDTH; ++x)
@@ -389,9 +413,12 @@ void UnitOverview::Updata_UNIT_ALL()
 			map_->data[y][x].transforms.translate.x = Easings::F_LINEAR(preTransforms[y][x].translate.x, targetTransforms[y][x].translate.x, float(t) / tMAX);
 			map_->data[y][x].transforms.translate.y = Easings::F_LINEAR(preTransforms[y][x].translate.y, targetTransforms[y][x].translate.y, float(t) / tMAX);
 			map_->data[y][x].transforms.translate.z = Easings::F_LINEAR(preTransforms[y][x].translate.z, targetTransforms[y][x].translate.z, float(t) / tMAX);
+			map_->data[y][x].LookAtFront();
 		}
 	}
 	t++;
+
+	center.transforms.translate.y = Easings::F_LINEAR(10.0f, 0.0f, float(t) / tMAX);
 
 	if (t > tMAX)
 	{

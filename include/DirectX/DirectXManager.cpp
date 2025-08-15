@@ -30,6 +30,9 @@ DirectXManager::~DirectXManager()
 
 void DirectXManager::BeginFrame()
 {
+    // コマンドリストをリセット
+    //commandContextManager->ResetCommandList();
+
     getHitKey_->Update();
     getPadState_->Update();
 
@@ -83,7 +86,7 @@ void DirectXManager::EndFrame()
     HRESULT hr = commandContextManager->GetCommandList()->Close();
     if (FAILED(hr))
     {
-        Log("コマンドリストの確定・実行にしっぱイしました");
+        Log("コマンドリストの確定・実行に失敗しました");
         assert(false);
     }
     ID3D12CommandList* commandLists[] = { commandContextManager->GetCommandList() };
