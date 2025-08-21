@@ -274,6 +274,10 @@ public:
 	static void MoveCenterTarget(Vector3 target, int spendFrame);
 	static void MoveRotateTarget(Vector3 target, int spendFrame);
 	static void MoveDistanceTarget(float target, int spendFrame);
+	static void SetControlModeCamera(bool mode);
+	static void SetControlModeCameraCenter(bool mode);
+	static void SetControlModeCameraRotate(bool mode);
+	static void SetControlModeCameraDistance(bool mode);
 
 	// AABBの作成
 	static AABB CreateAABB(const Transforms& transforms, uint32_t objectNumber);

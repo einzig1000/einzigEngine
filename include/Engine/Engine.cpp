@@ -922,6 +922,29 @@ void Engine::MoveDistanceTarget(float target, int spendFrame)
 	cameraController->SetDistanceTarget(target, spendFrame);
 }
 
+void Engine::SetControlModeCamera(bool mode)
+{
+	cameraController->cameraMode_ = mode;
+}
+
+void Engine::SetControlModeCameraCenter(bool mode)
+{
+	cameraController->cameraMode_centerControl_ = mode;
+	if (mode = true && cameraController->cameraMode_ == false)cameraController->cameraMode_ = true;
+}
+
+void Engine::SetControlModeCameraRotate(bool mode)
+{
+	cameraController->cameraMode_rotateControl_ = mode;
+	if (mode = true && cameraController->cameraMode_ == false)cameraController->cameraMode_ = true;
+}
+
+void Engine::SetControlModeCameraDistance(bool mode)
+{
+	cameraController->cameraMode_distanceControl_ = mode;
+	if (mode = true && cameraController->cameraMode_ == false)cameraController->cameraMode_ = true;
+}
+
 
 // 座標とかない、本当にただモデルの形のAABBを作るだけの関数（LoadOBJの時のAABB初期化用）
 AABB Engine::CreateLocalAABB(const ModelData& model)

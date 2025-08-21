@@ -143,6 +143,10 @@ void GameScene::Draw()
 
 void GameScene::Initialize_Setup()
 {
+	Game::SetControlModeCameraCenter(false);
+	Game::SetControlModeCameraRotate(false);
+	Game::SetControlModeCameraDistance(true);
+
 	frame_camera = 0;
 	frameMAX_camera = 60;
 	Game::MoveCenterTarget(PositionByIndex(centerIndex_camera), frameMAX_camera);
@@ -165,27 +169,35 @@ void GameScene::Updata_Setup()
 	{
 		if (R || L || T || B)
 		{
-			if (R && )
+			bool easingsSet = false;
+
+			if (R && centerIndex_camera.x > 0)
 			{
 				centerIndex_camera.x -= 1;
+				easingsSet = true;
 			}
-			if (L)
+			if (L && centerIndex_camera.x < MAP_WIDTH - 1)
 			{
 				centerIndex_camera.x += 1;
+				easingsSet = true;
 			}
-			if (T)
+			if (T && centerIndex_camera.y > 0)
 			{
 				centerIndex_camera.y -= 1;
+				easingsSet = true;
 			}
-			if (B)
+			if (B && centerIndex_camera.y < MAP_HEIGHT - 1)
 			{
 				centerIndex_camera.y += 1;
+				easingsSet = true;
 			}
 
-
-			frame_camera = 0;
-			frameMAX_camera = 10;
-			Game::MoveCenterTarget(PositionByIndex(centerIndex_camera), frameMAX_camera);
+			if (easingsSet)
+			{
+				frame_camera = 0;
+				frameMAX_camera = 5;
+				Game::MoveCenterTarget(PositionByIndex(centerIndex_camera), frameMAX_camera);
+			}
 		}
 
 

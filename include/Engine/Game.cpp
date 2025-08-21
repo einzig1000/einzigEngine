@@ -173,6 +173,26 @@ void Game::MoveDistanceTarget(float target, int spendFrame)
 	engine->MoveDistanceTarget(target, spendFrame);
 }
 
+void Game::SetControlModeCamera(bool mode)
+{
+	engine->SetControlModeCamera(mode);
+}
+
+void Game::SetControlModeCameraCenter(bool mode)
+{
+	engine->SetControlModeCameraCenter(mode);
+}
+
+void Game::SetControlModeCameraRotate(bool mode)
+{
+	engine->SetControlModeCameraRotate(mode);
+}
+
+void Game::SetControlModeCameraDistance(bool mode)
+{
+	engine->SetControlModeCameraDistance(mode);
+}
+
 AABB Game::CreateAABB(const Transforms& transforms, uint32_t objectNumber)
 {
 	return engine->CreateAABB(transforms, objectNumber);
