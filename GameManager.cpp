@@ -29,13 +29,17 @@ GameManager::GameManager()
 	Game::LoadOBJ("resources/PhaseIcon/Buttle", "Buttle.obj");
 	Game::LoadTexture("resources/PhaseIcon/Buttle/Buttle.png");
 
+	// ステージセレクトのアイコン
+	Game::LoadOBJ("resources/StageSelect", "StageSelect.obj");
+	Game::LoadTexture("resources/StageSelect/StageSelect.png");
+
 
 
 	// CharacterManager
 	characterManager_ = new CharacterManager();
 
 	// フェーズ管理用
-	requestPhase_ = PHASE::Phase_UnitOverview;
+	requestPhase_ = PHASE::Phase_ActSelect;
 	title_ = new Title();
 	actSelect_ = new ActSelect();
 	stageSelect_ = new StageSelect();
@@ -88,7 +92,7 @@ void GameManager::Update()
 			stageSelect_->Initialize();
 			break;
 		case PHASE::Phase_GameScene:
-			gameScene_->Initialize();
+			gameScene_->Initialize(stageSelect_->GetSelectStage());
 			break;
 		case PHASE::Phase_UnitOverview:
 			unitOverview_->Initialize();
@@ -152,6 +156,11 @@ void GameManager::Update()
 		break;
 	default:
 		break;
+	}
+
+	if (GetHitKey::keys[DIK_ESCAPE])
+	{
+		requestPhase_ = PHASE::Phase_ActSelect;
 	}
 
 	ImGui::Begin("FPS");

@@ -2,8 +2,6 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include "definition/definition.h"
-#include <unordered_map>
-#include <tuple>
 
 enum class EaseType
 {
@@ -39,65 +37,16 @@ enum class EaseType
 	OUT_BOUNCE,
 };
 
-struct EaseState
-{
-	float currentFrame = 0.0f;
-	float SpendFrame = 1.0f;
-};
-
-// std::tupleのカスタムハッシュ関数をstd::namespace内に特化
-namespace std
-{
-	// Vector3のテンプレート完全特殊化 (typename Tは不要です)
-	template <>
-	struct hash<Vector3>
-	{
-		size_t operator()(const Vector3& v) const
-		{
-			size_t h1 = hash<float>{}(v.x);
-			size_t h2 = hash<float>{}(v.y);
-			size_t h3 = hash<float>{}(v.z);
-			// 3つのハッシュ値を組み合わせる
-			return h1 ^ (h2 << 1) ^ (h3 << 2);
-		}
-	};
-
-	// std::tuple<float, float, EaseType>のテンプレート完全特殊化
-	template <>
-	struct hash<std::tuple<float, float, EaseType>>
-	{
-		size_t operator()(const std::tuple<float, float, EaseType>& t) const
-		{
-			size_t h1 = hash<float>{}(std::get<0>(t));
-			size_t h2 = hash<float>{}(std::get<1>(t));
-			size_t h3 = hash<EaseType>{}(std::get<2>(t));
-			// 3つのハッシュ値を組み合わせる
-			return h1 ^ (h2 << 1) ^ (h3 << 2);
-		}
-	};
-
-	// std::tuple<Vector3, Vector3, EaseType>のテンプレート完全特殊化
-	template <>
-	struct hash<std::tuple<Vector3, Vector3, EaseType>>
-	{
-		size_t operator()(const std::tuple<Vector3, Vector3, EaseType>& t) const
-		{
-			size_t h1 = hash<Vector3>{}(std::get<0>(t));
-			size_t h2 = hash<Vector3>{}(std::get<1>(t));
-			size_t h3 = hash<EaseType>{}(std::get<2>(t));
-			// 3つのハッシュ値を組み合わせる
-			return h1 ^ (h2 << 1) ^ (h3 << 2);
-		}
-	};
-}
 
 class Easings
 {
 public:
-	static float EasingFloat(float start, float end, EaseType easeType, float SpendFrame);
-	static Vector3 EasingVector3(Vector3 start, Vector3 end, EaseType easeType, float SpendFrame);
+	static float EasingFloat(float start, float end, EaseType easeType, float t);
+	static Vector3 EasingVector3(Vector3 start, Vector3 end, EaseType easeType, float t);
 	static int COLOR(int startColor, int endColor, float t);
 	
+
+private:
 	static float F_LINEAR(float start, float end, float t);
 	static float F_IN_SINE(float start, float end, float t);
 	static float F_OUT_SINE(float start, float end, float t);
@@ -128,10 +77,6 @@ public:
 	static float F_IN_OUT_ELASTIC(float start, float end, float t);
 	static float F_IN_BOUNCE(float start, float end, float t);
 	static float F_OUT_BOUNCE(float start, float end, float t);
-
-private:
-	static std::unordered_map<std::tuple<float, float, EaseType>, EaseState> easeStates_Float;
-	static std::unordered_map<std::tuple<Vector3, Vector3, EaseType>, EaseState> easeStates_Vector3;
 
 	static float CalculateEasedValue(float start, float end, EaseType easeType, float t);
 

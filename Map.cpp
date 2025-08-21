@@ -13,6 +13,7 @@ Map::Map()
 			data[y][x].model = uint32_t(TEXTURE::Map_Block);
 			data[y][x].texture = uint32_t(TEXTURE::Map_Block);
 			data[y][x].transforms.translate = PositionByIndex(Vector2int(x, y));
+			blockType[y][x] = BLOCK_TYPE::Empty;
 		}
 	}
 }
@@ -101,6 +102,10 @@ void Map::LoadMap(int stageNum)
 			ShapeChangeByType(Vector2int(x, y));
 		}
 	}
+
+	// 識別用
+	data[0][0].color = 0xFF0000FF;
+	data[0][1].color = 0xFFFF00FF;
 }
 
 void Map::Update()
@@ -123,8 +128,6 @@ void Map::Update()
 
 void Map::Draw()
 {
-	data[0][0].color = 0xFF0000FF;
-	data[0][1].color = 0xFFFF00FF;
 	for (int x = 0; x < MAP_WIDTH; ++x)
 	{
 		for (int y = 0; y < MAP_HEIGHT; ++y)

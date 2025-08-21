@@ -46,17 +46,13 @@ private:
 	// マップ
 	Map* map_;
 	// マップのイージング前と後
-	Transforms preTransforms[MAP_HEIGHT][MAP_WIDTH];
-	Transforms targetTransforms[MAP_HEIGHT][MAP_WIDTH];
+	Transforms mapPreTransforms[MAP_HEIGHT][MAP_WIDTH];
+	Transforms mapTargetTransforms[MAP_HEIGHT][MAP_WIDTH];
 	int t;
 	float tMAX = 5;
 
 	// 注目してる列
 	int targetY = 0;
-
-	// フレーム毎ホイール量
-	int preWheel = 0;
-	int nowWheel = 0;
 
 	// キャラ詳細画面に移行する時フォーカスしているキャラナンバー
 	int targetChar = 0;

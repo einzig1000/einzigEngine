@@ -60,8 +60,11 @@ enum class TEXTURE
 	Charactor_Rook = 5,
 	Charactor_Pawn = 6,
 
-	// フェーズ選択用のアイコン？
+	// フェーズ選択用のアイコン
 	Phase_Buttle = 7,
 	Phase_Gatya = 8,
 	Phase_UnitOverview = 9,
+
+	// ステージセレクトのモノリス
+	StageSelect_icon = 10,
 };

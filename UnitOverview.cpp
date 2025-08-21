@@ -50,6 +50,11 @@ void UnitOverview::Initialize()
 
 	phase_ = ViewPhase::None;
 	targetphase_ = ViewPhase::ALL;
+
+	// カメライージング
+	Game::MoveCenterTarget({ 0.0f, -0.0f, -5.390f }, 200);
+	Game::MoveRotateTarget({ 0.4f, -std::numbers::pi / 2.0f, 0.0f }, 200);
+	Game::MoveDistanceTarget(15.60f, 200);
 }
 
 void UnitOverview::Update()
@@ -126,75 +131,105 @@ void UnitOverview::Draw()
 
 void UnitOverview::Initialize_ALL()
 {
+	// イージングの設定
 	tMAX = 10;
 	t = tMAX;
+
+	// 注目列の初期化
+	targetY = 0;
+
+	// 回転中心イージング前と後の更新
+	centerPreTransforms = center.transforms;
+	centerTargetTransforms = centerPreTransforms;
+	centerTargetTransforms.rotate.y = 10.0f;
+
+	// マップ座標イージング前と後の更新
+	for (int y = 0; y < MAP_HEIGHT; ++y)
+	{
+		for (int x = 0; x < MAP_WIDTH; ++x)
+		{
+			mapPreTransforms[y][x] = map_->data[y][x].transforms;
+			mapTargetTransforms[y][x] = mapPreTransforms[y][x];
+			map_->data[y][x].transforms.parentWorld = nullptr;
+		}
+	}
+
+	// キャラが乗ってるマップのみ更新
 	int check = 0;
 	int CharSum = characterManager_->GetAllCharactor().size();
 	for (int y = 0; y < MAP_HEIGHT; ++y)
 	{
 		for (int x = 0; x < MAP_WIDTH; ++x)
 		{
-			preTransforms[y][x] = map_->data[y][x].transforms;
-			targetTransforms[y][x] = preTransforms[y][x];
-			map_->data[y][x].transforms.parentWorld = nullptr;;
-			if (check < CharSum)map_->data[y][x].LookAtFront();
+				map_->data[y][x].LookAtFront();
+			if (check < CharSum)
+			{
+			}
 			check++;
 		}
 	}
-	Game::MoveCenterTarget({ 0.0f, -0.0f, -5.390f }, 200);
-	Game::MoveRotateTarget({ 0.4f, -std::numbers::pi / 2.0f, 0.0f }, 200);
-	Game::MoveDistanceTarget(15.60f, 200);
 }
 
 void UnitOverview::Updata_ALL()
 {
-	// マップ移動
-	preWheel = nowWheel;
-	nowWheel = Game::GetMouseWheel();
-	if (nowWheel != 0 && preWheel == 0 && t > tMAX)// && targetY >= 0
-	{
-		if (nowWheel > 0)targetY++;
-		else targetY--;
-		t = 0;
+	// 入力受付
+	int deltaWheel = Game::GetMouseWheel();
+	bool up = false;
+	if (GetHitKey::keys[DIK_UPARROW] || GetHitKey::keys[DIK_W] || deltaWheel > 0)up = true;
+	bool down = false;
+	if (GetHitKey::keys[DIK_DOWNARROW] || GetHitKey::keys[DIK_S] || deltaWheel < 0)down = true;
 
+	// マップイージング前と後の更新 + イージング係数の初期化
+	if (t > tMAX)
+	{
+		if (up || down)
+		{
+			if (up)targetY++;
+			else targetY--;
+
+			for (int y = 0; y < MAP_HEIGHT; ++y)
+			{
+				for (int x = 0; x < MAP_WIDTH; ++x)
+				{
+					mapPreTransforms[y][x] = map_->data[y][x].transforms;
+					mapTargetTransforms[y][x] = mapPreTransforms[y][x];
+
+					if (up)
+					{
+						mapTargetTransforms[y][x].translate.x += BLOCK_HEIGHT;
+						if (x < targetY)
+						{
+							mapTargetTransforms[y][x].translate.x += BLOCK_HEIGHT * 5;
+						}
+					}
+					else
+					{
+						mapTargetTransforms[y][x].translate.x -= BLOCK_HEIGHT;
+						if (x < targetY + 1)
+						{
+							mapTargetTransforms[y][x].translate.x -= BLOCK_HEIGHT * 5;
+						}
+					}
+				}
+			}
+			t = 0;
+		}
+	}
+
+	// 計数1.0f以下の時のみイージング
+	if (t < tMAX)
+	{
 		for (int y = 0; y < MAP_HEIGHT; ++y)
 		{
 			for (int x = 0; x < MAP_WIDTH; ++x)
 			{
-				preTransforms[y][x] = map_->data[y][x].transforms;
-				targetTransforms[y][x] = preTransforms[y][x];
-
-				if (nowWheel > 0)
-				{
-					targetTransforms[y][x].translate.x += BLOCK_HEIGHT;
-					if (x < targetY)
-					{
-						targetTransforms[y][x].translate.x += BLOCK_HEIGHT * 5;
-					}
-				}
-				else
-				{
-					targetTransforms[y][x].translate.x -= BLOCK_HEIGHT;
-					if (x < targetY + 1)
-					{
-						targetTransforms[y][x].translate.x -= BLOCK_HEIGHT * 5;
-					}
-				}
+				map_->data[y][x].transforms.translate.x = Easings::EasingFloat(mapPreTransforms[y][x].translate.x, mapTargetTransforms[y][x].translate.x, EaseType::LINEAR, float(t) / tMAX);
+				map_->data[y][x].LookAtFront();
 			}
 		}
 	}
 
-	// 常時イージング
-	for (int y = 0; y < MAP_HEIGHT; ++y)
-	{
-		for (int x = 0; x < MAP_WIDTH; ++x)
-		{
-			map_->data[y][x].transforms.translate.x = Easings::F_LINEAR(preTransforms[y][x].translate.x, targetTransforms[y][x].translate.x, float(t) / tMAX);
-			map_->data[y][x].transforms.translate.y = Easings::F_LINEAR(preTransforms[y][x].translate.y, targetTransforms[y][x].translate.y, float(t) / tMAX);
-			map_->data[y][x].transforms.translate.z = Easings::F_LINEAR(preTransforms[y][x].translate.z, targetTransforms[y][x].translate.z, float(t) / tMAX);
-			map_->data[y][x].LookAtFront();
-		}
-	}
+	// イージング係数更新
 	t++;
 
 	// 駒とマウスの当たり判定
@@ -226,139 +261,124 @@ void UnitOverview::Updata_ALL()
 
 void UnitOverview::Initialize_ALL_UNIT()
 {
+	// イージングの設定
 	tMAX = 100;
 	t = 0;
 
-	
+	// 回転中心イージング前と後の更新
+	centerPreTransforms = center.transforms;
+	centerTargetTransforms = centerPreTransforms;
+	centerTargetTransforms.translate.y = 10.0f;
+
+	// マップ座標イージング前と後の更新
 	for (int y = 0; y < MAP_HEIGHT; ++y)
 	{
 		for (int x = 0; x < MAP_WIDTH; ++x)
 		{
-			preTransforms[y][x] = map_->data[y][x].transforms;
-			targetTransforms[y][x] = preTransforms[y][x];
+			mapPreTransforms[y][x] = map_->data[y][x].transforms;
+			mapTargetTransforms[y][x] = mapPreTransforms[y][x];
 		}
 	}
 
+	// キャラが乗ってるマップのみ更新
 	int check = 0;
 	int CharSum = characterManager_->GetAllCharactor().size();
+	Vector3 IconSum[100];
+	deltaRotate = (2.0f * std::numbers::pi) / CharSum;
 	for (int x = 0; x < MAP_WIDTH; ++x)
 	{
 		for (int y = 0; y < MAP_HEIGHT; ++y)
 		{
 			if (check < CharSum)
 			{
+				// 回転中心を親に
 				map_->data[y][x].transforms.parentWorld = &center.transforms.World;
+				// イージング先の設定
+				float angle = deltaRotate * check;
+				IconSum[check].x = -std::sinf(angle);
+				IconSum[check].z = -std::cosf(angle);
+				IconSum[check] *= 10;
+				mapTargetTransforms[y][x].translate = IconSum[check];
 			}
 			check++;
 		}
 	}
 
-
-	Vector3 IconSum[100];
-	deltaRotate = (2.0f * std::numbers::pi) / CharSum;
-	for (int i = 0; i < CharSum; ++i)
-	{
-		float angle = deltaRotate * i;
-		IconSum[i].x = -std::sinf(angle);
-		IconSum[i].z = -std::cosf(angle);
-		//IconSum[i] *= float(CharSum);
-		IconSum[i] *= 10;
-		//IconSum[i].y = 10.0f;
-
-
-		int x = i % MAP_HEIGHT;
-		int y = i / MAP_HEIGHT;
-		targetTransforms[x][y].translate = IconSum[i];
-	}
-
-
-	// カメラの操作
-
-	//Game::MoveRotateTarget({ 0,-(std::numbers::pi),0 }, tMAX);
-	//Game::MoveRotateTarget({ 0,-(std::numbers::pi) * 5,0 }, tMAX);
+	// カメライージング
 	Game::MoveRotateTarget({ 0,float(-std::numbers::pi) + (deltaRotate * float(targetChar)),0 }, tMAX);
-
-	//float aa = deltaRotate * float(targetChar);
-	//int rot = int(aa) % 360;
-	//Game::MoveRotateTarget({ 0,float(-std::numbers::pi) + float(rot),0 }, tMAX);
-
 	Game::MoveCenterTarget({ 0,11,0 }, tMAX + 60);
-	//Game::MoveCenterTarget({ 0,0,0 }, tMAX + 60);
 	Game::MoveDistanceTarget( -float(CharSum) / 10.0f, tMAX);
-
-
-	center.transforms.translate = { 0,0,0 };
 }
 
 void UnitOverview::Updata_ALL_UNIT()
 {
-	// 常時イージング
-	int check = 0;
-	int CharSum = characterManager_->GetAllCharactor().size();
-	for (int x = 0; x < MAP_WIDTH; ++x)
+	// 計数1.0f以下の時のみイージング
+	if (t < tMAX)
 	{
-		for (int y = 0; y < MAP_HEIGHT; ++y)
+		// マップの操作
+		int check = 0;
+		int CharSum = characterManager_->GetAllCharactor().size();
+		for (int x = 0; x < MAP_WIDTH; ++x)
 		{
-			map_->data[y][x].transforms.translate.x = Easings::F_LINEAR(preTransforms[y][x].translate.x, targetTransforms[y][x].translate.x, float(t) / tMAX);
-			map_->data[y][x].transforms.translate.y = Easings::F_LINEAR(preTransforms[y][x].translate.y, targetTransforms[y][x].translate.y, float(t) / tMAX);
-			map_->data[y][x].transforms.translate.z = Easings::F_LINEAR(preTransforms[y][x].translate.z, targetTransforms[y][x].translate.z, float(t) / tMAX);
-			if (check < CharSum)map_->data[y][x].LookAtOnce(center.transforms.translate);
-			check++;
+			for (int y = 0; y < MAP_HEIGHT; ++y)
+			{
+				map_->data[y][x].transforms.translate.x = Easings::EasingFloat(mapPreTransforms[y][x].translate.x, mapTargetTransforms[y][x].translate.x, EaseType::LINEAR, float(t) / tMAX);
+				map_->data[y][x].transforms.translate.y = Easings::EasingFloat(mapPreTransforms[y][x].translate.y, mapTargetTransforms[y][x].translate.y, EaseType::LINEAR, float(t) / tMAX);
+				map_->data[y][x].transforms.translate.z = Easings::EasingFloat(mapPreTransforms[y][x].translate.z, mapTargetTransforms[y][x].translate.z, EaseType::LINEAR, float(t) / tMAX);
+				if (check < CharSum)map_->data[y][x].LookAtOnce(center.transforms.translate);
+				check++;
+			}
 		}
+
+		// センターの操作
+		center.transforms.translate.y = Easings::EasingFloat(centerPreTransforms.translate.y, centerTargetTransforms.translate.y, EaseType::LINEAR, float(t) / tMAX);
 	}
 
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-	// センターの操作
-	center.transforms.translate.y = Easings::F_LINEAR(0.0f, 10.0f, float(t) / tMAX);
-	
-	//center.transforms.rotate.y = Easings::LINER(0, (deltaRotate * (targetChar + ((-2 * targetChar) + 3))) + (deltaRotate / 2), float(t) / tMAX);
-	//center.transforms.rotate.y = Easings::LINER(0, ((deltaRotate * targetChar) + (deltaRotate / 2)), float(t) / tMAX);
-	
-	//center.transforms.rotate.y = Easings::LINER(0, ((deltaRotate * (5 - targetChar)) + (deltaRotate / 2)), float(t) / tMAX);
-	
-	//center.transforms.rotate.y = Easings::LINER(0, (std::numbers::pi * 2.0f), float(t) / tMAX);
-	
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+	// イージング係数更新
 	t++;
 
+	// 状態遷移フェーズの修了
 	if (float(t) > tMAX)targetphase_ = ViewPhase::UNIT;
 }
 
 
 void UnitOverview::Initialize_UNIT()
 {
+	// イージングの設定
 	tMAX = 10;
 	t = tMAX;
 
+	// 回転中心イージング前と後の更新
 	centerPreTransforms = center.transforms;
 	centerTargetTransforms = centerPreTransforms;
 }
 
 void UnitOverview::Updata_UNIT()
 {
+	// 入力受付
 	int deltaWheel = Game::GetMouseWheel();
 	bool right = false;
 	if (GetHitKey::keys[DIK_RIGHTARROW] || GetHitKey::keys[DIK_D] || deltaWheel > 0)right = true;
 	bool left = false;
 	if (GetHitKey::keys[DIK_LEFTARROW] || GetHitKey::keys[DIK_A] || deltaWheel < 0)left = true;
 
-	if ((right || left) && t > tMAX)
+	// 回転中心イージング前と後の更新 + イージング係数の初期化
+	if (t > tMAX)
 	{
-		centerPreTransforms = center.transforms;
-		centerTargetTransforms = centerPreTransforms;
-		if (right)centerTargetTransforms.rotate.y -= deltaRotate;
-		else centerTargetTransforms.rotate.y += deltaRotate;
-		t = 0;
+		if (right || left)
+		{
+			centerPreTransforms = center.transforms;
+			centerTargetTransforms = centerPreTransforms;
+			if (right)centerTargetTransforms.rotate.y -= deltaRotate;
+			else centerTargetTransforms.rotate.y += deltaRotate;
+			t = 0;
+		}
 	}
 
+	// 計数1.0f以下の時のみイージング
 	if (t < tMAX)
 	{
+		center.transforms.rotate.y = Easings::EasingFloat(centerPreTransforms.rotate.y, centerTargetTransforms.rotate.y, EaseType::LINEAR, float(t) / tMAX);
 		int check = 0;
 		int CharSum = characterManager_->GetAllCharactor().size();
 		for (int x = 0; x < MAP_WIDTH; ++x)
@@ -371,8 +391,7 @@ void UnitOverview::Updata_UNIT()
 		}
 	}
 
-
-	center.transforms.rotate.y = Easings::F_LINEAR(centerPreTransforms.rotate.y, centerTargetTransforms.rotate.y, float(t) / tMAX);
+	// イージング係数更新
 	t++;
 
 	bool escape = false;
@@ -386,17 +405,27 @@ void UnitOverview::Updata_UNIT()
 
 void UnitOverview::Initialize_UNIT_ALL()
 {
+	// イージングの設定
 	tMAX = 100;
 	t = 0;
-	targetY = 0;
+
+	// 回転中心イージング前と後の更新
+	centerPreTransforms = center.transforms;
+	centerTargetTransforms = centerPreTransforms;
+	centerTargetTransforms.translate.y = 0.0f;
+	centerTargetTransforms.rotate.y = 0.0f;
+
+	// マップ座標イージング前と後の更新
 	for (int y = 0; y < MAP_HEIGHT; ++y)
 	{
 		for (int x = 0; x < MAP_WIDTH; ++x)
 		{
-			preTransforms[y][x] = map_->data[y][x].transforms;
-			targetTransforms[y][x].translate = PositionByIndex(Vector2int(x,y));
+			mapPreTransforms[y][x] = map_->data[y][x].transforms;
+			mapTargetTransforms[y][x].translate = PositionByIndex(Vector2int(x,y));
 		}
 	}
+
+	// カメライージング
 	Game::MoveCenterTarget({ 0.0f, -0.0f, -5.390f }, 200);
 	Game::MoveRotateTarget({ 0.4f, -std::numbers::pi / 2.0f, 0.0f }, 200);
 	Game::MoveDistanceTarget(15.60f, 200);
@@ -404,24 +433,32 @@ void UnitOverview::Initialize_UNIT_ALL()
 
 void UnitOverview::Updata_UNIT_ALL()
 {
-	int check = 0;
-	int CharSum = characterManager_->GetAllCharactor().size();
-	for (int y = 0; y < MAP_HEIGHT; ++y)
+	// 計数1.0f以下の時のみイージング
+	if (t < tMAX)
 	{
-		for (int x = 0; x < MAP_WIDTH; ++x)
+		int check = 0;
+		int CharSum = characterManager_->GetAllCharactor().size();
+		for (int y = 0; y < MAP_HEIGHT; ++y)
 		{
-			map_->data[y][x].transforms.translate.x = Easings::F_LINEAR(preTransforms[y][x].translate.x, targetTransforms[y][x].translate.x, float(t) / tMAX);
-			map_->data[y][x].transforms.translate.y = Easings::F_LINEAR(preTransforms[y][x].translate.y, targetTransforms[y][x].translate.y, float(t) / tMAX);
-			map_->data[y][x].transforms.translate.z = Easings::F_LINEAR(preTransforms[y][x].translate.z, targetTransforms[y][x].translate.z, float(t) / tMAX);
-			map_->data[y][x].LookAtFront();
+			for (int x = 0; x < MAP_WIDTH; ++x)
+			{
+				map_->data[y][x].transforms.translate.x = Easings::EasingFloat(mapPreTransforms[y][x].translate.x, mapTargetTransforms[y][x].translate.x, EaseType::LINEAR, float(t) / tMAX);
+				map_->data[y][x].transforms.translate.y = Easings::EasingFloat(mapPreTransforms[y][x].translate.y, mapTargetTransforms[y][x].translate.y, EaseType::LINEAR, float(t) / tMAX);
+				map_->data[y][x].transforms.translate.z = Easings::EasingFloat(mapPreTransforms[y][x].translate.z, mapTargetTransforms[y][x].translate.z, EaseType::LINEAR, float(t) / tMAX);
+
+				if (check < CharSum)map_->data[y][x].LookAtFront();
+				check++; 
+			}
 		}
+
+		// センターの操作
+		center.transforms.translate.y = Easings::EasingFloat(centerPreTransforms.translate.y, centerTargetTransforms.translate.y, EaseType::LINEAR, float(t) / tMAX);
+		center.transforms.rotate.y = Easings::EasingFloat(centerPreTransforms.rotate.y, centerTargetTransforms.rotate.y, EaseType::LINEAR, float(t) / tMAX);
 	}
+
+	// イージング係数更新
 	t++;
 
-	center.transforms.translate.y = Easings::F_LINEAR(10.0f, 0.0f, float(t) / tMAX);
 
-	if (t > tMAX)
-	{
-		targetphase_ = ViewPhase::ALL;
-	}
+	if (float(t) > tMAX)targetphase_ = ViewPhase::ALL;
 }

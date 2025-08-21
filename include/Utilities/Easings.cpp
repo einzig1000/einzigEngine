@@ -1,43 +1,17 @@
 #include "Utilities/Easings.h"
 #include <algorithm>
 
-std::unordered_map<std::tuple<float, float, EaseType>, EaseState> Easings::easeStates_Float;
-std::unordered_map<std::tuple<Vector3, Vector3, EaseType>, EaseState> Easings::easeStates_Vector3;
-
-
-float Easings::EasingFloat(float start, float end, EaseType easeType, float SpendFrame)
+float Easings::EasingFloat(float start, float end, EaseType easeType, float t)
 {
-	auto key = std::make_tuple(start, end, easeType);
-	auto& state = easeStates_Float[key];
-
-	if (state.currentFrame == 0.0f)
-	{
-		state.SpendFrame = SpendFrame;
-	}
-
-	state.currentFrame += 1.0f;
-	float t = state.currentFrame / state.SpendFrame;
-
 	return CalculateEasedValue(start, end, easeType, t);
 }
 
-Vector3 Easings::EasingVector3(Vector3 start, Vector3 end, EaseType easeType, float SpendFrame)
+Vector3 Easings::EasingVector3(Vector3 start, Vector3 end, EaseType easeType, float t)
 {
-	auto key = std::make_tuple(start, end, easeType);
-	auto& state = easeStates_Vector3[key];
-
-	if (state.currentFrame == 0.0f)
-	{
-		state.SpendFrame = SpendFrame;
-	}
-
-	state.currentFrame += 1.0f;
-	float t = state.currentFrame / state.SpendFrame;
-
-	Vector3 Return;
-	Return.x = CalculateEasedValue(start.x, end.x, easeType, t);
-	Return.y = CalculateEasedValue(start.y, end.y, easeType, t);
-	Return.z = CalculateEasedValue(start.z, end.z, easeType, t);
+	Vector3 Return = start;
+	if (start.x != end.x)Return.x = CalculateEasedValue(start.x, end.x, easeType, t);
+	if (start.y != end.y)Return.y = CalculateEasedValue(start.y, end.y, easeType, t);
+	if (start.z != end.z)Return.z = CalculateEasedValue(start.z, end.z, easeType, t);
 
 	return Return;
 }

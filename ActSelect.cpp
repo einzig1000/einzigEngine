@@ -94,17 +94,18 @@ void ActSelect::Update()
 
 
 	easingFrame++;
-	center.transforms.rotate.y = Easings::F_OUT_SINE(preCenterRotate.y, targetCenterRotate.y, easingFrame / easingFrameMAX);
+	center.transforms.rotate.y = Easings::EasingFloat(preCenterRotate.y, targetCenterRotate.y, EaseType::OUT_SINE, easingFrame / easingFrameMAX);
 
 	ImGui::Begin("act");
 	ImGui::Text("%d", selectIcon);
 	ImGui::Text("%d", selectIcon % iconSum_);
+	ImGui::Text("%f", center.transforms.rotate.y);
 	ImGui::End();
 }
 
 void ActSelect::Draw()
 {
-	center.DrawAABB();
+	center.Draw();
 	ButtleIcon.Draw();
 	GatyaIcon.Draw();
 	UnitOverViewIcon.Draw();
