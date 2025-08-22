@@ -59,9 +59,10 @@ private:
 	bool T;
 	bool B;
 
-
-
-
+	// キャラ配置中にキャラつかんでるかどうか
+	int holdNumber;
+	bool holdCharactor[100];
+	bool preHoldCharactor[100];
 
 
 

@@ -15,6 +15,12 @@ GameScene::GameScene(CharacterManager* characterManager)
 	phase_ = GameScenePhase::None;
 	targetphase_ = GameScenePhase::Setup;
 
+	holdNumber = -10;
+	for (uint32_t i = 0; i < 100; ++i)
+	{
+		holdCharactor[i] = false;
+		preHoldCharactor[i] = holdCharactor[i];
+	}
 
 	R = false;
 	L = false;
@@ -136,6 +142,8 @@ void GameScene::Draw()
 		for (uint32_t i = 0; i < characterManager_->GetAllCharactor().size(); ++i)
 		{
 			characterManager_->GetAllCharactor()[i]->data.Draw();
+			characterManager_->GetAllCharactor()[i]->dataSeat.Draw();
+			characterManager_->GetAllCharactor()[i]->dataSeat_type.Draw();
 		}
 	}
 
@@ -152,19 +160,20 @@ void GameScene::Initialize_Setup()
 	Game::MoveCenterTarget(PositionByIndex(centerIndex_camera), frameMAX_camera);
 	Game::MoveDistanceTarget(15.60f, frameMAX_camera);
 	Game::MoveRotateTarget({ 1.13f, 0.0f, 0.0f }, frameMAX_camera);
+
+
+	for (uint32_t i = 0; i < characterManager_->GetAllCharactor().size(); ++i)
+	{
+		characterManager_->GetAllCharactor()[i]->dataSeat.transforms.translate.x = 145;
+		characterManager_->GetAllCharactor()[i]->dataSeat.transforms.translate.y = i * 40 + 30;
+		characterManager_->GetAllCharactor()[i]->dataSeat_type.transforms.translate.x = 70;
+		characterManager_->GetAllCharactor()[i]->dataSeat_type.transforms.translate.y = i * 40 + 30;
+	}
 }
-
-void GameScene::Initialize_PlayerTurn()
-{}
-
-void GameScene::Initialize_EnemyTurn()
-{}
-
-void GameScene::Initialize_Result()
-{}
 
 void GameScene::Updata_Setup()
 {
+	// カメラコントロール
 	if (frame_camera > frameMAX_camera)
 	{
 		if (R || L || T || B)
@@ -203,13 +212,110 @@ void GameScene::Updata_Setup()
 
 	}
 
+	// キャラホールドフラグの更新
+	for (uint32_t i = 0; i < 100; ++i)
+	{
+		preHoldCharactor[i] = holdCharactor[i];
+	}
 
+	// キャラ詳細シートの更新
+	for (uint32_t i = 0; i < characterManager_->GetAllCharactor().size(); ++i)
+	{
+		if (characterManager_->GetAllCharactor()[i]->dataSeat.colisionMouseRay)
+		{
+			characterManager_->GetAllCharactor()[i]->dataSeat.color = 0xFF0000FF;
+
+			// キャラ詳細シートをクリック
+			if (Game::GetMousePress(0) && holdNumber < 0)
+			{
+				holdNumber = i;
+				holdCharactor[i] = true;
+			}
+		}
+		else
+		{
+			characterManager_->GetAllCharactor()[i]->dataSeat.color = 0xFFFFFFFF;
+			if (i != holdNumber)holdCharactor[i] = false;
+		}
+
+		// 掴んでる間
+		if (holdCharactor[i] == true)
+		{
+			characterManager_->GetAllCharactor()[i]->dataSeat_type.transforms.translate.x = Game::GetMousePosition().x;
+			characterManager_->GetAllCharactor()[i]->dataSeat_type.transforms.translate.y = Game::GetMousePosition().y;
+		}
+		// 離した瞬間
+		if (holdCharactor[i] == false && preHoldCharactor[i] == true)
+		{
+			for (int y = 0; y < MAP_HEIGHT; ++y)
+			{
+				for (int x = 0; x < MAP_WIDTH; ++x)
+				{
+					if (map_->data[y][x].color = 0xFF0000FF)
+					{
+						characterManager_->GetAllCharactor()[i]->data.transforms.translate = PositionByIndex(Vector2int{ x,y });
+						y = MAP_HEIGHT;
+						x = MAP_WIDTH;
+					}
+					if (y == MAP_HEIGHT && x == MAP_WIDTH)
+					{
+						holdCharactor[i] = false;
+					}
+				}
+			}
+		}
+	}
+
+	// 駒とマウスの当たり判定
+	for (uint32_t i = 0; i < characterManager_->GetAllCharactor().size(); ++i)
+	{
+		characterManager_->GetAllCharactor()[i]->data.color = 0xFFFFFFFF;
+	}
+	bool TheOne = false;
+	for (uint32_t y = 0; y < MAP_HEIGHT; ++y)
+	{
+		for (uint32_t x = 0; x < MAP_WIDTH; ++x)
+		{
+			map_->data[y][x].color = 0xFFFFFFFF;
+			if (!TheOne && IsCollision(Game::GetMouseRay(), map_->data[y][x].AABB))
+			{
+				map_->data[y][x].color = 0xFF0000FF;
+			}
+		}
+	}
+
+
+	if (holdNumber > 0)
+	{
+		if (!Game::GetMousePress(0))
+		{
+			holdNumber = -10;
+		}
+	}
+	
 	// フェーズ更新
 	if (GetHitKey::keys[DIK_P] && !GetHitKey::preKeys[DIK_P])
 	{
 		targetphase_ = GameScenePhase::PlayerTurn;
 	}
 }
+
+		//std::string label = "test" + std::to_string(i);
+		//
+		//// ImGui に渡すラベルは const char*
+		//ImGui::DragFloat3(
+		//	label.c_str(),
+		//	&characterManager_->GetAllCharactor()[i]->dataSeat.transforms.translate.x
+		//);
+void GameScene::Initialize_PlayerTurn()
+{}
+
+void GameScene::Initialize_EnemyTurn()
+{}
+
+void GameScene::Initialize_Result()
+{}
+
 
 void GameScene::Updata_PlayerTurn()
 {

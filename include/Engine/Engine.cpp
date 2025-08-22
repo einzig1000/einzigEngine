@@ -835,7 +835,7 @@ bool Engine::IsAudioPlaying(const uint32_t& audioId)
 
 
 // 入力
-void Engine::GetMousePosition(Vector2* position)
+Vector2 Engine::GetMousePosition()
 {
 	// hwnd: ゲームウィンドウのハンドル（WindowManagerなどから取得）
 	POINT mousePosScreen;
@@ -845,8 +845,7 @@ void Engine::GetMousePosition(Vector2* position)
 	ScreenToClient(windowManager->GetHwnd(), &mousePosScreen);
 
 	// mousePosScreen.x, mousePosScreen.y がウィンドウ内のマウス座標
-	position->x = float(mousePosScreen.x);
-	position->y = float(mousePosScreen.y);
+	return Vector2{ float(mousePosScreen.x),float(mousePosScreen.y) };
 }
 
 void Engine::SetMouseRay()

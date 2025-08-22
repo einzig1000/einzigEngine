@@ -53,18 +53,38 @@ enum class TEXTURE
 	Map_Block = 0,
 
 	// 駒
-	Charactor_King = 1,
-	Charactor_Queen = 2,
-	Charactor_Bishop = 3,
-	Charactor_Knight = 4,
-	Charactor_Rook = 5,
-	Charactor_Pawn = 6,
+	Charactor_King,
+	Charactor_Queen,
+	Charactor_Bishop,
+	Charactor_Knight,
+	Charactor_Rook,
+	Charactor_Pawn,
 
 	// フェーズ選択用のアイコン
-	Phase_Buttle = 7,
-	Phase_Gatya = 8,
-	Phase_UnitOverview = 9,
+	Phase_Buttle,
+	Phase_Gatya,
+	Phase_UnitOverview,
 
 	// ステージセレクトのモノリス
-	StageSelect_icon = 10,
+	StageSelect_icon,
+
+
+
+
+
+
+
+
+	// 以下スプライト
+
+	// キャラクターシート
+	Charactor_Seat,
+	Charactor_SeatMini,
+	// 2D駒
+	CharactorSprite_King,
+	CharactorSprite_Queen,
+	CharactorSprite_Bishop,
+	CharactorSprite_Knight,
+	CharactorSprite_Rook,
+	CharactorSprite_Pawn,
 };

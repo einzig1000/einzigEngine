@@ -56,7 +56,7 @@ public:
 	void ToggleLightMode(const uint32_t mode) { directionalLightData->mode = mode; }
 
 	// マウス
-	void GetMousePosition(Vector2* position);
+	Vector2 GetMousePosition();
 	void SetMouseRay();
 	Ray GetMouseRay();
 	bool IsCollisionMouseRayAABB(uint32_t objectNumber, const Transforms& data);

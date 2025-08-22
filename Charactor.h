@@ -27,6 +27,10 @@ public:
 
 
 	Game::RenderData_Model data;
+	Game::RenderData_Sprite dataSeat;
+	Game::RenderData_Sprite dataSeat_type;
+
+
 	int power_;
 	int hp_;
 	int actPoint_;

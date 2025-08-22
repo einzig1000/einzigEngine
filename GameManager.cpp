@@ -35,6 +35,20 @@ GameManager::GameManager()
 
 
 
+	////////////////// 以下スプライト ////////////////////////
+	// キャラクターシート
+	Game::LoadTexture("resources/Charactor/seat/charaSeat.png");
+	Game::LoadTexture("resources/Charactor/seat/charaSeat_mini.png");
+	// 2D駒
+	Game::LoadTexture("resources/Charactor/seat/charaSeat_King.png");
+	Game::LoadTexture("resources/Charactor/seat/charaSeat_Queen.png");
+	Game::LoadTexture("resources/Charactor/seat/charaSeat_Bishop.png");
+	Game::LoadTexture("resources/Charactor/seat/charaSeat_Knight.png");
+	Game::LoadTexture("resources/Charactor/seat/charaSeat_Rook.png");
+	Game::LoadTexture("resources/Charactor/seat/charaSeat_Pawn.png");
+
+
+
 	// CharacterManager
 	characterManager_ = new CharacterManager();
 

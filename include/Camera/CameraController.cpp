@@ -44,12 +44,12 @@ void CameraController::Updata()
             // クリックした瞬間
             if (pressMouse2_ && prePressMouse2_ == 0 && !GetHitKey::keys[DIK_LSHIFT])
             {
-                Game::GetMousePosition(&preMousePosition_);
+                preMousePosition_ = Game::GetMousePosition();
             }
             // クリックしている最中
             if (pressMouse2_ && !GetHitKey::keys[DIK_LSHIFT])
             {
-                Game::GetMousePosition(&mousePosition_);
+                mousePosition_ = Game::GetMousePosition();
                 mousePositionGap_.x = mousePosition_.x - preMousePosition_.x;
                 mousePositionGap_.y = mousePosition_.y - preMousePosition_.y;
                 transform_.rotate.x = (mousePositionGap_.y / 100.0f) + (preRotate_.x);
@@ -68,11 +68,11 @@ void CameraController::Updata()
         {
             if (prePressMouse2_ == 0 && pressMouse2_ && GetHitKey::keys[DIK_LSHIFT])
             {
-                Game::GetMousePosition(&preMousePosition_);
+                preMousePosition_ = Game::GetMousePosition();
             }
             if (pressMouse2_ && GetHitKey::keys[DIK_LSHIFT])
             {
-                Game::GetMousePosition(&mousePosition_);
+                mousePosition_ = Game::GetMousePosition();
                 mousePositionGap_.x = float(mousePosition_.x - preMousePosition_.x);
                 mousePositionGap_.y = float(mousePosition_.y - preMousePosition_.y);
 

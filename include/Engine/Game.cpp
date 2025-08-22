@@ -128,9 +128,9 @@ void Game::ToggleLightMode(const uint32_t mode)
 }
 
 
-void Game::GetMousePosition(Vector2* position)
+Vector2 Game::GetMousePosition()
 {
-	return engine->GetMousePosition(position);
+	return engine->GetMousePosition();
 }
 
 void Game::SetMouseRay()

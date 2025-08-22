@@ -31,6 +31,69 @@ public:
 		Transforms* dynamicTransform = nullptr;
 	};
 
+	// 初期化
+	static void Initialize(int width, int height, const std::wstring& title);
+
+	// メインループ用
+	static bool ProcessMessage();
+	static void BeginFrame();
+	static void EndFrame();
+
+	// 終了処理
+	static void Finalize();
+
+	// リソース読み込み
+	static uint32_t LoadOBJ(const std::string& directoryPath, const std::string& filename);
+	static uint32_t LoadTexture(const std::string& filePath);
+	static uint32_t LoadAudio(const std::string& filePath);
+	static TextureData* GetTexture(uint32_t textureNumber);
+
+	// 描画
+	static void Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
+	static void DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
+	static void DrawSprite(const Transforms& transform, const Vector2& center, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
+	static void DrawTriangle(const Transforms& transform, const Vector3& pos1, const Vector3& pos2, const Vector3& pos3, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
+	static void DrawLine(const Vector3& start, const Vector3& end, const uint32_t& materialColor);
+
+	// 音
+	static void PlayAudio(const uint32_t& audioId, bool loop);
+	static void StopAudio(const uint32_t& audioId);
+	static void SetAudioVolume(const uint32_t& audioId, float volume);
+	static void SetMasterVolume(float volume);
+	static float GetVolume(const uint32_t& audioId);
+	static float GetMasterVolume();
+	static bool IsAudioPlaying(const uint32_t& audioId);
+
+	// ライト
+	static void SetLightColor(const Vector4 color);
+	static void SetLightDirection(const Vector3 direction);
+	static void ToggleLightMode(const uint32_t mode);
+	static void SetLightIntensity(float intensity);
+
+	// マウス
+	static Vector2 GetMousePosition();
+	static void SetMouseRay();
+	static Ray GetMouseRay();
+	static bool IsCollisionMouseRayAABB(uint32_t objectNumber, const Transforms& data);
+	// 0 = 左クリック  1 = 右クリック  2 = ミドルボタン
+	static bool GetMousePress(int i);
+	static uint32_t GetMouseWheel();
+
+	// カメラ
+	static void MoveCenterTarget(Vector3 target, int spendFrame);
+	static void MoveRotateTarget(Vector3 target, int spendFrame);
+	static void MoveDistanceTarget(float target, int spendFrame);
+	static void SetControlModeCamera(bool mode);
+	static void SetControlModeCameraCenter(bool mode);
+	static void SetControlModeCameraRotate(bool mode);
+	static void SetControlModeCameraDistance(bool mode);
+
+	// AABBの作成
+	static AABB CreateAABB(const Transforms& transforms, uint32_t objectNumber);
+
+	// プリミティブモードの設定
+	static void toggleWireframeMode();
+
 	class RenderData_Model
 	{
 	public:
@@ -50,7 +113,8 @@ public:
 		DrawOptions options;
 		// 衝突判定用AABB
 		AABB AABB;
-
+		// マウスと衝突してるか？
+		//bool 
 
 		// 自身のワールド位置
 		Vector3 GetWorldPosition() const
@@ -133,7 +197,7 @@ public:
 			}
 
 			Matrix4x4 rotationMatrix = Matrix4x4::MakeFromQuaternion(finalRotation);
-			
+
 			Matrix4x4 local =
 				scaleMatrix *
 				toPivot *
@@ -215,73 +279,36 @@ public:
 		uint32_t texture = 0;
 		// 描画オプション
 		DrawOptions options;
+		// マウスと衝突してるか？
+		bool colisionMouseRay = false;
 
-		void Draw() const
+		void Draw()
 		{
 			Game::DrawSprite(this->transforms, this->pivot, this->texture, this->color, this->options);
+
+			// スプライトの中心座標
+			Vector2 center = { static_cast<float>(this->transforms.translate.x), static_cast<float>(this->transforms.translate.y) };
+
+			TextureData* data = Game::GetTexture(this->texture);
+			// 仮: テクスチャサイズ（本来はTextureDataから取得すべき）
+			float width = data->metadata.width;  // 例: 100px
+			float height = data->metadata.height; // 例: 100px
+
+			// スケール適用
+			width *= this->transforms.scale.x;
+			height *= this->transforms.scale.y;
+
+			// スプライトのAABB
+			float left = center.x - width * 0.5f;
+			float right = center.x + width * 0.5f;
+			float top = center.y - height * 0.5f;
+			float bottom = center.y + height * 0.5f;
+
+			// マウス座標取得
+			Vector2 mousePos = Game::GetMousePosition();
+
+			// 当たり判定
+			this->colisionMouseRay = (mousePos.x >= left && mousePos.x <= right && mousePos.y >= top && mousePos.y <= bottom);
 		}
 	};
-
-	// 初期化
-	static void Initialize(int width, int height, const std::wstring& title);
-
-	// メインループ用
-	static bool ProcessMessage();
-	static void BeginFrame();
-	static void EndFrame();
-
-	// 終了処理
-	static void Finalize();
-
-	// リソース読み込み
-	static uint32_t LoadOBJ(const std::string& directoryPath, const std::string& filename);
-	static uint32_t LoadTexture(const std::string& filePath);
-	static uint32_t LoadAudio(const std::string& filePath);
-	static TextureData* GetTexture(uint32_t textureNumber);
-
-	// 描画
-	static void Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
-	static void DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
-	static void DrawSprite(const Transforms& transform, const Vector2& center, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
-	static void DrawTriangle(const Transforms& transform, const Vector3& pos1, const Vector3& pos2, const Vector3& pos3, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
-	static void DrawLine(const Vector3& start, const Vector3& end, const uint32_t& materialColor);
-
-	// 音
-	static void PlayAudio(const uint32_t& audioId, bool loop);
-	static void StopAudio(const uint32_t& audioId);
-	static void SetAudioVolume(const uint32_t& audioId, float volume);
-	static void SetMasterVolume(float volume);
-	static float GetVolume(const uint32_t& audioId);
-	static float GetMasterVolume();
-	static bool IsAudioPlaying(const uint32_t& audioId);
-
-	// ライト
-	static void SetLightColor(const Vector4 color);
-	static void SetLightDirection(const Vector3 direction);
-	static void ToggleLightMode(const uint32_t mode);
-	static void SetLightIntensity(float intensity);
-
-	// マウス
-	static void GetMousePosition(Vector2* position);
-	static void SetMouseRay();
-	static Ray GetMouseRay();
-	static bool IsCollisionMouseRayAABB(uint32_t objectNumber, const Transforms& data);
-	// 0 = 左クリック  1 = 右クリック  2 = ミドルボタン
-	static bool GetMousePress(int i);
-	static uint32_t GetMouseWheel();
-
-	// カメラ
-	static void MoveCenterTarget(Vector3 target, int spendFrame);
-	static void MoveRotateTarget(Vector3 target, int spendFrame);
-	static void MoveDistanceTarget(float target, int spendFrame);
-	static void SetControlModeCamera(bool mode);
-	static void SetControlModeCameraCenter(bool mode);
-	static void SetControlModeCameraRotate(bool mode);
-	static void SetControlModeCameraDistance(bool mode);
-
-	// AABBの作成
-	static AABB CreateAABB(const Transforms& transforms, uint32_t objectNumber);
-
-	// プリミティブモードの設定
-	static void toggleWireframeMode();
 };
