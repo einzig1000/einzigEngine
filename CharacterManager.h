@@ -11,6 +11,9 @@ public:
 	// ガチャとかで獲得したキャラの追加
 	void AddCharactorList(Charactor* add);
 
+	// バトル前のキャラ配置でButtleCharactorリストに追加
+	void AddButtleCharactorList(Charactor* add);
+
 	// パワー順にソート
 	void Sort_Power();
 

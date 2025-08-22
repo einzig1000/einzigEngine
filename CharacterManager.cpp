@@ -44,6 +44,11 @@ void CharacterManager::AddCharactorList(Charactor* add)
 	AllCharactor.push_back(add);
 }
 
+void CharacterManager::AddButtleCharactorList(Charactor* add)
+{
+	ButtleCharactor.push_back(add);
+}
+
 void CharacterManager::LoadGetAllCharactor()
 {
 	// ファイルをひらく

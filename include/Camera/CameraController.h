@@ -8,6 +8,7 @@ struct easingSet
     bool easingFlag = 0;
     int flame = 0;
     int maxFrame = 0;
+    EaseType easetype = EaseType::OUT_QUART;
 };
 
 class CameraController
@@ -22,9 +23,9 @@ public:
     void MovingRotate();
     void MovingDistance();
 
-    void SetCenterTarget(Vector3 Center, int spendFrame);
-    void SetRotateTarget(Vector3 Center, int spendFrame);
-    void SetDistanceTarget(float Center, int spendFrame);
+    void SetCenterTarget(Vector3 Center, int spendFrame, EaseType easetype);
+    void SetRotateTarget(Vector3 Center, int spendFrame, EaseType easetype);
+    void SetDistanceTarget(float Center, int spendFrame, EaseType easetype);
 
 
 

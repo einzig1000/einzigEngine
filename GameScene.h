@@ -59,12 +59,10 @@ private:
 	bool T;
 	bool B;
 
-	// キャラ配置中にキャラつかんでるかどうか
+	// 掴んでるキャラは何番目？
 	int holdNumber;
-	bool holdCharactor[100];
-	bool preHoldCharactor[100];
-
-
+	// キャラ配置済かどうか
+	bool isSet[100];
 
 
 };

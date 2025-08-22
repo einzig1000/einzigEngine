@@ -64,9 +64,9 @@ public:
 	uint32_t GetMouseWheel();
 
 	// カメラ
-	void MoveCenterTarget(Vector3 target, int spendFrame);
-	void MoveRotateTarget(Vector3 target, int spendFrame);
-	void MoveDistanceTarget(float target, int spendFrame);
+	void MoveCenterTarget(Vector3 target, int spendFrame, EaseType easetype);
+	void MoveRotateTarget(Vector3 target, int spendFrame, EaseType easetype);
+	void MoveDistanceTarget(float target, int spendFrame, EaseType easetype);
 	void SetControlModeCamera(bool mode);
 	void SetControlModeCameraCenter(bool mode);
 	void SetControlModeCameraRotate(bool mode);

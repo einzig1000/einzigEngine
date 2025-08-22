@@ -52,9 +52,9 @@ void UnitOverview::Initialize()
 	targetphase_ = ViewPhase::ALL;
 
 	// カメライージング
-	Game::MoveCenterTarget({ 0.0f, -0.0f, -5.390f }, 200);
-	Game::MoveRotateTarget({ 0.4f, -std::numbers::pi / 2.0f, 0.0f }, 200);
-	Game::MoveDistanceTarget(15.60f, 200);
+	Game::MoveCenterTarget({ 0.0f, -0.0f, -5.390f }, 200, EaseType::OUT_QUART);
+	Game::MoveRotateTarget({ 0.4f, -std::numbers::pi / 2.0f, 0.0f }, 200, EaseType::OUT_QUART);
+	Game::MoveDistanceTarget(15.60f, 200, EaseType::OUT_QUART);
 }
 
 void UnitOverview::Update()
@@ -305,9 +305,9 @@ void UnitOverview::Initialize_ALL_UNIT()
 	}
 
 	// カメライージング
-	Game::MoveRotateTarget({ 0,float(-std::numbers::pi) + (deltaRotate * float(targetChar)),0 }, tMAX);
-	Game::MoveCenterTarget({ 0,11,0 }, tMAX + 60);
-	Game::MoveDistanceTarget( -float(CharSum) / 10.0f, tMAX);
+	Game::MoveRotateTarget({ 0,float(-std::numbers::pi) + (deltaRotate * float(targetChar)),0 }, tMAX, EaseType::OUT_QUART);
+	Game::MoveCenterTarget({ 0,11,0 }, tMAX + 60, EaseType::OUT_QUART);
+	Game::MoveDistanceTarget( -float(CharSum) / 10.0f, tMAX, EaseType::OUT_QUART);
 }
 
 void UnitOverview::Updata_ALL_UNIT()
@@ -426,9 +426,9 @@ void UnitOverview::Initialize_UNIT_ALL()
 	}
 
 	// カメライージング
-	Game::MoveCenterTarget({ 0.0f, -0.0f, -5.390f }, 200);
-	Game::MoveRotateTarget({ 0.4f, -std::numbers::pi / 2.0f, 0.0f }, 200);
-	Game::MoveDistanceTarget(15.60f, 200);
+	Game::MoveCenterTarget({ 0.0f, -0.0f, -5.390f }, 200, EaseType::OUT_QUART);
+	Game::MoveRotateTarget({ 0.4f, -std::numbers::pi / 2.0f, 0.0f }, 200, EaseType::OUT_QUART);
+	Game::MoveDistanceTarget(15.60f, 200, EaseType::OUT_QUART);
 }
 
 void UnitOverview::Updata_UNIT_ALL()

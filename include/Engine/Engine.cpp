@@ -906,19 +906,19 @@ uint32_t Engine::GetMouseWheel()
 }
 
 // カメラ操作
-void Engine::MoveCenterTarget(Vector3 target, int spendFrame)
+void Engine::MoveCenterTarget(Vector3 target, int spendFrame, EaseType easetype)
 {
-	cameraController->SetCenterTarget(target, spendFrame);
+	cameraController->SetCenterTarget(target, spendFrame, easetype);
 }
 
-void Engine::MoveRotateTarget(Vector3 target, int spendFrame)
+void Engine::MoveRotateTarget(Vector3 target, int spendFrame, EaseType easetype)
 {
-	cameraController->SetRotateTarget(target, spendFrame);
+	cameraController->SetRotateTarget(target, spendFrame, easetype);
 }
 
-void Engine::MoveDistanceTarget(float target, int spendFrame)
+void Engine::MoveDistanceTarget(float target, int spendFrame, EaseType easetype)
 {
-	cameraController->SetDistanceTarget(target, spendFrame);
+	cameraController->SetDistanceTarget(target, spendFrame, easetype);
 }
 
 void Engine::SetControlModeCamera(bool mode)

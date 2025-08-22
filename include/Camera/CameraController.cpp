@@ -234,7 +234,7 @@ void CameraController::MovingCenter()
     }
     float t = float(easeCenter_.flame) / float(easeCenter_.maxFrame);
 
-    center_ = Easings::EasingVector3(easeCenter_.start, easeCenter_.end, EaseType::OUT_QUART, t);
+    center_ = Easings::EasingVector3(easeCenter_.start, easeCenter_.end, easeCenter_.easetype, t);
     preCenter_ = center_;
 
     easeCenter_.flame++;
@@ -246,14 +246,14 @@ void CameraController::MovingCenter()
 
 void CameraController::MovingRotate()
 {
-    if (easeCenter_.maxFrame == 0)
+    if (easeRotate_.maxFrame == 0)
     {
-        easeCenter_.flame = 1;
-        easeCenter_.maxFrame = 1;
+        easeRotate_.flame = 1;
+        easeRotate_.maxFrame = 1;
     }
-    float t = float(easeCenter_.flame) / float(easeCenter_.maxFrame);
+    float t = float(easeRotate_.flame) / float(easeRotate_.maxFrame);
 
-    transform_.rotate = Easings::EasingVector3(easeRotate_.start, easeRotate_.end, EaseType::OUT_QUART, t);
+    transform_.rotate = Easings::EasingVector3(easeRotate_.start, easeRotate_.end, easeRotate_.easetype, t);
     preRotate_ = transform_.rotate;
 
     easeRotate_.flame++;
@@ -266,14 +266,14 @@ void CameraController::MovingRotate()
 
 void CameraController::MovingDistance()
 {
-    if (easeCenter_.maxFrame == 0)
+    if (easeDistance_.maxFrame == 0)
     {
-        easeCenter_.flame = 1;
-        easeCenter_.maxFrame = 1;
+        easeDistance_.flame = 1;
+        easeDistance_.maxFrame = 1;
     }
-    float t = float(easeCenter_.flame) / float(easeCenter_.maxFrame);
+    float t = float(easeDistance_.flame) / float(easeDistance_.maxFrame);
 
-    distance_ = Easings::EasingFloat(easeDistance_.start.x, easeDistance_.end.x, EaseType::OUT_QUART, t);
+    distance_ = Easings::EasingFloat(easeDistance_.start.x, easeDistance_.end.x, easeDistance_.easetype, t);
 
     easeDistance_.flame++;
 
@@ -284,7 +284,7 @@ void CameraController::MovingDistance()
 }
 
 // 動かす先の設定
-void CameraController::SetCenterTarget(Vector3 target, int spendFrame)
+void CameraController::SetCenterTarget(Vector3 target, int spendFrame, EaseType easetype)
 {
     easeCenter_.start = center_;
     easeCenter_.end = target;
@@ -293,7 +293,7 @@ void CameraController::SetCenterTarget(Vector3 target, int spendFrame)
     easeCenter_.maxFrame = spendFrame;
 };
 
-void CameraController::SetRotateTarget(Vector3 target, int spendFrame)
+void CameraController::SetRotateTarget(Vector3 target, int spendFrame, EaseType easetype)
 {
     easeRotate_.start = transform_.rotate;
     easeRotate_.end = target;
@@ -302,7 +302,7 @@ void CameraController::SetRotateTarget(Vector3 target, int spendFrame)
     easeRotate_.maxFrame = spendFrame;
 };
 
-void CameraController::SetDistanceTarget(float target, int spendFrame)
+void CameraController::SetDistanceTarget(float target, int spendFrame, EaseType easetype)
 {
     easeDistance_.start.x = distance_;
     easeDistance_.end.x = target;

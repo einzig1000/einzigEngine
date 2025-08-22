@@ -51,9 +51,9 @@ void ActSelect::Initialize()
 {
 	nextPhase = PHASE::Phase_None;
 
-	Game::MoveCenterTarget({ 0.0f, 0.0f, 0.0f }, 0);
-	Game::MoveDistanceTarget(50.0f, 0);
-	Game::MoveRotateTarget({ 0.0f, 0.0f, 0.0f }, 0);
+	Game::MoveCenterTarget({ 0.0f, 0.0f, 0.0f }, 0, EaseType::OUT_QUART);
+	Game::MoveDistanceTarget(50.0f, 0, EaseType::OUT_QUART);
+	Game::MoveRotateTarget({ 0.0f, 0.0f, 0.0f }, 0, EaseType::OUT_QUART);
 }
 
 void ActSelect::Update()

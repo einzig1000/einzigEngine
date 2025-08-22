@@ -158,19 +158,19 @@ uint32_t Game::GetMouseWheel()
 	return engine->GetMouseWheel();
 }
 
-void Game::MoveCenterTarget(Vector3 target, int spendFrame)
+void Game::MoveCenterTarget(Vector3 target, int spendFrame, EaseType easetype)
 {
-	engine->MoveCenterTarget(target, spendFrame);
+	engine->MoveCenterTarget(target, spendFrame, easetype);
 }
 
-void Game::MoveRotateTarget(Vector3 target, int spendFrame)
+void Game::MoveRotateTarget(Vector3 target, int spendFrame, EaseType easetype)
 {
-	engine->MoveRotateTarget(target, spendFrame);
+	engine->MoveRotateTarget(target, spendFrame, easetype);
 }
 
-void Game::MoveDistanceTarget(float target, int spendFrame)
+void Game::MoveDistanceTarget(float target, int spendFrame, EaseType easetype)
 {
-	engine->MoveDistanceTarget(target, spendFrame);
+	engine->MoveDistanceTarget(target, spendFrame, easetype);
 }
 
 void Game::SetControlModeCamera(bool mode)
