@@ -24,11 +24,15 @@ enum class ITEM
 
 enum class BLOCK_TYPE
 {
-	Empty = 0,		// 空（通行可能）
-	Wall = 1,		// 壁（通行不可）
-	Asid = 2,		// 毒（歩行コスト倍増）
-	WarpIn = 3,		// ワープ入口
-	WarpOut = 4,	// ワープ出口
+	Empty = 0,		// 空
+	Wall = 1,		// 壁
+	stairs = 2,		// 階段
+};
+
+enum class BLOCK_EFFECT_TYPE
+{
+	Empty = 0,		// 空
+	AbleCharactorSet// キャラ配置可能を示すエフェクト
 };
 
 enum class PHASE

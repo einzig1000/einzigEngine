@@ -244,7 +244,9 @@ void GameScene::Updata_Setup()
 				{
 					if (map_->data[y][x].color == 0xFF0000FF)
 					{
-						characterManager_->GetAllCharactor()[i]->data.transforms.translate = PositionByIndex(Vector2int{ x,y });
+						int Hight = 0;
+						if (map_->BlockTypeByIndex(Vector2int{ x,y }) == BLOCK_TYPE::Wall)Hight = 1;
+						characterManager_->GetAllCharactor()[i]->data.transforms.translate = PositionByIndex(Vector2int{ x,y }, Hight);
 						characterManager_->AddButtleCharactorList(characterManager_->GetAllCharactor()[i]);
 						isSet[i] = true;
 						y = MAP_HEIGHT;
@@ -261,25 +263,31 @@ void GameScene::Updata_Setup()
 		}
 	}
 
+	//-------- x=0y=0から調査しているせいで最初にマウスレイと衝突した一番手前のブロックじゃなくて --------
 	// マップとマウスの当たり判定
 	bool TheOne = false;
 	for (uint32_t y = 0; y < MAP_HEIGHT; ++y)
 	{
 		for (uint32_t x = 0; x < MAP_WIDTH; ++x)
 		{
-			if (map_->BlockTypeByIndex(Vector2int(x, y)) == BLOCK_TYPE::Empty)
+			// 色の初期化
+			map_->data[y][x].color = 0xFFFFFFFF;
+			// 駒をおける場所か判断
+			if (map_->BlockEffectByIndex(Vector2int(x, y)) == BLOCK_EFFECT_TYPE::AbleCharactorSet)
 			{
-				map_->data[y][x].color = 0xFFFFFFFF;
+				// まだ色を変えられたマスがない（TheOneがfalse）なら色を変える
 				if (!TheOne && IsCollision(Game::GetMouseRay(), map_->data[y][x].AABB))
 				{
+					// おける場所だったので色を変える
 					map_->data[y][x].color = 0xFF0000FF;
+					//TheOne = true;
 				}
 			}
 		}
 	}
 
 	// クリックされていない時holdNumberは-10に初期化される
-	if (holdNumber > 0)
+	if (holdNumber >= 0)
 	{
 		if (!Game::GetMousePress(0))
 		{
@@ -295,14 +303,21 @@ void GameScene::Updata_Setup()
 }
 
 void GameScene::Initialize_PlayerTurn()
-{}
+{
+	for (int x = 0; x < MAP_WIDTH; ++x)
+	{
+		for (int y = 0; y < MAP_HEIGHT; ++y)
+		{
+			map_->EffectType[y][x] = BLOCK_EFFECT_TYPE::Empty;
+		}
+	}
 
-void GameScene::Initialize_EnemyTurn()
-{}
-
-void GameScene::Initialize_Result()
-{}
-
+	frame_camera = 0;
+	frameMAX_camera = 60;
+	Game::MoveCenterTarget({ 0.0f, -0.0f, -5.390f }, 200, EaseType::OUT_QUART);
+	Game::MoveRotateTarget({ 0.4f, -std::numbers::pi / 2.0f, 0.0f }, 200, EaseType::OUT_QUART);
+	Game::MoveDistanceTarget(15.60f, 200, EaseType::OUT_QUART);
+}
 
 void GameScene::Updata_PlayerTurn()
 {
@@ -319,6 +334,14 @@ void GameScene::Updata_PlayerTurn()
 		targetphase_ = GameScenePhase::Result;
 	}
 }
+
+void GameScene::Initialize_EnemyTurn()
+{}
+
+void GameScene::Initialize_Result()
+{}
+
+
 
 void GameScene::Updata_EnemyTurn()
 {

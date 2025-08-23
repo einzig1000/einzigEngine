@@ -38,7 +38,6 @@ void StageSelect::Initialize()
 	Game::MoveCenterTarget({ 0.0f, 0.0f, 0.0f }, 0 , EaseType::OUT_QUART);
 	Game::MoveDistanceTarget(60.0f, 0, EaseType::OUT_QUART);
 	Game::MoveRotateTarget({ 0.0f, 0.0f, 0.0f }, 0, EaseType::OUT_QUART);
-
 }
 
 void StageSelect::Update()

@@ -18,10 +18,7 @@ Map::Map()
 	}
 }
 
-void Map::Initialize()
-{
-	//data[1][0].color = 0x000000FF;
-}
+void Map::Initialize(){}
 
 void Map::LoadMap(int stageNum)
 {
@@ -30,65 +27,88 @@ void Map::LoadMap(int stageNum)
 	// 既に読み込み済だったらスキップ
 	if (mapCSV[stageNum].empty())
 	{
+#pragma region mapBlock
 		// パス作成
-		std::ostringstream path;
-		path << "resources/csv/map/map" << stageNum << ".csv";
+		std::ostringstream path_Block;
+		path_Block << "resources/csv/map/map" << stageNum << ".csv";
 
 		// ファイルをひらく
-		std::ifstream file(path.str());
-		assert(file.is_open());
+		std::ifstream file_Block(path_Block.str());
+		assert(file_Block.is_open());
 
 		// ファイルの内容を丸ごとコピー
-		std::ostringstream buffer;
-		buffer << file.rdbuf();
-		mapCSV[stageNum] = buffer.str();
+		std::ostringstream buffer_Block;
+		buffer_Block << file_Block.rdbuf();
+		mapCSV[stageNum] = buffer_Block.str();
 
 		// ファイルを閉じる
-		file.close();
+		file_Block.close();
+#pragma endregion
+
+#pragma region mapEffect
+		// パス作成
+		std::ostringstream path_Effect;
+		path_Effect << "resources/csv/map/map" << stageNum << "-Initialize.csv";
+
+		// ファイルをひらく
+		std::ifstream file_Effect(path_Effect.str());
+		assert(file_Effect.is_open());
+
+		// ファイルの内容を丸ごとコピー
+		std::ostringstream buffer_Effect;
+		buffer_Effect << file_Effect.rdbuf();
+		mapEffectCSV[stageNum] = buffer_Effect.str();
+
+		// ファイルを閉じる
+		file_Effect.close();
+#pragma endregion
+
 	}
+
+#pragma region mapBlock
 	// 1行ずつ
-	std::string line;
+	std::string line_Block;
 	// ここで毎回新しいstringstreamを作る
-	std::istringstream mapStream(mapCSV[stageNum]);
+	std::istringstream mapStream_Block(mapCSV[stageNum]);
 
 
 	// ブロックタイプ適用
-	int lineNumber = 0;
-	int wordNumber = 0;
-	while (getline(mapStream, line))
+	int lineNumber_Block = 0;
+	int wordNumber_Block = 0;
+	while (getline(mapStream_Block, line_Block))
 	{
-		std::istringstream line_stream(line);
-		std::string word;
-		wordNumber = 0;
+		std::istringstream line_stream(line_Block);
+		std::string word_Block;
+		wordNumber_Block = 0;
 
-		while (getline(line_stream, word, ','))
+		while (getline(line_stream, word_Block, ','))
 		{
-			if (lineNumber < MAP_HEIGHT && wordNumber < MAP_WIDTH)
+			if (lineNumber_Block < MAP_HEIGHT && wordNumber_Block < MAP_WIDTH)
 			{
-				if (word.find("0") == 0)
+				if (word_Block.find("0") == 0)
 				{
-					blockType[lineNumber][wordNumber] = BLOCK_TYPE::Empty;
+					blockType[lineNumber_Block][wordNumber_Block] = BLOCK_TYPE::Empty;
 				}
-				else if (word.find("1") == 0)
+				else if (word_Block.find("1") == 0)
 				{
-					blockType[lineNumber][wordNumber] = BLOCK_TYPE::Wall;
+					blockType[lineNumber_Block][wordNumber_Block] = BLOCK_TYPE::Wall;
 				}
-				else if (word.find("2") == 0)
+				else if (word_Block.find("2") == 0)
 				{
-					blockType[lineNumber][wordNumber] = BLOCK_TYPE::Asid;
+					blockType[lineNumber_Block][wordNumber_Block] = BLOCK_TYPE::Asid;
 				}
-				else if (word.find("3") == 0)
+				else if (word_Block.find("3") == 0)
 				{
-					blockType[lineNumber][wordNumber] = BLOCK_TYPE::WarpIn;
+					blockType[lineNumber_Block][wordNumber_Block] = BLOCK_TYPE::WarpIn;
 				}
-				else if (word.find("4") == 0)
+				else if (word_Block.find("4") == 0)
 				{
-					blockType[lineNumber][wordNumber] = BLOCK_TYPE::WarpOut;
+					blockType[lineNumber_Block][wordNumber_Block] = BLOCK_TYPE::WarpOut;
 				}
 			}
-			wordNumber++;
+			wordNumber_Block++;
 		}
-		lineNumber++;
+		lineNumber_Block++;
 	}
 
 	// X軸反転
@@ -102,10 +122,46 @@ void Map::LoadMap(int stageNum)
 			ShapeChangeByType(Vector2int(x, y));
 		}
 	}
+#pragma endregion
 
-	// 識別用
-	data[0][0].color = 0xFF0000FF;
-	data[0][1].color = 0xFFFF00FF;
+#pragma region mapEffect
+	// 1行ずつ
+	std::string line_Effect;
+	// ここで毎回新しいstringstreamを作る
+	std::istringstream mapStream_Effect(mapEffectCSV[stageNum]);
+
+
+	// ブロックタイプ適用
+	int lineNumber_Effect = 0;
+	int wordNumber_Effect = 0;
+	while (getline(mapStream_Effect, line_Effect))
+	{
+		std::istringstream line_stream_Effect(line_Effect);
+		std::string word_Effect;
+		wordNumber_Effect = 0;
+
+		while (getline(line_stream_Effect, word_Effect, ','))
+		{
+			if (lineNumber_Effect < MAP_HEIGHT && wordNumber_Effect < MAP_WIDTH)
+			{
+				if (word_Effect.find("0") == 0)
+				{
+					EffectType[lineNumber_Effect][wordNumber_Effect] = BLOCK_EFFECT_TYPE::Empty;
+				}
+				else if (word_Effect.find("1") == 0)
+				{
+					EffectType[lineNumber_Effect][wordNumber_Effect] = BLOCK_EFFECT_TYPE::AbleCharactorSet;
+				}
+			}
+			wordNumber_Effect++;
+		}
+		lineNumber_Effect++;
+	}
+
+	// X軸反転
+	FlipXAxis(EffectType);
+
+#pragma endregion
 }
 
 void Map::Update()
@@ -114,7 +170,7 @@ void Map::Update()
 	//{
 	//	for (int y = 0; y < MAP_HEIGHT; ++y)
 	//	{
-	//		if (Game::IsCollisionMouseRayAABB(data[y][x].model, data[y][x].transforms))
+	//		if (EffectType[y][x] == BLOCK_EFFECT_TYPE::AbleCharactorSet)
 	//		{
 	//			data[y][x].color = 0xFF0000FF;
 	//		}
@@ -172,8 +228,26 @@ void Map::ShapeChangeByType(Vector2int index)
 }
 
 
-
 BLOCK_TYPE Map::BlockTypeByIndex(Vector2int index)
 {
 	return blockType[index.y][index.x];
+}
+
+BLOCK_EFFECT_TYPE Map::BlockEffectByIndex(Vector2int index)
+{
+	return EffectType[index.y][index.x];
+}
+
+bool Map::A_to_B(Vector2int start, Vector2int target)
+{
+	if (blockType[start.y][start.x] == BLOCK_TYPE::Empty && blockType[target.y][target.x] == BLOCK_TYPE::Wall)
+	{
+		return false;
+	}
+	if (blockType[start.y][start.x] == BLOCK_TYPE::Wall && blockType[target.y][target.x] == BLOCK_TYPE::Empty)
+	{
+		return false;
+	}
+
+	return true;
 }

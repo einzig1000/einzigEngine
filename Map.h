@@ -23,10 +23,20 @@ public:
 
 	BLOCK_TYPE BlockTypeByIndex(Vector2int index);
 
+	BLOCK_EFFECT_TYPE BlockEffectByIndex(Vector2int index);
+
 
 	Game::RenderData_Model data[MAP_HEIGHT][MAP_WIDTH];
+
+	// インデックスAからインデックスBはマップ的に移動できるか
+	bool A_to_B(Vector2int start, Vector2int target);
+
+	// マップのエフェクト情報
+	BLOCK_EFFECT_TYPE EffectType[MAP_HEIGHT][MAP_WIDTH];
 private:
+	// マップの種類情報
 	BLOCK_TYPE blockType[MAP_HEIGHT][MAP_WIDTH];
 
 	std::string mapCSV[STAGE_MAX];
+	std::string mapEffectCSV[STAGE_MAX];
 };

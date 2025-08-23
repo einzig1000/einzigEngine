@@ -55,6 +55,16 @@ Vector3 PositionByIndex(Vector2int index)
 
     return pos;
 }
+Vector3 PositionByIndex(Vector2int index, int high)
+{
+    Vector3 pos;
+
+    pos.x = -static_cast<float>(index.x) * BLOCK_WIDTH;
+    pos.y = high - (0.2f * high);
+    pos.z = -static_cast<float>(index.y) * BLOCK_HEIGHT;
+
+    return pos;
+}
 
 
 
