@@ -24,7 +24,7 @@ CameraController::CameraController()
     sphereOptions.enableLighting = false;
 }
 
-void CameraController::Updata()
+void CameraController::Update()
 {
     // カメラ操作可能
     if (cameraMode_)

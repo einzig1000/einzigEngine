@@ -29,10 +29,10 @@ public:
 	void Initialize_UNIT();
 	void Initialize_UNIT_ALL();
 
-	void Updata_ALL();
-	void Updata_ALL_UNIT();
-	void Updata_UNIT();
-	void Updata_UNIT_ALL();
+	void Update_ALL();
+	void Update_ALL_UNIT();
+	void Update_UNIT();
+	void Update_UNIT_ALL();
 
 
 private:

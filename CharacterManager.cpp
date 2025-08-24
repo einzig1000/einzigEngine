@@ -6,37 +6,6 @@
 CharacterManager::CharacterManager()
 {
 	LoadGetAllCharactor();
-	//Charactor* newChar = new Charactor(TEXTURE::Charactor_King);
-	//ButtleCharactor.push_back(newChar);
-	//AllCharactor.push_back(newChar);
-
-	//Charactor* newChar1 = new Charactor(TEXTURE::Charactor_Queen);
-	//AllCharactor.push_back(newChar1);
-	//Charactor* newChar2 = new Charactor(TEXTURE::Charactor_Bishop);
-	//AllCharactor.push_back(newChar2);
-	//Charactor* newChar3 = new Charactor(TEXTURE::Charactor_Knight);
-	//AllCharactor.push_back(newChar3);
-	//Charactor* newChar4 = new Charactor(TEXTURE::Charactor_Rook);
-	//AllCharactor.push_back(newChar4);
-	//Charactor* newChar5 = new Charactor(TEXTURE::Charactor_Pawn);
-	//AllCharactor.push_back(newChar5);
-	//Charactor* newChar6 = new Charactor(TEXTURE::Charactor_King);
-	//AllCharactor.push_back(newChar6);
-	//Charactor* newChar7 = new Charactor(TEXTURE::Charactor_Queen);
-	//AllCharactor.push_back(newChar7);
-
-	//Charactor* newChar8 = new Charactor(TEXTURE::Charactor_Bishop);
-	//AllCharactor.push_back(newChar8);
-	//Charactor* newChar9 = new Charactor(TEXTURE::Charactor_Knight);
-	//AllCharactor.push_back(newChar9);
-	//Charactor* newChar11 = new Charactor(TEXTURE::Charactor_Rook);
-	//AllCharactor.push_back(newChar11);
-	//Charactor* newChar12 = new Charactor(TEXTURE::Charactor_Pawn);
-	//AllCharactor.push_back(newChar12);
-	//Charactor* newChar13 = new Charactor(TEXTURE::Charactor_King);
-	//AllCharactor.push_back(newChar13);
-	//Charactor* newChar14 = new Charactor(TEXTURE::Charactor_Queen);
-	//AllCharactor.push_back(newChar14);
 }
 
 void CharacterManager::AddCharactorList(Charactor* add)
@@ -116,12 +85,17 @@ void CharacterManager::LoadGetAllCharactor()
 			// 攻撃力の設定
 			else if (i == 1)
 			{
-				add->power_ = std::stoi(word);
+				add->states_default_.power = std::stoi(word);
 			}
 			// Hpの設定
 			else if (i == 2)
 			{
-				add->power_ = std::stoi(word);
+				add->states_default_.hp = std::stoi(word);
+			}
+			// 素早さの設定
+			else if (i == 3)
+			{
+				add->states_default_.speed = std::stoi(word);
 			}
 			// 設定終わり
 			else
@@ -138,10 +112,28 @@ void CharacterManager::LoadGetAllCharactor()
 	}
 }
 
-void CharacterManager::Sort_Power()
+void CharacterManager::SetStatus()
+{
+	for (int i = 0; i < AllCharactor.size(); ++i)
+	{
+		AllCharactor[i]->states_buttle_ = AllCharactor[i]->states_default_;
+	}
+}
+
+// ユニットオーバーレイの時だから全キャラ更新
+void CharacterManager::Sort_All_Power()
 {
 	std::sort(AllCharactor.begin(), AllCharactor.end(), [](Charactor* a, Charactor* b)
 		{
-			return a->power_ > b->power_;
+			return a->states_default_.power > b->states_default_.power;
+		});
+}
+
+// バトル前更新用だからバトルキャラのみ更新
+void CharacterManager::Sort_Buttle_ActionDelay()
+{
+	std::sort(ButtleCharactor.begin(), ButtleCharactor.end(), [](Charactor* a, Charactor* b)
+		{
+			return a->actionDelay > b->actionDelay;
 		});
 }

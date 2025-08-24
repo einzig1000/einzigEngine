@@ -71,6 +71,7 @@ public:
 	void SetControlModeCameraCenter(bool mode);
 	void SetControlModeCameraRotate(bool mode);
 	void SetControlModeCameraDistance(bool mode);
+	CameraController *GetCamera();
 
 	// AABBの作成
 	AABB CreateAABB(const Transforms& transforms, uint32_t objectNumber);

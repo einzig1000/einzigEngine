@@ -53,7 +53,7 @@ void FlipXAxis(T(&arr)[Rows][Cols])
 
 Vector2int IndexByPosition(Vector3 pos);
 Vector3 PositionByIndex(Vector2int index);
-Vector3 PositionByIndex(Vector2int index, int high);
+Vector3 PositionByIndex(Vector2int index, BLOCK_TYPE blockType);
 
 
 /// <summary>

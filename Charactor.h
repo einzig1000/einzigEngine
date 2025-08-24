@@ -1,11 +1,6 @@
 #pragma once
 #include "Game.h"
 
-enum class states
-{
-
-};
-
 enum class CharactorName
 {
 	King,		// 場に一体しかだせない最強キャラ。なんらかのチートスキル持ち
@@ -16,6 +11,8 @@ enum class CharactorName
 	Pawn,		// 
 	CharactorMAX
 };
+
+
 
 class Charactor
 {
@@ -30,10 +27,13 @@ public:
 	Game::RenderData_Sprite dataSeat;
 	Game::RenderData_Sprite dataSeat_type;
 
+	States states_default_;
+	States states_buttle_;
 
-	int power_;
-	int hp_;
-	int actPoint_;
+	// 行動遅延
+	// これが少ないキャラから行動する。行動する度に加算される。強い技ほど加算される
+	int actionDelay = 0;
+
 	static int getCharactorSum_;
 	int serialNumber_;
 

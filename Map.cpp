@@ -95,15 +95,7 @@ void Map::LoadMap(int stageNum)
 				}
 				else if (word_Block.find("2") == 0)
 				{
-					blockType[lineNumber_Block][wordNumber_Block] = BLOCK_TYPE::Asid;
-				}
-				else if (word_Block.find("3") == 0)
-				{
-					blockType[lineNumber_Block][wordNumber_Block] = BLOCK_TYPE::WarpIn;
-				}
-				else if (word_Block.find("4") == 0)
-				{
-					blockType[lineNumber_Block][wordNumber_Block] = BLOCK_TYPE::WarpOut;
+					blockType[lineNumber_Block][wordNumber_Block] = BLOCK_TYPE::stairs;
 				}
 			}
 			wordNumber_Block++;
@@ -217,11 +209,12 @@ void Map::ShapeChangeByType(Vector2int index)
 		data[index.y][index.x].LookAtFront();
 		data[index.y][index.x].color = 0xFFFFFFFF;
 	}
-	else if (blockType[index.y][index.x] == BLOCK_TYPE::Asid)
+	else if (blockType[index.y][index.x] == BLOCK_TYPE::stairs)
 	{
-		data[index.y][index.x].transforms.scale = Vector3{ 1.0f,1.0f,1.0f };
+		data[index.y][index.x].transforms.scale = Vector3{ 1.0f,2.5f,1.0f };
 		data[index.y][index.x].transforms.rotate = Vector3{ 0.0f,0.0f,0.0f };
 		data[index.y][index.x].transforms.translate = PositionByIndex(index);
+		data[index.y][index.x].transforms.translate.y += 0.2f;
 		data[index.y][index.x].LookAtFront();
 		data[index.y][index.x].color = 0xFF0000FF;
 	}

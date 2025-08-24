@@ -193,6 +193,11 @@ void Game::SetControlModeCameraDistance(bool mode)
 	engine->SetControlModeCameraDistance(mode);
 }
 
+CameraController* Game::GetCamera()
+{
+	return engine->GetCamera();
+}
+
 AABB Game::CreateAABB(const Transforms& transforms, uint32_t objectNumber)
 {
 	return engine->CreateAABB(transforms, objectNumber);

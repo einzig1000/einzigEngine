@@ -1,6 +1,5 @@
 #pragma once
 #include "Engine/Engine.h"
-#include "enum.h"
 #include <numbers>
 
 #include "definition/definition.h"
@@ -87,6 +86,7 @@ public:
 	static void SetControlModeCameraCenter(bool mode);
 	static void SetControlModeCameraRotate(bool mode);
 	static void SetControlModeCameraDistance(bool mode);
+	static CameraController* GetCamera();
 
 	// AABBの作成
 	static AABB CreateAABB(const Transforms& transforms, uint32_t objectNumber);

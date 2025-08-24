@@ -22,6 +22,18 @@ enum class ITEM
 
 };
 
+struct States
+{
+	// 諸々のパワー
+	// アタッカーなら与えるダメージが変わるしヒーラーなら回復量が変わる
+	int power = 0;
+	// HP
+	int hp = 0;
+	// 素早さ
+	// 速いと技をactionDelay少なく使える
+	int speed = 0;
+};
+
 enum class BLOCK_TYPE
 {
 	Empty = 0,		// 空
@@ -72,8 +84,11 @@ enum class TEXTURE
 	// ステージセレクトのモノリス
 	StageSelect_icon,
 
-
-
+	// バトル中の行動選択アイコン
+	ActSelect_Icon_None,
+	ActSelect_Icon_Attack,
+	ActSelect_Icon_Move,
+	ActSelect_Icon_ChangeCameraMode,
 
 
 

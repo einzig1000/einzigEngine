@@ -15,10 +15,15 @@ public:
 	void AddButtleCharactorList(Charactor* add);
 
 	// パワー順にソート
-	void Sort_Power();
+	void Sort_All_Power();
+	// アクションディレイ順にソート
+	void Sort_Buttle_ActionDelay();
 
 	// csvから読み取る
 	void LoadGetAllCharactor();
+
+	// キャラクターステータスのデフォルト値を可変変数に適用
+	void SetStatus();
 
 
 	// 全保有キャラのゲッター

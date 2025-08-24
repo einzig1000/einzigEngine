@@ -21,7 +21,7 @@ GameManager::GameManager()
 	Game::LoadOBJ("resources/Charactor/Pawn", "Pawn.obj");
 	Game::LoadTexture("resources/Charactor/Pawn/Pawn.png");
 
-	// フェーズ選択用のアイコン？
+	// フェーズ選択用のアイコン
 	Game::LoadOBJ("resources/PhaseIcon/Buttle", "Buttle.obj");
 	Game::LoadTexture("resources/PhaseIcon/Buttle/Buttle.png");
 	Game::LoadOBJ("resources/PhaseIcon/Buttle", "Buttle.obj");
@@ -32,6 +32,16 @@ GameManager::GameManager()
 	// ステージセレクトのアイコン
 	Game::LoadOBJ("resources/StageSelect", "StageSelect.obj");
 	Game::LoadTexture("resources/StageSelect/StageSelect.png");
+
+	// バトル中の行動選択アイコン
+	Game::LoadOBJ("resources/Charactor/SelectIcon", "Icon.obj");
+	Game::LoadTexture("resources/Charactor/SelectIcon/Icon.png");
+	Game::LoadOBJ("resources/Charactor/SelectIcon", "Icon.obj");
+	Game::LoadTexture("resources/Charactor/SelectIcon/Icon.png");
+	Game::LoadOBJ("resources/Charactor/SelectIcon", "Icon.obj");
+	Game::LoadTexture("resources/Charactor/SelectIcon/Icon.png");
+	Game::LoadOBJ("resources/Charactor/SelectIcon", "Icon.obj");
+	Game::LoadTexture("resources/Charactor/SelectIcon/Icon.png");
 
 
 
@@ -53,7 +63,7 @@ GameManager::GameManager()
 	characterManager_ = new CharacterManager();
 
 	// フェーズ管理用
-	requestPhase_ = PHASE::Phase_ActSelect;
+	requestPhase_ = PHASE::Phase_GameScene;
 	title_ = new Title();
 	actSelect_ = new ActSelect();
 	stageSelect_ = new StageSelect();

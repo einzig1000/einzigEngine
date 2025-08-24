@@ -165,7 +165,7 @@ void Engine::UpdateCamera()
 		else cameraController->cameraMode_ = 1;
 	}*/
 	// カメラの更新
-	cameraController->Updata();
+	cameraController->Update();
 }
 void Engine::EndFrame()
 {
@@ -942,6 +942,11 @@ void Engine::SetControlModeCameraDistance(bool mode)
 {
 	cameraController->cameraMode_distanceControl_ = mode;
 	if (mode = true && cameraController->cameraMode_ == false)cameraController->cameraMode_ = true;
+}
+
+CameraController* Engine::GetCamera()
+{
+	return cameraController;
 }
 
 

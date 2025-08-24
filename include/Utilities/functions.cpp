@@ -20,7 +20,6 @@
 #include <windows.h>
 #include <DbgHelp.h>
 #include <strsafe.h>
-#include "enum.h"
 #include "Game.h"
 
 #pragma comment(lib, "d3d12.lib")
@@ -55,12 +54,14 @@ Vector3 PositionByIndex(Vector2int index)
 
     return pos;
 }
-Vector3 PositionByIndex(Vector2int index, int high)
+Vector3 PositionByIndex(Vector2int index, BLOCK_TYPE blockType)
 {
     Vector3 pos;
 
     pos.x = -static_cast<float>(index.x) * BLOCK_WIDTH;
-    pos.y = high - (0.2f * high);
+    if (blockType == BLOCK_TYPE::Empty)pos.y = 0.0f;
+    else if (blockType == BLOCK_TYPE::stairs)pos.y = 0.4f;
+    else if (blockType == BLOCK_TYPE::Wall)pos.y = 0.8f;
     pos.z = -static_cast<float>(index.y) * BLOCK_HEIGHT;
 
     return pos;

@@ -21,8 +21,6 @@ Charactor::Charactor(TEXTURE name)
 	else if (name == TEXTURE::Charactor_Rook  )dataSeat_type.texture = uint32_t(TEXTURE::CharactorSprite_Rook);
 	else if (name == TEXTURE::Charactor_Pawn  )dataSeat_type.texture = uint32_t(TEXTURE::CharactorSprite_Pawn);
 	
-
-
 	serialNumber_ = getCharactorSum_;
 	getCharactorSum_++;
 }

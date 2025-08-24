@@ -18,6 +18,7 @@
 
 // 外部ライブラリ
 #include "externals/DirectXTex/DirectXTex.h"
+#include "enum.h"
 
 class Quaternion;
 

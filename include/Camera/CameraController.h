@@ -16,7 +16,7 @@ class CameraController
 public:
 
     CameraController();
-    void Updata();
+    void Update();
     void Draw();
 
     void MovingCenter();

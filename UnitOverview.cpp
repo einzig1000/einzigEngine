@@ -90,16 +90,16 @@ void UnitOverview::Update()
 	case UnitOverview::ViewPhase::None:
 		break;
 	case UnitOverview::ViewPhase::ALL:
-		Updata_ALL();
+		Update_ALL();
 		break;
 	case UnitOverview::ViewPhase::ALL_UNIT:
-		Updata_ALL_UNIT();
+		Update_ALL_UNIT();
 		break;
 	case UnitOverview::ViewPhase::UNIT:
-		Updata_UNIT();
+		Update_UNIT();
 		break;
 	case UnitOverview::ViewPhase::UNIT_ALL:
-		Updata_UNIT_ALL();
+		Update_UNIT_ALL();
 		break;
 	default:
 		break;
@@ -170,7 +170,7 @@ void UnitOverview::Initialize_ALL()
 	}
 }
 
-void UnitOverview::Updata_ALL()
+void UnitOverview::Update_ALL()
 {
 	// 入力受付
 	int deltaWheel = Game::GetMouseWheel();
@@ -310,7 +310,7 @@ void UnitOverview::Initialize_ALL_UNIT()
 	Game::MoveDistanceTarget( -float(CharSum) / 10.0f, tMAX, EaseType::OUT_QUART);
 }
 
-void UnitOverview::Updata_ALL_UNIT()
+void UnitOverview::Update_ALL_UNIT()
 {
 	// 計数1.0f以下の時のみイージング
 	if (t < tMAX)
@@ -353,7 +353,7 @@ void UnitOverview::Initialize_UNIT()
 	centerTargetTransforms = centerPreTransforms;
 }
 
-void UnitOverview::Updata_UNIT()
+void UnitOverview::Update_UNIT()
 {
 	// 入力受付
 	int deltaWheel = Game::GetMouseWheel();
@@ -431,7 +431,7 @@ void UnitOverview::Initialize_UNIT_ALL()
 	Game::MoveDistanceTarget(15.60f, 200, EaseType::OUT_QUART);
 }
 
-void UnitOverview::Updata_UNIT_ALL()
+void UnitOverview::Update_UNIT_ALL()
 {
 	// 計数1.0f以下の時のみイージング
 	if (t < tMAX)
