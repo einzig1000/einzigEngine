@@ -184,12 +184,30 @@ public:
 			// 回転構築
 			Quaternion finalRotation;
 
+			// ターゲットのワールド位置を取得
+			Vector3 targetWorldPos = GetTargetWorldPosition();
+			// 自身のワールド位置を取得
+			Vector3 worldPos = GetWorldPosition();
+
+			// 既存のLookAtロジック
 			if (target.mode != LookAtMode::None)
 			{
-				Vector3 forward = (GetTargetWorldPosition() - GetWorldPosition()).Normalized();
-				Quaternion lookAtRot = Quaternion::MakeFromToRotation(Vector3(0, 0, 1), forward);
-				Quaternion eulerRot = Quaternion::MakeFromEulerAngles(transforms.rotate);
-				finalRotation = eulerRot * lookAtRot;
+				// 前方ベクトルを計算
+				Vector3 forward = (targetWorldPos - worldPos).Normalized();
+
+				// 上方向ベクトルを定義（Y軸を上とする）
+				Vector3 upVector = Vector3(0, 1, 0);
+
+				// forwardがupVectorとほぼ平行かどうかをチェック
+				if (abs(forward.Dot(upVector)) > 0.999f)
+				{
+					// ターゲットが真上または真下にある場合、代替の上方向を使用
+					upVector = Vector3(0, 0, 1);
+				}
+
+				// 新しいLookAtのロジック
+				Quaternion lookAtRotation = Quaternion::LookRotation(forward, upVector);
+				finalRotation = lookAtRotation;
 			}
 			else
 			{

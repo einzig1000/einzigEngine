@@ -2,7 +2,8 @@
 #include <fstream>
 #include <cassert>
 #include <algorithm>
-
+#include <queue>
+#include <limits>
 
 Map::Map()
 {
@@ -220,6 +221,62 @@ void Map::ShapeChangeByType(Vector2int index)
 	}
 }
 
+
+int Map::shotestCost(Vector2int start, Vector2int end)
+{
+	if (start == end) return 0;
+
+	const int INF = 1000;
+	int cost[MAP_HEIGHT][MAP_WIDTH];
+	for (int y = 0; y < MAP_HEIGHT; ++y)
+		for (int x = 0; x < MAP_WIDTH; ++x)
+			cost[y][x] = INF;
+
+	std::queue<Vector2int> q;
+	q.push(start);
+	cost[start.y][start.x] = 0;
+
+	const Vector2int directions[4] = {
+		{ 0, -1 }, // 上
+		{ 0,  1 }, // 下
+		{ -1, 0 }, // 左
+		{ 1,  0 }  // 右
+	};
+
+	while (!q.empty())
+	{
+		Vector2int current = q.front();
+		q.pop();
+
+		for (const auto& dir : directions)
+		{
+			Vector2int next = current + dir;
+
+			// 範囲外チェック
+			if (next.x < 0 || next.x >= MAP_WIDTH || next.y < 0 || next.y >= MAP_HEIGHT)
+				continue;
+
+			// 移動可能かチェック
+			if (!A_to_B(current, next))
+				continue;
+
+			// 未訪問なら更新
+			if (cost[next.y][next.x] == INF)
+			{
+				cost[next.y][next.x] = cost[current.y][current.x] + 1;
+				q.push(next);
+
+				// ゴールに到達したら即返す
+				if (next == end)
+					return cost[next.y][next.x];
+			}
+		}
+	}
+
+	// 到達不能
+	return -1;
+
+}
 
 BLOCK_TYPE Map::BlockTypeByIndex(Vector2int index)
 {

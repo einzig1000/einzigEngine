@@ -35,9 +35,9 @@ GameManager::GameManager()
 
 	// バトル中の行動選択アイコン
 	Game::LoadOBJ("resources/Charactor/SelectIcon", "Icon.obj");
-	Game::LoadTexture("resources/Charactor/SelectIcon/Icon.png");
+	Game::LoadTexture("resources/Charactor/SelectIcon/IconChangeCameraMode.png");
 	Game::LoadOBJ("resources/Charactor/SelectIcon", "Icon.obj");
-	Game::LoadTexture("resources/Charactor/SelectIcon/Icon.png");
+	Game::LoadTexture("resources/Charactor/SelectIcon/IconMove.png");
 	Game::LoadOBJ("resources/Charactor/SelectIcon", "Icon.obj");
 	Game::LoadTexture("resources/Charactor/SelectIcon/Icon.png");
 	Game::LoadOBJ("resources/Charactor/SelectIcon", "Icon.obj");

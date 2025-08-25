@@ -47,35 +47,69 @@ Quaternion Quaternion::MakeFromEulerAngles(const Vector3& euler)
 // 2つのベクトルの間の回転を表すクォータニオンを生成
 Quaternion Quaternion::MakeFromToRotation(const Vector3& from, const Vector3& to)
 {
+	// 入力ベクトルを正規化
 	Vector3 normalizedFrom = from.Normalized();
 	Vector3 normalizedTo = to.Normalized();
-	float dot = normalizedFrom.Dot(normalizedTo);
 
-	if (dot >= 1.0f - FLT_EPSILON)
+	// 2つのベクトルがなす角度のコサインを計算
+	float dotProduct = normalizedFrom.Dot(normalizedTo);
+
+	// ベクトルがほぼ同じ方向の場合、回転は不要
+	if (dotProduct >= 1.0f - FLT_EPSILON)
 	{
-		return MakeIdentity();
+		return Quaternion::MakeIdentity();
 	}
-
-	if (dot <= -1.0f + FLT_EPSILON)
+	// ベクトルがほぼ反対方向の場合、180度回転が必要
+	else if (dotProduct <= -1.0f + FLT_EPSILON)
 	{
-		// 180度回転
-		Vector3 axis = Vector3{ 1.0f, 0.0f, 0.0f }.Cross(normalizedFrom);
-		if (axis.Length() < FLT_EPSILON)
+		// 回転軸を見つける
+		Vector3 rotationAxis = Vector3(0.0f, 1.0f, 0.0f).Cross(normalizedFrom);
+		if (rotationAxis.LengthSq() < FLT_EPSILON)
 		{
-			axis = Vector3{ 0.0f, 1.0f, 0.0f }.Cross(normalizedFrom);
+			rotationAxis = Vector3(0.0f, 0.0f, 1.0f).Cross(normalizedFrom);
 		}
-		return MakeAxisAngle(axis.Normalized(), std::numbers::pi);
+
+		// 正規化して180度回転のクォータニオンを生成
+		return Quaternion::MakeAxisAngle(rotationAxis.Normalized(), std::numbers::pi);
+	}
+	else
+	{
+		// 軸と角度からクォータニオンを計算
+		Vector3 rotationAxis = normalizedFrom.Cross(normalizedTo);
+		float angle = acosf(dotProduct);
+		return Quaternion::MakeAxisAngle(rotationAxis.Normalized(), angle);
+	}
+}
+
+Quaternion Quaternion::LookRotation(const Vector3& forward, const Vector3& up)
+{
+	// forward と up ベクトルを正規化
+	Vector3 normalizedForward = forward.Normalized();
+	Vector3 normalizedUp = up.Normalized();
+
+	// forward と up が平行かどうかチェック
+	if (abs(normalizedForward.Dot(normalizedUp)) > 0.999f)
+	{
+		// 平行な場合、LookRotationは失敗するため、代わりにデフォルトの回転を返す
+		// (例: forwardをZ軸に、upをY軸に合わせる)
+		return Quaternion::MakeFromToRotation(Vector3(0, 0, 1), normalizedForward);
 	}
 
-	Vector3 axis = normalizedFrom.Cross(normalizedTo);
-	float s = std::sqrt((1.0f + dot) * 2.0f);
-	float invS = 1.0f / s;
-	return Quaternion(
-		axis.x * invS,
-		axis.y * invS,
-		axis.z * invS,
-		s * 0.5f
-	);
+	// 軸を構築
+	// 1. 新しい右ベクトル (right) を計算
+	Vector3 right = normalizedUp.Cross(normalizedForward).Normalized();
+
+	// 2. 新しい上ベクトル (up) を計算
+	Vector3 newUp = normalizedForward.Cross(right);
+
+	// 3. 回転行列を作成
+	Matrix4x4 lookAtMatrix;
+	lookAtMatrix.m[0][0] = right.x;     lookAtMatrix.m[0][1] = right.y;     lookAtMatrix.m[0][2] = right.z;
+	lookAtMatrix.m[1][0] = newUp.x;     lookAtMatrix.m[1][1] = newUp.y;     lookAtMatrix.m[1][2] = newUp.z;
+	lookAtMatrix.m[2][0] = normalizedForward.x; lookAtMatrix.m[2][1] = normalizedForward.y; lookAtMatrix.m[2][2] = normalizedForward.z;
+
+	// 回転行列からクォータニオンを生成
+	return Quaternion::MakeFromRotationMatrix(lookAtMatrix);
 }
 
 // 回転行列からのクォータニオン生成

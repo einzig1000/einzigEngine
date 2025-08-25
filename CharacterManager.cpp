@@ -97,6 +97,11 @@ void CharacterManager::LoadGetAllCharactor()
 			{
 				add->states_default_.speed = std::stoi(word);
 			}
+			// 移動距離の設定
+			else if (i == 4)
+			{
+				add->states_default_.movePoint = std::stoi(word);
+			}
 			// 設定終わり
 			else
 			{
@@ -134,6 +139,6 @@ void CharacterManager::Sort_Buttle_ActionDelay()
 {
 	std::sort(ButtleCharactor.begin(), ButtleCharactor.end(), [](Charactor* a, Charactor* b)
 		{
-			return a->actionDelay > b->actionDelay;
+			return a->actionDelay < b->actionDelay;
 		});
 }

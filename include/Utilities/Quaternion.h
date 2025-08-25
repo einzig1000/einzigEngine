@@ -24,6 +24,8 @@ public:
 	static Quaternion MakeFromEulerAngles(const Vector3& euler);
 	// 2つのベクトルの間の回転を表すクォータニオンを生成
 	static Quaternion MakeFromToRotation(const Vector3& from, const Vector3& to);
+	// 2つのベクトルの間の回転を表すクォータニオンを生成
+	static Quaternion LookRotation(const Vector3& forward, const Vector3& up);
 	// 回転行列からのクォータニオン生成
 	static Quaternion MakeFromRotationMatrix(const Matrix4x4& mat);
 

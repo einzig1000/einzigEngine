@@ -24,6 +24,7 @@ public:
 
 
 	Game::RenderData_Model data;
+	Game::RenderData_Model targetdata;
 	Game::RenderData_Sprite dataSeat;
 	Game::RenderData_Sprite dataSeat_type;
 
@@ -32,11 +33,15 @@ public:
 
 	// 行動遅延
 	// これが少ないキャラから行動する。行動する度に加算される。強い技ほど加算される
-	int actionDelay = 0;
+	float actionDelay = 0;
 
 	static int getCharactorSum_;
 	int serialNumber_;
 
+	bool EnemyOrPlayer_ = true;
+
 private:
+
+
 };
 

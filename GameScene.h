@@ -20,6 +20,7 @@ public:
 	{
 		None,
 		Setup,          // 駒の配置フェーズ
+		Check,			// 行動キャラがどちらの陣営かたしかめる
 		PlayerTurn,     // プレイヤーの操作フェーズ
 		EnemyTurn,      // 敵の操作フェーズ
 		Result          // リザルト
@@ -29,16 +30,19 @@ public:
 
 private:
 	void Initialize_Setup();
+	void Initialize_Check();
 	void Initialize_PlayerTurn();
 	void Initialize_EnemyTurn();
 	void Initialize_Result();
 
 	void Update_Setup();
+	void Update_Check();
 	void Update_PlayerTurn();
 	void Update_EnemyTurn();
 	void Update_Result();
 
 	void Draw_Setup();
+	void Draw_Check();
 	void Draw_PlayerTurn();
 	void Draw_EnemyTurn();
 	void Draw_Result();
@@ -81,6 +85,8 @@ private:
 		Focus,
 	};
 	CameraMode_Over_or_Focus cameraMode = CameraMode_Over_or_Focus::None;
+	void ChangeOver();
+	void ChangeFocus();
 
 	// プレイヤーターン時に選択している行動
 	enum class CharactorSelectPattern
@@ -93,6 +99,13 @@ private:
 	CharactorSelectPattern Act = CharactorSelectPattern::None;
 	// 行動選択アイコン
 	Game::RenderData_Model ActSelectIcon_[4];
+	// 行動選択アイコンの目標座標
+	Vector3 ActSelectIcon_targetIcon[4];
+	// 移動先を示す半透明なやつの座標
+	Vector3 moveTargetPosition;
+	Vector2int moveTargetPositionIndex;
+	// 移動先を示す半透明なやつの座標を連続で操作できないようにするクールタイム
+	int moveTragetCoolTome;
 
 };
 

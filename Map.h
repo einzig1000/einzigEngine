@@ -21,6 +21,9 @@ public:
 	// 座標変更したっていい
 	void SetTransforms(Vector2int index, Transforms transforms) { data[index.x][index.y].transforms = transforms; }
 
+	// startからendまで移動した場合の最短歩数
+	int shotestCost(Vector2int start, Vector2int end);
+
 	BLOCK_TYPE BlockTypeByIndex(Vector2int index);
 
 	BLOCK_EFFECT_TYPE BlockEffectByIndex(Vector2int index);

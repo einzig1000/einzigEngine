@@ -32,6 +32,8 @@ struct States
 	// 素早さ
 	// 速いと技をactionDelay少なく使える
 	int speed = 0;
+	// 移動可能距離
+	int movePoint = 5;
 };
 
 enum class BLOCK_TYPE
