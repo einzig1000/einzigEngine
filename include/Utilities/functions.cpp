@@ -647,7 +647,7 @@ uint32_t ConvertVector4ToUint(Vector4 color)
 
 float ToRadian(const float& angle)
 {
-    return angle * (std::numbers::pi / 180.0f);
+    return angle * (float(std::numbers::pi) / 180.0f);
 }
 
 // ARGBをRGBA

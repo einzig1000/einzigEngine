@@ -308,9 +308,8 @@ public:
 			Vector2 center = { static_cast<float>(this->transforms.translate.x), static_cast<float>(this->transforms.translate.y) };
 
 			TextureData* data = Game::GetTexture(this->texture);
-			// 仮: テクスチャサイズ（本来はTextureDataから取得すべき）
-			float width = data->metadata.width;  // 例: 100px
-			float height = data->metadata.height; // 例: 100px
+			float width = static_cast<float>(data->metadata.width);
+			float height = static_cast<float>(data->metadata.height);
 
 			// スケール適用
 			width *= this->transforms.scale.x;

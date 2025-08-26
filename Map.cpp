@@ -15,6 +15,7 @@ Map::Map()
 			data[y][x].texture = uint32_t(TEXTURE::Map_Block);
 			data[y][x].transforms.translate = PositionByIndex(Vector2int(x, y));
 			blockType[y][x] = BLOCK_TYPE::Empty;
+			IsCollisionMouseRay_[y][x] = false;
 		}
 	}
 }
@@ -155,24 +156,41 @@ void Map::LoadMap(int stageNum)
 	FlipXAxis(EffectType);
 
 #pragma endregion
+
+#pragma region mapCharactor
+	for (int x = 0; x < MAP_WIDTH; ++x)
+	{
+		for (int y = 0; y < MAP_HEIGHT; ++y)
+		{
+			CharactorType[y][x] = BLOCK_CHAR::Empty;
+		}
+	}
+#pragma endregion
+
 }
 
 void Map::Update()
 {
-	//for (int x = 0; x < MAP_WIDTH; ++x)
-	//{
-	//	for (int y = 0; y < MAP_HEIGHT; ++y)
-	//	{
-	//		if (EffectType[y][x] == BLOCK_EFFECT_TYPE::AbleCharactorSet)
-	//		{
-	//			data[y][x].color = 0xFF0000FF;
-	//		}
-	//		else
-	//		{
-	//			data[y][x].color = 0xFFFFFFFF;
-	//		}
-	//	}
-	//}
+	for (int x = 0; x < MAP_WIDTH; ++x)
+	{
+		for (int y = 0; y < MAP_HEIGHT; ++y)
+		{
+			if (EffectType[y][x] == BLOCK_EFFECT_TYPE::AbleCharactorSet)
+			{
+				data[y][x].color = 0x69ff5dFF;
+			}
+			else
+			{
+				data[y][x].color = 0xFFFFFFFF;
+			}
+
+			// マウスに当たっていたら
+			if (IsCollisionMouseRay_[y][x] == true)
+			{
+				data[y][x].color = 0xFF0000FF;
+			}
+		}
+	}
 }
 
 void Map::Draw()
@@ -229,8 +247,12 @@ int Map::shotestCost(Vector2int start, Vector2int end)
 	const int INF = 1000;
 	int cost[MAP_HEIGHT][MAP_WIDTH];
 	for (int y = 0; y < MAP_HEIGHT; ++y)
+	{
 		for (int x = 0; x < MAP_WIDTH; ++x)
+		{
 			cost[y][x] = INF;
+		}
+	}
 
 	std::queue<Vector2int> q;
 	q.push(start);
@@ -254,11 +276,15 @@ int Map::shotestCost(Vector2int start, Vector2int end)
 
 			// 範囲外チェック
 			if (next.x < 0 || next.x >= MAP_WIDTH || next.y < 0 || next.y >= MAP_HEIGHT)
+			{
 				continue;
+			}
 
 			// 移動可能かチェック
 			if (!A_to_B(current, next))
+			{
 				continue;
+			}
 
 			// 未訪問なら更新
 			if (cost[next.y][next.x] == INF)
@@ -268,15 +294,91 @@ int Map::shotestCost(Vector2int start, Vector2int end)
 
 				// ゴールに到達したら即返す
 				if (next == end)
+				{
 					return cost[next.y][next.x];
+				}
 			}
 		}
 	}
 
 	// 到達不能
 	return -1;
-
 }
+
+std::vector<Vector2int> Map::FindPath(Vector2int start, Vector2int end)
+{
+	if (start == end) return { start };
+
+	const int INF = 1000;
+	int cost[MAP_HEIGHT][MAP_WIDTH]{};
+	Vector2int cameFrom[MAP_HEIGHT][MAP_WIDTH]{};
+
+	for (int y = 0; y < MAP_HEIGHT; ++y)
+	{
+		for (int x = 0; x < MAP_WIDTH; ++x)
+		{
+			cost[y][x] = INF;
+			cameFrom[y][x] = Vector2int(-1, -1); // 未訪問
+		}
+	}
+
+	std::queue<Vector2int> q;
+	q.push(start);
+	cost[start.y][start.x] = 0;
+
+	const Vector2int directions[4] = {
+		{ 0, -1 }, { 0, 1 }, { -1, 0 }, { 1, 0 }
+	};
+
+	while (!q.empty())
+	{
+		Vector2int current = q.front();
+		q.pop();
+
+		for (const auto& dir : directions)
+		{
+			Vector2int next = current + dir;
+
+			if (next.x < 0 || next.x >= MAP_WIDTH || next.y < 0 || next.y >= MAP_HEIGHT)
+			{
+				continue;
+			}
+
+			if (!A_to_B(current, next))
+			{
+				continue;
+			}
+
+			if (cost[next.y][next.x] == INF)
+			{
+				cost[next.y][next.x] = cost[current.y][current.x] + 1;
+				cameFrom[next.y][next.x] = current;
+				q.push(next);
+
+				if (next == end)
+				{
+					goto reconstruct;
+				}
+			}
+		}
+	}
+
+	// 到達不能
+	return {};
+
+reconstruct:
+	std::vector<Vector2int> path;
+	Vector2int current = end;
+	while (current != start)
+	{
+		path.push_back(current);
+		current = cameFrom[current.y][current.x];
+	}
+	path.push_back(start);
+	std::reverse(path.begin(), path.end());
+	return path;
+}
+
 
 BLOCK_TYPE Map::BlockTypeByIndex(Vector2int index)
 {
@@ -288,6 +390,27 @@ BLOCK_EFFECT_TYPE Map::BlockEffectByIndex(Vector2int index)
 	return EffectType[index.y][index.x];
 }
 
+void Map::CheckAblemovement(Vector2int index, int idouhanni)
+{
+	for (int y = index.y - idouhanni; y <= index.y + idouhanni; ++y)
+	{
+		for (int x = index.x - idouhanni; x <= index.x + idouhanni; ++x)
+		{
+			// マップ内であれ
+			if (x >= 0 && x < MAP_WIDTH && y >= 0 && y < MAP_HEIGHT)
+			{
+				// ターゲットまでの最短経路を求める
+				int cost = shotestCost(index, Vector2int{ x,y });
+				// 最短ルートが移動可能範囲を超えていなかったため移動可能
+				if ((cost <= idouhanni && cost != -1))//|| (index == Vector2int{ x,y })
+				{
+					EffectType[y][x] = BLOCK_EFFECT_TYPE::AbleCharactorSet;
+				}
+			}
+		}
+	}
+}
+
 bool Map::A_to_B(Vector2int start, Vector2int target)
 {
 	if (blockType[start.y][start.x] == BLOCK_TYPE::Empty && blockType[target.y][target.x] == BLOCK_TYPE::Wall)
@@ -295,6 +418,12 @@ bool Map::A_to_B(Vector2int start, Vector2int target)
 		return false;
 	}
 	if (blockType[start.y][start.x] == BLOCK_TYPE::Wall && blockType[target.y][target.x] == BLOCK_TYPE::Empty)
+	{
+		return false;
+	}
+
+	// 既にtargetマスに誰かいる
+	if (CharactorType[target.y][target.x] == BLOCK_CHAR::OnEnemy || CharactorType[target.y][target.x] == BLOCK_CHAR::OnPlayer)
 	{
 		return false;
 	}

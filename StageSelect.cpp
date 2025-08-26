@@ -12,7 +12,7 @@ StageSelect::StageSelect()
 
 	Vector3 IconSum[STAGE_MAX];
 
-	const float angleIncrement = 2.0f * std::numbers::pi / iconSum_;
+	const float angleIncrement = 2.0f * float(std::numbers::pi) / iconSum_;
 	for (int i = 0; i < iconSum_; ++i)
 	{
 		float angle = angleIncrement * i;
@@ -22,7 +22,7 @@ StageSelect::StageSelect()
 		IconSum[i] *= 30;
 		Icon_[i].model = uint32_t(TEXTURE::StageSelect_icon);
 		Icon_[i].texture = uint32_t(TEXTURE::StageSelect_icon);
-		Icon_[i].transforms.rotate.y = (((2.0f * std::numbers::pi) / iconSum_) * i) + (std::numbers::pi);
+		Icon_[i].transforms.rotate.y = (((2.0f * float(std::numbers::pi)) / iconSum_) * i) + (float(std::numbers::pi));
 		Icon_[i].transforms.translate += IconSum[i];
 		Icon_[i].transforms.parentWorld = &center.transforms.World;
 	}
@@ -47,7 +47,7 @@ void StageSelect::Update()
 		if (easingFrame < easingFrameMAX + 2 && easingFrameMAX > 10)easingFrameMAX -= 10;
 		preCenterRotate = center.transforms.rotate;
 		targetCenterRotate = preCenterRotate;
-		targetCenterRotate.y += (2.0f * std::numbers::pi) / iconSum_;
+		targetCenterRotate.y += (2.0f * float(std::numbers::pi)) / iconSum_;
 		easingFrame = 0;
 		selectIcon++;
 		if (selectIcon >= iconSum_)selectIcon = 0;
@@ -57,7 +57,7 @@ void StageSelect::Update()
 		if (easingFrame < easingFrameMAX + 2 && easingFrameMAX > 10)easingFrameMAX -= 10;
 		preCenterRotate = center.transforms.rotate;
 		targetCenterRotate = preCenterRotate;
-		targetCenterRotate.y -= (2.0f * std::numbers::pi) / iconSum_;
+		targetCenterRotate.y -= (2.0f *float(std::numbers::pi)) / iconSum_;
 		easingFrame = 0;
 		selectIcon--;
 		if (selectIcon < 0)selectIcon = iconSum_ - 1;

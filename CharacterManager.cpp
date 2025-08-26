@@ -18,6 +18,15 @@ void CharacterManager::AddButtleCharactorList(Charactor* add)
 	ButtleCharactor.push_back(add);
 }
 
+void CharacterManager::SubButtleCharactorList(Charactor* add)
+{
+	auto it = std::find(ButtleCharactor.begin(), ButtleCharactor.end(), add);
+	if (it != ButtleCharactor.end())
+	{
+		ButtleCharactor.erase(it);
+	}
+}
+
 void CharacterManager::LoadGetAllCharactor()
 {
 	// ファイルをひらく
@@ -85,17 +94,17 @@ void CharacterManager::LoadGetAllCharactor()
 			// 攻撃力の設定
 			else if (i == 1)
 			{
-				add->states_default_.power = std::stoi(word);
+				add->states_default_.power = std::stof(word);
 			}
 			// Hpの設定
 			else if (i == 2)
 			{
-				add->states_default_.hp = std::stoi(word);
+				add->states_default_.hp = std::stof(word);
 			}
 			// 素早さの設定
 			else if (i == 3)
 			{
-				add->states_default_.speed = std::stoi(word);
+				add->states_default_.speed = std::stof(word);
 			}
 			// 移動距離の設定
 			else if (i == 4)

@@ -62,6 +62,7 @@ private:
 	// カメラ移動関連
 	int frame_camera;
 	int frameMAX_camera;
+	Vector3 center_camera;
 	Vector2int centerIndex_camera;
 
 	// キー

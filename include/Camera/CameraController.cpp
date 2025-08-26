@@ -291,6 +291,7 @@ void CameraController::SetCenterTarget(Vector3 target, int spendFrame, EaseType 
     easeCenter_.easingFlag = 1;
     easeCenter_.flame = 0;
     easeCenter_.maxFrame = spendFrame;
+    easeCenter_.easetype = easetype;
 };
 
 void CameraController::SetRotateTarget(Vector3 target, int spendFrame, EaseType easetype)
@@ -300,6 +301,7 @@ void CameraController::SetRotateTarget(Vector3 target, int spendFrame, EaseType 
     easeRotate_.easingFlag = 1;
     easeRotate_.flame = 0;
     easeRotate_.maxFrame = spendFrame;
+    easeRotate_.easetype = easetype;
 };
 
 void CameraController::SetDistanceTarget(float target, int spendFrame, EaseType easetype)
@@ -309,4 +311,5 @@ void CameraController::SetDistanceTarget(float target, int spendFrame, EaseType 
     easeDistance_.easingFlag = 1;
     easeDistance_.flame = 0;
     easeDistance_.maxFrame = spendFrame;
+    easeDistance_.easetype = easetype;
 };

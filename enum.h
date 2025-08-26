@@ -10,6 +10,8 @@
 #define BLOCK_HEIGHT 1.2f
 #define BLOCK_WIDTH 1.2f
 
+#define MOVE_COST 20.0f
+
 enum class ITEM
 {
 	Item_KingsSeed = 0,
@@ -26,12 +28,12 @@ struct States
 {
 	// 諸々のパワー
 	// アタッカーなら与えるダメージが変わるしヒーラーなら回復量が変わる
-	int power = 0;
+	float power = 0;
 	// HP
-	int hp = 0;
+	float hp = 0;
 	// 素早さ
 	// 速いと技をactionDelay少なく使える
-	int speed = 0;
+	float speed = 0;
 	// 移動可能距離
 	int movePoint = 5;
 };
@@ -41,6 +43,13 @@ enum class BLOCK_TYPE
 	Empty = 0,		// 空
 	Wall = 1,		// 壁
 	stairs = 2,		// 階段
+};
+
+enum class BLOCK_CHAR
+{
+	Empty,		// 空
+	OnEnemy,	// 敵がいる
+	OnPlayer,	// 味方がいる
 };
 
 enum class BLOCK_EFFECT_TYPE

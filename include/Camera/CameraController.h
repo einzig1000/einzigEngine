@@ -27,7 +27,7 @@ public:
     void SetRotateTarget(Vector3 Center, int spendFrame, EaseType easetype);
     void SetDistanceTarget(float Center, int spendFrame, EaseType easetype);
 
-
+    Vector3 GetCenter() const { return center_; }
 
     bool cameraMode_;
     bool cameraMode_centerControl_;

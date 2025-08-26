@@ -70,7 +70,7 @@ Quaternion Quaternion::MakeFromToRotation(const Vector3& from, const Vector3& to
 		}
 
 		// 正規化して180度回転のクォータニオンを生成
-		return Quaternion::MakeAxisAngle(rotationAxis.Normalized(), std::numbers::pi);
+		return Quaternion::MakeAxisAngle(rotationAxis.Normalized(), float(std::numbers::pi));
 	}
 	else
 	{

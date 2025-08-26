@@ -12,6 +12,11 @@ enum class CharactorName
 	CharactorMAX
 };
 
+enum class Skill
+{
+	
+};
+
 
 
 class Charactor
@@ -22,10 +27,14 @@ public:
 
 	void Update();
 
-
+	// 3Dモデル
 	Game::RenderData_Model data;
+	// 移動先を表す半透明3Dモデル
 	Game::RenderData_Model targetdata;
+	
+	// 細長いステータスシート
 	Game::RenderData_Sprite dataSeat;
+	// でかいステータスシート
 	Game::RenderData_Sprite dataSeat_type;
 
 	States states_default_;

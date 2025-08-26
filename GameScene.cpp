@@ -40,6 +40,10 @@ GameScene::GameScene(CharacterManager* characterManager)
 	ActSelectIcon_[2].texture = uint32_t(TEXTURE::ActSelect_Icon_Move);
 	ActSelectIcon_[3].texture = uint32_t(TEXTURE::ActSelect_Icon_ChangeCameraMode);
 
+	ActSelectIcon_[0].options.enableLighting = false;
+	ActSelectIcon_[1].options.enableLighting = false;
+	ActSelectIcon_[2].options.enableLighting = false;
+	ActSelectIcon_[3].options.enableLighting = false;
 }
 
 GameScene::~GameScene()
@@ -57,6 +61,8 @@ void GameScene::Initialize(int stageNum)
     map_->LoadMap(stageNum);
 
 	finishSetUp = false;
+
+	if (stageNum == 1)centerIndex_camera = { 17,5 };
 
 	// アクションディレイ順に行動するために初期化
 	for (int i = 0; i < characterManager_->GetAllCharactor().size(); ++i)
@@ -93,6 +99,8 @@ void GameScene::Update()
 		B = true;
 	}
 
+	// ここで色とか変わってる
+	map_->Update();
 
 
 	if (targetphase_ != GameScenePhase::None)
@@ -150,7 +158,6 @@ void GameScene::Update()
 	// カメライージング更新用フレーム
 	frame_camera++;
 
-    map_->Update();
 }
 
 void GameScene::Draw()
@@ -194,7 +201,7 @@ void GameScene::Draw()
 	}
 }
 
-
+// １キャラ行動する度に呼び出される
 void GameScene::Initialize_Check()
 {}
 
@@ -217,7 +224,7 @@ void GameScene::Update_Check()
 void GameScene::Draw_Check()
 {}
 
-
+// 駒を配置するフェーズ　各ゲームで一度しか呼び出されない
 void GameScene::Initialize_Setup()
 {
 	Game::SetControlModeCameraCenter(false);
@@ -230,18 +237,27 @@ void GameScene::Initialize_Setup()
 	Game::MoveDistanceTarget(15.60f, frameMAX_camera, EaseType::OUT_QUART);
 	Game::MoveRotateTarget({ 1.13f, 0.0f, 0.0f }, frameMAX_camera, EaseType::OUT_QUART);
 
-
 	for (uint32_t i = 0; i < characterManager_->GetAllCharactor().size(); ++i)
 	{
-		characterManager_->GetAllCharactor()[i]->dataSeat.transforms.translate.x = 145;
-		characterManager_->GetAllCharactor()[i]->dataSeat.transforms.translate.y = i * 40 + 30;
-		characterManager_->GetAllCharactor()[i]->dataSeat_type.transforms.translate.x = 70;
-		characterManager_->GetAllCharactor()[i]->dataSeat_type.transforms.translate.y = i * 40 + 30;
+		characterManager_->GetAllCharactor()[i]->dataSeat.transforms.translate.x = 145.0f;
+		characterManager_->GetAllCharactor()[i]->dataSeat.transforms.translate.y = i * 40.0f + 30.0f;
+		characterManager_->GetAllCharactor()[i]->dataSeat_type.transforms.translate.x = 70.0f;
+		characterManager_->GetAllCharactor()[i]->dataSeat_type.transforms.translate.y = i * 40.0f + 30.0f;
+	}
+
+
+	for (int y = 0; y < MAP_HEIGHT; ++y)
+	{
+		for (int x = 0; x < MAP_WIDTH; ++x)
+		{
+			map_->IsCollisionMouseRay_[y][x] = false;
+		}
 	}
 }
 
 void GameScene::Update_Setup()
 {
+	center_camera = Game::GetCamera()->GetCenter();
 	if (!finishSetUp)
 	{
 		// カメラコントロール
@@ -249,39 +265,37 @@ void GameScene::Update_Setup()
 		{
 			if (R || L || T || B)
 			{
-				bool easingsSet = false;
-
-				if (R && centerIndex_camera.x > 0)
+				bool w = false;
+				bool h = false;
+				if (R && !L && IndexByPosition(center_camera).x > 0)
 				{
-					centerIndex_camera.x -= 1;
-					easingsSet = true;
+					center_camera.x += BLOCK_HEIGHT;
+					w = true;
 				}
-				if (L && centerIndex_camera.x < MAP_WIDTH - 1)
+				if (L && !R && IndexByPosition(center_camera).x < MAP_WIDTH - 1)
 				{
-					centerIndex_camera.x += 1;
-					easingsSet = true;
-				}
-				if (T && centerIndex_camera.y > 0)
-				{
-					centerIndex_camera.y -= 1;
-					easingsSet = true;
-				}
-				if (B && centerIndex_camera.y < MAP_HEIGHT - 1)
-				{
-					centerIndex_camera.y += 1;
-					easingsSet = true;
+					center_camera.x -= BLOCK_HEIGHT;
+					w = true;
 				}
 
-				if (easingsSet)
+				if (T && !B && IndexByPosition(center_camera).y > 0)
 				{
-					frame_camera = 0;
-					frameMAX_camera = 5;
-					Game::MoveCenterTarget(PositionByIndex(centerIndex_camera), frameMAX_camera, EaseType::LINEAR);
+					center_camera.z += BLOCK_HEIGHT;
+					h = true;
 				}
+				if (B && !T && IndexByPosition(center_camera).y < MAP_HEIGHT - 1)
+				{
+					center_camera.z -= BLOCK_HEIGHT;
+					h = true;
+				}
+				frame_camera = 0;
+				if (w && h)frameMAX_camera = 14;
+				else frameMAX_camera = 10;
+				Game::MoveCenterTarget(center_camera, frameMAX_camera, EaseType::LINEAR);
 			}
 		}
 
-		// キャラ詳細シートの更新(シートとマウスが衝突している間そのシートは0xFF0000FFになる。その状態でクリックするとクリックしている間のみアイコン座標を操作できるようになる。アイコンを離した位置にあるマップに3D駒を配置する)
+		// キャラ詳細シートの更新
 		for (uint32_t i = 0; i < characterManager_->GetAllCharactor().size(); ++i)
 		{
 			// マウスと衝突してるスプライト
@@ -292,7 +306,22 @@ void GameScene::Update_Setup()
 				// 衝突中にクリック
 				if (Game::GetMousePress(0) && holdNumber < 0)
 				{
+					// 何番目の駒をクリックしているのか保存
 					holdNumber = i;
+					// 既にセットされていた時
+					if (isSet[i] == true)
+					{
+						// リセット
+						isSet[i] = false;
+						// 設置されていた場所を取得
+						Vector2int index = IndexByPosition(characterManager_->GetAllCharactor()[i]->data.transforms.translate);
+						// 設置されていた場所を[駒をおける場所]に戻す
+						map_->EffectType[index.y][index.x] = BLOCK_EFFECT_TYPE::AbleCharactorSet;
+						// 設置されていた場所を[誰もいない場所]に戻す
+						map_->CharactorType[index.y][index.x] = BLOCK_CHAR::Empty;
+						// 駒をバトルキャラリストから削除
+						characterManager_->SubButtleCharactorList(characterManager_->GetAllCharactor()[i]);
+					}
 				}
 			}
 			// 衝突していないスプライト
@@ -314,45 +343,52 @@ void GameScene::Update_Setup()
 				{
 					for (int x = 0; x < MAP_WIDTH; ++x)
 					{
-						if (map_->data[y][x].color == 0xFF0000FF)
+						// 設置場所の確定
+						if (map_->IsCollisionMouseRay_[y][x] == true)
 						{
+							// 駒の設置
 							characterManager_->GetAllCharactor()[i]->data.transforms.translate = PositionByIndex(Vector2int{ x,y }, map_->BlockTypeByIndex(Vector2int{ x,y }));
+							// 駒をバトルキャラリストに追加
 							characterManager_->AddButtleCharactorList(characterManager_->GetAllCharactor()[i]);
+							// バトルキャラが増える度にアクションディレイ順にソート
+							characterManager_->Sort_Buttle_ActionDelay();
+							// i 番目のキャラが配置されたことを記録
 							isSet[i] = true;
+							// 配置した場所にプレイヤーが配置されたことを記録
+							map_->CharactorType[y][x] = BLOCK_CHAR::OnPlayer;
+							// エフェクトの更新
+							map_->EffectType[y][x] = BLOCK_EFFECT_TYPE::Empty;
+							// ここでループを終わらせる
 							y = MAP_HEIGHT;
 							x = MAP_WIDTH;
-							// 場のキャラが増える度にアクションディレイ順にソート
-							characterManager_->Sort_Buttle_ActionDelay();
 						}
 						// 設置場所が見つからなかった
 						if (y == MAP_HEIGHT - 1 && x == MAP_WIDTH - 1 && isSet[i] == false)
 						{
-							characterManager_->GetAllCharactor()[i]->dataSeat_type.transforms.translate.x = 70;
-							characterManager_->GetAllCharactor()[i]->dataSeat_type.transforms.translate.y = i * 40 + 30;
+							// アイコンをもとの位置に戻す
+							characterManager_->GetAllCharactor()[i]->dataSeat_type.transforms.translate.x = 70.0f;
+							characterManager_->GetAllCharactor()[i]->dataSeat_type.transforms.translate.y = i * 40.0f + 30.0f;
 						}
 					}
 				}
 			}
 		}
 
-		//-------- x=0y=0から調査しているせいで最初にマウスレイと衝突した一番手前のブロックじゃなくて --------
 		// マップとマウスの当たり判定
-		bool TheOne = false;
 		for (uint32_t y = 0; y < MAP_HEIGHT; ++y)
 		{
 			for (uint32_t x = 0; x < MAP_WIDTH; ++x)
 			{
 				// 色の初期化
-				map_->data[y][x].color = 0xFFFFFFFF;
+				map_->IsCollisionMouseRay_[y][x] = false;
 				// 駒をおける場所か判断
 				if (map_->BlockEffectByIndex(Vector2int(x, y)) == BLOCK_EFFECT_TYPE::AbleCharactorSet)
 				{
 					// まだ色を変えられたマスがない（TheOneがfalse）なら色を変える
-					if (!TheOne && IsCollision(Game::GetMouseRay(), map_->data[y][x].AABB))
+					if (IsCollision(Game::GetMouseRay(), map_->data[y][x].AABB))
 					{
 						// おける場所だったので色を変える
-						map_->data[y][x].color = 0xFF0000FF;
-						//TheOne = true;
+						map_->IsCollisionMouseRay_[y][x] = true;
 					}
 				}
 			}
@@ -368,13 +404,13 @@ void GameScene::Update_Setup()
 		}
 
 		// フェーズ更新
-		if (GetHitKey::keys[DIK_P] && !GetHitKey::preKeys[DIK_P])
+		if (GetHitKey::keys[DIK_SPACE] && !GetHitKey::preKeys[DIK_SPACE])
 		{
 			finishSetUp = true;
 			frame_camera = 0;
 			frameMAX_camera = 180;
 			Game::MoveCenterTarget({ -11.4f, -0.0f, -4.10f }, frameMAX_camera, EaseType::OUT_QUART);
-			Game::MoveRotateTarget({ 1.1f, std::numbers::pi * 2.0f, 0.0f }, frameMAX_camera, EaseType::OUT_QUART);
+			Game::MoveRotateTarget({ 1.1f,float(std::numbers::pi) * 2.0f, 0.0f }, frameMAX_camera, EaseType::OUT_QUART);
 			Game::MoveDistanceTarget(32.40f, frameMAX_camera, EaseType::OUT_QUART);
 			for (int x = 0; x < MAP_WIDTH; ++x)
 			{
@@ -387,7 +423,7 @@ void GameScene::Update_Setup()
 	}
 	else
 	{
-		for (uint32_t i = 0; i < characterManager_->GetAllCharactor().size(); ++i)
+		for (int i = 0; i < int(characterManager_->GetAllCharactor().size()); ++i)
 		{
 			if (i * 3 < frame_camera)
 			{
@@ -399,7 +435,7 @@ void GameScene::Update_Setup()
 		}
 		if (frame_camera > frameMAX_camera)
 		{
-			targetphase_ = GameScenePhase::PlayerTurn;
+			targetphase_ = GameScenePhase::Check;
 
 			// キャラクターデフォルトステータスをバトル内ステータスに適用
 			characterManager_->SetStatus();
@@ -424,7 +460,7 @@ void GameScene::Draw_Setup()
 	}
 }
 
-
+// 行動キャラがプレイヤーサイドだった時に呼び出される
 void GameScene::Initialize_PlayerTurn()
 {
 	frame_camera = 60;
@@ -432,6 +468,25 @@ void GameScene::Initialize_PlayerTurn()
 	Act = CharactorSelectPattern::None;
 	moveTragetCoolTome = 0;
 	ChangeFocus();
+
+	// アイコン座標
+	for (int i = 0; i < 4; ++i)
+	{
+		ActSelectIcon_[i].transforms.translate = characterManager_->GetButtleCharactor()[0]->data.transforms.translate;
+		ActSelectIcon_[i].transforms.scale = { 0.0f,0.0f,0.0f };
+		ActSelectIcon_targetIcon[i] = ActSelectIcon_[i].transforms.translate;
+	}
+	ActSelectIcon_targetIcon[0].x -= 4.0f;
+	ActSelectIcon_targetIcon[0].y += 2.0f;
+
+	ActSelectIcon_targetIcon[1].x += 4.0f;
+	ActSelectIcon_targetIcon[1].y += 2.0f;
+
+	ActSelectIcon_targetIcon[2].x -= 1.5f;
+	ActSelectIcon_targetIcon[2].y += 3.0f;
+
+	ActSelectIcon_targetIcon[3].x += 1.5f;
+	ActSelectIcon_targetIcon[3].y += 3.0f;
 }
 
 void GameScene::Update_PlayerTurn()
@@ -448,86 +503,111 @@ void GameScene::Update_PlayerTurn()
 				Vector2int from = moveTargetPositionIndex;
 				Vector2int to = Vector2int{ moveTargetPositionIndex.x - 1, moveTargetPositionIndex.y };
 				// 移動できるか
-				if (map_->A_to_B(from, to))
+				if (map_->EffectType[to.y][to.x] == BLOCK_EFFECT_TYPE::AbleCharactorSet)
 				{
-					// 移動範囲をこえてないか
-					if (map_->shotestCost(IndexByPosition(characterManager_->GetButtleCharactor()[0]->data.transforms.translate), to) <= characterManager_->GetButtleCharactor()[0]->states_buttle_.movePoint)
-					{
-						moveTargetPositionIndex.x -= 1;
-						moveTragetCoolTome = 0;
-						characterManager_->GetButtleCharactor()[0]->targetdata.transforms.translate = PositionByIndex(moveTargetPositionIndex, map_->BlockTypeByIndex(moveTargetPositionIndex));
-					}
+					moveTargetPositionIndex.x -= 1;
+					moveTragetCoolTome = 0;
+					characterManager_->GetButtleCharactor()[0]->targetdata.transforms.translate = PositionByIndex(moveTargetPositionIndex, map_->BlockTypeByIndex(moveTargetPositionIndex));
 				}
 			}
 			if (L && moveTargetPositionIndex.x < MAP_WIDTH - 1)
 			{
 				Vector2int from = moveTargetPositionIndex;
 				Vector2int to = Vector2int{ moveTargetPositionIndex.x + 1, moveTargetPositionIndex.y };
-				if (map_->A_to_B(from, to))
+				// 移動できるか
+				if (map_->EffectType[to.y][to.x] == BLOCK_EFFECT_TYPE::AbleCharactorSet)
 				{
-					if (map_->shotestCost(IndexByPosition(characterManager_->GetButtleCharactor()[0]->data.transforms.translate), to) <= characterManager_->GetButtleCharactor()[0]->states_buttle_.movePoint)
-					{
-						moveTargetPositionIndex.x += 1;
-						moveTragetCoolTome = 0;
-						characterManager_->GetButtleCharactor()[0]->targetdata.transforms.translate = PositionByIndex(moveTargetPositionIndex, map_->BlockTypeByIndex(moveTargetPositionIndex));
-					}
+					moveTargetPositionIndex.x += 1;
+					moveTragetCoolTome = 0;
+					characterManager_->GetButtleCharactor()[0]->targetdata.transforms.translate = PositionByIndex(moveTargetPositionIndex, map_->BlockTypeByIndex(moveTargetPositionIndex));
 				}
+				//if (map_->A_to_B(from, to))
+				//{
+				//	if (map_->shotestCost(IndexByPosition(characterManager_->GetButtleCharactor()[0]->data.transforms.translate), to) <= characterManager_->GetButtleCharactor()[0]->states_buttle_.movePoint)
+				//	{
+				//		moveTargetPositionIndex.x += 1;
+				//		moveTragetCoolTome = 0;
+				//		characterManager_->GetButtleCharactor()[0]->targetdata.transforms.translate = PositionByIndex(moveTargetPositionIndex, map_->BlockTypeByIndex(moveTargetPositionIndex));
+				//	}
+				//}
 			}
 			if (T && moveTargetPositionIndex.y > 0)
 			{
 				Vector2int from = moveTargetPositionIndex;
 				Vector2int to = Vector2int{ moveTargetPositionIndex.x, moveTargetPositionIndex.y - 1 };
-				if (map_->A_to_B(from, to))
+				// 移動できるか
+				if (map_->EffectType[to.y][to.x] == BLOCK_EFFECT_TYPE::AbleCharactorSet)
 				{
-					if (map_->shotestCost(IndexByPosition(characterManager_->GetButtleCharactor()[0]->data.transforms.translate), to) <= characterManager_->GetButtleCharactor()[0]->states_buttle_.movePoint)
-					{
-
-						moveTargetPositionIndex.y -= 1;
-						moveTragetCoolTome = 0;
-						characterManager_->GetButtleCharactor()[0]->targetdata.transforms.translate = PositionByIndex(moveTargetPositionIndex, map_->BlockTypeByIndex(moveTargetPositionIndex));
-					}
+					moveTargetPositionIndex.y -= 1;
+					moveTragetCoolTome = 0;
+					characterManager_->GetButtleCharactor()[0]->targetdata.transforms.translate = PositionByIndex(moveTargetPositionIndex, map_->BlockTypeByIndex(moveTargetPositionIndex));
 				}
 			}
 			if (B && moveTargetPositionIndex.y < MAP_HEIGHT - 1)
 			{
 				Vector2int from = moveTargetPositionIndex;
 				Vector2int to = Vector2int{ moveTargetPositionIndex.x, moveTargetPositionIndex.y + 1 };
-				if (map_->A_to_B(from, to))
+				// 移動できるか
+				if (map_->EffectType[to.y][to.x] == BLOCK_EFFECT_TYPE::AbleCharactorSet)
 				{
-					if (map_->shotestCost(IndexByPosition(characterManager_->GetButtleCharactor()[0]->data.transforms.translate), to) <= characterManager_->GetButtleCharactor()[0]->states_buttle_.movePoint)
-					{
-						moveTargetPositionIndex.y += 1;
-						moveTragetCoolTome = 0;
-						characterManager_->GetButtleCharactor()[0]->targetdata.transforms.translate = PositionByIndex(moveTargetPositionIndex, map_->BlockTypeByIndex(moveTargetPositionIndex));
-					}
+					moveTargetPositionIndex.y += 1;
+					moveTragetCoolTome = 0;
+					characterManager_->GetButtleCharactor()[0]->targetdata.transforms.translate = PositionByIndex(moveTargetPositionIndex, map_->BlockTypeByIndex(moveTargetPositionIndex));
 				}
 			}
 		}
 		if (GetHitKey::keys[DIK_SPACE])
 		{
 			// 移動してたら
-			if (IndexByPosition(characterManager_->GetButtleCharactor()[0]->targetdata.transforms.translate) != IndexByPosition(characterManager_->GetButtleCharactor()[0]->data.transforms.translate))
+			Vector2int from = IndexByPosition(characterManager_->GetButtleCharactor()[0]->data.transforms.translate);
+			Vector2int to = moveTargetPositionIndex;
+
+			if (from != to)
 			{
-				// 何マス移動したかの計算
-				//int totalMove = map_->shotestCost(IndexByPosition(characterManager_->GetButtleCharactor()[0]->data.transforms.translate), IndexByPosition(characterManager_->GetButtleCharactor()[0]->targetdata.transforms.translate));
-				int moveCost = 20;
 				// 実際に移動
 				characterManager_->GetButtleCharactor()[0]->data.transforms.translate = PositionByIndex(moveTargetPositionIndex, map_->BlockTypeByIndex(moveTargetPositionIndex));
-				// 素早さ補正の計算
+				// 移動コストの取得
+				float moveCost = MOVE_COST;
+				// 素早さ補正の取得
 				float percentage = float(characterManager_->GetButtleCharactor()[0]->states_buttle_.speed) / 100;
 				// アクションディレイの更新
 				characterManager_->GetButtleCharactor()[0]->actionDelay += moveCost * percentage;
+				// マップ更新
+				map_->CharactorType[from.y][from.x] = BLOCK_CHAR::Empty;
+				map_->CharactorType[to.y][to.x] = BLOCK_CHAR::OnPlayer;
 				// フェーズ更新
 				targetphase_ = GameScenePhase::Check;
 				Act = CharactorSelectPattern::None;
+				// 移動可能マスを示すエフェクトをリセット
+				for (int y = 0; y < MAP_HEIGHT; ++y)
+				{
+					for (int x = 0; x < MAP_WIDTH; ++x)
+					{
+						// すでに移動可能になってるやつは初期化
+						if (map_->EffectType[y][x] == BLOCK_EFFECT_TYPE::AbleCharactorSet)
+						{
+							map_->EffectType[y][x] = BLOCK_EFFECT_TYPE::Empty;
+						}
+					}
+				}
 			}
 			// 移動先が変わってなかったら
 			else
 			{
 				ChangeFocus();
+				Act = CharactorSelectPattern::None;
 			}
 		}
 		moveTragetCoolTome++;
+	}
+
+	else if (Act == CharactorSelectPattern::ChangeCameraMode)
+	{
+	}
+
+	else if (Act == CharactorSelectPattern::Attack)
+	{
+
 	}
 }
 
@@ -545,6 +625,7 @@ void GameScene::Draw_PlayerTurn()
 }
 
 
+// 行動キャラがエネミーサイドだった時に呼び出される
 void GameScene::Initialize_EnemyTurn()
 {
 	frame_camera = 60;
@@ -576,6 +657,7 @@ void GameScene::Draw_EnemyTurn()
 	}
 }
 
+// バトル結果
 void GameScene::Initialize_Result()
 {}
 
@@ -593,7 +675,7 @@ void GameScene::Update_Result()
 void GameScene::Draw_Result()
 {}
 
-
+// 視点切り替え(コマンド選択もここ)
 void GameScene::Update_FocusMode()
 {
 	// 俯瞰中
@@ -606,8 +688,12 @@ void GameScene::Update_FocusMode()
 			ActSelectIcon_[i].transforms.scale = Easings::EasingVector3({ 1.5f,1.5f,1.5f }, { 0.0f,0.0f,0.0f }, EaseType::LINEAR, float(frame_camera) / float(frameMAX_camera - 20));
 			ActSelectIcon_[i].transforms.translate = Easings::EasingVector3(ActSelectIcon_targetIcon[i], characterManager_->GetButtleCharactor()[0]->data.transforms.translate, EaseType::LINEAR, float(frame_camera) / float(frameMAX_camera - 20));
 		}
+		if (GetHitKey::keys[DIK_SPACE] && !GetHitKey::preKeys[DIK_SPACE])
+		{
+			ChangeFocus();
+		}
 	}
-	// １キャラ注視中
+	// １キャラ注視中(コマンド選択もここ)
 	else if (cameraMode == CameraMode_Over_or_Focus::Focus)
 	{
 		for (int i = 0; i < 4; ++i)
@@ -627,6 +713,7 @@ void GameScene::Update_FocusMode()
 					if (i == 0)
 					{
 						ChangeOver();
+						Act = CharactorSelectPattern::ChangeCameraMode;
 					}
 					// 移動
 					else if (i == 1)
@@ -637,6 +724,7 @@ void GameScene::Update_FocusMode()
 						moveTargetPositionIndex = IndexByPosition(characterManager_->GetButtleCharactor()[0]->data.transforms.translate);
 						characterManager_->GetButtleCharactor()[0]->targetdata = characterManager_->GetButtleCharactor()[0]->data;
 						characterManager_->GetButtleCharactor()[0]->targetdata.color = 0xFFFFFF55;
+						map_->CheckAblemovement(moveTargetPositionIndex, characterManager_->GetButtleCharactor()[0]->states_buttle_.movePoint);
 					}
 				}
 			}
@@ -644,6 +732,10 @@ void GameScene::Update_FocusMode()
 			{
 				ActSelectIcon_[i].color = 0xFFFFFF30;
 			}
+		}
+		if (GetHitKey::keys[DIK_SPACE] && !GetHitKey::preKeys[DIK_SPACE])
+		{
+			ChangeOver();
 		}
 	}
 }
@@ -654,7 +746,7 @@ void GameScene::ChangeOver()
 	frameMAX_camera = 40;
 	cameraMode = CameraMode_Over_or_Focus::Over;
 	Game::MoveCenterTarget({ -11.4f, -0.0f, -4.10f }, frameMAX_camera, EaseType::OUT_QUART);
-	Game::MoveRotateTarget({ 1.1f, std::numbers::pi * 2.0f, 0.0f }, frameMAX_camera, EaseType::OUT_QUART);
+	Game::MoveRotateTarget({ 1.1f,float(std::numbers::pi) * 2.0f, 0.0f }, frameMAX_camera, EaseType::OUT_QUART);
 	Game::MoveDistanceTarget(32.40f, frameMAX_camera, EaseType::OUT_QUART);
 }
 
@@ -664,26 +756,8 @@ void GameScene::ChangeFocus()
 	frameMAX_camera = 40;
 	cameraMode = CameraMode_Over_or_Focus::Focus;
 	Game::MoveCenterTarget(characterManager_->GetButtleCharactor()[0]->data.transforms.translate, frameMAX_camera, EaseType::OUT_QUART);
-	Game::MoveRotateTarget({ 0.8f, std::numbers::pi * 2.0f, 0.0f }, frameMAX_camera, EaseType::OUT_QUART);
+	Game::MoveRotateTarget({ 0.8f,float(std::numbers::pi) * 2.0f, 0.0f }, frameMAX_camera, EaseType::OUT_QUART);
 	Game::MoveDistanceTarget(15.60f, frameMAX_camera, EaseType::OUT_QUART);
-	// アイコン座標
-	for (int i = 0; i < 4; ++i)
-	{
-		ActSelectIcon_[i].transforms.translate = characterManager_->GetButtleCharactor()[0]->data.transforms.translate;
-		ActSelectIcon_[i].transforms.scale = { 0.0f,0.0f,0.0f };
-		ActSelectIcon_targetIcon[i] = ActSelectIcon_[i].transforms.translate;
-	}
-	ActSelectIcon_targetIcon[0].x -= 4.0f;
-	ActSelectIcon_targetIcon[0].y += 2.0f;
-
-	ActSelectIcon_targetIcon[1].x += 4.0f;
-	ActSelectIcon_targetIcon[1].y += 2.0f;
-
-	ActSelectIcon_targetIcon[2].x -= 1.5f;
-	ActSelectIcon_targetIcon[2].y += 3.0f;
-
-	ActSelectIcon_targetIcon[3].x += 1.5f;
-	ActSelectIcon_targetIcon[3].y += 3.0f;
 }
 
 

@@ -53,7 +53,7 @@ void UnitOverview::Initialize()
 
 	// カメライージング
 	Game::MoveCenterTarget({ 0.0f, -0.0f, -5.390f }, 200, EaseType::OUT_QUART);
-	Game::MoveRotateTarget({ 0.4f, -std::numbers::pi / 2.0f, 0.0f }, 200, EaseType::OUT_QUART);
+	Game::MoveRotateTarget({ 0.4f, float(-std::numbers::pi) / 2.0f, 0.0f}, 200, EaseType::OUT_QUART);
 	Game::MoveDistanceTarget(15.60f, 200, EaseType::OUT_QUART);
 }
 
@@ -132,8 +132,8 @@ void UnitOverview::Draw()
 void UnitOverview::Initialize_ALL()
 {
 	// イージングの設定
-	tMAX = 10;
-	t = tMAX;
+	tMAX = 10.0f;
+	t = int(tMAX);
 
 	// 注目列の初期化
 	targetY = 0;
@@ -156,7 +156,7 @@ void UnitOverview::Initialize_ALL()
 
 	// キャラが乗ってるマップのみ更新
 	int check = 0;
-	int CharSum = characterManager_->GetAllCharactor().size();
+	int CharSum = int(characterManager_->GetAllCharactor().size());
 	for (int y = 0; y < MAP_HEIGHT; ++y)
 	{
 		for (int x = 0; x < MAP_WIDTH; ++x)
@@ -233,13 +233,13 @@ void UnitOverview::Update_ALL()
 	t++;
 
 	// 駒とマウスの当たり判定
-	for (uint32_t i = 0; i < characterManager_->GetAllCharactor().size(); ++i)
+	for (int i = 0; i < characterManager_->GetAllCharactor().size(); ++i)
 	{
 		characterManager_->GetAllCharactor()[i]->data.color = 0xFFFFFFFF;
 	}
-	for (uint32_t i = targetY * MAP_HEIGHT; i < (targetY + 1) * MAP_HEIGHT; ++i)
+	for (int i = targetY * MAP_HEIGHT; i < (targetY + 1) * MAP_HEIGHT; ++i)
 	{
-		if (i < characterManager_->GetAllCharactor().size())
+		if (i < int(characterManager_->GetAllCharactor().size()))
 		{
 			Charactor* dex = characterManager_->GetAllCharactor()[i];
 			// もしマウスレイと衝突してたら色を変える
@@ -282,9 +282,9 @@ void UnitOverview::Initialize_ALL_UNIT()
 
 	// キャラが乗ってるマップのみ更新
 	int check = 0;
-	int CharSum = characterManager_->GetAllCharactor().size();
+	int CharSum = int(characterManager_->GetAllCharactor().size());
 	Vector3 IconSum[100];
-	deltaRotate = (2.0f * std::numbers::pi) / CharSum;
+	deltaRotate = (2.0f *float(std::numbers::pi)) / CharSum;
 	for (int x = 0; x < MAP_WIDTH; ++x)
 	{
 		for (int y = 0; y < MAP_HEIGHT; ++y)
@@ -305,19 +305,19 @@ void UnitOverview::Initialize_ALL_UNIT()
 	}
 
 	// カメライージング
-	Game::MoveRotateTarget({ 0,float(-std::numbers::pi) + (deltaRotate * float(targetChar)),0 }, tMAX, EaseType::OUT_QUART);
-	Game::MoveCenterTarget({ 0,11,0 }, tMAX + 60, EaseType::OUT_QUART);
-	Game::MoveDistanceTarget( -float(CharSum) / 10.0f, tMAX, EaseType::OUT_QUART);
+	Game::MoveRotateTarget({ 0,float(-std::numbers::pi) + (deltaRotate * float(targetChar)),0 }, int(tMAX), EaseType::OUT_QUART);
+	Game::MoveCenterTarget({ 0,11,0 }, int(tMAX) + 60, EaseType::OUT_QUART);
+	Game::MoveDistanceTarget( -float(CharSum) / 10.0f, int(tMAX), EaseType::OUT_QUART);
 }
 
 void UnitOverview::Update_ALL_UNIT()
 {
 	// 計数1.0f以下の時のみイージング
-	if (t < tMAX)
+	if (t < int(tMAX))
 	{
 		// マップの操作
 		int check = 0;
-		int CharSum = characterManager_->GetAllCharactor().size();
+		int CharSum = int(characterManager_->GetAllCharactor().size());
 		for (int x = 0; x < MAP_WIDTH; ++x)
 		{
 			for (int y = 0; y < MAP_HEIGHT; ++y)
@@ -346,7 +346,7 @@ void UnitOverview::Initialize_UNIT()
 {
 	// イージングの設定
 	tMAX = 10;
-	t = tMAX;
+	t = int(tMAX);
 
 	// 回転中心イージング前と後の更新
 	centerPreTransforms = center.transforms;
@@ -380,7 +380,7 @@ void UnitOverview::Update_UNIT()
 	{
 		center.transforms.rotate.y = Easings::EasingFloat(centerPreTransforms.rotate.y, centerTargetTransforms.rotate.y, EaseType::LINEAR, float(t) / tMAX);
 		int check = 0;
-		int CharSum = characterManager_->GetAllCharactor().size();
+		int CharSum = int(characterManager_->GetAllCharactor().size());
 		for (int x = 0; x < MAP_WIDTH; ++x)
 		{
 			for (int y = 0; y < MAP_HEIGHT; ++y)
@@ -427,7 +427,7 @@ void UnitOverview::Initialize_UNIT_ALL()
 
 	// カメライージング
 	Game::MoveCenterTarget({ 0.0f, -0.0f, -5.390f }, 200, EaseType::OUT_QUART);
-	Game::MoveRotateTarget({ 0.4f, -std::numbers::pi / 2.0f, 0.0f }, 200, EaseType::OUT_QUART);
+	Game::MoveRotateTarget({ 0.4f, -float(std::numbers::pi) / 2.0f, 0.0f }, 200, EaseType::OUT_QUART);
 	Game::MoveDistanceTarget(15.60f, 200, EaseType::OUT_QUART);
 }
 
@@ -437,7 +437,7 @@ void UnitOverview::Update_UNIT_ALL()
 	if (t < tMAX)
 	{
 		int check = 0;
-		int CharSum = characterManager_->GetAllCharactor().size();
+		int CharSum = int(characterManager_->GetAllCharactor().size());
 		for (int y = 0; y < MAP_HEIGHT; ++y)
 		{
 			for (int x = 0; x < MAP_WIDTH; ++x)
