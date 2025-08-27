@@ -44,6 +44,8 @@ public:
 	// バトル場面に出てるキャラのゲッター
 	const std::vector<Charactor*>& GetButtleCharactor() const { return ButtleCharactor; }
 
+	void eraseButtleCharactor(int i);
+
 
 private:
 	// 所持キャラの全て

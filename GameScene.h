@@ -49,6 +49,9 @@ private:
 
 	void Update_FocusMode();
 
+	void CheckDamage();
+
+
 	// フェーズ
 	GameScenePhase phase_;
 	GameScenePhase targetphase_;
@@ -112,7 +115,7 @@ private:
 	// 攻撃ターゲットエフェクト
 	std::vector <Game::RenderData_Model> AttackTaregtEffectData;
 	int targetEffectFrame = 0;
-	void Inintialize_target();
+	void Inintialize_target(int color, BLOCK_CHAR targetSide);
 	void Update_target();
 
 	// 攻撃エフェク
@@ -124,6 +127,7 @@ private:
 		BLOCK_TYPE starttype;
 		Vector2int startindex;
 		Vector2int targetindex;
+		int range;
 	};
 	std::vector<dataaaaaa> AttacEffectsikakusuiData;
 	int Animationt;
@@ -133,5 +137,8 @@ private:
 
 	void Initialize_AttackEffect_CROSS(int range);
 	void Update_AttackEffect_CROSS();
+
+	void Initialize_AttackEffect_FRONT(int range);
+	void Update_AttackEffect_FRONT();
 };
 

@@ -3,7 +3,7 @@
 #define WIDTH 1280
 #define HEIGHT 720
 
-#define STAGE_MAX 10
+#define STAGE_MAX 5
 
 #define MAP_HEIGHT 10
 #define MAP_WIDTH 20

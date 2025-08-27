@@ -149,7 +149,6 @@ void CharacterManager::LoadGetAllEnemy()
 			add->serialNumber_ = serialNumber;
 			add->EnemyOrPlayer_ = false;
 			add->data.color = 0xFF1111FF;
-			add->targetdata.color = 0xFF1111FF;
 
 			AddEnemyList(add);
 		}
@@ -161,6 +160,14 @@ void CharacterManager::SetStatus()
 	for (int i = 0; i < AllCharactor.size(); ++i)
 	{
 		AllCharactor[i]->states_buttle_ = AllCharactor[i]->states_default_;
+	}
+}
+
+void CharacterManager::eraseButtleCharactor(int i)
+{
+	if (i < ButtleCharactor.size())
+	{
+		ButtleCharactor.erase(ButtleCharactor.begin() + i);
 	}
 }
 

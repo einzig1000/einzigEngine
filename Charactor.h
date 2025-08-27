@@ -48,6 +48,7 @@ public:
 	static int getCharactorSum_;
 	int serialNumber_;
 
+	// true == player
 	bool EnemyOrPlayer_ = true;
 
 	Skill skill;
@@ -57,6 +58,8 @@ public:
 
 	// 向き
 	Direction  direction = Direction::Right;
+
+	Vector2int pos;
 
 private:
 

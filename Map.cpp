@@ -833,6 +833,9 @@ void Map::CheckAbleAttack(Vector2int index, Skill skill, Direction direction)
 	}
 
 	case SkillAreaShape::例外:
+	{
+		EffectType[index.y][index.x] = BLOCK_EFFECT_TYPE::攻撃範囲;
+	}
 		break;
 	default:
 		break;
