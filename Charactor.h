@@ -12,10 +12,7 @@ enum class CharactorName
 	CharactorMAX
 };
 
-enum class Skill
-{
-	
-};
+
 
 
 
@@ -23,6 +20,10 @@ class Charactor
 {
 public:
 	Charactor(TEXTURE name);
+	Charactor* Clone() const
+	{
+		return new Charactor(*this);
+	}
 	~Charactor();
 
 	void Update();
@@ -49,8 +50,15 @@ public:
 
 	bool EnemyOrPlayer_ = true;
 
-private:
+	Skill skill;
+	Skill advancedSkill;
+	Skill passiveSkill;
+	Skill ultimateSkill;
 
+	// 向き
+	Direction  direction = Direction::Right;
+
+private:
 
 };
 

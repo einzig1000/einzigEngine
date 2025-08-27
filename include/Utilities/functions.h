@@ -144,6 +144,9 @@ void Log(std::ofstream& os, const std::string& message);
 
 #pragma endregion
 
+
+int RandomInt(int min, int max);
+
 /// <summary>
 /// 角度をラジアンに変換
 /// </summary>

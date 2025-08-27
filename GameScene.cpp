@@ -31,12 +31,12 @@ GameScene::GameScene(CharacterManager* characterManager)
 	finishSetUp = false;
 
 	ActSelectIcon_[0].model = uint32_t(TEXTURE::ActSelect_Icon_None);
-	ActSelectIcon_[1].model = uint32_t(TEXTURE::ActSelect_Icon_Attack);
+	ActSelectIcon_[1].model = uint32_t(TEXTURE::ActSelect_Icon_Skill);
 	ActSelectIcon_[2].model = uint32_t(TEXTURE::ActSelect_Icon_Move);
 	ActSelectIcon_[3].model = uint32_t(TEXTURE::ActSelect_Icon_ChangeCameraMode);
 
 	ActSelectIcon_[0].texture = uint32_t(TEXTURE::ActSelect_Icon_None);
-	ActSelectIcon_[1].texture = uint32_t(TEXTURE::ActSelect_Icon_Attack);
+	ActSelectIcon_[1].texture = uint32_t(TEXTURE::ActSelect_Icon_Skill);
 	ActSelectIcon_[2].texture = uint32_t(TEXTURE::ActSelect_Icon_Move);
 	ActSelectIcon_[3].texture = uint32_t(TEXTURE::ActSelect_Icon_ChangeCameraMode);
 
@@ -56,10 +56,9 @@ void GameScene::Initialize(int stageNum)
 {
     nextPhase = PHASE::Phase_None;
 
-	Initialize_Setup();
+	targetphase_ = GameScenePhase::Setup;
 
     map_->LoadMap(stageNum);
-
 	finishSetUp = false;
 
 	if (stageNum == 1)centerIndex_camera = { 17,5 };
@@ -69,6 +68,11 @@ void GameScene::Initialize(int stageNum)
 	{
 		characterManager_->GetAllCharactor()[i]->states_buttle_ = characterManager_->GetAllCharactor()[i]->states_default_;
 		characterManager_->GetAllCharactor()[i]->actionDelay = 100 - characterManager_->GetAllCharactor()[i]->states_default_.speed;
+	}
+	for (int i = 0; i < characterManager_->GetAllEnemy().size(); ++i)
+	{
+		characterManager_->GetAllEnemy()[i]->states_buttle_ = characterManager_->GetAllEnemy()[i]->states_default_;
+		characterManager_->GetAllEnemy()[i]->actionDelay = 100 - characterManager_->GetAllEnemy()[i]->states_default_.speed;
 	}
 }
 
@@ -245,12 +249,27 @@ void GameScene::Initialize_Setup()
 		characterManager_->GetAllCharactor()[i]->dataSeat_type.transforms.translate.y = i * 40.0f + 30.0f;
 	}
 
-
 	for (int y = 0; y < MAP_HEIGHT; ++y)
 	{
 		for (int x = 0; x < MAP_WIDTH; ++x)
 		{
 			map_->IsCollisionMouseRay_[y][x] = false;
+			map_->CharactorType[y][x] = BLOCK_CHAR::Empty;
+
+			if (map_->InitializeEnemy[y][x] > 0)
+			{
+				Charactor* add;
+				add = characterManager_->GetAllEnemy()[map_->InitializeEnemy[y][x] - 1]->Clone();
+				// 駒の設置
+				add->data.transforms.translate = PositionByIndex(Vector2int{ x,y }, map_->BlockTypeByIndex(Vector2int{ x,y }));
+				// 駒をバトルキャラリストに追加
+				characterManager_->AddButtleCharactorList(add);
+				int pp = characterManager_->GetButtleCharactor().size();
+				// バトルキャラが増える度にアクションディレイ順にソート
+				characterManager_->Sort_Buttle_ActionDelay();
+				// 配置した場所にプレイヤーが配置されたことを記録
+				map_->CharactorType[y][x] = BLOCK_CHAR::OnEnemy;
+			}
 		}
 	}
 }
@@ -316,7 +335,7 @@ void GameScene::Update_Setup()
 						// 設置されていた場所を取得
 						Vector2int index = IndexByPosition(characterManager_->GetAllCharactor()[i]->data.transforms.translate);
 						// 設置されていた場所を[駒をおける場所]に戻す
-						map_->EffectType[index.y][index.x] = BLOCK_EFFECT_TYPE::AbleCharactorSet;
+						map_->EffectType[index.y][index.x] = BLOCK_EFFECT_TYPE::移動可能;
 						// 設置されていた場所を[誰もいない場所]に戻す
 						map_->CharactorType[index.y][index.x] = BLOCK_CHAR::Empty;
 						// 駒をバトルキャラリストから削除
@@ -382,7 +401,7 @@ void GameScene::Update_Setup()
 				// 色の初期化
 				map_->IsCollisionMouseRay_[y][x] = false;
 				// 駒をおける場所か判断
-				if (map_->BlockEffectByIndex(Vector2int(x, y)) == BLOCK_EFFECT_TYPE::AbleCharactorSet)
+				if (map_->BlockEffectByIndex(Vector2int(x, y)) == BLOCK_EFFECT_TYPE::移動可能)
 				{
 					// まだ色を変えられたマスがない（TheOneがfalse）なら色を変える
 					if (IsCollision(Game::GetMouseRay(), map_->data[y][x].AABB))
@@ -453,10 +472,12 @@ void GameScene::Draw_Setup()
 	{
 		// 全てのキャラの2Dスプライトを描画
 		characterManager_->GetAllCharactor()[i]->dataSeat.Draw();
-		// マップ上に配置されたら3Dモデルを描画
-		if (isSet[i])characterManager_->GetAllCharactor()[i]->data.Draw();
 		// 配置されてなかったらアイコン描画
-		else characterManager_->GetAllCharactor()[i]->dataSeat_type.Draw();
+		if (!isSet[i]) characterManager_->GetAllCharactor()[i]->dataSeat_type.Draw();
+	}
+	for (uint32_t i = 0; i < characterManager_->GetButtleCharactor().size(); ++i)
+	{
+		characterManager_->GetButtleCharactor()[i]->data.Draw();
 	}
 }
 
@@ -503,7 +524,7 @@ void GameScene::Update_PlayerTurn()
 				Vector2int from = moveTargetPositionIndex;
 				Vector2int to = Vector2int{ moveTargetPositionIndex.x - 1, moveTargetPositionIndex.y };
 				// 移動できるか
-				if (map_->EffectType[to.y][to.x] == BLOCK_EFFECT_TYPE::AbleCharactorSet)
+				if (map_->EffectType[to.y][to.x] == BLOCK_EFFECT_TYPE::移動可能)
 				{
 					moveTargetPositionIndex.x -= 1;
 					moveTragetCoolTome = 0;
@@ -515,7 +536,7 @@ void GameScene::Update_PlayerTurn()
 				Vector2int from = moveTargetPositionIndex;
 				Vector2int to = Vector2int{ moveTargetPositionIndex.x + 1, moveTargetPositionIndex.y };
 				// 移動できるか
-				if (map_->EffectType[to.y][to.x] == BLOCK_EFFECT_TYPE::AbleCharactorSet)
+				if (map_->EffectType[to.y][to.x] == BLOCK_EFFECT_TYPE::移動可能)
 				{
 					moveTargetPositionIndex.x += 1;
 					moveTragetCoolTome = 0;
@@ -536,7 +557,7 @@ void GameScene::Update_PlayerTurn()
 				Vector2int from = moveTargetPositionIndex;
 				Vector2int to = Vector2int{ moveTargetPositionIndex.x, moveTargetPositionIndex.y - 1 };
 				// 移動できるか
-				if (map_->EffectType[to.y][to.x] == BLOCK_EFFECT_TYPE::AbleCharactorSet)
+				if (map_->EffectType[to.y][to.x] == BLOCK_EFFECT_TYPE::移動可能)
 				{
 					moveTargetPositionIndex.y -= 1;
 					moveTragetCoolTome = 0;
@@ -548,7 +569,7 @@ void GameScene::Update_PlayerTurn()
 				Vector2int from = moveTargetPositionIndex;
 				Vector2int to = Vector2int{ moveTargetPositionIndex.x, moveTargetPositionIndex.y + 1 };
 				// 移動できるか
-				if (map_->EffectType[to.y][to.x] == BLOCK_EFFECT_TYPE::AbleCharactorSet)
+				if (map_->EffectType[to.y][to.x] == BLOCK_EFFECT_TYPE::移動可能)
 				{
 					moveTargetPositionIndex.y += 1;
 					moveTragetCoolTome = 0;
@@ -584,7 +605,7 @@ void GameScene::Update_PlayerTurn()
 					for (int x = 0; x < MAP_WIDTH; ++x)
 					{
 						// すでに移動可能になってるやつは初期化
-						if (map_->EffectType[y][x] == BLOCK_EFFECT_TYPE::AbleCharactorSet)
+						if (map_->EffectType[y][x] == BLOCK_EFFECT_TYPE::移動可能)
 						{
 							map_->EffectType[y][x] = BLOCK_EFFECT_TYPE::Empty;
 						}
@@ -594,8 +615,39 @@ void GameScene::Update_PlayerTurn()
 			// 移動先が変わってなかったら
 			else
 			{
-				ChangeFocus();
+				// フェーズ更新
+				targetphase_ = GameScenePhase::Check;
 				Act = CharactorSelectPattern::None;
+				// 移動可能マスを示すエフェクトをリセット
+				for (int y = 0; y < MAP_HEIGHT; ++y)
+				{
+					for (int x = 0; x < MAP_WIDTH; ++x)
+					{
+						// すでに移動可能になってるやつは初期化
+						if (map_->EffectType[y][x] == BLOCK_EFFECT_TYPE::移動可能)
+						{
+							map_->EffectType[y][x] = BLOCK_EFFECT_TYPE::Empty;
+						}
+					}
+				}
+			}
+		}
+		if (GetHitKey::keys[DIK_Q] && !GetHitKey::preKeys[DIK_Q])
+		{
+			// フェーズ更新
+			targetphase_ = GameScenePhase::Check;
+			Act = CharactorSelectPattern::None;
+			// 移動可能マスを示すエフェクトをリセット
+			for (int y = 0; y < MAP_HEIGHT; ++y)
+			{
+				for (int x = 0; x < MAP_WIDTH; ++x)
+				{
+					// すでに移動可能になってるやつは初期化
+					if (map_->EffectType[y][x] == BLOCK_EFFECT_TYPE::移動可能)
+					{
+						map_->EffectType[y][x] = BLOCK_EFFECT_TYPE::Empty;
+					}
+				}
 			}
 		}
 		moveTragetCoolTome++;
@@ -603,10 +655,150 @@ void GameScene::Update_PlayerTurn()
 
 	else if (Act == CharactorSelectPattern::ChangeCameraMode)
 	{
+		if (GetHitKey::keys[DIK_Q] && !GetHitKey::preKeys[DIK_Q])
+		{
+			// フェーズ更新
+			targetphase_ = GameScenePhase::Check;
+			Act = CharactorSelectPattern::None;
+		}
+		if (GetHitKey::keys[DIK_SPACE] && !GetHitKey::preKeys[DIK_SPACE])
+		{
+			// フェーズ更新
+			targetphase_ = GameScenePhase::Check;
+			Act = CharactorSelectPattern::None;
+		}
 	}
 
-	else if (Act == CharactorSelectPattern::Attack)
+	else if (Act == CharactorSelectPattern::Skill)
 	{
+		if (GetHitKey::keys[DIK_Q] && !GetHitKey::preKeys[DIK_Q])
+		{
+			// フェーズ更新
+			targetphase_ = GameScenePhase::Check;
+			Act = CharactorSelectPattern::None;
+
+			for (int y = 0; y < MAP_HEIGHT; ++y)
+			{
+				for (int x = 0; x < MAP_WIDTH; ++x)
+				{
+					// すでに移動可能になってるやつは初期化
+					map_->EffectType[y][x] = BLOCK_EFFECT_TYPE::Empty;
+				}
+			}
+		}
+
+		if (characterManager_->GetButtleCharactor()[0]->skill.areaShape == SkillAreaShape::直線)
+		{
+			if (R)
+			{
+				characterManager_->GetButtleCharactor()[0]->direction = Direction::Right;
+				map_->CheckAbleAttack(moveTargetPositionIndex, characterManager_->GetButtleCharactor()[0]->skill, characterManager_->GetButtleCharactor()[0]->direction);
+				Inintialize_target();
+			}
+			if (L)
+			{
+				characterManager_->GetButtleCharactor()[0]->direction = Direction::Left;
+				map_->CheckAbleAttack(moveTargetPositionIndex, characterManager_->GetButtleCharactor()[0]->skill, characterManager_->GetButtleCharactor()[0]->direction);
+				Inintialize_target();
+			}
+			if (T)
+			{
+				characterManager_->GetButtleCharactor()[0]->direction = Direction::Up;
+				map_->CheckAbleAttack(moveTargetPositionIndex, characterManager_->GetButtleCharactor()[0]->skill, characterManager_->GetButtleCharactor()[0]->direction);
+				Inintialize_target();
+			}
+			if (B)
+			{
+				characterManager_->GetButtleCharactor()[0]->direction = Direction::Down;
+				map_->CheckAbleAttack(moveTargetPositionIndex, characterManager_->GetButtleCharactor()[0]->skill, characterManager_->GetButtleCharactor()[0]->direction);
+				Inintialize_target();
+			}
+			if (GetHitKey::keys[DIK_SPACE] && !GetHitKey::preKeys[DIK_SPACE])
+			{
+				Act = CharactorSelectPattern::SkillAnimation;
+				Initialize_AttackEffect_LINE(characterManager_->GetButtleCharactor()[0]->skill.range);
+			}
+		}
+		else if(characterManager_->GetButtleCharactor()[0]->skill.areaShape == SkillAreaShape::十字)
+		{
+			if (GetHitKey::keys[DIK_SPACE] && !GetHitKey::preKeys[DIK_SPACE])
+			{
+				Act = CharactorSelectPattern::SkillAnimation;
+				Initialize_AttackEffect_CROSS(characterManager_->GetButtleCharactor()[0]->skill.range);
+			}
+		}
+		else if (characterManager_->GetButtleCharactor()[0]->skill.areaShape == SkillAreaShape::前方正方形)
+		{
+			if (R)
+			{
+				characterManager_->GetButtleCharactor()[0]->direction = Direction::Right;
+				map_->CheckAbleAttack(moveTargetPositionIndex, characterManager_->GetButtleCharactor()[0]->skill, characterManager_->GetButtleCharactor()[0]->direction);
+				Inintialize_target();
+			}
+			if (L)
+			{
+				characterManager_->GetButtleCharactor()[0]->direction = Direction::Left;
+				map_->CheckAbleAttack(moveTargetPositionIndex, characterManager_->GetButtleCharactor()[0]->skill, characterManager_->GetButtleCharactor()[0]->direction);
+				Inintialize_target();
+			}
+			if (T)
+			{
+				characterManager_->GetButtleCharactor()[0]->direction = Direction::Up;
+				map_->CheckAbleAttack(moveTargetPositionIndex, characterManager_->GetButtleCharactor()[0]->skill, characterManager_->GetButtleCharactor()[0]->direction);
+				Inintialize_target();
+			}
+			if (B)
+			{
+				characterManager_->GetButtleCharactor()[0]->direction = Direction::Down;
+				map_->CheckAbleAttack(moveTargetPositionIndex, characterManager_->GetButtleCharactor()[0]->skill, characterManager_->GetButtleCharactor()[0]->direction);
+				Inintialize_target();
+			}
+			if (GetHitKey::keys[DIK_SPACE] && !GetHitKey::preKeys[DIK_SPACE])
+			{
+				Act = CharactorSelectPattern::SkillAnimation;
+				Initialize_AttackEffect_LINE(characterManager_->GetButtleCharactor()[0]->skill.range);
+			}
+		}
+		Update_target();
+	}
+
+	else if (Act == CharactorSelectPattern::SkillAnimation)
+	{
+		Update_target();
+		switch (characterManager_->GetButtleCharactor()[0]->skill.areaShape)
+		{
+		case SkillAreaShape::円:
+		{
+
+			break;
+		}
+		case SkillAreaShape::直線:
+		{
+			Update_AttackEffect_LINE();
+			break;
+		}
+		case SkillAreaShape::十字:
+		{
+			Update_AttackEffect_CROSS();
+			break;
+		}
+		case SkillAreaShape::正方形:
+		{
+
+			break;
+		}
+		case SkillAreaShape::前方正方形:
+		{
+
+			break;
+		}
+		case SkillAreaShape::例外:
+		{
+			break;
+		}
+		default:
+			break;
+		}
 
 	}
 }
@@ -688,10 +880,6 @@ void GameScene::Update_FocusMode()
 			ActSelectIcon_[i].transforms.scale = Easings::EasingVector3({ 1.5f,1.5f,1.5f }, { 0.0f,0.0f,0.0f }, EaseType::LINEAR, float(frame_camera) / float(frameMAX_camera - 20));
 			ActSelectIcon_[i].transforms.translate = Easings::EasingVector3(ActSelectIcon_targetIcon[i], characterManager_->GetButtleCharactor()[0]->data.transforms.translate, EaseType::LINEAR, float(frame_camera) / float(frameMAX_camera - 20));
 		}
-		if (GetHitKey::keys[DIK_SPACE] && !GetHitKey::preKeys[DIK_SPACE])
-		{
-			ChangeFocus();
-		}
 	}
 	// １キャラ注視中(コマンド選択もここ)
 	else if (cameraMode == CameraMode_Over_or_Focus::Focus)
@@ -726,16 +914,21 @@ void GameScene::Update_FocusMode()
 						characterManager_->GetButtleCharactor()[0]->targetdata.color = 0xFFFFFF55;
 						map_->CheckAblemovement(moveTargetPositionIndex, characterManager_->GetButtleCharactor()[0]->states_buttle_.movePoint);
 					}
+					// 攻撃
+					else if (i == 2)
+					{
+						ChangeOver();
+						Act = CharactorSelectPattern::Skill;
+						moveTargetPositionIndex = IndexByPosition(characterManager_->GetButtleCharactor()[0]->data.transforms.translate);
+						map_->CheckAbleAttack(moveTargetPositionIndex, characterManager_->GetButtleCharactor()[0]->skill, characterManager_->GetButtleCharactor()[0]->direction);
+						Inintialize_target();
+					}
 				}
 			}
 			else
 			{
 				ActSelectIcon_[i].color = 0xFFFFFF30;
 			}
-		}
-		if (GetHitKey::keys[DIK_SPACE] && !GetHitKey::preKeys[DIK_SPACE])
-		{
-			ChangeOver();
 		}
 	}
 }
@@ -758,6 +951,365 @@ void GameScene::ChangeFocus()
 	Game::MoveCenterTarget(characterManager_->GetButtleCharactor()[0]->data.transforms.translate, frameMAX_camera, EaseType::OUT_QUART);
 	Game::MoveRotateTarget({ 0.8f,float(std::numbers::pi) * 2.0f, 0.0f }, frameMAX_camera, EaseType::OUT_QUART);
 	Game::MoveDistanceTarget(15.60f, frameMAX_camera, EaseType::OUT_QUART);
+}
+
+
+// 攻撃ターゲット
+void GameScene::Inintialize_target()
+{
+	AttackTaregtEffectData.clear();
+
+	for (int x = 0; x < MAP_WIDTH; ++x)
+	{
+		for (int y = 0; y < MAP_HEIGHT; ++y)
+		{
+			if (map_->EffectType[y][x] == BLOCK_EFFECT_TYPE::攻撃範囲)
+			{
+				if (map_->CharactorType[y][x] == BLOCK_CHAR::OnEnemy)
+				{
+					Game::RenderData_Model target;
+					target.model = uint32_t(TEXTURE::Attack_Marker);
+					target.texture = uint32_t(TEXTURE::Attack_Marker);
+					target.transforms.translate = PositionByIndex(Vector2int{ x,y }, map_->BlockTypeByIndex(Vector2int{ x,y }));
+					target.transforms.translate.y += 2.5f;
+					AttackTaregtEffectData.push_back(target);
+				}
+			}
+		}
+	}
+
+	targetEffectFrame = 0;
+}
+
+void GameScene::Update_target()
+{
+	for (int i = 0; i < AttackTaregtEffectData.size(); ++i)
+	{
+		AttackTaregtEffectData[i].transforms.translate.y += (std::sinf(float(targetEffectFrame) / 10.0f)) / 80.0f;
+		AttackTaregtEffectData[i].transforms.rotate.y += 0.1f;
+		AttackTaregtEffectData[i].Draw();
+	}
+	targetEffectFrame++;
+}
+
+
+// 攻撃エフェクト
+void GameScene::Initialize_AttackEffect_LINE(int range)
+{
+	AttacEffectsikakusuiData.clear();
+
+	for (int i = 0; i < 10; ++i)
+	{
+		dataaaaaa add;
+
+		add.data.model = uint32_t(TEXTURE::Attack_Effect);
+		add.data.texture = uint32_t(TEXTURE::Attack_Effect);
+		add.data.options.enableLighting = false;
+		add.startindex = IndexByPosition(characterManager_->GetButtleCharactor()[0]->data.transforms.translate);
+		add.targetindex = add.startindex;
+		add.starttype = map_->BlockTypeByIndex(add.startindex);
+
+		add.data.transforms.translate = characterManager_->GetButtleCharactor()[0]->data.transforms.translate;
+		add.data.transforms.translate.y += 0.5f;
+		add.data.transforms.translate.x += float(RandomInt(-30, 30)) / 100.0f;
+		add.data.transforms.translate.y += float(RandomInt(-30, 30)) / 100.0f;
+		add.data.transforms.translate.z += float(RandomInt(-30, 30)) / 100.0f;
+		add.data.transforms.scale = { 0.1f, 0.1f, 0.1f };
+
+		Direction dir = characterManager_->GetButtleCharactor()[0]->direction;
+		switch (dir)
+		{
+		case Direction::None:
+			break;
+		case Direction::Left:
+			add.data.transforms.rotate.y = float(std::numbers::pi / 2.0);
+			add.velocity = { -0.5f,0.0f,0.0f };
+			add.targetindex.x += range;
+			break;
+		case Direction::Right:
+			add.data.transforms.rotate.y = float(std::numbers::pi / 2.0);
+			add.velocity = { 0.5f,0.0f,0.0f };
+			add.targetindex.x -= range;
+			break;
+		case Direction::Down:
+			add.data.transforms.rotate.y = float(std::numbers::pi);
+			add.velocity = { 0.0f,0.0f,-0.5f };
+			add.targetindex.y += range;
+			break;
+		case Direction::Up:
+			add.data.transforms.rotate.y = float(std::numbers::pi);
+			add.velocity = { 0.0f,0.0f,0.5f };
+			add.targetindex.y -= range;
+			break;
+		default:
+			break;
+		}
+
+		add.frame = i * 2;
+
+		AttacEffectsikakusuiData.push_back(add);
+	}
+
+	Animationt = 0;
+
+}
+
+void GameScene::Update_AttackEffect_LINE()
+{
+
+	for (int i = 0; i < 10; ++i)
+	{
+		if (Animationt > AttacEffectsikakusuiData[i].frame)
+		{
+			AttacEffectsikakusuiData[i].data.transforms.translate += AttacEffectsikakusuiData[i].velocity;
+			AttacEffectsikakusuiData[i].data.transforms.rotate.z += 0.1f;
+			AttacEffectsikakusuiData[i].data.Draw();
+			if (AttacEffectsikakusuiData[i].starttype == BLOCK_TYPE::Empty)
+			{
+				Vector2int imdex = IndexByPosition(AttacEffectsikakusuiData[i].data.transforms.translate);
+				if (map_->BlockTypeByIndex(imdex) == BLOCK_TYPE::Wall)
+				{
+					AttacEffectsikakusuiData[i].data.transforms.scale = { 0.0f, 0.0f, 0.0f };
+				}
+				if (imdex == AttacEffectsikakusuiData[i].targetindex)
+				{
+					if (AttacEffectsikakusuiData[i].data.transforms.scale.x > 0)
+					{
+						AttacEffectsikakusuiData[i].data.transforms.scale -= { 0.05f, 0.05f, 0.05f };
+						if (AttacEffectsikakusuiData[i].data.transforms.scale.x <= 0)
+						{
+							AttacEffectsikakusuiData[i].data.transforms.scale = { 0.0f, 0.0f, 0.0f };
+						}
+					}
+				}
+			}
+			else if (AttacEffectsikakusuiData[i].starttype == BLOCK_TYPE::Wall)
+			{
+				Vector2int imdex = IndexByPosition(AttacEffectsikakusuiData[i].data.transforms.translate);
+				if (imdex == AttacEffectsikakusuiData[i].targetindex)
+				{
+					if (AttacEffectsikakusuiData[i].data.transforms.scale.x > 0)
+					{
+						AttacEffectsikakusuiData[i].data.transforms.scale -= { 0.05f, 0.05f, 0.05f };
+						if (AttacEffectsikakusuiData[i].data.transforms.scale.x <= 0)
+						{
+							AttacEffectsikakusuiData[i].data.transforms.scale = { 0.0f, 0.0f, 0.0f };
+						}
+					}
+				}
+			}
+		}
+	}
+
+	if (GetHitKey::keys[DIK_SPACE] && !GetHitKey::preKeys[DIK_SPACE])
+	{
+		// 攻撃コストの取得
+		float attackCost = 20;
+		// 素早さ補正の取得
+		float percentage = float(characterManager_->GetButtleCharactor()[0]->states_buttle_.speed) / 100;
+		// アクションディレイの更新
+		characterManager_->GetButtleCharactor()[0]->actionDelay += attackCost * percentage;
+		// フェーズ更新
+		targetphase_ = GameScenePhase::Check;
+		// 移動可能マスを示すエフェクトをリセット
+		for (int y = 0; y < MAP_HEIGHT; ++y)
+		{
+			for (int x = 0; x < MAP_WIDTH; ++x)
+			{
+				// すでに移動可能になってるやつは初期化
+				map_->EffectType[y][x] = BLOCK_EFFECT_TYPE::Empty;
+			}
+		}
+	}
+
+	Animationt++;
+}
+
+void GameScene::Initialize_AttackEffect_CROSS(int range)
+{
+	AttacEffectsikakusuiData.clear();
+
+	for (int i = 0; i < 10; ++i)
+	{
+		dataaaaaa add;
+
+		add.data.model = uint32_t(TEXTURE::Attack_Effect);
+		add.data.texture = uint32_t(TEXTURE::Attack_Effect);
+		add.data.options.enableLighting = false;
+		add.startindex = IndexByPosition(characterManager_->GetButtleCharactor()[0]->data.transforms.translate);
+		add.targetindex = add.startindex;
+		add.starttype = map_->BlockTypeByIndex(add.startindex);
+
+		add.data.transforms.translate = characterManager_->GetButtleCharactor()[0]->data.transforms.translate;
+		add.data.transforms.translate.y += 0.5f;
+		add.data.transforms.translate.x += float(RandomInt(-30, 30)) / 100.0f;
+		add.data.transforms.translate.y += float(RandomInt(-30, 30)) / 100.0f;
+		add.data.transforms.translate.z += float(RandomInt(-30, 30)) / 100.0f;
+		add.data.transforms.scale = { 0.1f, 0.1f, 0.1f };
+
+		add.data.transforms.rotate.y = float(std::numbers::pi / 2.0);
+		add.velocity = { -0.5f,0.0f,0.0f };
+		add.targetindex.x += range;
+
+		add.frame = i * 2;
+
+		AttacEffectsikakusuiData.push_back(add);
+	}
+	for (int i = 0; i < 10; ++i)
+	{
+		dataaaaaa add;
+
+		add.data.model = uint32_t(TEXTURE::Attack_Effect);
+		add.data.texture = uint32_t(TEXTURE::Attack_Effect);
+		add.data.options.enableLighting = false;
+		add.startindex = IndexByPosition(characterManager_->GetButtleCharactor()[0]->data.transforms.translate);
+		add.targetindex = add.startindex;
+		add.starttype = map_->BlockTypeByIndex(add.startindex);
+
+		add.data.transforms.translate = characterManager_->GetButtleCharactor()[0]->data.transforms.translate;
+		add.data.transforms.translate.y += 0.5f;
+		add.data.transforms.translate.x += float(RandomInt(-30, 30)) / 100.0f;
+		add.data.transforms.translate.y += float(RandomInt(-30, 30)) / 100.0f;
+		add.data.transforms.translate.z += float(RandomInt(-30, 30)) / 100.0f;
+		add.data.transforms.scale = { 0.1f, 0.1f, 0.1f };
+
+		add.data.transforms.rotate.y = float(std::numbers::pi / 2.0);
+		add.velocity = { 0.5f,0.0f,0.0f };
+		add.targetindex.x -= range;
+
+		add.frame = i * 2;
+
+		AttacEffectsikakusuiData.push_back(add);
+	}
+	for (int i = 0; i < 10; ++i)
+	{
+		dataaaaaa add;
+
+		add.data.model = uint32_t(TEXTURE::Attack_Effect);
+		add.data.texture = uint32_t(TEXTURE::Attack_Effect);
+		add.data.options.enableLighting = false;
+		add.startindex = IndexByPosition(characterManager_->GetButtleCharactor()[0]->data.transforms.translate);
+		add.targetindex = add.startindex;
+		add.starttype = map_->BlockTypeByIndex(add.startindex);
+
+		add.data.transforms.translate = characterManager_->GetButtleCharactor()[0]->data.transforms.translate;
+		add.data.transforms.translate.y += 0.5f;
+		add.data.transforms.translate.x += float(RandomInt(-30, 30)) / 100.0f;
+		add.data.transforms.translate.y += float(RandomInt(-30, 30)) / 100.0f;
+		add.data.transforms.translate.z += float(RandomInt(-30, 30)) / 100.0f;
+		add.data.transforms.scale = { 0.1f, 0.1f, 0.1f };
+
+		add.data.transforms.rotate.y = float(std::numbers::pi);
+		add.velocity = { 0.0f,0.0f,-0.5f };
+		add.targetindex.y += range;
+
+		add.frame = i * 2;
+
+		AttacEffectsikakusuiData.push_back(add);
+	}
+	for (int i = 0; i < 10; ++i)
+	{
+		dataaaaaa add;
+
+		add.data.model = uint32_t(TEXTURE::Attack_Effect);
+		add.data.texture = uint32_t(TEXTURE::Attack_Effect);
+		add.data.options.enableLighting = false;
+		add.startindex = IndexByPosition(characterManager_->GetButtleCharactor()[0]->data.transforms.translate);
+		add.targetindex = add.startindex;
+		add.starttype = map_->BlockTypeByIndex(add.startindex);
+
+		add.data.transforms.translate = characterManager_->GetButtleCharactor()[0]->data.transforms.translate;
+		add.data.transforms.translate.y += 0.5f;
+		add.data.transforms.translate.x += float(RandomInt(-30, 30)) / 100.0f;
+		add.data.transforms.translate.y += float(RandomInt(-30, 30)) / 100.0f;
+		add.data.transforms.translate.z += float(RandomInt(-30, 30)) / 100.0f;
+		add.data.transforms.scale = { 0.1f, 0.1f, 0.1f };
+
+		add.data.transforms.rotate.y = float(std::numbers::pi);
+		add.velocity = { 0.0f,0.0f,0.5f };
+		add.targetindex.y -= range;
+
+		add.frame = i * 2;
+
+		AttacEffectsikakusuiData.push_back(add);
+	}
+
+	int test = AttacEffectsikakusuiData.size();
+	Animationt = 0;
+
+	Inintialize_target();
+}
+
+void GameScene::Update_AttackEffect_CROSS()
+{
+	for (int i = 0; i < 40; ++i)
+	{
+		if (Animationt > AttacEffectsikakusuiData[i].frame)
+		{
+			AttacEffectsikakusuiData[i].data.transforms.translate += AttacEffectsikakusuiData[i].velocity;
+			AttacEffectsikakusuiData[i].data.transforms.rotate.z += 0.2f;
+			AttacEffectsikakusuiData[i].data.Draw();
+			if (AttacEffectsikakusuiData[i].starttype == BLOCK_TYPE::Empty)
+			{
+				Vector2int imdex = IndexByPosition(AttacEffectsikakusuiData[i].data.transforms.translate);
+				if (map_->BlockTypeByIndex(imdex) == BLOCK_TYPE::Wall)
+				{
+					AttacEffectsikakusuiData[i].data.transforms.scale = { 0.0f, 0.0f, 0.0f };
+				}
+				if (imdex == AttacEffectsikakusuiData[i].targetindex)
+				{
+					if (AttacEffectsikakusuiData[i].data.transforms.scale.x > 0)
+					{
+						AttacEffectsikakusuiData[i].data.transforms.scale -= { 0.05f, 0.05f, 0.05f };
+						if (AttacEffectsikakusuiData[i].data.transforms.scale.x <= 0)
+						{
+							AttacEffectsikakusuiData[i].data.transforms.scale = { 0.0f, 0.0f, 0.0f };
+						}
+					}
+				}
+			}
+			else if (AttacEffectsikakusuiData[i].starttype == BLOCK_TYPE::Wall)
+			{
+				Vector2int imdex = IndexByPosition(AttacEffectsikakusuiData[i].data.transforms.translate);
+				if (imdex == AttacEffectsikakusuiData[i].targetindex)
+				{
+					if (AttacEffectsikakusuiData[i].data.transforms.scale.x > 0)
+					{
+						AttacEffectsikakusuiData[i].data.transforms.scale -= { 0.05f, 0.05f, 0.05f };
+						if (AttacEffectsikakusuiData[i].data.transforms.scale.x <= 0)
+						{
+							AttacEffectsikakusuiData[i].data.transforms.scale = { 0.0f, 0.0f, 0.0f };
+						}
+					}
+				}
+			}
+		}
+	}
+
+
+
+	if (GetHitKey::keys[DIK_SPACE] && !GetHitKey::preKeys[DIK_SPACE])
+	{
+		// 攻撃コストの取得
+		float attackCost = 20;
+		// 素早さ補正の取得
+		float percentage = float(characterManager_->GetButtleCharactor()[0]->states_buttle_.speed) / 100;
+		// アクションディレイの更新
+		characterManager_->GetButtleCharactor()[0]->actionDelay += attackCost * percentage;
+		// フェーズ更新
+		targetphase_ = GameScenePhase::Check;
+		// 移動可能マスを示すエフェクトをリセット
+		for (int y = 0; y < MAP_HEIGHT; ++y)
+		{
+			for (int x = 0; x < MAP_WIDTH; ++x)
+			{
+				// すでに移動可能になってるやつは初期化
+				map_->EffectType[y][x] = BLOCK_EFFECT_TYPE::Empty;
+			}
+		}
+	}
+
+	Animationt++;
 }
 
 

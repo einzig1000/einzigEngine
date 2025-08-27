@@ -21,6 +21,7 @@
 #include <DbgHelp.h>
 #include <strsafe.h>
 #include "Game.h"
+#include <random>
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "Dbghelp.lib")
@@ -625,6 +626,14 @@ void Log(std::ofstream& os, const std::string& message)
 }
 
 #pragma endregion
+
+
+int RandomInt(int min, int max)
+{
+    static std::mt19937 rng(std::random_device{}());
+    std::uniform_int_distribution<int> dist(min, max);
+    return dist(rng);
+}
 
 
 Vector4 ConvertUintToVector4(uint32_t color)

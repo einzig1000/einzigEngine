@@ -93,7 +93,8 @@ private:
 	enum class CharactorSelectPattern
 	{
 		None,
-		Attack,
+		Skill,SkillAnimation,
+		CheckStates,
 		Move,
 		ChangeCameraMode,
 	};
@@ -108,5 +109,29 @@ private:
 	// 移動先を示す半透明なやつの座標を連続で操作できないようにするクールタイム
 	int moveTragetCoolTome;
 
+	// 攻撃ターゲットエフェクト
+	std::vector <Game::RenderData_Model> AttackTaregtEffectData;
+	int targetEffectFrame = 0;
+	void Inintialize_target();
+	void Update_target();
+
+	// 攻撃エフェク
+	struct dataaaaaa
+	{
+		Game::RenderData_Model data;
+		Vector3 velocity;
+		int frame = 0;
+		BLOCK_TYPE starttype;
+		Vector2int startindex;
+		Vector2int targetindex;
+	};
+	std::vector<dataaaaaa> AttacEffectsikakusuiData;
+	int Animationt;
+
+	void Initialize_AttackEffect_LINE(int range);
+	void Update_AttackEffect_LINE();
+
+	void Initialize_AttackEffect_CROSS(int range);
+	void Update_AttackEffect_CROSS();
 };
 

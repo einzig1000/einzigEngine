@@ -16,6 +16,7 @@ Map::Map()
 			data[y][x].transforms.translate = PositionByIndex(Vector2int(x, y));
 			blockType[y][x] = BLOCK_TYPE::Empty;
 			IsCollisionMouseRay_[y][x] = false;
+			CharactorType[y][x] = BLOCK_CHAR::Empty;
 		}
 	}
 }
@@ -65,6 +66,24 @@ void Map::LoadMap(int stageNum)
 		file_Effect.close();
 #pragma endregion
 
+#pragma region mapEnemy
+		// パス作成
+		std::ostringstream path_Enemy;
+		path_Enemy << "resources/csv/map/map" << stageNum << "-Enemy.csv";
+
+		// ファイルをひらく
+		std::ifstream file_Enemy(path_Enemy.str());
+		assert(file_Enemy.is_open());
+
+		// ファイルの内容を丸ごとコピー
+		std::ostringstream buffer_Enemy;
+		buffer_Enemy << file_Enemy.rdbuf();
+		mapEnemyCSV[stageNum] = buffer_Enemy.str();
+
+		// ファイルを閉じる
+		file_Enemy.close();
+
+#pragma endregion
 	}
 
 #pragma region mapBlock
@@ -144,7 +163,7 @@ void Map::LoadMap(int stageNum)
 				}
 				else if (word_Effect.find("1") == 0)
 				{
-					EffectType[lineNumber_Effect][wordNumber_Effect] = BLOCK_EFFECT_TYPE::AbleCharactorSet;
+					EffectType[lineNumber_Effect][wordNumber_Effect] = BLOCK_EFFECT_TYPE::移動可能;
 				}
 			}
 			wordNumber_Effect++;
@@ -157,14 +176,43 @@ void Map::LoadMap(int stageNum)
 
 #pragma endregion
 
-#pragma region mapCharactor
+#pragma region mapEnemy
 	for (int x = 0; x < MAP_WIDTH; ++x)
 	{
 		for (int y = 0; y < MAP_HEIGHT; ++y)
 		{
-			CharactorType[y][x] = BLOCK_CHAR::Empty;
+			InitializeEnemy[y][x] = 0;
 		}
 	}
+	// 1行ずつ
+	std::string line_Enemy;
+	// ここで毎回新しいstringstreamを作る
+	std::istringstream mapStream_Enemy(mapEnemyCSV[stageNum]);
+
+
+	// ブロックタイプ適用
+	int lineNumber_Enemy = 0;
+	int wordNumber_Enemy = 0;
+	while (getline(mapStream_Enemy, line_Enemy))
+	{
+		std::istringstream line_stream_Enemy(line_Enemy);
+		std::string word_Enemy;
+		wordNumber_Enemy = 0;
+
+		while (getline(line_stream_Enemy, word_Enemy, ','))
+		{
+			if (lineNumber_Enemy < MAP_HEIGHT && wordNumber_Enemy < MAP_WIDTH)
+			{
+				InitializeEnemy[lineNumber_Enemy][wordNumber_Enemy] = std::stoi(word_Enemy);
+			}
+			wordNumber_Enemy++;
+		}
+		lineNumber_Enemy++;
+	}
+
+	// X軸反転
+	FlipXAxis(InitializeEnemy);
+
 #pragma endregion
 
 }
@@ -175,9 +223,13 @@ void Map::Update()
 	{
 		for (int y = 0; y < MAP_HEIGHT; ++y)
 		{
-			if (EffectType[y][x] == BLOCK_EFFECT_TYPE::AbleCharactorSet)
+			if (EffectType[y][x] == BLOCK_EFFECT_TYPE::移動可能)
 			{
 				data[y][x].color = 0x69ff5dFF;
+			}
+			else if (EffectType[y][x] == BLOCK_EFFECT_TYPE::攻撃範囲)
+			{
+				data[y][x].color = 0xFF6A6AFF;
 			}
 			else
 			{
@@ -399,15 +451,391 @@ void Map::CheckAblemovement(Vector2int index, int idouhanni)
 			// マップ内であれ
 			if (x >= 0 && x < MAP_WIDTH && y >= 0 && y < MAP_HEIGHT)
 			{
+				EffectType[y][x] = BLOCK_EFFECT_TYPE::Empty;
 				// ターゲットまでの最短経路を求める
 				int cost = shotestCost(index, Vector2int{ x,y });
 				// 最短ルートが移動可能範囲を超えていなかったため移動可能
 				if ((cost <= idouhanni && cost != -1))//|| (index == Vector2int{ x,y })
 				{
-					EffectType[y][x] = BLOCK_EFFECT_TYPE::AbleCharactorSet;
+					EffectType[y][x] = BLOCK_EFFECT_TYPE::移動可能;
 				}
 			}
 		}
+	}
+}
+
+void Map::CheckAbleAttack(Vector2int index, Skill skill, Direction direction)
+{
+	for (int x = 0; x < MAP_WIDTH; ++x)
+	{
+		for (int y = 0; y < MAP_HEIGHT; ++y)
+		{
+			EffectType[y][x] = BLOCK_EFFECT_TYPE::Empty;
+		}
+	}
+
+	switch (skill.areaShape)
+	{
+	case SkillAreaShape::円:
+	{
+		for (int y = index.y - skill.range; y <= index.y + skill.range; ++y)
+		{
+			if (y >= 0 && y < MAP_HEIGHT)
+			{
+				EffectType[y][index.x] = BLOCK_EFFECT_TYPE::攻撃範囲;
+			}
+		}
+		for (int x = index.x - skill.range; x <= index.x + skill.range; ++x)
+		{
+			if (x >= 0 && x < MAP_WIDTH)
+			{
+				EffectType[index.y][x] = BLOCK_EFFECT_TYPE::攻撃範囲;
+			}
+		}
+
+		break;
+	}
+
+	case SkillAreaShape::直線:
+	{
+		Vector2int start = index;
+		Vector2int end = index;
+
+		switch (direction)
+		{
+		case Direction::None:
+			break;
+		case Direction::Left:
+			end.x += skill.range;
+			for (int x = start.x; x <= end.x; ++x)
+			{
+				if (x >= 0 && x < MAP_WIDTH)
+				{
+					if (blockType[start.y][start.x] == BLOCK_TYPE::Empty)
+					{
+						if (blockType[end.y][x] == BLOCK_TYPE::Empty)
+						{
+							EffectType[end.y][x] = BLOCK_EFFECT_TYPE::攻撃範囲;
+						}
+						else
+						{
+							break;
+						}
+					}
+					else
+					{
+						if (blockType[end.y][x] == BLOCK_TYPE::Wall)
+						{
+							EffectType[end.y][x] = BLOCK_EFFECT_TYPE::攻撃範囲;
+						}
+					}
+				}
+			}
+			break;
+		case Direction::Right:
+			end.x -= skill.range;
+			for (int x = start.x; x >= end.x; --x)
+			{
+				if (x >= 0 && x < MAP_WIDTH)
+				{
+					if (blockType[start.y][start.x] == BLOCK_TYPE::Empty)
+					{
+						if (blockType[end.y][x] == BLOCK_TYPE::Empty)
+						{
+							EffectType[end.y][x] = BLOCK_EFFECT_TYPE::攻撃範囲;
+						}
+						else
+						{
+							break;
+						}
+					}
+					else
+					{
+						if (blockType[end.y][x] == BLOCK_TYPE::Wall)
+						{
+							EffectType[end.y][x] = BLOCK_EFFECT_TYPE::攻撃範囲;
+						}
+					}
+				}
+			}
+			break;
+		case Direction::Down:
+			end.y += skill.range;
+			for (int y = start.y; y <= end.y; ++y)
+			{
+				if (y >= 0 && y < MAP_HEIGHT)
+				{
+					if (blockType[start.y][start.x] == BLOCK_TYPE::Empty)
+					{
+						if (blockType[y][end.x] == BLOCK_TYPE::Empty)
+						{
+							EffectType[y][end.x] = BLOCK_EFFECT_TYPE::攻撃範囲;
+						}
+						else
+						{
+							break;
+						}
+					}
+					else
+					{
+						if (blockType[y][end.x] == BLOCK_TYPE::Wall)
+						{
+							EffectType[y][end.x] = BLOCK_EFFECT_TYPE::攻撃範囲;
+						}
+					}
+				}
+			}
+			break;
+		case Direction::Up:
+			end.y -= skill.range;
+			for (int y = start.y; y >= end.y; --y)
+			{
+				if (y >= 0 && y < MAP_HEIGHT)
+				{
+					if (blockType[start.y][start.x] == BLOCK_TYPE::Empty)
+					{
+						if (blockType[y][end.x] == BLOCK_TYPE::Empty)
+						{
+							EffectType[y][end.x] = BLOCK_EFFECT_TYPE::攻撃範囲;
+						}
+						else
+						{
+							break;
+						}
+					}
+					else
+					{
+						if (blockType[y][end.x] == BLOCK_TYPE::Wall)
+						{
+							EffectType[y][end.x] = BLOCK_EFFECT_TYPE::攻撃範囲;
+						}
+					}
+				}
+			}
+			break;
+		default:
+			break;
+		}
+		break;
+
+	}
+
+	case SkillAreaShape::十字:
+	{
+		Vector2int start = index;
+		Vector2int end = index;
+
+		end = index;
+		end.x += skill.range;
+		for (int x = start.x; x <= end.x; ++x)
+		{
+			if (x >= 0 && x < MAP_WIDTH)
+			{
+				if (blockType[start.y][start.x] == BLOCK_TYPE::Empty)
+				{
+					if (blockType[end.y][x] == BLOCK_TYPE::Empty)
+					{
+						EffectType[end.y][x] = BLOCK_EFFECT_TYPE::攻撃範囲;
+					}
+					else
+					{
+						break;
+					}
+				}
+				else
+				{
+					if (blockType[end.y][x] == BLOCK_TYPE::Wall)
+					{
+						EffectType[end.y][x] = BLOCK_EFFECT_TYPE::攻撃範囲;
+					}
+				}
+			}
+		}
+
+		end = index;
+		end.x -= skill.range;
+		for (int x = start.x; x >= end.x; --x)
+		{
+			if (x >= 0 && x < MAP_WIDTH)
+			{
+				if (blockType[start.y][start.x] == BLOCK_TYPE::Empty)
+				{
+					if (blockType[end.y][x] == BLOCK_TYPE::Empty)
+					{
+						EffectType[end.y][x] = BLOCK_EFFECT_TYPE::攻撃範囲;
+					}
+					else
+					{
+						break;
+					}
+				}
+				else
+				{
+					if (blockType[end.y][x] == BLOCK_TYPE::Wall)
+					{
+						EffectType[end.y][x] = BLOCK_EFFECT_TYPE::攻撃範囲;
+					}
+				}
+			}
+		}
+
+		end = index;
+		end.y += skill.range;
+		for (int y = start.y; y <= end.y; ++y)
+		{
+			if (y >= 0 && y < MAP_HEIGHT)
+			{
+				if (blockType[start.y][start.x] == BLOCK_TYPE::Empty)
+				{
+					if (blockType[y][end.x] == BLOCK_TYPE::Empty)
+					{
+						EffectType[y][end.x] = BLOCK_EFFECT_TYPE::攻撃範囲;
+					}
+					else
+					{
+						break;
+					}
+				}
+				else
+				{
+					if (blockType[y][end.x] == BLOCK_TYPE::Wall)
+					{
+						EffectType[y][end.x] = BLOCK_EFFECT_TYPE::攻撃範囲;
+					}
+				}
+			}
+		}
+
+		end = index;
+		end.y -= skill.range;
+		for (int y = start.y; y >= end.y; --y)
+		{
+			if (y >= 0 && y < MAP_HEIGHT)
+			{
+				if (blockType[start.y][start.x] == BLOCK_TYPE::Empty)
+				{
+					if (blockType[y][end.x] == BLOCK_TYPE::Empty)
+					{
+						EffectType[y][end.x] = BLOCK_EFFECT_TYPE::攻撃範囲;
+					}
+					else
+					{
+						break;
+					}
+				}
+				else
+				{
+					if (blockType[y][end.x] == BLOCK_TYPE::Wall)
+					{
+						EffectType[y][end.x] = BLOCK_EFFECT_TYPE::攻撃範囲;
+					}
+				}
+			}
+		}
+
+		break;
+
+		//for (int y = index.y - skill.range; y <= index.y + skill.range; ++y)
+		//{
+		//	if (y >= 0 && y < MAP_HEIGHT)
+		//	{
+		//		EffectType[y][index.x] = BLOCK_EFFECT_TYPE::攻撃範囲;
+		//	}
+		//}
+		//for (int x = index.x - skill.range; x <= index.x + skill.range; ++x)
+		//{
+		//	if (x >= 0 && x < MAP_WIDTH)
+		//	{
+		//		EffectType[index.y][x] = BLOCK_EFFECT_TYPE::攻撃範囲;
+		//	}
+		//}
+		//break;
+	}
+
+	case SkillAreaShape::正方形:
+	{
+		for (int y = index.y - skill.range; y <= index.y + skill.range; ++y)
+		{
+			for (int x = index.x - skill.range; x <= index.x + skill.range; ++x)
+			{
+				// マップ内であれ
+				if (x >= 0 && x < MAP_WIDTH && y >= 0 && y < MAP_HEIGHT)
+				{
+					if (skill.passHeight)
+					{
+						EffectType[y][x] = BLOCK_EFFECT_TYPE::攻撃範囲;
+					}
+					else
+					{
+						if (blockType[index.y][index.x] == BLOCK_TYPE::Empty)
+						{
+							if (blockType[y][x] == BLOCK_TYPE::Empty)
+							{
+								EffectType[y][x] = BLOCK_EFFECT_TYPE::攻撃範囲;
+							}
+						}
+						else if (blockType[index.y][index.x] == BLOCK_TYPE::Wall)
+						{
+							if (blockType[y][x] == BLOCK_TYPE::Wall)
+							{
+								EffectType[y][x] = BLOCK_EFFECT_TYPE::攻撃範囲;
+							}
+						}
+						else if (blockType[index.y][index.x] == BLOCK_TYPE::stairs)
+						{
+							EffectType[y][x] = BLOCK_EFFECT_TYPE::攻撃範囲;
+						}
+					}
+				}
+			}
+		}
+		break;
+	}
+
+	case SkillAreaShape::前方正方形:
+	{
+		int localRange = skill.range;
+		if (localRange % 2 == 0)localRange--;
+		int dif = (localRange / 2) + 1;
+		Vector2int localCenter = index;
+		switch (direction)
+		{
+		case Direction::None:
+			break;
+		case Direction::Left:
+			localCenter.x += dif;
+			break;
+		case Direction::Right:
+			localCenter.x -= dif;
+			break;
+		case Direction::Down:
+			localCenter.y += dif;
+			break;
+		case Direction::Up:
+			localCenter.y -= dif;
+			break;
+		default:
+			break;
+		}
+		for (int y = localCenter.y - (localRange / 2); y <= localCenter.y + (localRange / 2); ++y)
+		{
+			for (int x = localCenter.x - (localRange / 2); x <= localCenter.x + (localRange / 2); ++x)
+			{
+				// マップ内であれ
+				if (x >= 0 && x < MAP_WIDTH && y >= 0 && y < MAP_HEIGHT)
+				{
+					EffectType[y][x] = BLOCK_EFFECT_TYPE::攻撃範囲;
+				}
+			}
+		}
+
+		break;
+	}
+
+	case SkillAreaShape::例外:
+		break;
+	default:
+		break;
 	}
 }
 

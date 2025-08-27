@@ -39,10 +39,17 @@ GameManager::GameManager()
 	Game::LoadOBJ("resources/Charactor/SelectIcon", "Icon.obj");
 	Game::LoadTexture("resources/Charactor/SelectIcon/IconMove.png");
 	Game::LoadOBJ("resources/Charactor/SelectIcon", "Icon.obj");
-	Game::LoadTexture("resources/Charactor/SelectIcon/Icon.png");
+	Game::LoadTexture("resources/Charactor/SelectIcon/IconSkill.png");
 	Game::LoadOBJ("resources/Charactor/SelectIcon", "Icon.obj");
 	Game::LoadTexture("resources/Charactor/SelectIcon/Icon.png");
 
+	// 攻撃エフェクト
+	Game::LoadOBJ("resources/Effect", "square_bipyramid.obj");
+	Game::LoadTexture("resources/Effect/square_bipyramid.png");
+
+	// 攻撃ターゲット
+	Game::LoadOBJ("resources/Effect", "target.obj");
+	Game::LoadTexture("resources/Effect/target.png");
 
 
 	////////////////// 以下スプライト ////////////////////////
