@@ -28,6 +28,8 @@ public:
     void SetDistanceTarget(float Center, int spendFrame, EaseType easetype);
 
     Vector3 GetCenter() const { return center_; }
+    float GetDistance() const { return distance_; }
+    void SetDistance(float target) { distance_ = target; }
 
     bool cameraMode_;
     bool cameraMode_centerControl_;

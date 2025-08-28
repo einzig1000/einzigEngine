@@ -167,6 +167,9 @@ enum class TEXTURE
 	// 攻撃対象
 	Attack_Marker,
 
+	// 天球
+	Sky_Dome,
+
 	// 以下スプライト
 
 	// キャラクターシート

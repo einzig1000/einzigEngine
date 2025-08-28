@@ -236,7 +236,7 @@ public:
 			// ターゲット方向へのライン描画（デバッグ用）
 			if (target.mode != LookAtMode::None)
 			{
-				Game::DrawLine(GetWorldPosition(), GetTargetWorldPosition(), 0xFF00FFFF);
+				//Game::DrawLine(GetWorldPosition(), GetTargetWorldPosition(), 0xFF00FFFF);
 			}
 		}
 

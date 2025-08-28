@@ -51,6 +51,10 @@ GameManager::GameManager()
 	Game::LoadOBJ("resources/Effect", "target.obj");
 	Game::LoadTexture("resources/Effect/target.png");
 
+	// 天球
+	Game::LoadOBJ("resources/skyDome", "skyDome.obj");
+	Game::LoadTexture("resources/skyDome/skyDome.png");
+
 
 	////////////////// 以下スプライト ////////////////////////
 	// キャラクターシート
@@ -70,7 +74,7 @@ GameManager::GameManager()
 	characterManager_ = new CharacterManager();
 
 	// フェーズ管理用
-	requestPhase_ = PHASE::Phase_GameScene;
+	requestPhase_ = PHASE::Phase_ActSelect;
 	title_ = new Title();
 	actSelect_ = new ActSelect();
 	stageSelect_ = new StageSelect();
@@ -78,12 +82,9 @@ GameManager::GameManager()
 	unitOverview_ = new UnitOverview(characterManager_);
 	gatya_ = new Gatya(characterManager_);
 
-
-
-
-
-
-
+	skydome_.model = uint32_t(TEXTURE::Sky_Dome);
+	skydome_.texture = uint32_t(TEXTURE::Sky_Dome);
+	skydome_.transforms.scale = { 100.0f,100.0f,100.0f };
 }
 
 GameManager::~GameManager()
@@ -194,13 +195,18 @@ void GameManager::Update()
 		requestPhase_ = PHASE::Phase_ActSelect;
 	}
 
-	ImGui::Begin("FPS");
-	ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
-	ImGui::End();
+	skydome_.options.uvTransform.translate.y += 0.001f;
+
+	
+	//Begin("FPS");
+	//ImGui::DragFloat3("a", &skydome_.options.uvTransform.translate.x,0.01f);
+	//ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+	//ImGui::End();
 }
 
 void GameManager::Draw()
 {
+	skydome_.Draw();
 	switch (phase_)
 	{
 	case PHASE::Phase_None:

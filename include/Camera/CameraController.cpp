@@ -6,9 +6,9 @@ CameraController::CameraController()
 {
     mousePositionGap_ = { 0,0 };
     cameraMode_ = false;
-     cameraMode_centerControl_ = true;
-     cameraMode_rotateControl_ = true;
-     cameraMode_distanceControl_ = true;
+    cameraMode_centerControl_ = false;
+    cameraMode_rotateControl_ = false;
+    cameraMode_distanceControl_ = false;
     cameraModeMode_ = true;
 
     // カメラ
@@ -142,16 +142,16 @@ void CameraController::Update()
 
 #ifdef DEBUG
 #endif
-    ImGui::Begin("camera");
-    ImGui::DragFloat3("cameraCenter", &center_.x, 0.01f);
-    ImGui::DragFloat3("cameraRotate", &transform_.rotate.x, 0.01f);
-    ImGui::DragFloat("cameraDistance", &distance_, 0.1f);
-    ImGui::DragFloat3("cameratransform_.translate", &transform_.translate.x, 0.01f);
-    ImGui::DragFloat3("cameratransform_.rotate", &transform_.rotate.x, 0.01f);
-    ImGui::Text("push SPACE key : change cameraMode");
-    ImGui::Checkbox("cameraMode", &cameraMode_);
-    ImGui::Checkbox("cameraModeMode", &cameraModeMode_);
-    ImGui::End();
+    //ImGui::Begin("camera");
+    //ImGui::DragFloat3("cameraCenter", &center_.x, 0.01f);
+    //ImGui::DragFloat3("cameraRotate", &transform_.rotate.x, 0.01f);
+    //ImGui::DragFloat("cameraDistance", &distance_, 0.1f);
+    //ImGui::DragFloat3("cameratransform_.translate", &transform_.translate.x, 0.01f);
+    //ImGui::DragFloat3("cameratransform_.rotate", &transform_.rotate.x, 0.01f);
+    //ImGui::Text("push SPACE key : change cameraMode");
+    //ImGui::Checkbox("cameraMode", &cameraMode_);
+    //ImGui::Checkbox("cameraModeMode", &cameraModeMode_);
+    //ImGui::End();
 
     //////////////////////////////////////////////
     ///               カメラ移動               ///

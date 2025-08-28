@@ -53,7 +53,7 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 	vertexResourceSprite = CreateBufferResource(dxManager->GetDevice(), vertexResourceSizeSprite);
 
 	vertexResourceSizeObj = static_cast<UINT>(sizeof(VertexData) * 4096); // オブジェクト
-	//vertexResourceSizeObj = static_cast<UINT>(sizeof(VertexData) * 8192); // オブジェクト
+	//vertexResourceSizeObj = static_cast<UINT>(sizeof(VertexData) * 300000); // オブジェクト
 	vertexResourceObj = CreateBufferResource(dxManager->GetDevice(), vertexResourceSizeObj);
 
 	vertexResourceSizeTriangle = static_cast<UINT>(sizeof(VertexData) * 1024); // 三角形

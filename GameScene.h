@@ -50,6 +50,7 @@ private:
 	void Update_FocusMode();
 
 	void CheckDamage();
+	void CheckHeal();
 
 
 	// フェーズ
@@ -140,5 +141,8 @@ private:
 
 	void Initialize_AttackEffect_FRONT(int range);
 	void Update_AttackEffect_FRONT();
+
+	void Initialize_Heal(int range, BLOCK_CHAR targetSide);
+	void Update_Heal();
 };
 

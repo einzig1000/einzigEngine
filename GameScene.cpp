@@ -107,7 +107,6 @@ void GameScene::Update()
 	// ここで色とか変わってる
 	map_->Update();
 
-
 	if (targetphase_ != GameScenePhase::None)
 	{
 		switch (targetphase_)
@@ -162,7 +161,6 @@ void GameScene::Update()
 
 	// カメライージング更新用フレーム
 	frame_camera++;
-
 }
 
 void GameScene::Draw()
@@ -196,13 +194,19 @@ void GameScene::Draw()
 	}
 
 
-	for (uint32_t i = 0; i < characterManager_->GetButtleCharactor().size(); ++i)
+	//for (uint32_t i = 0; i < characterManager_->GetButtleCharactor().size(); ++i)
+	//{
+	//	std::string label = "test:" + std::to_string(i);
+	//	ImGui::DragFloat(
+	//		label.c_str(),
+	//		&characterManager_->GetButtleCharactor()[i]->actionDelay
+	//	);
+	//}
+
+
+	if (Game::GetCamera()->GetDistance() > 32.4f)
 	{
-		std::string label = "test:" + std::to_string(i);
-		ImGui::DragFloat(
-			label.c_str(),
-			&characterManager_->GetButtleCharactor()[i]->actionDelay
-		);
+		Game::GetCamera()->SetDistance(32.4f);
 	}
 }
 
@@ -256,14 +260,10 @@ void GameScene::Draw_Check()
 // 駒を配置するフェーズ　各ゲームで一度しか呼び出されない
 void GameScene::Initialize_Setup()
 {
-	Game::SetControlModeCameraCenter(false);
-	Game::SetControlModeCameraRotate(false);
-	Game::SetControlModeCameraDistance(true);
-
 	frame_camera = 0;
 	frameMAX_camera = 60;
 	Game::MoveCenterTarget(PositionByIndex(centerIndex_camera), frameMAX_camera, EaseType::OUT_QUART);
-	Game::MoveDistanceTarget(15.60f, frameMAX_camera, EaseType::OUT_QUART);
+	Game::MoveDistanceTarget(20.0f, frameMAX_camera, EaseType::OUT_QUART);
 	Game::MoveRotateTarget({ 1.13f, 0.0f, 0.0f }, frameMAX_camera, EaseType::OUT_QUART);
 
 	for (uint32_t i = 0; i < characterManager_->GetAllCharactor().size(); ++i)
@@ -460,6 +460,7 @@ void GameScene::Update_Setup()
 				for (int y = 0; y < MAP_HEIGHT; ++y)
 				{
 					map_->EffectType[y][x] = BLOCK_EFFECT_TYPE::Empty;
+					map_->IsCollisionMouseRay_[y][x] = false;
 				}
 			}
 			for (int i = 0; i < characterManager_->GetButtleCharactor().size(); ++i)
@@ -846,7 +847,12 @@ void GameScene::Update_PlayerTurn()
 		}
 		else if (characterManager_->GetButtleCharactor()[0]->skill.type == SkillType::回復)
 		{
-			Initialize_AttackEffect_LINE(characterManager_->GetButtleCharactor()[0]->skill.range);
+			if (GetHitKey::keys[DIK_SPACE] && !GetHitKey::preKeys[DIK_SPACE])
+			{
+				Act = CharactorSelectPattern::SkillAnimation;
+				SkillAreaShape dd = characterManager_->GetButtleCharactor()[0]->skill.areaShape;
+				Initialize_Heal(characterManager_->GetButtleCharactor()[0]->skill.range, BLOCK_CHAR::OnPlayer);
+			}
 		}
 		Update_target();
 	}
@@ -858,7 +864,8 @@ void GameScene::Update_PlayerTurn()
 		{
 		case SkillAreaShape::円:
 		{
-
+			if (characterManager_->GetButtleCharactor()[0]->skill.type == SkillType::攻撃)Update_AttackEffect_CROSS();
+			else if (characterManager_->GetButtleCharactor()[0]->skill.type == SkillType::回復)Update_Heal();
 			break;
 		}
 		case SkillAreaShape::直線:
@@ -868,12 +875,14 @@ void GameScene::Update_PlayerTurn()
 		}
 		case SkillAreaShape::十字:
 		{
-			Update_AttackEffect_CROSS();
+			if (characterManager_->GetButtleCharactor()[0]->skill.type == SkillType::攻撃)Update_AttackEffect_CROSS();
+			else if (characterManager_->GetButtleCharactor()[0]->skill.type == SkillType::回復)Update_Heal();
 			break;
 		}
 		case SkillAreaShape::正方形:
 		{
-
+			if (characterManager_->GetButtleCharactor()[0]->skill.type == SkillType::攻撃)Update_AttackEffect_CROSS();
+			else if (characterManager_->GetButtleCharactor()[0]->skill.type == SkillType::回復)Update_Heal();
 			break;
 		}
 		case SkillAreaShape::前方正方形:
@@ -1104,76 +1113,141 @@ void GameScene::Update_EnemyTurn()
 			}
 		}
 
-		if (characterManager_->GetButtleCharactor()[0]->skill.areaShape == SkillAreaShape::直線)
+		if (characterManager_->GetButtleCharactor()[0]->skill.type == SkillType::攻撃)
 		{
-			if (R)
+			if (characterManager_->GetButtleCharactor()[0]->skill.areaShape == SkillAreaShape::直線)
 			{
-				characterManager_->GetButtleCharactor()[0]->direction = Direction::Right;
-				map_->CheckAbleAttack(moveTargetPositionIndex, characterManager_->GetButtleCharactor()[0]->skill, characterManager_->GetButtleCharactor()[0]->direction);
-				Inintialize_target(0xf72c2cFF, BLOCK_CHAR::OnPlayer);
+				if (R)
+				{
+					characterManager_->GetButtleCharactor()[0]->direction = Direction::Right;
+					map_->CheckAbleAttack(moveTargetPositionIndex, characterManager_->GetButtleCharactor()[0]->skill, characterManager_->GetButtleCharactor()[0]->direction);
+					Inintialize_target(0xf72c2cFF, BLOCK_CHAR::OnPlayer);
+				}
+				if (L)
+				{
+					characterManager_->GetButtleCharactor()[0]->direction = Direction::Left;
+					map_->CheckAbleAttack(moveTargetPositionIndex, characterManager_->GetButtleCharactor()[0]->skill, characterManager_->GetButtleCharactor()[0]->direction);
+					Inintialize_target(0xf72c2cFF, BLOCK_CHAR::OnPlayer);
+				}
+				if (T)
+				{
+					characterManager_->GetButtleCharactor()[0]->direction = Direction::Up;
+					map_->CheckAbleAttack(moveTargetPositionIndex, characterManager_->GetButtleCharactor()[0]->skill, characterManager_->GetButtleCharactor()[0]->direction);
+					Inintialize_target(0xf72c2cFF, BLOCK_CHAR::OnPlayer);
+				}
+				if (B)
+				{
+					characterManager_->GetButtleCharactor()[0]->direction = Direction::Down;
+					map_->CheckAbleAttack(moveTargetPositionIndex, characterManager_->GetButtleCharactor()[0]->skill, characterManager_->GetButtleCharactor()[0]->direction);
+					Inintialize_target(0xf72c2cFF, BLOCK_CHAR::OnPlayer);
+				}
+				if (GetHitKey::keys[DIK_SPACE] && !GetHitKey::preKeys[DIK_SPACE])
+				{
+					Act = CharactorSelectPattern::SkillAnimation;
+					CheckDamage();
+					Initialize_AttackEffect_LINE(characterManager_->GetButtleCharactor()[0]->skill.range);
+				}
 			}
-			if (L)
+			else if (characterManager_->GetButtleCharactor()[0]->skill.areaShape == SkillAreaShape::十字)
 			{
-				characterManager_->GetButtleCharactor()[0]->direction = Direction::Left;
-				map_->CheckAbleAttack(moveTargetPositionIndex, characterManager_->GetButtleCharactor()[0]->skill, characterManager_->GetButtleCharactor()[0]->direction);
-				Inintialize_target(0xf72c2cFF, BLOCK_CHAR::OnPlayer);
+				if (GetHitKey::keys[DIK_SPACE] && !GetHitKey::preKeys[DIK_SPACE])
+				{
+					Act = CharactorSelectPattern::SkillAnimation;
+					CheckDamage();
+					Initialize_AttackEffect_CROSS(characterManager_->GetButtleCharactor()[0]->skill.range);
+				}
 			}
-			if (T)
+			else if (characterManager_->GetButtleCharactor()[0]->skill.areaShape == SkillAreaShape::前方正方形)
 			{
-				characterManager_->GetButtleCharactor()[0]->direction = Direction::Up;
-				map_->CheckAbleAttack(moveTargetPositionIndex, characterManager_->GetButtleCharactor()[0]->skill, characterManager_->GetButtleCharactor()[0]->direction);
-				Inintialize_target(0xf72c2cFF, BLOCK_CHAR::OnPlayer);
-			}
-			if (B)
-			{
-				characterManager_->GetButtleCharactor()[0]->direction = Direction::Down;
-				map_->CheckAbleAttack(moveTargetPositionIndex, characterManager_->GetButtleCharactor()[0]->skill, characterManager_->GetButtleCharactor()[0]->direction);
-				Inintialize_target(0xf72c2cFF, BLOCK_CHAR::OnPlayer);
-			}
-			if (GetHitKey::keys[DIK_SPACE] && !GetHitKey::preKeys[DIK_SPACE])
-			{
-				Act = CharactorSelectPattern::SkillAnimation;
-				Initialize_AttackEffect_LINE(characterManager_->GetButtleCharactor()[0]->skill.range);
+				if (R)
+				{
+					characterManager_->GetButtleCharactor()[0]->direction = Direction::Right;
+					map_->CheckAbleAttack(moveTargetPositionIndex, characterManager_->GetButtleCharactor()[0]->skill, characterManager_->GetButtleCharactor()[0]->direction);
+					Inintialize_target(0xf72c2cFF, BLOCK_CHAR::OnPlayer);
+				}
+				if (L)
+				{
+					characterManager_->GetButtleCharactor()[0]->direction = Direction::Left;
+					map_->CheckAbleAttack(moveTargetPositionIndex, characterManager_->GetButtleCharactor()[0]->skill, characterManager_->GetButtleCharactor()[0]->direction);
+					Inintialize_target(0xf72c2cFF, BLOCK_CHAR::OnPlayer);
+				}
+				if (T)
+				{
+					characterManager_->GetButtleCharactor()[0]->direction = Direction::Up;
+					map_->CheckAbleAttack(moveTargetPositionIndex, characterManager_->GetButtleCharactor()[0]->skill, characterManager_->GetButtleCharactor()[0]->direction);
+					Inintialize_target(0xf72c2cFF, BLOCK_CHAR::OnPlayer);
+				}
+				if (B)
+				{
+					characterManager_->GetButtleCharactor()[0]->direction = Direction::Down;
+					map_->CheckAbleAttack(moveTargetPositionIndex, characterManager_->GetButtleCharactor()[0]->skill, characterManager_->GetButtleCharactor()[0]->direction);
+					Inintialize_target(0xf72c2cFF, BLOCK_CHAR::OnPlayer);
+				}
+				if (GetHitKey::keys[DIK_SPACE] && !GetHitKey::preKeys[DIK_SPACE])
+				{
+					Act = CharactorSelectPattern::SkillAnimation;
+					CheckDamage();
+					Initialize_AttackEffect_FRONT(characterManager_->GetButtleCharactor()[0]->skill.range);
+				}
 			}
 		}
-		else if (characterManager_->GetButtleCharactor()[0]->skill.areaShape == SkillAreaShape::十字)
+		else if (characterManager_->GetButtleCharactor()[0]->skill.type == SkillType::バフ)
 		{
 			if (GetHitKey::keys[DIK_SPACE] && !GetHitKey::preKeys[DIK_SPACE])
 			{
-				Act = CharactorSelectPattern::SkillAnimation;
-				Initialize_AttackEffect_CROSS(characterManager_->GetButtleCharactor()[0]->skill.range);
+				for (int x = 0; x < MAP_WIDTH; ++x)
+				{
+					for (int y = 0; y < MAP_HEIGHT; ++y)
+					{
+						if (map_->EffectType[y][x] == BLOCK_EFFECT_TYPE::攻撃範囲)
+						{
+							if (map_->CharactorType[y][x] == BLOCK_CHAR::OnEnemy)
+							{
+								for (int i = 0; i < characterManager_->GetButtleCharactor().size(); ++i)
+								{
+									if (characterManager_->GetButtleCharactor()[i]->pos == Vector2int{ x,y })
+									{
+										switch (characterManager_->GetButtleCharactor()[0]->skill.buffTargetStates)
+										{
+										case AllStates::power:
+											characterManager_->GetButtleCharactor()[i]->states_buttle_.power *=
+												characterManager_->GetButtleCharactor()[0]->skill.multiplier;
+											break;
+										case AllStates::hp_max:
+											characterManager_->GetButtleCharactor()[i]->states_buttle_.hp_max *=
+												characterManager_->GetButtleCharactor()[0]->skill.multiplier;
+											break;
+										case AllStates::speed:
+											characterManager_->GetButtleCharactor()[i]->states_buttle_.speed *=
+												characterManager_->GetButtleCharactor()[0]->skill.multiplier;
+											if (characterManager_->GetButtleCharactor()[i]->states_buttle_.speed >= 100)
+											{
+												characterManager_->GetButtleCharactor()[i]->states_buttle_.speed = 99;
+											}
+											break;
+										case AllStates::moveRenge:
+											characterManager_->GetButtleCharactor()[i]->states_buttle_.hp_max += 1;
+											break;
+										case AllStates::例外:
+											break;
+										default:
+											break;
+										}
+									}
+								}
+							}
+						}
+					}
+				}
 			}
 		}
-		else if (characterManager_->GetButtleCharactor()[0]->skill.areaShape == SkillAreaShape::前方正方形)
+		else if (characterManager_->GetButtleCharactor()[0]->skill.type == SkillType::回復)
 		{
-			if (R)
-			{
-				characterManager_->GetButtleCharactor()[0]->direction = Direction::Right;
-				map_->CheckAbleAttack(moveTargetPositionIndex, characterManager_->GetButtleCharactor()[0]->skill, characterManager_->GetButtleCharactor()[0]->direction);
-				Inintialize_target(0xf72c2cFF, BLOCK_CHAR::OnPlayer);
-			}
-			if (L)
-			{
-				characterManager_->GetButtleCharactor()[0]->direction = Direction::Left;
-				map_->CheckAbleAttack(moveTargetPositionIndex, characterManager_->GetButtleCharactor()[0]->skill, characterManager_->GetButtleCharactor()[0]->direction);
-				Inintialize_target(0xf72c2cFF, BLOCK_CHAR::OnPlayer);
-			}
-			if (T)
-			{
-				characterManager_->GetButtleCharactor()[0]->direction = Direction::Up;
-				map_->CheckAbleAttack(moveTargetPositionIndex, characterManager_->GetButtleCharactor()[0]->skill, characterManager_->GetButtleCharactor()[0]->direction);
-				Inintialize_target(0xf72c2cFF, BLOCK_CHAR::OnPlayer);
-			}
-			if (B)
-			{
-				characterManager_->GetButtleCharactor()[0]->direction = Direction::Down;
-				map_->CheckAbleAttack(moveTargetPositionIndex, characterManager_->GetButtleCharactor()[0]->skill, characterManager_->GetButtleCharactor()[0]->direction);
-				Inintialize_target(0xf72c2cFF, BLOCK_CHAR::OnPlayer);
-			}
 			if (GetHitKey::keys[DIK_SPACE] && !GetHitKey::preKeys[DIK_SPACE])
 			{
 				Act = CharactorSelectPattern::SkillAnimation;
-				Initialize_AttackEffect_LINE(characterManager_->GetButtleCharactor()[0]->skill.range);
+				SkillAreaShape dd = characterManager_->GetButtleCharactor()[0]->skill.areaShape;
+				Initialize_Heal(characterManager_->GetButtleCharactor()[0]->skill.range, BLOCK_CHAR::OnEnemy);
 			}
 		}
 		Update_target();
@@ -1264,6 +1338,32 @@ void GameScene::CheckDamage()
 	for (int i = 0; i < deathFrag.size(); ++i)
 	{
 		characterManager_->eraseButtleCharactor(deathFrag[i]);
+	}
+}
+
+void GameScene::CheckHeal()
+{
+	for (int x = 0; x < MAP_WIDTH; ++x)
+	{
+		for (int y = 0; y < MAP_HEIGHT; ++y)
+		{
+			if (map_->EffectType[y][x] == BLOCK_EFFECT_TYPE::回復範囲)
+			{
+				for (int i = 1; i < characterManager_->GetButtleCharactor().size(); ++i)
+				{
+					if (characterManager_->GetButtleCharactor()[i]->pos == Vector2int{ x,y })
+					{
+						characterManager_->GetButtleCharactor()[i]->states_buttle_.hp +=
+							characterManager_->GetButtleCharactor()[0]->states_buttle_.power *
+							characterManager_->GetButtleCharactor()[0]->skill.multiplier;
+						if (characterManager_->GetButtleCharactor()[i]->states_buttle_.hp > characterManager_->GetButtleCharactor()[i]->states_buttle_.hp_max)
+						{
+							characterManager_->GetButtleCharactor()[i]->states_buttle_.hp = characterManager_->GetButtleCharactor()[i]->states_buttle_.hp_max;
+						}
+					}
+				}
+			}
+		}
 	}
 }
 
@@ -1379,6 +1479,13 @@ void GameScene::Update_FocusMode()
 								Inintialize_target(0x00FF7FFF, BLOCK_CHAR::OnEnemy);
 							}
 						}
+					}
+					// スキル
+					else if (i == 3)
+					{
+						characterManager_->GetButtleCharactor()[0]->actionDelay += 20;
+						// フェーズ更新
+						targetphase_ = GameScenePhase::Check;
 					}
 				}
 			}
@@ -1514,7 +1621,6 @@ void GameScene::Initialize_AttackEffect_LINE(int range)
 
 void GameScene::Update_AttackEffect_LINE()
 {
-
 	for (int i = 0; i < 30; ++i)
 	{
 		if (Animationt > AttacEffectsikakusuiData[i].frame)
@@ -1876,6 +1982,92 @@ void GameScene::Update_AttackEffect_FRONT()
 					position.z = std::clamp(position.z, aabb.min.z, aabb.max.z);
 				}
 			}
+		}
+	}
+
+	if (Animationt > 60)
+	{
+		// 攻撃コストの取得
+		float attackCost = 20;
+		// 素早さ補正の取得
+		float percentage = float(characterManager_->GetButtleCharactor()[0]->states_buttle_.speed) / 100;
+		// アクションディレイの更新
+		characterManager_->GetButtleCharactor()[0]->actionDelay += attackCost * percentage;
+		// フェーズ更新
+		targetphase_ = GameScenePhase::Check;
+		// 移動可能マスを示すエフェクトをリセット
+		for (int y = 0; y < MAP_HEIGHT; ++y)
+		{
+			for (int x = 0; x < MAP_WIDTH; ++x)
+			{
+				// すでに移動可能になってるやつは初期化
+				map_->EffectType[y][x] = BLOCK_EFFECT_TYPE::Empty;
+			}
+		}
+	}
+
+	Animationt++;
+}
+
+void GameScene::Initialize_Heal(int range, BLOCK_CHAR targetSide)
+{
+	AttacEffectsikakusuiData.clear();
+
+	for (int x = 0; x < MAP_WIDTH; ++x)
+	{
+		for (int y = 0; y < MAP_HEIGHT; ++y)
+		{
+			if (map_->EffectType[y][x] != BLOCK_EFFECT_TYPE::Empty)
+			{
+				if (map_->CharactorType[y][x] == targetSide)
+				{
+					for (int i = 0; i < 30; ++i)
+					{
+						dataaaaaa add;
+
+						add.data.model = uint32_t(TEXTURE::Attack_Effect);
+						add.data.texture = uint32_t(TEXTURE::Attack_Effect);
+						add.data.options.enableLighting = false;
+						add.startindex = IndexByPosition(characterManager_->GetButtleCharactor()[0]->data.transforms.translate);
+						add.targetindex = add.startindex;
+						add.starttype = map_->BlockTypeByIndex(add.startindex);
+
+						//add.data.transforms.translate = characterManager_->GetButtleCharactor()[0]->data.transforms.translate;
+						add.data.transforms.translate = PositionByIndex(Vector2int{ x,y }, map_->BlockTypeByIndex(Vector2int{ x,y }));
+						add.data.transforms.translate.x += float(RandomInt(-50, 50)) / 100.0f;
+						add.data.transforms.translate.y += float(RandomInt(-50, 50)) / 100.0f;
+						add.data.transforms.translate.z += float(RandomInt(-50, 50)) / 100.0f;
+						add.data.transforms.rotate.x = float(std::numbers::pi / 2.0f);
+						add.data.transforms.scale = { 0.2f, 0.2f, 0.2f };
+
+						add.velocity = { 0.0f,0.1f,0.0f };
+
+						add.frame = i * 2;
+
+						AttacEffectsikakusuiData.push_back(add);
+					}
+				}
+			}
+		}
+	}
+
+	CheckHeal();
+	Animationt = 0;
+}
+
+void GameScene::Update_Heal()
+{
+	for (int i = 0; i < int(AttacEffectsikakusuiData.size()); ++i)
+	{
+		if (Animationt > AttacEffectsikakusuiData[i].frame)
+		{
+			AttacEffectsikakusuiData[i].data.transforms.translate += AttacEffectsikakusuiData[i].velocity;
+			AttacEffectsikakusuiData[i].data.transforms.rotate.z += 0.1f;
+			if (AttacEffectsikakusuiData[i].data.transforms.scale.x > 0)
+			{
+				AttacEffectsikakusuiData[i].data.transforms.scale -= { 0.01f, 0.01f, 0.01f };
+			}
+			AttacEffectsikakusuiData[i].data.Draw();
 		}
 	}
 

@@ -30,7 +30,7 @@ private:
 	// 所持アイテム
 
 	// 天球
-
+	Game::RenderData_Model skydome_;
 
 	// フェーズ
 	PHASE phase_ = PHASE::Phase_None;
