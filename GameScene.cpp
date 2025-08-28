@@ -793,7 +793,6 @@ void GameScene::Update_PlayerTurn()
 					Initialize_AttackEffect_FRONT(characterManager_->GetButtleCharactor()[0]->skill.range);
 				}
 			}
-			Update_target();
 		}
 		else if (characterManager_->GetButtleCharactor()[0]->skill.type == SkillType::バフ)
 		{
@@ -847,8 +846,9 @@ void GameScene::Update_PlayerTurn()
 		}
 		else if (characterManager_->GetButtleCharactor()[0]->skill.type == SkillType::回復)
 		{
-
+			Initialize_AttackEffect_LINE(characterManager_->GetButtleCharactor()[0]->skill.range);
 		}
+		Update_target();
 	}
 
 	else if (Act == CharactorSelectPattern::SkillAnimation)
@@ -1356,11 +1356,11 @@ void GameScene::Update_FocusMode()
 							}
 							else if (characterManager_->GetButtleCharactor()[0]->skill.type == SkillType::バフ)
 							{
-								Inintialize_target(0xf72c2cFF, BLOCK_CHAR::OnPlayer);
+								Inintialize_target(0x00FF7FFF, BLOCK_CHAR::OnPlayer);
 							}
 							else if (characterManager_->GetButtleCharactor()[0]->skill.type == SkillType::回復)
 							{
-								Inintialize_target(0xf72c2cFF, BLOCK_CHAR::OnPlayer);
+								Inintialize_target(0x00FF7FFF, BLOCK_CHAR::OnPlayer);
 							}
 						}
 						else
@@ -1372,11 +1372,11 @@ void GameScene::Update_FocusMode()
 							}
 							else if (characterManager_->GetButtleCharactor()[0]->skill.type == SkillType::バフ)
 							{
-								Inintialize_target(0xf72c2cFF, BLOCK_CHAR::OnEnemy);
+								Inintialize_target(0x00FF7FFF, BLOCK_CHAR::OnEnemy);
 							}
 							else if (characterManager_->GetButtleCharactor()[0]->skill.type == SkillType::回復)
 							{
-								Inintialize_target(0xf72c2cFF, BLOCK_CHAR::OnEnemy);
+								Inintialize_target(0x00FF7FFF, BLOCK_CHAR::OnEnemy);
 							}
 						}
 					}
@@ -1420,7 +1420,7 @@ void GameScene::Inintialize_target(int color, BLOCK_CHAR targetSide)
 	{
 		for (int y = 0; y < MAP_HEIGHT; ++y)
 		{
-			if (map_->EffectType[y][x] == BLOCK_EFFECT_TYPE::攻撃範囲)
+			if (map_->EffectType[y][x] != BLOCK_EFFECT_TYPE::Empty)
 			{
 				if (map_->CharactorType[y][x] == targetSide)
 				{

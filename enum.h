@@ -58,6 +58,7 @@ enum class BLOCK_EFFECT_TYPE
 	Empty = 0,		// 空
 	移動可能,		// キャラ配置可能を示すエフェクト
 	攻撃範囲,		// 攻撃予定地
+	回復範囲,		// 回復予定地
 };
 
 enum class SkillAreaShape

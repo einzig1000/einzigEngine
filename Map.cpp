@@ -229,7 +229,12 @@ void Map::Update()
 			}
 			else if (EffectType[y][x] == BLOCK_EFFECT_TYPE::攻撃範囲)
 			{
-				data[y][x].color = 0xFF6A6AFF;
+				// data[y][x].color = 0xFF6A6AFF;
+				data[y][x].color = 0xFF0000FF;
+			}
+			else if (EffectType[y][x] == BLOCK_EFFECT_TYPE::回復範囲)
+			{
+				data[y][x].color = 0xFF69B4FF;
 			}
 			else
 			{
@@ -761,29 +766,60 @@ void Map::CheckAbleAttack(Vector2int index, Skill skill, Direction direction)
 				// マップ内であれ
 				if (x >= 0 && x < MAP_WIDTH && y >= 0 && y < MAP_HEIGHT)
 				{
-					if (skill.passHeight)
+					if (skill.type == SkillType::攻撃)
 					{
-						EffectType[y][x] = BLOCK_EFFECT_TYPE::攻撃範囲;
-					}
-					else
-					{
-						if (blockType[index.y][index.x] == BLOCK_TYPE::Empty)
-						{
-							if (blockType[y][x] == BLOCK_TYPE::Empty)
-							{
-								EffectType[y][x] = BLOCK_EFFECT_TYPE::攻撃範囲;
-							}
-						}
-						else if (blockType[index.y][index.x] == BLOCK_TYPE::Wall)
-						{
-							if (blockType[y][x] == BLOCK_TYPE::Wall)
-							{
-								EffectType[y][x] = BLOCK_EFFECT_TYPE::攻撃範囲;
-							}
-						}
-						else if (blockType[index.y][index.x] == BLOCK_TYPE::stairs)
+						if (skill.passHeight)
 						{
 							EffectType[y][x] = BLOCK_EFFECT_TYPE::攻撃範囲;
+						}
+						else
+						{
+							if (blockType[index.y][index.x] == BLOCK_TYPE::Empty)
+							{
+								if (blockType[y][x] == BLOCK_TYPE::Empty)
+								{
+									EffectType[y][x] = BLOCK_EFFECT_TYPE::攻撃範囲;
+								}
+							}
+							else if (blockType[index.y][index.x] == BLOCK_TYPE::Wall)
+							{
+								if (blockType[y][x] == BLOCK_TYPE::Wall)
+								{
+									EffectType[y][x] = BLOCK_EFFECT_TYPE::攻撃範囲;
+								}
+							}
+							else if (blockType[index.y][index.x] == BLOCK_TYPE::stairs)
+							{
+								EffectType[y][x] = BLOCK_EFFECT_TYPE::攻撃範囲;
+							}
+						}
+					}
+					else if (skill.type == SkillType::回復)
+					{
+						if (skill.passHeight)
+						{
+							EffectType[y][x] = BLOCK_EFFECT_TYPE::回復範囲;
+						}
+						else
+						{
+							if (blockType[index.y][index.x] == BLOCK_TYPE::Empty)
+							{
+								if (blockType[y][x] == BLOCK_TYPE::Empty)
+								{
+									EffectType[y][x] = BLOCK_EFFECT_TYPE::回復範囲;
+								}
+							}
+							else if (blockType[index.y][index.x] == BLOCK_TYPE::Wall)
+							{
+								if (blockType[y][x] == BLOCK_TYPE::Wall)
+								{
+									EffectType[y][x] = BLOCK_EFFECT_TYPE::回復範囲;
+								}
+							}
+							else if (blockType[index.y][index.x] == BLOCK_TYPE::stairs)
+							{
+								EffectType[y][x] = BLOCK_EFFECT_TYPE::回復範囲;
+							}
 						}
 					}
 				}
