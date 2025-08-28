@@ -196,12 +196,6 @@ void GameManager::Update()
 	}
 
 	skydome_.options.uvTransform.translate.y += 0.001f;
-
-	
-	//Begin("FPS");
-	//ImGui::DragFloat3("a", &skydome_.options.uvTransform.translate.x,0.01f);
-	//ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
-	//ImGui::End();
 }
 
 void GameManager::Draw()

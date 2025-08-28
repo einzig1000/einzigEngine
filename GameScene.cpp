@@ -194,15 +194,6 @@ void GameScene::Draw()
 	}
 
 
-	//for (uint32_t i = 0; i < characterManager_->GetButtleCharactor().size(); ++i)
-	//{
-	//	std::string label = "test:" + std::to_string(i);
-	//	ImGui::DragFloat(
-	//		label.c_str(),
-	//		&characterManager_->GetButtleCharactor()[i]->actionDelay
-	//	);
-	//}
-
 
 	if (Game::GetCamera()->GetDistance() > 32.4f)
 	{
