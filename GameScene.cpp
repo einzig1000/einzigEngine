@@ -1190,7 +1190,7 @@ void GameScene::Update_EnemyTurn()
 				{
 					for (int y = 0; y < MAP_HEIGHT; ++y)
 					{
-						if (map_->EffectType[y][x] == BLOCK_EFFECT_TYPE::攻撃範囲)
+						if (map_->EffectType[y][x] == BLOCK_EFFECT_TYPE::回復範囲)
 						{
 							if (map_->CharactorType[y][x] == BLOCK_CHAR::OnEnemy)
 							{
@@ -1471,7 +1471,7 @@ void GameScene::Update_FocusMode()
 							}
 						}
 					}
-					// スキル
+					// パス
 					else if (i == 3)
 					{
 						characterManager_->GetButtleCharactor()[0]->actionDelay += 20;

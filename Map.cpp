@@ -822,6 +822,34 @@ void Map::CheckAbleAttack(Vector2int index, Skill skill, Direction direction)
 							}
 						}
 					}
+					else if (skill.type == SkillType::回復)
+					{
+						if (skill.passHeight)
+						{
+							EffectType[y][x] = BLOCK_EFFECT_TYPE::回復範囲;
+						}
+						else
+						{
+							if (blockType[index.y][index.x] == BLOCK_TYPE::Empty)
+							{
+								if (blockType[y][x] == BLOCK_TYPE::Empty)
+								{
+									EffectType[y][x] = BLOCK_EFFECT_TYPE::回復範囲;
+								}
+							}
+							else if (blockType[index.y][index.x] == BLOCK_TYPE::Wall)
+							{
+								if (blockType[y][x] == BLOCK_TYPE::Wall)
+								{
+									EffectType[y][x] = BLOCK_EFFECT_TYPE::回復範囲;
+								}
+							}
+							else if (blockType[index.y][index.x] == BLOCK_TYPE::stairs)
+							{
+								EffectType[y][x] = BLOCK_EFFECT_TYPE::回復範囲;
+							}
+						}
+					}
 				}
 			}
 		}
