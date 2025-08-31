@@ -20,6 +20,21 @@
 #include "externals/DirectXTex/DirectXTex.h"
 #include "enum.h"
 
+enum class LookAtMode
+{
+    None,
+    StaticVector,
+    StaticCamera,
+    StaticTransform
+};
+
+struct LookAtTarget
+{
+    LookAtMode mode = LookAtMode::None;
+    Vector3 staticTarget = { 0, 0, 0 };
+    Transforms* dynamicTransform = nullptr;
+};
+
 class Quaternion;
 
 enum class Direction
@@ -931,6 +946,8 @@ struct DrawOptions
     Transforms uvTransform;
     // ライティングするか
     bool enableLighting = true;
+    // mouseとの当たり判定とるか
+    bool enableCheckMouseCollision = false;
 };
 
 

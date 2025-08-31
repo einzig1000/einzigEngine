@@ -1,4 +1,5 @@
 #include "Engine/Game.h"
+#include "Engine/Engine.h"
 
 static Engine* engine = new Engine;
 
@@ -47,9 +48,9 @@ TextureData* Game::GetTexture(uint32_t textureNumber)
 	return engine->GetTexture(textureNumber);
 }
 
-void Game::Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions)
+void Game::Drawobj(Game::RenderData_Model& renderData)
 {
-	engine->Drawobj(transform, center, objectNumber, textureNumber, materialColor, drawOptions);
+	engine->Drawobj(renderData);
 }
 
 void Game::DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions)
@@ -206,4 +207,117 @@ AABB Game::CreateAABB(const Transforms& transforms, uint32_t objectNumber)
 void Game::toggleWireframeMode()
 {
 	engine->toggleWireframeMode();
+}
+
+
+
+
+Vector3 Game::RenderData_Model::GetWorldPosition() const
+{
+	if (transforms.parentWorld)
+	{
+		return Transform(transforms.translate, *transforms.parentWorld);
+	}
+	else
+	{
+		return transforms.translate;
+	}
+}
+
+Vector3 Game::RenderData_Model::GetTargetWorldPosition() const
+{
+	{
+		switch (target.mode)
+		{
+		case LookAtMode::StaticVector:
+			return target.staticTarget;
+
+		case LookAtMode::StaticTransform:
+			if (target.dynamicTransform)
+			{
+				return target.dynamicTransform->parentWorld
+					? Transform(target.dynamicTransform->translate, *target.dynamicTransform->parentWorld)
+					: target.dynamicTransform->translate;
+			}
+			break;
+
+		default:
+			break;
+		}
+		return GetWorldPosition() + Vector3(0, 0, 1);
+	}
+}
+
+void Game::RenderData_Model::LookAtOnce(const Vector3& targetWorldPos)
+{
+	target.mode = LookAtMode::StaticVector;
+	target.staticTarget = targetWorldPos;
+	target.dynamicTransform = nullptr;
+}
+
+void Game::RenderData_Model::LookAtOnce(const Transforms& targetTransforms)
+{
+	target.mode = LookAtMode::StaticTransform;
+	target.dynamicTransform = const_cast<Transforms*>(&targetTransforms);
+}
+
+void Game::RenderData_Model::LookAtOnce(const RenderData_Model& renderData_Model)
+{}
+
+void Game::RenderData_Model::SetRotationEuler(const Vector3 & eulerDeg)
+{
+	rotationQuat = Quaternion::FromEulerDegrees(eulerDeg);
+}
+
+Vector3 Game::RenderData_Model::GetRotationEuler() const
+{
+	return rotationQuat.ToEulerDegrees();
+}
+
+void Game::RenderData_Model::LookAtFront()
+{
+	LookAtOnce(GetWorldPosition() + Vector3(0, 0, 1));
+}
+
+void Game::RenderData_Model::Draw()
+{
+	Game::Drawobj(*this);
+}
+
+void Game::RenderData_Model::DrawAABB()
+{
+	CreateAABB();
+
+	Vector3 p[8];
+	p[0] = { AABB.min.x, AABB.min.y, AABB.min.z };
+	p[1] = { AABB.max.x, AABB.min.y, AABB.min.z };
+	p[2] = { AABB.max.x, AABB.max.y, AABB.min.z };
+	p[3] = { AABB.min.x, AABB.max.y, AABB.min.z };
+	p[4] = { AABB.min.x, AABB.min.y, AABB.max.z };
+	p[5] = { AABB.max.x, AABB.min.y, AABB.max.z };
+	p[6] = { AABB.max.x, AABB.max.y, AABB.max.z };
+	p[7] = { AABB.min.x, AABB.max.y, AABB.max.z };
+
+	// 下側
+	Game::DrawLine(p[0], p[1], 0xFF0000FF);
+	Game::DrawLine(p[1], p[2], 0xFF0000FF);
+	Game::DrawLine(p[2], p[3], 0xFF0000FF);
+	Game::DrawLine(p[3], p[0], 0xFF0000FF);
+
+	// 上側
+	Game::DrawLine(p[4], p[5], 0xFF0000FF);
+	Game::DrawLine(p[5], p[6], 0xFF0000FF);
+	Game::DrawLine(p[6], p[7], 0xFF0000FF);
+	Game::DrawLine(p[7], p[4], 0xFF0000FF);
+
+	// 側面
+	Game::DrawLine(p[0], p[4], 0xFF0000FF);
+	Game::DrawLine(p[1], p[5], 0xFF0000FF);
+	Game::DrawLine(p[2], p[6], 0xFF0000FF);
+	Game::DrawLine(p[3], p[7], 0xFF0000FF);
+}
+
+void Game::RenderData_Model::CreateAABB()
+{
+	this->AABB = Game::CreateAABB(this->transforms, this->model);
 }

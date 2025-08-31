@@ -9,6 +9,7 @@
 #include "Camera/CameraController.h"
 #include "Window/WindowManager.h"
 #include "DirectX/DirectXManager.h"
+#include "Engine/Game.h"
 
 // 初期化用
 void Engine::Initialize(int width, int height, const std::wstring& title)
@@ -407,6 +408,79 @@ void Engine::Drawobj(const Transforms& transform, const Vector3& center, uint32_
 	dxManager->GetCommandList()->DrawInstanced(kSumVertex, 1, 0, 0);
 
 	drawCallIndex++;
+}
+
+void Engine::Drawobj(Game::RenderData_Model& renderData)
+{
+	// スケール
+	Matrix4x4 scaleMatrix = Matrix4x4::MakeScaleMatrix(renderData.transforms.scale);
+
+	// 移動
+	Matrix4x4 translateMatrix = Matrix4x4::MakeTranslateMatrix(renderData.transforms.translate);
+
+	// 回転中心への移動
+	Matrix4x4 toPivot = Matrix4x4::MakeTranslateMatrix(-renderData.pivot);
+	Matrix4x4 fromPivot = Matrix4x4::MakeTranslateMatrix(renderData.pivot);
+
+	// 回転構築
+	Quaternion finalRotation;
+
+	// ターゲットのワールド位置を取得
+	Vector3 targetWorldPos = renderData.GetTargetWorldPosition();
+	// 自身のワールド位置を取得
+	Vector3 worldPos = renderData.GetWorldPosition();
+
+	// 既存のLookAtロジック
+	if (renderData.target.mode != LookAtMode::None)
+	{
+		// 前方ベクトルを計算
+		Vector3 forward = (targetWorldPos - worldPos).Normalized();
+
+		// 上方向ベクトルを定義（Y軸を上とする）
+		Vector3 upVector = Vector3(0, 1, 0);
+
+		// forwardがupVectorとほぼ平行かどうかをチェック
+		if (abs(forward.Dot(upVector)) > 0.999f)
+		{
+			// ターゲットが真上または真下にある場合、代替の上方向を使用
+			upVector = Vector3(0, 0, 1);
+		}
+
+		Quaternion lookAtRotation = Quaternion::LookRotation(forward, upVector);
+		finalRotation = lookAtRotation;
+	}
+	else
+	{
+		finalRotation = Quaternion::MakeFromEulerAngles(renderData.transforms.rotate);
+	}
+
+	Matrix4x4 rotationMatrix = Matrix4x4::MakeFromQuaternion(finalRotation);
+
+	Matrix4x4 local =
+		scaleMatrix *
+		toPivot *
+		rotationMatrix *
+		fromPivot *
+		translateMatrix;
+
+	if (renderData.transforms.parentWorld)renderData.transforms.World = local * (*renderData.transforms.parentWorld);
+	else renderData.transforms.World = local;
+
+
+	// AABB更新
+	renderData.AABB = CreateAABB(renderData.transforms, renderData.model);
+
+	// モデル描画
+	Drawobj(renderData.transforms, renderData.pivot, renderData.model, renderData.texture, renderData.color, renderData.options);
+
+	// ターゲット方向へのライン描画（デバッグ用）
+#ifdef DEBUG
+	if (target.mode != LookAtMode::None)
+	{
+		Game::DrawLine(GetWorldPosition(), GetTargetWorldPosition(), 0xFF00FFFF);
+	}
+#endif
+
 }
 
 void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions)

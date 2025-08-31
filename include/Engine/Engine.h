@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <wrl/client.h>
+#include "Game.h" 
 
 class WindowManager;
 class DirectXManager;
@@ -35,6 +36,7 @@ public:
 
 	// 描画
 	void Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
+	void Drawobj(Game::RenderData_Model& renderData);
 	void DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
 	void DrawTriangle(const Transforms& transform, const Vector3& pos1, const Vector3& pos2, const Vector3& pos3, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
 	void DrawSprite(const Transforms& transform, const Vector2& center, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
