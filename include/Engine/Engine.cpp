@@ -210,9 +210,13 @@ void Engine::UpdateTransforms()
 			-rd->pivot.y,
 			-rd->pivot.z);
 
-		// 3) 回転（Quaternion → 行列）
+		// 3) 回転（transforms.rotateとQuaternionを合成）
+		// transforms.rotateのオイラー角（ラジアン）をクォータニオンに変換
+		Quaternion eulerQuat = Quaternion::MakeFromEulerAngles(rd->transforms.rotate);
+		// 既存のクォータニオンとオイラー角から生成したクォータニオンを合成
+		Quaternion combinedQuat = eulerQuat * rd->GetRotationQuaternion();
 		XMVECTOR q = XMLoadFloat4(
-			reinterpret_cast<const XMFLOAT4*>(&rd->GetRotationQuaternion()));
+			reinterpret_cast<const XMFLOAT4*>(&combinedQuat));
 		XMMATRIX R = XMMatrixRotationQuaternion(q);
 
 		// 4) ピボットへ戻す

@@ -20,7 +20,6 @@ class Game
 public:
 	class RenderData_Model
 	{
-	private:
 	public:
 		RenderData_Model();
 		// 位置、回転、スケール
@@ -50,21 +49,22 @@ public:
 		void    SetRotationEuler(const Vector3& eulerRad);
 		Vector3 GetRotationEuler() const;    // 度数法で返す
 
-		// ワールド位置を返す（デバッグライン描画用など）
+		// ワールド位置を返す
 		Vector3 GetWorldPosition()       const;
 		Vector3 GetTargetWorldPosition() const;
 
 		// 描画
 		void Draw();
 		void DrawAABB();
-		void CreateAABB();  // AABBのみ更新
+		void CreateAABB();
 
 		// 内部クォータニオン取得
 		const Quaternion& GetRotationQuaternion() const { return rotationQuat; }
 
 	private:
-		// 内部回転状態
+		// 回転量
 		Quaternion rotationQuat;
+		Vector3 rotationEuler;
 		// LookAtOnce の引数を保持
 		Vector3    lastTargetWorldPos{};
 

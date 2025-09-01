@@ -251,22 +251,50 @@ Vector3 Game::RenderData_Model::GetTargetWorldPosition() const
 
 void Game::RenderData_Model::LookAtOnce(const Vector3& targetWorldPos)
 {
-	// 自身のワールド位置
-	Vector3 worldPos = GetWorldPosition();
-
-	// forward ベクトル
-	Vector3 forward = (targetWorldPos - worldPos).Normalize();
-
-	// up ベクトル（Y軸を上とする）
-	Vector3 up = { 0.0f, 1.0f, 0.0f };
-	// ほぼ平行ならZ軸を代替 up に
-	if (std::abs(forward.Dot(up)) > 0.999f)
+	if (transforms.parentWorld)
 	{
-		up = { 0.0f, 0.0f, 1.0f };
-	}
+		// 親のワールド行列を取得し、逆行列を計算
+		Matrix4x4 parentWorldMatrix = *transforms.parentWorld;
+		Matrix4x4 invertedParentWorldMatrix = parentWorldMatrix.Inverse();
 
-	// 内部四元数を更新
-	rotationQuat = Quaternion::LookRotation(forward, up);
+		// ターゲットのワールド座標を親のローカル座標に変換
+		Vector3 targetLocalPos = invertedParentWorldMatrix.TransformPoint(targetWorldPos);
+
+		// 親のローカル座標系で子の回転を計算
+		rotationQuat = Quaternion::LookAt(transforms.translate, targetLocalPos);
+	}
+	else
+	{
+		// 親がいない場合は、ワールド座標で回転を計算
+		Vector3 myPos = GetWorldPosition();
+		rotationQuat = Quaternion::LookAt(myPos, targetWorldPos);
+	}
+	//// 自身のワールド位置
+	//Vector3 worldPos = GetWorldPosition();
+	//
+	//// forward ベクトル
+	//Vector3 forward = (targetWorldPos - worldPos).Normalize();
+	//
+	//// up ベクトル（Y軸を上とする）
+	//Vector3 up = { 0.0f, 1.0f, 0.0f };
+	//
+	//if (std::abs(forward.Dot(up)) > 0.999f)
+	//{
+	//	up = { 0.0f, 0.0f, 1.0f };
+	//}
+	//
+	//Quaternion worldRotation = Quaternion::LookRotation(forward, up);
+	//
+	//// 親の回転がある場合は、親の逆回転を適用してローカル回転を求める
+	//if (transforms.parentWorld)
+	//{
+	//	Quaternion parentRotation = Quaternion::ExtractRotationFromMatrix(*transforms.parentWorld);
+	//	rotationQuat = parentRotation.Inverse();
+	//}
+	//else
+	//{
+	//	rotationQuat = worldRotation;
+	//}
 }
 
 void Game::RenderData_Model::LookAtOnce(const RenderData_Model* other)

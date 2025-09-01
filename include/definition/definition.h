@@ -774,6 +774,24 @@ struct Matrix4x4
     // クォータニオンから回転行列を生成
     static Matrix4x4 MakeFromQuaternion(const Quaternion& q);
 
+    // 座標変換
+    Vector3 TransformPoint(const Vector3& point) const
+    {
+        Vector3 result;
+        result.x = point.x * m[0][0] + point.y * m[1][0] + point.z * m[2][0] + 1.0f * m[3][0];
+        result.y = point.x * m[0][1] + point.y * m[1][1] + point.z * m[2][1] + 1.0f * m[3][1];
+        result.z = point.x * m[0][2] + point.y * m[1][2] + point.z * m[2][2] + 1.0f * m[3][2];
+        float w = point.x * m[0][3] + point.y * m[1][3] + point.z * m[2][3] + 1.0f * m[3][3];
+
+        // wが0でなければ
+        if (std::abs(w) > 0.00001f)
+        {
+            result.x /= w;
+            result.y /= w;
+            result.z /= w;
+        }
+        return result;
+    }
 };
 
 

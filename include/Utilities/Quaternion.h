@@ -30,11 +30,14 @@ public:
 	static Quaternion MakeFromRotationMatrix(const Matrix4x4& mat);
 	// 度単位のオイラー角から生成
 	static Quaternion FromEulerDegrees(const Vector3& eulerDeg); 
+	// 回転成分を抽出してクォータニオンにする
+	static Quaternion ExtractRotationFromMatrix(const Matrix4x4& mat);
 	// クォータニオンをラジアン単位のオイラー角に分解
 	Vector3 ToEulerRadians() const;
 	// クォータニオンを度単位のオイラー角に分解
 	Vector3 ToEulerDegrees() const;
-
+	// 任意の始点と終点からLookAtクォータニオンを生成
+	static Quaternion LookAt(const Vector3& eye, const Vector3& target, const Vector3& up = { 0.0f, 1.0f, 0.0f });
 
 
 	// 積

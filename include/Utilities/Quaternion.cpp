@@ -173,6 +173,52 @@ Quaternion Quaternion::FromEulerDegrees(const Vector3& eulerDeg)
 	return MakeFromEulerAngles(rad);
 }
 
+Quaternion Quaternion::ExtractRotationFromMatrix(const Matrix4x4& mat)
+{
+	float trace = mat.m[0][0] + mat.m[1][1] + mat.m[2][2];
+	Quaternion q;
+
+	if (trace > 0.0f)
+	{
+		float s = 0.5f / sqrtf(trace + 1.0f);
+		q.w = 0.25f / s;
+		q.x = (mat.m[2][1] - mat.m[1][2]) * s;
+		q.y = (mat.m[0][2] - mat.m[2][0]) * s;
+		q.z = (mat.m[1][0] - mat.m[0][1]) * s;
+	}
+	else
+	{
+		// Find largest diagonal element and proceed accordingly
+		if (mat.m[0][0] > mat.m[1][1] && mat.m[0][0] > mat.m[2][2])
+		{
+			float s = 2.0f * sqrtf(1.0f + mat.m[0][0] - mat.m[1][1] - mat.m[2][2]);
+			q.w = (mat.m[2][1] - mat.m[1][2]) / s;
+			q.x = 0.25f * s;
+			q.y = (mat.m[0][1] + mat.m[1][0]) / s;
+			q.z = (mat.m[0][2] + mat.m[2][0]) / s;
+		}
+		else if (mat.m[1][1] > mat.m[2][2])
+		{
+			float s = 2.0f * sqrtf(1.0f + mat.m[1][1] - mat.m[0][0] - mat.m[2][2]);
+			q.w = (mat.m[0][2] - mat.m[2][0]) / s;
+			q.x = (mat.m[0][1] + mat.m[1][0]) / s;
+			q.y = 0.25f * s;
+			q.z = (mat.m[1][2] + mat.m[2][1]) / s;
+		}
+		else
+		{
+			float s = 2.0f * sqrtf(1.0f + mat.m[2][2] - mat.m[0][0] - mat.m[1][1]);
+			q.w = (mat.m[1][0] - mat.m[0][1]) / s;
+			q.x = (mat.m[0][2] + mat.m[2][0]) / s;
+			q.y = (mat.m[1][2] + mat.m[2][1]) / s;
+			q.z = 0.25f * s;
+		}
+	}
+
+	q.Normalize(); // 正規化
+	return q;
+}
+
 Vector3 Quaternion::ToEulerRadians() const
 {
 	// standard Tait–Bryan Y (yaw), X (pitch), Z (roll) decomposition
@@ -205,6 +251,30 @@ Vector3 Quaternion::ToEulerDegrees() const
 		ToDegree(rad.y),
 		ToDegree(rad.z)
 	};
+}
+
+Quaternion Quaternion::LookAt(const Vector3& eye, const Vector3& target, const Vector3& up)
+{
+	Vector3 forward = (target - eye).Normalized();
+	Vector3 upVec = up.Normalized();
+
+	Vector3 right = upVec.Cross(forward).Normalized();
+	Vector3 newUp = forward.Cross(right).Normalized();
+
+	// 軸と角度から回転を計算
+	// 4x4 行列を作成
+	Matrix4x4 lookAtMatrix= Matrix4x4::MakeIdentity4x4();
+	lookAtMatrix.m[0][0] = right.x;
+	lookAtMatrix.m[0][1] = right.y;
+	lookAtMatrix.m[0][2] = right.z;
+	lookAtMatrix.m[1][0] = newUp.x;
+	lookAtMatrix.m[1][1] = newUp.y;
+	lookAtMatrix.m[1][2] = newUp.z;
+	lookAtMatrix.m[2][0] = forward.x;
+	lookAtMatrix.m[2][1] = forward.y;
+	lookAtMatrix.m[2][2] = forward.z;
+
+	return MakeFromRotationMatrix(lookAtMatrix);
 }
 
 // 積
