@@ -34,40 +34,6 @@
 #endif
 
 
-Vector2int IndexByPosition(Vector3 pos)
-{
-    Vector2int index;
-    // ブロック中心座標からインデックスを計算
-    index.x = static_cast<int>(std::round(-pos.x / BLOCK_WIDTH));
-    index.y = static_cast<int>(std::round(-pos.z / BLOCK_HEIGHT));
-    // 範囲外の値を制限
-    index.x = std::clamp(index.x, 0, MAP_WIDTH - 1);
-    index.y = std::clamp(index.y, 0, MAP_HEIGHT - 1);
-    return index;
-}
-Vector3 PositionByIndex(Vector2int index)
-{
-    Vector3 pos;
-
-    pos.x = -static_cast<float>(index.x) * BLOCK_WIDTH;
-    pos.y = 0.0f;
-    pos.z = -static_cast<float>(index.y) * BLOCK_HEIGHT;
-
-    return pos;
-}
-Vector3 PositionByIndex(Vector2int index, BLOCK_TYPE blockType)
-{
-    Vector3 pos;
-
-    pos.x = -static_cast<float>(index.x) * BLOCK_WIDTH;
-    if (blockType == BLOCK_TYPE::Empty)pos.y = 0.0f;
-    else if (blockType == BLOCK_TYPE::stairs)pos.y = 0.4f;
-    else if (blockType == BLOCK_TYPE::Wall)pos.y = 0.8f;
-    pos.z = -static_cast<float>(index.y) * BLOCK_HEIGHT;
-
-    return pos;
-}
-
 
 
 
@@ -657,6 +623,11 @@ uint32_t ConvertVector4ToUint(Vector4 color)
 float ToRadian(const float& angle)
 {
     return angle * (float(std::numbers::pi) / 180.0f);
+}
+
+float ToDegree(float rad)
+{
+    return rad * (180.0f / std::numbers::pi_v<float>);
 }
 
 // ARGBをRGBA

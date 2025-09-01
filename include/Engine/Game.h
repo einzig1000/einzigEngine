@@ -13,20 +13,20 @@
 #include "externals/imgui/imgui_impl_win32.h"
 
 class CameraController;
-class RenderData_Model;
+//class RenderData_Model;
 
 class Game
 {
 public:
 	class RenderData_Model
 	{
+	private:
 	public:
+		RenderData_Model();
 		// 位置、回転、スケール
 		Transforms transforms;
 		// 回転の中心点
 		Vector3 pivot;
-		// 向き
-		LookAtTarget target;
 		// 色
 		uint32_t color = 0xFFFFFFFF;
 		// 3Dモデル
@@ -40,37 +40,35 @@ public:
 		// マウスと衝突してるか？
 		bool isCollisionMouseRay;
 
-
+		////LookAtVector3(Game::GetCamera()->GetCenter());
+		// 任意のポイントを向く
 		void LookAtOnce(const Vector3& targetWorldPos);
-
-		void LookAtOnce(const Transforms& targetTransforms);
-
-		void LookAtOnce(const RenderData_Model& renderData_Model);
-
-		void SetRotationEuler(const Vector3& eulerDeg);
-
-		Vector3 GetRotationEuler() const;
-
+		void LookAtOnce(const RenderData_Model* other);
+		void LookAtCamera();
 		void LookAtFront();
 
-		// 自身のワールド位置
-		Vector3 GetWorldPosition() const;
-		// ターゲットのワールド位置
+		// 外部から度数法のオイラー角を指定
+		void    SetRotationEuler(const Vector3& eulerRad);
+		Vector3 GetRotationEuler() const;    // 度数法で返す
+
+		// ワールド位置を返す（デバッグライン描画用など）
+		Vector3 GetWorldPosition()       const;
 		Vector3 GetTargetWorldPosition() const;
 
-
-		// 描画処理
+		// 描画
 		void Draw();
-
 		void DrawAABB();
+		void CreateAABB();  // AABBのみ更新
 
-		// AABBのみ更新
-		void CreateAABB();
-
+		// 内部クォータニオン取得
+		const Quaternion& GetRotationQuaternion() const { return rotationQuat; }
 
 	private:
 		// 内部回転状態
 		Quaternion rotationQuat;
+		// LookAtOnce の引数を保持
+		Vector3    lastTargetWorldPos{};
+
 	};
 
 	class RenderData_Sprite
@@ -119,6 +117,8 @@ public:
 			this->colisionMouseRay = (mousePos.x >= left && mousePos.x <= right && mousePos.y >= top && mousePos.y <= bottom);
 		}
 	};
+
+
 
 
 	// 初期化
@@ -185,5 +185,18 @@ public:
 
 	// プリミティブモードの設定
 	static void toggleWireframeMode();
+
+	// モデルリストの取得
+	static std::vector<Game::RenderData_Model*> GetModelList() { return renderModels; }
+
+	static void AddModel(Game::RenderData_Model* model)
+	{
+		renderModels.push_back(model);
+	}
+private:
+	static std::vector<Game::RenderData_Model*> renderModels;
+
+
+
 
 };

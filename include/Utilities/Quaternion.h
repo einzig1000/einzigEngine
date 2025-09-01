@@ -28,6 +28,14 @@ public:
 	static Quaternion LookRotation(const Vector3& forward, const Vector3& up);
 	// 回転行列からのクォータニオン生成
 	static Quaternion MakeFromRotationMatrix(const Matrix4x4& mat);
+	// 度単位のオイラー角から生成
+	static Quaternion FromEulerDegrees(const Vector3& eulerDeg); 
+	// クォータニオンをラジアン単位のオイラー角に分解
+	Vector3 ToEulerRadians() const;
+	// クォータニオンを度単位のオイラー角に分解
+	Vector3 ToEulerDegrees() const;
+
+
 
 	// 積
 	Quaternion Multiply(const Quaternion& other) const;

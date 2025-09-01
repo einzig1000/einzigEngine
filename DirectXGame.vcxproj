@@ -94,9 +94,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="ActSelect.cpp" />
-    <ClCompile Include="CharacterManager.cpp" />
-    <ClCompile Include="Charactor.cpp" />
     <ClCompile Include="externals\imgui\imgui.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Disabled</Optimization>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MinSpace</Optimization>
@@ -125,9 +122,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Disabled</Optimization>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MinSpace</Optimization>
     </ClCompile>
-    <ClCompile Include="GameManager.cpp" />
-    <ClCompile Include="GameScene.cpp" />
-    <ClCompile Include="Gatya.cpp" />
     <ClCompile Include="include\definition\definition.cpp" />
     <ClCompile Include="include\input\GetPadState.cpp" />
     <ClCompile Include="include\Audio\AudioManager.cpp" />
@@ -149,20 +143,10 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="include\Utilities\Easings.cpp" />
     <ClCompile Include="include\Utilities\functions.cpp" />
     <ClCompile Include="include\Window\WindowManager.cpp" />
-    <ClCompile Include="ItemManager.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="Map.cpp" />
-    <ClCompile Include="PhaseParent.cpp" />
-    <ClCompile Include="StageSelect.cpp" />
     <ClCompile Include="include\Utilities\Quaternion.cpp" />
-    <ClCompile Include="Title.cpp" />
-    <ClCompile Include="UnitOverview.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ActSelect.h" />
-    <ClInclude Include="CharacterManager.h" />
-    <ClInclude Include="Charactor.h" />
-    <ClInclude Include="enum.h" />
     <ClInclude Include="externals\imgui\imconfig.h" />
     <ClInclude Include="externals\imgui\imgui.h" />
     <ClInclude Include="externals\imgui\imgui_impl_dx12.h" />
@@ -171,9 +155,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="externals\imgui\imstb_rectpack.h" />
     <ClInclude Include="externals\imgui\imstb_textedit.h" />
     <ClInclude Include="externals\imgui\imstb_truetype.h" />
-    <ClInclude Include="GameManager.h" />
-    <ClInclude Include="GameScene.h" />
-    <ClInclude Include="Gatya.h" />
     <ClInclude Include="include\input\GetPadState.h" />
     <ClInclude Include="include\Audio\AudioManager.h" />
     <ClInclude Include="include\Camera\CameraController.h" />
@@ -195,13 +176,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="include\Utilities\Easings.h" />
     <ClInclude Include="include\Utilities\functions.h" />
     <ClInclude Include="include\Window\WindowManager.h" />
-    <ClInclude Include="ItemManager.h" />
-    <ClInclude Include="Map.h" />
-    <ClInclude Include="PhaseParent.h" />
-    <ClInclude Include="StageSelect.h" />
     <ClInclude Include="include\Utilities\Quaternion.h" />
-    <ClInclude Include="Title.h" />
-    <ClInclude Include="UnitOverview.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

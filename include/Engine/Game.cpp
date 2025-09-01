@@ -3,6 +3,9 @@
 
 static Engine* engine = new Engine;
 
+std::vector<Game::RenderData_Model*> Game::renderModels;
+
+
 void Game::Initialize(int width, int height, const std::wstring& title)
 {
 	engine->Initialize(width, height, title);
@@ -212,71 +215,82 @@ void Game::toggleWireframeMode()
 
 
 
+
+
+
+
+
+
+
+
+Game::RenderData_Model::RenderData_Model()
+{
+	AddModel(this);
+}
+
 Vector3 Game::RenderData_Model::GetWorldPosition() const
 {
 	if (transforms.parentWorld)
 	{
+		// 親のワールド行列があるならローカル translate を合成
 		return Transform(transforms.translate, *transforms.parentWorld);
 	}
-	else
-	{
-		return transforms.translate;
-	}
+	// ルート直下ならそのまま
+	return transforms.translate;
 }
 
+// 現在の向きに沿った前方方向のワールド座標を返す
 Vector3 Game::RenderData_Model::GetTargetWorldPosition() const
-{
-	{
-		switch (target.mode)
-		{
-		case LookAtMode::StaticVector:
-			return target.staticTarget;
-
-		case LookAtMode::StaticTransform:
-			if (target.dynamicTransform)
-			{
-				return target.dynamicTransform->parentWorld
-					? Transform(target.dynamicTransform->translate, *target.dynamicTransform->parentWorld)
-					: target.dynamicTransform->translate;
-			}
-			break;
-
-		default:
-			break;
-		}
-		return GetWorldPosition() + Vector3(0, 0, 1);
-	}
+{ 
+	// 自身のワールド位置 ＋ ローカルZ軸(0,0,1)を四元数回転
+	Vector3 forward = rotationQuat * Vector3{ 0.0f, 0.0f, 1.0f };
+	return GetWorldPosition() + forward;
 }
+
 
 void Game::RenderData_Model::LookAtOnce(const Vector3& targetWorldPos)
 {
-	target.mode = LookAtMode::StaticVector;
-	target.staticTarget = targetWorldPos;
-	target.dynamicTransform = nullptr;
+	// 自身のワールド位置
+	Vector3 worldPos = GetWorldPosition();
+
+	// forward ベクトル
+	Vector3 forward = (targetWorldPos - worldPos).Normalize();
+
+	// up ベクトル（Y軸を上とする）
+	Vector3 up = { 0.0f, 1.0f, 0.0f };
+	// ほぼ平行ならZ軸を代替 up に
+	if (std::abs(forward.Dot(up)) > 0.999f)
+	{
+		up = { 0.0f, 0.0f, 1.0f };
+	}
+
+	// 内部四元数を更新
+	rotationQuat = Quaternion::LookRotation(forward, up);
 }
 
-void Game::RenderData_Model::LookAtOnce(const Transforms& targetTransforms)
+void Game::RenderData_Model::LookAtOnce(const RenderData_Model* other)
 {
-	target.mode = LookAtMode::StaticTransform;
-	target.dynamicTransform = const_cast<Transforms*>(&targetTransforms);
+	LookAtOnce(other->GetWorldPosition());
 }
 
-void Game::RenderData_Model::LookAtOnce(const RenderData_Model& renderData_Model)
+void Game::RenderData_Model::LookAtCamera()
 {}
 
-void Game::RenderData_Model::SetRotationEuler(const Vector3 & eulerDeg)
+void Game::RenderData_Model::LookAtFront()
 {
-	rotationQuat = Quaternion::FromEulerDegrees(eulerDeg);
+	Vector3 frontPos = GetWorldPosition() + Vector3{ 0.0f, 0.0f, 1.0f };
+	LookAtOnce(frontPos);
+}
+
+
+void Game::RenderData_Model::SetRotationEuler(const Vector3 & eulerRad)
+{
+	rotationQuat = Quaternion::MakeFromEulerAngles(eulerRad);
 }
 
 Vector3 Game::RenderData_Model::GetRotationEuler() const
 {
 	return rotationQuat.ToEulerDegrees();
-}
-
-void Game::RenderData_Model::LookAtFront()
-{
-	LookAtOnce(GetWorldPosition() + Vector3(0, 0, 1));
 }
 
 void Game::RenderData_Model::Draw()

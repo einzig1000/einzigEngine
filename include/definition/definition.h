@@ -18,21 +18,16 @@
 
 // 外部ライブラリ
 #include "externals/DirectXTex/DirectXTex.h"
-#include "enum.h"
+
+#define WIDTH 1280
+#define HEIGHT 720
+
 
 enum class LookAtMode
 {
     None,
-    StaticVector,
-    StaticCamera,
-    StaticTransform
-};
-
-struct LookAtTarget
-{
-    LookAtMode mode = LookAtMode::None;
-    Vector3 staticTarget = { 0, 0, 0 };
-    Transforms* dynamicTransform = nullptr;
+    Target,
+    Front
 };
 
 class Quaternion;

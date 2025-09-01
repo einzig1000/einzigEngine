@@ -11,6 +11,10 @@
 #include "DirectX/DirectXManager.h"
 #include "Engine/Game.h"
 
+#include <DirectXMath.h>
+using namespace DirectX;
+
+
 // 初期化用
 void Engine::Initialize(int width, int height, const std::wstring& title)
 {
@@ -181,16 +185,66 @@ void Engine::EndFrame()
 	drawLineCallIndex = 0;
 }
 
+XMFLOAT4X4 Matrix4x4ToXMFLOAT4X4(const Matrix4x4& mat)
+{
+	XMFLOAT4X4 xmMat;
+	for (int i = 0; i < 4; ++i)
+		for (int j = 0; j < 4; ++j)
+			xmMat.m[i][j] = mat.m[i][j];
+	return xmMat;
+}
+
 void Engine::UpdateTransforms()
 {
-	//for (auto& obj : objects)
-	//{
-	//	obj.transform.World = Matrix4x4::MakeAffineMatrix(obj.transform.scale, obj.transform.rotate, obj.transform.translate);
-	//	if (obj.transform.parentWorld)
-	//	{
-	//		obj.transform.World = obj.transform.World * (*obj.transform.parentWorld);
-	//	}
-	//}
+	for (auto& rd : Game::GetModelList())
+	{
+		// 1) スケール
+		XMMATRIX S = XMMatrixScaling(
+			rd->transforms.scale.x,
+			rd->transforms.scale.y,
+			rd->transforms.scale.z);
+
+		// 2) ピボットオフセット
+		XMMATRIX T_pivotNeg = XMMatrixTranslation(
+			-rd->pivot.x,
+			-rd->pivot.y,
+			-rd->pivot.z);
+
+		// 3) 回転（Quaternion → 行列）
+		XMVECTOR q = XMLoadFloat4(
+			reinterpret_cast<const XMFLOAT4*>(&rd->GetRotationQuaternion()));
+		XMMATRIX R = XMMatrixRotationQuaternion(q);
+
+		// 4) ピボットへ戻す
+		XMMATRIX T_pivotPos = XMMatrixTranslation(
+			rd->pivot.x,
+			rd->pivot.y,
+			rd->pivot.z);
+
+		// 5) 平行移動
+		XMMATRIX T = XMMatrixTranslation(
+			rd->transforms.translate.x,
+			rd->transforms.translate.y,
+			rd->transforms.translate.z);
+
+		// 合成：S → T_pivotNeg → R → T_pivotPos → T
+		XMMATRIX world = S * T_pivotNeg * R * T_pivotPos * T;
+
+		// 6) 親行列があれば乗算
+		if (rd->transforms.parentWorld)
+		{
+			XMFLOAT4X4 parentXM = Matrix4x4ToXMFLOAT4X4(*rd->transforms.parentWorld);
+			world = XMLoadFloat4x4(&parentXM) * world;
+		}
+
+		// 7) Transforms.World に格納
+		XMFLOAT4X4 tempXM;
+		XMStoreFloat4x4(&tempXM, world);
+		for (int i = 0; i < 4; ++i)
+			for (int j = 0; j < 4; ++j)
+				rd->transforms.World.m[i][j] = tempXM.m[i][j];
+	}
+
 }
 
 // 終了処理
@@ -412,76 +466,160 @@ void Engine::Drawobj(const Transforms& transform, const Vector3& center, uint32_
 
 void Engine::Drawobj(Game::RenderData_Model& renderData)
 {
-	// スケール
-	Matrix4x4 scaleMatrix = Matrix4x4::MakeScaleMatrix(renderData.transforms.scale);
+	// 1) AABB を更新
+	renderData.CreateAABB();
 
-	// 移動
-	Matrix4x4 translateMatrix = Matrix4x4::MakeTranslateMatrix(renderData.transforms.translate);
+	// 2) マウスレイとの衝突判定
+	renderData.isCollisionMouseRay = IsCollisionMouseRayAABB(renderData.model, renderData.transforms);
 
-	// 回転中心への移動
-	Matrix4x4 toPivot = Matrix4x4::MakeTranslateMatrix(-renderData.pivot);
-	Matrix4x4 fromPivot = Matrix4x4::MakeTranslateMatrix(renderData.pivot);
-
-	// 回転構築
-	Quaternion finalRotation;
-
-	// ターゲットのワールド位置を取得
-	Vector3 targetWorldPos = renderData.GetTargetWorldPosition();
-	// 自身のワールド位置を取得
-	Vector3 worldPos = renderData.GetWorldPosition();
-
-	// 既存のLookAtロジック
-	if (renderData.target.mode != LookAtMode::None)
-	{
-		// 前方ベクトルを計算
-		Vector3 forward = (targetWorldPos - worldPos).Normalized();
-
-		// 上方向ベクトルを定義（Y軸を上とする）
-		Vector3 upVector = Vector3(0, 1, 0);
-
-		// forwardがupVectorとほぼ平行かどうかをチェック
-		if (abs(forward.Dot(upVector)) > 0.999f)
-		{
-			// ターゲットが真上または真下にある場合、代替の上方向を使用
-			upVector = Vector3(0, 0, 1);
-		}
-
-		Quaternion lookAtRotation = Quaternion::LookRotation(forward, upVector);
-		finalRotation = lookAtRotation;
-	}
-	else
-	{
-		finalRotation = Quaternion::MakeFromEulerAngles(renderData.transforms.rotate);
-	}
-
-	Matrix4x4 rotationMatrix = Matrix4x4::MakeFromQuaternion(finalRotation);
-
-	Matrix4x4 local =
-		scaleMatrix *
-		toPivot *
-		rotationMatrix *
-		fromPivot *
-		translateMatrix;
-
-	if (renderData.transforms.parentWorld)renderData.transforms.World = local * (*renderData.transforms.parentWorld);
-	else renderData.transforms.World = local;
-
-
-	// AABB更新
-	renderData.AABB = CreateAABB(renderData.transforms, renderData.model);
-
-	// モデル描画
-	Drawobj(renderData.transforms, renderData.pivot, renderData.model, renderData.texture, renderData.color, renderData.options);
-
-	// ターゲット方向へのライン描画（デバッグ用）
-#ifdef DEBUG
-	if (target.mode != LookAtMode::None)
-	{
-		Game::DrawLine(GetWorldPosition(), GetTargetWorldPosition(), 0xFF00FFFF);
-	}
-#endif
-
+	// 3) 実際の描画パスへ委譲
+	Drawobj(renderData.transforms,
+		renderData.pivot,
+		renderData.model,
+		renderData.texture,
+		renderData.color,
+		renderData.options);
 }
+
+//{
+//	// 1) スケール → 2) ピボット移動 → 3) 回転 → 4) ピボット戻し → 5) 平行移動
+//	Matrix4x4 scaleMatrix = Matrix4x4::MakeScaleMatrix(renderData.transforms.scale);
+//	Matrix4x4 toPivot = Matrix4x4::MakeTranslateMatrix(-renderData.pivot);
+//	Matrix4x4 fromPivot = Matrix4x4::MakeTranslateMatrix(renderData.pivot);
+//	Matrix4x4 translateMatrix = Matrix4x4::MakeTranslateMatrix(renderData.transforms.translate);
+//
+//	// ターゲットのワールド位置と自身のワールド位置
+//	Vector3 targetWorldPos = renderData.GetTargetWorldPosition();
+//	Vector3 worldPos = renderData.GetWorldPosition();
+//
+//	// ここで最終的なクォータニオンを選択
+//	Quaternion finalRotation;
+//	if (renderData.target.mode != LookAtMode::None)
+//	{
+//		// LookAt 用 forward と up ベクトルを計算
+//		Vector3 forward = (targetWorldPos - worldPos).Normalized();
+//		Vector3 up = renderData.target.upVector;      // 設定値 or デフォルト(0,1,0)
+//
+//		// forward と up がほぼ平行なら別の up を使う
+//		if (std::abs(forward.Dot(up)) > 0.999f)
+//			up = Vector3(0, 0, 1);
+//
+//		// LookAt クォータニオン
+//		finalRotation = Quaternion::LookRotation(forward, up);
+//	}
+//	else
+//	{
+//		// 普通のオイラー角（ラジアン）からクォータニオン
+//		finalRotation = Quaternion::MakeFromEulerAngles(renderData.transforms.rotate);
+//	}
+//
+//	// クォータニオン → 回転行列
+//	Matrix4x4 rotationMatrix = finalRotation.MakeRotateMatrix();
+//
+//	// ワールド行列を構成
+//	Matrix4x4 local = scaleMatrix
+//		* toPivot
+//		* rotationMatrix
+//		* fromPivot
+//		* translateMatrix;
+//
+//	if (renderData.transforms.parentWorld)
+//		renderData.transforms.World = local * (*renderData.transforms.parentWorld);
+//	else
+//		renderData.transforms.World = local;
+//
+//	// AABB 更新
+//	renderData.AABB = CreateAABB(renderData.transforms, renderData.model);
+//
+//	// 実際の描画呼び出し
+//	Drawobj(renderData.transforms,
+//		renderData.pivot,
+//		renderData.model,
+//		renderData.texture,
+//		renderData.color,
+//		renderData.options);
+//
+//#ifdef DEBUG
+//	if (renderData.target.mode != LookAtMode::None)
+//	{
+//		Game::DrawLine(worldPos, targetWorldPos, 0xFF00FFFF);
+//	}
+//#endif
+//
+//}
+
+//
+//{
+//	// スケール
+//	Matrix4x4 scaleMatrix = Matrix4x4::MakeScaleMatrix(renderData.transforms.scale);
+//
+//	// 移動
+//	Matrix4x4 translateMatrix = Matrix4x4::MakeTranslateMatrix(renderData.transforms.translate);
+//
+//	// 回転中心への移動
+//	Matrix4x4 toPivot = Matrix4x4::MakeTranslateMatrix(-renderData.pivot);
+//	Matrix4x4 fromPivot = Matrix4x4::MakeTranslateMatrix(renderData.pivot);
+//
+//	// 回転構築
+//	Quaternion finalRotation;
+//
+//	// ターゲットのワールド位置を取得
+//	Vector3 targetWorldPos = renderData.GetTargetWorldPosition();
+//	// 自身のワールド位置を取得
+//	Vector3 worldPos = renderData.GetWorldPosition();
+//
+//	// 既存のLookAtロジック
+//	//if (renderData.target.mode != LookAtMode::None)
+//	//{
+//	//	// 前方ベクトルを計算
+//	//	Vector3 forward = (targetWorldPos - worldPos).Normalized();
+//
+//	//	// 上方向ベクトルを定義（Y軸を上とする）
+//	//	Vector3 upVector = Vector3(0, 1, 0);
+//
+//	//	// forwardがupVectorとほぼ平行かどうかをチェック
+//	//	if (abs(forward.Dot(upVector)) > 0.999f)
+//	//	{
+//	//		// ターゲットが真上または真下にある場合、代替の上方向を使用
+//	//		upVector = Vector3(0, 0, 1);
+//	//	}
+//
+//	//	Quaternion lookAtRotation = Quaternion::LookRotation(forward, upVector);
+//	//	finalRotation = lookAtRotation;
+//	//}
+//	//else
+//	//{
+//	//	finalRotation = Quaternion::MakeFromEulerAngles(renderData.transforms.rotate);
+//	//}
+//
+//	Matrix4x4 rotationMatrix = Matrix4x4::MakeFromQuaternion(finalRotation);
+//
+//	Matrix4x4 local =
+//		scaleMatrix *
+//		toPivot *
+//		rotationMatrix *
+//		fromPivot *
+//		translateMatrix;
+//
+//	if (renderData.transforms.parentWorld)renderData.transforms.World = local * (*renderData.transforms.parentWorld);
+//	else renderData.transforms.World = local;
+//
+//
+//	// AABB更新
+//	renderData.AABB = CreateAABB(renderData.transforms, renderData.model);
+//
+//	// モデル描画
+//	Drawobj(renderData.transforms, renderData.pivot, renderData.model, renderData.texture, renderData.color, renderData.options);
+//
+//	// ターゲット方向へのライン描画（デバッグ用）
+//#ifdef DEBUG
+//	if (target.mode != LookAtMode::None)
+//	{
+//		Game::DrawLine(GetWorldPosition(), GetTargetWorldPosition(), 0xFF00FFFF);
+//	}
+//#endif
+//
+//}
 
 void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions)
 {

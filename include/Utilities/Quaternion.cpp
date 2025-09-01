@@ -162,6 +162,51 @@ Quaternion Quaternion::MakeFromRotationMatrix(const Matrix4x4& mat)
 	}
 }
 
+Quaternion Quaternion::FromEulerDegrees(const Vector3& eulerDeg)
+{  
+	// 度 → ラジアン
+	Vector3 rad{
+		ToRadian(eulerDeg.x),
+		ToRadian(eulerDeg.y),
+		ToRadian(eulerDeg.z)
+	};
+	return MakeFromEulerAngles(rad);
+}
+
+Vector3 Quaternion::ToEulerRadians() const
+{
+	// standard Tait–Bryan Y (yaw), X (pitch), Z (roll) decomposition
+	float ysqr = y * y;
+
+	// pitch (X-axis rotation)
+	float t0 = +2.0f * (w * x + y * z);
+	float t1 = +1.0f - 2.0f * (x * x + ysqr);
+	float pitch = std::atan2(t0, t1);
+
+	// yaw (Y-axis rotation)
+	float t2 = +2.0f * (w * y - z * x);
+	t2 = t2 > +1.0f ? +1.0f : t2;
+	t2 = t2 < -1.0f ? -1.0f : t2;
+	float yaw = std::asin(t2);
+
+	// roll (Z-axis rotation)
+	float t3 = +2.0f * (w * z + x * y);
+	float t4 = +1.0f - 2.0f * (ysqr + z * z);
+	float roll = std::atan2(t3, t4);
+
+	return { pitch, yaw, roll };
+}
+
+Vector3 Quaternion::ToEulerDegrees() const
+{
+	Vector3 rad = ToEulerRadians();
+	return {
+		ToDegree(rad.x),
+		ToDegree(rad.y),
+		ToDegree(rad.z)
+	};
+}
+
 // 積
 Quaternion Quaternion::Multiply(const Quaternion& other) const
 {

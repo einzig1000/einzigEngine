@@ -51,10 +51,6 @@ void FlipXAxis(T(&arr)[Rows][Cols])
 }
 
 
-Vector2int IndexByPosition(Vector3 pos);
-Vector3 PositionByIndex(Vector2int index);
-Vector3 PositionByIndex(Vector2int index, BLOCK_TYPE blockType);
-
 
 /// <summary>
 // 三角形の法線ベクトルを計算し、正規化して返す
@@ -153,6 +149,9 @@ int RandomInt(int min, int max);
 /// <param name="angle"></param>
 /// <returns></returns>
 float ToRadian(const float& angle);
+
+// ラジアン → 度
+float ToDegree(float rad);
 
 // ARGBをRGBA
 Vector4 ConvertARGBtoRGBA(const Vector4& argb);
