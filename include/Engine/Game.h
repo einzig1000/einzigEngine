@@ -40,7 +40,6 @@ public:
 		// マウスと衝突してるか？
 		bool isCollisionMouseRay;
 
-		////LookAtVector3(Game::GetCamera()->GetCenter());
 		// 任意のポイントを向く
 		void LookAtOnce(const Vector3& targetWorldPos);
 		void LookAtOnce(const RenderData_Model* other);

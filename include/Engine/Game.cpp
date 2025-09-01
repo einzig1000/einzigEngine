@@ -1,5 +1,6 @@
 #include "Engine/Game.h"
 #include "Engine/Engine.h"
+#include "Camera/CameraController.h"
 
 static Engine* engine = new Engine;
 
@@ -274,7 +275,9 @@ void Game::RenderData_Model::LookAtOnce(const RenderData_Model* other)
 }
 
 void Game::RenderData_Model::LookAtCamera()
-{}
+{
+	LookAtOnce(Game::GetCamera()->GetCenter());
+}
 
 void Game::RenderData_Model::LookAtFront()
 {

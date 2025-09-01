@@ -37,11 +37,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 		if (GetHitKey::keys[DIK_1])
 		{
-			test1.LookAtModel(&test2);
+			test1.LookAtOnce(&test2);
 		}
 		if (GetHitKey::keys[DIK_2])
 		{
-			test1.LookAtVector3(target);
+			test1.LookAtOnce(target);
 		}
 		if (GetHitKey::keys[DIK_2])
 		{

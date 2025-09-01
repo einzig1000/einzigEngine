@@ -5,7 +5,7 @@
 CameraController::CameraController()
 {
     mousePositionGap_ = { 0,0 };
-    cameraMode_ = false;
+    cameraMode_ = true;
     cameraMode_centerControl_ = false;
     cameraMode_rotateControl_ = false;
     cameraMode_distanceControl_ = false;
