@@ -26,6 +26,8 @@ public:
 		Transforms transforms;
 		// 回転の中心点
 		Vector3 pivot;
+		// UV座標
+		Transforms uvTransform;
 		// 速度
 		Vector3 velocity;
 		// 加速度

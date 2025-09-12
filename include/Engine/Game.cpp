@@ -324,10 +324,17 @@ void Game::RenderData_Model::DrawImGui()
 	std::string num = std::to_string(this->ID) + " : ";
 
     ImGui::Begin(str.c_str());
-	
-	ImGui::DragFloat3((num + "scale").c_str(),		&transforms.scale.x);
-	ImGui::DragFloat3((num + "translate").c_str(),	&transforms.translate.x);
-	ImGui::DragFloat3((num + "rotate").c_str(),		&transforms.rotate.x);
+
+	ImGui::Text("transforms");
+	ImGui::DragFloat3((num + "scale").c_str(), &transforms.scale.x);
+	ImGui::DragFloat3((num + "translate").c_str(), &transforms.translate.x);
+	ImGui::DragFloat3((num + "rotate").c_str(), &transforms.rotate.x);
+	ImGui::DragFloat3((num + "pivot").c_str(), &pivot.x);
+	ImGui::Text("uvTransform");
+	ImGui::DragFloat3((num + "UVscale").c_str(), &uvTransform.scale.x);
+	ImGui::DragFloat3((num + "UVtranslate").c_str(), &uvTransform.translate.x);
+	ImGui::DragFloat3((num + "UVrotate").c_str(), &uvTransform.rotate.x);
+	ImGui::Text("velocity");
 	ImGui::DragFloat3((num + "velocity").c_str(), &velocity.x);
 	ImGui::DragFloat3((num + "acceleration").c_str(), &acceleration.x);
 	ImGui::DragFloat((num + "gravity").c_str(), &gravity);

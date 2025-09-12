@@ -991,8 +991,6 @@ struct DrawOptions
 {
     // ワイヤーフレームにしてもいいか（天球なんかはワイヤーフレームになってほしくない）
     bool enableWireframeMode = true;
-    // UV座標
-    Transforms uvTransform;
     // ライティングするか
     bool enableLighting = true;
     // mouseとの当たり判定とるか
