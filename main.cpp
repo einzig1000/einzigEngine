@@ -16,21 +16,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	{
 		// フレームの開始
 		Game::BeginFrame();
-		Game::SetMouseRay();
 
-
-		
 		// ↓更新処理ここから
-		
-		
 		gm->Update();
 
-		
+		// モデル情報の更新
+		Game::UpdateTransforms();
+
 		// ↓描画処理ここから
-
-
 		gm->Draw();
-
 
 		// フレームの終了
 		Game::EndFrame();

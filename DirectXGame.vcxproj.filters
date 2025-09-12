@@ -88,47 +88,11 @@
     <Filter Include="GameEngine\CameraController">
       <UniqueIdentifier>{8119ccfa-d6ad-4af0-83e5-034de74534f5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Game">
-      <UniqueIdentifier>{b502c716-2faa-4a81-9f38-86c17aaed018}</UniqueIdentifier>
+    <Filter Include="GameEngine\input\Input">
+      <UniqueIdentifier>{fa67fb13-219c-43c1-8e19-8bf1f07e96f1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Game\GameManeger">
+    <Filter Include="GameManeger">
       <UniqueIdentifier>{be7b0085-0de3-4d37-bc83-670da58a57b2}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Game\Charactor">
-      <UniqueIdentifier>{d1501cf6-0637-47e8-8cbc-43c73884362b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Game\1_ActSelect">
-      <UniqueIdentifier>{a130eac2-9f00-4b68-acf8-a379b4f05b0c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Game\0_Title">
-      <UniqueIdentifier>{80437ce6-8d3b-4c4d-b92f-66dd36614abc}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Game\2[0]_StageSelect">
-      <UniqueIdentifier>{e79e663a-2058-4bfb-a8f7-ac951eb3dbd3}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Game\2[1]_GameScene">
-      <UniqueIdentifier>{fb842c0b-13ef-426b-9a58-3ea083023241}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Game\3_UnitOverview">
-      <UniqueIdentifier>{64caef79-4688-463b-bee7-2861e3db674b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Game\Phase親">
-      <UniqueIdentifier>{ddf3c7e6-8076-4b34-8616-e9b695baa7d0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Game\2[1]_GameScene\Map">
-      <UniqueIdentifier>{e08240d2-da10-4f33-9c08-ad966fbccedc}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Game\Charactor\CharacterManager">
-      <UniqueIdentifier>{deb25c83-b06f-4868-85e1-c574a6999d73}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Game\4_Gatya">
-      <UniqueIdentifier>{279a88d7-0875-4b42-922a-eaca93b92b0f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Game\Item">
-      <UniqueIdentifier>{9c00815c-3c61-44eb-89b3-e2f7187be4a9}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="GameEngine\Utilities\Quaternion">
-      <UniqueIdentifier>{3fa49e97-b982-440f-bd4f-4558b7cf0acc}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -217,46 +181,13 @@
       <Filter>GameEngine\input\GetPadState</Filter>
     </ClCompile>
     <ClCompile Include="GameManager.cpp">
-      <Filter>Game\GameManeger</Filter>
-    </ClCompile>
-    <ClCompile Include="Map.cpp">
-      <Filter>Game\2[1]_GameScene\Map</Filter>
-    </ClCompile>
-    <ClCompile Include="Charactor.cpp">
-      <Filter>Game\Charactor</Filter>
-    </ClCompile>
-    <ClCompile Include="Title.cpp">
-      <Filter>Game\0_Title</Filter>
-    </ClCompile>
-    <ClCompile Include="ActSelect.cpp">
-      <Filter>Game\1_ActSelect</Filter>
-    </ClCompile>
-    <ClCompile Include="StageSelect.cpp">
-      <Filter>Game\2[0]_StageSelect</Filter>
-    </ClCompile>
-    <ClCompile Include="GameScene.cpp">
-      <Filter>Game\2[1]_GameScene</Filter>
-    </ClCompile>
-    <ClCompile Include="UnitOverview.cpp">
-      <Filter>Game\3_UnitOverview</Filter>
-    </ClCompile>
-    <ClCompile Include="PhaseParent.cpp">
-      <Filter>Game\Phase親</Filter>
-    </ClCompile>
-    <ClCompile Include="CharacterManager.cpp">
-      <Filter>Game\Charactor\CharacterManager</Filter>
-    </ClCompile>
-    <ClCompile Include="Gatya.cpp">
-      <Filter>Game\4_Gatya</Filter>
-    </ClCompile>
-    <ClCompile Include="ItemManager.cpp">
-      <Filter>Game\Item</Filter>
-    </ClCompile>
-    <ClCompile Include="include\Utilities\Quaternion.cpp">
-      <Filter>GameEngine\Utilities\Quaternion</Filter>
+      <Filter>GameManeger</Filter>
     </ClCompile>
     <ClCompile Include="include\definition\definition.cpp">
       <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="include\input\Input.cpp">
+      <Filter>GameEngine\input\Input</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -348,46 +279,10 @@
       <Filter>GameEngine\input\GetPadState</Filter>
     </ClInclude>
     <ClInclude Include="GameManager.h">
-      <Filter>Game\GameManeger</Filter>
+      <Filter>GameManeger</Filter>
     </ClInclude>
-    <ClInclude Include="Map.h">
-      <Filter>Game\2[1]_GameScene\Map</Filter>
-    </ClInclude>
-    <ClInclude Include="Charactor.h">
-      <Filter>Game\Charactor</Filter>
-    </ClInclude>
-    <ClInclude Include="Title.h">
-      <Filter>Game\0_Title</Filter>
-    </ClInclude>
-    <ClInclude Include="ActSelect.h">
-      <Filter>Game\1_ActSelect</Filter>
-    </ClInclude>
-    <ClInclude Include="StageSelect.h">
-      <Filter>Game\2[0]_StageSelect</Filter>
-    </ClInclude>
-    <ClInclude Include="GameScene.h">
-      <Filter>Game\2[1]_GameScene</Filter>
-    </ClInclude>
-    <ClInclude Include="UnitOverview.h">
-      <Filter>Game\3_UnitOverview</Filter>
-    </ClInclude>
-    <ClInclude Include="PhaseParent.h">
-      <Filter>Game\Phase親</Filter>
-    </ClInclude>
-    <ClInclude Include="enum.h">
-      <Filter>Game</Filter>
-    </ClInclude>
-    <ClInclude Include="CharacterManager.h">
-      <Filter>Game\Charactor\CharacterManager</Filter>
-    </ClInclude>
-    <ClInclude Include="Gatya.h">
-      <Filter>Game\4_Gatya</Filter>
-    </ClInclude>
-    <ClInclude Include="ItemManager.h">
-      <Filter>Game\Item</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Utilities\Quaternion.h">
-      <Filter>GameEngine\Utilities\Quaternion</Filter>
+    <ClInclude Include="include\input\Input.h">
+      <Filter>GameEngine\input\Input</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

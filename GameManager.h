@@ -1,17 +1,5 @@
 #pragma once
-#include <memory>
-
-#include "Title.h"
-#include "ActSelect.h"
-#include "StageSelect.h"
-#include "GameScene.h"
-#include "UnitOverview.h"
-#include "Gatya.h"
-
-#include "CharacterManager.h"
-
-#include "enum.h"
-
+#include "Game.h"
 
 class GameManager
 {
@@ -24,25 +12,8 @@ public:
 
 
 private:
-	// 所持キャラ
-	CharacterManager* characterManager_;
 
-	// 所持アイテム
-
-	// 天球
-	Game::RenderData_Model skydome_;
-
-	// フェーズ
-	PHASE phase_ = PHASE::Phase_None;
-	PHASE requestPhase_ = PHASE::Phase_None;
-
-	Title* title_;
-	ActSelect* actSelect_;
-	StageSelect* stageSelect_;
-	GameScene* gameScene_;
-	UnitOverview* unitOverview_;
-	Gatya* gatya_;
-
+	Game::RenderData_Model test;
 
 };
 

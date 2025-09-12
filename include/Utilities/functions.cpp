@@ -34,40 +34,6 @@
 #endif
 
 
-Vector2int IndexByPosition(Vector3 pos)
-{
-    Vector2int index;
-    // ブロック中心座標からインデックスを計算
-    index.x = static_cast<int>(std::round(-pos.x / BLOCK_WIDTH));
-    index.y = static_cast<int>(std::round(-pos.z / BLOCK_HEIGHT));
-    // 範囲外の値を制限
-    index.x = std::clamp(index.x, 0, MAP_WIDTH - 1);
-    index.y = std::clamp(index.y, 0, MAP_HEIGHT - 1);
-    return index;
-}
-Vector3 PositionByIndex(Vector2int index)
-{
-    Vector3 pos;
-
-    pos.x = -static_cast<float>(index.x) * BLOCK_WIDTH;
-    pos.y = 0.0f;
-    pos.z = -static_cast<float>(index.y) * BLOCK_HEIGHT;
-
-    return pos;
-}
-Vector3 PositionByIndex(Vector2int index, BLOCK_TYPE blockType)
-{
-    Vector3 pos;
-
-    pos.x = -static_cast<float>(index.x) * BLOCK_WIDTH;
-    if (blockType == BLOCK_TYPE::Empty)pos.y = 0.0f;
-    else if (blockType == BLOCK_TYPE::stairs)pos.y = 0.4f;
-    else if (blockType == BLOCK_TYPE::Wall)pos.y = 0.8f;
-    pos.z = -static_cast<float>(index.y) * BLOCK_HEIGHT;
-
-    return pos;
-}
-
 
 
 
@@ -627,12 +593,20 @@ void Log(std::ofstream& os, const std::string& message)
 
 #pragma endregion
 
-
 int RandomInt(int min, int max)
 {
     static std::mt19937 rng(std::random_device{}());
     std::uniform_int_distribution<int> dist(min, max);
     return dist(rng);
+}
+
+float RandomFloat(float min, float max, int decimalPlaces)
+{
+    int scale = static_cast<int>(std::pow(10, decimalPlaces));
+    int intMin = static_cast<int>(std::round(min * scale));
+    int intMax = static_cast<int>(std::round(max * scale));
+    int randomInt = RandomInt(intMin, intMax);
+    return static_cast<float>(randomInt) / scale;
 }
 
 
@@ -656,7 +630,7 @@ uint32_t ConvertVector4ToUint(Vector4 color)
 
 float ToRadian(const float& angle)
 {
-    return angle * (float(std::numbers::pi) / 180.0f);
+    return angle * (std::numbers::pi_v<float> / 180.0f);
 }
 
 // ARGBをRGBA
@@ -673,15 +647,15 @@ void CreateSphere(VertexData* vertexData, uint32_t kSubdivision)
     }
 
     // 経度分割１つ分の角度
-    const float kLonEvery = float((2 * M_PI) / kSubdivision);
+    const float kLonEvery = float((2 * std::numbers::pi_v<float>) / kSubdivision);
     // 緯度分割１つ分の角度
-    const float kLatEvery = float(M_PI / kSubdivision);
+    const float kLatEvery = float(std::numbers::pi_v<float> / kSubdivision);
 
     // 緯度の方向に分割 -π/2 ～ π/2
     for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex)
     {
         // 現在の緯度と次の緯度
-        const float lat = float(-M_PI / 2.0f + latIndex * kLatEvery);
+        const float lat = float(-std::numbers::pi_v<float> / 2.0f + latIndex * kLatEvery);
         const float nextLat = lat + kLatEvery;
 
         // 経度方向に分割 0 ～ 2π

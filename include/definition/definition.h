@@ -18,7 +18,41 @@
 
 // 外部ライブラリ
 #include "externals/DirectXTex/DirectXTex.h"
-#include "enum.h"
+
+#define WIDTH 1280
+#define HEIGHT 720
+
+enum class PHASE
+{
+    Phase_None,
+    Phase_Title,
+    Phase_GameScene,
+    Phase_StageSelect,
+    Phase_GameClear,
+};
+
+enum class LookAtMode
+{
+    None,
+    Target,
+    Front
+};
+
+enum class Anker
+{
+    Center,
+
+    CenterLeft,
+    CenterRight,
+    CenterTop,
+    CenterDown,
+
+    LeftTop,
+    RightTop,
+    LeftDown,
+    RightDown,
+};
+
 
 class Quaternion;
 
@@ -760,10 +794,6 @@ struct Matrix4x4
 
         return Return;
     }
-
-    // クォータニオンから回転行列を生成
-    static Matrix4x4 MakeFromQuaternion(const Quaternion& q);
-
 };
 
 
@@ -771,7 +801,13 @@ struct Matrix4x4
 struct Sphere
 {
     Vector3 center;
-    float radius = 1;
+    float radius = 1.0f;
+};
+
+struct SphereXYZ
+{
+    Vector3 center;
+    Vector3 radius = { 1.0f, 1.0f, 1.0f };
 };
 
 struct Plane
@@ -799,7 +835,7 @@ struct Transforms
     Vector3 rotate = { 0,0,0 };
     Vector3 translate = { 0,0,0 };
     Matrix4x4 World;
-    Matrix4x4 *parentWorld = nullptr;
+    Matrix4x4* parentWorld = nullptr;
 };
 
 struct VertexData
@@ -871,6 +907,15 @@ struct AABB
 {
     Vector3 min;
     Vector3 max;
+
+    Vector3 center()
+    {
+        return Vector3{
+            (min.x + max.x) / 2.0f,
+            (min.y + max.y) / 2.0f,
+            (min.z + max.z) / 2.0f,
+        };
+    };
 };
 
 struct Object3D
@@ -890,7 +935,7 @@ struct Object3D
     AABB aabb;
 
     // 識別ナンバー
-    uint32_t number;
+    uint32_t number = 0;
 };
 
 struct TextureData
@@ -923,6 +968,25 @@ struct D3DResourceLeakChecker
     }
 };
 
+
+enum class BlendMode
+{
+    // ブレンドなし
+    kBlendModeNone,
+    // 通常アルファブレンド
+    kBlendModeNormal,
+    // 加算
+    kBlendModeAdd,
+    // 減算
+    kBlendModeSub,
+    // 乗算
+    kBlendModeMul,
+    // スクリーン
+    kBlendModeScreen,
+    // 使用したら殺す
+    Wireframe
+};
+
 struct DrawOptions
 {
     // ワイヤーフレームにしてもいいか（天球なんかはワイヤーフレームになってほしくない）
@@ -931,6 +995,27 @@ struct DrawOptions
     Transforms uvTransform;
     // ライティングするか
     bool enableLighting = true;
+    // mouseとの当たり判定とるか
+    bool enableCheckMouseCollision = false;
+    // ブレンドモード
+    BlendMode blendMode = BlendMode::kBlendModeNormal;
+    // カメラ方向を向くかどうか
+    bool toCamera = false;
+};
+
+struct DrawParticleOptions
+{
+    // エミッターはAABB型か球型か
+    // true = AABB　false = 球
+    bool emitterShape = true;
+    // 全パーティクルがtarget方向に向かうかエミッターとtargetの垂直方向に向かうか
+    // trueなら垂直方向、falseならtarget方向
+    bool targetDirection = true;
+    // エミッター内部でも発生するか外殻上でのみ発生するか
+    // trueなら内部でも発生、falseなら外殻のみ
+    bool spawnInsideEmitter = true;
+    // ビルボードか否か
+    bool toCamera = false;
 };
 
 
@@ -967,3 +1052,18 @@ enum class EaseType
     IN_BOUNCE,
     OUT_BOUNCE,
 };
+
+struct ParticleInf
+{
+    Vector3 velocity;
+    int liveTime;
+
+};
+
+//enum class DestructionType
+//{
+//    // 透明になっていく
+//    FadeOut,
+//    // 小さくなっていく
+//    ToSmall,
+//};

@@ -1,6 +1,11 @@
 #include "Engine/Game.h"
+#include "Engine/Engine.h"
+#include "Camera/CameraController.h"
 
 static Engine* engine = new Engine;
+
+std::vector<Game::RenderData_Model*> Game::renderModels;
+
 
 void Game::Initialize(int width, int height, const std::wstring& title)
 {
@@ -15,6 +20,11 @@ bool Game::ProcessMessage()
 void Game::BeginFrame()
 {
 	engine->BeginFrame();
+}
+
+void Game::UpdateTransforms()
+{
+	engine->UpdateTransforms();
 }
 
 void Game::EndFrame()
@@ -47,24 +57,9 @@ TextureData* Game::GetTexture(uint32_t textureNumber)
 	return engine->GetTexture(textureNumber);
 }
 
-void Game::Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions)
-{
-	engine->Drawobj(transform, center, objectNumber, textureNumber, materialColor, drawOptions);
-}
-
 void Game::DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions)
 {
 	engine->DrawSphere(transform, center, kSubdivision, textureNumber, materialColor, drawOptions);
-}
-
-void Game::DrawTriangle(const Transforms& transform, const Vector3& pos1, const Vector3& pos2, const Vector3& pos3, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions)
-{
-	engine->DrawTriangle(transform, pos1, pos2, pos3, textureNumber, materialColor, drawOptions);
-}
-
-void Game::DrawSprite(const Transforms& transform, const Vector2& center, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions)
-{
-	engine->DrawSprite(transform, center, textureNumber, materialColor, drawOptions);
 }
 
 void Game::DrawLine(const Vector3& start, const Vector3& end, const uint32_t& materialColor)
@@ -133,11 +128,6 @@ Vector2 Game::GetMousePosition()
 	return engine->GetMousePosition();
 }
 
-void Game::SetMouseRay()
-{
-	return engine->SetMouseRay();
-}
-
 Ray Game::GetMouseRay()
 {
 	return engine->GetMouseRay();
@@ -145,7 +135,7 @@ Ray Game::GetMouseRay()
 
 bool Game::IsCollisionMouseRayAABB(uint32_t objectNumber, const Transforms& data)
 {
-	return engine->IsCollisionMouseRayAABB(objectNumber,data);
+	return engine->IsCollisionMouseRayAABB(objectNumber, data);
 }
 
 bool Game::GetMousePress(int i)
@@ -198,6 +188,23 @@ CameraController* Game::GetCamera()
 	return engine->GetCamera();
 }
 
+CameraController* Game::GetDebugCamera()
+{
+	return engine->GetDebugCamera();
+}
+
+//// カメラシェイク開始
+//void Game::StartCameraShake(float intensity, float duration, float frequency)
+//{
+//	engine->StartCameraShake(intensity, duration, frequency);
+//}
+//
+//// カメラシェイク中かどうか
+//bool Game::IsCameraShaking()
+//{
+//	return engine->IsCameraShaking();
+//}
+
 AABB Game::CreateAABB(const Transforms& transforms, uint32_t objectNumber)
 {
 	return engine->CreateAABB(transforms, objectNumber);
@@ -206,4 +213,188 @@ AABB Game::CreateAABB(const Transforms& transforms, uint32_t objectNumber)
 void Game::toggleWireframeMode()
 {
 	engine->toggleWireframeMode();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+Game::RenderData_Model::RenderData_Model()
+{
+	AddModel(this);
+	this->ID = GetModelList().size();
+}
+
+Game::RenderData_Model::~RenderData_Model()
+{
+	SubModel(this);
+}
+
+// マウスと衝突してるか
+bool Game::RenderData_Model::isCollisionMouseRay()
+{
+	return false;
+}
+
+// ワールド
+Matrix4x4 Game::RenderData_Model::GetWorldMatrix() const
+{
+	if (transforms.parentWorld)
+	{
+		return (*transforms.parentWorld) * transforms.World;
+	}
+	return transforms.World;
+}
+Vector3 Game::RenderData_Model::GetWorldPosition() const
+{
+	return Transform(Vector3(0.0f, 0.0f, 0.0f), GetWorldMatrix());
+}
+
+// 任意のポイントを向く
+void Game::RenderData_Model::LookAtOnce(const Vector3& targetWorldPos, float roll)
+{
+	Vector3 direction = (targetWorldPos - this->GetWorldPosition()).Normalized();
+	float yaw = std::atan2(direction.x, direction.z); // Y軸回り
+	float pitch = std::asin(-direction.y);            // X軸回り
+
+	transforms.rotate = { pitch, yaw, roll };
+}
+void Game::RenderData_Model::LookAtOnce(const RenderData_Model* other, float roll)
+{
+	LookAtOnce(other->GetWorldPosition(), roll);
+}
+void Game::RenderData_Model::LookAtCamera(float roll)
+{
+	LookAtOnce(Game::GetCamera()->GetCenter(), roll);
+}
+void Game::RenderData_Model::LookAtFront(float roll)
+{
+	Vector3 frontPos = this->GetWorldPosition() + Vector3{ 0.0f, 0.0f, 1.0f };
+	LookAtOnce(frontPos, roll);
+}
+
+
+
+void Game::RenderData_Model::Draw()
+{
+	engine->Drawobj(*this);
+}
+
+void Game::RenderData_Model::DrawAABB()
+{
+	Vector3 p[8];
+	p[0] = { AABB.min.x, AABB.min.y, AABB.min.z };
+	p[1] = { AABB.max.x, AABB.min.y, AABB.min.z };
+	p[2] = { AABB.max.x, AABB.max.y, AABB.min.z };
+	p[3] = { AABB.min.x, AABB.max.y, AABB.min.z };
+	p[4] = { AABB.min.x, AABB.min.y, AABB.max.z };
+	p[5] = { AABB.max.x, AABB.min.y, AABB.max.z };
+	p[6] = { AABB.max.x, AABB.max.y, AABB.max.z };
+	p[7] = { AABB.min.x, AABB.max.y, AABB.max.z };
+
+	// 下側
+	Game::DrawLine(p[0], p[1], 0xFF0000FF);
+	Game::DrawLine(p[1], p[2], 0xFF0000FF);
+	Game::DrawLine(p[2], p[3], 0xFF0000FF);
+	Game::DrawLine(p[3], p[0], 0xFF0000FF);
+
+	// 上側
+	Game::DrawLine(p[4], p[5], 0xFF0000FF);
+	Game::DrawLine(p[5], p[6], 0xFF0000FF);
+	Game::DrawLine(p[6], p[7], 0xFF0000FF);
+	Game::DrawLine(p[7], p[4], 0xFF0000FF);
+
+	// 側面
+	Game::DrawLine(p[0], p[4], 0xFF0000FF);
+	Game::DrawLine(p[1], p[5], 0xFF0000FF);
+	Game::DrawLine(p[2], p[6], 0xFF0000FF);
+	Game::DrawLine(p[3], p[7], 0xFF0000FF);
+}
+
+void Game::RenderData_Model::DrawImGui()
+{
+	std::string str = "object : " + std::to_string(this->ID);
+	std::string num = std::to_string(this->ID) + " : ";
+
+    ImGui::Begin(str.c_str());
+	
+	ImGui::DragFloat3((num + "scale").c_str(),		&transforms.scale.x);
+	ImGui::DragFloat3((num + "translate").c_str(),	&transforms.translate.x);
+	ImGui::DragFloat3((num + "rotate").c_str(),		&transforms.rotate.x);
+	ImGui::DragFloat3((num + "velocity").c_str(), &velocity.x);
+	ImGui::DragFloat3((num + "acceleration").c_str(), &acceleration.x);
+	ImGui::DragFloat((num + "gravity").c_str(), &gravity);
+
+
+	ImGui::End();
+}
+
+
+
+void Game::RenderData_Sprite::Draw()
+{
+	engine->DrawSprite(*this);
+}
+
+
+void Game::RenderData_Triangle::Draw()
+{
+	engine->DrawTriangle(*this);
+}
+
+
+void Game::RenderData_Particle::Draw()
+{
+	engine->DrawParticle(*this);
+}
+
+void Game::RenderData_Particle::DrawEmitter()
+{
+	// エミッターがAABB
+	if (this->option.emitterShape)
+	{
+		Vector3 p[8];
+		p[0] = { this->emitterAABB.min.x, this->emitterAABB.min.y, this->emitterAABB.min.z };
+		p[1] = { this->emitterAABB.max.x, this->emitterAABB.min.y, this->emitterAABB.min.z };
+		p[2] = { this->emitterAABB.max.x, this->emitterAABB.max.y, this->emitterAABB.min.z };
+		p[3] = { this->emitterAABB.min.x, this->emitterAABB.max.y, this->emitterAABB.min.z };
+		p[4] = { this->emitterAABB.min.x, this->emitterAABB.min.y, this->emitterAABB.max.z };
+		p[5] = { this->emitterAABB.max.x, this->emitterAABB.min.y, this->emitterAABB.max.z };
+		p[6] = { this->emitterAABB.max.x, this->emitterAABB.max.y, this->emitterAABB.max.z };
+		p[7] = { this->emitterAABB.min.x, this->emitterAABB.max.y, this->emitterAABB.max.z };
+
+		// 下側
+		Game::DrawLine(p[0], p[1], 0xFF0000FF);
+		Game::DrawLine(p[1], p[2], 0xFF0000FF);
+		Game::DrawLine(p[2], p[3], 0xFF0000FF);
+		Game::DrawLine(p[3], p[0], 0xFF0000FF);
+
+		// 上側
+		Game::DrawLine(p[4], p[5], 0xFF0000FF);
+		Game::DrawLine(p[5], p[6], 0xFF0000FF);
+		Game::DrawLine(p[6], p[7], 0xFF0000FF);
+		Game::DrawLine(p[7], p[4], 0xFF0000FF);
+
+		// 側面
+		Game::DrawLine(p[0], p[4], 0xFF0000FF);
+		Game::DrawLine(p[1], p[5], 0xFF0000FF);
+		Game::DrawLine(p[2], p[6], 0xFF0000FF);
+		Game::DrawLine(p[3], p[7], 0xFF0000FF);
+	}
+	// 
+	else
+	{
+		Transforms transforms;
+		transforms.scale = this->emitterSphere.radius;
+		DrawOptions option;
+
+		engine->DrawSphere(transforms, this->emitterSphere.center, 12, 0, 0xFFFFFF22, option);
+	}
 }

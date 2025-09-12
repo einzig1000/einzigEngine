@@ -6,15 +6,9 @@
 
 #include <Windows.h>
 #include <sstream>
-//#include "Game.h"
-
 
 #include <dxcapi.h>
 #pragma comment(lib, "dxcompiler")
-
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
 
 
 template <typename T>
@@ -49,12 +43,6 @@ void FlipXAxis(T(&arr)[Rows][Cols])
 		}
 	}
 }
-
-
-Vector2int IndexByPosition(Vector3 pos);
-Vector3 PositionByIndex(Vector2int index);
-Vector3 PositionByIndex(Vector2int index, BLOCK_TYPE blockType);
-
 
 /// <summary>
 // 三角形の法線ベクトルを計算し、正規化して返す
@@ -146,6 +134,7 @@ void Log(std::ofstream& os, const std::string& message);
 
 
 int RandomInt(int min, int max);
+float RandomFloat(float min, float max, int decimalPlaces);
 
 /// <summary>
 /// 角度をラジアンに変換
