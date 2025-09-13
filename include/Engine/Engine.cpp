@@ -37,7 +37,7 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 	cameraController = new CameraController();
 	debugCameraController = new CameraController();
 	cameraController->cameraMode_ = false;
-	debugCamera = false;
+	debugCamera = true;
 
 	// インプット系
 	inputManager_ = new Input(windowManager->GetHwnd(), windowManager->Getwidth(), windowManager->Getheight(), &cameraController->viewProjectionMatrix, &debugCameraController->viewProjectionMatrix, &debugCamera);
@@ -191,8 +191,8 @@ void Engine::UpdateCamera()
 		CreateFrustumPlanes(debugCameraController->viewProjectionMatrix);
 	}
 
-	//ImGui::Text("---------------camera---------------");
-	//ImGui::Checkbox("switchDebugCamera", &debugCamera);
+	ImGui::Text("---------------camera---------------");
+	ImGui::Checkbox("switchDebugCamera", &debugCamera);
 }
 void Engine::EndFrame()
 {
@@ -212,60 +212,49 @@ void Engine::UpdateTransforms()
 {
 	for (auto& rd : Game::GetModelList())
 	{
-		//――――――――――――――――――――――――
 		// AABB更新
-		//――――――――――――――――――――――――
 		rd->AABB = CreateAABB(rd->transforms, rd->model);
 
-		//――――――――――――――――――――――――
+
 		// 座標更新
-		//――――――――――――――――――――――――
 		rd->velocity.y -= rd->gravity;
 		rd->velocity += rd->acceleration;
 		rd->transforms.translate += rd->velocity;
 
-		//――――――――――――――――――――――――
+
 		// 事前ロード
-		//――――――――――――――――――――――――
 		XMVECTOR scaleVec = XMVectorSet(rd->transforms.scale.x, rd->transforms.scale.y, rd->transforms.scale.z, 0.0f);
 		XMVECTOR pivotVec = XMVectorSet(rd->pivot.x, rd->pivot.y, rd->pivot.z, 0.0f);
 		XMVECTOR translateVec = XMVectorSet(rd->transforms.translate.x, rd->transforms.translate.y, rd->transforms.translate.z, 0.0f);
 		XMVECTOR rotEuler = XMVectorSet(rd->transforms.rotate.x, rd->transforms.rotate.y, rd->transforms.rotate.z, 0.0f);
 
-		//――――――――――――――――――――――――
+
 		// 1) スケール
-		//――――――――――――――――――――――――
 		XMMATRIX S = XMMatrixScalingFromVector(scaleVec);
 
-		//――――――――――――――――――――――――
+
 		// 2) ピボットオフセット（負）
-		//――――――――――――――――――――――――
 		XMMATRIX Tneg = XMMatrixTranslationFromVector(XMVectorNegate(pivotVec));
 
-		//――――――――――――――――――――――――
+
 		// 3) 回転（オイラー→クォータニオン→行列）
-		//――――――――――――――――――――――――
 		XMVECTOR quatEuler = XMQuaternionRotationRollPitchYawFromVector(rotEuler);
 		XMMATRIX R = XMMatrixRotationQuaternion(quatEuler);
 
-		//――――――――――――――――――――――――
+
 		// 4) ピボットオフセット（正）
-		//――――――――――――――――――――――――
 		XMMATRIX Tpos = XMMatrixTranslationFromVector(pivotVec);
 
-		//――――――――――――――――――――――――
+
 		// 5) 平行移動
-		//――――――――――――――――――――――――
 		XMMATRIX T = XMMatrixTranslationFromVector(translateVec);
 
-		//――――――――――――――――――――――――
+
 		// 6) 合成: S → Tneg → R → Tpos → T
-		//――――――――――――――――――――――――
 		XMMATRIX world = S * Tneg * R * Tpos * T;
 
-		//――――――――――――――――――――――――
+
 		// 7) 親行列の適用
-		//――――――――――――――――――――――――
 		if (rd->transforms.parentWorld)
 		{
 			// parentWorld が Matrix4x4 ならまず XMFLOAT4X4 にコピー
@@ -276,9 +265,8 @@ void Engine::UpdateTransforms()
 			world = parentM * world;
 		}
 
-		//――――――――――――――――――――――――
+
 		// 8) 結果を transforms.World に格納
-		//――――――――――――――――――――――――
 		XMFLOAT4X4 tmp;
 		XMStoreFloat4x4(&tmp, world);
 		for (int i = 0; i < 4; ++i)
@@ -445,16 +433,13 @@ TextureData* Engine::GetTexture(uint32_t textureNumber)
 // 描画
 void Engine::Drawobj(Game::RenderData_Model& renderData)
 {
-	// 1) AABB を更新
-	renderData.CreateAABB();
-
-	// 2) 画面内か判定
+	// 画面内か判定
 	if (!IsAABBInFrustum(renderData.AABB, renderData.transforms.World))
 	{
 		return;
 	}
 
-	// 3) 描画
+	// 描画
 	{
 		// 描画回数上限
 		if (drawCallIndex >= kMaxDrawCallPerFrame) return;
@@ -463,7 +448,7 @@ void Engine::Drawobj(Game::RenderData_Model& renderData)
 
 		// RootSignatureとPSOを設定
 		dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
-		if (renderData.options.enableWireframeMode && WireframeMode)
+		if (renderData.options.wireframe || WireframeMode)
 		{	 // ワイヤーフレーム用PSOを設定
 			dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(BlendMode::Wireframe, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
 		}
@@ -495,9 +480,9 @@ void Engine::Drawobj(Game::RenderData_Model& renderData)
 		materialData[drawCallIndex]->color = color;
 		materialData[drawCallIndex]->enableLighting = renderData.options.enableLighting;
 		Matrix4x4 uvTransformMatrix = Matrix4x4::MakeIdentity4x4();
-		uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeScaleMatrix(renderData.options.uvTransform.scale));
-		uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(renderData.options.uvTransform.rotate.z));
-		uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(renderData.options.uvTransform.translate));
+		uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeScaleMatrix(renderData.uvTransform.scale));
+		uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(renderData.uvTransform.rotate.z));
+		uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(renderData.uvTransform.translate));
 		materialData[drawCallIndex]->uvTransform = uvTransformMatrix;
 
 
@@ -527,7 +512,7 @@ void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint
 
 	// RootSignatureとPSOを設定
 	dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
-	if (drawOptions.enableWireframeMode && WireframeMode)
+	if (drawOptions.wireframe || WireframeMode)
 	{	 // ワイヤーフレーム用PSOを設定
 		dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(BlendMode::Wireframe, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
 	}
@@ -597,9 +582,9 @@ void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint
 	materialData[drawCallIndex]->color = color;
 	materialData[drawCallIndex]->enableLighting = drawOptions.enableLighting;
 	Matrix4x4 uvTransformMatrix = Matrix4x4::MakeIdentity4x4();
-	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeScaleMatrix(drawOptions.uvTransform.scale));
-	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(drawOptions.uvTransform.rotate.z));
-	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(drawOptions.uvTransform.translate));
+	//uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeScaleMatrix(drawOptions.uvTransform.scale));
+	//uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(drawOptions.uvTransform.rotate.z));
+	//uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(drawOptions.uvTransform.translate));
 	materialData[drawCallIndex]->uvTransform = uvTransformMatrix;
 
 
@@ -643,7 +628,7 @@ void Engine::DrawTriangle(Game::RenderData_Triangle& renderData)
 
 	// RootSignatureとPSOを設定
 	dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
-	if (renderData.options.enableWireframeMode && WireframeMode)
+	if (renderData.options.wireframe || WireframeMode)
 	{	 // ワイヤーフレーム用PSOを設定
 		dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(BlendMode::Wireframe, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
 	}
@@ -700,9 +685,9 @@ void Engine::DrawTriangle(Game::RenderData_Triangle& renderData)
 	materialData[drawCallIndex]->color = color;
 	materialData[drawCallIndex]->enableLighting = renderData.options.enableLighting;
 	Matrix4x4 uvTransformMatrix = Matrix4x4::MakeIdentity4x4();
-	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeScaleMatrix(renderData.options.uvTransform.scale));
-	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(renderData.options.uvTransform.rotate.z));
-	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(renderData.options.uvTransform.translate));
+	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeScaleMatrix(renderData.uvTransform.scale));
+	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(renderData.uvTransform.rotate.z));
+	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(renderData.uvTransform.translate));
 	materialData[drawCallIndex]->uvTransform = uvTransformMatrix;
 
 	// 頂点リソース
@@ -957,12 +942,12 @@ void Engine::DrawSprite(Game::RenderData_Sprite& renderData)
 	Matrix4x4 toCenter = Matrix4x4::MakeTranslateMatrix({ -uvCenterX, -uvCenterY, 0.0f });
 	Matrix4x4 fromCenter = Matrix4x4::MakeTranslateMatrix({ uvCenterX, uvCenterY, 0.0f });
 	Matrix4x4 uvTransformMatrix = Matrix4x4::MakeIdentity4x4();
-	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeScaleMatrix(renderData.options.uvTransform.scale));
-	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(renderData.options.uvTransform.rotate.z));
+	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeScaleMatrix(renderData.uvTransform.scale));
+	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(renderData.uvTransform.rotate.z));
 
 	uvTransformMatrix = (fromCenter * (uvTransformMatrix * toCenter));
 
-	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(renderData.options.uvTransform.translate));
+	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(renderData.uvTransform.translate));
 
 
 	Vector4 color = ConvertUintToVector4(renderData.color);
@@ -1524,24 +1509,6 @@ void Engine::MoveDistanceTarget(float target, int spendFrame, EaseType easetype)
 void Engine::SetControlModeCamera(bool mode)
 {
 	cameraController->cameraMode_ = mode;
-}
-
-void Engine::SetControlModeCameraCenter(bool mode)
-{
-	cameraController->cameraMode_centerControl_ = mode;
-	if (mode = true && cameraController->cameraMode_ == false)cameraController->cameraMode_ = true;
-}
-
-void Engine::SetControlModeCameraRotate(bool mode)
-{
-	cameraController->cameraMode_rotateControl_ = mode;
-	if (mode = true && cameraController->cameraMode_ == false)cameraController->cameraMode_ = true;
-}
-
-void Engine::SetControlModeCameraDistance(bool mode)
-{
-	cameraController->cameraMode_distanceControl_ = mode;
-	if (mode = true && cameraController->cameraMode_ == false)cameraController->cameraMode_ = true;
 }
 
 CameraController* Engine::GetCamera()

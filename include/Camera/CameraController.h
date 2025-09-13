@@ -32,9 +32,6 @@ public:
     void SetDistance(float target) { distance_ = target; }
 
     bool cameraMode_;
-    bool cameraMode_centerControl_;
-    bool cameraMode_rotateControl_;
-    bool cameraMode_distanceControl_;
     bool cameraModeMode_;
 
 private:

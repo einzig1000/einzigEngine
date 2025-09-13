@@ -33,7 +33,7 @@ public:
 		// 加速度
 		Vector3 acceleration;
 		// 重力加速度
-		float gravity = 0.01f;
+		float gravity = 0.00f;
 		// 色
 		uint32_t color = 0xFFFFFFFF;
 		// 3Dモデル
@@ -46,12 +46,16 @@ public:
 		AABB AABB;
 		// ID
 		int ID = 0;
-		// マウスと衝突してるか？
-		bool isCollisionMouseRay();
+
+		// マウスとの衝突判定
+		bool isCollisionMouseRay() const;
+
+		// 他のオブジェクトとの衝突判定
+		bool isCollision(RenderData_Model& target) const;
 
 		// 任意のポイントを向く
 		void LookAtOnce(const Vector3& targetWorldPos, float roll = 0);
-		void LookAtOnce(const RenderData_Model* other, float roll = 0);
+		void LookAtOnce(const RenderData_Model& other, float roll = 0);
 		void LookAtCamera(float roll = 0);
 		void LookAtFront(float roll = 0);
 
@@ -76,6 +80,8 @@ public:
 	public:
 		// 位置、回転、スケール
 		Transforms transforms;
+		// UV座標
+		Transforms uvTransform;
 		// アンカー
 		Anker anker = Anker::Center;
 		// 親のワールドマトリックス
@@ -99,6 +105,8 @@ public:
 	public:
 		// 位置、回転、スケール
 		Transforms transform;
+		// UV座標
+		Transforms uvTransform;
 		// 上
 		Vector3 pos1;
 		// 右下
@@ -227,9 +235,6 @@ public:
 	static void MoveRotateTarget(Vector3 target, int spendFrame, EaseType easetype);
 	static void MoveDistanceTarget(float target, int spendFrame, EaseType easetype);
 	static void SetControlModeCamera(bool mode);
-	static void SetControlModeCameraCenter(bool mode);
-	static void SetControlModeCameraRotate(bool mode);
-	static void SetControlModeCameraDistance(bool mode);
 	static CameraController* GetCamera();
 	static CameraController* GetDebugCamera();
 

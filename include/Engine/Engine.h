@@ -72,15 +72,12 @@ public:
 	void MoveRotateTarget(Vector3 target, int spendFrame, EaseType easetype);
 	void MoveDistanceTarget(float target, int spendFrame, EaseType easetype);
 	void SetControlModeCamera(bool mode);
-	void SetControlModeCameraCenter(bool mode);
-	void SetControlModeCameraRotate(bool mode);
-	void SetControlModeCameraDistance(bool mode);
 	CameraController* GetCamera();
 	CameraController* GetDebugCamera();
 
 	// カメラシェイク
-	void StartCameraShake(float intensity, float duration, float frequency = 25.0f);
-	bool IsCameraShaking();
+	//void StartCameraShake(float intensity, float duration, float frequency = 25.0f);
+	//bool IsCameraShaking();
 
 	// AABBの作成
 	AABB CreateAABB(const Transforms& transforms, uint32_t objectNumber);

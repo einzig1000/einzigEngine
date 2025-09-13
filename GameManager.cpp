@@ -2,22 +2,31 @@
 
 GameManager::GameManager()
 {
-	//ImGui::CreateContext();
-	//ImGuiIO& io = ImGui::GetIO();
-	//io.ConfigFlags |= ImGuiConfigFlags_DockingEnable; // ドッキング機能を有効化
-	//io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;  // ウィンドウを複数の OS ウィンドウ化
+	test.model = Game::LoadOBJ("resources/Prototypes/model/", "corn.obj");
+	test.texture = Game::LoadTexture("resources/Prototypes/texture/uvChecker.png");
+	test1.model = Game::LoadOBJ("resources/Prototypes/model/", "corn.obj");
+	test1.texture = Game::LoadTexture("resources/Prototypes/texture/uvChecker.png");
 }
 
 GameManager::~GameManager()
-{}
+{
+
+}
 
 void GameManager::Update()
 {
-
+	if (test.isCollision(test1))
+	{
+		test.color = 0xFF0000FF;
+	}
 }
 
 void GameManager::Draw()
 {
 	test.Draw();
+	test.DrawAABB();
 	test.DrawImGui();
+	test1.Draw();
+	test1.DrawAABB();
+	test1.DrawImGui();
 }

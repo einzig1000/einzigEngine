@@ -168,21 +168,6 @@ void Game::SetControlModeCamera(bool mode)
 	engine->SetControlModeCamera(mode);
 }
 
-void Game::SetControlModeCameraCenter(bool mode)
-{
-	engine->SetControlModeCameraCenter(mode);
-}
-
-void Game::SetControlModeCameraRotate(bool mode)
-{
-	engine->SetControlModeCameraRotate(mode);
-}
-
-void Game::SetControlModeCameraDistance(bool mode)
-{
-	engine->SetControlModeCameraDistance(mode);
-}
-
 CameraController* Game::GetCamera()
 {
 	return engine->GetCamera();
@@ -229,7 +214,7 @@ void Game::toggleWireframeMode()
 Game::RenderData_Model::RenderData_Model()
 {
 	AddModel(this);
-	this->ID = GetModelList().size();
+	this->ID = int(GetModelList().size());
 }
 
 Game::RenderData_Model::~RenderData_Model()
@@ -237,9 +222,25 @@ Game::RenderData_Model::~RenderData_Model()
 	SubModel(this);
 }
 
-// マウスと衝突してるか
-bool Game::RenderData_Model::isCollisionMouseRay()
+// マウスとの衝突判定
+bool Game::RenderData_Model::isCollisionMouseRay() const
 {
+	return engine->IsCollisionMouseRayAABB(this->model, this->transforms);
+}
+
+// 他のオブジェクトとの衝突判定
+bool Game::RenderData_Model::isCollision(RenderData_Model& target) const
+{
+	for (auto& other : Game::GetModelList())
+	{ 
+		// 自分自身は除外
+		if (&target == other) continue;
+		// いずれはそれぞれに形に適したものに変更したい AABB組み合わせたりもしたい
+		if (IsCollision(target.AABB, other->AABB))
+		{
+			return true;
+		}
+	}
 	return false;
 }
 
@@ -266,9 +267,9 @@ void Game::RenderData_Model::LookAtOnce(const Vector3& targetWorldPos, float rol
 
 	transforms.rotate = { pitch, yaw, roll };
 }
-void Game::RenderData_Model::LookAtOnce(const RenderData_Model* other, float roll)
+void Game::RenderData_Model::LookAtOnce(const RenderData_Model &other, float roll)
 {
-	LookAtOnce(other->GetWorldPosition(), roll);
+	LookAtOnce(other.GetWorldPosition(), roll);
 }
 void Game::RenderData_Model::LookAtCamera(float roll)
 {
@@ -321,23 +322,31 @@ void Game::RenderData_Model::DrawAABB()
 void Game::RenderData_Model::DrawImGui()
 {
 	std::string str = "object : " + std::to_string(this->ID);
-	std::string num = std::to_string(this->ID) + " : ";
+	std::string num = std::to_string(this->ID) + ":";
 
     ImGui::Begin(str.c_str());
 
 	ImGui::Text("transforms");
-	ImGui::DragFloat3((num + "scale").c_str(), &transforms.scale.x);
-	ImGui::DragFloat3((num + "translate").c_str(), &transforms.translate.x);
-	ImGui::DragFloat3((num + "rotate").c_str(), &transforms.rotate.x);
-	ImGui::DragFloat3((num + "pivot").c_str(), &pivot.x);
+	ImGui::DragFloat3((num + "scale").c_str(), &transforms.scale.x, 0.01f);
+	ImGui::DragFloat3((num + "translate").c_str(), &transforms.translate.x, 0.01f);
+	ImGui::DragFloat3((num + "rotate").c_str(), &transforms.rotate.x, 0.01f);
+	ImGui::DragFloat3((num + "pivot").c_str(), &pivot.x, 0.01f);
 	ImGui::Text("uvTransform");
-	ImGui::DragFloat3((num + "UVscale").c_str(), &uvTransform.scale.x);
-	ImGui::DragFloat3((num + "UVtranslate").c_str(), &uvTransform.translate.x);
-	ImGui::DragFloat3((num + "UVrotate").c_str(), &uvTransform.rotate.x);
+	ImGui::DragFloat3((num + "UVscale").c_str(), &uvTransform.scale.x, 0.01f);
+	ImGui::DragFloat3((num + "UVtranslate").c_str(), &uvTransform.translate.x, 0.01f);
+	ImGui::DragFloat3((num + "UVrotate").c_str(), &uvTransform.rotate.x, 0.01f);
 	ImGui::Text("velocity");
-	ImGui::DragFloat3((num + "velocity").c_str(), &velocity.x);
-	ImGui::DragFloat3((num + "acceleration").c_str(), &acceleration.x);
-	ImGui::DragFloat((num + "gravity").c_str(), &gravity);
+	ImGui::DragFloat3((num + "velocity").c_str(), &velocity.x, 0.01f);
+	ImGui::DragFloat3((num + "acceleration").c_str(), &acceleration.x, 0.01f);
+	ImGui::DragFloat((num + "gravity").c_str(), &gravity, 0.01f);
+	ImGui::Text("color");
+	static float floatColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	ImGui::ColorEdit4((num + "color").c_str(), floatColor, 1);
+	Vector4 vector4Color = { floatColor[0], floatColor[1], floatColor[2], floatColor[3] };
+	color = ConvertVector4ToUint(vector4Color);
+	ImGui::Text("option");
+	ImGui::Checkbox("wireFrame", &options.wireframe);
+	ImGui::Checkbox("lighting", &options.enableLighting);
 
 
 	ImGui::End();

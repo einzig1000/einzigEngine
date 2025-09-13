@@ -14,6 +14,7 @@ public:
 private:
 
 	Game::RenderData_Model test;
+	Game::RenderData_Model test1;
 
 };
 

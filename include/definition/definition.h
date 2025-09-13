@@ -989,16 +989,12 @@ enum class BlendMode
 
 struct DrawOptions
 {
-    // ワイヤーフレームにしてもいいか（天球なんかはワイヤーフレームになってほしくない）
-    bool enableWireframeMode = true;
+    // ワイヤーフレーム
+    bool wireframe = false;
     // ライティングするか
     bool enableLighting = true;
-    // mouseとの当たり判定とるか
-    bool enableCheckMouseCollision = false;
     // ブレンドモード
     BlendMode blendMode = BlendMode::kBlendModeNormal;
-    // カメラ方向を向くかどうか
-    bool toCamera = false;
 };
 
 struct DrawParticleOptions

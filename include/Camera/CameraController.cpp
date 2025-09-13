@@ -5,16 +5,13 @@
 CameraController::CameraController()
 {
     mousePositionGap_ = { 0,0 };
-    cameraMode_ = false;
-    cameraMode_centerControl_ = false;
-    cameraMode_rotateControl_ = false;
-    cameraMode_distanceControl_ = false;
+    cameraMode_ = true;
     cameraModeMode_ = true;
 
     // カメラ
     transform_.translate = { 0.0f, 0.0f, 0.0f };
     transform_.rotate = { 1.13f, 0.0f, 0.0f };
-    center_ = { -11.390f, -0.170f, -5.530f };
+    center_ = { 0.0f, 0.0f, 0.0f };
     distance_ = 35.60f;
 
     preCenter_ = center_;
@@ -39,89 +36,82 @@ void CameraController::Update()
         mouseWheel_ = Game::GetMouseWheel();
 
 #pragma region カメラ回転
-        if (cameraMode_rotateControl_)
+        // クリックした瞬間
+        if (pressMouse2_ && prePressMouse2_ == 0 && !GetHitKey::keys[DIK_LSHIFT])
         {
-            // クリックした瞬間
-            if (pressMouse2_ && prePressMouse2_ == 0 && !GetHitKey::keys[DIK_LSHIFT])
-            {
-                preMousePosition_ = Game::GetMousePosition();
-            }
-            // クリックしている最中
-            if (pressMouse2_ && !GetHitKey::keys[DIK_LSHIFT])
-            {
-                mousePosition_ = Game::GetMousePosition();
-                mousePositionGap_.x = mousePosition_.x - preMousePosition_.x;
-                mousePositionGap_.y = mousePosition_.y - preMousePosition_.y;
-                transform_.rotate.x = (mousePositionGap_.y / 100.0f) + (preRotate_.x);
-                transform_.rotate.y = (mousePositionGap_.x / 100.0f) + (preRotate_.y);
-            }
-            // クリックやめた瞬間
-            if (prePressMouse2_ && pressMouse2_ == 0 && !GetHitKey::keys[DIK_LSHIFT])
-            {
-                preRotate_ = transform_.rotate;
-            }
+            preMousePosition_ = Game::GetMousePosition();
         }
+        // クリックしている最中
+        if (pressMouse2_ && !GetHitKey::keys[DIK_LSHIFT])
+        {
+            mousePosition_ = Game::GetMousePosition();
+            mousePositionGap_.x = mousePosition_.x - preMousePosition_.x;
+            mousePositionGap_.y = mousePosition_.y - preMousePosition_.y;
+            transform_.rotate.x = (mousePositionGap_.y / 100.0f) + (preRotate_.x);
+            transform_.rotate.y = (mousePositionGap_.x / 100.0f) + (preRotate_.y);
+        }
+        // クリックやめた瞬間
+        if (prePressMouse2_ && pressMouse2_ == 0 && !GetHitKey::keys[DIK_LSHIFT])
+        {
+            preRotate_ = transform_.rotate;
+        }
+
 #pragma endregion
 
 #pragma region 回転中心
-        if (cameraMode_centerControl_)
+        if (prePressMouse2_ == 0 && pressMouse2_ && GetHitKey::keys[DIK_LSHIFT])
         {
-            if (prePressMouse2_ == 0 && pressMouse2_ && GetHitKey::keys[DIK_LSHIFT])
-            {
-                preMousePosition_ = Game::GetMousePosition();
-            }
-            if (pressMouse2_ && GetHitKey::keys[DIK_LSHIFT])
-            {
-                mousePosition_ = Game::GetMousePosition();
-                mousePositionGap_.x = float(mousePosition_.x - preMousePosition_.x);
-                mousePositionGap_.y = float(mousePosition_.y - preMousePosition_.y);
-
-                //	カメラの回転行列（cameraRotMat）を作ることで、カメラの「右」「上」方向ベクトルを取得できます。
-                //	右方向ベクトル = 回転行列の1列目（m[0][0], m[1][0], m[2][0]）
-                //	上方向ベクトル = 回転行列の2列目（m[0][1], m[1][1], m[2][1]）
-                //	前方向ベクトル = 回転行列の3列目（m[0][2], m[1][2], m[2][2]）
-                //
-                //      ↑ y（上）
-                //      |
-                //      |
-                //      o----→ x（右）
-                //     /
-                //    /
-                //    z（前）
-                // 
-                //　カメラの回転行列 は カメラの向いてる向き
-                // 
-
-
-                Matrix4x4 cameraRotMat = Matrix4x4::MakeAffineMatrix({ 1,1,1 }, transform_.rotate, { 0,0,0 });
-                // 右方向ベクトル（ローカルx軸）
-                Vector3 right = { cameraRotMat.m[0][0], cameraRotMat.m[1][0], cameraRotMat.m[2][0] };
-                // 上方向ベクトル（ローカルy軸）
-                Vector3 up = { cameraRotMat.m[0][1], cameraRotMat.m[1][1], cameraRotMat.m[2][1] };
-
-
-                // Centerを移動
-                //center_ = preCenter_ + (((right * -1) * (mousePositionGap_.x / 100.0f)) + ((up * -1) * (-mousePositionGap_.y / 100.0f)));
-                center_ = preCenter_ + (((right * -1) * (mousePositionGap_.x / 100.0f)) + ((up * 1) * (-mousePositionGap_.y / 100.0f)));
-            }
-            if (prePressMouse2_ && pressMouse2_ == 0 && GetHitKey::keys[DIK_LSHIFT])
-            {
-                preCenter_ = center_;
-            }
+            preMousePosition_ = Game::GetMousePosition();
         }
+        if (pressMouse2_ && GetHitKey::keys[DIK_LSHIFT])
+        {
+            mousePosition_ = Game::GetMousePosition();
+            mousePositionGap_.x = float(mousePosition_.x - preMousePosition_.x);
+            mousePositionGap_.y = float(mousePosition_.y - preMousePosition_.y);
+
+            //	カメラの回転行列（cameraRotMat）を作ることで、カメラの「右」「上」方向ベクトルを取得できます。
+            //	右方向ベクトル = 回転行列の1列目（m[0][0], m[1][0], m[2][0]）
+            //	上方向ベクトル = 回転行列の2列目（m[0][1], m[1][1], m[2][1]）
+            //	前方向ベクトル = 回転行列の3列目（m[0][2], m[1][2], m[2][2]）
+            //
+            //      ↑ y（上）
+            //      |
+            //      |
+            //      o----→ x（右）
+            //     /
+            //    /
+            //    z（前）
+            // 
+            //　カメラの回転行列 は カメラの向いてる向き
+            // 
+
+
+            Matrix4x4 cameraRotMat = Matrix4x4::MakeAffineMatrix({ 1,1,1 }, transform_.rotate, { 0,0,0 });
+            // 右方向ベクトル（ローカルx軸）
+            Vector3 right = { cameraRotMat.m[0][0], cameraRotMat.m[1][0], cameraRotMat.m[2][0] };
+            // 上方向ベクトル（ローカルy軸）
+            Vector3 up = { cameraRotMat.m[0][1], cameraRotMat.m[1][1], cameraRotMat.m[2][1] };
+
+
+            // Centerを移動
+            //center_ = preCenter_ + (((right * -1) * (mousePositionGap_.x / 100.0f)) + ((up * -1) * (-mousePositionGap_.y / 100.0f)));
+            center_ = preCenter_ + (((right * -1) * (mousePositionGap_.x / 100.0f)) + ((up * 1) * (-mousePositionGap_.y / 100.0f)));
+        }
+        if (prePressMouse2_ && pressMouse2_ == 0 && GetHitKey::keys[DIK_LSHIFT])
+        {
+            preCenter_ = center_;
+        }
+
 #pragma endregion
 
 #pragma region カメラ距離
-        if (cameraMode_distanceControl_)
+        if (mouseWheel_ > 0)
         {
-            if (mouseWheel_ > 0)
-            {
-                distance_ -= float(mouseWheel_) / 100;
-            }
-            if (mouseWheel_ < 0)
-            {
-                distance_ -= float(mouseWheel_) / 100;
-            }
+            distance_ -= float(mouseWheel_) / 100;
+        }
+        if (mouseWheel_ < 0)
+        {
+            distance_ -= float(mouseWheel_) / 100;
         }
 
 #pragma endregion
