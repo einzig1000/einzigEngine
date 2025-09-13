@@ -272,40 +272,108 @@ void Engine::UpdateTransforms()
 		for (int i = 0; i < 4; ++i)
 			for (int j = 0; j < 4; ++j)
 				rd->transforms.World.m[i][j] = tmp.m[i][j];
+		//for (auto& rd : Game::GetModelList())
+		//{
+		//	// 1) スケール
+		//	Matrix4x4 scale = Matrix4x4::MakeScaleMatrix(rd->transforms.scale);
+		//
+		//	// 2) ピボットオフセット
+		//	Matrix4x4 pivotOffsetNeg = Matrix4x4::MakeTranslateMatrix(-rd->pivot);
+		//
+		//	// 3) 回転（X, Y, Z軸すべてを合成）
+		//	Matrix4x4 rotateX = Matrix4x4::MakeRotateXMatrix(rd->transforms.rotate.x);
+		//	Matrix4x4 rotateY = Matrix4x4::MakeRotateYMatrix(rd->transforms.rotate.y);
+		//	Matrix4x4 rotateZ = Matrix4x4::MakeRotateZMatrix(rd->transforms.rotate.z);
+		//	Matrix4x4 rotate = rotateZ * rotateX * rotateY;
+		//
+		//	// 4) ピボットへ戻す
+		//	Matrix4x4 pivotOffset = Matrix4x4::MakeTranslateMatrix(rd->pivot);
+		//
+		//	// 5) 平行移動
+		//	Matrix4x4 translate = Matrix4x4::MakeTranslateMatrix(rd->transforms.translate);
+		//
+		//	// 合成
+		//	Matrix4x4 world = scale * pivotOffsetNeg * rotate * pivotOffset * translate;
+		//
+		//	// 6) 親行列があれば乗算
+		//	if (rd->transforms.parentWorld)
+		//	{
+		//		Matrix4x4 parentMatrix = *rd->transforms.parentWorld;
+		//		world = parentMatrix * world;
+		//	}
+		//
+		//	// 7) Transforms.World に格納
+		//	rd->transforms.World = world;
+		//}
+		// マウスレイ取得
 	}
-	//for (auto& rd : Game::GetModelList())
-	//{
-	//	// 1) スケール
-	//	Matrix4x4 scale = Matrix4x4::MakeScaleMatrix(rd->transforms.scale);
-	//
-	//	// 2) ピボットオフセット
-	//	Matrix4x4 pivotOffsetNeg = Matrix4x4::MakeTranslateMatrix(-rd->pivot);
-	//
-	//	// 3) 回転（X, Y, Z軸すべてを合成）
-	//	Matrix4x4 rotateX = Matrix4x4::MakeRotateXMatrix(rd->transforms.rotate.x);
-	//	Matrix4x4 rotateY = Matrix4x4::MakeRotateYMatrix(rd->transforms.rotate.y);
-	//	Matrix4x4 rotateZ = Matrix4x4::MakeRotateZMatrix(rd->transforms.rotate.z);
-	//	Matrix4x4 rotate = rotateZ * rotateX * rotateY;
-	//
-	//	// 4) ピボットへ戻す
-	//	Matrix4x4 pivotOffset = Matrix4x4::MakeTranslateMatrix(rd->pivot);
-	//
-	//	// 5) 平行移動
-	//	Matrix4x4 translate = Matrix4x4::MakeTranslateMatrix(rd->transforms.translate);
-	//
-	//	// 合成
-	//	Matrix4x4 world = scale * pivotOffsetNeg * rotate * pivotOffset * translate;
-	//
-	//	// 6) 親行列があれば乗算
-	//	if (rd->transforms.parentWorld)
-	//	{
-	//		Matrix4x4 parentMatrix = *rd->transforms.parentWorld;
-	//		world = parentMatrix * world;
-	//	}
-	//
-	//	// 7) Transforms.World に格納
-	//	rd->transforms.World = world;
-	//}
+
+
+
+	Ray mouseRay = Game::GetMouseRay();
+
+	struct HitInfo { Game::RenderData_Model* rd; float distance; };
+
+	std::vector<HitInfo> hits;
+	hits.reserve(Game::GetModelList().size());
+
+	for (auto& rd : Game::GetModelList())
+	{
+		if (IsCollisionMouseRayAABB(rd->model, rd->transforms))
+		{
+			float d = (rd->GetWorldPosition() - mouseRay.origin).Length();
+			hits.push_back({ rd, d });
+		}
+	}
+
+	// 距離の昇順でソート
+	std::sort(hits.begin(), hits.end(),
+		[](auto& a, auto& b) { return a.distance < b.distance; });
+
+	// ソート後に順序を割り当て
+	for (int order = 0; order < (int)hits.size(); ++order)
+	{
+		hits[order].rd->isCollisionMouseRay = order;
+	}
+
+	// 最短距離のモデルを見つけたいだけなら…
+	if (!hits.empty())
+	{
+		closestIndex = Game::GetModelList().index_of(hits[0].rd); // index_of は自前実装
+	}
+
+
+
+
+
+
+
+
+
+
+
+	// 衝突判定用
+	int hitOrder = 0;
+	float minDistance = (std::numeric_limits<float>::max)();
+	int closestIndex = -1;
+
+	for (auto& rd : Game::GetModelList())
+	{
+		rd->isCollisionMouseRay = -1;
+
+		// 衝突判定
+		if (IsCollisionMouseRayAABB(rd->model, rd->transforms))
+		{
+			float distance = (rd->GetWorldPosition() - mouseRay.origin).Length();
+			if (distance < minDistance)
+			{
+				minDistance = distance;
+				closestIndex = i;
+			}
+			rd->isCollisionMouseRay = hitOrder; // 何番目に当たったか
+			hitOrder++;
+		}
+	}
 }
 
 // 終了処理

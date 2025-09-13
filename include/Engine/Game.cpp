@@ -222,12 +222,6 @@ Game::RenderData_Model::~RenderData_Model()
 	SubModel(this);
 }
 
-// マウスとの衝突判定
-bool Game::RenderData_Model::isCollisionMouseRay() const
-{
-	return engine->IsCollisionMouseRayAABB(this->model, this->transforms);
-}
-
 // 他のオブジェクトとの衝突判定
 bool Game::RenderData_Model::isCollision(RenderData_Model& target) const
 {

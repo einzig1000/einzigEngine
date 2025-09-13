@@ -9,6 +9,8 @@
 #include "externals/imgui/imgui.h"
 #include "externals/imgui/imgui_impl_dx12.h"
 #include "externals/imgui/imgui_impl_win32.h"
+#include <algorithm>
+
 
 class CameraController;
 
@@ -46,9 +48,9 @@ public:
 		AABB AABB;
 		// ID
 		int ID = 0;
-
 		// マウスとの衝突判定
-		bool isCollisionMouseRay() const;
+		int isCollisionMouseRay = -1; // -1:未衝突, 0:最初に衝突, 1:2番目
+
 
 		// 他のオブジェクトとの衝突判定
 		bool isCollision(RenderData_Model& target) const;
