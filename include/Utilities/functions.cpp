@@ -396,11 +396,6 @@ bool IsCollision(const Ray& ray, const std::vector<VertexData>& vertices, const 
             Vector3{ vertices[i + 2].position.x, vertices[i + 2].position.y, vertices[i + 2].position.z },
             data.World
         );
-        //Log("Triangle[0].x : %f,Triangle[0].y : %f,Triangle[0].z : %f", t.vertices[0].x, t.vertices[0].y, t.vertices[0].z);
-        //Log("Triangle[1].x : %f,Triangle[1].y : %f,Triangle[1].z : %f", t.vertices[1].x, t.vertices[1].y, t.vertices[1].z);
-        //Log("Triangle[2].x : %f,Triangle[2].y : %f,Triangle[2].z : %f", t.vertices[2].x, t.vertices[2].y, t.vertices[2].z);
-        //Log("Ray.origin.x : %f,Ray.origin.y : %f,Ray.origin.z : %f", ray.origin.x, ray.origin.y, ray.origin.z);
-        //Log("Ray.diff.x : %f,Ray.diff.y : %f,Ray.diff.z : %f", ray.diff.x, ray.diff.y, ray.diff.z);
 
         if (IsCollision(ray, t))
         {
@@ -411,8 +406,137 @@ bool IsCollision(const Ray& ray, const std::vector<VertexData>& vertices, const 
 }
 
 
+std::optional<Vector3> IntersectRayTriangle(const Ray& r, const Triangle& t)
+{
+    // 三角形の法線と平面の距離を求める
+    Vector3 edge1 = (t.vertices[1] - t.vertices[0]);
+    Vector3 edge2 = (t.vertices[2] - t.vertices[0]);
+    Vector3 normal = (edge1.Cross(edge2)).Normalized();
+    float distance = (normal.Dot(t.vertices[0]));
+
+    // １，線と三角形の存在する平面の衝突判定
+    if (!IsCollision(r, Plane{ normal, distance }))
+    {
+        return std::nullopt;
+    }
+
+    // 線分の始点と方向
+    const Vector3& start = r.origin;
+    const Vector3& dir = r.diff;
+
+    // 線分と平面の交点を求める
+    float denom = (dir.Dot(normal));
+    float tParam = (distance - (start.Dot(normal))) / denom;
+    // 衝突点
+    Vector3 intersect = (start + (dir * tParam));
+
+    // 各辺と交点のクロス積で判定
+    float sign = 0.0f;
+    for (int i = 0; i < 3; ++i)
+    {
+        // 始点
+        Vector3 v0 = t.vertices[i];
+        // 終点
+        Vector3 v1 = t.vertices[(i + 1) % 3];
+        // 始点と終点のベクトル
+        Vector3 edge = (v1 - v0);
+        // 始点と衝突点のベクトル
+        Vector3 toP = (intersect - v0);
+        // 上記２つのクロス積
+        Vector3 cross = (edge.Cross(toP));
+        // 三角形の法線とクロス積の内積
+        float dot = (normal.Dot(cross));
+        // 1つ目の三角形の向きを基準にして2,3つ目の向きと比較する
+        if (i == 0)
+        {
+            sign = dot;
+        }
+        else
+        {
+            // 向きの不一致が起きた
+            if (sign * dot < 1e-6f)
+            {
+                return std::nullopt;
+            }
+        }
+    }
+    return intersect;
+}
+
+std::optional<Vector3> IntersectRayModel(const Ray& ray, const std::vector<VertexData>& vertices, const AABB& aabb, const Transforms& data)
+{
+    // まずAABBで大まかに判定
+    if (!IsCollision(ray, aabb))
+    {
+        return std::nullopt;
+    }
+
+    // AABBに当たっていた場合のみ、三角形ごとに詳細判定
+    for (size_t i = 0; i + 2 < vertices.size(); i += 3)
+    {
+        Triangle t;
+        // 三角形の頂点をワールド座標に変換
+        t.vertices[0] = Transform(
+            Vector3{ vertices[i].position.x, vertices[i].position.y, vertices[i].position.z },
+            data.World
+        );
+        t.vertices[1] = Transform(
+            Vector3{ vertices[i + 1].position.x, vertices[i + 1].position.y, vertices[i + 1].position.z },
+            data.World
+        );
+        t.vertices[2] = Transform(
+            Vector3{ vertices[i + 2].position.x, vertices[i + 2].position.y, vertices[i + 2].position.z },
+            data.World
+        );
+
+        std::optional<Vector3> pos = IntersectRayTriangle(ray, t);
+
+        if (pos != std::nullopt)
+        {
+            return pos.value(); // どれか1つでも当たればtrue
+        }
+    }
+    return std::nullopt;
+}
+
+std::optional<Vector3> IntersectRayAABB(const Ray& ray, const AABB& box)
+{
+    const float EPSILON = 1e-8f;
+    float tmin = 0.0f;
+    float tmax = std::numeric_limits<float>::infinity();
+
+    // スラブ（軸ごとの射線区間）を更新するラムダ
+    auto slab = [&](float origin, float dir, float bmin, float bmax) -> bool
+        {
+            // X方向のベクトルが０に限りなく近ければ、X平面で見た時レイは点のように見える。
+            if (std::fabs(dir) < EPSILON)
+            {
+                // その点がAABBのＸ軸から見た平面内だったら衝突しているといえる。Ｙ軸Ｚ軸についても同様のことであってくれ
+                return (origin >= bmin && origin <= bmax);
+            }
 
 
+            float invD = 1.0f / dir;
+            float t1 = (bmin - origin) * invD;
+            float t2 = (bmax - origin) * invD;
+            // 
+            if (t1 > t2) std::swap(t1, t2);
+            tmin = my_max(tmin, t1);
+            tmax = my_min(tmax, t2);
+            return (tmax >= tmin);
+        };
+
+    if (!slab(ray.origin.x, ray.diff.x, box.min.x, box.max.x)) return std::nullopt;
+    if (!slab(ray.origin.y, ray.diff.y, box.min.y, box.max.y)) return std::nullopt;
+    if (!slab(ray.origin.z, ray.diff.z, box.min.z, box.max.z)) return std::nullopt;
+
+    // レイがボックスの後方にしかない場合は衝突なし
+    if (tmax < 0.0f) return std::nullopt;
+
+    // tmin が正なら最初の交差、負ならボックス内スタート → tmax を使う
+    float tHit = (tmin >= 0.0f) ? tmin : tmax;
+    return ray.origin + ray.diff * tHit;
+}
 
 #pragma endregion
 
@@ -593,6 +717,8 @@ void Log(std::ofstream& os, const std::string& message)
 
 #pragma endregion
 
+#pragma region Rand
+
 int RandomInt(int min, int max)
 {
     static std::mt19937 rng(std::random_device{}());
@@ -608,6 +734,53 @@ float RandomFloat(float min, float max, int decimalPlaces)
     int randomInt = RandomInt(intMin, intMax);
     return static_cast<float>(randomInt) / scale;
 }
+
+#pragma endregion
+
+#pragma region Load
+
+std::vector<AABB> LoadAABBFromCSV(const std::string& csvPath)
+{
+    std::vector<AABB> aabbs;
+    std::ifstream file(csvPath);
+    if (!file.is_open()) return aabbs;
+
+    std::string line;
+    // 1行目はヘッダーなのでスキップ
+    std::getline(file, line);
+
+    while (std::getline(file, line))
+    {
+        std::istringstream ss(line);
+        std::string token;
+        std::vector<float> values;
+        while (std::getline(ss, token, ','))
+        {
+            values.push_back(std::stof(token));
+        }
+        if (values.size() == 6)
+        {
+            AABB aabb;
+            aabb.min = { values[0], values[1], values[2] };
+            aabb.max = { values[3], values[4], values[5] };
+            aabbs.push_back(aabb);
+        }
+    }
+    return aabbs;
+}
+
+void SaveAABBToCSV(const std::string& csvPath, const std::vector<AABB>& aabbs)
+{
+    std::ofstream file(csvPath);
+    file << "min_x,min_y,min_z,max_x,max_y,max_z\n";
+    for (const auto& aabb : aabbs)
+    {
+        file << aabb.min.x << "," << aabb.min.y << "," << aabb.min.z << ","
+            << aabb.max.x << "," << aabb.max.y << "," << aabb.max.z << "\n";
+    }
+}
+
+#pragma endregion
 
 
 Vector4 ConvertUintToVector4(uint32_t color)
@@ -627,6 +800,7 @@ uint32_t ConvertVector4ToUint(Vector4 color)
     uint32_t a = static_cast<uint32_t>(std::clamp(color.w * 255.0f, 0.0f, 255.0f));
     return (r << 24) | (g << 16) | (b << 8) | a;
 }
+
 
 float ToRadian(const float& angle)
 {
@@ -925,7 +1099,16 @@ Microsoft::WRL::ComPtr<IDxcBlob> CompileShader(
     ///////////////////////////////////////
     // コンパイル結果から実行用のバイナリ部分を取得
     IDxcBlob* shaderBlob = nullptr;
-    hr = shaderResult->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&shaderBlob), nullptr);
+    //hr = shaderResult->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&shaderBlob), nullptr);
+    if (shaderResult->HasOutput(DXC_OUT_OBJECT))
+    {
+        hr = shaderResult->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&shaderBlob), nullptr);
+    }
+    else
+    {
+        hr = E_FAIL;
+        shaderBlob = nullptr;
+    }
     assert(SUCCEEDED(hr));
     // 成功したログを出す
     Log(ConvertString(std::format(L"Compile Succeeded. path:{}\n", filePath, profile)));

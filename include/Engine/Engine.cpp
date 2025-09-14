@@ -12,6 +12,7 @@
 #include "Engine/Game.h"
 
 #include <DirectXMath.h>
+#include <filesystem>
 using namespace DirectX;
 
 
@@ -210,10 +211,13 @@ void Engine::EndFrame()
 
 void Engine::UpdateTransforms()
 {
+#pragma region 座標更新
+
+	// 移動してない場合はスキップするようにしたい
 	for (auto& rd : Game::GetModelList())
 	{
 		// AABB更新
-		rd->AABB = CreateAABB(rd->transforms, rd->model);
+		rd->aabb = CreateAABB(rd->transforms, rd->model);
 
 
 		// 座標更新
@@ -308,21 +312,70 @@ void Engine::UpdateTransforms()
 		// マウスレイ取得
 	}
 
+#pragma endregion
 
-
-	Ray mouseRay = Game::GetMouseRay();
-
-	struct HitInfo { Game::RenderData_Model* rd; float distance; };
-
-	std::vector<HitInfo> hits;
-	hits.reserve(Game::GetModelList().size());
+#pragma region 描画範囲内判定
 
 	for (auto& rd : Game::GetModelList())
 	{
-		if (IsCollisionMouseRayAABB(rd->model, rd->transforms))
+		bool inFrustum = false;
+		for (const auto& aabb : rd->aabb)
 		{
-			float d = (rd->GetWorldPosition() - mouseRay.origin).Length();
-			hits.push_back({ rd, d });
+			if (IsAABBInFrustum(aabb, rd->transforms.World))
+			{
+				inFrustum = true;
+				break;
+			}
+		}
+		rd->inPicture = inFrustum;
+	}
+
+#pragma endregion
+
+#pragma region 衝突判定
+
+	// マウスレイ取得
+	Ray mouseRay = Game::GetMouseRay();
+
+	// モデルと衝突までの距離セット構造体
+	struct HitInfo { Game::RenderData_Model* rd; float distance; };
+	// のリスト
+	std::vector<HitInfo> hits;
+	// のリサイズ(リサイズではない)
+	hits.reserve(Game::GetModelList().size());
+
+	// 描画範囲内のオブジェクトを全て調査
+	for (auto& rd : Game::GetModelList())
+	{
+		rd->isCollisionMouseRay = -1;
+		if (rd->inPicture)
+		{
+			float minDistance = (std::numeric_limits<float>::max)();
+			std::optional<Vector3> nearestColPos;
+
+			for (const auto& aabb : rd->aabb)
+			{
+				std::optional<Vector3> colPos = IntersectRayModel(
+					inputManager_->GetMouseController()->GetMouseRay(),
+					objects[rd->model].modelData.vertices,
+					aabb,
+					rd->transforms
+				);
+				if (colPos)
+				{
+					float d = (colPos.value() - mouseRay.origin).Length();
+					if (d < minDistance)
+					{
+						minDistance = d;
+						nearestColPos = colPos;
+					}
+				}
+			}
+
+			if (nearestColPos)
+			{
+				hits.push_back({ rd, minDistance });
+			}
 		}
 	}
 
@@ -336,44 +389,18 @@ void Engine::UpdateTransforms()
 		hits[order].rd->isCollisionMouseRay = order;
 	}
 
-	// 最短距離のモデルを見つけたいだけなら…
-	if (!hits.empty())
-	{
-		closestIndex = Game::GetModelList().index_of(hits[0].rd); // index_of は自前実装
-	}
+#pragma endregion
+
+
+
+
+	
 
 
 
 
 
 
-
-
-
-
-
-	// 衝突判定用
-	int hitOrder = 0;
-	float minDistance = (std::numeric_limits<float>::max)();
-	int closestIndex = -1;
-
-	for (auto& rd : Game::GetModelList())
-	{
-		rd->isCollisionMouseRay = -1;
-
-		// 衝突判定
-		if (IsCollisionMouseRayAABB(rd->model, rd->transforms))
-		{
-			float distance = (rd->GetWorldPosition() - mouseRay.origin).Length();
-			if (distance < minDistance)
-			{
-				minDistance = distance;
-				closestIndex = i;
-			}
-			rd->isCollisionMouseRay = hitOrder; // 何番目に当たったか
-			hitOrder++;
-		}
-	}
 }
 
 // 終了処理
@@ -462,8 +489,15 @@ uint32_t Engine::LoadOBJ(const std::string& directoryPath, const std::string& fi
 	obj.modelData = LoadOBJFile(directoryPath, filename);
 	// 変換行列
 	obj.transform = { {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f} };
-	// AABB
-	obj.aabb = CreateLocalAABB(obj.modelData);
+	// AABB .obj → .csv へ拡張子を変換して渡す
+	std::string csvFilename = filename;
+	size_t dotPos = csvFilename.rfind('.');
+	if (dotPos != std::string::npos)
+		csvFilename.replace(dotPos, csvFilename.length() - dotPos, ".csv");
+	else
+		csvFilename += ".csv";
+	csvFilename = directoryPath + csvFilename;
+	obj.aabb = LoadAABB(csvFilename, obj.modelData);
 	// 識別ナンバー
 	obj.number = static_cast<uint32_t>(objects.size());
 
@@ -486,6 +520,23 @@ uint32_t Engine::LoadOBJ(const std::string& directoryPath, const std::string& fi
 	return ref.number;
 }
 
+std::vector<AABB> Engine::LoadAABB(const std::string& csvPath, const ModelData& model)
+{
+	std::vector<AABB> aabbs;
+	if (std::filesystem::exists(csvPath))
+	{
+		aabbs = LoadAABBFromCSV(csvPath);
+	}
+	else
+	{
+		// 今までの方法でAABBを1つ作成
+		AABB aabb = CreateLocalAABB(model);
+		aabbs.push_back(aabb);
+		SaveAABBToCSV(csvPath, aabbs);
+	}
+	return aabbs;
+}
+
 uint32_t Engine::LoadAudio(const std::string& filePath)
 {
 	return dxManager->GetAudioManager()->LoadAudio(filePath);
@@ -502,10 +553,7 @@ TextureData* Engine::GetTexture(uint32_t textureNumber)
 void Engine::Drawobj(Game::RenderData_Model& renderData)
 {
 	// 画面内か判定
-	if (!IsAABBInFrustum(renderData.AABB, renderData.transforms.World))
-	{
-		return;
-	}
+	if (!renderData.inPicture)return;
 
 	// 描画
 	{
@@ -1530,9 +1578,19 @@ uint32_t Engine::GetMouseWheel()
 
 bool Engine::IsCollisionMouseRayAABB(uint32_t objectNumber, const Transforms& data)
 {
-	AABB aabb = CreateAABB(data, objectNumber);
-	return IsCollision(inputManager_->GetMouseController()->GetMouseRay(), objects[objectNumber].modelData.vertices, aabb, data);
-};
+	std::vector<AABB> aabbs = CreateAABB(data, objectNumber);
+	Ray ray = inputManager_->GetMouseController()->GetMouseRay();
+
+	// どれか1つでも衝突すればtrue
+	for (const auto& aabb : aabbs)
+	{
+		if (IsCollision(ray, objects[objectNumber].modelData.vertices, aabb, data))
+		{
+			return true;
+		}
+	}
+	return false;
+}
 
 bool Engine::IsPressMouse(int i)
 {
@@ -1649,39 +1707,42 @@ AABB Engine::CreateLocalAABB(const ModelData& model)
 }
 
 // CreateLocalAABBでつくったAABBに座標を適応させる（当たり判定の毎フレーム更新用）
-AABB Engine::CreateAABB(const Transforms& transforms, uint32_t objectNumber)
+std::vector<AABB>  Engine::CreateAABB(const Transforms& transforms, uint32_t objectNumber)
 {
 	Matrix4x4 worldMatrix = transforms.World;
-
 	Object3D& obj = objects[objectNumber];
+	std::vector<AABB> result;
 
-	// ローカルAABBの8頂点
-	Vector3 corners[8] = {
-		{obj.aabb.min.x, obj.aabb.min.y, obj.aabb.min.z},
-		{obj.aabb.max.x, obj.aabb.min.y, obj.aabb.min.z},
-		{obj.aabb.min.x, obj.aabb.max.y, obj.aabb.min.z},
-		{obj.aabb.max.x, obj.aabb.max.y, obj.aabb.min.z},
-		{obj.aabb.min.x, obj.aabb.min.y, obj.aabb.max.z},
-		{obj.aabb.max.x, obj.aabb.min.y, obj.aabb.max.z},
-		{obj.aabb.min.x, obj.aabb.max.y, obj.aabb.max.z},
-		{obj.aabb.max.x, obj.aabb.max.y, obj.aabb.max.z},
-	};
-
-	// 8頂点をワールド空間に変換
-	Vector3 worldMin = Transform(corners[0], worldMatrix);
-	Vector3 worldMax = worldMin;
-
-	for (int i = 1; i < 8; ++i)
+	for (const auto& localAABB : obj.aabb)
 	{
-		Vector3 v = Transform(corners[i], worldMatrix);
-		worldMin.x = my_min(worldMin.x, v.x);
-		worldMin.y = my_min(worldMin.y, v.y);
-		worldMin.z = my_min(worldMin.z, v.z);
-		worldMax.x = my_max(worldMax.x, v.x);
-		worldMax.y = my_max(worldMax.y, v.y);
-		worldMax.z = my_max(worldMax.z, v.z);
+		// ローカルAABBの8頂点
+		Vector3 corners[8] = {
+			{localAABB.min.x, localAABB.min.y, localAABB.min.z},
+			{localAABB.max.x, localAABB.min.y, localAABB.min.z},
+			{localAABB.min.x, localAABB.max.y, localAABB.min.z},
+			{localAABB.max.x, localAABB.max.y, localAABB.min.z},
+			{localAABB.min.x, localAABB.min.y, localAABB.max.z},
+			{localAABB.max.x, localAABB.min.y, localAABB.max.z},
+			{localAABB.min.x, localAABB.max.y, localAABB.max.z},
+			{localAABB.max.x, localAABB.max.y, localAABB.max.z},
+		};
+
+		// 8頂点をワールド空間に変換
+		Vector3 worldMin = Transform(corners[0], worldMatrix);
+		Vector3 worldMax = worldMin;
+		for (int i = 1; i < 8; ++i)
+		{
+			Vector3 v = Transform(corners[i], worldMatrix);
+			worldMin.x = my_min(worldMin.x, v.x);
+			worldMin.y = my_min(worldMin.y, v.y);
+			worldMin.z = my_min(worldMin.z, v.z);
+			worldMax.x = my_max(worldMax.x, v.x);
+			worldMax.y = my_max(worldMax.y, v.y);
+			worldMax.z = my_max(worldMax.z, v.z);
+		}
+		result.push_back({ worldMin, worldMax });
 	}
-	return { worldMin, worldMax };
+	return result;
 }
 
 void Engine::toggleWireframeMode()

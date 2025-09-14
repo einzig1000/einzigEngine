@@ -27,6 +27,7 @@ public:
 
 	// リソース読み込み
 	uint32_t LoadOBJ(const std::string& directoryPath, const std::string& filename);
+	std::vector<AABB> LoadAABB(const std::string& csvPath, const ModelData& model);
 	uint32_t LoadTexture(const std::string& filePath);
 	uint32_t LoadAudio(const std::string& filePath);
 
@@ -64,8 +65,8 @@ public:
 	Vector2 GetMousePosition();
 	uint32_t GetMouseWheel();
 	Ray GetMouseRay();
-	bool IsCollisionMouseRayAABB(uint32_t objectNumber, const Transforms& data);
 	bool IsPressMouse(int i);
+	bool IsCollisionMouseRayAABB(uint32_t objectNumber, const Transforms& data);
 
 	// カメラ
 	void MoveCenterTarget(Vector3 target, int spendFrame, EaseType easetype);
@@ -80,7 +81,7 @@ public:
 	//bool IsCameraShaking();
 
 	// AABBの作成
-	AABB CreateAABB(const Transforms& transforms, uint32_t objectNumber);
+	std::vector<AABB>  CreateAABB(const Transforms& transforms, uint32_t objectNumber);
 
 	// プリミティブモードの設定
 	void toggleWireframeMode();

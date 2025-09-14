@@ -8,6 +8,7 @@
 #include <sstream>
 
 #include <dxcapi.h>
+#include <optional>
 #pragma comment(lib, "dxcompiler")
 
 
@@ -76,11 +77,14 @@ bool IsCollision(const Ray& r, const Triangle& t);
 bool IsCollision(const AABB& aabb1, const AABB& aabb2);
 bool IsCollision(const AABB& aabb, const Sphere& s);
 bool IsCollision(const AABB& aabb, const Segment& s);
-
 bool IsCollision(const Ray& ray, const std::vector<VertexData>& vertices, const AABB& aabb, const Transforms& data);
 
-#pragma endregion
+std::optional<Vector3> IntersectRayTriangle(const Ray& ray, const Triangle& t);
+std::optional<Vector3> IntersectRayModel(const Ray& ray, const std::vector<VertexData>& vertices, const AABB& aabb, const Transforms& data);
+std::optional<Vector3> IntersectRayAABB(const Ray& ray, const AABB& box);
 
+
+#pragma endregion
 
 #pragma region Log
 /// <summary>
@@ -132,9 +136,19 @@ void Log(std::ofstream& os, const std::string& message);
 
 #pragma endregion
 
+#pragma region Rand
 
 int RandomInt(int min, int max);
 float RandomFloat(float min, float max, int decimalPlaces);
+
+#pragma endregion
+
+#pragma region Load
+
+std::vector<AABB> LoadAABBFromCSV(const std::string& csvPath);
+void SaveAABBToCSV(const std::string& csvPath, const std::vector<AABB>& aabbs);
+
+#pragma endregion
 
 /// <summary>
 /// 角度をラジアンに変換
@@ -148,6 +162,15 @@ Vector4 ConvertARGBtoRGBA(const Vector4& argb);
 // int型のカラーをVector4型に
 Vector4 ConvertUintToVector4(uint32_t color);
 uint32_t ConvertVector4ToUint(Vector4 color);
+
+
+
+
+
+
+
+
+
 
 /// <summary>
 /// 球体の頂点データを生成する関数

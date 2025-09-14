@@ -19,6 +19,19 @@ void GameManager::Update()
 	{
 		test.color = 0xFF0000FF;
 	}
+	else
+	{
+		test.color = 0xFFFFFFFF;
+	}
+
+	if (GetHitKey::keys[DIK_1])
+	{
+		test.LookAtFront();
+	}
+	if (GetHitKey::keys[DIK_2])
+	{
+		test.LookAtCamera();
+	}
 }
 
 void GameManager::Draw()

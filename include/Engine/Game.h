@@ -23,7 +23,6 @@ public:
 		RenderData_Model();
 		~RenderData_Model();
 
-
 		// 位置、回転、スケール
 		Transforms transforms;
 		// 回転の中心点
@@ -45,11 +44,13 @@ public:
 		// 描画オプション
 		DrawOptions options;
 		// 衝突判定用AABB
-		AABB AABB;
+		std::vector<AABB> aabb;
 		// ID
 		int ID = 0;
+		// 画面内に存在するか
+		bool inPicture = false;
 		// マウスとの衝突判定
-		int isCollisionMouseRay = -1; // -1:未衝突, 0:最初に衝突, 1:2番目
+		int isCollisionMouseRay = -1; // -1:非衝突, 0:最初に衝突, 1:2番目
 
 
 		// 他のオブジェクトとの衝突判定
@@ -252,7 +253,7 @@ public:
 	//static bool IsCameraShaking();
 
 	// AABBの作成
-	static AABB CreateAABB(const Transforms& transforms, uint32_t objectNumber);
+	static std::vector<AABB> CreateAABB(const Transforms& transforms, uint32_t objectNumber);
 
 	// プリミティブモードの設定
 	static void toggleWireframeMode();

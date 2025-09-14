@@ -932,7 +932,7 @@ struct Object3D
     Transforms transform;
 
     // AABB
-    AABB aabb;
+    std::vector<AABB> aabb;
 
     // 識別ナンバー
     uint32_t number = 0;

@@ -190,7 +190,7 @@ CameraController* Game::GetDebugCamera()
 //	return engine->IsCameraShaking();
 //}
 
-AABB Game::CreateAABB(const Transforms& transforms, uint32_t objectNumber)
+std::vector<AABB> Game::CreateAABB(const Transforms& transforms, uint32_t objectNumber)
 {
 	return engine->CreateAABB(transforms, objectNumber);
 }
@@ -229,10 +229,16 @@ bool Game::RenderData_Model::isCollision(RenderData_Model& target) const
 	{ 
 		// 自分自身は除外
 		if (&target == other) continue;
-		// いずれはそれぞれに形に適したものに変更したい AABB組み合わせたりもしたい
-		if (IsCollision(target.AABB, other->AABB))
+		// AABB組み合わせたkekka
+		for (const auto& aabb1 : target.aabb)
 		{
-			return true;
+			for (const auto& aabb2 : other->aabb)
+			{
+				if (IsCollision(aabb1, aabb2))
+				{
+					return true;
+				}
+			}
 		}
 	}
 	return false;
@@ -267,7 +273,7 @@ void Game::RenderData_Model::LookAtOnce(const RenderData_Model &other, float rol
 }
 void Game::RenderData_Model::LookAtCamera(float roll)
 {
-	LookAtOnce(Game::GetCamera()->GetCenter(), roll);
+	LookAtOnce(Game::GetCamera()->transform_.translate, roll);
 }
 void Game::RenderData_Model::LookAtFront(float roll)
 {
@@ -284,33 +290,36 @@ void Game::RenderData_Model::Draw()
 
 void Game::RenderData_Model::DrawAABB()
 {
-	Vector3 p[8];
-	p[0] = { AABB.min.x, AABB.min.y, AABB.min.z };
-	p[1] = { AABB.max.x, AABB.min.y, AABB.min.z };
-	p[2] = { AABB.max.x, AABB.max.y, AABB.min.z };
-	p[3] = { AABB.min.x, AABB.max.y, AABB.min.z };
-	p[4] = { AABB.min.x, AABB.min.y, AABB.max.z };
-	p[5] = { AABB.max.x, AABB.min.y, AABB.max.z };
-	p[6] = { AABB.max.x, AABB.max.y, AABB.max.z };
-	p[7] = { AABB.min.x, AABB.max.y, AABB.max.z };
+	for (const auto& theOne : aabb)
+	{
+		Vector3 p[8];
+		p[0] = { theOne.min.x, theOne.min.y, theOne.min.z };
+		p[1] = { theOne.max.x, theOne.min.y, theOne.min.z };
+		p[2] = { theOne.max.x, theOne.max.y, theOne.min.z };
+		p[3] = { theOne.min.x, theOne.max.y, theOne.min.z };
+		p[4] = { theOne.min.x, theOne.min.y, theOne.max.z };
+		p[5] = { theOne.max.x, theOne.min.y, theOne.max.z };
+		p[6] = { theOne.max.x, theOne.max.y, theOne.max.z };
+		p[7] = { theOne.min.x, theOne.max.y, theOne.max.z };
 
-	// 下側
-	Game::DrawLine(p[0], p[1], 0xFF0000FF);
-	Game::DrawLine(p[1], p[2], 0xFF0000FF);
-	Game::DrawLine(p[2], p[3], 0xFF0000FF);
-	Game::DrawLine(p[3], p[0], 0xFF0000FF);
+		// 下側
+		Game::DrawLine(p[0], p[1], 0xFF0000FF);
+		Game::DrawLine(p[1], p[2], 0xFF0000FF);
+		Game::DrawLine(p[2], p[3], 0xFF0000FF);
+		Game::DrawLine(p[3], p[0], 0xFF0000FF);
 
-	// 上側
-	Game::DrawLine(p[4], p[5], 0xFF0000FF);
-	Game::DrawLine(p[5], p[6], 0xFF0000FF);
-	Game::DrawLine(p[6], p[7], 0xFF0000FF);
-	Game::DrawLine(p[7], p[4], 0xFF0000FF);
+		// 上側
+		Game::DrawLine(p[4], p[5], 0xFF0000FF);
+		Game::DrawLine(p[5], p[6], 0xFF0000FF);
+		Game::DrawLine(p[6], p[7], 0xFF0000FF);
+		Game::DrawLine(p[7], p[4], 0xFF0000FF);
 
-	// 側面
-	Game::DrawLine(p[0], p[4], 0xFF0000FF);
-	Game::DrawLine(p[1], p[5], 0xFF0000FF);
-	Game::DrawLine(p[2], p[6], 0xFF0000FF);
-	Game::DrawLine(p[3], p[7], 0xFF0000FF);
+		// 側面
+		Game::DrawLine(p[0], p[4], 0xFF0000FF);
+		Game::DrawLine(p[1], p[5], 0xFF0000FF);
+		Game::DrawLine(p[2], p[6], 0xFF0000FF);
+		Game::DrawLine(p[3], p[7], 0xFF0000FF);
+	}
 }
 
 void Game::RenderData_Model::DrawImGui()
@@ -334,14 +343,15 @@ void Game::RenderData_Model::DrawImGui()
 	ImGui::DragFloat3((num + "acceleration").c_str(), &acceleration.x, 0.01f);
 	ImGui::DragFloat((num + "gravity").c_str(), &gravity, 0.01f);
 	ImGui::Text("color");
-	static float floatColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	Vector4 preColor = ConvertUintToVector4(color);
+	float floatColor[4] = { preColor.x, preColor.y, preColor.z, preColor.w };
 	ImGui::ColorEdit4((num + "color").c_str(), floatColor, 1);
 	Vector4 vector4Color = { floatColor[0], floatColor[1], floatColor[2], floatColor[3] };
 	color = ConvertVector4ToUint(vector4Color);
 	ImGui::Text("option");
 	ImGui::Checkbox("wireFrame", &options.wireframe);
 	ImGui::Checkbox("lighting", &options.enableLighting);
-
+	ImGui::Text("isCollisionMouse : %d", isCollisionMouseRay);
 
 	ImGui::End();
 }
