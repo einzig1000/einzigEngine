@@ -33,7 +33,8 @@ void GameManager::Update()
 		{
 			if (GetHitKey::keys[DIK_SPACE])
 			{
-				test.velocity.y += 5.0f;
+ 				test.velocity.y += 5.0f;
+				test.gravity = 0.01f;
 			}
 		}
 
