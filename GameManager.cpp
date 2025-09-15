@@ -4,15 +4,15 @@ GameManager::GameManager()
 {
 	frame = 0;
 
-	test.model = Game::LoadOBJ("resources/Prototypes/model/", "corn.obj");
-	test.texture = Game::LoadTexture("resources/Prototypes/texture/uvChecker.png");
-	test1.model = Game::LoadOBJ("resources/Prototypes/model/", "cube.obj");
-	test1.texture = Game::LoadTexture("resources/Prototypes/texture/uvChecker.png");
+	player.model = Game::LoadOBJ("resources/Prototypes/model/", "corn.obj");
+	player.texture = Game::LoadTexture("resources/Prototypes/texture/uvChecker.png");
+	ground.model = Game::LoadOBJ("resources/Prototypes/model/", "cube.obj");
+	ground.texture = Game::LoadTexture("resources/Prototypes/texture/uvChecker.png");
 
-	test.transforms.translate = { 0.0f,10.0f,0.0f };
-	test.gravity = 0.01f;
+	player.transforms.translate = { 0.0f,10.0f,0.0f };
+	player.gravity = 0.01f;
 
-	test1.transforms.scale = { 10.0f,1.0f,10.0f };
+	ground.transforms.scale = { 10.0f,1.0f,10.0f };
 }
 
 GameManager::~GameManager()
@@ -24,27 +24,33 @@ void GameManager::Update()
 {
 	if (frame > 1)
 	{
-		if (test.isCollision(test1))
+		kk[99] = GetHitKey::preKeys[DIK_SPACE];
+		for (int i = 0; i < 99; ++i)
 		{
-			test.velocity.y = 0.0f;
-			test.gravity = 0.0f;
+			kk[i] = kk[i + 1];
 		}
-		if (!GetHitKey::preKeys[DIK_SPACE])
+
+
+		if (player.isCollision(ground))
 		{
-			if (GetHitKey::keys[DIK_SPACE])
-			{
- 				test.velocity.y += 5.0f;
-				test.gravity = 0.01f;
-			}
+			player.velocity.y = 0.0f;
+			player.gravity = 0.0f;
 		}
+
+		if (GetHitKey::keys[DIK_SPACE] && !GetHitKey::preKeys[DIK_SPACE])
+		{
+			player.velocity.y += 5.0f;
+			player.gravity = 0.01f;
+		}
+
 
 		if (GetHitKey::keys[DIK_1])
 		{
-			test.LookAtFront();
+			player.LookAtFront();
 		}
 		if (GetHitKey::keys[DIK_2])
 		{
-			test.LookAtCamera();
+			player.LookAtCamera();
 		}
 	}
 
@@ -54,10 +60,10 @@ void GameManager::Update()
 
 void GameManager::Draw()
 {
-	test.Draw();
-	test.DrawAABB();
-	test.DrawImGui();
-	test1.Draw();
-	test1.DrawAABB();
-	test1.DrawImGui();
+	player.Draw();
+	player.DrawAABB();
+	player.DrawImGui();
+	ground.Draw();
+	ground.DrawAABB();
+	ground.DrawImGui();
 }

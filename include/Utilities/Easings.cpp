@@ -3,11 +3,14 @@
 
 float Easings::EasingFloat(float start, float end, EaseType easeType, float t)
 {
+	if (t >= 1.0f)return end;
 	return CalculateEasedValue(start, end, easeType, t);
 }
 
 Vector3 Easings::EasingVector3(Vector3 start, Vector3 end, EaseType easeType, float t)
 {
+	if (t >= 1.0f)return end;
+
 	Vector3 Return = start;
 	if (start.x != end.x)Return.x = CalculateEasedValue(start.x, end.x, easeType, t);
 	if (start.y != end.y)Return.y = CalculateEasedValue(start.y, end.y, easeType, t);

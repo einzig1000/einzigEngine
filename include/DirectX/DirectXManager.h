@@ -11,8 +11,7 @@
 #include "DirectX/SynchronizationManager.h"
 #include "DirectX/ViewportScissorManager.h"
 
-#include "input/GetHitKey.h"
-#include "input/GetPadState.h"
+#include "input/Input.h"
 #include "Audio/AudioManager.h"
 #include "Texture/TextureManager.h"
 #include <memory>
@@ -33,7 +32,6 @@ public:
     AudioManager* GetAudioManager() const { return audioManager_.get(); }
     TextureManager* GetTextureManager() const { return textureManager_.get(); }
 
-
     void BeginFrame();
     void EndFrame();
 
@@ -51,6 +49,4 @@ private:
 
     std::unique_ptr<AudioManager> audioManager_;
     std::unique_ptr<TextureManager> textureManager_;
-    std::unique_ptr<GetHitKey> getHitKey_;
-    std::unique_ptr<GetPadState> getPadState_;
 };

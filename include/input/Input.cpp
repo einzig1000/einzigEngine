@@ -19,69 +19,69 @@ void Input::Update()
     getPadState_->Update();
     mouseController_->Update();
 
-    if (GetHitKey::keys[DIK_A] ||
-        GetPadState::leftStickX < -10000 ||
-        GetPadState::buttons[PAD_LEFT])
-    {
-        left = true;
-    }
-    else
-    {
-        left = false;
-    }
+    //if (GetHitKey::keys[DIK_A] ||
+    //    GetPadState::leftStickX < -10000 ||
+    //    GetPadState::buttons[PAD_LEFT])
+    //{
+    //    left = true;
+    //}
+    //else
+    //{
+    //    left = false;
+    //}
 
-    if (GetHitKey::keys[DIK_D] ||
-        GetPadState::leftStickX > 10000 ||
-        GetPadState::buttons[PAD_RIGHT])
-    {
-        right = true;
-    }
-    else
-    {
-        right = false;
-    }
+    //if (GetHitKey::keys[DIK_D] ||
+    //    GetPadState::leftStickX > 10000 ||
+    //    GetPadState::buttons[PAD_RIGHT])
+    //{
+    //    right = true;
+    //}
+    //else
+    //{
+    //    right = false;
+    //}
 
-    if (GetHitKey::keys[DIK_W] ||
-        GetPadState::buttons[PAD_A])
-    {
-        jump = true;
-    }
-    else
-    {
-        jump = false;
-    }
+    //if (GetHitKey::keys[DIK_W] ||
+    //    GetPadState::buttons[PAD_A])
+    //{
+    //    jump = true;
+    //}
+    //else
+    //{
+    //    jump = false;
+    //}
 
-    if (GetHitKey::keys[DIK_SPACE] ||
-        GetPadState::buttons[PAD_B] ||
-        GetPadState::buttons[PAD_X])
-    {
-        hide = true;
-    }
-    else
-    {
-        hide = false;
-    }
+    //if (GetHitKey::keys[DIK_SPACE] ||
+    //    GetPadState::buttons[PAD_B] ||
+    //    GetPadState::buttons[PAD_X])
+    //{
+    //    hide = true;
+    //}
+    //else
+    //{
+    //    hide = false;
+    //}
 
-    if (GetHitKey::keys[DIK_ESCAPE] ||
-        GetPadState::buttons[PAD_START])
-    {
-        Pause = true;
-    }
-    else
-    {
-        Pause = false;
-    }
+    //if (GetHitKey::keys[DIK_ESCAPE] ||
+    //    GetPadState::buttons[PAD_START])
+    //{
+    //    Pause = true;
+    //}
+    //else
+    //{
+    //    Pause = false;
+    //}
 
-    if (GetHitKey::preKeys[DIK_SPACE] ||
-        GetPadState::preButtons[PAD_B] ||
-        GetPadState::preButtons[PAD_X]
-        )
-    {
-        preHide = true;
-    }
-    else
-    {
-        preHide = false;
-    }
+    //if (GetHitKey::preKeys[DIK_SPACE] ||
+    //    GetPadState::preButtons[PAD_B] ||
+    //    GetPadState::preButtons[PAD_X]
+    //    )
+    //{
+    //    preHide = true;
+    //}
+    //else
+    //{
+    //    preHide = false;
+    //}
 
 }

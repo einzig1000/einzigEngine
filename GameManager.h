@@ -15,8 +15,10 @@ private:
 
 	int frame;
 
-	Game::RenderData_Model test;
-	Game::RenderData_Model test1;
+	Game::RenderData_Model player;
+	Game::RenderData_Model ground;
+
+	int kk[100];
 
 };
 

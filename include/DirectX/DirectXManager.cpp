@@ -17,8 +17,6 @@ DirectXManager::DirectXManager(HWND hwnd, int width, int height)
 
     audioManager_ = std::make_unique<AudioManager>();
     textureManager_ = std::make_unique<TextureManager>(GetDevice(), GetsrvDescriptorHeap());
-    getHitKey_ = std::make_unique<GetHitKey>(hwnd);
-    getPadState_ = std::make_unique<GetPadState>();
 
     Log("コンストラクタ実行成功 : DirectXManager");
 }
@@ -32,9 +30,6 @@ void DirectXManager::BeginFrame()
 {
     // コマンドリストをリセット
     //commandContextManager->ResetCommandList();
-
-    getHitKey_->Update();
-    getPadState_->Update();
 
     // バックバッファのインデックスを更新
     swapChainManager->UpdateBackBufferIndex();
@@ -81,7 +76,7 @@ void DirectXManager::EndFrame()
     commandContextManager->GetCommandList()->ResourceBarrier(1, &barrier);
 
     // --- ここにGPU-CPU同期の待機処理を追加 ---
-    
+
     // コマンドリストを確定・実行
     HRESULT hr = commandContextManager->GetCommandList()->Close();
     if (FAILED(hr))

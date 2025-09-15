@@ -55,7 +55,7 @@ public:
 
 		// 他のオブジェクトとの衝突判定
 		bool isCollision(RenderData_Model& target) const;
-		bool isCollision(RenderData_Model& target, mode めり込まない) const;
+		//void めり込み解除;
 
 		// 任意のポイントを向く
 		void LookAtOnce(const Vector3& targetWorldPos, float roll = 0);
