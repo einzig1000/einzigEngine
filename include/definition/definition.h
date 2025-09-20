@@ -925,8 +925,8 @@ struct Object3D
 
     // 頂点バッファ
     Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer;
-    D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
-    UINT vertexBufferSize;
+    D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
+    UINT vertexBufferSize = 0;
 
     // 変換行列
     Transforms transform;
@@ -1050,8 +1050,7 @@ enum class EaseType
 struct ParticleInf
 {
     Vector3 velocity;
-    int liveTime;
-
+    int liveTime = 0;
 };
 
 //enum class DestructionType

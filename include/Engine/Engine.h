@@ -148,7 +148,7 @@ private:
 	// カメラ
 	CameraController* cameraController = nullptr;
 	CameraController* debugCameraController = nullptr;
-	bool debugCamera;
+	bool debugCamera = false;
 	std::array<Plane, 6> frustumPlanes_;// 視錐台を構成する6つの平面
 
 	// 入力

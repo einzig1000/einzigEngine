@@ -1102,7 +1102,9 @@ Microsoft::WRL::ComPtr<IDxcBlob> CompileShader(
     //hr = shaderResult->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&shaderBlob), nullptr);
     if (shaderResult->HasOutput(DXC_OUT_OBJECT))
     {
-        hr = shaderResult->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&shaderBlob), nullptr);
+        IDxcBlobWide* dummyOutputName = nullptr;
+        hr = shaderResult->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&shaderBlob), &dummyOutputName);
+        //hr = shaderResult->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&shaderBlob), nullptr);
     }
     else
     {

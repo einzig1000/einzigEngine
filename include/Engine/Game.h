@@ -22,6 +22,7 @@ public:
 	public:
 		RenderData_Model();
 		~RenderData_Model();
+		void Updata(const Ray& mouseRay, std::vector<Object3D>& objects);
 
 		// 位置、回転、スケール
 		Transforms transforms;
@@ -55,7 +56,8 @@ public:
 
 		// 他のオブジェクトとの衝突判定
 		bool isCollision(RenderData_Model& target) const;
-		//void めり込み解除;
+		// 衝突時すりぬけないオブジェクトの設定
+		void SetBlock(RenderData_Model& target);
 
 		// 任意のポイントを向く
 		void LookAtOnce(const Vector3& targetWorldPos, float roll = 0);
@@ -74,9 +76,10 @@ public:
 		void DrawImGui();
 
 	private:
-		Vector3 rotationEuler;
-		// LookAtOnce の引数を保持
-		Vector3    lastTargetWorldPos{};
+		void ResolveBlockCollision();
+
+		std::vector<RenderData_Model*> blockList;
+
 	};
 
 	class RenderData_Sprite
@@ -263,6 +266,12 @@ public:
 	static std::vector<Game::RenderData_Model*> GetModelList() { return renderModels; }
 
 private:
+	// 描画オブジェクトは画面内か
+	static bool IsAABBInFrustum(const AABB& aabb, const Matrix4x4& worldMatrix);
+
+
+
+	// モデルリスト
 	static std::vector<Game::RenderData_Model*> renderModels;
 
 	static void AddModel(Game::RenderData_Model* model)

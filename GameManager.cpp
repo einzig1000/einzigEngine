@@ -13,6 +13,8 @@ GameManager::GameManager()
 	player.gravity = 0.01f;
 
 	ground.transforms.scale = { 10.0f,1.0f,10.0f };
+
+	player.SetBlock(ground);
 }
 
 GameManager::~GameManager()
@@ -31,15 +33,15 @@ void GameManager::Update()
 		}
 
 
-		if (player.isCollision(ground))
-		{
-			player.velocity.y = 0.0f;
-			player.gravity = 0.0f;
-		}
+		//if (player.isCollision(ground))
+		//{
+		//	player.velocity.y = 0.0f;
+		//	player.gravity = 0.0f;
+		//}
 
 		if (GetHitKey::keys[DIK_SPACE] && !GetHitKey::preKeys[DIK_SPACE])
 		{
-			player.velocity.y += 5.0f;
+			player.velocity.y += 2.0f;
 			player.gravity = 0.01f;
 		}
 
