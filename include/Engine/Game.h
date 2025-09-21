@@ -22,7 +22,7 @@ public:
 	public:
 		RenderData_Model();
 		~RenderData_Model();
-		void Updata(const Ray& mouseRay, std::vector<Object3D>& objects);
+		void Updata(std::vector<Object3D>& objects);
 
 		// 位置、回転、スケール
 		Transforms transforms;

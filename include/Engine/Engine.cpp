@@ -211,10 +211,80 @@ void Engine::EndFrame()
 
 void Engine::UpdateTransforms()
 {
-	for (auto& rd : Game::GetModelList())
+
+#pragma region モデルリスト取得
+
+	const auto& modelList = Game::GetModelList();
+
+#pragma endregion
+
+#pragma region 座標更新 & 描画範囲内判定
+	
+	// オブジェクト更新
+	for (auto& rd : modelList)
 	{
-		rd->Updata(inputManager_->GetMouseController()->GetMouseRay(), objects);
+		rd->Updata(objects);
 	}
+
+#pragma endregion
+
+#pragma region マウスレイ衝突判定
+
+	// マウスレイ取得
+	const Ray mouseRay = inputManager_->GetMouseController()->GetMouseRay();
+	// モデルと衝突までの距離セット構造体
+	struct HitInfo { Game::RenderData_Model* rdm; float distance; };
+	// のリスト
+	std::vector<HitInfo> hits;
+	// のリサイズ(リサイズではない)
+	hits.reserve(modelList.size());
+
+	// 描画範囲内のオブジェクトを全て調査
+	for (auto& rd : modelList)
+	{
+		rd->isCollisionMouseRay = -1;
+		if (rd->inPicture)
+		{
+			float minDistance = (std::numeric_limits<float>::max)();
+			std::optional<Vector3> nearestColPos;
+
+			for (const auto& aabb : rd->aabb)
+			{
+				std::optional<Vector3> colPos = IntersectRayModel(
+					mouseRay,
+					objects[rd->model].modelData.vertices,
+					aabb, rd->transforms
+				);
+				if (colPos)
+				{
+					float d = (colPos.value() - mouseRay.origin).Length();
+					if (d < minDistance)
+					{
+						minDistance = d;
+						nearestColPos = colPos;
+					}
+				}
+			}
+
+			if (nearestColPos)
+			{
+				hits.push_back({ rd, minDistance });
+			}
+		}
+	}
+
+	// 距離の昇順でソート
+	std::sort(hits.begin(), hits.end(),
+		[](auto& a, auto& b) { return a.distance < b.distance; });
+
+	// ソート後に順序を割り当て
+	for (int order = 0; order < (int)hits.size(); ++order)
+	{
+		hits[order].rdm->isCollisionMouseRay = order;
+	}
+
+#pragma endregion
+
 }
 
 // 終了処理
