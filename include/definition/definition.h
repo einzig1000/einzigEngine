@@ -821,14 +821,6 @@ struct Triangle
     Vector3 vertices[3];
 };
 
-struct Vertex
-{
-    Vector2 LT;
-    Vector2 RT;
-    Vector2 LB;
-    Vector2 RB;
-};
-
 struct Transforms
 {
     Vector3 scale = { 1,1,1 };

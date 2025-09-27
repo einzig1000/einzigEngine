@@ -40,6 +40,7 @@ public:
 	void DrawParticle(Game::RenderData_Particle& renderData);
 	void DrawLine(const Vector3& start, const Vector3& end, const uint32_t& materialColor);
 	void DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
+	void DrawFullScreenQuad(ID3D12GraphicsCommandList* cmdList);
 
 	// カメラの更新時に視錐台の平面を計算する関数
 	void CreateFrustumPlanes(const Matrix4x4& viewProjectionMatrix);
@@ -124,6 +125,12 @@ private:
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> indexResource;
 	D3D12_INDEX_BUFFER_VIEW indexBufferView;
+
+	// フルスクリーンクアッド用バッファ
+	Microsoft::WRL::ComPtr<ID3D12Resource> fullScreenQuadVertexBuffer;
+	D3D12_VERTEX_BUFFER_VIEW fullScreenQuadVBView{};
+	Microsoft::WRL::ComPtr<ID3D12Resource> fullScreenQuadIndexBuffer;
+	D3D12_INDEX_BUFFER_VIEW fullScreenQuadIBView{};
 
 	// 使い回す定数バッファ（マテリアル/WVP）をフレーム数分用意
 	size_t kMaxDrawCallPerFrame = 1280;

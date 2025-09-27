@@ -50,7 +50,8 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 	ImGui_ImplWin32_Init(windowManager->GetHwnd());
 	ImGui_ImplDX12_Init(
 		dxManager->GetDevice(),
-		dxManager->GetSwapChainDesc().BufferCount,
+		//dxManager->GetSwapChainDesc().BufferCount,
+		dxManager->GetSwapChainManager()->GetSwapChainDesc().BufferCount,
 		dxManager->GetRtvDesc().Format,
 		dxManager->GetsrvDescriptorHeap(),
 		dxManager->GetsrvDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
@@ -94,6 +95,36 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 	InitializeLineResources(dxManager->GetDevice());
 
 
+	// フルスクリーンクアッド用頂点データ
+	VertexData quadVertices[4] = {
+		{ { -1.0f, -1.0f, 0.0f, 1.0f }, { 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
+		{ { -1.0f,  1.0f, 0.0f, 1.0f }, { 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } },
+		{ {  1.0f, -1.0f, 0.0f, 1.0f }, { 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
+		{ {  1.0f,  1.0f, 0.0f, 1.0f }, { 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } },
+	};
+	uint16_t quadIndices[6] = { 0, 1, 2, 2, 1, 3 };
+
+	// 頂点バッファ
+	fullScreenQuadVertexBuffer = CreateBufferResource(dxManager->GetDevice(), sizeof(quadVertices));
+	void* mappedVB = nullptr;
+	fullScreenQuadVertexBuffer->Map(0, nullptr, &mappedVB);
+	memcpy(mappedVB, quadVertices, sizeof(quadVertices));
+	fullScreenQuadVertexBuffer->Unmap(0, nullptr);
+
+	fullScreenQuadVBView.BufferLocation = fullScreenQuadVertexBuffer->GetGPUVirtualAddress();
+	fullScreenQuadVBView.SizeInBytes = sizeof(quadVertices);
+	fullScreenQuadVBView.StrideInBytes = sizeof(VertexData);
+
+	// インデックスバッファ
+	fullScreenQuadIndexBuffer = CreateBufferResource(dxManager->GetDevice(), sizeof(quadIndices));
+	void* mappedIB = nullptr;
+	fullScreenQuadIndexBuffer->Map(0, nullptr, &mappedIB);
+	memcpy(mappedIB, quadIndices, sizeof(quadIndices));
+	fullScreenQuadIndexBuffer->Unmap(0, nullptr);
+
+	fullScreenQuadIBView.BufferLocation = fullScreenQuadIndexBuffer->GetGPUVirtualAddress();
+	fullScreenQuadIBView.SizeInBytes = sizeof(quadIndices);
+	fullScreenQuadIBView.Format = DXGI_FORMAT_R16_UINT;
 
 	// インデックスリソース
 	indexResource = CreateBufferResource(dxManager->GetDevice(), sizeof(uint32_t) * 6);
@@ -114,6 +145,27 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 	// インデックスはuint32_tとする
 	indexBufferView.Format = DXGI_FORMAT_R32_UINT;
 
+	// オフスクリーンレンダリング
+	D3D12_RESOURCE_DESC desc = {};
+	desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	desc.Width = windowManager->Getwidth();
+	desc.Height = windowManager->Getheight();
+	desc.DepthOrArraySize = 1;
+	desc.MipLevels = 1;
+	desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	desc.SampleDesc.Count = 1;
+	desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+
+	D3D12_HEAP_PROPERTIES heapProps = {};
+	heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
+
+	D3D12_CLEAR_VALUE clearValue = {};
+	clearValue.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	clearValue.Color[0] = 0.0f;
+	clearValue.Color[1] = 0.0f;
+	clearValue.Color[2] = 0.0f;
+	clearValue.Color[3] = 1.0f;
 
 	// 光源の設定
 	directionalLightResource = CreateBufferResource(dxManager->GetDevice(), sizeof(DirectionalLight));
@@ -149,6 +201,13 @@ bool Engine::ProcessMessage()
 }
 void Engine::BeginFrame()
 {
+	// 修正前:
+	dxManager->GetCommandList()->OMSetRenderTargets(1, &dxManager->GetSwapChainManager()->GetOffscreenCurrentRTVHandle(), FALSE, nullptr);
+
+	//// 修正後:
+	//auto offscreenRTVHandle = dxManager->GetSwapChainManager()->GetOffscreenCurrentRTVHandle();
+	//dxManager->GetCommandList()->OMSetRenderTargets(1, &offscreenRTVHandle, FALSE, nullptr);
+
 	// ImGuiを更新
 	ImGui_ImplDX12_NewFrame();
 	ImGui_ImplWin32_NewFrame();
@@ -198,6 +257,23 @@ void Engine::UpdateCamera()
 void Engine::EndFrame()
 {
 	wheelDelta = 0;
+
+	// --- ポストエフェクト描画 ---
+	// 1. SwapChainのバックバッファをレンダーターゲットにセット
+	auto swapChainRTV = dxManager->GetSwapChainManager()->GetCurrentRTVHandle();
+	dxManager->GetCommandList()->OMSetRenderTargets(1, &swapChainRTV, FALSE, nullptr);
+
+	// 2. ポストエフェクト用PSO/RootSignatureをセット(とりあえず通常びょyが)
+	dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature());
+	dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(BlendMode::kBlendModeNone, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
+
+	// 3. オフスクリーンSRVをセット
+	ID3D12DescriptorHeap* heaps[] = { dxManager->GetSwapChainManager()->GetOffscreenSRVDescriptorHeap() };
+	dxManager->GetCommandList()->SetDescriptorHeaps(_countof(heaps), heaps);
+	dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(0, dxManager->GetSwapChainManager()->GetOffscreenSRVDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
+
+	// 4. フルスクリーンクアッド描画
+	DrawFullScreenQuad(dxManager->GetCommandList());
 
 	//cameraController->Draw();
 	ImGui::Render();
@@ -1316,6 +1392,96 @@ void Engine::DrawParticle(Game::RenderData_Particle& renderData)
 
 	renderData.frame++;
 }
+
+void Engine::DrawFullScreenQuad(ID3D12GraphicsCommandList* cmdList)
+{
+	cmdList->IASetVertexBuffers(0, 1, &fullScreenQuadVBView);
+	cmdList->IASetIndexBuffer(&fullScreenQuadIBView);
+	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	cmdList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+}
+//{
+//	// dxManager からデバイス取得
+//	ID3D12Device* device = dxManager->GetDevice();
+//
+//	// 頂点データ（NDC座標系、UV、法線はZ+）
+//	VertexData quadVertices[4] = {
+//		//   position                texcoord   normal
+//		{ { -1.0f, -1.0f, 0.0f, 1.0f }, { 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } }, // 左下
+//		{ { -1.0f,  1.0f, 0.0f, 1.0f }, { 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } }, // 左上
+//		{ {  1.0f, -1.0f, 0.0f, 1.0f }, { 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } }, // 右下
+//		{ {  1.0f,  1.0f, 0.0f, 1.0f }, { 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } }, // 右上
+//	};
+//	uint16_t quadIndices[6] = { 0, 1, 2, 2, 1, 3 };
+//
+//    // 頂点バッファ作成
+//	Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer;
+//	{
+//		D3D12_HEAP_PROPERTIES heapProps = {};
+//		heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
+//		D3D12_RESOURCE_DESC resDesc = {};
+//		resDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+//		resDesc.Width = sizeof(quadVertices);
+//		resDesc.Height = 1;
+//		resDesc.DepthOrArraySize = 1;
+//		resDesc.MipLevels = 1;
+//		resDesc.Format = DXGI_FORMAT_UNKNOWN;
+//		resDesc.SampleDesc.Count = 1;
+//		resDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+//		resDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+//		HRESULT hr = device->CreateCommittedResource(
+//			&heapProps, D3D12_HEAP_FLAG_NONE, &resDesc,
+//			D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&vertexBuffer));
+//		void* mapped = nullptr;
+//		vertexBuffer->Map(0, nullptr, &mapped);
+//		memcpy(mapped, quadVertices, sizeof(quadVertices));
+//		vertexBuffer->Unmap(0, nullptr);
+//	}
+//	D3D12_VERTEX_BUFFER_VIEW vbView = {};
+//	vbView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
+//	vbView.SizeInBytes = sizeof(quadVertices);
+//	vbView.StrideInBytes = sizeof(VertexData);
+//
+//	// インデックスバッファ作成
+//	Microsoft::WRL::ComPtr<ID3D12Resource> indexBuffer;
+//	{
+//		D3D12_HEAP_PROPERTIES heapProps = {};
+//		heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
+//		D3D12_RESOURCE_DESC resDesc = {};
+//		resDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+//		resDesc.Width = sizeof(quadIndices);
+//		resDesc.Height = 1;
+//		resDesc.DepthOrArraySize = 1;
+//		resDesc.MipLevels = 1;
+//		resDesc.Format = DXGI_FORMAT_UNKNOWN;
+//		resDesc.SampleDesc.Count = 1;
+//		resDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+//		resDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+//		HRESULT hr = device->CreateCommittedResource(
+//			&heapProps, D3D12_HEAP_FLAG_NONE, &resDesc,
+//			D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&indexBuffer));
+//		void* mapped = nullptr;
+//		indexBuffer->Map(0, nullptr, &mapped);
+//		memcpy(mapped, quadIndices, sizeof(quadIndices));
+//		indexBuffer->Unmap(0, nullptr);
+//	}
+//	D3D12_INDEX_BUFFER_VIEW ibView = {};
+//	ibView.BufferLocation = indexBuffer->GetGPUVirtualAddress();
+//	ibView.SizeInBytes = sizeof(quadIndices);
+//	ibView.Format = DXGI_FORMAT_R16_UINT;
+//
+//	// バッファバインド
+//	cmdList->IASetVertexBuffers(0, 1, &vbView);
+//	cmdList->IASetIndexBuffer(&ibView);
+//	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+//
+//	// CBVバインド（Material, TransformationMatrix, DirectionalLight）
+//	// ※ここでは既にSetGraphicsRootDescriptorTable/SetGraphicsRootConstantBufferView済みのはず
+//	// 必要ならここで再バインド
+//
+//	// 描画
+//	cmdList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+//}
 
 void Engine::CreateFrustumPlanes(const Matrix4x4& viewProjectionMatrix)
 {
