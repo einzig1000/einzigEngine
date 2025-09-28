@@ -343,21 +343,25 @@ void Game::RenderData_Model::Updata(std::vector<Object3D>& objects)
 
 #pragma endregion
 
-
 	for (auto* target : blockList)
 	{
 		if (isCollision(*target))
 		{
+			// 自分と相手のAABBを取得
+			const auto& myAABB = this->aabb[0];
+			const auto& targetAABB = target->aabb[0];
+
 			if (velocity.y < 0.0f)
 			{
-				// 下向きに落下中 → 地面の上面に合わせる
-				transforms.translate.y = target->aabb[0].max.y;
+				// 下向きに落下中 → 地面の上面に自分のAABBの下端が接するように
+				float myHeight = myAABB.max.y - myAABB.min.y;
+				transforms.translate.y = targetAABB.max.y + myHeight / 2.0f;
 			}
 			else if (velocity.y > 0.0f)
 			{
-				// 上向きに移動中 → 天井の下面に合わせる
-				//transforms.translate.y = target->aabb[0].min.y - 自分の高さ;
-				transforms.translate.y = target->aabb[0].min.y - 0.0f;
+				// 上向きに移動中 → 天井の下面に自分のAABBの上端が接するように
+				float myHeight = myAABB.max.y - myAABB.min.y;
+				transforms.translate.y = targetAABB.min.y - myHeight / 2.0f;
 			}
 			velocity.y = 0.0f;
 		}

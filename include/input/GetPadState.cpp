@@ -1,64 +1,65 @@
 #include "input/GetPadState.h"
 #include <cstring>
 
-XINPUT_STATE GetPadState::state{};
-XINPUT_STATE GetPadState::preState{};
-bool GetPadState::isConnect;
-bool GetPadState::buttons[PAD_BUTTON_MAX]{};
-bool GetPadState::preButtons[PAD_BUTTON_MAX]{};
-DWORD GetPadState::dwUserIndex = 0;
-BYTE GetPadState::leftTrigger = 0;
-BYTE GetPadState::rightTrigger = 0;
-SHORT GetPadState::leftStickX = 0;
-SHORT GetPadState::leftStickY = 0;
-SHORT GetPadState::rightStickX = 0;
-SHORT GetPadState::rightStickY = 0;
-Vector2 GetPadState::leftStickDir = { 0.0f,0.0f };
-Vector2 GetPadState::rightStickDir = { 0.0f,0.0f };
+XINPUT_STATE GetPadState::state[4]{};
+XINPUT_STATE GetPadState::preState[4]{};
+bool GetPadState::isConnect[4];
+bool GetPadState::buttons[4][PAD_BUTTON_MAX]{};
+bool GetPadState::preButtons[4][PAD_BUTTON_MAX]{};
+DWORD GetPadState::dwUserIndex[4] = { 0,0,0,0 };
+BYTE GetPadState::leftTrigger[4] = { 0,0,0,0 };
+BYTE GetPadState::rightTrigger[4] = { 0,0,0,0 };
+SHORT GetPadState::leftStickX[4] = { 0,0,0,0 };
+SHORT GetPadState::leftStickY[4] = { 0,0,0,0 };
+SHORT GetPadState::rightStickX[4] = { 0,0,0,0 };
+SHORT GetPadState::rightStickY[4] = { 0,0,0,0 };
+Vector2 GetPadState::leftStickDir[4] = { { 0.0f,0.0f } ,{ 0.0f,0.0f } ,{ 0.0f,0.0f } ,{ 0.0f,0.0f } };
+Vector2 GetPadState::rightStickDir[4] = { { 0.0f,0.0f } ,{ 0.0f,0.0f } ,{ 0.0f,0.0f } ,{ 0.0f,0.0f } };
 
 void GetPadState::Update()
 {
-    preState = state;
-    std::memcpy(preButtons, buttons, sizeof(buttons));
-
-    ZeroMemory(&state, sizeof(XINPUT_STATE));
-    if (XInputGetState(dwUserIndex, &state) == ERROR_SUCCESS)
+    for (DWORD i = 0; i < 4; ++i)
     {
-        WORD b = state.Gamepad.wButtons;
-        buttons[PAD_A] = b & XINPUT_GAMEPAD_A;
-        buttons[PAD_B] = b & XINPUT_GAMEPAD_B;
-        buttons[PAD_X] = b & XINPUT_GAMEPAD_X;
-        buttons[PAD_Y] = b & XINPUT_GAMEPAD_Y;
-        buttons[PAD_LB] = b & XINPUT_GAMEPAD_LEFT_SHOULDER;
-        buttons[PAD_RB] = b & XINPUT_GAMEPAD_RIGHT_SHOULDER;
-        buttons[PAD_LS] = b & XINPUT_GAMEPAD_LEFT_THUMB;
-        buttons[PAD_RS] = b & XINPUT_GAMEPAD_RIGHT_THUMB;
-        buttons[PAD_BACK] = b & XINPUT_GAMEPAD_BACK;
-        buttons[PAD_START] = b & XINPUT_GAMEPAD_START;
-        buttons[PAD_UP] = b & XINPUT_GAMEPAD_DPAD_UP;
-        buttons[PAD_DOWN] = b & XINPUT_GAMEPAD_DPAD_DOWN;
-        buttons[PAD_LEFT] = b & XINPUT_GAMEPAD_DPAD_LEFT;
-        buttons[PAD_RIGHT] = b & XINPUT_GAMEPAD_DPAD_RIGHT;
+        preState[i] = state[i];
+        std::memcpy(preButtons[i], buttons[i], sizeof(buttons[i]));
 
+        ZeroMemory(&state[i], sizeof(XINPUT_STATE));
+        if (XInputGetState(i, &state[i]) == ERROR_SUCCESS)
+        {
+            WORD b = state[i].Gamepad.wButtons;
+            buttons[i][PAD_A] = b & XINPUT_GAMEPAD_A;
+            buttons[i][PAD_A] = b & XINPUT_GAMEPAD_A;
+            buttons[i][PAD_B] = b & XINPUT_GAMEPAD_B;
+            buttons[i][PAD_X] = b & XINPUT_GAMEPAD_X;
+            buttons[i][PAD_Y] = b & XINPUT_GAMEPAD_Y;
+            buttons[i][PAD_LB] = b & XINPUT_GAMEPAD_LEFT_SHOULDER;
+            buttons[i][PAD_RB] = b & XINPUT_GAMEPAD_RIGHT_SHOULDER;
+            buttons[i][PAD_LS] = b & XINPUT_GAMEPAD_LEFT_THUMB;
+            buttons[i][PAD_RS] = b & XINPUT_GAMEPAD_RIGHT_THUMB;
+            buttons[i][PAD_BACK] = b & XINPUT_GAMEPAD_BACK;
+            buttons[i][PAD_START] = b & XINPUT_GAMEPAD_START;
+            buttons[i][PAD_UP] = b & XINPUT_GAMEPAD_DPAD_UP;
+            buttons[i][PAD_DOWN] = b & XINPUT_GAMEPAD_DPAD_DOWN;
+            buttons[i][PAD_LEFT] = b & XINPUT_GAMEPAD_DPAD_LEFT;
+            buttons[i][PAD_RIGHT] = b & XINPUT_GAMEPAD_DPAD_RIGHT;
 
-        // トリガーとスティックの値を更新
-        leftTrigger = state.Gamepad.bLeftTrigger;
-        rightTrigger = state.Gamepad.bRightTrigger;
-
-        leftStickX = state.Gamepad.sThumbLX;
-        leftStickY = state.Gamepad.sThumbLY;
-        rightStickX = state.Gamepad.sThumbRX;
-        rightStickY = state.Gamepad.sThumbRY;
-
-        Vector2 leftStick = { float(leftStickX) , float(leftStickY) };
-        leftStickDir = leftStick.Normalized();
-        Vector2 rightStick = { float(rightStickX) , float(rightStickY) };
-        rightStickDir = rightStick.Normalized();
-
-        isConnect = true;
-    }
-    else
-    {
-        isConnect = false;
+            leftTrigger[i] = state[i].Gamepad.bLeftTrigger;
+            rightTrigger[i] = state[i].Gamepad.bRightTrigger;
+            
+            leftStickX[i] = state[i].Gamepad.sThumbLX;
+            leftStickY[i] = state[i].Gamepad.sThumbLY;
+            rightStickX[i] = state[i].Gamepad.sThumbRX;
+            rightStickY[i] = state[i].Gamepad.sThumbRY;
+            
+            Vector2 leftStick = { float(leftStickX[i]), float(leftStickY[i]) };
+            leftStickDir[i] = leftStick.Normalized();
+            Vector2 rightStick = { float(rightStickX[i]), float(rightStickY[i]) };
+            rightStickDir[i] = rightStick.Normalized();
+            isConnect[i] = true;
+        }
+        else
+        {
+            isConnect[i] = false;
+        }
     }
 }

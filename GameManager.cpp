@@ -26,22 +26,9 @@ void GameManager::Update()
 {
 	if (frame > 1)
 	{
-		kk[99] = GetHitKey::preKeys[DIK_SPACE];
-		for (int i = 0; i < 99; ++i)
-		{
-			kk[i] = kk[i + 1];
-		}
-
-
-		//if (player.isCollision(ground))
-		//{
-		//	player.velocity.y = 0.0f;
-		//	player.gravity = 0.0f;
-		//}
-
 		if (GetHitKey::keys[DIK_SPACE] && !GetHitKey::preKeys[DIK_SPACE])
 		{
-			player.velocity.y += 2.0f;
+			player.velocity.y += 1.0f;
 			player.gravity = 0.01f;
 		}
 

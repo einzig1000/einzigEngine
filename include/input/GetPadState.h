@@ -26,22 +26,22 @@ public:
     static void Update();
 
     // 使用箇所で GetPadState::buttons[PAD_A] のようにアクセス可能
-    static bool buttons[PAD_BUTTON_MAX];
-    static bool preButtons[PAD_BUTTON_MAX];
-    static bool isConnect;
+    static bool buttons[4][PAD_BUTTON_MAX];
+    static bool preButtons[4][PAD_BUTTON_MAX];
+    static bool isConnect[4];
 
-    static BYTE leftTrigger;     // 左トリガー（0〜255）
-    static BYTE rightTrigger;    // 右トリガー（0〜255）
+    static BYTE leftTrigger[4];     // 左トリガー（0〜255）
+    static BYTE rightTrigger[4];    // 右トリガー（0〜255）
 
-    static SHORT leftStickX;        // 左スティックX軸（-32768〜32767）
-    static SHORT leftStickY;        // 左スティックY軸（-32768〜32767）
-    static SHORT rightStickX;        // 右スティックX軸（-32768〜32767）
-    static SHORT rightStickY;        // 右スティックY軸（-32768〜32767）
-    static Vector2 leftStickDir;        // 左スティック方向({-1〜1},{-1〜1})
-    static Vector2 rightStickDir;        // 左スティック方向({-1〜1},{-1〜1})
+    static SHORT leftStickX[4];        // 左スティックX軸（-32768〜32767）
+    static SHORT leftStickY[4];        // 左スティックY軸（-32768〜32767）
+    static SHORT rightStickX[4];        // 右スティックX軸（-32768〜32767）
+    static SHORT rightStickY[4];        // 右スティックY軸（-32768〜32767）
+    static Vector2 leftStickDir[4];        // 左スティック方向({-1〜1},{-1〜1})
+    static Vector2 rightStickDir[4];        // 左スティック方向({-1〜1},{-1〜1})
 
 private:
-    static XINPUT_STATE state;
-    static XINPUT_STATE preState;
-    static DWORD dwUserIndex;
+    static XINPUT_STATE state[4];
+    static XINPUT_STATE preState[4];
+    static DWORD dwUserIndex[4];
 };
