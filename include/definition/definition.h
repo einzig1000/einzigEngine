@@ -22,6 +22,8 @@
 #define WIDTH 1280
 #define HEIGHT 720
 
+inline constexpr UINT kFrameCount = 2;
+
 enum class PHASE
 {
     Phase_None,
@@ -894,6 +896,12 @@ struct ModelData
     MaterialData material;
 };
 
+struct FrameResource
+{
+    Microsoft::WRL::ComPtr<ID3D12CommandAllocator> commandAllocator;
+    Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> commandList;
+    UINT64 fenceValue = 0;
+};
 
 struct AABB
 {

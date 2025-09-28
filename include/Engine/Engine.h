@@ -96,6 +96,9 @@ private:
 	WindowManager* windowManager;
 	DirectXManager* dxManager;
 
+	// ダブルバッファ化したコマンドリストのインデックス
+	UINT frameIndex;
+
 	// 頂点リソースと頂点データと使用済み頂点数
 
 	// モデル

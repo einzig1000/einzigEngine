@@ -1162,10 +1162,19 @@ Microsoft::WRL::ComPtr<ID3D12Resource> UploadTextureData(ID3D12Resource* texture
 {
     std::vector<D3D12_SUBRESOURCE_DATA> subresources;
     DirectX::PrepareUpload(device, mipImages.GetImages(), mipImages.GetImageCount(), mipImages.GetMetadata(), subresources);
-    uint64_t intermediateSize = GetRequiredIntermediateSize(texture, 0, UINT(subresources.size()));
+
+    // サブリソース数を厳密に計算
+    const D3D12_RESOURCE_DESC& desc = texture->GetDesc();
+    UINT numSubresources = desc.MipLevels * desc.DepthOrArraySize;
+    assert(subresources.size() == numSubresources && "サブリソース数が一致しません");
+
+    uint64_t intermediateSize = GetRequiredIntermediateSize(texture, 0, numSubresources);
     Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource = CreateBufferResource(device, intermediateSize);
-    UpdateSubresources(commandList, texture, intermediateResource.Get(), 0, 0, UINT(subresources.size()), subresources.data());
-    // Tetureへの転送後は利用できるよう、D3D12_RESOURCE_STATE_COPY_DESTからD3D12_RESOURCE_STATE_GENERIC_READ ResourceStateを変更する
+
+    // NumSubresourcesを明示的に正しい値で渡す
+    UpdateSubresources(commandList, texture, intermediateResource.Get(), 0, 0, numSubresources, subresources.data());
+
+    // ResourceStateを変更
     D3D12_RESOURCE_BARRIER barrier{};
     barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
     barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
@@ -1174,6 +1183,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> UploadTextureData(ID3D12Resource* texture
     barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
     barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_GENERIC_READ;
     commandList->ResourceBarrier(1, &barrier);
+
     return intermediateResource;
 }
 

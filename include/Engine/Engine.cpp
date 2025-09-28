@@ -201,12 +201,15 @@ bool Engine::ProcessMessage()
 }
 void Engine::BeginFrame()
 {
+	// ダブルバッファ化したコマンドリストのインデックス取得
+	frameIndex = dxManager->GetSwapChainManager()->GetCurrentBackBufferIndex();
+
 	// 修正前:
-	dxManager->GetCommandList()->OMSetRenderTargets(1, &dxManager->GetSwapChainManager()->GetOffscreenCurrentRTVHandle(), FALSE, nullptr);
+	dxManager->GetCommandList(frameIndex)->OMSetRenderTargets(1, &dxManager->GetSwapChainManager()->GetOffscreenCurrentRTVHandle(), FALSE, nullptr);
 
 	//// 修正後:
 	//auto offscreenRTVHandle = dxManager->GetSwapChainManager()->GetOffscreenCurrentRTVHandle();
-	//dxManager->GetCommandList()->OMSetRenderTargets(1, &offscreenRTVHandle, FALSE, nullptr);
+	//dxManager->GetCommandList(frameIndex)->OMSetRenderTargets(1, &offscreenRTVHandle, FALSE, nullptr);
 
 	// ImGuiを更新
 	ImGui_ImplDX12_NewFrame();
@@ -261,19 +264,19 @@ void Engine::EndFrame()
 	// --- ポストエフェクト描画 ---
 	// 1. SwapChainのバックバッファをレンダーターゲットにセット
 	auto swapChainRTV = dxManager->GetSwapChainManager()->GetCurrentRTVHandle();
-	dxManager->GetCommandList()->OMSetRenderTargets(1, &swapChainRTV, FALSE, nullptr);
+	dxManager->GetCommandList(frameIndex)->OMSetRenderTargets(1, &swapChainRTV, FALSE, nullptr);
 
 	// 2. ポストエフェクト用PSO/RootSignatureをセット(とりあえず通常びょyが)
-	dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature());
-	dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(BlendMode::kBlendModeNone, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
+	dxManager->GetCommandList(frameIndex)->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature());
+	dxManager->GetCommandList(frameIndex)->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(BlendMode::kBlendModeNone, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
 
 	// 3. オフスクリーンSRVをセット
 	ID3D12DescriptorHeap* heaps[] = { dxManager->GetSwapChainManager()->GetOffscreenSRVDescriptorHeap() };
-	dxManager->GetCommandList()->SetDescriptorHeaps(_countof(heaps), heaps);
-	dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(0, dxManager->GetSwapChainManager()->GetOffscreenSRVDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
+	dxManager->GetCommandList(frameIndex)->SetDescriptorHeaps(_countof(heaps), heaps);
+	dxManager->GetCommandList(frameIndex)->SetGraphicsRootDescriptorTable(0, dxManager->GetSwapChainManager()->GetOffscreenSRVDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
 
 	// 4. フルスクリーンクアッド描画
-	DrawFullScreenQuad(dxManager->GetCommandList());
+	DrawFullScreenQuad(dxManager->GetCommandList(frameIndex));
 
 	//cameraController->Draw();
 	ImGui::Render();
@@ -438,7 +441,7 @@ void Engine::Finalize()
 // リソース読み込み
 uint32_t Engine::LoadTexture(const std::string& filePath)
 {
-	return dxManager->GetTextureManager()->LoadTexture(filePath, dxManager->GetCommandList());
+	return dxManager->GetTextureManager()->LoadTexture(filePath, dxManager->GetCommandList(frameIndex));
 }
 
 uint32_t Engine::LoadOBJ(const std::string& directoryPath, const std::string& filename)
@@ -523,14 +526,14 @@ void Engine::Drawobj(Game::RenderData_Model& renderData)
 		if (renderData.model >= objects.size()) return;
 
 		// RootSignatureとPSOを設定
-		dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
+		dxManager->GetCommandList(frameIndex)->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
 		if (renderData.options.wireframe || WireframeMode)
 		{	 // ワイヤーフレーム用PSOを設定
-			dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(BlendMode::Wireframe, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
+			dxManager->GetCommandList(frameIndex)->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(BlendMode::Wireframe, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
 		}
 		else
 		{	// Triangle用PSOを設定
-			dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(renderData.options.blendMode, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
+			dxManager->GetCommandList(frameIndex)->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(renderData.options.blendMode, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
 		}
 
 		// 描画するモデルの検索
@@ -563,19 +566,19 @@ void Engine::Drawobj(Game::RenderData_Model& renderData)
 
 
 		// 頂点バッファをバインド（描画に使う頂点データを指定）
-		dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &obj.vertexBufferView);
+		dxManager->GetCommandList(frameIndex)->IASetVertexBuffers(0, 1, &obj.vertexBufferView);
 		// プリミティブトポロジ（描画する形状の種類：三角形リスト）を設定
-		dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		dxManager->GetCommandList(frameIndex)->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		// ルートパラメータ0にマテリアル用定数バッファ（色・ライティング情報など）をバインド
-		dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources[drawCallIndex]->GetGPUVirtualAddress());
+		dxManager->GetCommandList(frameIndex)->SetGraphicsRootConstantBufferView(0, materialResources[drawCallIndex]->GetGPUVirtualAddress());
 		// ルートパラメータ1にWVP（ワールド・ビュー・プロジェクション）用定数バッファをバインド
-		dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources[drawCallIndex]->GetGPUVirtualAddress());
+		dxManager->GetCommandList(frameIndex)->SetGraphicsRootConstantBufferView(1, wvpResources[drawCallIndex]->GetGPUVirtualAddress());
 		// ルートパラメータ2にテクスチャのSRV（シェーダリソースビュー）をバインド
-		dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
+		dxManager->GetCommandList(frameIndex)->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
 		// ルートパラメータ3にディレクショナルライト用定数バッファをバインド
-		dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
+		dxManager->GetCommandList(frameIndex)->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 		// 頂点数分のインスタンス描画を実行（実際に描画コマンドを発行）
-		dxManager->GetCommandList()->DrawInstanced(kSumVertex, 1, 0, 0);
+		dxManager->GetCommandList(frameIndex)->DrawInstanced(kSumVertex, 1, 0, 0);
 
 		drawCallIndex++;
 	}
@@ -587,14 +590,14 @@ void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint
 	if (drawCallIndex >= kMaxDrawCallPerFrame) return;
 
 	// RootSignatureとPSOを設定
-	dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
+	dxManager->GetCommandList(frameIndex)->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
 	if (drawOptions.wireframe || WireframeMode)
 	{	 // ワイヤーフレーム用PSOを設定
-		dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(BlendMode::Wireframe, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
+		dxManager->GetCommandList(frameIndex)->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(BlendMode::Wireframe, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
 	}
 	else
 	{	// Triangle用PSOを設定
-		dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(drawOptions.blendMode, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
+		dxManager->GetCommandList(frameIndex)->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(drawOptions.blendMode, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
 	}
 
 	// 必要な頂点数
@@ -678,20 +681,20 @@ void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint
 	vertexBufferView.StrideInBytes = sizeof(VertexData);
 
 	// 描画処理
-	dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
-	dxManager->GetCommandList()->IASetIndexBuffer(&indexBufferView);
+	dxManager->GetCommandList(frameIndex)->IASetVertexBuffers(0, 1, &vertexBufferView);
+	dxManager->GetCommandList(frameIndex)->IASetIndexBuffer(&indexBufferView);
 	// 形状を設定
-	dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	dxManager->GetCommandList(frameIndex)->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	// CBVを設定する マテリアル用のCBufferの場所を設定
-	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources[drawCallIndex]->GetGPUVirtualAddress());
+	dxManager->GetCommandList(frameIndex)->SetGraphicsRootConstantBufferView(0, materialResources[drawCallIndex]->GetGPUVirtualAddress());
 	// CBVを設定する wvp用のCBufferの場所を設定
-	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources[drawCallIndex]->GetGPUVirtualAddress());
+	dxManager->GetCommandList(frameIndex)->SetGraphicsRootConstantBufferView(1, wvpResources[drawCallIndex]->GetGPUVirtualAddress());
 	// SRVのDescriptorTableの先頭を設定。２はrootParameters[2]。
-	dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
+	dxManager->GetCommandList(frameIndex)->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
 	// CBVを設定する ディレクショナルライト用のCBufferの場所を設定
-	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
+	dxManager->GetCommandList(frameIndex)->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 
-	dxManager->GetCommandList()->DrawInstanced(kSumVertex, 1, 0, 0);
+	dxManager->GetCommandList(frameIndex)->DrawInstanced(kSumVertex, 1, 0, 0);
 
 	drawCallIndex++;
 	sphereVertexDataUsed += kSumVertex;
@@ -703,14 +706,14 @@ void Engine::DrawTriangle(Game::RenderData_Triangle& renderData)
 	if (drawCallIndex >= kMaxDrawCallPerFrame) return;
 
 	// RootSignatureとPSOを設定
-	dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
+	dxManager->GetCommandList(frameIndex)->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
 	if (renderData.options.wireframe || WireframeMode)
 	{	 // ワイヤーフレーム用PSOを設定
-		dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(BlendMode::Wireframe, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
+		dxManager->GetCommandList(frameIndex)->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(BlendMode::Wireframe, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
 	}
 	else
 	{	// Triangle用PSOを設定
-		dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(renderData.options.blendMode, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
+		dxManager->GetCommandList(frameIndex)->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(renderData.options.blendMode, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
 	}
 
 	// 必要な頂点数
@@ -781,20 +784,20 @@ void Engine::DrawTriangle(Game::RenderData_Triangle& renderData)
 
 
 	// RootSignatureを設定。
-	dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
+	dxManager->GetCommandList(frameIndex)->IASetVertexBuffers(0, 1, &vertexBufferView);
 	// 形状を設定
-	dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	dxManager->GetCommandList(frameIndex)->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	// CBVを設定する マテリアル用のCBufferの場所を設定
-	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources[drawCallIndex]->GetGPUVirtualAddress());
+	dxManager->GetCommandList(frameIndex)->SetGraphicsRootConstantBufferView(0, materialResources[drawCallIndex]->GetGPUVirtualAddress());
 	// CBVを設定する wvp用のCBufferの場所を設定
-	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources[drawCallIndex]->GetGPUVirtualAddress());
+	dxManager->GetCommandList(frameIndex)->SetGraphicsRootConstantBufferView(1, wvpResources[drawCallIndex]->GetGPUVirtualAddress());
 	// SRVのDescriptorTableの先頭を設定。２はrootParameters[2]。
-	dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
+	dxManager->GetCommandList(frameIndex)->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
 	// CBVを設定する ディレクショナルライト用のCBufferの場所を設定
-	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
+	dxManager->GetCommandList(frameIndex)->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 
 	// 描画
-	dxManager->GetCommandList()->DrawInstanced(3, 1, 0, 0);
+	dxManager->GetCommandList(frameIndex)->DrawInstanced(3, 1, 0, 0);
 
 	drawCallIndex++;
 	spriteVertexDataUsed += kSumVertex;
@@ -806,8 +809,8 @@ void Engine::DrawSprite(Game::RenderData_Sprite& renderData)
 	if (drawCallIndex >= kMaxDrawCallPerFrame) return;
 
 	// RootSignatureとPSOを設定 - Triangle
-	dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
-	dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(renderData.options.blendMode, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE)); // Triangle用PSOを設定
+	dxManager->GetCommandList(frameIndex)->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
+	dxManager->GetCommandList(frameIndex)->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(renderData.options.blendMode, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE)); // Triangle用PSOを設定
 
 	// 必要な頂点数
 	const uint32_t kSumVertex = 4;
@@ -1100,21 +1103,21 @@ void Engine::DrawSprite(Game::RenderData_Sprite& renderData)
 	renderData.isCollisionMouseRay = (mousePos.x >= left && mousePos.x <= right && mousePos.y >= top && mousePos.y <= bottom);
 
 	// Spriteの描画
-	dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
-	dxManager->GetCommandList()->IASetIndexBuffer(&indexBufferView);
+	dxManager->GetCommandList(frameIndex)->IASetVertexBuffers(0, 1, &vertexBufferView);
+	dxManager->GetCommandList(frameIndex)->IASetIndexBuffer(&indexBufferView);
 	// 形状を設定
-	dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	dxManager->GetCommandList(frameIndex)->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	// CBVを設定する マテリアル用のCBufferの場所を設定
-	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources[drawCallIndex]->GetGPUVirtualAddress());
+	dxManager->GetCommandList(frameIndex)->SetGraphicsRootConstantBufferView(0, materialResources[drawCallIndex]->GetGPUVirtualAddress());
 	// CBVを設定する wvp用のCBufferの場所を設定
-	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources[drawCallIndex]->GetGPUVirtualAddress());
+	dxManager->GetCommandList(frameIndex)->SetGraphicsRootConstantBufferView(1, wvpResources[drawCallIndex]->GetGPUVirtualAddress());
 	// SRVのDescriptorTableの先頭を設定。２はrootParameters[2]。
-	dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
+	dxManager->GetCommandList(frameIndex)->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
 	// CBVを設定する ディレクショナルライト用のCBufferの場所を設定
-	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
+	dxManager->GetCommandList(frameIndex)->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 
 	// 描画
-	dxManager->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
+	dxManager->GetCommandList(frameIndex)->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
 	drawCallIndex++;
 	spriteVertexDataUsed += kSumVertex;
@@ -1125,8 +1128,8 @@ void Engine::DrawLine(const Vector3& start, const Vector3& end, const uint32_t& 
 	if (drawLineCallIndex >= kMaxDrawLineCallPerFrame) return;
 
 	// RootSignatureとPSOを設定 - Line
-	dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
-	dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(BlendMode::kBlendModeNormal, D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE)); // Line用PSOを設定
+	dxManager->GetCommandList(frameIndex)->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
+	dxManager->GetCommandList(frameIndex)->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(BlendMode::kBlendModeNormal, D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE)); // Line用PSOを設定
 
 	// 頂点データの準備
 	VertexData vertices[2];
@@ -1153,17 +1156,17 @@ void Engine::DrawLine(const Vector3& start, const Vector3& end, const uint32_t& 
 	vertexBufferViewLine.BufferLocation = vertexResourceLine->GetGPUVirtualAddress() + sizeof(VertexData) * currentLineVertexOffset;;
 	vertexBufferViewLine.SizeInBytes = sizeof(VertexData) * 2;
 	vertexBufferViewLine.StrideInBytes = sizeof(VertexData);
-	dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferViewLine);
+	dxManager->GetCommandList(frameIndex)->IASetVertexBuffers(0, 1, &vertexBufferViewLine);
 
 	// プリミティブトポロジーの設定
-	dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST); // 直線を設定
+	dxManager->GetCommandList(frameIndex)->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST); // 直線を設定
 
 	// マテリアル定数バッファの更新
 	Vector4 color = ConvertUintToVector4(materialColor);
 	materialDataLine[drawLineCallIndex]->color = color;
 	materialDataLine[drawLineCallIndex]->enableLighting = 0; // 線にライト要らない
 	materialDataLine[drawLineCallIndex]->uvTransform = Matrix4x4::MakeIdentity4x4(); // 線にUV変換いらない
-	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResourceLine[drawLineCallIndex]->GetGPUVirtualAddress());// b1にバインド
+	dxManager->GetCommandList(frameIndex)->SetGraphicsRootConstantBufferView(0, materialResourceLine[drawLineCallIndex]->GetGPUVirtualAddress());// b1にバインド
 
 	// WVP行列定数バッファの更新 (カメラのWVP行列を使用)
 	Matrix4x4 wvpMatrix = cameraController->viewProjectionMatrix;
@@ -1177,11 +1180,11 @@ void Engine::DrawLine(const Vector3& start, const Vector3& end, const uint32_t& 
 	}
 	wvpDataLine[drawLineCallIndex]->WVP = wvpMatrix;
 	wvpDataLine[drawLineCallIndex]->World = Matrix4x4::MakeIdentity4x4();
-	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResourceLine[drawLineCallIndex]->GetGPUVirtualAddress()); // b0にバインド
+	dxManager->GetCommandList(frameIndex)->SetGraphicsRootConstantBufferView(1, wvpResourceLine[drawLineCallIndex]->GetGPUVirtualAddress()); // b0にバインド
 
 
 	// 描画コマンドの発行
-	dxManager->GetCommandList()->DrawInstanced(2, 1, 0, 0);
+	dxManager->GetCommandList(frameIndex)->DrawInstanced(2, 1, 0, 0);
 
 	drawLineCallIndex++;
 }

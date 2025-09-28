@@ -23,7 +23,7 @@ public:
     ~DirectXManager();
 
     ID3D12Device* GetDevice() const { return deviceManager->GetDevice(); }
-    ID3D12GraphicsCommandList* GetCommandList() const { return commandContextManager->GetCommandList(); }
+    ID3D12GraphicsCommandList* GetCommandList(UINT frameIndex) const { return commandContextManager->GetCommandList(frameIndex); }
     ID3D12DescriptorHeap* GetsrvDescriptorHeap() const { return descriptorHeapManager->GetSRVDescriptorHeap(); }
     //const DXGI_SWAP_CHAIN_DESC1& GetSwapChainDesc() const { return swapChainManager->GetSwapChainDesc(); }
     SwapChainManager* GetSwapChainManager() { return swapChainManager.get(); };
