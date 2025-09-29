@@ -183,11 +183,11 @@
     <ClCompile Include="GameManager.cpp">
       <Filter>GameManeger</Filter>
     </ClCompile>
-    <ClCompile Include="include\definition\definition.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="include\input\Input.cpp">
       <Filter>GameEngine\input\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="include\definition\definition.cpp">
+      <Filter>GameEngine\definition</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
