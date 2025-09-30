@@ -224,7 +224,6 @@ LONG WINAPI ExportDump(EXCEPTION_POINTERS* exception);
 /// <param name="sizeInBytes">バッファのサイズ (バイト単位)</param>
 /// <returns>作成されたバッファリソース</returns>
 Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(ID3D12Device* device, size_t sizeInBytes);
-//ID3D12Resource* CreateBufferResource(ID3D12Device* device, size_t sizeInBytes);
 
 /// <summary>
 /// HLSL シェーダーをコンパイルする関数
