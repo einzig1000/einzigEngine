@@ -228,9 +228,9 @@ Game::RenderData_Model::~RenderData_Model()
 
 void Game::RenderData_Model::Updata(std::vector<Object3D>& objects)
 {
-#pragma region 座標更新
 
 	// 移動してない場合はスキップするようにしたい
+#pragma region 座標更新
 
 	// AABB更新
 	this->aabb = CreateAABB(this->transforms, this->model);
@@ -364,6 +364,7 @@ void Game::RenderData_Model::Updata(std::vector<Object3D>& objects)
 				transforms.translate.y = targetAABB.min.y - myHeight / 2.0f;
 			}
 			velocity.y = 0.0f;
+			this->aabb = CreateAABB(this->transforms, this->model);
 		}
 	}
 
