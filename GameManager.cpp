@@ -39,12 +39,12 @@ void GameManager::Update()
 		}
 		if (GetHitKey::keys[DIK_2])
 		{
-			player.LookAtCamera();
+			player.LookAtCamera(roll);
 		}
 
 	}
 
-
+	roll += 0.01f;
 	frame++;
 }
 

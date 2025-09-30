@@ -19,10 +19,6 @@ public:
     void Update();
     void Draw();
 
-    void MovingCenter();
-    void MovingRotate();
-    void MovingDistance();
-
     void SetCenterTarget(Vector3 Center, int spendFrame, EaseType easetype);
     void SetRotateTarget(Vector3 Center, int spendFrame, EaseType easetype);
     void SetDistanceTarget(float Center, int spendFrame, EaseType easetype);
@@ -35,6 +31,10 @@ public:
     bool cameraModeMode_;
 
 private:
+
+    void MovingCenter();
+    void MovingRotate();
+    void MovingDistance();
     //////////////////////////////////////////////
     ///              カメラ回転                ///
     //////////////////////////////////////////////
