@@ -41,6 +41,7 @@ void GameManager::Update()
 		{
 			player.LookAtCamera();
 		}
+
 	}
 
 

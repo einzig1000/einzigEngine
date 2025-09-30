@@ -519,6 +519,12 @@ void Game::RenderData_Model::DrawImGui()
 	ImGui::Text("option");
 	ImGui::Checkbox("wireFrame", &options.wireframe);
 	ImGui::Checkbox("lighting", &options.enableLighting);
+	bool lookAt = false;
+	ImGui::Checkbox("lookAt", &lookAt);
+	if (lookAt)
+	{
+		GetDebugCamera()->SetCenterTarget(transforms.translate, 0, EaseType::IN_BACK);
+	}
 	ImGui::Text("isCollisionMouse : %d", isCollisionMouseRay);
 
 	ImGui::End();
