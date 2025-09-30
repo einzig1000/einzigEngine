@@ -88,6 +88,12 @@
     <Filter Include="GameEngine\CameraController">
       <UniqueIdentifier>{8119ccfa-d6ad-4af0-83e5-034de74534f5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="GameEngine\input\Input">
+      <UniqueIdentifier>{fa67fb13-219c-43c1-8e19-8bf1f07e96f1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GameManeger">
+      <UniqueIdentifier>{be7b0085-0de3-4d37-bc83-670da58a57b2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -173,6 +179,15 @@
     </ClCompile>
     <ClCompile Include="include\input\GetPadState.cpp">
       <Filter>GameEngine\input\GetPadState</Filter>
+    </ClCompile>
+    <ClCompile Include="GameManager.cpp">
+      <Filter>GameManeger</Filter>
+    </ClCompile>
+    <ClCompile Include="include\input\Input.cpp">
+      <Filter>GameEngine\input\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="include\definition\definition.cpp">
+      <Filter>GameEngine\definition</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -262,6 +277,12 @@
     </ClInclude>
     <ClInclude Include="include\input\GetPadState.h">
       <Filter>GameEngine\input\GetPadState</Filter>
+    </ClInclude>
+    <ClInclude Include="GameManager.h">
+      <Filter>GameManeger</Filter>
+    </ClInclude>
+    <ClInclude Include="include\input\Input.h">
+      <Filter>GameEngine\input\Input</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

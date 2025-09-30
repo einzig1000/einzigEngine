@@ -1,7 +1,19 @@
-#include "Game.h"
+#include "Engine/Engine.h"
 #include "externals/DirectXTex/d3dx12.h"
 #include "externals/DirectXTex/DirectXTex.h"
+#include "Utilities/Easings.h"
+#include "Utilities/functions.h"
 #include <cstdint>
+
+#include "input/MouseController.h"
+#include "Camera/CameraController.h"
+#include "Window/WindowManager.h"
+#include "DirectX/DirectXManager.h"
+#include "Engine/Game.h"
+
+#include <DirectXMath.h>
+#include <filesystem>
+using namespace DirectX;
 
 
 // 初期化用
@@ -15,12 +27,21 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 
 	if (!windowManager)
 	{
-		windowManager = new WindowManager(width, height, title);
+		windowManager = new  WindowManager(width, height, title);
 	}
 	if (!dxManager)
 	{
 		dxManager = new DirectXManager(windowManager->GetHwnd(), width, height);
 	}
+
+	// カメラ
+	cameraController = new CameraController();
+	debugCameraController = new CameraController();
+	cameraController->cameraMode_ = false;
+	debugCamera = true;
+
+	// インプット系
+	inputManager_ = new Input(windowManager->GetHwnd(), windowManager->Getwidth(), windowManager->Getheight(), &cameraController->viewProjectionMatrix, &debugCameraController->viewProjectionMatrix, &debugCamera);
 
 	/// imguiの初期化
 	IMGUI_CHECKVERSION();
@@ -36,18 +57,12 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 		dxManager->GetsrvDescriptorHeap()->GetGPUDescriptorHandleForHeapStart()
 	);
 
-	// カメラ
-	cameraController = new CameraController;
-
-	// マウス
-	mouseController = new MouseController;
-
 	// 頂点リソース
 	vertexResourceSizeSprite = static_cast<UINT>(sizeof(VertexData) * 1536); // スプライト 
 	vertexResourceSprite = CreateBufferResource(dxManager->GetDevice(), vertexResourceSizeSprite);
 
 	vertexResourceSizeObj = static_cast<UINT>(sizeof(VertexData) * 4096); // オブジェクト
-	//vertexResourceSizeObj = static_cast<UINT>(sizeof(VertexData) * 8192); // オブジェクト
+	//vertexResourceSizeObj = static_cast<UINT>(sizeof(VertexData) * 300000); // オブジェクト
 	vertexResourceObj = CreateBufferResource(dxManager->GetDevice(), vertexResourceSizeObj);
 
 	vertexResourceSizeTriangle = static_cast<UINT>(sizeof(VertexData) * 1024); // 三角形
@@ -134,16 +149,26 @@ bool Engine::ProcessMessage()
 }
 void Engine::BeginFrame()
 {
+	// ImGuiを更新
 	ImGui_ImplDX12_NewFrame();
 	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
+	//ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
+
+	// ???
 	sphereVertexDataUsed = 0;
 	spriteVertexDataUsed = 0;
-	ImGui::NewFrame();
 
-
+	// ライトを更新
 	UpdateLight();
+
+	// カメラを更新
 	UpdateCamera();
-	UpdateTransforms();
+
+	// インプット系を更新
+	inputManager_->Update();
+
+	// DirectXを更新
 	dxManager->BeginFrame();
 }
 void Engine::UpdateLight()
@@ -153,17 +178,28 @@ void Engine::UpdateLight()
 }
 void Engine::UpdateCamera()
 {
-	if (GetHitKey::keys[DIK_SPACE] && !GetHitKey::preKeys[DIK_SPACE])
+	// カメラの更新（シェイクも自動的に処理される）
+	cameraController->Update();
+	debugCameraController->Update();
+
+	// 視錐台平面を更新
+	if (!debugCamera)
 	{
-		if (cameraController->cameraMode_ == 1)cameraController->cameraMode_ = 0;
-		else cameraController->cameraMode_ = 1;
+		CreateFrustumPlanes(cameraController->viewProjectionMatrix);
 	}
-	// カメラの更新
-	cameraController->Updata();
+	else
+	{
+		CreateFrustumPlanes(debugCameraController->viewProjectionMatrix);
+	}
+
+	ImGui::Text("---------------camera---------------");
+	ImGui::Checkbox("switchDebugCamera", &debugCamera);
 }
 void Engine::EndFrame()
 {
-	cameraController->Draw();
+	wheelDelta = 0;
+
+	//cameraController->Draw();
 	ImGui::Render();
 
 	dxManager->EndFrame();
@@ -172,16 +208,83 @@ void Engine::EndFrame()
 	drawLineCallIndex = 0;
 }
 
+
 void Engine::UpdateTransforms()
 {
-	//for (auto& obj : objects)
-	//{
-	//	obj.transform.World = Matrix4x4::MakeAffineMatrix(obj.transform.scale, obj.transform.rotate, obj.transform.translate);
-	//	if (obj.transform.parentWorld)
-	//	{
-	//		obj.transform.World = obj.transform.World * (*obj.transform.parentWorld);
-	//	}
-	//}
+
+#pragma region モデルリスト取得
+
+	const auto& modelList = Game::GetModelList();
+
+#pragma endregion
+
+#pragma region 座標更新 & 描画範囲内判定
+	
+	// オブジェクト更新
+	for (auto& rd : modelList)
+	{
+		rd->Updata(objects);
+	}
+
+#pragma endregion
+
+#pragma region マウスレイ衝突判定
+
+	// マウスレイ取得
+	const Ray mouseRay = inputManager_->GetMouseController()->GetMouseRay();
+	// モデルと衝突までの距離セット構造体
+	struct HitInfo { Game::RenderData_Model* rdm; float distance; };
+	// のリスト
+	std::vector<HitInfo> hits;
+	// のリサイズ(リサイズではない)
+	hits.reserve(modelList.size());
+
+	// 描画範囲内のオブジェクトを全て調査
+	for (auto& rd : modelList)
+	{
+		rd->isCollisionMouseRay = -1;
+		if (rd->inPicture)
+		{
+			float minDistance = (std::numeric_limits<float>::max)();
+			std::optional<Vector3> nearestColPos;
+
+			for (const auto& aabb : rd->aabb)
+			{
+				std::optional<Vector3> colPos = IntersectRayModel(
+					mouseRay,
+					objects[rd->model].modelData.vertices,
+					aabb, rd->transforms
+				);
+				if (colPos)
+				{
+					float d = (colPos.value() - mouseRay.origin).Length();
+					if (d < minDistance)
+					{
+						minDistance = d;
+						nearestColPos = colPos;
+					}
+				}
+			}
+
+			if (nearestColPos)
+			{
+				hits.push_back({ rd, minDistance });
+			}
+		}
+	}
+
+	// 距離の昇順でソート
+	std::sort(hits.begin(), hits.end(),
+		[](auto& a, auto& b) { return a.distance < b.distance; });
+
+	// ソート後に順序を割り当て
+	for (int order = 0; order < (int)hits.size(); ++order)
+	{
+		hits[order].rdm->isCollisionMouseRay = order;
+	}
+
+#pragma endregion
+
 }
 
 // 終了処理
@@ -240,56 +343,20 @@ void Engine::Finalize()
 
 	objects.clear();
 
-	delete dxManager;
-	dxManager = nullptr;
-	delete windowManager;
-	windowManager = nullptr;
-	delete cameraController;
-	cameraController = nullptr;
-	delete mouseController;
-	mouseController = nullptr;
-
 	// COMの終了処理
 	CoUninitialize();
-}
 
-// Draw用データ作成するやつ
-DrawData Engine::SetupDrawData(size_t dstBufferSize, const VertexData* srcVertexData, size_t vertexCount, Microsoft::WRL::ComPtr<ID3D12Resource>& vertexResource, UINT& vertexResourceSize, Material* material, const uint32_t& materialColor, bool enableLighting, const Matrix4x4& uvTransform, TransformationMatrix* wvp, const Matrix4x4& world, const Matrix4x4& wvpMatrix, uint32_t textureNumber)
-{
-	// 描画回数上限
-	if (drawCallIndex >= kMaxDrawCallPerFrame) return{};
-
-	// 頂点数
-	if (vertexCount == 0) return{};
-	if (vertexCount * sizeof(VertexData) > dstBufferSize) return {};
-
-	// 頂点リソース
-	VertexData* vData = nullptr;
-	HRESULT hr = vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vData));
-	if (FAILED(hr) || vData == nullptr) return {};
-	std::memcpy(vData, srcVertexData, sizeof(VertexData) * vertexCount);
-	vertexResource->Unmap(0, nullptr);
-
-	// 頂点バッファビュー
-	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
-	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
-	vertexBufferView.SizeInBytes = sizeof(VertexData) * static_cast<UINT>(vertexCount);
-	vertexBufferView.StrideInBytes = sizeof(VertexData);
-
-	// マテリアル
-	Vector4 color = ConvertUintToVector4(materialColor);
-	material->color = color;
-	material->enableLighting = enableLighting;
-	material->uvTransform = uvTransform;
-
-	// WVP
-	wvp->World = world;
-	wvp->WVP = wvpMatrix;
-
-	// テクスチャ
-	const TextureData* tex = dxManager->GetTextureManager()->GetTexture(textureNumber);
-
-	return { vertexBufferView, tex };
+	// 解放
+	delete windowManager;
+	windowManager = nullptr;
+	delete dxManager;
+	dxManager = nullptr;
+	delete cameraController;
+	cameraController = nullptr;
+	delete debugCameraController;
+	debugCameraController = nullptr;
+	delete inputManager_;
+	inputManager_ = nullptr;
 }
 
 // リソース読み込み
@@ -306,8 +373,15 @@ uint32_t Engine::LoadOBJ(const std::string& directoryPath, const std::string& fi
 	obj.modelData = LoadOBJFile(directoryPath, filename);
 	// 変換行列
 	obj.transform = { {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f} };
-	// AABB
-	obj.aabb = CreateLocalAABB(obj.modelData);
+	// AABB .obj → .csv へ拡張子を変換して渡す
+	std::string csvFilename = filename;
+	size_t dotPos = csvFilename.rfind('.');
+	if (dotPos != std::string::npos)
+		csvFilename.replace(dotPos, csvFilename.length() - dotPos, ".csv");
+	else
+		csvFilename += ".csv";
+	csvFilename = directoryPath + csvFilename;
+	obj.aabb = LoadAABB(csvFilename, obj.modelData);
 	// 識別ナンバー
 	obj.number = static_cast<uint32_t>(objects.size());
 
@@ -330,6 +404,23 @@ uint32_t Engine::LoadOBJ(const std::string& directoryPath, const std::string& fi
 	return ref.number;
 }
 
+std::vector<AABB> Engine::LoadAABB(const std::string& csvPath, const ModelData& model)
+{
+	std::vector<AABB> aabbs;
+	if (std::filesystem::exists(csvPath))
+	{
+		aabbs = LoadAABBFromCSV(csvPath);
+	}
+	else
+	{
+		// 今までの方法でAABBを1つ作成
+		AABB aabb = CreateLocalAABB(model);
+		aabbs.push_back(aabb);
+		SaveAABBToCSV(csvPath, aabbs);
+	}
+	return aabbs;
+}
+
 uint32_t Engine::LoadAudio(const std::string& filePath)
 {
 	return dxManager->GetAudioManager()->LoadAudio(filePath);
@@ -343,62 +434,75 @@ TextureData* Engine::GetTexture(uint32_t textureNumber)
 
 
 // 描画
-void Engine::Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions)
+void Engine::Drawobj(Game::RenderData_Model& renderData)
 {
-	// 描画回数上限
-	if (drawCallIndex >= kMaxDrawCallPerFrame) return;
+	// 画面内か判定
+	if (!renderData.inPicture)return;
 
-	if (objectNumber >= objects.size()) return;
+	// 描画
+	{
+		// 描画回数上限
+		if (drawCallIndex >= kMaxDrawCallPerFrame) return;
 
-	// RootSignatureとPSOを設定
-	if (drawOptions.enableWireframeMode && WireframeMode)
-	{	// Wireframe
-		dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetWireframePipelineState()); // ワイヤーフレーム用PSOを設定
+		if (renderData.model >= objects.size()) return;
+
+		// RootSignatureとPSOを設定
+		dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
+		if (renderData.options.wireframe || WireframeMode)
+		{	 // ワイヤーフレーム用PSOを設定
+			dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(BlendMode::Wireframe, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
+		}
+		else
+		{	// Triangle用PSOを設定
+			dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(renderData.options.blendMode, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
+		}
+
+		// 描画するモデルの検索
+		Object3D& obj = objects[renderData.model];
+		// 頂点数の取得
+		const uint32_t kSumVertex = static_cast<uint32_t>(obj.modelData.vertices.size());
+
+		// WVP行列
+		wvpData[drawCallIndex]->World = renderData.transforms.World;
+		if (!debugCamera)
+		{
+			wvpData[drawCallIndex]->WVP = renderData.transforms.World * cameraController->viewProjectionMatrix;
+		}
+		else
+		{
+			wvpData[drawCallIndex]->WVP = renderData.transforms.World * debugCameraController->viewProjectionMatrix;
+		}
+
+		const TextureData* tex = dxManager->GetTextureManager()->GetTexture(renderData.texture);
+		if (!tex) return;
+
+		Vector4 color = ConvertUintToVector4(renderData.color);
+		materialData[drawCallIndex]->color = color;
+		materialData[drawCallIndex]->enableLighting = renderData.options.enableLighting;
+		Matrix4x4 uvTransformMatrix = Matrix4x4::MakeIdentity4x4();
+		uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeScaleMatrix(renderData.uvTransform.scale));
+		uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(renderData.uvTransform.rotate.z));
+		uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(renderData.uvTransform.translate));
+		materialData[drawCallIndex]->uvTransform = uvTransformMatrix;
+
+
+		// 頂点バッファをバインド（描画に使う頂点データを指定）
+		dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &obj.vertexBufferView);
+		// プリミティブトポロジ（描画する形状の種類：三角形リスト）を設定
+		dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		// ルートパラメータ0にマテリアル用定数バッファ（色・ライティング情報など）をバインド
+		dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources[drawCallIndex]->GetGPUVirtualAddress());
+		// ルートパラメータ1にWVP（ワールド・ビュー・プロジェクション）用定数バッファをバインド
+		dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources[drawCallIndex]->GetGPUVirtualAddress());
+		// ルートパラメータ2にテクスチャのSRV（シェーダリソースビュー）をバインド
+		dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
+		// ルートパラメータ3にディレクショナルライト用定数バッファをバインド
+		dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
+		// 頂点数分のインスタンス描画を実行（実際に描画コマンドを発行）
+		dxManager->GetCommandList()->DrawInstanced(kSumVertex, 1, 0, 0);
+
+		drawCallIndex++;
 	}
-	else
-	{	// Triangle
-		dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState()); // Triangle用PSOを設定
-	}
-	dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
-
-	// 描画するモデルの検索
-	Object3D& obj = objects[objectNumber];
-	// 頂点数の取得
-	const uint32_t kSumVertex = static_cast<uint32_t>(obj.modelData.vertices.size());
-
-	// WVP行列
-	wvpData[drawCallIndex]->World = transform.World;
-	wvpData[drawCallIndex]->WVP = transform.World * cameraController->viewProjectionMatrix;
-
-	const TextureData* tex = dxManager->GetTextureManager()->GetTexture(textureNumber);
-	if (!tex) return;
-
-	Vector4 color = ConvertUintToVector4(materialColor);
-	materialData[drawCallIndex]->color = color;
-	materialData[drawCallIndex]->enableLighting = drawOptions.enableLighting;
-	Matrix4x4 uvTransformMatrix = Matrix4x4::MakeIdentity4x4();
-	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeScaleMatrix(drawOptions.uvTransform.scale));
-	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(drawOptions.uvTransform.rotate.z));
-	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(drawOptions.uvTransform.translate));
-	materialData[drawCallIndex]->uvTransform = uvTransformMatrix;
-
-
-	// 頂点バッファをバインド（描画に使う頂点データを指定）
-	dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &obj.vertexBufferView);
-	// プリミティブトポロジ（描画する形状の種類：三角形リスト）を設定
-	dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	// ルートパラメータ0にマテリアル用定数バッファ（色・ライティング情報など）をバインド
-	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources[drawCallIndex]->GetGPUVirtualAddress());
-	// ルートパラメータ1にWVP（ワールド・ビュー・プロジェクション）用定数バッファをバインド
-	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources[drawCallIndex]->GetGPUVirtualAddress());
-	// ルートパラメータ2にテクスチャのSRV（シェーダリソースビュー）をバインド
-	dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
-	// ルートパラメータ3にディレクショナルライト用定数バッファをバインド
-	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
-	// 頂点数分のインスタンス描画を実行（実際に描画コマンドを発行）
-	dxManager->GetCommandList()->DrawInstanced(kSumVertex, 1, 0, 0);
-
-	drawCallIndex++;
 }
 
 void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions)
@@ -406,20 +510,16 @@ void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint
 	// 描画回数上限
 	if (drawCallIndex >= kMaxDrawCallPerFrame) return;
 
-	//// RootSignatureとPSOを設定 - Triangle
-	//dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState()); // Triangle用PSOを設定
-	//dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
-
 	// RootSignatureとPSOを設定
-	if (drawOptions.enableWireframeMode && WireframeMode)
-	{	// Wireframe
-		dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetWireframePipelineState()); // ワイヤーフレーム用PSOを設定
+	dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
+	if (drawOptions.wireframe || WireframeMode)
+	{	 // ワイヤーフレーム用PSOを設定
+		dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(BlendMode::Wireframe, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
 	}
 	else
-	{	// Triangle
-		dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState()); // Triangle用PSOを設定
+	{	// Triangle用PSOを設定
+		dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(drawOptions.blendMode, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
 	}
-	dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
 
 	// 必要な頂点数
 	const uint32_t kSumVertex = kSubdivision * kSubdivision * 6;
@@ -460,7 +560,15 @@ void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint
 		translateMatrix;	 // 5. 最終的なワールド位置へ移動
 
 	// WVP行列
-	Matrix4x4 wvpMatrix = (worldMatrix * cameraController->viewProjectionMatrix);
+	Matrix4x4 wvpMatrix;
+	if (!debugCamera)
+	{
+		wvpMatrix = worldMatrix * cameraController->viewProjectionMatrix;
+	}
+	else
+	{
+		wvpMatrix = worldMatrix * debugCameraController->viewProjectionMatrix;
+	}
 
 	wvpData[drawCallIndex]->World = worldMatrix;
 	wvpData[drawCallIndex]->WVP = wvpMatrix;
@@ -474,9 +582,9 @@ void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint
 	materialData[drawCallIndex]->color = color;
 	materialData[drawCallIndex]->enableLighting = drawOptions.enableLighting;
 	Matrix4x4 uvTransformMatrix = Matrix4x4::MakeIdentity4x4();
-	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeScaleMatrix(drawOptions.uvTransform.scale));
-	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(drawOptions.uvTransform.rotate.z));
-	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(drawOptions.uvTransform.translate));
+	//uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeScaleMatrix(drawOptions.uvTransform.scale));
+	//uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(drawOptions.uvTransform.rotate.z));
+	//uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(drawOptions.uvTransform.translate));
 	materialData[drawCallIndex]->uvTransform = uvTransformMatrix;
 
 
@@ -513,21 +621,21 @@ void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint
 	sphereVertexDataUsed += kSumVertex;
 }
 
-void Engine::DrawTriangle(const Transforms& transform, const Vector3& pos1, const Vector3& pos2, const Vector3& pos3, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions)
+void Engine::DrawTriangle(Game::RenderData_Triangle& renderData)
 {
 	// 描画回数上限
 	if (drawCallIndex >= kMaxDrawCallPerFrame) return;
 
 	// RootSignatureとPSOを設定
-	if (drawOptions.enableWireframeMode && WireframeMode)
-	{	// Wireframe
-		dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetWireframePipelineState()); // ワイヤーフレーム用PSOを設定
+	dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
+	if (renderData.options.wireframe || WireframeMode)
+	{	 // ワイヤーフレーム用PSOを設定
+		dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(BlendMode::Wireframe, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
 	}
 	else
-	{	// Triangle
-		dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState()); // Triangle用PSOを設定
+	{	// Triangle用PSOを設定
+		dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(renderData.options.blendMode, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
 	}
-	dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
 
 	// 必要な頂点数
 	const uint32_t kSumVertex = 4;
@@ -537,45 +645,49 @@ void Engine::DrawTriangle(const Transforms& transform, const Vector3& pos1, cons
 		spriteVertexData.resize(spriteVertexDataUsed + kSumVertex);
 	}
 
+	// テクスチャ
+	const TextureData* tex = dxManager->GetTextureManager()->GetTexture(renderData.texture);
+	if (!tex) return;
+
 	// 上
-	spriteVertexData[spriteVertexDataUsed + 0].position = { pos1.x,pos1.y,pos1.z,0 };
+	spriteVertexData[spriteVertexDataUsed + 0].position = { renderData.pos1.x, renderData.pos1.y, renderData.pos1.z, 1.0f };
 	spriteVertexData[spriteVertexDataUsed + 0].texcoord = { 0.5f, 0.0f };
 	spriteVertexData[spriteVertexDataUsed + 0].normal = { 0.0f, 0.0f, -1.0f };
 
 	// 右下
-	spriteVertexData[spriteVertexDataUsed + 1].position = { pos2.x,pos2.y,pos2.z,0 };
+	spriteVertexData[spriteVertexDataUsed + 1].position = { renderData.pos2.x, renderData.pos2.y, renderData.pos2.z, 1.0f };
 	spriteVertexData[spriteVertexDataUsed + 1].texcoord = { 1.0f, 1.0f };
 	spriteVertexData[spriteVertexDataUsed + 1].normal = { 0.0f, 0.0f, -1.0f };
 
 	// 左下
-	spriteVertexData[spriteVertexDataUsed + 2].position = { pos3.x,pos3.y,pos3.z,0 };
+	spriteVertexData[spriteVertexDataUsed + 2].position = { renderData.pos3.x,renderData.pos3.y, renderData.pos3.z, 1.0f };
 	spriteVertexData[spriteVertexDataUsed + 2].texcoord = { 0.0f, 1.0f };
 	spriteVertexData[spriteVertexDataUsed + 2].normal = { 0.0f, 0.0f, -1.0f };
 
 	// WVP行列
-	Matrix4x4 orthoProjectionMatrix = Matrix4x4::MakeOrthographicMatrix(
-		0.0f, 0.0f,
-		static_cast<float>(windowManager->Getwidth()),
-		static_cast<float>(windowManager->Getheight()),
-		0.0f, 100.0f);
-	Matrix4x4 world = Matrix4x4::MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
-	Matrix4x4 wvpMatrix = (world * orthoProjectionMatrix);
+	Matrix4x4 world = Matrix4x4::MakeAffineMatrix(renderData.transform.scale, renderData.transform.rotate, renderData.transform.translate);
+	Matrix4x4 viewProj;
+	if (!debugCamera)
+	{
+		viewProj = cameraController->viewProjectionMatrix;
+	}
+	else
+	{
+		viewProj = debugCameraController->viewProjectionMatrix;
+	}
+	Matrix4x4 wvpMatrix = world * viewProj;
 
 	wvpData[drawCallIndex]->World = world;
 	wvpData[drawCallIndex]->WVP = wvpMatrix;
 
-	// テクスチャ
-	const TextureData* tex = dxManager->GetTextureManager()->GetTexture(textureNumber);
-	if (!tex)return;
-
 	// マテリアル
-	Vector4 color = ConvertUintToVector4(materialColor);
+	Vector4 color = ConvertUintToVector4(renderData.color);
 	materialData[drawCallIndex]->color = color;
-	materialData[drawCallIndex]->enableLighting = drawOptions.enableLighting;
+	materialData[drawCallIndex]->enableLighting = renderData.options.enableLighting;
 	Matrix4x4 uvTransformMatrix = Matrix4x4::MakeIdentity4x4();
-	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeScaleMatrix(drawOptions.uvTransform.scale));
-	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(drawOptions.uvTransform.rotate.z));
-	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(drawOptions.uvTransform.translate));
+	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeScaleMatrix(renderData.uvTransform.scale));
+	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(renderData.uvTransform.rotate.z));
+	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(renderData.uvTransform.translate));
 	materialData[drawCallIndex]->uvTransform = uvTransformMatrix;
 
 	// 頂点リソース
@@ -590,7 +702,6 @@ void Engine::DrawTriangle(const Transforms& transform, const Vector3& pos1, cons
 	vertexBufferView.BufferLocation = vertexResourceSprite->GetGPUVirtualAddress() + sizeof(VertexData) * (spriteVertexDataUsed);
 	vertexBufferView.SizeInBytes = sizeof(VertexData) * static_cast<UINT>(kSumVertex);
 	vertexBufferView.StrideInBytes = sizeof(VertexData);
-
 
 
 	// RootSignatureを設定。
@@ -613,14 +724,14 @@ void Engine::DrawTriangle(const Transforms& transform, const Vector3& pos1, cons
 	spriteVertexDataUsed += kSumVertex;
 }
 
-void Engine::DrawSprite(const Transforms& transform, const Vector2& center, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions)
+void Engine::DrawSprite(Game::RenderData_Sprite& renderData)
 {
 	// 描画回数上限
 	if (drawCallIndex >= kMaxDrawCallPerFrame) return;
 
 	// RootSignatureとPSOを設定 - Triangle
-	dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState()); // Triangle用PSOを設定
 	dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
+	dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(renderData.options.blendMode, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE)); // Triangle用PSOを設定
 
 	// 必要な頂点数
 	const uint32_t kSumVertex = 4;
@@ -631,12 +742,12 @@ void Engine::DrawSprite(const Transforms& transform, const Vector2& center, uint
 	}
 
 	// テクスチャ
-	const TextureData* tex = dxManager->GetTextureManager()->GetTexture(textureNumber);
+	const TextureData* tex = dxManager->GetTextureManager()->GetTexture(renderData.texture);
 	if (!tex)return;
 
 	// 頂点
-	const float halfWidth = tex->metadata.width * 0.5f;
-	const float halfHeight = tex->metadata.height * 0.5f;
+	float halfWidth = static_cast<float>(tex->metadata.width) * 0.5f;
+	float halfHeight = static_cast<float>(tex->metadata.height) * 0.5f;
 
 	// 左下 (index 0)
 	spriteVertexData[spriteVertexDataUsed + 0].position = { -halfWidth, -halfHeight, 0.0f, 1.0f };
@@ -656,7 +767,158 @@ void Engine::DrawSprite(const Transforms& transform, const Vector2& center, uint
 	// 右上 (index 3)
 	spriteVertexData[spriteVertexDataUsed + 3].position = { halfWidth, halfHeight, 0.0f, 1.0f };
 	spriteVertexData[spriteVertexDataUsed + 3].texcoord = { 1.0f, 1.0f };
-	spriteVertexData[spriteVertexDataUsed + 3].normal = { 0.0f, 0.0f, -1.0f }; 
+	spriteVertexData[spriteVertexDataUsed + 3].normal = { 0.0f, 0.0f, -1.0f };
+
+	switch (renderData.anker)
+	{
+	case Anker::Center:
+	{
+		// 左下 (index 0)
+		spriteVertexData[spriteVertexDataUsed + 0].position.x;
+		spriteVertexData[spriteVertexDataUsed + 0].position.y;
+		// 左上 (index 1)
+		spriteVertexData[spriteVertexDataUsed + 1].position.x;
+		spriteVertexData[spriteVertexDataUsed + 1].position.y;
+		// 右下 (index 2)
+		spriteVertexData[spriteVertexDataUsed + 2].position.x;
+		spriteVertexData[spriteVertexDataUsed + 2].position.y;
+		// 右上 (index 3)
+		spriteVertexData[spriteVertexDataUsed + 3].position.x;
+		spriteVertexData[spriteVertexDataUsed + 3].position.y;
+		break;
+	}
+	case Anker::CenterLeft:
+	{
+		// 左下 (index 0)
+		spriteVertexData[spriteVertexDataUsed + 0].position.x += halfWidth;
+		spriteVertexData[spriteVertexDataUsed + 0].position.y;
+		// 左上 (index 1)
+		spriteVertexData[spriteVertexDataUsed + 1].position.x += halfWidth;
+		spriteVertexData[spriteVertexDataUsed + 1].position.y;
+		// 右下 (index 2)
+		spriteVertexData[spriteVertexDataUsed + 2].position.x += halfWidth;
+		spriteVertexData[spriteVertexDataUsed + 2].position.y;
+		// 右上 (index 3)
+		spriteVertexData[spriteVertexDataUsed + 3].position.x += halfWidth;
+		spriteVertexData[spriteVertexDataUsed + 3].position.y;
+		break;
+	}
+	case Anker::CenterRight:
+	{
+		// 左下 (index 0)
+		spriteVertexData[spriteVertexDataUsed + 0].position.x += -halfWidth;
+		spriteVertexData[spriteVertexDataUsed + 0].position.y;
+		// 左上 (index 1)
+		spriteVertexData[spriteVertexDataUsed + 1].position.x += -halfWidth;
+		spriteVertexData[spriteVertexDataUsed + 1].position.y;
+		// 右下 (index 2)
+		spriteVertexData[spriteVertexDataUsed + 2].position.x += -halfWidth;
+		spriteVertexData[spriteVertexDataUsed + 2].position.y;
+		// 右上 (index 3)
+		spriteVertexData[spriteVertexDataUsed + 3].position.x += -halfWidth;
+		spriteVertexData[spriteVertexDataUsed + 3].position.y;
+		break;
+	}
+	case Anker::CenterTop:
+	{
+		// 左下 (index 0)
+		spriteVertexData[spriteVertexDataUsed + 0].position.x;
+		spriteVertexData[spriteVertexDataUsed + 0].position.y += halfHeight;
+		// 左上 (index 1)
+		spriteVertexData[spriteVertexDataUsed + 1].position.x;
+		spriteVertexData[spriteVertexDataUsed + 1].position.y += halfHeight;
+		// 右下 (index 2)
+		spriteVertexData[spriteVertexDataUsed + 2].position.x;
+		spriteVertexData[spriteVertexDataUsed + 2].position.y += halfHeight;
+		// 右上 (index 3)
+		spriteVertexData[spriteVertexDataUsed + 3].position.x;
+		spriteVertexData[spriteVertexDataUsed + 3].position.y += halfHeight;
+		break;
+	}
+	case Anker::CenterDown:
+	{
+		// 左下 (index 0)
+		spriteVertexData[spriteVertexDataUsed + 0].position.x;
+		spriteVertexData[spriteVertexDataUsed + 0].position.y += -halfHeight;
+		// 左上 (index 1)
+		spriteVertexData[spriteVertexDataUsed + 1].position.x;
+		spriteVertexData[spriteVertexDataUsed + 1].position.y += -halfHeight;
+		// 右下 (index 2)
+		spriteVertexData[spriteVertexDataUsed + 2].position.x;
+		spriteVertexData[spriteVertexDataUsed + 2].position.y += -halfHeight;
+		// 右上 (index 3)
+		spriteVertexData[spriteVertexDataUsed + 3].position.x;
+		spriteVertexData[spriteVertexDataUsed + 3].position.y += -halfHeight;
+		break;
+	}
+	case Anker::LeftTop:
+	{
+		// 左下 (index 0)
+		spriteVertexData[spriteVertexDataUsed + 0].position.x += halfWidth;
+		spriteVertexData[spriteVertexDataUsed + 0].position.y += halfHeight;
+		// 左上 (index 1)
+		spriteVertexData[spriteVertexDataUsed + 1].position.x += halfWidth;
+		spriteVertexData[spriteVertexDataUsed + 1].position.y += halfHeight;
+		// 右下 (index 2)
+		spriteVertexData[spriteVertexDataUsed + 2].position.x += halfWidth;
+		spriteVertexData[spriteVertexDataUsed + 2].position.y += halfHeight;
+		// 右上 (index 3)
+		spriteVertexData[spriteVertexDataUsed + 3].position.x += halfWidth;
+		spriteVertexData[spriteVertexDataUsed + 3].position.y += halfHeight;
+		break;
+	}
+	case Anker::RightTop:
+	{
+		// 左下 (index 0)
+		spriteVertexData[spriteVertexDataUsed + 0].position.x += -halfWidth;
+		spriteVertexData[spriteVertexDataUsed + 0].position.y += halfHeight;
+		// 左上 (index 1)
+		spriteVertexData[spriteVertexDataUsed + 1].position.x += -halfWidth;
+		spriteVertexData[spriteVertexDataUsed + 1].position.y += halfHeight;
+		// 右下 (index 2)
+		spriteVertexData[spriteVertexDataUsed + 2].position.x += -halfWidth;
+		spriteVertexData[spriteVertexDataUsed + 2].position.y += halfHeight;
+		// 右上 (index 3)
+		spriteVertexData[spriteVertexDataUsed + 3].position.x += -halfWidth;
+		spriteVertexData[spriteVertexDataUsed + 3].position.y += halfHeight;
+		break;
+	}
+	case Anker::LeftDown:
+	{
+		// 左下 (index 0)
+		spriteVertexData[spriteVertexDataUsed + 0].position.x += halfWidth;
+		spriteVertexData[spriteVertexDataUsed + 0].position.y += -halfHeight;
+		// 左上 (index 1)
+		spriteVertexData[spriteVertexDataUsed + 1].position.x += halfWidth;
+		spriteVertexData[spriteVertexDataUsed + 1].position.y += -halfHeight;
+		// 右下 (index 2)
+		spriteVertexData[spriteVertexDataUsed + 2].position.x += halfWidth;
+		spriteVertexData[spriteVertexDataUsed + 2].position.y += -halfHeight;
+		// 右上 (index 3)
+		spriteVertexData[spriteVertexDataUsed + 3].position.x += halfWidth;
+		spriteVertexData[spriteVertexDataUsed + 3].position.y += -halfHeight;
+		break;
+	}
+	case Anker::RightDown:
+	{
+		// 左下 (index 0)
+		spriteVertexData[spriteVertexDataUsed + 0].position.x += -halfWidth;
+		spriteVertexData[spriteVertexDataUsed + 0].position.y += -halfHeight;
+		// 左上 (index 1)
+		spriteVertexData[spriteVertexDataUsed + 1].position.x += -halfWidth;
+		spriteVertexData[spriteVertexDataUsed + 1].position.y += -halfHeight;
+		// 右下 (index 2)
+		spriteVertexData[spriteVertexDataUsed + 2].position.x += -halfWidth;
+		spriteVertexData[spriteVertexDataUsed + 2].position.y += -halfHeight;
+		// 右上 (index 3)
+		spriteVertexData[spriteVertexDataUsed + 3].position.x += -halfWidth;
+		spriteVertexData[spriteVertexDataUsed + 3].position.y += -halfHeight;
+		break;
+	}
+	default:
+		break;
+	}
+
 
 	// WVP行列
 	Matrix4x4 orthoProjectionMatrix = Matrix4x4::MakeOrthographicMatrix(
@@ -664,35 +926,35 @@ void Engine::DrawSprite(const Transforms& transform, const Vector2& center, uint
 		static_cast<float>(windowManager->Getwidth()),
 		static_cast<float>(windowManager->Getheight()),
 		0.0f, 100.0f);
-	Matrix4x4 world = Matrix4x4::MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+	Matrix4x4 world = Matrix4x4::MakeAffineMatrix(renderData.transforms.scale, renderData.transforms.rotate, renderData.transforms.translate);
 	Matrix4x4 wvpMatrix = (world * orthoProjectionMatrix);
 
 	wvpData[drawCallIndex]->World = world;
 	wvpData[drawCallIndex]->WVP = wvpMatrix;
 
-	
+
 	// マテリアル
-	float uvCenterX = (center.x) - (halfWidth);
-	float uvCenterY = (center.y) - (halfHeight);
+	float uvCenterX = (renderData.pivot.x) - (halfWidth);
+	float uvCenterY = (renderData.pivot.y) - (halfHeight);
 	uvCenterX = uvCenterX / halfWidth / 2;
 	uvCenterY = uvCenterY / halfHeight / 2;
 
 	Matrix4x4 toCenter = Matrix4x4::MakeTranslateMatrix({ -uvCenterX, -uvCenterY, 0.0f });
 	Matrix4x4 fromCenter = Matrix4x4::MakeTranslateMatrix({ uvCenterX, uvCenterY, 0.0f });
 	Matrix4x4 uvTransformMatrix = Matrix4x4::MakeIdentity4x4();
-		uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeScaleMatrix(drawOptions.uvTransform.scale));
-		uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(drawOptions.uvTransform.rotate.z));
+	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeScaleMatrix(renderData.uvTransform.scale));
+	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(renderData.uvTransform.rotate.z));
 
 	uvTransformMatrix = (fromCenter * (uvTransformMatrix * toCenter));
 
-	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(drawOptions.uvTransform.translate));
+	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(renderData.uvTransform.translate));
 
 
-	Vector4 color = ConvertUintToVector4(materialColor);
+	Vector4 color = ConvertUintToVector4(renderData.color);
 	materialData[drawCallIndex]->color = color;
 	materialData[drawCallIndex]->enableLighting = false;
 	materialData[drawCallIndex]->uvTransform = uvTransformMatrix;
-	
+
 
 	// 頂点リソース
 	VertexData* vData = nullptr;
@@ -707,7 +969,59 @@ void Engine::DrawSprite(const Transforms& transform, const Vector2& center, uint
 	vertexBufferView.SizeInBytes = sizeof(VertexData) * static_cast<UINT>(kSumVertex);
 	vertexBufferView.StrideInBytes = sizeof(VertexData);
 
+	// スプライトの中心座標
+	Vector2 center = { renderData.transforms.translate.x, renderData.transforms.translate.y };
 
+
+	halfWidth *= renderData.transforms.scale.x;
+	halfHeight *= renderData.transforms.scale.y;
+
+	// アンカーに応じて中心座標を補正
+	switch (renderData.anker)
+	{
+	case Anker::CenterLeft:
+		center.x += halfWidth;
+		break;
+	case Anker::CenterRight:
+		center.x -= halfWidth;
+		break;
+	case Anker::CenterTop:
+		center.y += halfHeight;
+		break;
+	case Anker::CenterDown:
+		center.y -= halfHeight;
+		break;
+	case Anker::LeftTop:
+		center.x += halfWidth;
+		center.y += halfHeight;
+		break;
+	case Anker::RightTop:
+		center.x -= halfWidth;
+		center.y += halfHeight;
+		break;
+	case Anker::LeftDown:
+		center.x += halfWidth;
+		center.y -= halfHeight;
+		break;
+	case Anker::RightDown:
+		center.x -= halfWidth;
+		center.y -= halfHeight;
+		break;
+	default:
+		break;
+	}
+
+	// スプライトのAABB
+	float left = center.x - halfWidth;
+	float right = center.x + halfWidth;
+	float top = center.y - halfHeight;
+	float bottom = center.y + halfHeight;
+
+	// マウス座標取得
+	Vector2 mousePos = Game::GetMousePosition();
+
+	// 当たり判定
+	renderData.isCollisionMouseRay = (mousePos.x >= left && mousePos.x <= right && mousePos.y >= top && mousePos.y <= bottom);
 
 	// Spriteの描画
 	dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
@@ -724,7 +1038,6 @@ void Engine::DrawSprite(const Transforms& transform, const Vector2& center, uint
 	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 
 	// 描画
-	//dxManager->GetCommandList()->DrawIndexedInstanced(6, 1, 0, static_cast<UINT>(spriteVertexDataUsed), 0);
 	dxManager->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
 	drawCallIndex++;
@@ -736,8 +1049,8 @@ void Engine::DrawLine(const Vector3& start, const Vector3& end, const uint32_t& 
 	if (drawLineCallIndex >= kMaxDrawLineCallPerFrame) return;
 
 	// RootSignatureとPSOを設定 - Line
-	dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetLinePipelineState()); // Line用PSOを設定
 	dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
+	dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(BlendMode::kBlendModeNormal, D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE)); // Line用PSOを設定
 
 	// 頂点データの準備
 	VertexData vertices[2];
@@ -777,7 +1090,15 @@ void Engine::DrawLine(const Vector3& start, const Vector3& end, const uint32_t& 
 	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResourceLine[drawLineCallIndex]->GetGPUVirtualAddress());// b1にバインド
 
 	// WVP行列定数バッファの更新 (カメラのWVP行列を使用)
-	Matrix4x4 wvpMatrix = cameraController->viewProjectionMatrix; // カメラのViewProjection行列
+	Matrix4x4 wvpMatrix = cameraController->viewProjectionMatrix;
+	if (!debugCamera)
+	{
+		wvpMatrix = cameraController->viewProjectionMatrix;
+	}
+	else
+	{
+		wvpMatrix = debugCameraController->viewProjectionMatrix;
+	}
 	wvpDataLine[drawLineCallIndex]->WVP = wvpMatrix;
 	wvpDataLine[drawLineCallIndex]->World = Matrix4x4::MakeIdentity4x4();
 	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResourceLine[drawLineCallIndex]->GetGPUVirtualAddress()); // b0にバインド
@@ -787,6 +1108,302 @@ void Engine::DrawLine(const Vector3& start, const Vector3& end, const uint32_t& 
 	dxManager->GetCommandList()->DrawInstanced(2, 1, 0, 0);
 
 	drawLineCallIndex++;
+}
+
+void Engine::DrawParticle(Game::RenderData_Particle& renderData)
+{
+	if (renderData.frame >= renderData.emissionDelay)
+	{
+		for (int i = 0; i < renderData.particlesPerEmission; ++i)
+		{
+			// AABB逆転対策
+			AABB buf = renderData.emitterAABB;
+			renderData.emitterAABB.min.x = my_min(buf.min.x, buf.max.x);
+			renderData.emitterAABB.max.x = my_max(buf.min.x, buf.max.x);
+			renderData.emitterAABB.min.y = my_min(buf.min.y, buf.max.y);
+			renderData.emitterAABB.max.y = my_max(buf.min.y, buf.max.y);
+			renderData.emitterAABB.min.z = my_min(buf.min.z, buf.max.z);
+			renderData.emitterAABB.max.z = my_max(buf.min.z, buf.max.z);
+
+			// フレームリセット
+			renderData.frame = 0;
+
+			////////////// オブジェクト作成 //////////////
+			Game::RenderData_Model model;
+
+			// エミッターがAABB型だった場合
+			if (renderData.option.emitterShape == true)
+			{
+				// エミッターが内部を指す場合
+				if (renderData.option.spawnInsideEmitter == true)
+				{
+					model.transforms.translate.x = RandomFloat(renderData.emitterAABB.min.x, renderData.emitterAABB.max.x, 3);
+					model.transforms.translate.y = RandomFloat(renderData.emitterAABB.min.y, renderData.emitterAABB.max.y, 3);
+					model.transforms.translate.z = RandomFloat(renderData.emitterAABB.min.z, renderData.emitterAABB.max.z, 3);
+				}
+				// エミッターが外殻を指す場合
+				else
+				{
+					int i = RandomInt(1, 6);
+					if (i == 1 || i == 2)
+					{
+						if (i == 1)
+						{
+							model.transforms.translate.x = renderData.emitterAABB.min.x;
+						}
+						else
+						{
+							model.transforms.translate.x = renderData.emitterAABB.max.x;
+						}
+						model.transforms.translate.y = RandomFloat(renderData.emitterAABB.min.y, renderData.emitterAABB.max.y, 3);
+						model.transforms.translate.z = RandomFloat(renderData.emitterAABB.min.z, renderData.emitterAABB.max.z, 3);
+					}
+					else if (i == 3 || i == 4)
+					{
+						if (i == 3)
+						{
+							model.transforms.translate.y = renderData.emitterAABB.min.y;
+						}
+						else
+						{
+							model.transforms.translate.y = renderData.emitterAABB.max.y;
+						}
+						model.transforms.translate.x = RandomFloat(renderData.emitterAABB.min.x, renderData.emitterAABB.max.x, 3);
+						model.transforms.translate.z = RandomFloat(renderData.emitterAABB.min.z, renderData.emitterAABB.max.z, 3);
+					}
+					else if (i == 5 || i == 6)
+					{
+						if (i == 5)
+						{
+							model.transforms.translate.z = renderData.emitterAABB.min.z;
+						}
+						else
+						{
+							model.transforms.translate.z = renderData.emitterAABB.max.z;
+						}
+						model.transforms.translate.y = RandomFloat(renderData.emitterAABB.min.y, renderData.emitterAABB.max.y, 3);
+						model.transforms.translate.x = RandomFloat(renderData.emitterAABB.min.x, renderData.emitterAABB.max.x, 3);
+					}
+				}
+			}
+			// エミッターが球型だった場合
+			else
+			{
+				// エミッターが内部を指す場合
+				if (renderData.option.spawnInsideEmitter == true)
+				{
+					Vector3 center = renderData.emitterSphere.center;
+					Vector3 radius = renderData.emitterSphere.radius;
+
+					// ランダムな方向（単位ベクトル）を生成
+					float theta = RandomFloat(0.0f, 2.0f * float(std::numbers::pi), 3);       // 0〜2π
+					float phi = RandomFloat(0.0f, float(std::numbers::pi), 3);              // 0〜π
+					float r = RandomFloat(0.0f, 1.0f, 3);            // 0〜1（球内）
+
+					// 球内部の距離に合わせてスケーリング（立方根で均等分布）
+					r = pow(r, 1.0f / 3.0f);
+
+					// 球面座標系から直交座標系へ変換
+					float x = r * sin(phi) * cos(theta) * radius.x;
+					float y = r * sin(phi) * sin(theta) * radius.y;
+					float z = r * cos(phi) * radius.z;
+
+					model.transforms.translate.x = center.x + x;
+					model.transforms.translate.y = center.y + y;
+					model.transforms.translate.z = center.z + z;
+				}
+				// エミッターが外殻を指す場合
+				else
+				{
+					Vector3 center = renderData.emitterSphere.center;
+					Vector3 radius = renderData.emitterSphere.radius;
+
+					// ランダムな方向（単位ベクトル）を生成
+					float theta = RandomFloat(0.0f, 2.0f * float(std::numbers::pi), 3); // 0〜2π
+					float phi = RandomFloat(0.0f, float(std::numbers::pi), 3);        // 0〜π
+
+					// r = 1.0f 固定 → 外殻のみ
+					float x = sin(phi) * cos(theta) * radius.x;
+					float y = sin(phi) * sin(theta) * radius.y;
+					float z = cos(phi) * radius.z;
+
+					model.transforms.translate.x = center.x + x;
+					model.transforms.translate.y = center.y + y;
+					model.transforms.translate.z = center.z + z;
+				}
+
+			}
+
+			model.transforms.rotate = renderData.mono.transforms.rotate;
+			model.transforms.scale = renderData.mono.transforms.scale;
+			model.model = renderData.mono.model;
+			model.texture = renderData.mono.texture;
+			model.color = renderData.mono.color;
+			model.options = renderData.mono.options;
+
+			// 速度設定
+			ParticleInf inf;
+			if (renderData.option.targetDirection == true)
+			{
+				inf.velocity = renderData.target - Vector3{ (renderData.emitterAABB.max + renderData.emitterAABB.min) / 2.0f };
+			}
+			else
+			{
+				inf.velocity = renderData.target - model.transforms.translate;
+			}
+			inf.velocity.Normalize();
+			inf.velocity *= renderData.velocity;
+
+			// 人生設計
+			inf.liveTime = renderData.liveMax;
+
+			// リストに追加
+			renderData.GetModelList().push_back(model);
+			renderData.GetInfList().push_back(inf);
+		}
+	}
+
+
+	for (int i = 0; i < renderData.GetModelList().size(); ++i)
+	{
+		if (renderData.GetInfList()[i].liveTime > 0)
+		{
+			// 更新
+			renderData.GetModelList()[i].transforms.translate += renderData.GetInfList()[i].velocity;
+			renderData.GetModelList()[i].transforms.rotate += renderData.AddRotate;
+			renderData.GetModelList()[i].transforms.scale += renderData.AddScale;
+
+			//static float floatColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+			//ImGui::ColorEdit4("model2.color", floatColor, 1);
+			//Vector4 vector4Color = { floatColor[0], floatColor[1], floatColor[2], floatColor[3] };
+			//model1PreColor = ConvertVector4ToUint(vector4Color);
+			//renderData.GetModelList()[i].color -= renderData.AddColor;
+
+			if (renderData.GetModelList()[i].transforms.scale.x < 0)
+				renderData.GetModelList()[i].transforms.scale.x = 0.0f;
+			if (renderData.GetModelList()[i].transforms.scale.y < 0)
+				renderData.GetModelList()[i].transforms.scale.y = 0.0f;
+			if (renderData.GetModelList()[i].transforms.scale.z < 0)
+				renderData.GetModelList()[i].transforms.scale.z = 0.0f;
+
+			// ワールド行列更新
+			renderData.GetModelList()[i].transforms.World =
+				Matrix4x4::MakeAffineMatrix(
+					renderData.GetModelList()[i].transforms.scale,
+					renderData.GetModelList()[i].transforms.rotate,
+					renderData.GetModelList()[i].transforms.translate);
+
+			// 人生消費
+			renderData.GetInfList()[i].liveTime--;
+
+			// 描画
+			renderData.GetModelList()[i].Draw();
+		}
+
+		if (
+			// 生存時間０の時
+			renderData.GetInfList()[i].liveTime <= 0
+			// 大きさ０の時
+			|| (renderData.GetModelList()[i].transforms.scale.x <= 0.0f || renderData.GetModelList()[i].transforms.scale.y <= 0.0f || renderData.GetModelList()[i].transforms.scale.z <= 0.0f)
+			// アルファ値０の時
+			//|| renderData.GetModelList()[i].color
+			)
+		{
+			renderData.GetModelList().erase(renderData.GetModelList().begin() + i);
+			renderData.GetInfList().erase(renderData.GetInfList().begin() + i);
+		}
+	}
+
+	renderData.frame++;
+}
+
+void Engine::CreateFrustumPlanes(const Matrix4x4& viewProjectionMatrix)
+{
+	// Left Plane
+	frustumPlanes_[0].normal.x = viewProjectionMatrix.m[0][3] + viewProjectionMatrix.m[0][0];
+	frustumPlanes_[0].normal.y = viewProjectionMatrix.m[1][3] + viewProjectionMatrix.m[1][0];
+	frustumPlanes_[0].normal.z = viewProjectionMatrix.m[2][3] + viewProjectionMatrix.m[2][0];
+	frustumPlanes_[0].distance = viewProjectionMatrix.m[3][3] + viewProjectionMatrix.m[3][0];
+	// Right Plane
+	frustumPlanes_[1].normal.x = viewProjectionMatrix.m[0][3] - viewProjectionMatrix.m[0][0];
+	frustumPlanes_[1].normal.y = viewProjectionMatrix.m[1][3] - viewProjectionMatrix.m[1][0];
+	frustumPlanes_[1].normal.z = viewProjectionMatrix.m[2][3] - viewProjectionMatrix.m[2][0];
+	frustumPlanes_[1].distance = viewProjectionMatrix.m[3][3] - viewProjectionMatrix.m[3][0];
+	// Bottom Plane
+	frustumPlanes_[2].normal.x = viewProjectionMatrix.m[0][3] + viewProjectionMatrix.m[0][1];
+	frustumPlanes_[2].normal.y = viewProjectionMatrix.m[1][3] + viewProjectionMatrix.m[1][1];
+	frustumPlanes_[2].normal.z = viewProjectionMatrix.m[2][3] + viewProjectionMatrix.m[2][1];
+	frustumPlanes_[2].distance = viewProjectionMatrix.m[3][3] + viewProjectionMatrix.m[3][1];
+	// Top Plane
+	frustumPlanes_[3].normal.x = viewProjectionMatrix.m[0][3] - viewProjectionMatrix.m[0][1];
+	frustumPlanes_[3].normal.y = viewProjectionMatrix.m[1][3] - viewProjectionMatrix.m[1][1];
+	frustumPlanes_[3].normal.z = viewProjectionMatrix.m[2][3] - viewProjectionMatrix.m[2][1];
+	frustumPlanes_[3].distance = viewProjectionMatrix.m[3][3] - viewProjectionMatrix.m[3][1];
+	// Near Plane
+	frustumPlanes_[4].normal.x = viewProjectionMatrix.m[0][2];
+	frustumPlanes_[4].normal.y = viewProjectionMatrix.m[1][2];
+	frustumPlanes_[4].normal.z = viewProjectionMatrix.m[2][2];
+	frustumPlanes_[4].distance = viewProjectionMatrix.m[3][2];
+	// Far Plane
+	frustumPlanes_[5].normal.x = viewProjectionMatrix.m[0][3] - viewProjectionMatrix.m[0][2];
+	frustumPlanes_[5].normal.y = viewProjectionMatrix.m[1][3] - viewProjectionMatrix.m[1][2];
+	frustumPlanes_[5].normal.z = viewProjectionMatrix.m[2][3] - viewProjectionMatrix.m[2][2];
+	frustumPlanes_[5].distance = viewProjectionMatrix.m[3][3] - viewProjectionMatrix.m[3][2];
+
+	// 各平面を正規化
+	for (int i = 0; i < 6; ++i)
+	{
+		float length = sqrt(frustumPlanes_[i].normal.x * frustumPlanes_[i].normal.x +
+			frustumPlanes_[i].normal.y * frustumPlanes_[i].normal.y +
+			frustumPlanes_[i].normal.z * frustumPlanes_[i].normal.z);
+		frustumPlanes_[i].normal = frustumPlanes_[i].normal / length;
+		frustumPlanes_[i].distance /= length;
+	}
+}
+
+bool Engine::IsAABBInFrustum(const AABB& aabb, const Matrix4x4& worldMatrix)
+{
+	// AABBの8つの頂点をワールド空間に変換
+	Vector3 points[8];
+	//points[0] = Transform(Vector3{ aabb.min.x, aabb.min.y, aabb.min.z }, worldMatrix);
+	//points[1] = Transform(Vector3{ aabb.max.x, aabb.min.y, aabb.min.z }, worldMatrix);
+	//points[2] = Transform(Vector3{ aabb.max.x, aabb.max.y, aabb.min.z }, worldMatrix);
+	//points[3] = Transform(Vector3{ aabb.min.x, aabb.max.y, aabb.min.z }, worldMatrix);
+	//points[4] = Transform(Vector3{ aabb.min.x, aabb.min.y, aabb.max.z }, worldMatrix);
+	//points[5] = Transform(Vector3{ aabb.max.x, aabb.min.y, aabb.max.z }, worldMatrix);
+	//points[6] = Transform(Vector3{ aabb.max.x, aabb.max.y, aabb.max.z }, worldMatrix);
+	//points[7] = Transform(Vector3{ aabb.min.x, aabb.max.y, aabb.max.z }, worldMatrix);
+
+	points[0] = Vector3{ aabb.min.x, aabb.min.y, aabb.min.z };
+	points[1] = Vector3{ aabb.max.x, aabb.min.y, aabb.min.z };
+	points[2] = Vector3{ aabb.max.x, aabb.max.y, aabb.min.z };
+	points[3] = Vector3{ aabb.min.x, aabb.max.y, aabb.min.z };
+	points[4] = Vector3{ aabb.min.x, aabb.min.y, aabb.max.z };
+	points[5] = Vector3{ aabb.max.x, aabb.min.y, aabb.max.z };
+	points[6] = Vector3{ aabb.max.x, aabb.max.y, aabb.max.z };
+	points[7] = Vector3{ aabb.min.x, aabb.max.y, aabb.max.z };
+
+	// 6つの各平面に対してテスト
+	for (const auto& plane : frustumPlanes_)
+	{
+		int inCount = 0;
+		// AABBのすべての頂点が平面の裏側にあるかチェック
+		for (int i = 0; i < 8; ++i)
+		{
+			float dist = plane.normal.Dot(points[i]) + plane.distance;
+			if (dist >= 0)
+			{
+				inCount++;
+			}
+		}
+		// すべての頂点が平面の裏側にある場合は、AABBは視錐台の外
+		if (inCount == 0)
+		{
+			return false;
+		}
+	}
+
+	return true; // どの平面の外側にもない場合は、視錐台内にあると判定
 }
 
 // 音
@@ -827,41 +1444,37 @@ bool Engine::IsAudioPlaying(const uint32_t& audioId)
 
 
 // 入力
-void Engine::GetMousePosition(Vector2* position)
+Vector2 Engine::GetMousePosition()
 {
-	// hwnd: ゲームウィンドウのハンドル（WindowManagerなどから取得）
-	POINT mousePosScreen;
-	GetCursorPos(&mousePosScreen); // 画面座標で取得
-
-	// クライアント座標（ウィンドウ左上基準）に変換
-	ScreenToClient(windowManager->GetHwnd(), &mousePosScreen);
-
-	// mousePosScreen.x, mousePosScreen.y がウィンドウ内のマウス座標
-	position->x = float(mousePosScreen.x);
-	position->y = float(mousePosScreen.y);
+	return inputManager_->GetMouseController()->GetMousePosition();
 }
 
-void Engine::SetMouseRay()
+Ray Engine::GetMouseRay()
 {
-	// hwnd: ゲームウィンドウのハンドル（WindowManagerなどから取得）
-	POINT mousePosScreen;
-	GetCursorPos(&mousePosScreen); // 画面座標で取得
-
-	// クライアント座標（ウィンドウ左上基準）に変換
-	ScreenToClient(windowManager->GetHwnd(), &mousePosScreen);
-
-	// mousePosScreen.x, mousePosScreen.y がウィンドウ内のマウス座標
-	mouseController->SetMousePosition({ float(mousePosScreen.x) ,float(mousePosScreen.y) });
-	mouseController->SetMouseRay(windowManager->Getwidth(), windowManager->Getheight(), cameraController->viewProjectionMatrix);
-
-	DrawLine(mouseController->GetMouseRay().origin, mouseController->GetMouseRay().diff * 10000, 0xFFFF00FF);
+	return inputManager_->GetMouseController()->GetMouseRay();
 }
 
-bool Engine::IsCollisionMouseRayAABB(AABB aabb, int objNum)
+uint32_t Engine::GetMouseWheel()
 {
-	return IsCollision(mouseController->GetMouseRay(), aabb, objects[objNum].modelData.vertices, objects[objNum].transform.World);
-	//return IsCollision(mouseController->GetMouseRay(), aabb, objects[objNum].modelData.vertices, Matrix4x4::MakeAffineMatrix(objects[objNum].transform.scale, objects[objNum].transform.rotate, objects[objNum].transform.translate));
-};
+	uint32_t delta = wheelDelta;
+	return delta;
+}
+
+bool Engine::IsCollisionMouseRayAABB(uint32_t objectNumber, const Transforms& data)
+{
+	std::vector<AABB> aabbs = CreateAABB(data, objectNumber);
+	Ray ray = inputManager_->GetMouseController()->GetMouseRay();
+
+	// どれか1つでも衝突すればtrue
+	for (const auto& aabb : aabbs)
+	{
+		if (IsCollision(ray, objects[objectNumber].modelData.vertices, aabb, data))
+		{
+			return true;
+		}
+	}
+	return false;
+}
 
 bool Engine::IsPressMouse(int i)
 {
@@ -887,29 +1500,58 @@ bool Engine::IsPressMouse(int i)
 	return false;
 }
 
-uint32_t Engine::GetWheel()
-{
-	uint32_t delta = wheelDelta;
-	wheelDelta = 0;
-	return delta;
-}
-
 // カメラ操作
-void Engine::MoveCenterTarget(Vector3 target, int spendFrame)
+void Engine::MoveCenterTarget(Vector3 target, int spendFrame, EaseType easetype)
 {
-	cameraController->SetCenterTarget(target, spendFrame);
+	cameraController->SetCenterTarget(target, spendFrame, easetype);
 }
 
-void Engine::MoveRotateTarget(Vector3 target, int spendFrame)
+void Engine::MoveRotateTarget(Vector3 target, int spendFrame, EaseType easetype)
 {
-	cameraController->SetRotateTarget(target, spendFrame);
+	cameraController->SetRotateTarget(target, spendFrame, easetype);
 }
 
-void Engine::MoveDistanceTarget(float target, int spendFrame)
+void Engine::MoveDistanceTarget(float target, int spendFrame, EaseType easetype)
 {
-	cameraController->SetDistanceTarget(target, spendFrame);
+	cameraController->SetDistanceTarget(target, spendFrame, easetype);
 }
 
+void Engine::SetControlModeCamera(bool mode)
+{
+	cameraController->cameraMode_ = mode;
+}
+
+CameraController* Engine::GetCamera()
+{
+	return cameraController;
+}
+
+CameraController* Engine::GetDebugCamera()
+{
+	return debugCameraController;
+}
+
+//// カメラシェイク開始
+//void Engine::StartCameraShake(float intensity, float duration, float frequency)
+//{
+//	// メインカメラとデバッグカメラ両方にシェイクを適用
+//	cameraController->StartShake(intensity, duration, frequency);
+//	debugCameraController->StartShake(intensity, duration, frequency);
+//}
+//
+//// カメラシェイク中かどうか
+//bool Engine::IsCameraShaking()
+//{
+//	// 現在アクティブなカメラのシェイク状態を返す
+//	if (!debugCamera)
+//	{
+//		return cameraController->IsShaking();
+//	}
+//	else
+//	{
+//		return debugCameraController->IsShaking();
+//	}
+//}
 
 // 座標とかない、本当にただモデルの形のAABBを作るだけの関数（LoadOBJの時のAABB初期化用）
 AABB Engine::CreateLocalAABB(const ModelData& model)
@@ -949,39 +1591,42 @@ AABB Engine::CreateLocalAABB(const ModelData& model)
 }
 
 // CreateLocalAABBでつくったAABBに座標を適応させる（当たり判定の毎フレーム更新用）
-AABB Engine::CreateAABB(const Transforms& transforms, uint32_t objectNumber)
+std::vector<AABB>  Engine::CreateAABB(const Transforms& transforms, uint32_t objectNumber)
 {
 	Matrix4x4 worldMatrix = transforms.World;
-
 	Object3D& obj = objects[objectNumber];
+	std::vector<AABB> result;
 
-	// ローカルAABBの8頂点
-	Vector3 corners[8] = {
-		{obj.aabb.min.x, obj.aabb.min.y, obj.aabb.min.z},
-		{obj.aabb.max.x, obj.aabb.min.y, obj.aabb.min.z},
-		{obj.aabb.min.x, obj.aabb.max.y, obj.aabb.min.z},
-		{obj.aabb.max.x, obj.aabb.max.y, obj.aabb.min.z},
-		{obj.aabb.min.x, obj.aabb.min.y, obj.aabb.max.z},
-		{obj.aabb.max.x, obj.aabb.min.y, obj.aabb.max.z},
-		{obj.aabb.min.x, obj.aabb.max.y, obj.aabb.max.z},
-		{obj.aabb.max.x, obj.aabb.max.y, obj.aabb.max.z},
-	};
-
-	// 8頂点をワールド空間に変換
-	Vector3 worldMin = Transform(corners[0], worldMatrix);
-	Vector3 worldMax = worldMin;
-
-	for (int i = 1; i < 8; ++i)
+	for (const auto& localAABB : obj.aabb)
 	{
-		Vector3 v = Transform(corners[i], worldMatrix);
-		worldMin.x = my_min(worldMin.x, v.x);
-		worldMin.y = my_min(worldMin.y, v.y);
-		worldMin.z = my_min(worldMin.z, v.z);
-		worldMax.x = my_max(worldMax.x, v.x);
-		worldMax.y = my_max(worldMax.y, v.y);
-		worldMax.z = my_max(worldMax.z, v.z);
+		// ローカルAABBの8頂点
+		Vector3 corners[8] = {
+			{localAABB.min.x, localAABB.min.y, localAABB.min.z},
+			{localAABB.max.x, localAABB.min.y, localAABB.min.z},
+			{localAABB.min.x, localAABB.max.y, localAABB.min.z},
+			{localAABB.max.x, localAABB.max.y, localAABB.min.z},
+			{localAABB.min.x, localAABB.min.y, localAABB.max.z},
+			{localAABB.max.x, localAABB.min.y, localAABB.max.z},
+			{localAABB.min.x, localAABB.max.y, localAABB.max.z},
+			{localAABB.max.x, localAABB.max.y, localAABB.max.z},
+		};
+
+		// 8頂点をワールド空間に変換
+		Vector3 worldMin = Transform(corners[0], worldMatrix);
+		Vector3 worldMax = worldMin;
+		for (int i = 1; i < 8; ++i)
+		{
+			Vector3 v = Transform(corners[i], worldMatrix);
+			worldMin.x = my_min(worldMin.x, v.x);
+			worldMin.y = my_min(worldMin.y, v.y);
+			worldMin.z = my_min(worldMin.z, v.z);
+			worldMax.x = my_max(worldMax.x, v.x);
+			worldMax.y = my_max(worldMax.y, v.y);
+			worldMax.z = my_max(worldMax.z, v.z);
+		}
+		result.push_back({ worldMin, worldMax });
 	}
-	return { worldMin, worldMax };
+	return result;
 }
 
 void Engine::toggleWireframeMode()

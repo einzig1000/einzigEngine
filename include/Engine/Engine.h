@@ -1,15 +1,14 @@
 #pragma once
-#include "Window/WindowManager.h"
-#include "DirectX/DirectXManager.h"
 #include "definition/definition.h"
-#include "Camera/CameraController.h"
-#include "input/MouseController.h"
 #include <array>
 #include <vector>
 #include <string>
 #include <wrl/client.h>
-#include "Utilities/Easings.h"
-#include "Utilities/functions.h"
+#include "Game.h" 
+
+#include "Window/WindowManager.h"
+#include "DirectX/DirectXManager.h"
+#include "Camera/CameraController.h"
 
 class Engine
 {
@@ -20,26 +19,32 @@ public:
 	// メインループ用
 	bool ProcessMessage();
 	void BeginFrame();
-	void EndFrame();
-
 	void UpdateTransforms();
+	void EndFrame();
 
 	// 終了処理
 	void Finalize();
 
 	// リソース読み込み
 	uint32_t LoadOBJ(const std::string& directoryPath, const std::string& filename);
+	std::vector<AABB> LoadAABB(const std::string& csvPath, const ModelData& model);
 	uint32_t LoadTexture(const std::string& filePath);
 	uint32_t LoadAudio(const std::string& filePath);
 
 	TextureData* GetTexture(uint32_t textureNumber);
 
 	// 描画
-	void Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
-	void DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
-	void DrawTriangle(const Transforms& transform, const Vector3& pos1, const Vector3& pos2, const Vector3& pos3, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
-	void DrawSprite(const Transforms& transform, const Vector2& center, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
+	void Drawobj(Game::RenderData_Model& renderData);
+	void DrawTriangle(Game::RenderData_Triangle& renderData);
+	void DrawSprite(Game::RenderData_Sprite& renderData);
+	void DrawParticle(Game::RenderData_Particle& renderData);
 	void DrawLine(const Vector3& start, const Vector3& end, const uint32_t& materialColor);
+	void DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
+
+	// カメラの更新時に視錐台の平面を計算する関数
+	void CreateFrustumPlanes(const Matrix4x4& viewProjectionMatrix);
+	// AABBが視錐台内にあるか判定する関数
+	bool IsAABBInFrustum(const AABB& aabb, const Matrix4x4& worldMatrix);
 
 	// 音
 	void PlayAudio(const uint32_t& audioId, bool loop);
@@ -57,19 +62,26 @@ public:
 	void ToggleLightMode(const uint32_t mode) { directionalLightData->mode = mode; }
 
 	// マウス
-	void GetMousePosition(Vector2* position);
-	void SetMouseRay();
-	bool IsCollisionMouseRayAABB(AABB aabb, int objNum);
+	Vector2 GetMousePosition();
+	uint32_t GetMouseWheel();
+	Ray GetMouseRay();
 	bool IsPressMouse(int i);
-	uint32_t GetWheel();
+	bool IsCollisionMouseRayAABB(uint32_t objectNumber, const Transforms& data);
 
 	// カメラ
-	void MoveCenterTarget(Vector3 target, int spendFrame);
-	void MoveRotateTarget(Vector3 target, int spendFrame);
-	void MoveDistanceTarget(float target, int spendFrame);
+	void MoveCenterTarget(Vector3 target, int spendFrame, EaseType easetype);
+	void MoveRotateTarget(Vector3 target, int spendFrame, EaseType easetype);
+	void MoveDistanceTarget(float target, int spendFrame, EaseType easetype);
+	void SetControlModeCamera(bool mode);
+	CameraController* GetCamera();
+	CameraController* GetDebugCamera();
+
+	// カメラシェイク
+	//void StartCameraShake(float intensity, float duration, float frequency = 25.0f);
+	//bool IsCameraShaking();
 
 	// AABBの作成
-	AABB CreateAABB(const Transforms& transforms, uint32_t objectNumber);
+	std::vector<AABB>  CreateAABB(const Transforms& transforms, uint32_t objectNumber);
 
 	// プリミティブモードの設定
 	void toggleWireframeMode();
@@ -80,44 +92,8 @@ private:
 	AABB CreateLocalAABB(const ModelData& model);
 	void InitializeLineResources(ID3D12Device* device);
 
-#pragma region
-	/// <summary>
-	/// Draw用データ作成するやつ
-	/// </summary>
-	/// <param name="dstBufferSize">Map先バッファサイズ</param>
-	/// <param name="srcVertexData">コピー元頂点データ</param>
-	/// <param name="vertexCount">頂点数</param>
-	/// <param name="vertexResource">頂点リソース</param>
-	/// <param name="vertexResourceSize">頂点リソースサイズ</param>
-	/// <param name="material">マテリアル</param>
-	/// <param name="materialColor">マテリアル色</param>
-	/// <param name="enableLighting">ライティングするか</param>
-	/// <param name="uvTransform">UV変換</param>
-	/// <param name="wvp">WVP</param>
-	/// <param name="world">ワールド行列</param>
-	/// <param name="wvpMatrix">WVP行列</param>
-	/// <param name="textureNumber">テクスチャ番号</param>
-	/// <returns> Draw用データ</returns>
-	DrawData SetupDrawData(
-		size_t dstBufferSize,
-		const VertexData* srcVertexData,
-		size_t vertexCount,
-		Microsoft::WRL::ComPtr<ID3D12Resource>& vertexResource,
-		UINT& vertexResourceSize,
-		Material* material,
-		const uint32_t& materialColor,
-		bool enableLighting,
-		const Matrix4x4& uvTransform,
-		TransformationMatrix* wvp,
-		const Matrix4x4& world,
-		const Matrix4x4& wvpMatrix,
-		uint32_t textureNumber);
-
-#pragma endregion
-
 	WindowManager* windowManager;
 	DirectXManager* dxManager;
-
 
 	// 頂点リソースと頂点データと使用済み頂点数
 
@@ -146,15 +122,11 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceLine;
 	UINT vertexResourceSizeLine;
 
-
 	Microsoft::WRL::ComPtr<ID3D12Resource> indexResource;
 	D3D12_INDEX_BUFFER_VIEW indexBufferView;
 
-
-
-
 	// 使い回す定数バッファ（マテリアル/WVP）をフレーム数分用意
-	size_t kMaxDrawCallPerFrame = 256;
+	size_t kMaxDrawCallPerFrame = 1280;
 	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> materialResources;
 	std::vector<Material*> materialData;
 	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> wvpResources;
@@ -162,7 +134,7 @@ private:
 	size_t drawCallIndex;
 
 	// ラインはその他の3Dオブジェクトと比べて必要な情報量が少ないから他のと一緒に扱ったら余計な容量使う。はず
-	size_t kMaxDrawLineCallPerFrame = 1280;
+	size_t kMaxDrawLineCallPerFrame = 2560;
 	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> materialResourceLine;
 	std::vector<Material*> materialDataLine;
 	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> wvpResourceLine;
@@ -174,10 +146,13 @@ private:
 	DirectionalLight* directionalLightData;
 
 	// カメラ
-	CameraController* cameraController;
+	CameraController* cameraController = nullptr;
+	CameraController* debugCameraController = nullptr;
+	bool debugCamera = false;
+	std::array<Plane, 6> frustumPlanes_;// 視錐台を構成する6つの平面
 
-	// マウスホイール量
-	MouseController* mouseController;
+	// 入力
+	Input* inputManager_;
 	int wheelDelta;
 
 	// プリミティブモード

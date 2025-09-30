@@ -1,10 +1,15 @@
 #include "Engine/Game.h"
+#include "Engine/Engine.h"
+#include "Camera/CameraController.h"
+using namespace DirectX;
 
 static Engine* engine = new Engine;
 
+std::vector<Game::RenderData_Model*> Game::renderModels;
+
+
 void Game::Initialize(int width, int height, const std::wstring& title)
 {
-	D3DResourceLeakChecker checker;
 	engine->Initialize(width, height, title);
 }
 
@@ -16,6 +21,11 @@ bool Game::ProcessMessage()
 void Game::BeginFrame()
 {
 	engine->BeginFrame();
+}
+
+void Game::UpdateTransforms()
+{
+	engine->UpdateTransforms();
 }
 
 void Game::EndFrame()
@@ -48,24 +58,9 @@ TextureData* Game::GetTexture(uint32_t textureNumber)
 	return engine->GetTexture(textureNumber);
 }
 
-void Game::Drawobj(const Transforms& transform, const Vector3& center, uint32_t objectNumber, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions)
-{
-	engine->Drawobj(transform, center, objectNumber, textureNumber, materialColor, drawOptions);
-}
-
 void Game::DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions)
 {
 	engine->DrawSphere(transform, center, kSubdivision, textureNumber, materialColor, drawOptions);
-}
-
-void Game::DrawTriangle(const Transforms& transform, const Vector3& pos1, const Vector3& pos2, const Vector3& pos3, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions)
-{
-	engine->DrawTriangle(transform, pos1, pos2, pos3, textureNumber, materialColor, drawOptions);
-}
-
-void Game::DrawSprite(const Transforms& transform, const Vector2& center, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions)
-{
-	engine->DrawSprite(transform, center, textureNumber, materialColor, drawOptions);
 }
 
 void Game::DrawLine(const Vector3& start, const Vector3& end, const uint32_t& materialColor)
@@ -129,47 +124,74 @@ void Game::ToggleLightMode(const uint32_t mode)
 }
 
 
-void Game::GetMousePosition(Vector2* position)
+Vector2 Game::GetMousePosition()
 {
-	return engine->GetMousePosition(position);
+	return engine->GetMousePosition();
 }
 
-void Game::SetMouseRay()
+Ray Game::GetMouseRay()
 {
-	return engine->SetMouseRay();
+	return engine->GetMouseRay();
 }
 
-bool Game::IsCollisionMouseRayAABB(AABB aabb, int objNum)
+bool Game::IsCollisionMouseRayAABB(uint32_t objectNumber, const Transforms& data)
 {
-	return engine->IsCollisionMouseRayAABB(aabb, objNum);
+	return engine->IsCollisionMouseRayAABB(objectNumber, data);
 }
 
-bool Game::IsPressMouse(int i)
+bool Game::GetMousePress(int i)
 {
 	return engine->IsPressMouse(i);
 }
 
-uint32_t Game::GetWheel()
+uint32_t Game::GetMouseWheel()
 {
-	return engine->GetWheel();
+	return engine->GetMouseWheel();
 }
 
-void Game::MoveCenterTarget(Vector3 target, int spendFrame)
+void Game::MoveCenterTarget(Vector3 target, int spendFrame, EaseType easetype)
 {
-	engine->MoveCenterTarget(target, spendFrame);
+	engine->MoveCenterTarget(target, spendFrame, easetype);
 }
 
-void Game::MoveRotateTarget(Vector3 target, int spendFrame)
+void Game::MoveRotateTarget(Vector3 target, int spendFrame, EaseType easetype)
 {
-	engine->MoveRotateTarget(target, spendFrame);
+	engine->MoveRotateTarget(target, spendFrame, easetype);
 }
 
-void Game::MoveDistanceTarget(float target, int spendFrame)
+void Game::MoveDistanceTarget(float target, int spendFrame, EaseType easetype)
 {
-	engine->MoveDistanceTarget(target, spendFrame);
+	engine->MoveDistanceTarget(target, spendFrame, easetype);
 }
 
-AABB Game::CreateAABB(const Transforms& transforms, uint32_t objectNumber)
+void Game::SetControlModeCamera(bool mode)
+{
+	engine->SetControlModeCamera(mode);
+}
+
+CameraController* Game::GetCamera()
+{
+	return engine->GetCamera();
+}
+
+CameraController* Game::GetDebugCamera()
+{
+	return engine->GetDebugCamera();
+}
+
+//// カメラシェイク開始
+//void Game::StartCameraShake(float intensity, float duration, float frequency)
+//{
+//	engine->StartCameraShake(intensity, duration, frequency);
+//}
+//
+//// カメラシェイク中かどうか
+//bool Game::IsCameraShaking()
+//{
+//	return engine->IsCameraShaking();
+//}
+
+std::vector<AABB> Game::CreateAABB(const Transforms& transforms, uint32_t objectNumber)
 {
 	return engine->CreateAABB(transforms, objectNumber);
 }
@@ -177,4 +199,390 @@ AABB Game::CreateAABB(const Transforms& transforms, uint32_t objectNumber)
 void Game::toggleWireframeMode()
 {
 	engine->toggleWireframeMode();
+}
+
+bool Game::IsAABBInFrustum(const AABB& aabb, const Matrix4x4& worldMatrix)
+{
+	return engine->IsAABBInFrustum(aabb, worldMatrix);
+}
+
+
+
+
+
+
+
+
+
+
+Game::RenderData_Model::RenderData_Model()
+{
+	AddModel(this);
+	this->ID = int(GetModelList().size());
+}
+
+Game::RenderData_Model::~RenderData_Model()
+{
+	SubModel(this);
+}
+
+void Game::RenderData_Model::Updata(std::vector<Object3D>& objects)
+{
+#pragma region 座標更新
+
+	// 移動してない場合はスキップするようにしたい
+
+	// AABB更新
+	this->aabb = CreateAABB(this->transforms, this->model);
+
+
+	// 座標更新
+	this->velocity.y -= this->gravity;
+	this->velocity += this->acceleration;
+	this->transforms.translate += this->velocity;
+
+
+	// 移動マトリックス作成
+	XMVECTOR scaleVec = XMVectorSet(this->transforms.scale.x, this->transforms.scale.y, this->transforms.scale.z, 0.0f);
+	XMVECTOR pivotVec = XMVectorSet(this->pivot.x, this->pivot.y, this->pivot.z, 0.0f);
+	XMVECTOR translateVec = XMVectorSet(this->transforms.translate.x, this->transforms.translate.y, this->transforms.translate.z, 0.0f);
+	XMVECTOR rotEuler = XMVectorSet(this->transforms.rotate.x, this->transforms.rotate.y, this->transforms.rotate.z, 0.0f);
+
+
+	// 1) スケール
+	XMMATRIX S = XMMatrixScalingFromVector(scaleVec);
+
+
+	// 2) ピボットオフセット（負）
+	XMMATRIX Tneg = XMMatrixTranslationFromVector(XMVectorNegate(pivotVec));
+
+
+	// 3) 回転（オイラー→クォータニオン→行列）
+	XMVECTOR quatEuler = XMQuaternionRotationRollPitchYawFromVector(rotEuler);
+	XMMATRIX R = XMMatrixRotationQuaternion(quatEuler);
+
+
+	// 4) ピボットオフセット（正）
+	XMMATRIX Tpos = XMMatrixTranslationFromVector(pivotVec);
+
+
+	// 5) 平行移動
+	XMMATRIX T = XMMatrixTranslationFromVector(translateVec);
+
+
+	// 6) 合成: S → Tneg → R → Tpos → T
+	XMMATRIX world = S * Tneg * R * Tpos * T;
+
+
+	// 7) 親行列の適用
+	if (this->transforms.parentWorld)
+	{
+		// parentWorld が Matrix4x4 ならまず XMFLOAT4X4 にコピー
+		XMFLOAT4X4 parentF4;
+		// 4×4 のメモリ配列を直接コピー
+		std::memcpy(&parentF4, this->transforms.parentWorld, sizeof(parentF4));
+		XMMATRIX parentM = XMLoadFloat4x4(&parentF4);
+		world = parentM * world;
+	}
+
+
+	// 8) 結果を transforms.World に格納
+	XMFLOAT4X4 tmp;
+	XMStoreFloat4x4(&tmp, world);
+	for (int i = 0; i < 4; ++i)
+		for (int j = 0; j < 4; ++j)
+			this->transforms.World.m[i][j] = tmp.m[i][j];
+	//for (auto& rd : Game::GetModelList())
+	//{
+	//	// 1) スケール
+	//	Matrix4x4 scale = Matrix4x4::MakeScaleMatrix(rd->transforms.scale);
+	//
+	//	// 2) ピボットオフセット
+	//	Matrix4x4 pivotOffsetNeg = Matrix4x4::MakeTranslateMatrix(-rd->pivot);
+	//
+	//	// 3) 回転（X, Y, Z軸すべてを合成）
+	//	Matrix4x4 rotateX = Matrix4x4::MakeRotateXMatrix(rd->transforms.rotate.x);
+	//	Matrix4x4 rotateY = Matrix4x4::MakeRotateYMatrix(rd->transforms.rotate.y);
+	//	Matrix4x4 rotateZ = Matrix4x4::MakeRotateZMatrix(rd->transforms.rotate.z);
+	//	Matrix4x4 rotate = rotateZ * rotateX * rotateY;
+	//
+	//	// 4) ピボットへ戻す
+	//	Matrix4x4 pivotOffset = Matrix4x4::MakeTranslateMatrix(rd->pivot);
+	//
+	//	// 5) 平行移動
+	//	Matrix4x4 translate = Matrix4x4::MakeTranslateMatrix(rd->transforms.translate);
+	//
+	//	// 合成
+	//	Matrix4x4 world = scale * pivotOffsetNeg * rotate * pivotOffset * translate;
+	//
+	//	// 6) 親行列があれば乗算
+	//	if (rd->transforms.parentWorld)
+	//	{
+	//		Matrix4x4 parentMatrix = *rd->transforms.parentWorld;
+	//		world = parentMatrix * world;
+	//	}
+	//
+	//	// 7) Transforms.World に格納
+	//	rd->transforms.World = world;
+	//}
+
+#pragma endregion
+
+#pragma region 描画範囲内判定
+
+	bool inFrustum = false;
+	for (const auto& aabb : this->aabb)
+	{
+		if (IsAABBInFrustum(aabb, this->transforms.World))
+		{
+			inFrustum = true;
+			break;
+		}
+	}
+	this->inPicture = inFrustum;
+
+#pragma endregion
+
+	for (auto* target : blockList)
+	{
+		if (isCollision(*target))
+		{
+			// 自分と相手のAABBを取得
+			const auto& myAABB = this->aabb[0];
+			const auto& targetAABB = target->aabb[0];
+
+			if (velocity.y < 0.0f)
+			{
+				// 下向きに落下中 → 地面の上面に自分のAABBの下端が接するように
+				float myHeight = myAABB.max.y - myAABB.min.y;
+				transforms.translate.y = targetAABB.max.y + myHeight / 2.0f;
+			}
+			else if (velocity.y > 0.0f)
+			{
+				// 上向きに移動中 → 天井の下面に自分のAABBの上端が接するように
+				float myHeight = myAABB.max.y - myAABB.min.y;
+				transforms.translate.y = targetAABB.min.y - myHeight / 2.0f;
+			}
+			velocity.y = 0.0f;
+		}
+	}
+
+	// 描画範囲内のオブジェクトを全て調査
+	for (auto& rd : Game::GetModelList())
+	{
+		rd->ResolveBlockCollision();
+	}
+
+
+
+}
+
+// 他のオブジェクトとの衝突判定
+bool Game::RenderData_Model::isCollision(RenderData_Model& target) const
+{
+	for (auto& other : Game::GetModelList())
+	{ 
+		// 自分自身は除外
+		if (&target == other) continue;
+		// AABB組み合わせたkekka
+		for (const auto& aabb1 : target.aabb)
+		{
+			for (const auto& aabb2 : other->aabb)
+			{
+				if (IsCollision(aabb1, aabb2))
+				{
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
+void Game::RenderData_Model::SetBlock(RenderData_Model& target)
+{
+	// すでに登録済みなら追加しない
+	if (std::find(blockList.begin(), blockList.end(), &target) == blockList.end())
+	{
+		blockList.push_back(&target);
+	}
+}
+
+void Game::RenderData_Model::ResolveBlockCollision()
+{
+}
+
+// ワールド
+Matrix4x4 Game::RenderData_Model::GetWorldMatrix() const
+{
+	if (transforms.parentWorld)
+	{
+		return (*transforms.parentWorld) * transforms.World;
+	}
+	return transforms.World;
+}
+Vector3 Game::RenderData_Model::GetWorldPosition() const
+{
+	return Transform(Vector3(0.0f, 0.0f, 0.0f), GetWorldMatrix());
+}
+
+// 任意のポイントを向く
+void Game::RenderData_Model::LookAtOnce(const Vector3& targetWorldPos, float roll)
+{
+	Vector3 direction = (targetWorldPos - this->GetWorldPosition()).Normalized();
+	float yaw = std::atan2(direction.x, direction.z); // Y軸回り
+	float pitch = std::asin(-direction.y);            // X軸回り
+
+	transforms.rotate = { pitch, yaw, roll };
+}
+void Game::RenderData_Model::LookAtOnce(const RenderData_Model &other, float roll)
+{
+	LookAtOnce(other.GetWorldPosition(), roll);
+}
+void Game::RenderData_Model::LookAtCamera(float roll)
+{
+	LookAtOnce(Game::GetCamera()->transform_.translate, roll);
+}
+void Game::RenderData_Model::LookAtFront(float roll)
+{
+	Vector3 frontPos = this->GetWorldPosition() + Vector3{ 0.0f, 0.0f, 1.0f };
+	LookAtOnce(frontPos, roll);
+}
+
+
+
+void Game::RenderData_Model::Draw()
+{
+	engine->Drawobj(*this);
+}
+
+void Game::RenderData_Model::DrawAABB()
+{
+	for (const auto& theOne : aabb)
+	{
+		Vector3 p[8];
+		p[0] = { theOne.min.x, theOne.min.y, theOne.min.z };
+		p[1] = { theOne.max.x, theOne.min.y, theOne.min.z };
+		p[2] = { theOne.max.x, theOne.max.y, theOne.min.z };
+		p[3] = { theOne.min.x, theOne.max.y, theOne.min.z };
+		p[4] = { theOne.min.x, theOne.min.y, theOne.max.z };
+		p[5] = { theOne.max.x, theOne.min.y, theOne.max.z };
+		p[6] = { theOne.max.x, theOne.max.y, theOne.max.z };
+		p[7] = { theOne.min.x, theOne.max.y, theOne.max.z };
+
+		// 下側
+		Game::DrawLine(p[0], p[1], 0xFF0000FF);
+		Game::DrawLine(p[1], p[2], 0xFF0000FF);
+		Game::DrawLine(p[2], p[3], 0xFF0000FF);
+		Game::DrawLine(p[3], p[0], 0xFF0000FF);
+
+		// 上側
+		Game::DrawLine(p[4], p[5], 0xFF0000FF);
+		Game::DrawLine(p[5], p[6], 0xFF0000FF);
+		Game::DrawLine(p[6], p[7], 0xFF0000FF);
+		Game::DrawLine(p[7], p[4], 0xFF0000FF);
+
+		// 側面
+		Game::DrawLine(p[0], p[4], 0xFF0000FF);
+		Game::DrawLine(p[1], p[5], 0xFF0000FF);
+		Game::DrawLine(p[2], p[6], 0xFF0000FF);
+		Game::DrawLine(p[3], p[7], 0xFF0000FF);
+	}
+}
+
+void Game::RenderData_Model::DrawImGui()
+{
+	std::string str = "object : " + std::to_string(this->ID);
+	std::string num = std::to_string(this->ID) + ":";
+
+    ImGui::Begin(str.c_str());
+
+	ImGui::Text("transforms");
+	ImGui::DragFloat3((num + "scale").c_str(), &transforms.scale.x, 0.01f);
+	ImGui::DragFloat3((num + "translate").c_str(), &transforms.translate.x, 0.01f);
+	ImGui::DragFloat3((num + "rotate").c_str(), &transforms.rotate.x, 0.01f);
+	ImGui::DragFloat3((num + "pivot").c_str(), &pivot.x, 0.01f);
+	ImGui::Text("uvTransform");
+	ImGui::DragFloat3((num + "UVscale").c_str(), &uvTransform.scale.x, 0.01f);
+	ImGui::DragFloat3((num + "UVtranslate").c_str(), &uvTransform.translate.x, 0.01f);
+	ImGui::DragFloat3((num + "UVrotate").c_str(), &uvTransform.rotate.x, 0.01f);
+	ImGui::Text("velocity");
+	ImGui::DragFloat3((num + "velocity").c_str(), &velocity.x, 0.01f);
+	ImGui::DragFloat3((num + "acceleration").c_str(), &acceleration.x, 0.01f);
+	ImGui::DragFloat((num + "gravity").c_str(), &gravity, 0.01f);
+	ImGui::Text("color");
+	Vector4 preColor = ConvertUintToVector4(color);
+	float floatColor[4] = { preColor.x, preColor.y, preColor.z, preColor.w };
+	ImGui::ColorEdit4((num + "color").c_str(), floatColor, 1);
+	Vector4 vector4Color = { floatColor[0], floatColor[1], floatColor[2], floatColor[3] };
+	color = ConvertVector4ToUint(vector4Color);
+	ImGui::Text("option");
+	ImGui::Checkbox("wireFrame", &options.wireframe);
+	ImGui::Checkbox("lighting", &options.enableLighting);
+	ImGui::Text("isCollisionMouse : %d", isCollisionMouseRay);
+
+	ImGui::End();
+}
+
+
+
+void Game::RenderData_Sprite::Draw()
+{
+	engine->DrawSprite(*this);
+}
+
+
+void Game::RenderData_Triangle::Draw()
+{
+	engine->DrawTriangle(*this);
+}
+
+
+void Game::RenderData_Particle::Draw()
+{
+	engine->DrawParticle(*this);
+}
+
+void Game::RenderData_Particle::DrawEmitter()
+{
+	// エミッターがAABB
+	if (this->option.emitterShape)
+	{
+		Vector3 p[8];
+		p[0] = { this->emitterAABB.min.x, this->emitterAABB.min.y, this->emitterAABB.min.z };
+		p[1] = { this->emitterAABB.max.x, this->emitterAABB.min.y, this->emitterAABB.min.z };
+		p[2] = { this->emitterAABB.max.x, this->emitterAABB.max.y, this->emitterAABB.min.z };
+		p[3] = { this->emitterAABB.min.x, this->emitterAABB.max.y, this->emitterAABB.min.z };
+		p[4] = { this->emitterAABB.min.x, this->emitterAABB.min.y, this->emitterAABB.max.z };
+		p[5] = { this->emitterAABB.max.x, this->emitterAABB.min.y, this->emitterAABB.max.z };
+		p[6] = { this->emitterAABB.max.x, this->emitterAABB.max.y, this->emitterAABB.max.z };
+		p[7] = { this->emitterAABB.min.x, this->emitterAABB.max.y, this->emitterAABB.max.z };
+
+		// 下側
+		Game::DrawLine(p[0], p[1], 0xFF0000FF);
+		Game::DrawLine(p[1], p[2], 0xFF0000FF);
+		Game::DrawLine(p[2], p[3], 0xFF0000FF);
+		Game::DrawLine(p[3], p[0], 0xFF0000FF);
+
+		// 上側
+		Game::DrawLine(p[4], p[5], 0xFF0000FF);
+		Game::DrawLine(p[5], p[6], 0xFF0000FF);
+		Game::DrawLine(p[6], p[7], 0xFF0000FF);
+		Game::DrawLine(p[7], p[4], 0xFF0000FF);
+
+		// 側面
+		Game::DrawLine(p[0], p[4], 0xFF0000FF);
+		Game::DrawLine(p[1], p[5], 0xFF0000FF);
+		Game::DrawLine(p[2], p[6], 0xFF0000FF);
+		Game::DrawLine(p[3], p[7], 0xFF0000FF);
+	}
+	// 
+	else
+	{
+		Transforms transforms;
+		transforms.scale = this->emitterSphere.radius;
+		DrawOptions option;
+
+		engine->DrawSphere(transforms, this->emitterSphere.center, 12, 0, 0xFFFFFF22, option);
+	}
 }

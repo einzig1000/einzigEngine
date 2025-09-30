@@ -4,13 +4,25 @@
 class MouseController
 {
 public:
-	void SetMousePosition(Vector2 position) { position_ = position; };
-	void SetMouseRay(const uint32_t width, const  uint32_t height, const Matrix4x4 viewProjectionMatrix);
+	MouseController(HWND hwnd, uint32_t width, uint32_t height, Matrix4x4* viewProjectionMatrix, Matrix4x4* debugViewProjectionMatrix, bool* debugCameraMode);
+	void Update();
+
+	void SetMousePosition();
+	void SetMouseRay();
 
 	Vector2 GetMousePosition() const { return position_; }
 	Ray GetMouseRay() const { return ray_; }
 
+
+
 private:
 	Vector2 position_;
 	Ray ray_;
+
+	HWND hwnd_;
+	bool* debugCameraMode_;
+	uint32_t width_;
+	uint32_t height_;
+	Matrix4x4* viewProjectionMatrix_;
+	Matrix4x4* debugViewProjectionMatrix_;
 };

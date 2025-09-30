@@ -7,13 +7,9 @@
 #include <Windows.h>
 #include <sstream>
 
-
 #include <dxcapi.h>
+#include <optional>
 #pragma comment(lib, "dxcompiler")
-
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
 
 
 template <typename T>
@@ -28,8 +24,28 @@ constexpr const T& my_max(const T& a, const T& b)
     return (a > b) ? a : b;
 }
 
+template <typename T, size_t Rows, size_t Cols>
+void FlipYAxis(T(&arr)[Rows][Cols])
+{
+	for (size_t i = 0; i < Rows / 2; ++i)
+	{
+		std::swap(arr[i], arr[Rows - 1 - i]);
+	}
+}
+
+template <typename T, size_t Rows, size_t Cols>
+void FlipXAxis(T(&arr)[Rows][Cols])
+{
+	for (size_t i = 0; i < Rows; ++i)
+	{
+		for (size_t j = 0; j < Cols / 2; ++j)
+		{
+			std::swap(arr[i][j], arr[i][Cols - 1 - j]);
+		}
+	}
+}
+
 /// <summary>
-/// 
 // 三角形の法線ベクトルを計算し、正規化して返す
 /// </summary>
 /// <param name="v0">三角形の頂点0</param>
@@ -61,11 +77,14 @@ bool IsCollision(const Ray& r, const Triangle& t);
 bool IsCollision(const AABB& aabb1, const AABB& aabb2);
 bool IsCollision(const AABB& aabb, const Sphere& s);
 bool IsCollision(const AABB& aabb, const Segment& s);
+bool IsCollision(const Ray& ray, const std::vector<VertexData>& vertices, const AABB& aabb, const Transforms& data);
 
-bool IsCollision(const Ray& ray, const AABB& aabb, const std::vector<VertexData>& vertices, const Matrix4x4& worldMatrix);
+std::optional<Vector3> IntersectRayTriangle(const Ray& ray, const Triangle& t);
+std::optional<Vector3> IntersectRayModel(const Ray& ray, const std::vector<VertexData>& vertices, const AABB& aabb, const Transforms& data);
+std::optional<Vector3> IntersectRayAABB(const Ray& ray, const AABB& box);
+
 
 #pragma endregion
-
 
 #pragma region Log
 /// <summary>
@@ -117,12 +136,41 @@ void Log(std::ofstream& os, const std::string& message);
 
 #pragma endregion
 
+#pragma region Rand
+
+int RandomInt(int min, int max);
+float RandomFloat(float min, float max, int decimalPlaces);
+
+#pragma endregion
+
+#pragma region Load
+
+std::vector<AABB> LoadAABBFromCSV(const std::string& csvPath);
+void SaveAABBToCSV(const std::string& csvPath, const std::vector<AABB>& aabbs);
+
+#pragma endregion
+
+/// <summary>
+/// 角度をラジアンに変換
+/// </summary>
+/// <param name="angle"></param>
+/// <returns></returns>
+float ToRadian(const float& angle);
 
 // ARGBをRGBA
 Vector4 ConvertARGBtoRGBA(const Vector4& argb);
 // int型のカラーをVector4型に
 Vector4 ConvertUintToVector4(uint32_t color);
 uint32_t ConvertVector4ToUint(Vector4 color);
+
+
+
+
+
+
+
+
+
 
 /// <summary>
 /// 球体の頂点データを生成する関数

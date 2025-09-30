@@ -6,12 +6,13 @@ CameraController::CameraController()
 {
     mousePositionGap_ = { 0,0 };
     cameraMode_ = true;
+    cameraModeMode_ = true;
 
     // カメラ
     transform_.translate = { 0.0f, 0.0f, 0.0f };
-    transform_.rotate = { 0.43f, 0.0f, 0.0f };
+    transform_.rotate = { 1.13f, 0.0f, 0.0f };
     center_ = { 0.0f, 0.0f, 0.0f };
-    distance_ = 39.60f;
+    distance_ = 35.60f;
 
     preCenter_ = center_;
     preRotate_.x = transform_.rotate.x;
@@ -20,30 +21,30 @@ CameraController::CameraController()
     sphereOptions.enableLighting = false;
 }
 
-void CameraController::Updata()
+void CameraController::Update()
 {
     // カメラ操作可能
     if (cameraMode_)
     {
         // 左クリック
         prePressMouse0_ = pressMouse0_;
-        pressMouse0_ = Game::IsPressMouse(0);
+        pressMouse0_ = Game::GetMousePress(0);
         // ミドルボタン
         prePressMouse2_ = pressMouse2_;
-        pressMouse2_ = Game::IsPressMouse(2);
+        pressMouse2_ = Game::GetMousePress(2);
 
-        mouseWheel_ = Game::GetWheel();
+        mouseWheel_ = Game::GetMouseWheel();
 
 #pragma region カメラ回転
         // クリックした瞬間
         if (pressMouse2_ && prePressMouse2_ == 0 && !GetHitKey::keys[DIK_LSHIFT])
         {
-            Game::GetMousePosition(&preMousePosition_);
+            preMousePosition_ = Game::GetMousePosition();
         }
         // クリックしている最中
         if (pressMouse2_ && !GetHitKey::keys[DIK_LSHIFT])
         {
-            Game::GetMousePosition(&mousePosition_);
+            mousePosition_ = Game::GetMousePosition();
             mousePositionGap_.x = mousePosition_.x - preMousePosition_.x;
             mousePositionGap_.y = mousePosition_.y - preMousePosition_.y;
             transform_.rotate.x = (mousePositionGap_.y / 100.0f) + (preRotate_.x);
@@ -54,16 +55,17 @@ void CameraController::Updata()
         {
             preRotate_ = transform_.rotate;
         }
+
 #pragma endregion
 
-#pragma region 回転中心 
+#pragma region 回転中心
         if (prePressMouse2_ == 0 && pressMouse2_ && GetHitKey::keys[DIK_LSHIFT])
         {
-            Game::GetMousePosition(&preMousePosition_);
+            preMousePosition_ = Game::GetMousePosition();
         }
         if (pressMouse2_ && GetHitKey::keys[DIK_LSHIFT])
         {
-            Game::GetMousePosition(&mousePosition_);
+            mousePosition_ = Game::GetMousePosition();
             mousePositionGap_.x = float(mousePosition_.x - preMousePosition_.x);
             mousePositionGap_.y = float(mousePosition_.y - preMousePosition_.y);
 
@@ -100,8 +102,6 @@ void CameraController::Updata()
             preCenter_ = center_;
         }
 
-
-
 #pragma endregion
 
 #pragma region カメラ距離
@@ -113,6 +113,7 @@ void CameraController::Updata()
         {
             distance_ -= float(mouseWheel_) / 100;
         }
+
 #pragma endregion
     }
 
@@ -131,14 +132,16 @@ void CameraController::Updata()
 
 #ifdef DEBUG
 #endif
+    //ImGui::Begin("camera");
     //ImGui::DragFloat3("cameraCenter", &center_.x, 0.01f);
     //ImGui::DragFloat3("cameraRotate", &transform_.rotate.x, 0.01f);
-    //ImGui::DragFloat("cameraDistance", &distance_, 0.01f);
+    //ImGui::DragFloat("cameraDistance", &distance_, 0.1f);
     //ImGui::DragFloat3("cameratransform_.translate", &transform_.translate.x, 0.01f);
     //ImGui::DragFloat3("cameratransform_.rotate", &transform_.rotate.x, 0.01f);
     //ImGui::Text("push SPACE key : change cameraMode");
-    ImGui::Checkbox("cameraMode", &cameraMode_);
+    //ImGui::Checkbox("cameraMode", &cameraMode_);
     //ImGui::Checkbox("cameraModeMode", &cameraModeMode_);
+    //ImGui::End();
 
     //////////////////////////////////////////////
     ///               カメラ移動               ///
@@ -214,11 +217,14 @@ void CameraController::Draw()
 // 実際に動かす
 void CameraController::MovingCenter()
 {
+    if (easeCenter_.maxFrame == 0)
+    {
+        easeCenter_.flame = 1;
+        easeCenter_.maxFrame = 1;
+    }
     float t = float(easeCenter_.flame) / float(easeCenter_.maxFrame);
 
-    center_.x = Easings::OUT_QUART(easeCenter_.start.x, easeCenter_.end.x, t);
-    center_.y = Easings::OUT_QUART(easeCenter_.start.y, easeCenter_.end.y, t);
-    center_.z = Easings::OUT_QUART(easeCenter_.start.z, easeCenter_.end.z, t);
+    center_ = Easings::EasingVector3(easeCenter_.start, easeCenter_.end, easeCenter_.easetype, t);
     preCenter_ = center_;
 
     easeCenter_.flame++;
@@ -230,11 +236,14 @@ void CameraController::MovingCenter()
 
 void CameraController::MovingRotate()
 {
-    float t = float(easeCenter_.flame) / float(easeCenter_.maxFrame);
+    if (easeRotate_.maxFrame == 0)
+    {
+        easeRotate_.flame = 1;
+        easeRotate_.maxFrame = 1;
+    }
+    float t = float(easeRotate_.flame) / float(easeRotate_.maxFrame);
 
-    center_.x = Easings::OUT_QUART(easeRotate_.start.x, easeRotate_.end.x, t);
-    center_.y = Easings::OUT_QUART(easeRotate_.start.y, easeRotate_.end.y, t);
-    center_.z = Easings::OUT_QUART(easeRotate_.start.z, easeRotate_.end.z, t);
+    transform_.rotate = Easings::EasingVector3(easeRotate_.start, easeRotate_.end, easeRotate_.easetype, t);
     preRotate_ = transform_.rotate;
 
     easeRotate_.flame++;
@@ -247,9 +256,14 @@ void CameraController::MovingRotate()
 
 void CameraController::MovingDistance()
 {
-    float t = float(easeCenter_.flame) / float(easeCenter_.maxFrame);
+    if (easeDistance_.maxFrame == 0)
+    {
+        easeDistance_.flame = 1;
+        easeDistance_.maxFrame = 1;
+    }
+    float t = float(easeDistance_.flame) / float(easeDistance_.maxFrame);
 
-    distance_ = Easings::OUT_QUART(easeDistance_.start.x, easeDistance_.end.x, t);
+    distance_ = Easings::EasingFloat(easeDistance_.start.x, easeDistance_.end.x, easeDistance_.easetype, t);
 
     easeDistance_.flame++;
 
@@ -260,29 +274,32 @@ void CameraController::MovingDistance()
 }
 
 // 動かす先の設定
-void CameraController::SetCenterTarget(Vector3 target, int spendFrame)
+void CameraController::SetCenterTarget(Vector3 target, int spendFrame, EaseType easetype)
 {
     easeCenter_.start = center_;
     easeCenter_.end = target;
     easeCenter_.easingFlag = 1;
     easeCenter_.flame = 0;
     easeCenter_.maxFrame = spendFrame;
+    easeCenter_.easetype = easetype;
 };
 
-void CameraController::SetRotateTarget(Vector3 target, int spendFrame)
+void CameraController::SetRotateTarget(Vector3 target, int spendFrame, EaseType easetype)
 {
     easeRotate_.start = transform_.rotate;
     easeRotate_.end = target;
     easeRotate_.easingFlag = 1;
     easeRotate_.flame = 0;
     easeRotate_.maxFrame = spendFrame;
+    easeRotate_.easetype = easetype;
 };
 
-void CameraController::SetDistanceTarget(float target, int spendFrame)
+void CameraController::SetDistanceTarget(float target, int spendFrame, EaseType easetype)
 {
     easeDistance_.start.x = distance_;
     easeDistance_.end.x = target;
     easeDistance_.easingFlag = 1;
     easeDistance_.flame = 0;
     easeDistance_.maxFrame = spendFrame;
+    easeDistance_.easetype = easetype;
 };

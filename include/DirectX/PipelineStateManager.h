@@ -2,6 +2,7 @@
 #include <d3d12.h>
 #include <wrl.h>
 #include <cassert>
+#include <map>
 #include "Utilities/functions.h"
 
 class PipelineStateManager
@@ -11,18 +12,13 @@ public:
     ~PipelineStateManager();
 
     ID3D12RootSignature* GetRootSignature() const { return rootSignature.Get(); }
-    // Triangle描画PSO
-    ID3D12PipelineState* GetPipelineState() const { return graphicsPipelineState.Get(); }
-    // Line描画PSO
-    ID3D12PipelineState* GetLinePipelineState() const { return graphicsPipelineStateLine.Get(); }
-    // ワイヤーフレーム描画PSO 
-    ID3D12PipelineState* GetWireframePipelineState() const { return graphicsPipelineStateWireframe.Get(); }
+
+    ID3D12PipelineState* GetPipelineState(BlendMode mode, D3D12_PRIMITIVE_TOPOLOGY_TYPE type) const;
 
 private:
     Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;
-    Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState;
-    Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineStateLine; // Line描画用PSO
-    Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineStateWireframe; // ワイヤーフレーム用PSO
+    std::map<BlendMode, Microsoft::WRL::ComPtr<ID3D12PipelineState>> trianglePSOs; // Triangle描画用PSO
+    std::map<BlendMode, Microsoft::WRL::ComPtr<ID3D12PipelineState>> linePSOs;     // Line描画用PSO
 
     Microsoft::WRL::ComPtr<IDxcUtils> dxcUtils;
     Microsoft::WRL::ComPtr<IDxcCompiler3> dxcCompiler;
@@ -30,7 +26,12 @@ private:
 
     void InitializeDxc();
     void InitializeRootSignatureInternal(ID3D12Device* device);
-    void InitializePSOInternal(ID3D12Device* device); // オブジェクト描画用
-    void InitializeLinePSOInternal(ID3D12Device* device); // Line描画用
-    void InitializeWireframePSOInternal(ID3D12Device* device); // ワイヤーフレーム用
+    void CreateAllPSOs(ID3D12Device* device);
+
+    // 汎用的なPSO生成関数
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> CreatePipelineState(
+        ID3D12Device* device,
+        const D3D12_BLEND_DESC& blendDesc,
+        D3D12_PRIMITIVE_TOPOLOGY_TYPE primitiveType,
+        const D3D12_RASTERIZER_DESC& rasterizerDesc);
 };

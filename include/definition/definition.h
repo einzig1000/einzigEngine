@@ -9,7 +9,6 @@
 #include <d3d12.h>
 #include <dxgi1_6.h>
 
-
 // ライブラリリンク
 #pragma comment(lib, "dxguid.lib")
 #pragma comment(lib, "d3d12.lib")
@@ -22,6 +21,40 @@
 
 #define WIDTH 1280
 #define HEIGHT 720
+
+enum class PHASE
+{
+    Phase_None,
+    Phase_Title,
+    Phase_GameScene,
+    Phase_StageSelect,
+    Phase_GameClear,
+};
+
+enum class LookAtMode
+{
+    None,
+    Target,
+    Front
+};
+
+enum class Anker
+{
+    Center,
+
+    CenterLeft,
+    CenterRight,
+    CenterTop,
+    CenterDown,
+
+    LeftTop,
+    RightTop,
+    LeftDown,
+    RightDown,
+};
+
+
+class Quaternion;
 
 enum class Direction
 {
@@ -36,6 +69,14 @@ struct Vector2int
 {
     int x = 0;
     int y = 0;
+    Vector2int operator+(const Vector2int& rhs) const
+    {
+        return Vector2int{ x + rhs.x, y + rhs.y };
+    }
+    Vector2int operator-(const Vector2int& rhs) const
+    {
+        return Vector2int{ x - rhs.x, y - rhs.y };
+    }
     bool operator==(const Vector2int& rhs) const
     {
         return x == rhs.x && y == rhs.y;
@@ -760,7 +801,13 @@ struct Matrix4x4
 struct Sphere
 {
     Vector3 center;
-    float radius = 1;
+    float radius = 1.0f;
+};
+
+struct SphereXYZ
+{
+    Vector3 center;
+    Vector3 radius = { 1.0f, 1.0f, 1.0f };
 };
 
 struct Plane
@@ -788,7 +835,7 @@ struct Transforms
     Vector3 rotate = { 0,0,0 };
     Vector3 translate = { 0,0,0 };
     Matrix4x4 World;
-    Matrix4x4 *parentWorld = nullptr;
+    Matrix4x4* parentWorld = nullptr;
 };
 
 struct VertexData
@@ -860,6 +907,15 @@ struct AABB
 {
     Vector3 min;
     Vector3 max;
+
+    Vector3 center()
+    {
+        return Vector3{
+            (min.x + max.x) / 2.0f,
+            (min.y + max.y) / 2.0f,
+            (min.z + max.z) / 2.0f,
+        };
+    };
 };
 
 struct Object3D
@@ -869,17 +925,17 @@ struct Object3D
 
     // 頂点バッファ
     Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer;
-    D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
-    UINT vertexBufferSize;
+    D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
+    UINT vertexBufferSize = 0;
 
     // 変換行列
     Transforms transform;
 
     // AABB
-    AABB aabb;
+    std::vector<AABB> aabb;
 
     // 識別ナンバー
-    uint32_t number;
+    uint32_t number = 0;
 };
 
 struct TextureData
@@ -912,12 +968,95 @@ struct D3DResourceLeakChecker
     }
 };
 
+
+enum class BlendMode
+{
+    // ブレンドなし
+    kBlendModeNone,
+    // 通常アルファブレンド
+    kBlendModeNormal,
+    // 加算
+    kBlendModeAdd,
+    // 減算
+    kBlendModeSub,
+    // 乗算
+    kBlendModeMul,
+    // スクリーン
+    kBlendModeScreen,
+    // 使用したら殺す
+    Wireframe
+};
+
 struct DrawOptions
 {
-    // ワイヤーフレームにしてもいいか（天球なんかはワイヤーフレームになってほしくない）
-    bool enableWireframeMode = true;
-    // UV座標
-    Transforms uvTransform;
+    // ワイヤーフレーム
+    bool wireframe = false;
     // ライティングするか
     bool enableLighting = true;
+    // ブレンドモード
+    BlendMode blendMode = BlendMode::kBlendModeNormal;
 };
+
+struct DrawParticleOptions
+{
+    // エミッターはAABB型か球型か
+    // true = AABB　false = 球
+    bool emitterShape = true;
+    // 全パーティクルがtarget方向に向かうかエミッターとtargetの垂直方向に向かうか
+    // trueなら垂直方向、falseならtarget方向
+    bool targetDirection = true;
+    // エミッター内部でも発生するか外殻上でのみ発生するか
+    // trueなら内部でも発生、falseなら外殻のみ
+    bool spawnInsideEmitter = true;
+    // ビルボードか否か
+    bool toCamera = false;
+};
+
+
+enum class EaseType
+{
+    LINEAR,
+    IN_SINE,
+    OUT_SINE,
+    IN_OUT_SINE,
+    IN_QUAD,
+    OUT_QUAD,
+    IN_OUT_QUAD,
+    IN_CUBIC,
+    OUT_CUBIC,
+    IN_OUT_CUBIC,
+    IN_QUART,
+    OUT_QUART,
+    IN_OUT_QUART,
+    IN_QUINT,
+    OUT_QUINT,
+    IN_OUT_QUINT,
+    IN_EXPO,
+    OUT_EXPO,
+    IN_OUT_EXPO,
+    IN_CIRC,
+    OUT_CIRC,
+    IN_OUT_CIRC,
+    IN_BACK,
+    OUT_BACK,
+    IN_OUT_BACK,
+    IN_ELASTIC,
+    OUT_ELASTIC,
+    IN_OUT_ELASTIC,
+    IN_BOUNCE,
+    OUT_BOUNCE,
+};
+
+struct ParticleInf
+{
+    Vector3 velocity;
+    int liveTime = 0;
+};
+
+//enum class DestructionType
+//{
+//    // 透明になっていく
+//    FadeOut,
+//    // 小さくなっていく
+//    ToSmall,
+//};
