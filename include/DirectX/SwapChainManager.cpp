@@ -11,7 +11,10 @@ SwapChainManager::SwapChainManager(ID3D12Device* device, ID3D12CommandQueue* com
     Log("コンストラクタ実行成功 : SwapChainManager");
 }
 
-SwapChainManager::~SwapChainManager() {}
+SwapChainManager::~SwapChainManager()
+{
+    Log("デストラクタ実行成功 : SwapChainManager");
+}
 
 void SwapChainManager::InitializeSwapChainInternal(ID3D12Device* device, ID3D12CommandQueue* commandQueue, HWND hwnd, int width, int height)
 {
@@ -41,8 +44,6 @@ void SwapChainManager::InitializeSwapChainInternal(ID3D12Device* device, ID3D12C
     assert(SUCCEEDED(hr));
     hr = swapChain->GetBuffer(1, IID_PPV_ARGS(&swapChainResources[1]));
     assert(SUCCEEDED(hr));
-
-    Log("デストラクタ実行成功 : SwapChainManager");
 }
 
 void SwapChainManager::InitializeOffscreenResources(ID3D12Device* device, int width, int height)
@@ -55,18 +56,18 @@ void SwapChainManager::InitializeOffscreenResources(ID3D12Device* device, int wi
     desc.DepthOrArraySize = 1;
     desc.MipLevels = 1;
     desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
     desc.SampleDesc.Count = 1;
     desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-    desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
 
     D3D12_HEAP_PROPERTIES heapProps = {};
     heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
 
     D3D12_CLEAR_VALUE clearValue = {};
     clearValue.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    clearValue.Color[0] = 0.0f;
-    clearValue.Color[1] = 0.0f;
-    clearValue.Color[2] = 0.0f;
+    clearValue.Color[0] = 0.1f;
+    clearValue.Color[1] = 0.25f;
+    clearValue.Color[2] = 0.5f;
     clearValue.Color[3] = 1.0f;
 
     HRESULT hr = device->CreateCommittedResource(
@@ -88,11 +89,12 @@ void SwapChainManager::InitializeOffscreenResources(ID3D12Device* device, int wi
     assert(SUCCEEDED(hr));
 
     // SRV作成
-    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
     srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
     srvDesc.Texture2D.MipLevels = 1;
-    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
     device->CreateShaderResourceView(
         offscreenRenderTarget.Get(),
         &srvDesc,
@@ -121,6 +123,10 @@ void SwapChainManager::InitializeRenderTargetView(ID3D12Device* device)
     rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
     HRESULT hr = device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&rtvDescriptorHeap));
     assert(SUCCEEDED(hr));
+
+    // オフスクリーンレンダリングの時は
+    // DXGI_FORMAT_R8G8B8A8_UNORMにする
+    //rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 
     rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
     rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;

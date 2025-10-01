@@ -4,9 +4,9 @@ GameManager::GameManager()
 {
 	frame = 0;
 
-	//player.model = Game::LoadOBJ("resources/Prototypes/model/", "corn.obj");
+	player.model = Game::LoadOBJ("resources/Prototypes/model/", "corn.obj");
 	//player.texture = Game::LoadTexture("resources/Prototypes/texture/uvChecker.png");
-	//ground.model = Game::LoadOBJ("resources/Prototypes/model/", "cube.obj");
+	ground.model = Game::LoadOBJ("resources/Prototypes/model/", "cube.obj");
 	//ground.texture = Game::LoadTexture("resources/Prototypes/texture/uvChecker.png");
 
 	//player.transforms.translate = { 0.0f,10.0f,0.0f };

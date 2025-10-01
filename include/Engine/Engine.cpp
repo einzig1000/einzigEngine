@@ -201,21 +201,19 @@ bool Engine::ProcessMessage()
 }
 void Engine::BeginFrame()
 {
+	// DirectXを更新
+	dxManager->BeginFrame();
+
+	const float clearColor[4] = { 0.1f,0.25f,0.5f,1.0f };
+	ID3D12GraphicsCommandList* cmd = dxManager->BeginScene(clearColor);
+
 	// ダブルバッファ化したコマンドリストのインデックス取得
 	frameIndex = dxManager->GetSwapChainManager()->GetCurrentBackBufferIndex();
 
-	// 修正前:
-	dxManager->GetCommandList(frameIndex)->OMSetRenderTargets(1, &dxManager->GetSwapChainManager()->GetOffscreenCurrentRTVHandle(), FALSE, nullptr);
-
-	//// 修正後:
-	//auto offscreenRTVHandle = dxManager->GetSwapChainManager()->GetOffscreenCurrentRTVHandle();
-	//dxManager->GetCommandList(frameIndex)->OMSetRenderTargets(1, &offscreenRTVHandle, FALSE, nullptr);
-
-	// ImGuiを更新
+	// ImGuiフレーム開始
 	ImGui_ImplDX12_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
-	//ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
 
 	// ???
 	sphereVertexDataUsed = 0;
@@ -229,9 +227,6 @@ void Engine::BeginFrame()
 
 	// インプット系を更新
 	inputManager_->Update();
-
-	// DirectXを更新
-	dxManager->BeginFrame();
 }
 void Engine::UpdateLight()
 {
@@ -261,28 +256,27 @@ void Engine::EndFrame()
 {
 	wheelDelta = 0;
 
-	// --- ポストエフェクト描画 ---
-	// 1. SwapChainのバックバッファをレンダーターゲットにセット
-	auto swapChainRTV = dxManager->GetSwapChainManager()->GetCurrentRTVHandle();
-	dxManager->GetCommandList(frameIndex)->OMSetRenderTargets(1, &swapChainRTV, FALSE, nullptr);
+	// 事前にコマンドリスト、スワップチェインを取得しておく
+	ID3D12GraphicsCommandList* cmd = dxManager->BeginPostProcess();
 
-	// 2. ポストエフェクト用PSO/RootSignatureをセット(とりあえず通常びょyが)
-	dxManager->GetCommandList(frameIndex)->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature());
-	dxManager->GetCommandList(frameIndex)->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(BlendMode::kBlendModeNone, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
+	// ポストエフェクト PSO / RS 設定
+	cmd->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature());
+	cmd->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(BlendMode::kBlendModeNone, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
 
-	// 3. オフスクリーンSRVをセット
-	ID3D12DescriptorHeap* heaps[] = { dxManager->GetSwapChainManager()->GetOffscreenSRVDescriptorHeap() };
-	dxManager->GetCommandList(frameIndex)->SetDescriptorHeaps(_countof(heaps), heaps);
-	dxManager->GetCommandList(frameIndex)->SetGraphicsRootDescriptorTable(0, dxManager->GetSwapChainManager()->GetOffscreenSRVDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
 
-	// 4. フルスクリーンクアッド描画
-	DrawFullScreenQuad(dxManager->GetCommandList(frameIndex));
+	// オフスクリーンSRVヒープ
+	{
+		ID3D12DescriptorHeap* heaps[] = { dxManager->GetSwapChainManager()->GetOffscreenSRVDescriptorHeap() };
+		cmd->SetDescriptorHeaps(1, heaps);
+		cmd->SetGraphicsRootDescriptorTable(0, dxManager->GetSwapChainManager()->GetOffscreenSRVDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
+	}
+	DrawFullScreenQuad(cmd);
 
-	//cameraController->Draw();
+	// ImGui
 	ImGui::Render();
 
-	dxManager->EndFrame();
-
+	// 7. 終了処理（フェンス・Present 等）
+	dxManager->EndFrame(true);
 	drawCallIndex = 0;
 	drawLineCallIndex = 0;
 }
@@ -1762,8 +1756,11 @@ AABB Engine::CreateLocalAABB(const ModelData& model)
 // CreateLocalAABBでつくったAABBに座標を適応させる（当たり判定の毎フレーム更新用）
 std::vector<AABB>  Engine::CreateAABB(const Transforms& transforms, uint32_t objectNumber)
 {
-	Matrix4x4 worldMatrix = transforms.World;
-	Object3D& obj = objects[objectNumber];
+	Matrix4x4 worldMatrix = transforms.World;//
+	const Game::RenderData_Model* renderModel = Game::GetModelList()[objectNumber];
+	const Object3D& obj = objects[renderModel->model];
+
+
 	std::vector<AABB> result;
 
 	for (const auto& localAABB : obj.aabb)

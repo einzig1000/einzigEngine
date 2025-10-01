@@ -28,7 +28,7 @@ DirectXManager::~DirectXManager()
 
 void DirectXManager::BeginFrame()
 {
-    // 1. バックバッファのインデックスを更新
+    // 1. バックバッファのインデックス更新
     swapChainManager->UpdateBackBufferIndex();
     UINT frameIndex = swapChainManager->GetCurrentBackBufferIndex();
 
@@ -38,67 +38,117 @@ void DirectXManager::BeginFrame()
     // 3. コマンドリストをリセット
     commandContextManager->ResetCommandList(frameIndex);
 
-    // 4. ResourceStateをPRESENTからRENDER_TARGETへ遷移
-    barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-    barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-    barrier.Transition.pResource = swapChainManager->GetCurrentBackBufferResource();
-    barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
-    barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-    commandContextManager->GetCommandList(frameIndex)->ResourceBarrier(1, &barrier);
-
-    // 5. 描画先のRTVとDSVを設定
-    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = swapChainManager->GetCurrentRTVHandle();
-    D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = depthStencilManager->GetDSVHandle();
-    commandContextManager->GetCommandList(frameIndex)->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
-
-    // 6. クリア
-    float clearColor[] = { 0.1f, 0.25f, 0.5f, 1.0f };
-    commandContextManager->GetCommandList(frameIndex)->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
-    commandContextManager->GetCommandList(frameIndex)->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
-
-    // 7. ディスクリプタヒープを設定 (SRV用)
-    ID3D12DescriptorHeap* descriptorHeaps[] = { descriptorHeapManager->GetSRVDescriptorHeap() };
-    commandContextManager->GetCommandList(frameIndex)->SetDescriptorHeaps(1, descriptorHeaps);
-
-    // 8. ViewportとScissorを設定
-    commandContextManager->GetCommandList(frameIndex)->RSSetViewports(1, &viewportScissorManager->GetViewport());
-    commandContextManager->GetCommandList(frameIndex)->RSSetScissorRects(1, &viewportScissorManager->GetScissorRect());
+    //// 5. 描画先のRTVとDSVを設定
+    //D3D12_CPU_DESCRIPTOR_HANDLE offscreenRTV = swapChainManager->GetOffscreenCurrentRTVHandle();
+    //D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = depthStencilManager->GetDSVHandle();
+    //commandContextManager->GetCommandList(frameIndex)->OMSetRenderTargets(1, &offscreenRTV, FALSE, &dsvHandle);
+    //
+    //// 6. クリア（オフスクリーン + 深度）
+    //const float clearColor[4] = { 0.1f, 0.25f, 0.5f, 1.0f };
+    //commandContextManager->GetCommandList(frameIndex)->ClearRenderTargetView(offscreenRTV, clearColor, 0, nullptr);
+    //commandContextManager->GetCommandList(frameIndex)->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+    //
+    //// 7. SRVディスクリプタヒープセット（モデル描画で使う）
+    //ID3D12DescriptorHeap* heaps[] = { descriptorHeapManager->GetSRVDescriptorHeap() };
+    //commandContextManager->GetCommandList(frameIndex)->SetDescriptorHeaps(1, heaps);
+    //
+    //// 8. Viewport / Scissor
+    //commandContextManager->GetCommandList(frameIndex)->RSSetViewports(1, &viewportScissorManager->GetViewport());
+    //commandContextManager->GetCommandList(frameIndex)->RSSetScissorRects(1, &viewportScissorManager->GetScissorRect());
 }
 
-void DirectXManager::EndFrame()
+ID3D12GraphicsCommandList* DirectXManager::BeginScene(const float clearColor[4])
 {
     UINT frameIndex = swapChainManager->GetCurrentBackBufferIndex();
+    auto* cmd = commandContextManager->GetCommandList(frameIndex);
 
-    // 1. ImGui の初期化みたいなもん
-    ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandContextManager->GetCommandList(frameIndex));
-
-    // 2. ResourceStateをRENDER_TARGETからPRESENTへ遷移
-    barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-    barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-    barrier.Transition.pResource = swapChainManager->GetCurrentBackBufferResource();
-    barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-    barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
-    commandContextManager->GetCommandList(frameIndex)->ResourceBarrier(1, &barrier);
-
-    // 3. コマンドリストをClose
-    HRESULT hr = commandContextManager->GetCommandList(frameIndex)->Close();
-    if (FAILED(hr))
+    // Offscreen が SRV 状態なら RT に戻す
     {
-        Log("コマンドリストの確定・実行に失敗しました");
-        assert(false);
+        D3D12_RESOURCE_BARRIER b{};
+        b.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+        b.Transition.pResource = swapChainManager->GetOffscreenRenderTarget();
+        b.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+        b.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+        b.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+        cmd->ResourceBarrier(1, &b);
     }
 
+    D3D12_CPU_DESCRIPTOR_HANDLE offscreenRTV = swapChainManager->GetOffscreenCurrentRTVHandle();
+    D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = depthStencilManager->GetDSVHandle();
+    cmd->OMSetRenderTargets(1, &offscreenRTV, FALSE, &dsvHandle);
+    cmd->ClearRenderTargetView(offscreenRTV, clearColor, 0, nullptr);
+    cmd->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+
+    ID3D12DescriptorHeap* heaps[] = { descriptorHeapManager->GetSRVDescriptorHeap() };
+    cmd->SetDescriptorHeaps(1, heaps);
+    cmd->RSSetViewports(1, &viewportScissorManager->GetViewport());
+    cmd->RSSetScissorRects(1, &viewportScissorManager->GetScissorRect());
+    return cmd;
+}
+
+ID3D12GraphicsCommandList* DirectXManager::BeginPostProcess()
+{
+    UINT frameIndex = swapChainManager->GetCurrentBackBufferIndex();
+    auto* cmd = commandContextManager->GetCommandList(frameIndex);
+
+    // Offscreen: RT -> SRV
+    {
+        D3D12_RESOURCE_BARRIER b{};
+        b.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+        b.Transition.pResource = swapChainManager->GetOffscreenRenderTarget();
+        b.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+        b.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+        b.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+        cmd->ResourceBarrier(1, &b);
+    }
+    // BackBuffer: PRESENT -> RT
+    {
+        D3D12_RESOURCE_BARRIER b{};
+        b.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+        b.Transition.pResource = swapChainManager->GetCurrentBackBufferResource();
+        b.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+        b.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+        b.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+        cmd->ResourceBarrier(1, &b);
+    }
+
+    auto backRTV = swapChainManager->GetCurrentRTVHandle();
+    cmd->OMSetRenderTargets(1, &backRTV, FALSE, nullptr);
+    return cmd;
+}
+
+void DirectXManager::EndFrame(bool drawImGui)
+{
+    UINT frameIndex = swapChainManager->GetCurrentBackBufferIndex();
+    auto* cmd = commandContextManager->GetCommandList(frameIndex);
+
+    if (drawImGui)
+    {
+        ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), cmd);
+    }
+
+    // BackBuffer: RT -> PRESENT
+    {
+        D3D12_RESOURCE_BARRIER b{};
+        b.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+        b.Transition.pResource = swapChainManager->GetCurrentBackBufferResource();
+        b.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+        b.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+        b.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+        cmd->ResourceBarrier(1, &b);
+    }
+
+    // 8. コマンドリストClose → 実行 → フェンス → Present
+    HRESULT hr = cmd->Close();
+    if (FAILED(hr)) { Log("CommandList Close失敗"); assert(false); }
+
     // 4. コマンドリストをExecute
-    ID3D12CommandList* commandLists[] = { commandContextManager->GetCommandList(frameIndex) };
-    commandContextManager->GetCommandQueue()->ExecuteCommandLists(1, commandLists);
+    ID3D12CommandList* lists[] = { cmd };
+    commandContextManager->GetCommandQueue()->ExecuteCommandLists(1, lists);
 
     // 5. フェンス値をインクリメントしてSignal
     synchronizationManager->Signal(commandContextManager->GetCommandQueue(), frameIndex);
 
     // 6. Present
     swapChainManager->Present();
-
-    //// 5. GPU同期
-    //synchronizationManager->Signal(commandContextManager->GetCommandQueue(), frameIndex);
-    //synchronizationManager->WaitForGPU(frameIndex);
 }

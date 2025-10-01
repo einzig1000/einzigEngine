@@ -25,7 +25,6 @@ public:
     ID3D12Device* GetDevice() const { return deviceManager->GetDevice(); }
     ID3D12GraphicsCommandList* GetCommandList(UINT frameIndex) const { return commandContextManager->GetCommandList(frameIndex); }
     ID3D12DescriptorHeap* GetsrvDescriptorHeap() const { return descriptorHeapManager->GetSRVDescriptorHeap(); }
-    //const DXGI_SWAP_CHAIN_DESC1& GetSwapChainDesc() const { return swapChainManager->GetSwapChainDesc(); }
     SwapChainManager* GetSwapChainManager() { return swapChainManager.get(); };
     const D3D12_RENDER_TARGET_VIEW_DESC& GetRtvDesc() const { return swapChainManager->GetRtvDesc(); }
     PipelineStateManager* GetPipelineStateManager() const { return pipelineStateManager.get(); }
@@ -34,7 +33,9 @@ public:
     TextureManager* GetTextureManager() const { return textureManager_.get(); }
 
     void BeginFrame();
-    void EndFrame();
+    ID3D12GraphicsCommandList* BeginScene(const float clearColor[4]);
+    ID3D12GraphicsCommandList* BeginPostProcess();
+    void EndFrame(bool drawImGui);
 
 
 private:
