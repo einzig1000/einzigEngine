@@ -85,9 +85,6 @@
     <Filter Include="engine\Application">
       <UniqueIdentifier>{24c1e14d-3c15-48b9-9b53-6d5405a3ce02}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\Application\Application">
-      <UniqueIdentifier>{f318fca5-3d7c-49cd-bd1a-0bbb7dad65fe}</UniqueIdentifier>
-    </Filter>
     <Filter Include="engine\CameraController">
       <UniqueIdentifier>{8119ccfa-d6ad-4af0-83e5-034de74534f5}</UniqueIdentifier>
     </Filter>
@@ -159,9 +156,6 @@
     <ClCompile Include="include\engine\Engine\Engine.cpp">
       <Filter>engine\Application</Filter>
     </ClCompile>
-    <ClCompile Include="include\engine\Engine\Game.cpp">
-      <Filter>engine\Application\Application</Filter>
-    </ClCompile>
     <ClCompile Include="include\engine\input\GetHitKey.cpp">
       <Filter>engine\input\GetHitKey</Filter>
     </ClCompile>
@@ -203,6 +197,9 @@
     </ClCompile>
     <ClCompile Include="include\engine\definition\definition.cpp">
       <Filter>engine\definition</Filter>
+    </ClCompile>
+    <ClCompile Include="include\engine\Engine\Game.cpp">
+      <Filter>engine\Application</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -257,9 +254,6 @@
     <ClInclude Include="include\engine\Engine\Engine.h">
       <Filter>engine\Application</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\Engine\Game.h">
-      <Filter>engine\Application\Application</Filter>
-    </ClInclude>
     <ClInclude Include="include\engine\input\GetHitKey.h">
       <Filter>engine\input\GetHitKey</Filter>
     </ClInclude>
@@ -298,6 +292,9 @@
     </ClInclude>
     <ClInclude Include="include\engine\input\Input.h">
       <Filter>engine\input\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="include\engine\Engine\Game.h">
+      <Filter>engine\Application</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
