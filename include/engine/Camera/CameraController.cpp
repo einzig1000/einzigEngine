@@ -92,10 +92,11 @@ void CameraController::Update()
             // 上方向ベクトル（ローカルy軸）
             Vector3 up = { cameraRotMat.m[0][1], cameraRotMat.m[1][1], cameraRotMat.m[2][1] };
 
+            // パン感度
+            float panSpeed = distance_ * 0.001f;
 
             // Centerを移動
-            //center_ = preCenter_ + (((right * -1) * (mousePositionGap_.x / 100.0f)) + ((up * -1) * (-mousePositionGap_.y / 100.0f)));
-            center_ = preCenter_ + (((right * -1) * (mousePositionGap_.x / 100.0f)) + ((up * 1) * (-mousePositionGap_.y / 100.0f)));
+            center_ = preCenter_ + -right * (mousePositionGap_.x * panSpeed) - up * (mousePositionGap_.y * panSpeed);
         }
         if (prePressMouse2_ && pressMouse2_ == 0 && GetHitKey::keys[DIK_LSHIFT])
         {
@@ -130,18 +131,18 @@ void CameraController::Update()
         MovingDistance();
     }
 
-#ifdef DEBUG
+#ifdef _DEBUG
 #endif
-    //ImGui::Begin("camera");
-    //ImGui::DragFloat3("cameraCenter", &center_.x, 0.01f);
-    //ImGui::DragFloat3("cameraRotate", &transform_.rotate.x, 0.01f);
-    //ImGui::DragFloat("cameraDistance", &distance_, 0.1f);
-    //ImGui::DragFloat3("cameratransform_.translate", &transform_.translate.x, 0.01f);
-    //ImGui::DragFloat3("cameratransform_.rotate", &transform_.rotate.x, 0.01f);
-    //ImGui::Text("push SPACE key : change cameraMode");
-    //ImGui::Checkbox("cameraMode", &cameraMode_);
-    //ImGui::Checkbox("cameraModeMode", &cameraModeMode_);
-    //ImGui::End();
+    ImGui::Begin("camera");
+    ImGui::DragFloat3("cameraCenter", &center_.x, 0.01f);
+    ImGui::DragFloat3("cameraRotate", &transform_.rotate.x, 0.01f);
+    ImGui::DragFloat("cameraDistance", &distance_, 0.1f);
+    ImGui::DragFloat3("cameratransform_.translate", &transform_.translate.x, 0.01f);
+    ImGui::DragFloat3("cameratransform_.rotate", &transform_.rotate.x, 0.01f);
+    ImGui::Text("push SPACE key : change cameraMode");
+    ImGui::Checkbox("cameraMode", &cameraMode_);
+    ImGui::Checkbox("cameraModeMode", &cameraModeMode_);
+    ImGui::End();
 
     //////////////////////////////////////////////
     ///               カメラ移動               ///

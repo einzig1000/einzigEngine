@@ -32,19 +32,17 @@ void GameManager::Update()
 			player.gravity = 0.01f;
 		}
 
-
 		if (GetHitKey::keys[DIK_1])
 		{
 			player.LookAtFront();
 		}
 		if (GetHitKey::keys[DIK_2])
 		{
-			player.LookAtCamera();
+			player.LookAtCamera(roll);
 		}
-
 	}
 
-
+	roll += 0.01f;
 	frame++;
 }
 
