@@ -55,6 +55,15 @@ void MouseController::SetMouseRay()
     }.Normalized();
 }
 
+void MouseController::SetMouseButtenState()
+{
+	preButtens = Buttens;
+
+    Buttens.leftButton = (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
+    Buttens.rightButton = (GetAsyncKeyState(VK_RBUTTON) & 0x8000) != 0;
+    Buttens.middleButton = (GetAsyncKeyState(VK_MBUTTON) & 0x8000) != 0;
+}
+
 void MouseController::Update()
 {
     // マウスポジション取得
@@ -62,4 +71,7 @@ void MouseController::Update()
 
     // マウスレイ取得
     SetMouseRay();
+
+	// マウスボタン状態取得
+    SetMouseButtenState();
 }

@@ -968,6 +968,13 @@ struct D3DResourceLeakChecker
     }
 };
 
+struct mouseButtenState
+{
+    bool leftButton;
+    bool rightButton;
+    bool middleButton;
+};
+
 
 enum class BlendMode
 {

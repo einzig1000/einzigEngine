@@ -235,6 +235,8 @@ public:
 	static bool IsCollisionMouseRayAABB(uint32_t objectNumber, const Transforms& data);
 	// 0 = 左クリック  1 = 右クリック  2 = ミドルボタン
 	static bool GetMousePress(int i);
+	// 0 = 左クリック  1 = 右クリック  2 = ミドルボタン
+	static bool GetMousePrePress(int i);
 	static uint32_t GetMouseWheel();
 
 	// カメラ

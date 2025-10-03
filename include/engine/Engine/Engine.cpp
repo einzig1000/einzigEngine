@@ -192,6 +192,22 @@ void Engine::UpdateCamera()
 		CreateFrustumPlanes(debugCameraController->viewProjectionMatrix);
 	}
 
+	// 左シフト＋左クリックでカメラターゲットをオブジェクトに合わせる
+	if (GetHitKey::keys[DIK_LSHIFT])
+	{
+		if (Game::GetMousePress(0) && !GetMousePrePress(0))
+		{
+			for (auto& rd : Game::GetModelList())
+			{
+				if (rd->isCollisionMouseRay == 0)
+				{
+					GetDebugCamera()->SetCenterTarget(rd->transforms.translate, 0, EaseType::IN_BACK);
+				}
+			}
+		}
+	}
+
+
 	ImGui::Text("---------------camera---------------");
 	ImGui::Checkbox("switchDebugCamera", &debugCamera);
 }
@@ -1476,25 +1492,43 @@ bool Engine::IsCollisionMouseRayAABB(uint32_t objectNumber, const Transforms& da
 	return false;
 }
 
-bool Engine::IsPressMouse(int i)
+bool Engine::GetMousePress(int i)
 {
 	// 左クリック
 	if (i == 0)
 	{
-		bool leftButton = (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
-		return leftButton;
+		return inputManager_->GetMouseController()->Buttens.leftButton;
 	}
 	// 右クリック
-	if (i == 1)
+	else if (i == 1)
 	{
-		bool rightButton = (GetAsyncKeyState(VK_RBUTTON) & 0x8000) != 0;
-		return rightButton;
+		return inputManager_->GetMouseController()->Buttens.rightButton;
 	}
 	// ミドルボタン（マウスホイールクリック）
-	if (i == 2)
+	else if (i == 2)
 	{
-		bool middleButton = (GetAsyncKeyState(VK_MBUTTON) & 0x8000) != 0;
-		return middleButton;
+		return inputManager_->GetMouseController()->Buttens.middleButton;
+	}
+
+	return false;
+}
+
+bool Engine::GetMousePrePress(int i)
+{
+	// 左クリック
+	if (i == 0)
+	{
+		return inputManager_->GetMouseController()->preButtens.leftButton;
+	}
+	// 右クリック
+	else if (i == 1)
+	{
+		return inputManager_->GetMouseController()->preButtens.rightButton;
+	}
+	// ミドルボタン（マウスホイールクリック）
+	else if (i == 2)
+	{
+		return inputManager_->GetMouseController()->preButtens.middleButton;
 	}
 
 	return false;
