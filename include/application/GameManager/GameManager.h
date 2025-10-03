@@ -17,6 +17,7 @@ private:
 
 	Game::RenderData_Model player;
 	Game::RenderData_Model ground;
+	Game::RenderData_Sprite	sprite;
 
 	float roll = 0.0f;
 };

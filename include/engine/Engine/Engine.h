@@ -99,25 +99,13 @@ private:
 	// 頂点リソースと頂点データと使用済み頂点数
 
 	// モデル
-	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceObj;
 	std::vector<Object3D> objects;
-	UINT vertexResourceSizeObj;
-
-	// 球
-	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceSphere;
-	UINT vertexResourceSizeSphere;
-	std::vector<VertexData> sphereVertexData;
-	size_t sphereVertexDataUsed = 0;
-
-	// スプライト
-	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceSprite;
-	UINT vertexResourceSizeSprite;
-	std::vector<VertexData> spriteVertexData;
-	size_t spriteVertexDataUsed = 0;
 
 	// 三角形
-	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceTriangle;
-	UINT vertexResourceSizeTriangle;
+	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;
+	UINT vertexResourceSize;
+	std::vector<VertexData> vertexData;
+	size_t vertexDataUsed = 0;
 
 	// 線
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceLine;

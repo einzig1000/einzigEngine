@@ -58,17 +58,8 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 	);
 
 	// 頂点リソース
-	vertexResourceSizeSprite = static_cast<UINT>(sizeof(VertexData) * 1536); // スプライト 
-	vertexResourceSprite = CreateBufferResource(dxManager->GetDevice(), vertexResourceSizeSprite);
-
-	vertexResourceSizeObj = static_cast<UINT>(sizeof(VertexData) * 4096); // オブジェクト
-	vertexResourceObj = CreateBufferResource(dxManager->GetDevice(), vertexResourceSizeObj);
-
-	vertexResourceSizeTriangle = static_cast<UINT>(sizeof(VertexData) * 1024); // 三角形
-	vertexResourceTriangle = CreateBufferResource(dxManager->GetDevice(), vertexResourceSizeTriangle);
-
-	vertexResourceSizeSphere = static_cast<UINT>(sizeof(VertexData) * 4096); // 球
-	vertexResourceSphere = CreateBufferResource(dxManager->GetDevice(), vertexResourceSizeSphere);
+	vertexResourceSize = static_cast<UINT>(sizeof(VertexData) * 1024); // 三角形
+	vertexResource = CreateBufferResource(dxManager->GetDevice(), vertexResourceSize);
 
 	vertexResourceSizeLine = static_cast<UINT>(sizeof(VertexData) * 2048); // 1024本の線
 	vertexResourceLine = CreateBufferResource(dxManager->GetDevice(), vertexResourceSizeLine);
@@ -155,8 +146,7 @@ void Engine::BeginFrame()
 	//ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
 
 	// ???
-	sphereVertexDataUsed = 0;
-	spriteVertexDataUsed = 0;
+	vertexDataUsed = 0;
 
 	// ライトを更新
 	UpdateLight();
@@ -348,10 +338,7 @@ void Engine::Finalize()
 	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>>().swap(materialResourceLine);
 	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>>().swap(wvpResourceLine);
 
-	vertexResourceSprite.Reset();
-	vertexResourceObj.Reset();
-	vertexResourceTriangle.Reset();
-	vertexResourceSphere.Reset();
+	vertexResource.Reset();
 	vertexResourceLine.Reset();
 	indexResource.Reset();
 	directionalLightResource.Reset();
@@ -539,13 +526,13 @@ void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint
 	// 必要な頂点数
 	const uint32_t kSumVertex = kSubdivision * kSubdivision * 6;
 	// 必要な頂点数分配列を拡張
-	if (sphereVertexDataUsed + kSumVertex > sphereVertexData.size())
+	if (vertexDataUsed + kSumVertex > vertexData.size())
 	{
-		sphereVertexData.resize(sphereVertexDataUsed + kSumVertex);
+		vertexData.resize(vertexDataUsed + kSumVertex);
 	}
 
 	// 頂点
-	CreateSphere(&sphereVertexData[sphereVertexDataUsed], kSubdivision);
+	CreateSphere(&vertexData[vertexDataUsed], kSubdivision);
 
 
 	// 1. オブジェクトのスケール行列
@@ -605,14 +592,14 @@ void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint
 
 	// 頂点リソース
 	VertexData* vData = nullptr;
-	HRESULT hr = vertexResourceSphere->Map(0, nullptr, reinterpret_cast<void**>(&vData));
+	HRESULT hr = vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vData));
 	if (FAILED(hr) || vData == nullptr) return;
-	std::memcpy(vData + sphereVertexDataUsed, &sphereVertexData[sphereVertexDataUsed], sizeof(VertexData) * kSumVertex);
-	vertexResourceSphere->Unmap(0, nullptr);
+	std::memcpy(vData + vertexDataUsed, &vertexData[vertexDataUsed], sizeof(VertexData) * kSumVertex);
+	vertexResource->Unmap(0, nullptr);
 
 	// 頂点バッファビュー
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
-	vertexBufferView.BufferLocation = vertexResourceSphere->GetGPUVirtualAddress() + sizeof(VertexData) * sphereVertexDataUsed;
+	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress() + sizeof(VertexData) * vertexDataUsed;
 	vertexBufferView.SizeInBytes = sizeof(VertexData) * static_cast<UINT>(kSumVertex);
 	vertexBufferView.StrideInBytes = sizeof(VertexData);
 
@@ -633,7 +620,7 @@ void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint
 	dxManager->GetCommandList()->DrawInstanced(kSumVertex, 1, 0, 0);
 
 	drawCallIndex++;
-	sphereVertexDataUsed += kSumVertex;
+	vertexDataUsed += kSumVertex;
 }
 
 void Engine::DrawTriangle(Game::RenderData_Triangle& renderData)
@@ -653,11 +640,11 @@ void Engine::DrawTriangle(Game::RenderData_Triangle& renderData)
 	}
 
 	// 必要な頂点数
-	const uint32_t kSumVertex = 4;
+	const uint32_t kSumVertex = 3;
 	// 必要な頂点数分配列を拡張
-	if (spriteVertexDataUsed + kSumVertex > spriteVertexData.size())
+	if (vertexDataUsed + kSumVertex > vertexData.size())
 	{
-		spriteVertexData.resize(spriteVertexDataUsed + kSumVertex);
+		vertexData.resize(vertexDataUsed + kSumVertex);
 	}
 
 	// テクスチャ
@@ -665,19 +652,19 @@ void Engine::DrawTriangle(Game::RenderData_Triangle& renderData)
 	if (!tex) return;
 
 	// 上
-	spriteVertexData[spriteVertexDataUsed + 0].position = { renderData.pos1.x, renderData.pos1.y, renderData.pos1.z, 1.0f };
-	spriteVertexData[spriteVertexDataUsed + 0].texcoord = { 0.5f, 0.0f };
-	spriteVertexData[spriteVertexDataUsed + 0].normal = { 0.0f, 0.0f, -1.0f };
+	vertexData[vertexDataUsed + 0].position = { renderData.pos1.x, renderData.pos1.y, renderData.pos1.z, 1.0f };
+	vertexData[vertexDataUsed + 0].texcoord = { 0.5f, 0.0f };
+	vertexData[vertexDataUsed + 0].normal = { 0.0f, 0.0f, -1.0f };
 
 	// 右下
-	spriteVertexData[spriteVertexDataUsed + 1].position = { renderData.pos2.x, renderData.pos2.y, renderData.pos2.z, 1.0f };
-	spriteVertexData[spriteVertexDataUsed + 1].texcoord = { 1.0f, 1.0f };
-	spriteVertexData[spriteVertexDataUsed + 1].normal = { 0.0f, 0.0f, -1.0f };
+	vertexData[vertexDataUsed + 1].position = { renderData.pos2.x, renderData.pos2.y, renderData.pos2.z, 1.0f };
+	vertexData[vertexDataUsed + 1].texcoord = { 1.0f, 1.0f };
+	vertexData[vertexDataUsed + 1].normal = { 0.0f, 0.0f, -1.0f };
 
 	// 左下
-	spriteVertexData[spriteVertexDataUsed + 2].position = { renderData.pos3.x,renderData.pos3.y, renderData.pos3.z, 1.0f };
-	spriteVertexData[spriteVertexDataUsed + 2].texcoord = { 0.0f, 1.0f };
-	spriteVertexData[spriteVertexDataUsed + 2].normal = { 0.0f, 0.0f, -1.0f };
+	vertexData[vertexDataUsed + 2].position = { renderData.pos3.x,renderData.pos3.y, renderData.pos3.z, 1.0f };
+	vertexData[vertexDataUsed + 2].texcoord = { 0.0f, 1.0f };
+	vertexData[vertexDataUsed + 2].normal = { 0.0f, 0.0f, -1.0f };
 
 	// WVP行列
 	Matrix4x4 world = Matrix4x4::MakeAffineMatrix(renderData.transform.scale, renderData.transform.rotate, renderData.transform.translate);
@@ -707,14 +694,14 @@ void Engine::DrawTriangle(Game::RenderData_Triangle& renderData)
 
 	// 頂点リソース
 	VertexData* vData = nullptr;
-	HRESULT hr = vertexResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&vData));
+	HRESULT hr = vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vData));
 	if (FAILED(hr) || vData == nullptr) return;
-	std::memcpy(vData + spriteVertexDataUsed, &spriteVertexData[spriteVertexDataUsed], sizeof(VertexData) * kSumVertex);
-	vertexResourceSprite->Unmap(0, nullptr);
+	std::memcpy(vData + vertexDataUsed, &vertexData[vertexDataUsed], sizeof(VertexData) * kSumVertex);
+	vertexResource->Unmap(0, nullptr);
 
 	// 頂点バッファビュー
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
-	vertexBufferView.BufferLocation = vertexResourceSprite->GetGPUVirtualAddress() + sizeof(VertexData) * (spriteVertexDataUsed);
+	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress() + sizeof(VertexData) * (vertexDataUsed);
 	vertexBufferView.SizeInBytes = sizeof(VertexData) * static_cast<UINT>(kSumVertex);
 	vertexBufferView.StrideInBytes = sizeof(VertexData);
 
@@ -736,7 +723,7 @@ void Engine::DrawTriangle(Game::RenderData_Triangle& renderData)
 	dxManager->GetCommandList()->DrawInstanced(3, 1, 0, 0);
 
 	drawCallIndex++;
-	spriteVertexDataUsed += kSumVertex;
+	vertexDataUsed += kSumVertex;
 }
 
 void Engine::DrawSprite(Game::RenderData_Sprite& renderData)
@@ -751,9 +738,9 @@ void Engine::DrawSprite(Game::RenderData_Sprite& renderData)
 	// 必要な頂点数
 	const uint32_t kSumVertex = 4;
 	// 必要な頂点数分配列を拡張
-	if (spriteVertexDataUsed + kSumVertex > spriteVertexData.size())
+	if (vertexDataUsed + kSumVertex > vertexData.size())
 	{
-		spriteVertexData.resize(spriteVertexDataUsed + kSumVertex);
+		vertexData.resize(vertexDataUsed + kSumVertex);
 	}
 
 	// テクスチャ
@@ -765,169 +752,169 @@ void Engine::DrawSprite(Game::RenderData_Sprite& renderData)
 	float halfHeight = static_cast<float>(tex->metadata.height) * 0.5f;
 
 	// 左下 (index 0)
-	spriteVertexData[spriteVertexDataUsed + 0].position = { -halfWidth, -halfHeight, 0.0f, 1.0f };
-	spriteVertexData[spriteVertexDataUsed + 0].texcoord = { 0.0f, 0.0f };
-	spriteVertexData[spriteVertexDataUsed + 0].normal = { 0.0f, 0.0f, -1.0f };
+	vertexData[vertexDataUsed + 0].position = { -halfWidth, -halfHeight, 0.0f, 1.0f };
+	vertexData[vertexDataUsed + 0].texcoord = { 0.0f, 0.0f };
+	vertexData[vertexDataUsed + 0].normal = { 0.0f, 0.0f, -1.0f };
 
 	// 左上 (index 1)
-	spriteVertexData[spriteVertexDataUsed + 1].position = { halfWidth, -halfHeight, 0.0f, 1.0f };
-	spriteVertexData[spriteVertexDataUsed + 1].texcoord = { 1.0f, 0.0f };
-	spriteVertexData[spriteVertexDataUsed + 1].normal = { 0.0f, 0.0f, -1.0f };
+	vertexData[vertexDataUsed + 1].position = { halfWidth, -halfHeight, 0.0f, 1.0f };
+	vertexData[vertexDataUsed + 1].texcoord = { 1.0f, 0.0f };
+	vertexData[vertexDataUsed + 1].normal = { 0.0f, 0.0f, -1.0f };
 
 	// 右下 (index 2)
-	spriteVertexData[spriteVertexDataUsed + 2].position = { -halfWidth, halfHeight, 0.0f, 1.0f };
-	spriteVertexData[spriteVertexDataUsed + 2].texcoord = { 0.0f, 1.0f };
-	spriteVertexData[spriteVertexDataUsed + 2].normal = { 0.0f, 0.0f, -1.0f };
+	vertexData[vertexDataUsed + 2].position = { -halfWidth, halfHeight, 0.0f, 1.0f };
+	vertexData[vertexDataUsed + 2].texcoord = { 0.0f, 1.0f };
+	vertexData[vertexDataUsed + 2].normal = { 0.0f, 0.0f, -1.0f };
 
 	// 右上 (index 3)
-	spriteVertexData[spriteVertexDataUsed + 3].position = { halfWidth, halfHeight, 0.0f, 1.0f };
-	spriteVertexData[spriteVertexDataUsed + 3].texcoord = { 1.0f, 1.0f };
-	spriteVertexData[spriteVertexDataUsed + 3].normal = { 0.0f, 0.0f, -1.0f };
+	vertexData[vertexDataUsed + 3].position = { halfWidth, halfHeight, 0.0f, 1.0f };
+	vertexData[vertexDataUsed + 3].texcoord = { 1.0f, 1.0f };
+	vertexData[vertexDataUsed + 3].normal = { 0.0f, 0.0f, -1.0f };
 
 	switch (renderData.anker)
 	{
 	case Anker::Center:
 	{
 		// 左下 (index 0)
-		spriteVertexData[spriteVertexDataUsed + 0].position.x;
-		spriteVertexData[spriteVertexDataUsed + 0].position.y;
+		vertexData[vertexDataUsed + 0].position.x;
+		vertexData[vertexDataUsed + 0].position.y;
 		// 左上 (index 1)
-		spriteVertexData[spriteVertexDataUsed + 1].position.x;
-		spriteVertexData[spriteVertexDataUsed + 1].position.y;
+		vertexData[vertexDataUsed + 1].position.x;
+		vertexData[vertexDataUsed + 1].position.y;
 		// 右下 (index 2)
-		spriteVertexData[spriteVertexDataUsed + 2].position.x;
-		spriteVertexData[spriteVertexDataUsed + 2].position.y;
+		vertexData[vertexDataUsed + 2].position.x;
+		vertexData[vertexDataUsed + 2].position.y;
 		// 右上 (index 3)
-		spriteVertexData[spriteVertexDataUsed + 3].position.x;
-		spriteVertexData[spriteVertexDataUsed + 3].position.y;
+		vertexData[vertexDataUsed + 3].position.x;
+		vertexData[vertexDataUsed + 3].position.y;
 		break;
 	}
 	case Anker::CenterLeft:
 	{
 		// 左下 (index 0)
-		spriteVertexData[spriteVertexDataUsed + 0].position.x += halfWidth;
-		spriteVertexData[spriteVertexDataUsed + 0].position.y;
+		vertexData[vertexDataUsed + 0].position.x += halfWidth;
+		vertexData[vertexDataUsed + 0].position.y;
 		// 左上 (index 1)
-		spriteVertexData[spriteVertexDataUsed + 1].position.x += halfWidth;
-		spriteVertexData[spriteVertexDataUsed + 1].position.y;
+		vertexData[vertexDataUsed + 1].position.x += halfWidth;
+		vertexData[vertexDataUsed + 1].position.y;
 		// 右下 (index 2)
-		spriteVertexData[spriteVertexDataUsed + 2].position.x += halfWidth;
-		spriteVertexData[spriteVertexDataUsed + 2].position.y;
+		vertexData[vertexDataUsed + 2].position.x += halfWidth;
+		vertexData[vertexDataUsed + 2].position.y;
 		// 右上 (index 3)
-		spriteVertexData[spriteVertexDataUsed + 3].position.x += halfWidth;
-		spriteVertexData[spriteVertexDataUsed + 3].position.y;
+		vertexData[vertexDataUsed + 3].position.x += halfWidth;
+		vertexData[vertexDataUsed + 3].position.y;
 		break;
 	}
 	case Anker::CenterRight:
 	{
 		// 左下 (index 0)
-		spriteVertexData[spriteVertexDataUsed + 0].position.x += -halfWidth;
-		spriteVertexData[spriteVertexDataUsed + 0].position.y;
+		vertexData[vertexDataUsed + 0].position.x += -halfWidth;
+		vertexData[vertexDataUsed + 0].position.y;
 		// 左上 (index 1)
-		spriteVertexData[spriteVertexDataUsed + 1].position.x += -halfWidth;
-		spriteVertexData[spriteVertexDataUsed + 1].position.y;
+		vertexData[vertexDataUsed + 1].position.x += -halfWidth;
+		vertexData[vertexDataUsed + 1].position.y;
 		// 右下 (index 2)
-		spriteVertexData[spriteVertexDataUsed + 2].position.x += -halfWidth;
-		spriteVertexData[spriteVertexDataUsed + 2].position.y;
+		vertexData[vertexDataUsed + 2].position.x += -halfWidth;
+		vertexData[vertexDataUsed + 2].position.y;
 		// 右上 (index 3)
-		spriteVertexData[spriteVertexDataUsed + 3].position.x += -halfWidth;
-		spriteVertexData[spriteVertexDataUsed + 3].position.y;
+		vertexData[vertexDataUsed + 3].position.x += -halfWidth;
+		vertexData[vertexDataUsed + 3].position.y;
 		break;
 	}
 	case Anker::CenterTop:
 	{
 		// 左下 (index 0)
-		spriteVertexData[spriteVertexDataUsed + 0].position.x;
-		spriteVertexData[spriteVertexDataUsed + 0].position.y += halfHeight;
+		vertexData[vertexDataUsed + 0].position.x;
+		vertexData[vertexDataUsed + 0].position.y += halfHeight;
 		// 左上 (index 1)
-		spriteVertexData[spriteVertexDataUsed + 1].position.x;
-		spriteVertexData[spriteVertexDataUsed + 1].position.y += halfHeight;
+		vertexData[vertexDataUsed + 1].position.x;
+		vertexData[vertexDataUsed + 1].position.y += halfHeight;
 		// 右下 (index 2)
-		spriteVertexData[spriteVertexDataUsed + 2].position.x;
-		spriteVertexData[spriteVertexDataUsed + 2].position.y += halfHeight;
+		vertexData[vertexDataUsed + 2].position.x;
+		vertexData[vertexDataUsed + 2].position.y += halfHeight;
 		// 右上 (index 3)
-		spriteVertexData[spriteVertexDataUsed + 3].position.x;
-		spriteVertexData[spriteVertexDataUsed + 3].position.y += halfHeight;
+		vertexData[vertexDataUsed + 3].position.x;
+		vertexData[vertexDataUsed + 3].position.y += halfHeight;
 		break;
 	}
 	case Anker::CenterDown:
 	{
 		// 左下 (index 0)
-		spriteVertexData[spriteVertexDataUsed + 0].position.x;
-		spriteVertexData[spriteVertexDataUsed + 0].position.y += -halfHeight;
+		vertexData[vertexDataUsed + 0].position.x;
+		vertexData[vertexDataUsed + 0].position.y += -halfHeight;
 		// 左上 (index 1)
-		spriteVertexData[spriteVertexDataUsed + 1].position.x;
-		spriteVertexData[spriteVertexDataUsed + 1].position.y += -halfHeight;
+		vertexData[vertexDataUsed + 1].position.x;
+		vertexData[vertexDataUsed + 1].position.y += -halfHeight;
 		// 右下 (index 2)
-		spriteVertexData[spriteVertexDataUsed + 2].position.x;
-		spriteVertexData[spriteVertexDataUsed + 2].position.y += -halfHeight;
+		vertexData[vertexDataUsed + 2].position.x;
+		vertexData[vertexDataUsed + 2].position.y += -halfHeight;
 		// 右上 (index 3)
-		spriteVertexData[spriteVertexDataUsed + 3].position.x;
-		spriteVertexData[spriteVertexDataUsed + 3].position.y += -halfHeight;
+		vertexData[vertexDataUsed + 3].position.x;
+		vertexData[vertexDataUsed + 3].position.y += -halfHeight;
 		break;
 	}
 	case Anker::LeftTop:
 	{
 		// 左下 (index 0)
-		spriteVertexData[spriteVertexDataUsed + 0].position.x += halfWidth;
-		spriteVertexData[spriteVertexDataUsed + 0].position.y += halfHeight;
+		vertexData[vertexDataUsed + 0].position.x += halfWidth;
+		vertexData[vertexDataUsed + 0].position.y += halfHeight;
 		// 左上 (index 1)
-		spriteVertexData[spriteVertexDataUsed + 1].position.x += halfWidth;
-		spriteVertexData[spriteVertexDataUsed + 1].position.y += halfHeight;
+		vertexData[vertexDataUsed + 1].position.x += halfWidth;
+		vertexData[vertexDataUsed + 1].position.y += halfHeight;
 		// 右下 (index 2)
-		spriteVertexData[spriteVertexDataUsed + 2].position.x += halfWidth;
-		spriteVertexData[spriteVertexDataUsed + 2].position.y += halfHeight;
+		vertexData[vertexDataUsed + 2].position.x += halfWidth;
+		vertexData[vertexDataUsed + 2].position.y += halfHeight;
 		// 右上 (index 3)
-		spriteVertexData[spriteVertexDataUsed + 3].position.x += halfWidth;
-		spriteVertexData[spriteVertexDataUsed + 3].position.y += halfHeight;
+		vertexData[vertexDataUsed + 3].position.x += halfWidth;
+		vertexData[vertexDataUsed + 3].position.y += halfHeight;
 		break;
 	}
 	case Anker::RightTop:
 	{
 		// 左下 (index 0)
-		spriteVertexData[spriteVertexDataUsed + 0].position.x += -halfWidth;
-		spriteVertexData[spriteVertexDataUsed + 0].position.y += halfHeight;
+		vertexData[vertexDataUsed + 0].position.x += -halfWidth;
+		vertexData[vertexDataUsed + 0].position.y += halfHeight;
 		// 左上 (index 1)
-		spriteVertexData[spriteVertexDataUsed + 1].position.x += -halfWidth;
-		spriteVertexData[spriteVertexDataUsed + 1].position.y += halfHeight;
+		vertexData[vertexDataUsed + 1].position.x += -halfWidth;
+		vertexData[vertexDataUsed + 1].position.y += halfHeight;
 		// 右下 (index 2)
-		spriteVertexData[spriteVertexDataUsed + 2].position.x += -halfWidth;
-		spriteVertexData[spriteVertexDataUsed + 2].position.y += halfHeight;
+		vertexData[vertexDataUsed + 2].position.x += -halfWidth;
+		vertexData[vertexDataUsed + 2].position.y += halfHeight;
 		// 右上 (index 3)
-		spriteVertexData[spriteVertexDataUsed + 3].position.x += -halfWidth;
-		spriteVertexData[spriteVertexDataUsed + 3].position.y += halfHeight;
+		vertexData[vertexDataUsed + 3].position.x += -halfWidth;
+		vertexData[vertexDataUsed + 3].position.y += halfHeight;
 		break;
 	}
 	case Anker::LeftDown:
 	{
 		// 左下 (index 0)
-		spriteVertexData[spriteVertexDataUsed + 0].position.x += halfWidth;
-		spriteVertexData[spriteVertexDataUsed + 0].position.y += -halfHeight;
+		vertexData[vertexDataUsed + 0].position.x += halfWidth;
+		vertexData[vertexDataUsed + 0].position.y += -halfHeight;
 		// 左上 (index 1)
-		spriteVertexData[spriteVertexDataUsed + 1].position.x += halfWidth;
-		spriteVertexData[spriteVertexDataUsed + 1].position.y += -halfHeight;
+		vertexData[vertexDataUsed + 1].position.x += halfWidth;
+		vertexData[vertexDataUsed + 1].position.y += -halfHeight;
 		// 右下 (index 2)
-		spriteVertexData[spriteVertexDataUsed + 2].position.x += halfWidth;
-		spriteVertexData[spriteVertexDataUsed + 2].position.y += -halfHeight;
+		vertexData[vertexDataUsed + 2].position.x += halfWidth;
+		vertexData[vertexDataUsed + 2].position.y += -halfHeight;
 		// 右上 (index 3)
-		spriteVertexData[spriteVertexDataUsed + 3].position.x += halfWidth;
-		spriteVertexData[spriteVertexDataUsed + 3].position.y += -halfHeight;
+		vertexData[vertexDataUsed + 3].position.x += halfWidth;
+		vertexData[vertexDataUsed + 3].position.y += -halfHeight;
 		break;
 	}
 	case Anker::RightDown:
 	{
 		// 左下 (index 0)
-		spriteVertexData[spriteVertexDataUsed + 0].position.x += -halfWidth;
-		spriteVertexData[spriteVertexDataUsed + 0].position.y += -halfHeight;
+		vertexData[vertexDataUsed + 0].position.x += -halfWidth;
+		vertexData[vertexDataUsed + 0].position.y += -halfHeight;
 		// 左上 (index 1)
-		spriteVertexData[spriteVertexDataUsed + 1].position.x += -halfWidth;
-		spriteVertexData[spriteVertexDataUsed + 1].position.y += -halfHeight;
+		vertexData[vertexDataUsed + 1].position.x += -halfWidth;
+		vertexData[vertexDataUsed + 1].position.y += -halfHeight;
 		// 右下 (index 2)
-		spriteVertexData[spriteVertexDataUsed + 2].position.x += -halfWidth;
-		spriteVertexData[spriteVertexDataUsed + 2].position.y += -halfHeight;
+		vertexData[vertexDataUsed + 2].position.x += -halfWidth;
+		vertexData[vertexDataUsed + 2].position.y += -halfHeight;
 		// 右上 (index 3)
-		spriteVertexData[spriteVertexDataUsed + 3].position.x += -halfWidth;
-		spriteVertexData[spriteVertexDataUsed + 3].position.y += -halfHeight;
+		vertexData[vertexDataUsed + 3].position.x += -halfWidth;
+		vertexData[vertexDataUsed + 3].position.y += -halfHeight;
 		break;
 	}
 	default:
@@ -973,14 +960,14 @@ void Engine::DrawSprite(Game::RenderData_Sprite& renderData)
 
 	// 頂点リソース
 	VertexData* vData = nullptr;
-	HRESULT hr = vertexResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&vData));
+	HRESULT hr = vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vData));
 	if (FAILED(hr) || vData == nullptr) return;
-	std::memcpy(vData + spriteVertexDataUsed, &spriteVertexData[spriteVertexDataUsed], sizeof(VertexData) * kSumVertex);
-	vertexResourceSprite->Unmap(0, nullptr);
+	std::memcpy(vData + vertexDataUsed, &vertexData[vertexDataUsed], sizeof(VertexData) * kSumVertex);
+	vertexResource->Unmap(0, nullptr);
 
 	// 頂点バッファビュー
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
-	vertexBufferView.BufferLocation = vertexResourceSprite->GetGPUVirtualAddress() + sizeof(VertexData) * (spriteVertexDataUsed);
+	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress() + sizeof(VertexData) * (vertexDataUsed);
 	vertexBufferView.SizeInBytes = sizeof(VertexData) * static_cast<UINT>(kSumVertex);
 	vertexBufferView.StrideInBytes = sizeof(VertexData);
 
@@ -1056,7 +1043,7 @@ void Engine::DrawSprite(Game::RenderData_Sprite& renderData)
 	dxManager->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
 	drawCallIndex++;
-	spriteVertexDataUsed += kSumVertex;
+	vertexDataUsed += kSumVertex;
 }
 
 void Engine::DrawLine(const Vector3& start, const Vector3& end, const uint32_t& materialColor)
