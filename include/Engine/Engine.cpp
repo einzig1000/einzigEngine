@@ -268,7 +268,13 @@ void Engine::EndFrame()
 	{
 		ID3D12DescriptorHeap* heaps[] = { dxManager->GetSwapChainManager()->GetOffscreenSRVDescriptorHeap() };
 		cmd->SetDescriptorHeaps(1, heaps);
-		cmd->SetGraphicsRootDescriptorTable(0, dxManager->GetSwapChainManager()->GetOffscreenSRVDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
+
+		// 正しいインデックスは 2
+		cmd->SetGraphicsRootDescriptorTable(
+			2,
+			dxManager->GetSwapChainManager()->GetOffscreenSRVDescriptorHeap()->GetGPUDescriptorHandleForHeapStart()
+		);
+		// 必要ならダミーCBVを 0,1,3 にセット（シェーダが参照するなら）
 	}
 	DrawFullScreenQuad(cmd);
 
