@@ -1,6 +1,6 @@
 // Line.PS.hlsl
 
-#include "object3d.hlsli"
+#include "Line.hlsli"
 
 //--------------------------------------------------------------------------------------
 // 定数バッファ
@@ -15,7 +15,7 @@ ConstantBuffer<DirectionalLight> gDirectionalLight : register(b2);
 //--------------------------------------------------------------------------------------
 // ピクセルシェーダー (PS) エントリーポイント
 //--------------------------------------------------------------------------------------
-PixelShaderOutput main(VertexShaderOutput input)
+PixelShaderOutput main(LineShaderOutput input)
 {
     PixelShaderOutput output;
 

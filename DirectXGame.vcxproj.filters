@@ -97,6 +97,18 @@
     <Filter Include="application\GameManeger">
       <UniqueIdentifier>{be7b0085-0de3-4d37-bc83-670da58a57b2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="engine\Shader">
+      <UniqueIdentifier>{ba7941ee-22c3-46d9-992c-a964b12ce9d2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\Shader\Line">
+      <UniqueIdentifier>{5e4c47d4-804a-4d92-bee3-dc922fa94409}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\Shader\Object3d">
+      <UniqueIdentifier>{5eb0e5b9-a5a2-4336-a11f-93bd4a329ee2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\Shader\Particle">
+      <UniqueIdentifier>{cb625b4a-e4fc-4a27-ba56-21e5c5776d36}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -292,5 +304,36 @@
     <Text Include="externals\imgui\LICENSE.txt">
       <Filter>engine\imgui</Filter>
     </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="resources\Shaders\Line.PS.hlsl">
+      <Filter>engine\Shader\Line</Filter>
+    </FxCompile>
+    <FxCompile Include="resources\Shaders\Line.VS.hlsl">
+      <Filter>engine\Shader\Line</Filter>
+    </FxCompile>
+    <FxCompile Include="resources\Shaders\Object3d.PS.hlsl">
+      <Filter>engine\Shader\Object3d</Filter>
+    </FxCompile>
+    <FxCompile Include="resources\Shaders\Object3d.VS.hlsl">
+      <Filter>engine\Shader\Object3d</Filter>
+    </FxCompile>
+    <FxCompile Include="resources\Shaders\Particle.PS.hlsl">
+      <Filter>engine\Shader\Particle</Filter>
+    </FxCompile>
+    <FxCompile Include="resources\Shaders\Particle.VS.hlsl">
+      <Filter>engine\Shader\Particle</Filter>
+    </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\Shaders\Line.hlsli">
+      <Filter>engine\Shader\Line</Filter>
+    </None>
+    <None Include="resources\Shaders\Object3d.hlsli">
+      <Filter>engine\Shader\Object3d</Filter>
+    </None>
+    <None Include="resources\Shaders\Particle.hlsli">
+      <Filter>engine\Shader\Particle</Filter>
+    </None>
   </ItemGroup>
 </Project>

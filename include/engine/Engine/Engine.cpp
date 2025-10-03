@@ -449,7 +449,7 @@ void Engine::Drawobj(Game::RenderData_Model& renderData)
 		// RootSignatureとPSOを設定
 		dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
 		if (renderData.options.wireframe || WireframeMode)
-		{	 // ワイヤーフレーム用PSOを設定
+		{	// ワイヤーフレーム用PSOを設定
 			dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(BlendMode::Wireframe, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
 		}
 		else

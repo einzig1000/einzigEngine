@@ -33,5 +33,8 @@ private:
         ID3D12Device* device,
         const D3D12_BLEND_DESC& blendDesc,
         D3D12_PRIMITIVE_TOPOLOGY_TYPE primitiveType,
-        const D3D12_RASTERIZER_DESC& rasterizerDesc);
+        const D3D12_RASTERIZER_DESC& rasterizerDesc,
+        const D3D12_INPUT_ELEMENT_DESC* inputElementDescs,
+        UINT numInputElements
+    );
 };
