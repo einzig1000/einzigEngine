@@ -9,11 +9,13 @@ public:
 
 	void SetMousePosition();
 	void SetMouseRay();
+	void SetMouseButtenState();
 
 	Vector2 GetMousePosition() const { return position_; }
 	Ray GetMouseRay() const { return ray_; }
 
-
+	mouseButtenState Buttens;
+	mouseButtenState preButtens;
 
 private:
 	Vector2 position_;

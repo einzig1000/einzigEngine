@@ -65,7 +65,8 @@ public:
 	Vector2 GetMousePosition();
 	uint32_t GetMouseWheel();
 	Ray GetMouseRay();
-	bool IsPressMouse(int i);
+	bool GetMousePress(int i);
+	bool GetMousePrePress(int i);
 	bool IsCollisionMouseRayAABB(uint32_t objectNumber, const Transforms& data);
 
 	// カメラ

@@ -141,7 +141,12 @@ bool Game::IsCollisionMouseRayAABB(uint32_t objectNumber, const Transforms& data
 
 bool Game::GetMousePress(int i)
 {
-	return engine->IsPressMouse(i);
+	return engine->GetMousePress(i);
+}
+
+bool Game::GetMousePrePress(int i)
+{
+	return engine->GetMousePrePress(i);
 }
 
 uint32_t Game::GetMouseWheel()
