@@ -48,6 +48,7 @@ void GameManager::Update()
 
 void GameManager::Draw()
 {
+	Game::DrawLine(Vector3{ 0,0,0 }, Vector3{ 100,100,100 }, 0xFFFFFFFF);
 	player.Draw();
 	player.DrawAABB();
 	player.DrawImGui();

@@ -214,25 +214,35 @@ void PipelineStateManager::CreateAllPSOs(ID3D12Device* device)
     // ----------------------------------------------------
     // PSOの生成
     // ----------------------------------------------------
-    trianglePSOs[BlendMode::kBlendModeNone] = CreatePipelineState(device, blendOpaqueDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, rasterizerSolidDesc);
-    trianglePSOs[BlendMode::kBlendModeNormal] = CreatePipelineState(device, blendTransparentDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, rasterizerSolidDesc);
-    trianglePSOs[BlendMode::kBlendModeAdd] = CreatePipelineState(device, blendAddDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, rasterizerSolidDesc);
-    trianglePSOs[BlendMode::kBlendModeSub] = CreatePipelineState(device, blendSubDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, rasterizerSolidDesc);
-    trianglePSOs[BlendMode::kBlendModeMul] = CreatePipelineState(device, blendMulDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, rasterizerSolidDesc);
-    trianglePSOs[BlendMode::kBlendModeScreen] = CreatePipelineState(device, blendScreenDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, rasterizerSolidDesc);
+    D3D12_INPUT_ELEMENT_DESC triangleInputElementDescs[] =
+    {
+        {"POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+        {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+        {"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
+	};
+    trianglePSOs[BlendMode::kBlendModeNone] = CreatePipelineState(device, blendOpaqueDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, rasterizerSolidDesc, triangleInputElementDescs, _countof(triangleInputElementDescs));
+    trianglePSOs[BlendMode::kBlendModeNormal] = CreatePipelineState(device, blendTransparentDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, rasterizerSolidDesc, triangleInputElementDescs, _countof(triangleInputElementDescs));
+    trianglePSOs[BlendMode::kBlendModeAdd] = CreatePipelineState(device, blendAddDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, rasterizerSolidDesc, triangleInputElementDescs, _countof(triangleInputElementDescs));
+    trianglePSOs[BlendMode::kBlendModeSub] = CreatePipelineState(device, blendSubDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, rasterizerSolidDesc, triangleInputElementDescs, _countof(triangleInputElementDescs));
+    trianglePSOs[BlendMode::kBlendModeMul] = CreatePipelineState(device, blendMulDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, rasterizerSolidDesc, triangleInputElementDescs, _countof(triangleInputElementDescs));
+    trianglePSOs[BlendMode::kBlendModeScreen] = CreatePipelineState(device, blendScreenDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, rasterizerSolidDesc, triangleInputElementDescs, _countof(triangleInputElementDescs));
 
-    linePSOs[BlendMode::kBlendModeNone] = CreatePipelineState(device, blendOpaqueDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE, rasterizerLineDesc);
-    linePSOs[BlendMode::kBlendModeNormal] = CreatePipelineState(device, blendTransparentDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE, rasterizerLineDesc);
-    linePSOs[BlendMode::kBlendModeAdd] = CreatePipelineState(device, blendAddDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE, rasterizerLineDesc);
-    linePSOs[BlendMode::kBlendModeSub] = CreatePipelineState(device, blendSubDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE, rasterizerLineDesc);
-    linePSOs[BlendMode::kBlendModeMul] = CreatePipelineState(device, blendMulDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE, rasterizerLineDesc);
-    linePSOs[BlendMode::kBlendModeScreen] = CreatePipelineState(device, blendScreenDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE, rasterizerLineDesc);
+    D3D12_INPUT_ELEMENT_DESC lineInputElementDescs[] =
+    {
+        {"POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+	};
+    linePSOs[BlendMode::kBlendModeNone] = CreatePipelineState(device, blendOpaqueDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE, rasterizerLineDesc, lineInputElementDescs, _countof(lineInputElementDescs));
+    linePSOs[BlendMode::kBlendModeNormal] = CreatePipelineState(device, blendTransparentDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE, rasterizerLineDesc, lineInputElementDescs, _countof(lineInputElementDescs));
+    linePSOs[BlendMode::kBlendModeAdd] = CreatePipelineState(device, blendAddDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE, rasterizerLineDesc, lineInputElementDescs, _countof(lineInputElementDescs));
+    linePSOs[BlendMode::kBlendModeSub] = CreatePipelineState(device, blendSubDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE, rasterizerLineDesc, lineInputElementDescs, _countof(lineInputElementDescs));
+    linePSOs[BlendMode::kBlendModeMul] = CreatePipelineState(device, blendMulDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE, rasterizerLineDesc, lineInputElementDescs, _countof(lineInputElementDescs));
+    linePSOs[BlendMode::kBlendModeScreen] = CreatePipelineState(device, blendScreenDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE, rasterizerLineDesc, lineInputElementDescs, _countof(lineInputElementDescs));
 
     // ワイヤーフレーム用は通常ブレンドのみ
-    trianglePSOs[BlendMode::Wireframe] = CreatePipelineState(device, blendOpaqueDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, rasterizerWireframeDesc);
+    trianglePSOs[BlendMode::Wireframe] = CreatePipelineState(device, blendOpaqueDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, rasterizerWireframeDesc, triangleInputElementDescs, _countof(triangleInputElementDescs));
 }
 
-Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineStateManager::CreatePipelineState(ID3D12Device* device, const D3D12_BLEND_DESC& blendDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE primitiveType, const D3D12_RASTERIZER_DESC& rasterizerDesc)
+Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineStateManager::CreatePipelineState(ID3D12Device* device, const D3D12_BLEND_DESC& blendDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE primitiveType, const D3D12_RASTERIZER_DESC& rasterizerDesc, const D3D12_INPUT_ELEMENT_DESC* inputElementDescs, UINT numInputElements)
 {
     HRESULT hr;
 
@@ -251,17 +261,9 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineStateManager::CreatePipeline
     assert(pixelShaderBlob != nullptr);
     assert(vertexShaderBlob != nullptr);
 
-
-
-    D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
-    {
-        {"POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-        {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-        {"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
-    };
     D3D12_INPUT_LAYOUT_DESC inputLayoutDesc{};
     inputLayoutDesc.pInputElementDescs = inputElementDescs;
-    inputLayoutDesc.NumElements = _countof(inputElementDescs);
+    inputLayoutDesc.NumElements = numInputElements;
 
     D3D12_DEPTH_STENCIL_DESC depthStencilDesc{};
     depthStencilDesc.DepthEnable = true;
