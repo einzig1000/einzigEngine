@@ -10,7 +10,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	// ウィンドウ、DrectX初期化
 	Game::Initialize(WIDTH, HEIGHT, L"LE2A_17_ヨコヤマ_タダノブ");
 
-	GameManager* gm = new GameManager();
+	Game::BeginFrame();                      // コマンドリストをResetしてopenにする
+	GameManager* gm = new GameManager();     // ここでテクスチャ読み込み（Uploadが記録される）
+	Game::EndFrame();                        // Close→Execute→Present→Wait で反映
 
 	while (Game::ProcessMessage())
 	{

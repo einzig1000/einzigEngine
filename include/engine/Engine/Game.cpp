@@ -36,6 +36,8 @@ void Game::EndFrame()
 void Game::Finalize()
 {
 	engine->Finalize();
+	delete engine;
+	engine = nullptr;
 }
 
 uint32_t Game::LoadOBJ(const std::string& directoryPath, const std::string& filename)
@@ -237,15 +239,10 @@ void Game::RenderData_Model::Updata(std::vector<Object3D>& objects)
 	// 移動してない場合はスキップするようにしたい
 #pragma region 座標更新
 
-	// AABB更新
-	this->aabb = CreateAABB(this->transforms, this->model);
-
-
 	// 座標更新
 	this->velocity.y -= this->gravity;
 	this->velocity += this->acceleration;
 	this->transforms.translate += this->velocity;
-
 
 	// 移動マトリックス作成
 	XMVECTOR scaleVec = XMVectorSet(this->transforms.scale.x, this->transforms.scale.y, this->transforms.scale.z, 0.0f);
@@ -330,6 +327,9 @@ void Game::RenderData_Model::Updata(std::vector<Object3D>& objects)
 	//	// 7) Transforms.World に格納
 	//	rd->transforms.World = world;
 	//}
+
+	// AABB更新
+	this->aabb = CreateAABB(this->transforms, this->model);
 
 #pragma endregion
 

@@ -29,7 +29,7 @@ void GameManager::Update()
 	{
 		if (GetHitKey::keys[DIK_SPACE] && !GetHitKey::preKeys[DIK_SPACE])
 		{
-			player.velocity.y += 1.0f;
+			player.velocity.y += 0.3f;
 			player.gravity = 0.01f;
 		}
 

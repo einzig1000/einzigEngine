@@ -61,8 +61,8 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 	vertexResourceSize = static_cast<UINT>(sizeof(VertexData) * 1024); // 三角形
 	vertexResource = CreateBufferResource(dxManager->GetDevice(), vertexResourceSize);
 
-	vertexResourceSizeLine = static_cast<UINT>(sizeof(VertexData) * 2048); // 1024本の線
-	vertexResourceLine = CreateBufferResource(dxManager->GetDevice(), vertexResourceSizeLine);
+	hr = vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexMappedPtr));
+	assert(SUCCEEDED(hr));
 
 	materialResources.resize(kMaxDrawCallPerFrame);
 	materialData.resize(kMaxDrawCallPerFrame);
@@ -115,6 +115,11 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 
 	// プリミティブモードの設定
 	WireframeMode = false;
+
+	drawCallIndex = 0;
+	drawLineCallIndex = 0;
+	wheelDelta = 0;
+
 }
 
 // メインループ用
@@ -699,6 +704,10 @@ void Engine::DrawTriangle(Game::RenderData_Triangle& renderData)
 	std::memcpy(vData + vertexDataUsed, &vertexData[vertexDataUsed], sizeof(VertexData) * kSumVertex);
 	vertexResource->Unmap(0, nullptr);
 
+	// 頂点リソースにコピー
+	if (!EnsureDynamicVB(vertexDataUsed + kSumVertex)) return;
+	memcpy(vertexMappedPtr + vertexDataUsed, &vertexData[vertexDataUsed], sizeof(VertexData) * kSumVertex);
+
 	// 頂点バッファビュー
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
 	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress() + sizeof(VertexData) * (vertexDataUsed);
@@ -771,6 +780,7 @@ void Engine::DrawSprite(Game::RenderData_Sprite& renderData)
 	vertexData[vertexDataUsed + 3].texcoord = { 1.0f, 1.0f };
 	vertexData[vertexDataUsed + 3].normal = { 0.0f, 0.0f, -1.0f };
 
+	// アンカーによる位置調整
 	switch (renderData.anker)
 	{
 	case Anker::Center:
@@ -958,18 +968,18 @@ void Engine::DrawSprite(Game::RenderData_Sprite& renderData)
 	materialData[drawCallIndex]->uvTransform = uvTransformMatrix;
 
 
-	// 頂点リソース
-	VertexData* vData = nullptr;
-	HRESULT hr = vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vData));
-	if (FAILED(hr) || vData == nullptr) return;
-	std::memcpy(vData + vertexDataUsed, &vertexData[vertexDataUsed], sizeof(VertexData) * kSumVertex);
-	vertexResource->Unmap(0, nullptr);
+	//// 頂点リソース
+	//VertexData* vData = nullptr;
+	//HRESULT hr = vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vData));
+	//if (FAILED(hr) || vData == nullptr) return;
+	//std::memcpy(vData + vertexDataUsed, &vertexData[vertexDataUsed], sizeof(VertexData) * kSumVertex);
+	//vertexResource->Unmap(0, nullptr);
 
-	// 頂点バッファビュー
-	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
-	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress() + sizeof(VertexData) * (vertexDataUsed);
-	vertexBufferView.SizeInBytes = sizeof(VertexData) * static_cast<UINT>(kSumVertex);
-	vertexBufferView.StrideInBytes = sizeof(VertexData);
+	//// 頂点バッファビュー
+	//D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
+	//vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress() + sizeof(VertexData) * (vertexDataUsed);
+	//vertexBufferView.SizeInBytes = sizeof(VertexData) * static_cast<UINT>(kSumVertex);
+	//vertexBufferView.StrideInBytes = sizeof(VertexData);
 
 	// スプライトの中心座標
 	Vector2 center = { renderData.transforms.translate.x, renderData.transforms.translate.y };
@@ -1025,6 +1035,17 @@ void Engine::DrawSprite(Game::RenderData_Sprite& renderData)
 	// 当たり判定
 	renderData.isCollisionMouseRay = (mousePos.x >= left && mousePos.x <= right && mousePos.y >= top && mousePos.y <= bottom);
 
+
+	// GPUバッファ容量確保 + 書き込み（永続Map）
+	if (!EnsureDynamicVB(vertexDataUsed + kSumVertex)) return;
+	memcpy(vertexMappedPtr + vertexDataUsed, &vertexData[vertexDataUsed], sizeof(VertexData) * kSumVertex);
+
+	// 頂点バッファビュー
+	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
+	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress() + sizeof(VertexData) * (vertexDataUsed);
+	vertexBufferView.SizeInBytes = sizeof(VertexData) * static_cast<UINT>(kSumVertex);
+	vertexBufferView.StrideInBytes = sizeof(VertexData);
+	
 	// Spriteの描画
 	dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
 	dxManager->GetCommandList()->IASetIndexBuffer(&indexBufferView);
@@ -1057,26 +1078,16 @@ void Engine::DrawLine(const Vector3& start, const Vector3& end, const uint32_t& 
 	// 頂点データの準備
 	VertexData vertices[2];
 	vertices[0].position = { start.x, start.y, start.z, 1.0f };
-	vertices[0].texcoord = { 0.0f, 0.0f };
-	vertices[0].normal = { 0.0f, 0.0f, 1.0f };
-
 	vertices[1].position = { end.x, end.y, end.z, 1.0f };
-	vertices[1].texcoord = { 0.0f, 0.0f };
-	vertices[1].normal = { 0.0f, 0.0f, 1.0f };
 
-	UINT currentLineVertexOffset = static_cast<UINT>(drawLineCallIndex * 2);
+	UINT offset = static_cast<UINT>(drawLineCallIndex * 2);
 
 	// 頂点バッファへのデータ書き込み
-	// Mapして直接書き込む
-	VertexData* mappedVertexData = nullptr;
-	HRESULT hr = vertexResourceLine->Map(0, nullptr, reinterpret_cast<void**>(&mappedVertexData));
-	assert(SUCCEEDED(hr));
-	memcpy(mappedVertexData + currentLineVertexOffset, vertices, sizeof(VertexData) * 2);
-	vertexResourceLine->Unmap(0, nullptr);
+	memcpy(lineMappedPtr + offset, vertices, sizeof(VertexData) * 2);
 
 	// 頂点バッファビューの設定
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferViewLine{};
-	vertexBufferViewLine.BufferLocation = vertexResourceLine->GetGPUVirtualAddress() + sizeof(VertexData) * currentLineVertexOffset;;
+	vertexBufferViewLine.BufferLocation = vertexResourceLine->GetGPUVirtualAddress() + sizeof(VertexData) * offset;
 	vertexBufferViewLine.SizeInBytes = sizeof(VertexData) * 2;
 	vertexBufferViewLine.StrideInBytes = sizeof(VertexData);
 	dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferViewLine);
@@ -1660,13 +1671,16 @@ void Engine::InitializeLineResources(ID3D12Device* device)
 {
 	HRESULT hr;
 
-	// Line描画用の頂点バッファを確保（2頂点分）
+	// Line用VB確保（2頂点 * 最大本数）
 	vertexResourceSizeLine = static_cast<UINT>(sizeof(VertexData) * 2 * kMaxDrawLineCallPerFrame);
 	vertexResourceLine = CreateBufferResource(device, vertexResourceSizeLine);
+	// 永続Map
+	hr = vertexResourceLine->Map(0, nullptr, reinterpret_cast<void**>(&lineMappedPtr));
+	assert(SUCCEEDED(hr));
 
+	// ヒーププロパティ (アップロード用)
 	D3D12_HEAP_PROPERTIES heapProperties{};
 	heapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
-
 
 	// WVPバッファの記述 (定数バッファは256バイトアライメントが必要)
 	D3D12_RESOURCE_DESC wvpBufferDesc{};
@@ -1716,4 +1730,42 @@ void Engine::InitializeLineResources(ID3D12Device* device)
 		wvpResourceLine[i]->SetName(L"wvpResourceLine");
 		wvpResourceLine[i]->Map(0, nullptr, reinterpret_cast<void**>(&wvpDataLine[i]));
 	}
+}
+
+bool Engine::EnsureDynamicVB(size_t requiredVertexCount)
+{
+	// まだMapしていなければここで永続Map
+	if (!vertexMappedPtr && vertexResource)
+	{
+		HRESULT hr0 = vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexMappedPtr));
+		if (FAILED(hr0) || !vertexMappedPtr) return false;
+	}
+
+	size_t requiredBytes = requiredVertexCount * sizeof(VertexData);
+	if (requiredBytes <= vertexResourceSize) return true;
+
+	// 2倍成長でリサイズ
+	size_t currentCount = vertexResourceSize / sizeof(VertexData);
+	size_t newCount = my_max(requiredVertexCount, currentCount ? currentCount * 2 : size_t(1024));
+	UINT newSizeBytes = static_cast<UINT>(newCount * sizeof(VertexData));
+
+	auto newResource = CreateBufferResource(dxManager->GetDevice(), newSizeBytes);
+	if (!newResource) return false;
+
+	// 新リソースを永続Map
+	VertexData* newMapped = nullptr;
+	HRESULT hr = newResource->Map(0, nullptr, reinterpret_cast<void**>(&newMapped));
+	if (FAILED(hr) || !newMapped) return false;
+
+	// 旧内容をコピー
+	if (vertexMappedPtr && vertexDataUsed > 0)
+	{
+		memcpy(newMapped, vertexMappedPtr, vertexDataUsed * sizeof(VertexData));
+		vertexResource->Unmap(0, nullptr);
+	}
+
+	vertexResource = newResource;
+	vertexMappedPtr = newMapped;
+	vertexResourceSize = newSizeBytes;
+	return true;
 }
