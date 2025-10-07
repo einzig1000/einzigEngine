@@ -347,13 +347,16 @@ void Game::RenderData_Model::Updata(std::vector<Object3D>& objects)
 
 #pragma endregion
 
+#pragma region 衝突判定
+
 	for (auto* target : blockList)
 	{
-		if (isCollision(*target))
+		std::optional<Vector2int> pair = isCollisionAABBPair(*target);
+		if (pair != std::nullopt)
 		{
 			// 自分と相手のAABBを取得
-			const auto& myAABB = this->aabb[0];
-			const auto& targetAABB = target->aabb[0];
+			const auto& myAABB = this->aabb[pair->y];
+			const auto& targetAABB = target->aabb[pair->x];
 
 			if (velocity.y < 0.0f)
 			{
@@ -372,29 +375,23 @@ void Game::RenderData_Model::Updata(std::vector<Object3D>& objects)
 		}
 	}
 
-
-
+#pragma endregion
 }
 
 // 他のオブジェクトとの衝突判定
 bool Game::RenderData_Model::isCollision(RenderData_Model& target) const
 {
-	for (auto& other : Game::GetModelList())
-	{ 
-		// 自分自身は除外
-		if (&target == other) continue;
-		// AABB組み合わせたkekka
-		for (const auto& aabb1 : target.aabb)
+	for (const auto& aabb1 : target.aabb)
+	{
+		for (const auto& aabb2 : this->aabb)
 		{
-			for (const auto& aabb2 : other->aabb)
+			if (IsCollision(aabb1, aabb2))
 			{
-				if (IsCollision(aabb1, aabb2))
-				{
-					return true;
-				}
+				return true;
 			}
 		}
 	}
+	
 	return false;
 }
 
@@ -523,6 +520,25 @@ void Game::RenderData_Model::DrawImGui()
 	ImGui::Text("isCollisionMouse : %d", isCollisionMouseRay);
 
 	ImGui::End();
+}
+
+std::optional<Vector2int> Game::RenderData_Model::isCollisionAABBPair(RenderData_Model& target) const
+{
+	Vector2int pair = { -1, -1 };	
+	
+	for (size_t i = 0; i < target.aabb.size(); ++i)
+	{
+		for (size_t j = 0; j < this->aabb.size(); ++j)
+		{
+			if (IsCollision(target.aabb[i], this->aabb[j]))
+			{
+				pair = { int(i), int(j) };
+				return pair;
+			}
+		}
+	}
+
+	return std::nullopt;
 }
 
 

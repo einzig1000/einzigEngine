@@ -5,6 +5,7 @@ GameManager::GameManager()
 	frame = 0;
 
 	sprite.texture = Game::LoadTexture("resources/Prototypes/texture/uvChecker.png");
+	player.model = Game::LoadOBJ("resources/Minecraft/blaze/", "blaze.obj");
 	player.model = Game::LoadOBJ("resources/Prototypes/model/", "corn.obj");
 	player.texture = Game::LoadTexture("resources/Prototypes/texture/uvChecker.png");
 	ground.model = Game::LoadOBJ("resources/Prototypes/model/", "cube.obj");

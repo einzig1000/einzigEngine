@@ -76,6 +76,9 @@ public:
 
 	private:
 
+		// 他のオブジェクトと衝突したときのAABBのインデックスペア
+		std::optional<Vector2int> isCollisionAABBPair(RenderData_Model& target) const;
+
 		std::vector<RenderData_Model*> blockList;
 
 	};
