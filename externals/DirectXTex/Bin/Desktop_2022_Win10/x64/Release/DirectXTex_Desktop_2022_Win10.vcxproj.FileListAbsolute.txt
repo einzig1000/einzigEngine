@@ -1,0 +1,2 @@
+C:\Users\K024G\OneDrive\デスクトップ\A_CG2\DirectXGame\externals\DirectXTex\Bin\Desktop_2022_Win10\x64\Release\DirectXTex.lib
+C:\Users\K024G\OneDrive\デスクトップ\避難訓練\科目ファイル\A_CG2\DirectXGame\externals\DirectXTex\Bin\Desktop_2022_Win10\x64\Release\DirectXTex.lib
