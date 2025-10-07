@@ -15,6 +15,9 @@ CommandContextManager::CommandContextManager(ID3D12Device* device)
     hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator.Get(), nullptr, IID_PPV_ARGS(&commandList));
     assert(SUCCEEDED(hr));
 
+    hr = commandList->Close();
+    assert(SUCCEEDED(hr));
+
     Log("コンストラクタ実行成功 : CommandContextManager");
 }
 

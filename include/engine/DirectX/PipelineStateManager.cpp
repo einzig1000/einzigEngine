@@ -9,7 +9,7 @@
 PipelineStateManager::PipelineStateManager(ID3D12Device* device)
 {
     InitializeDxc();
-    InitializeRootSignatureInternal(device);
+    InitializeRootSignature(device);
     CreateAllPSOs(device);
 
     Log("コンストラクタ実行成功 : PipelineStateManager");
@@ -51,7 +51,13 @@ void PipelineStateManager::InitializeDxc()
     assert(SUCCEEDED(hr));
 }
 
-void PipelineStateManager::InitializeRootSignatureInternal(ID3D12Device* device)
+void PipelineStateManager::InitializeRootSignature(ID3D12Device* device)
+{
+    InitializeRootSignature_object(device);
+    InitializeRootSignature_particle(device);
+}
+
+void PipelineStateManager::InitializeRootSignature_object(ID3D12Device* device)
 {
     HRESULT hr;
     // DescriptorRange for SRV (t0)
@@ -114,7 +120,69 @@ void PipelineStateManager::InitializeRootSignatureInternal(ID3D12Device* device)
         }
         assert(false);
     }
-    hr = device->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
+    hr = device->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature_object));
+    assert(SUCCEEDED(hr));
+}
+
+void PipelineStateManager::InitializeRootSignature_particle(ID3D12Device * device)
+{
+    HRESULT hr;
+    // DescriptorRange for SRV (t0)
+    D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
+    descriptorRange[0].BaseShaderRegister = 0; // t0 レジスタ
+    descriptorRange[0].NumDescriptors = 1;
+    descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+    D3D12_ROOT_PARAMETER rootParameters[4] = {};
+
+    // ルートパラメータ0: Material (register b0)
+    rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+    rootParameters[0].DescriptorTable.pDescriptorRanges = descriptorRange;
+    rootParameters[0].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
+
+    // ルートパラメータ1: TransformationMatrix (WVP, World) (register b1)
+    rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+    rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL; // VS, PS 両方からアクセス可能
+    rootParameters[1].Descriptor.ShaderRegister = 1; // b1
+
+    // ルートパラメータ2: Texture (SRV) Descriptor Table (register t0)
+    rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; // PSからのみアクセス
+    rootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRange;
+    rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
+
+
+    D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};
+    staticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+    staticSamplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    staticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    staticSamplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    staticSamplers[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+    staticSamplers[0].ShaderRegister = 0; // s0 レジスタ
+    staticSamplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+    D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc{};
+    rootSignatureDesc.pParameters = rootParameters;
+    rootSignatureDesc.NumParameters = _countof(rootParameters);
+    rootSignatureDesc.pStaticSamplers = staticSamplers;
+    rootSignatureDesc.NumStaticSamplers = _countof(staticSamplers);
+    rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+
+
+    Microsoft::WRL::ComPtr<ID3DBlob> signatureBlob = nullptr;
+    Microsoft::WRL::ComPtr<ID3DBlob> errorBlob = nullptr;
+    hr = D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1_0, &signatureBlob, &errorBlob);
+    if (FAILED(hr))
+    {
+        if (errorBlob)
+        {
+            Log(reinterpret_cast<char*>(errorBlob->GetBufferPointer()));
+        }
+        assert(false);
+    }
+    hr = device->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature_particle));
     assert(SUCCEEDED(hr));
 }
 
@@ -242,7 +310,15 @@ void PipelineStateManager::CreateAllPSOs(ID3D12Device* device)
     trianglePSOs[BlendMode::Wireframe] = CreatePipelineState(device, blendOpaqueDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, rasterizerWireframeDesc, triangleInputElementDescs, _countof(triangleInputElementDescs));
 }
 
-Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineStateManager::CreatePipelineState(ID3D12Device* device, const D3D12_BLEND_DESC& blendDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE primitiveType, const D3D12_RASTERIZER_DESC& rasterizerDesc, const D3D12_INPUT_ELEMENT_DESC* inputElementDescs, UINT numInputElements)
+Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineStateManager::CreatePipelineState(
+    ID3D12Device* device, 
+    const D3D12_BLEND_DESC& blendDesc, 
+    D3D12_PRIMITIVE_TOPOLOGY_TYPE primitiveType, 
+    const D3D12_RASTERIZER_DESC& rasterizerDesc, 
+    const D3D12_INPUT_ELEMENT_DESC* inputElementDescs, 
+    UINT numInputElements
+	// bool isDepthEnabled
+)
 {
     HRESULT hr;
 
@@ -271,7 +347,7 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineStateManager::CreatePipeline
     depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 
     D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc{};
-    graphicsPipelineStateDesc.pRootSignature = rootSignature.Get();
+    graphicsPipelineStateDesc.pRootSignature = rootSignature_object.Get();
     graphicsPipelineStateDesc.InputLayout = inputLayoutDesc;
     graphicsPipelineStateDesc.BlendState = blendDesc;
     graphicsPipelineStateDesc.RasterizerState = rasterizerDesc;

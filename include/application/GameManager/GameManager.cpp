@@ -4,6 +4,7 @@ GameManager::GameManager()
 {
 	frame = 0;
 
+	sprite.texture = Game::LoadTexture("resources/Prototypes/texture/uvChecker.png");
 	player.model = Game::LoadOBJ("resources/Prototypes/model/", "corn.obj");
 	player.texture = Game::LoadTexture("resources/Prototypes/texture/uvChecker.png");
 	ground.model = Game::LoadOBJ("resources/Prototypes/model/", "cube.obj");
@@ -15,6 +16,7 @@ GameManager::GameManager()
 	ground.transforms.scale = { 10.0f,1.0f,10.0f };
 
 	player.SetBlock(ground);
+	ground.SetBlock(player);
 }
 
 GameManager::~GameManager()
@@ -28,7 +30,7 @@ void GameManager::Update()
 	{
 		if (GetHitKey::keys[DIK_SPACE] && !GetHitKey::preKeys[DIK_SPACE])
 		{
-			player.velocity.y += 1.0f;
+			player.velocity.y += 0.3f;
 			player.gravity = 0.01f;
 		}
 
@@ -49,6 +51,7 @@ void GameManager::Update()
 void GameManager::Draw()
 {
 	Game::DrawLine(Vector3{ 0,0,0 }, Vector3{ 100,100,100 }, 0xFFFFFFFF);
+	sprite.Draw();
 	player.Draw();
 	player.DrawAABB();
 	player.DrawImGui();

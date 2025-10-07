@@ -29,7 +29,7 @@ DirectXManager::~DirectXManager()
 void DirectXManager::BeginFrame()
 {
     // コマンドリストをリセット
-    //commandContextManager->ResetCommandList();
+    commandContextManager->ResetCommandList();
 
     // バックバッファのインデックスを更新
     swapChainManager->UpdateBackBufferIndex();
@@ -67,7 +67,6 @@ void DirectXManager::EndFrame()
     ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandContextManager->GetCommandList());
 
     // ResourceStateをRENDER_TARGETからPRESENTへ遷移
-    UINT backBufferIndex = swapChainManager->GetCurrentBackBufferIndex();
     barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
     barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
     barrier.Transition.pResource = swapChainManager->GetCurrentBackBufferResource();
@@ -81,19 +80,21 @@ void DirectXManager::EndFrame()
     HRESULT hr = commandContextManager->GetCommandList()->Close();
     if (FAILED(hr))
     {
-        Log("コマンドリストの確定・実行に失敗しました");
+        Log("コマンドリストの確定に失敗"); 
         assert(false);
     }
     ID3D12CommandList* commandLists[] = { commandContextManager->GetCommandList() };
     commandContextManager->GetCommandQueue()->ExecuteCommandLists(1, commandLists);
 
-    // GPU同期
+    // フェンスシグナル
     synchronizationManager->Signal(commandContextManager->GetCommandQueue());
-    synchronizationManager->WaitForGPU();
 
     // スワップチェーンをプレゼンテーション
     swapChainManager->Present();
 
+    // GPU同期
+    synchronizationManager->WaitForGPU();
+
     // コマンドリストをリセット
-    commandContextManager->ResetCommandList();
+    //commandContextManager->ResetCommandList();
 }

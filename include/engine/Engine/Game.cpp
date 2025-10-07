@@ -36,6 +36,8 @@ void Game::EndFrame()
 void Game::Finalize()
 {
 	engine->Finalize();
+	delete engine;
+	engine = nullptr;
 }
 
 uint32_t Game::LoadOBJ(const std::string& directoryPath, const std::string& filename)
@@ -233,19 +235,13 @@ Game::RenderData_Model::~RenderData_Model()
 
 void Game::RenderData_Model::Updata(std::vector<Object3D>& objects)
 {
-
 	// 移動してない場合はスキップするようにしたい
 #pragma region 座標更新
-
-	// AABB更新
-	this->aabb = CreateAABB(this->transforms, this->model);
-
 
 	// 座標更新
 	this->velocity.y -= this->gravity;
 	this->velocity += this->acceleration;
 	this->transforms.translate += this->velocity;
-
 
 	// 移動マトリックス作成
 	XMVECTOR scaleVec = XMVectorSet(this->transforms.scale.x, this->transforms.scale.y, this->transforms.scale.z, 0.0f);
@@ -331,6 +327,9 @@ void Game::RenderData_Model::Updata(std::vector<Object3D>& objects)
 	//	rd->transforms.World = world;
 	//}
 
+	// AABB更新
+	this->aabb = CreateAABB(this->transforms, this->model);
+
 #pragma endregion
 
 #pragma region 描画範囲内判定
@@ -373,12 +372,6 @@ void Game::RenderData_Model::Updata(std::vector<Object3D>& objects)
 		}
 	}
 
-	// 描画範囲内のオブジェクトを全て調査
-	for (auto& rd : Game::GetModelList())
-	{
-		rd->ResolveBlockCollision();
-	}
-
 
 
 }
@@ -414,11 +407,7 @@ void Game::RenderData_Model::SetBlock(RenderData_Model& target)
 	}
 }
 
-void Game::RenderData_Model::ResolveBlockCollision()
-{
-}
-
-// ワールド
+// ワールド行列とワールド座標の取得
 Matrix4x4 Game::RenderData_Model::GetWorldMatrix() const
 {
 	if (transforms.parentWorld)

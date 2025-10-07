@@ -69,14 +69,12 @@ public:
 		Matrix4x4 GetWorldMatrix() const;
 		Vector3 GetWorldPosition() const;
 
-
 		// 描画
 		void Draw();
 		void DrawAABB();
 		void DrawImGui();
 
 	private:
-		void ResolveBlockCollision();
 
 		std::vector<RenderData_Model*> blockList;
 
@@ -105,6 +103,7 @@ public:
 		bool isCollisionMouseRay = false;
 
 		void Draw();
+		void DrawImGui();
 	};
 
 	class RenderData_Triangle
@@ -129,6 +128,34 @@ public:
 
 		void Draw();
 	};
+
+	//class RenderData_Sphere
+	//{
+	//public:
+	//	// 位置、回転、スケール
+	//	Transforms transforms;
+	//	// 回転の中心点
+	//	Vector3 pivot;
+	//	// 分割数
+	//	uint32_t kSubdivision;
+	//	// 色
+	//	uint32_t color = 0xFFFFFFFF;
+	//	// 描画オプション
+	//	DrawOptions options;
+	//	// 衝突判定用AABB
+	//	std::vector<AABB> aabb;
+	//	// ID
+	//	int ID = 0;
+	//	// 画面内に存在するか
+	//	bool inPicture = false;
+	//
+	//	// 描画
+	//	void Draw();
+	//
+	//private:
+	//
+	//
+	//};
 
 	class RenderData_Particle
 	{

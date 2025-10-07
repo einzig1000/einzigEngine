@@ -35,6 +35,7 @@ public:
 
 	// 描画
 	void Drawobj(Game::RenderData_Model& renderData);
+	//void DrawSphere(Game::RenderData_Sphere& renderData);
 	void DrawTriangle(Game::RenderData_Triangle& renderData);
 	void DrawSprite(Game::RenderData_Sprite& renderData);
 	void DrawParticle(Game::RenderData_Particle& renderData);
@@ -88,10 +89,16 @@ public:
 	void toggleWireframeMode();
 
 private:
+	// カメラ更新
 	void UpdateCamera();
+	// ライト更新
 	void UpdateLight();
+	// ただモデルの形のAABBを作るだけの関数（LoadOBJの時のAABB初期化用）
 	AABB CreateLocalAABB(const ModelData& model);
+	// ライン頂点リソースの初期化
 	void InitializeLineResources(ID3D12Device* device);
+	// 動的頂点バッファの確保
+	bool EnsureDynamicVB(size_t requiredVertexCount);
 
 	WindowManager* windowManager;
 	DirectXManager* dxManager;
@@ -99,29 +106,19 @@ private:
 	// 頂点リソースと頂点データと使用済み頂点数
 
 	// モデル
-	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceObj;
 	std::vector<Object3D> objects;
-	UINT vertexResourceSizeObj;
-
-	// 球
-	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceSphere;
-	UINT vertexResourceSizeSphere;
-	std::vector<VertexData> sphereVertexData;
-	size_t sphereVertexDataUsed = 0;
-
-	// スプライト
-	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceSprite;
-	UINT vertexResourceSizeSprite;
-	std::vector<VertexData> spriteVertexData;
-	size_t spriteVertexDataUsed = 0;
 
 	// 三角形
-	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceTriangle;
-	UINT vertexResourceSizeTriangle;
+	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;
+	UINT vertexResourceSize;
+	std::vector<VertexData> vertexData;
+	size_t vertexDataUsed = 0;
+	VertexData* vertexMappedPtr = nullptr; // 永続Mapポインタ
 
 	// 線
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceLine;
 	UINT vertexResourceSizeLine;
+	VertexData* lineMappedPtr = nullptr; // 永続Mapポインタ
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> indexResource;
 	D3D12_INDEX_BUFFER_VIEW indexBufferView;
