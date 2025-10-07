@@ -310,7 +310,15 @@ void PipelineStateManager::CreateAllPSOs(ID3D12Device* device)
     trianglePSOs[BlendMode::Wireframe] = CreatePipelineState(device, blendOpaqueDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, rasterizerWireframeDesc, triangleInputElementDescs, _countof(triangleInputElementDescs));
 }
 
-Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineStateManager::CreatePipelineState(ID3D12Device* device, const D3D12_BLEND_DESC& blendDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE primitiveType, const D3D12_RASTERIZER_DESC& rasterizerDesc, const D3D12_INPUT_ELEMENT_DESC* inputElementDescs, UINT numInputElements)
+Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineStateManager::CreatePipelineState(
+    ID3D12Device* device, 
+    const D3D12_BLEND_DESC& blendDesc, 
+    D3D12_PRIMITIVE_TOPOLOGY_TYPE primitiveType, 
+    const D3D12_RASTERIZER_DESC& rasterizerDesc, 
+    const D3D12_INPUT_ELEMENT_DESC* inputElementDescs, 
+    UINT numInputElements
+	// bool isDepthEnabled
+)
 {
     HRESULT hr;
 

@@ -69,14 +69,12 @@ public:
 		Matrix4x4 GetWorldMatrix() const;
 		Vector3 GetWorldPosition() const;
 
-
 		// 描画
 		void Draw();
 		void DrawAABB();
 		void DrawImGui();
 
 	private:
-		void ResolveBlockCollision();
 
 		std::vector<RenderData_Model*> blockList;
 

@@ -235,7 +235,6 @@ Game::RenderData_Model::~RenderData_Model()
 
 void Game::RenderData_Model::Updata(std::vector<Object3D>& objects)
 {
-
 	// 移動してない場合はスキップするようにしたい
 #pragma region 座標更新
 
@@ -373,12 +372,6 @@ void Game::RenderData_Model::Updata(std::vector<Object3D>& objects)
 		}
 	}
 
-	// 描画範囲内のオブジェクトを全て調査
-	for (auto& rd : Game::GetModelList())
-	{
-		rd->ResolveBlockCollision();
-	}
-
 
 
 }
@@ -414,11 +407,7 @@ void Game::RenderData_Model::SetBlock(RenderData_Model& target)
 	}
 }
 
-void Game::RenderData_Model::ResolveBlockCollision()
-{
-}
-
-// ワールド
+// ワールド行列とワールド座標の取得
 Matrix4x4 Game::RenderData_Model::GetWorldMatrix() const
 {
 	if (transforms.parentWorld)

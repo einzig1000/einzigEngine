@@ -16,6 +16,7 @@ GameManager::GameManager()
 	ground.transforms.scale = { 10.0f,1.0f,10.0f };
 
 	player.SetBlock(ground);
+	ground.SetBlock(player);
 }
 
 GameManager::~GameManager()
