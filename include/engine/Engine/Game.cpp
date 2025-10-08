@@ -399,16 +399,6 @@ void Game::RenderData_Model::Updata(std::vector<Object3D>& objects)
 					this->transforms.translate.x += Inf->depth.x;
 					velocity.x = 0.0f;
 				}
-				if (this->lastMove.y > 0.0f)
-				{
-					this->transforms.translate.y -= Inf->depth.y;
-					velocity.y = 0.0f;
-				}
-				else if (this->lastMove.y < 0.0f)
-				{
-					this->transforms.translate.y += Inf->depth.y;
-					velocity.y = 0.0f;
-				}
 				if (this->lastMove.z > 0.0f)
 				{
 					this->transforms.translate.z -= Inf->depth.z;
@@ -418,6 +408,16 @@ void Game::RenderData_Model::Updata(std::vector<Object3D>& objects)
 				{
 					this->transforms.translate.z += Inf->depth.z;
 					velocity.z = 0.0f;
+				}
+				if (this->lastMove.y > 0.0f)
+				{
+					this->transforms.translate.y -= Inf->depth.y;
+					velocity.y = 0.0f;
+				}
+				else if (this->lastMove.y < 0.0f)
+				{
+					this->transforms.translate.y += Inf->depth.y;
+					velocity.y = 0.0f;
 				}
 			}
 
@@ -488,6 +488,38 @@ void Game::RenderData_Model::Updata(std::vector<Object3D>& objects)
 	}
 
 #pragma endregion
+	{
+		XMVECTOR scaleVec = XMVectorSet(this->transforms.scale.x, this->transforms.scale.y, this->transforms.scale.z, 0.0f);
+		XMVECTOR pivotVec = XMVectorSet(this->pivot.x, this->pivot.y, this->pivot.z, 0.0f);
+		XMVECTOR translateVec = XMVectorSet(this->transforms.translate.x, this->transforms.translate.y, this->transforms.translate.z, 0.0f);
+		XMVECTOR rotEuler = XMVectorSet(this->transforms.rotate.x, this->transforms.rotate.y, this->transforms.rotate.z, 0.0f);
+
+		XMMATRIX S = XMMatrixScalingFromVector(scaleVec);
+		XMMATRIX Tneg = XMMatrixTranslationFromVector(XMVectorNegate(pivotVec));
+		XMVECTOR quatEuler = XMQuaternionRotationRollPitchYawFromVector(rotEuler);
+		XMMATRIX R = XMMatrixRotationQuaternion(quatEuler);
+		XMMATRIX Tpos = XMMatrixTranslationFromVector(pivotVec);
+		XMMATRIX T = XMMatrixTranslationFromVector(translateVec);
+
+		XMMATRIX world = S * Tneg * R * Tpos * T;
+
+		if (this->transforms.parentWorld)
+		{
+			XMFLOAT4X4 parentF4;
+			std::memcpy(&parentF4, this->transforms.parentWorld, sizeof(parentF4));
+			XMMATRIX parentM = XMLoadFloat4x4(&parentF4);
+			world = parentM * world;
+		}
+
+		XMFLOAT4X4 tmp;
+		XMStoreFloat4x4(&tmp, world);
+		for (int i = 0; i < 4; ++i)
+			for (int j = 0; j < 4; ++j)
+				this->transforms.World.m[i][j] = tmp.m[i][j];
+
+		// 最終AABB
+		this->aabb = CreateAABB(this->transforms, this->model);
+	}
 }
 
 // 他のオブジェクトとの衝突判定

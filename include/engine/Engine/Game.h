@@ -83,12 +83,8 @@ public:
 	private:
 		// 前フレーム位置、回転、スケール
 		Transforms preTransforms;
-		// 後フレーム位置、回転、スケール
-		//Transforms preTransforms;
 		// 前フレームAABB
 		std::vector<AABB> preAABB;
-		// 後フレームAABB
-		//std::vector<AABB> preAABB;
 
 		// 他のオブジェクトと衝突したときのAABBのインデックスペア
 		std::optional<CollisionInf> isCollisionAABBInf(RenderData_Model& target) const;
