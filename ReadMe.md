@@ -5,8 +5,8 @@
 ### 機能
 ## メインループ
 - - [x] Game::Initialize(int width, int height, const std::wstring& title);
-  - (int ウィンドウ横幅, int ウィンドウ縦幅, const std::wstring& タイトル)
-  - ウィンドウのサイズとウィンドウの名前を設定できる。
+   (int ウィンドウ横幅, int ウィンドウ縦幅, const std::wstring& タイトル)
+   ウィンドウのサイズとウィンドウの名前を設定できる。
 
 - -[]Game::ProcessMessage()
 - Game::BeginFrame()
