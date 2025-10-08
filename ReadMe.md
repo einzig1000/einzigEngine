@@ -40,8 +40,12 @@
       - Game::LoadAudio("resources/Prototypes/audio/BGM/Morning.mp3");のように使う
 
 - TextureData* Game::GetTexture(uint32_t textureNumber);
-  (uint32_t Game::LoadAudioの返り値(オーディオID))
-  ImGuiで画像描画したいからmetadata欲しい！って時とかに使う
+   - 引数
+      - テクスチャID
+   - 返り値
+      - テクスチャIDに応じたmetadataを含むテクスチャの情報
+   - 備考
+      - ImGuiで画像描画したいからmetadata欲しい！って時とかに使う
 
 ## オーディオ系
 - Game::PlayAudio(const uint32_t& audioId, bool loop);
