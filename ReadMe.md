@@ -22,12 +22,23 @@
       - モデルID
    - 備考
       - Game::LoadOBJ("resources/Prototypes/model/", "test.obj");のように使う
+      
 - uint32_t Game::LoadTexture(const std::string& filePath);
-  (const std::string& ディレクトリパス + ファイルネーム)
-  Game::LoadTexture("resources/Prototypes/texture/test.png");のように使う
+   - 引数
+      - ディレクトリパス + ファイルネーム
+   - 返り値
+      - テクスチャID
+   - 備考
+      - Game::LoadTexture("resources/Prototypes/texture/test.png");のように使う
+ 
 - uint32_t Game::LoadAudio(const std::string& filePath);
-  (const std::string& ディレクトリパス + ファイルネーム)
-  Game::LoadTexture("resources/Prototypes/audio/BGM/Morning.mp3");のように使う
+   - 引数
+      - ディレクトリパス + ファイルネーム
+   - 返り値
+      - オーディオID
+   - 備考
+      - Game::LoadAudio("resources/Prototypes/audio/BGM/Morning.mp3");のように使う
+
 - TextureData* Game::GetTexture(uint32_t textureNumber);
   (uint32_t Game::LoadAudioの返り値(オーディオID))
   ImGuiで画像描画したいからmetadata欲しい！って時とかに使う
