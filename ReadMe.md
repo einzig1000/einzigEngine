@@ -15,13 +15,13 @@
 
 ## ロード系
 - uint32_t Game::LoadOBJ(const std::string& directoryPath, const std::string& filename)
-  引数
-     - ディレクトリパス
-     - ファイルネーム)
-  返り値
-     - モデルID
-  備考
-     - Game::LoadOBJ("resources/Prototypes/model/", "test.obj");のように使う
+   - 引数
+      - ディレクトリパス
+      - ファイルネーム
+   - 返り値
+      - モデルID
+   - 備考
+      - Game::LoadOBJ("resources/Prototypes/model/", "test.obj");のように使う
 - uint32_t Game::LoadTexture(const std::string& filePath);
   (const std::string& ディレクトリパス + ファイルネーム)
   Game::LoadTexture("resources/Prototypes/texture/test.png");のように使う
