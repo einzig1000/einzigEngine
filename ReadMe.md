@@ -48,14 +48,36 @@
       - ImGuiで画像描画したいからmetadata欲しい！って時とかに使う
 
 ## オーディオ系
-- Game::PlayAudio(const uint32_t& audioId, bool loop);
+- void Game::PlayAudio(const uint32_t& audioId, bool loop);
+   - 引数
+     - オーディオID
+     - true の時はループ再生
+   - 返り値
+      - なし
+   - 備考
+      - オーディオの再生
+      
+- void Game::StopAudio(const uint32_t& audioId);
+   - 引数
+     - オーディオID
+   - 返り値
+      - なし
+   - 備考
+      - オーディオの停止
   
-- Game::StopAudio(const uint32_t& audioId);
-- Game::SetAudioVolume(const uint32_t& audioId, float volume);
-- Game::SetMasterVolume(float volume);
-- Game::GetVolume(const uint32_t& audioId);
-- Game::GetMasterVolume();
-- Game::IsAudioPlaying(const uint32_t& audioId);
+- void Game::SetAudioVolume(const uint32_t& audioId, float volume);
+   - 引数
+     - オーディオID
+     - 音量
+   - 返り値
+      - なし
+   - 備考
+      - オーディオの音量の設定
+        
+- void Game::SetMasterVolume(float volume);
+- void Game::GetVolume(const uint32_t& audioId);
+- void Game::GetMasterVolume();
+- void Game::IsAudioPlaying(const uint32_t& audioId);
 
 ## ライト系
 - Game::SetLightColor(const Vector4 color);
