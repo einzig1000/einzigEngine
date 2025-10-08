@@ -24,8 +24,12 @@ public:
 		~RenderData_Model();
 		void Updata(std::vector<Object3D>& objects);
 
-		// 位置、回転、スケール
+		// 今フレーム位置、回転、スケール
 		Transforms transforms;
+		// 今フレームの移動量
+		Vector3 lastMove;
+		// 今フレームでS/R/Tに変化があったか
+		bool movedThisFrame = true;
 		// 回転の中心点
 		Vector3 pivot;
 		// UV座標
@@ -35,7 +39,7 @@ public:
 		// 加速度
 		Vector3 acceleration;
 		// 重力加速度
-		float gravity = 0.00f;
+		Vector3 gravity;
 		// 色
 		uint32_t color = 0xFFFFFFFF;
 		// 3Dモデル
@@ -46,6 +50,8 @@ public:
 		DrawOptions options;
 		// 衝突判定用AABB
 		std::vector<AABB> aabb;
+		// 重さ
+		float mass = 1.0f;
 		// ID
 		int ID = 0;
 		// 画面内に存在するか
@@ -75,9 +81,17 @@ public:
 		void DrawImGui();
 
 	private:
+		// 前フレーム位置、回転、スケール
+		Transforms preTransforms;
+		// 後フレーム位置、回転、スケール
+		//Transforms preTransforms;
+		// 前フレームAABB
+		std::vector<AABB> preAABB;
+		// 後フレームAABB
+		//std::vector<AABB> preAABB;
 
 		// 他のオブジェクトと衝突したときのAABBのインデックスペア
-		std::optional<Vector2int> isCollisionAABBPair(RenderData_Model& target) const;
+		std::optional<CollisionInf> isCollisionAABBInf(RenderData_Model& target) const;
 
 		std::vector<RenderData_Model*> blockList;
 

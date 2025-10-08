@@ -5,14 +5,14 @@ GameManager::GameManager()
 	frame = 0;
 
 	sprite.texture = Game::LoadTexture("resources/Prototypes/texture/uvChecker.png");
+	ground.model = Game::LoadOBJ("resources/Prototypes/model/", "cube.obj");
+	ground.texture = Game::LoadTexture("resources/Prototypes/texture/uvChecker.png");
 	player.model = Game::LoadOBJ("resources/Minecraft/blaze/", "blaze.obj");
 	player.model = Game::LoadOBJ("resources/Prototypes/model/", "corn.obj");
 	player.texture = Game::LoadTexture("resources/Prototypes/texture/uvChecker.png");
-	ground.model = Game::LoadOBJ("resources/Prototypes/model/", "cube.obj");
-	ground.texture = Game::LoadTexture("resources/Prototypes/texture/uvChecker.png");
 
 	player.transforms.translate = { 0.0f,10.0f,0.0f };
-	player.gravity = 0.01f;
+	player.gravity.y = 0.01f;
 
 	ground.transforms.scale = { 10.0f,1.0f,10.0f };
 
@@ -32,8 +32,26 @@ void GameManager::Update()
 		if (GetHitKey::keys[DIK_SPACE] && !GetHitKey::preKeys[DIK_SPACE])
 		{
 			player.velocity.y += 0.3f;
-			player.gravity = 0.01f;
+			player.gravity.y = 0.01f;
 		}
+
+		if (GetHitKey::keys[DIK_W] || GetHitKey::keys[DIK_S])
+		{
+			if (GetHitKey::keys[DIK_W])
+				player.velocity.z = 0.03f;
+			if (GetHitKey::keys[DIK_S])
+				player.velocity.z = -0.03f;
+		}
+		else player.velocity.z = 0.0f;
+
+		if (GetHitKey::keys[DIK_D] || GetHitKey::keys[DIK_A])
+		{
+			if (GetHitKey::keys[DIK_D])
+				player.velocity.x = 0.03f;
+			if (GetHitKey::keys[DIK_A])
+				player.velocity.x = -0.03f;
+		}
+		else player.velocity.x = 0.0f;
 
 		if (GetHitKey::keys[DIK_1])
 		{

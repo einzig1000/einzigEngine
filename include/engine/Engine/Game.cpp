@@ -235,100 +235,130 @@ Game::RenderData_Model::~RenderData_Model()
 
 void Game::RenderData_Model::Updata(std::vector<Object3D>& objects)
 {
-	// 移動してない場合はスキップするようにしたい
+#pragma region 前フレーム情報保存
+
+	this->preTransforms = this->transforms;
+	this->preAABB = this->aabb;
+
+#pragma endregion
+
 #pragma region 座標更新
 
 	// 座標更新
-	this->velocity.y -= this->gravity;
+	this->velocity -= this->gravity;
 	this->velocity += this->acceleration;
 	this->transforms.translate += this->velocity;
 
-	// 移動マトリックス作成
-	XMVECTOR scaleVec = XMVectorSet(this->transforms.scale.x, this->transforms.scale.y, this->transforms.scale.z, 0.0f);
-	XMVECTOR pivotVec = XMVectorSet(this->pivot.x, this->pivot.y, this->pivot.z, 0.0f);
-	XMVECTOR translateVec = XMVectorSet(this->transforms.translate.x, this->transforms.translate.y, this->transforms.translate.z, 0.0f);
-	XMVECTOR rotEuler = XMVectorSet(this->transforms.rotate.x, this->transforms.rotate.y, this->transforms.rotate.z, 0.0f);
+	// 今フレームの移動量
+	this->lastMove = this->transforms.translate - this->preTransforms.translate;
+
+	auto changed = [](float a, float b, float eps) { return ((a - b) > eps) || ((a - b) < eps); };
+	constexpr float epsT = 1e-6f;
+	constexpr float epsR = 1e-6f;
+	constexpr float epsS = 1e-6f;
+
+	// S/R/Tに変化があったか
+	this->movedThisFrame =
+		changed(this->lastMove.x, 0.0f, epsT) ||
+		changed(this->lastMove.y, 0.0f, epsT) || 
+		changed(this->lastMove.z, 0.0f, epsT) ||
+		changed(this->transforms.rotate.x, this->preTransforms.rotate.x, epsR) ||
+		changed(this->transforms.rotate.y, this->preTransforms.rotate.y, epsR) ||
+		changed(this->transforms.rotate.z, this->preTransforms.rotate.z, epsR) ||
+		changed(this->transforms.scale.x, this->preTransforms.scale.x, epsS) ||
+		changed(this->transforms.scale.y, this->preTransforms.scale.y, epsS) ||
+		changed(this->transforms.scale.z, this->preTransforms.scale.z, epsS);
 
 
-	// 1) スケール
-	XMMATRIX S = XMMatrixScalingFromVector(scaleVec);
-
-
-	// 2) ピボットオフセット（負）
-	XMMATRIX Tneg = XMMatrixTranslationFromVector(XMVectorNegate(pivotVec));
-
-
-	// 3) 回転（オイラー→クォータニオン→行列）
-	XMVECTOR quatEuler = XMQuaternionRotationRollPitchYawFromVector(rotEuler);
-	XMMATRIX R = XMMatrixRotationQuaternion(quatEuler);
-
-
-	// 4) ピボットオフセット（正）
-	XMMATRIX Tpos = XMMatrixTranslationFromVector(pivotVec);
-
-
-	// 5) 平行移動
-	XMMATRIX T = XMMatrixTranslationFromVector(translateVec);
-
-
-	// 6) 合成: S → Tneg → R → Tpos → T
-	XMMATRIX world = S * Tneg * R * Tpos * T;
-
-
-	// 7) 親行列の適用
-	if (this->transforms.parentWorld)
+	//if (this->movedThisFrame)
 	{
-		// parentWorld が Matrix4x4 ならまず XMFLOAT4X4 にコピー
-		XMFLOAT4X4 parentF4;
-		// 4×4 のメモリ配列を直接コピー
-		std::memcpy(&parentF4, this->transforms.parentWorld, sizeof(parentF4));
-		XMMATRIX parentM = XMLoadFloat4x4(&parentF4);
-		world = parentM * world;
+		// 移動マトリックス作成
+		XMVECTOR scaleVec = XMVectorSet(this->transforms.scale.x, this->transforms.scale.y, this->transforms.scale.z, 0.0f);
+		XMVECTOR pivotVec = XMVectorSet(this->pivot.x, this->pivot.y, this->pivot.z, 0.0f);
+		XMVECTOR translateVec = XMVectorSet(this->transforms.translate.x, this->transforms.translate.y, this->transforms.translate.z, 0.0f);
+		XMVECTOR rotEuler = XMVectorSet(this->transforms.rotate.x, this->transforms.rotate.y, this->transforms.rotate.z, 0.0f);
+
+
+		// 1) スケール
+		XMMATRIX S = XMMatrixScalingFromVector(scaleVec);
+
+
+		// 2) ピボットオフセット（負）
+		XMMATRIX Tneg = XMMatrixTranslationFromVector(XMVectorNegate(pivotVec));
+
+
+		// 3) 回転（オイラー→クォータニオン→行列）
+		XMVECTOR quatEuler = XMQuaternionRotationRollPitchYawFromVector(rotEuler);
+		XMMATRIX R = XMMatrixRotationQuaternion(quatEuler);
+
+
+		// 4) ピボットオフセット（正）
+		XMMATRIX Tpos = XMMatrixTranslationFromVector(pivotVec);
+
+
+		// 5) 平行移動
+		XMMATRIX T = XMMatrixTranslationFromVector(translateVec);
+
+
+		// 6) 合成: S → Tneg → R → Tpos → T
+		XMMATRIX world = S * Tneg * R * Tpos * T;
+
+
+		// 7) 親行列の適用
+		if (this->transforms.parentWorld)
+		{
+			// parentWorld が Matrix4x4 ならまず XMFLOAT4X4 にコピー
+			XMFLOAT4X4 parentF4;
+			// 4×4 のメモリ配列を直接コピー
+			std::memcpy(&parentF4, this->transforms.parentWorld, sizeof(parentF4));
+			XMMATRIX parentM = XMLoadFloat4x4(&parentF4);
+			world = parentM * world;
+		}
+
+
+		// 8) 結果を transforms.World に格納
+		XMFLOAT4X4 tmp;
+		XMStoreFloat4x4(&tmp, world);
+		for (int i = 0; i < 4; ++i)
+			for (int j = 0; j < 4; ++j)
+				this->transforms.World.m[i][j] = tmp.m[i][j];
+		//for (auto& rd : Game::GetModelList())
+		//{
+		//	// 1) スケール
+		//	Matrix4x4 scale = Matrix4x4::MakeScaleMatrix(rd->transforms.scale);
+		//
+		//	// 2) ピボットオフセット
+		//	Matrix4x4 pivotOffsetNeg = Matrix4x4::MakeTranslateMatrix(-rd->pivot);
+		//
+		//	// 3) 回転（X, Y, Z軸すべてを合成）
+		//	Matrix4x4 rotateX = Matrix4x4::MakeRotateXMatrix(rd->transforms.rotate.x);
+		//	Matrix4x4 rotateY = Matrix4x4::MakeRotateYMatrix(rd->transforms.rotate.y);
+		//	Matrix4x4 rotateZ = Matrix4x4::MakeRotateZMatrix(rd->transforms.rotate.z);
+		//	Matrix4x4 rotate = rotateZ * rotateX * rotateY;
+		//
+		//	// 4) ピボットへ戻す
+		//	Matrix4x4 pivotOffset = Matrix4x4::MakeTranslateMatrix(rd->pivot);
+		//
+		//	// 5) 平行移動
+		//	Matrix4x4 translate = Matrix4x4::MakeTranslateMatrix(rd->transforms.translate);
+		//
+		//	// 合成
+		//	Matrix4x4 world = scale * pivotOffsetNeg * rotate * pivotOffset * translate;
+		//
+		//	// 6) 親行列があれば乗算
+		//	if (rd->transforms.parentWorld)
+		//	{
+		//		Matrix4x4 parentMatrix = *rd->transforms.parentWorld;
+		//		world = parentMatrix * world;
+		//	}
+		//
+		//	// 7) Transforms.World に格納
+		//	rd->transforms.World = world;
+		//}
+
+		// AABB更新
+		this->aabb = CreateAABB(this->transforms, this->model);
 	}
-
-
-	// 8) 結果を transforms.World に格納
-	XMFLOAT4X4 tmp;
-	XMStoreFloat4x4(&tmp, world);
-	for (int i = 0; i < 4; ++i)
-		for (int j = 0; j < 4; ++j)
-			this->transforms.World.m[i][j] = tmp.m[i][j];
-	//for (auto& rd : Game::GetModelList())
-	//{
-	//	// 1) スケール
-	//	Matrix4x4 scale = Matrix4x4::MakeScaleMatrix(rd->transforms.scale);
-	//
-	//	// 2) ピボットオフセット
-	//	Matrix4x4 pivotOffsetNeg = Matrix4x4::MakeTranslateMatrix(-rd->pivot);
-	//
-	//	// 3) 回転（X, Y, Z軸すべてを合成）
-	//	Matrix4x4 rotateX = Matrix4x4::MakeRotateXMatrix(rd->transforms.rotate.x);
-	//	Matrix4x4 rotateY = Matrix4x4::MakeRotateYMatrix(rd->transforms.rotate.y);
-	//	Matrix4x4 rotateZ = Matrix4x4::MakeRotateZMatrix(rd->transforms.rotate.z);
-	//	Matrix4x4 rotate = rotateZ * rotateX * rotateY;
-	//
-	//	// 4) ピボットへ戻す
-	//	Matrix4x4 pivotOffset = Matrix4x4::MakeTranslateMatrix(rd->pivot);
-	//
-	//	// 5) 平行移動
-	//	Matrix4x4 translate = Matrix4x4::MakeTranslateMatrix(rd->transforms.translate);
-	//
-	//	// 合成
-	//	Matrix4x4 world = scale * pivotOffsetNeg * rotate * pivotOffset * translate;
-	//
-	//	// 6) 親行列があれば乗算
-	//	if (rd->transforms.parentWorld)
-	//	{
-	//		Matrix4x4 parentMatrix = *rd->transforms.parentWorld;
-	//		world = parentMatrix * world;
-	//	}
-	//
-	//	// 7) Transforms.World に格納
-	//	rd->transforms.World = world;
-	//}
-
-	// AABB更新
-	this->aabb = CreateAABB(this->transforms, this->model);
 
 #pragma endregion
 
@@ -349,29 +379,111 @@ void Game::RenderData_Model::Updata(std::vector<Object3D>& objects)
 
 #pragma region 衝突判定
 
+
 	for (auto* target : blockList)
 	{
-		std::optional<Vector2int> pair = isCollisionAABBPair(*target);
-		if (pair != std::nullopt)
+		std::optional<CollisionInf> Inf = isCollisionAABBInf(*target);
+		// 衝突していたら
+		if (Inf != std::nullopt)
 		{
-			// 自分と相手のAABBを取得
-			const auto& myAABB = this->aabb[pair->y];
-			const auto& targetAABB = target->aabb[pair->x];
+			// 自分の方が軽かったら自分を動かす
+			if (this->mass <= target->mass)
+			{
+				if (this->lastMove.x > 0.0f)
+				{
+					this->transforms.translate.x -= Inf->depth.x;
+					velocity.x = 0.0f;
+				}
+				else if (this->lastMove.x < 0.0f)
+				{
+					this->transforms.translate.x += Inf->depth.x;
+					velocity.x = 0.0f;
+				}
+				if (this->lastMove.y > 0.0f)
+				{
+					this->transforms.translate.y -= Inf->depth.y;
+					velocity.y = 0.0f;
+				}
+				else if (this->lastMove.y < 0.0f)
+				{
+					this->transforms.translate.y += Inf->depth.y;
+					velocity.y = 0.0f;
+				}
+				if (this->lastMove.z > 0.0f)
+				{
+					this->transforms.translate.z -= Inf->depth.z;
+					velocity.z = 0.0f;
+				}
+				else if (this->lastMove.z < 0.0f)
+				{
+					this->transforms.translate.z += Inf->depth.z;
+					velocity.z = 0.0f;
+				}
+			}
 
-			if (velocity.y < 0.0f)
-			{
-				// 下向きに落下中 → 地面の上面に自分のAABBの下端が接するように
-				float myHeight = myAABB.max.y - myAABB.min.y;
-				transforms.translate.y = targetAABB.max.y + myHeight / 2.0f;
-			}
-			else if (velocity.y > 0.0f)
-			{
-				// 上向きに移動中 → 天井の下面に自分のAABBの上端が接するように
-				float myHeight = myAABB.max.y - myAABB.min.y;
-				transforms.translate.y = targetAABB.min.y - myHeight / 2.0f;
-			}
-			velocity.y = 0.0f;
 			this->aabb = CreateAABB(this->transforms, this->model);
+
+			//Inf = isCollisionAABBInf(*target);
+
+
+
+			//Vector3 offset = transforms.translate;
+			//
+			//// 左方向に移動しているとき
+			//if (this->lastMove.x > 0.0f)
+			//{
+			//	offset.x += this->lastMove.x;
+			//	velocity.x = 0.0f;
+			//}
+			//// 右方向に移動しているとき
+			//else if (this->lastMove.x < 0.0f)
+			//{
+			//	offset.x -= this->lastMove.x;
+			//	velocity.x = 0.0f;
+			//}
+			//
+			//// 奥方向に移動しているとき
+			//if (this->lastMove.z > 0.0f)
+			//{
+			//	offset.z += this->lastMove.z;
+			//	velocity.z = 0.0f;
+			//}
+			//// 手前方向に移動しているとき
+			//else if (this->lastMove.z < 0.0f)
+			//{
+			//	offset.z -= this->lastMove.z;
+			//	velocity.z = 0.0f;
+			//}
+			//
+			//// 上方向に移動しているとき
+			//if (this->lastMove.y > 0.0f)
+			//{
+			//	offset.y += this->lastMove.y;
+			//	velocity.y = 0.0f;
+			//}
+			//// 下方向に移動しているとき
+			//else if (this->lastMove.y < 0.0f)
+			//{
+			//	offset.y -= this->lastMove.y;
+			//	velocity.y = 0.0f;
+			//}
+			//
+			//transforms.translate = { 0.0f,0.0f,0.0f };
+			//transforms.translate += offset;
+			//// 上方向に移動しているとき
+			//if (this->lastMove.y > 0.0f)
+			//{
+			//	float myHeight = myAABB.max.y - myAABB.min.y;
+			//	transforms.translate.y = targetAABB.min.y - myHeight / 2.0f;
+			//	velocity.y = 0.0f;
+			//}
+			//// 下方向に移動しているとき
+			//else if (this->lastMove.y < 0.0f)
+			//{
+			//	float myHeight = myAABB.max.y - myAABB.min.y;
+			//	transforms.translate.y = targetAABB.max.y + myHeight / 2.0f;
+			//	velocity.y = 0.0f;
+			//}
 		}
 	}
 
@@ -499,9 +611,10 @@ void Game::RenderData_Model::DrawImGui()
 	ImGui::DragFloat3((num + "UVtranslate").c_str(), &uvTransform.translate.x, 0.01f);
 	ImGui::DragFloat3((num + "UVrotate").c_str(), &uvTransform.rotate.x, 0.01f);
 	ImGui::Text("velocity");
+	ImGui::DragFloat3((num + "lastMove").c_str(), &lastMove.x, 0.01f);
 	ImGui::DragFloat3((num + "velocity").c_str(), &velocity.x, 0.01f);
 	ImGui::DragFloat3((num + "acceleration").c_str(), &acceleration.x, 0.01f);
-	ImGui::DragFloat((num + "gravity").c_str(), &gravity, 0.01f);
+	ImGui::DragFloat3((num + "gravity").c_str(), &gravity.x, 0.01f);
 	ImGui::Text("color");
 	Vector4 preColor = ConvertUintToVector4(color);
 	float floatColor[4] = { preColor.x, preColor.y, preColor.z, preColor.w };
@@ -522,23 +635,27 @@ void Game::RenderData_Model::DrawImGui()
 	ImGui::End();
 }
 
-std::optional<Vector2int> Game::RenderData_Model::isCollisionAABBPair(RenderData_Model& target) const
+std::optional<CollisionInf> Game::RenderData_Model::isCollisionAABBInf(RenderData_Model& target) const
 {
-	Vector2int pair = { -1, -1 };	
-	
+	CollisionInf result;
+	result.pair = { -1, -1 };
+
+	// どのAABB同士が衝突しているか
 	for (size_t i = 0; i < target.aabb.size(); ++i)
 	{
 		for (size_t j = 0; j < this->aabb.size(); ++j)
 		{
-			if (IsCollision(target.aabb[i], this->aabb[j]))
+			if (IsLooseCollision(target.aabb[i], this->aabb[j], 0.001f))
 			{
-				pair = { int(i), int(j) };
-				return pair;
+				Vector3 depth = this->aabb[j].GetCollisionDepth(target.aabb[i]);
+				result.pair = { static_cast<int>(i), static_cast<int>(j) };
+				result.depth = depth;
+				break;
 			}
 		}
 	}
-
-	return std::nullopt;
+	if (result.pair == Vector2int{ -1, -1 }) return std::nullopt;
+	return result;
 }
 
 
