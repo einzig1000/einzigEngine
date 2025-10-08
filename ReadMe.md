@@ -7,21 +7,34 @@
 - - [x] Game::Initialize(int width, int height, const std::wstring& title);
    (int ウィンドウ横幅, int ウィンドウ縦幅, const std::wstring& タイトル)
    ウィンドウのサイズとウィンドウの名前を設定できる。
-
-- -[]Game::ProcessMessage()
-- Game::BeginFrame()
-- Game::UpdateTransforms();
-- Game::EndFrame();
-- Game::Finalize();
+- - [x] Game::ProcessMessage()
+- - [x] Game::BeginFrame()
+- - [x] Game::UpdateTransforms();
+- - [x] Game::EndFrame();
+- - [x] Game::Finalize();
 
 ## ロード系
-- Game::LoadOBJ(const std::string& directoryPath, const std::string& filename)
-- Game::LoadTexture(const std::string& filePath);
-- Game::LoadAudio(const std::string& filePath);
-- Game::GetTexture(uint32_t textureNumber);
+- uint32_t Game::LoadOBJ(const std::string& directoryPath, const std::string& filename)
+  引数
+   - ディレクトリパス
+   - ファイルネーム)
+  返り値
+   - モデルID
+  備考
+   - Game::LoadOBJ("resources/Prototypes/model/", "test.obj");のように使う
+- uint32_t Game::LoadTexture(const std::string& filePath);
+  (const std::string& ディレクトリパス + ファイルネーム)
+  Game::LoadTexture("resources/Prototypes/texture/test.png");のように使う
+- uint32_t Game::LoadAudio(const std::string& filePath);
+  (const std::string& ディレクトリパス + ファイルネーム)
+  Game::LoadTexture("resources/Prototypes/audio/BGM/Morning.mp3");のように使う
+- TextureData* Game::GetTexture(uint32_t textureNumber);
+  (uint32_t Game::LoadAudioの返り値(オーディオID))
+  ImGuiで画像描画したいからmetadata欲しい！って時とかに使う
 
 ## オーディオ系
 - Game::PlayAudio(const uint32_t& audioId, bool loop);
+  
 - Game::StopAudio(const uint32_t& audioId);
 - Game::SetAudioVolume(const uint32_t& audioId, float volume);
 - Game::SetMasterVolume(float volume);
