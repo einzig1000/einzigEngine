@@ -75,12 +75,48 @@
       - オーディオの音量の設定
         
 - void Game::SetMasterVolume(float volume);
-- void Game::GetVolume(const uint32_t& audioId);
+   - 引数
+     - 音量
+   - 返り値
+      - なし
+   - 備考
+      - マスター音量の設定
+
+- uint32_t Game::GetVolume(const uint32_t& audioId);
+   - 引数
+     - オーディオID
+   - 返り値
+      - オーディオの音量
+   - 備考
+      - 
+  
 - void Game::GetMasterVolume();
-- void Game::IsAudioPlaying(const uint32_t& audioId);
+   - 引数
+      - なし
+   - 返り値
+      - マスターの音量
+   - 備考
+      - 
+
+- bool Game::IsAudioPlaying(const uint32_t& audioId);
+   - 引数
+      - オーディオID
+   - 返り値
+      - オーディオが再生されているか
+   - 備考
+      - 
+  
 
 ## ライト系
 - Game::SetLightColor(const Vector4 color);
+   - 引数
+      - 
+   - 返り値
+      - オーディオが再生されているか
+   - 備考
+      - 
+ 
+
 - Game::SetLightDirection(const Vector3 direction);
 - Game::SetLightIntensity(float intensity);
 - Game::ToggleLightMode(const uint32_t mode);
