@@ -224,6 +224,82 @@
 - Game::GetCamera();
    - つかわないでほしい
 
+## レンダーデータクラス
+- class RenderData_Model;
+   - メンバ変数
+      - Transforms transforms;
+        オブジェクトのSRT + worldMatrix + 親オブジェクト
+      - Vector3 lastMove;
+        １つ前のフレームからどれだけ移動したか
+      - bool movedThisFrame;
+        このフレームで移動したか
+      - Vector3 pivot;
+        rotateを変更したときの回転中心
+      - Transforms uvTransform;
+        テクスチャのuvTransform
+      - Vector3 velocity;
+        速度
+   	- Vector3 acceleration;
+      　加速度
+   	-	Vector3 gravity;
+      重力
+   	-	uint32_t color;
+      カラー
+	   -	uint32_t model;
+	   モデルＩＤ
+   	-	uint32_t texture;
+      テクスチャＩＤ
+   	-	DrawOptions options;
+      オプション
+     	wireframeをtrueにするとワイヤーフレーム描画される
+     	enableLightingをfalseにするとライティングされなくなる
+     	blendModeを変更するとブレンドモードが変更される
+   	-	std::vector<AABB> aabb;
+      衝突判定用のAABBが入っている。特に設定しなければAABBが自動生成される
+   	-	float mass;
+      重さ。衝突したとき自身の方が軽かったら自身の動きは止まる。自身の方が重かったら相手にも速度が伝播する
+   	-	int ID;
+      オブジェクトID。気にしなくていい。
+   	-	bool inPicture;
+      画面内に映っているかどうか
+   	-	int isCollisionMouseRay;
+      マウスレイとの衝突順
+      -1:非衝突, 0:最初に衝突, 1:2番目
+
+
+   - メンバ関数 
+		// 他のオブジェクトとの衝突判定
+		bool isCollision(RenderData_Model& target) const;
+		// 衝突時すりぬけないオブジェクトの設定
+		void SetBlock(RenderData_Model& target);
+
+		// 任意のポイントを向く
+		void LookAtOnce(const Vector3& targetWorldPos, float roll = 0);
+		void LookAtOnce(const RenderData_Model& other, float roll = 0);
+		void LookAtCamera(float roll = 0);
+		void LookAtFront(float roll = 0);
+
+		// ワールド位置を返す
+		Matrix4x4 GetWorldMatrix() const;
+		Vector3 GetWorldPosition() const;
+
+		// 描画
+		void Draw();
+		void DrawAABB();
+		void DrawImGui();
+
+	private:
+		// 前フレーム位置、回転、スケール
+		Transforms preTransforms;
+		// 後フレーム位置、回転、スケール
+		//Transforms preTransforms;
+		// 前フレームAABB
+		std::vector<AABB> preAABB;
+		// 後フレームAABB
+		//std::vector<AABB> preAABB;
+
+	};
+
 - Game::GetDebugCamera();
    - つかわないでほしい
 
