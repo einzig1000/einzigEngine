@@ -256,39 +256,98 @@
    	  - bool inPicture : 画面内に映っているかどうか
    	  - int isCollisionMouseRay : マウスレイとの衝突順 -1:非衝突, 0:最初に衝突, 1:2番目
 
-
-   - メンバ関数 
-		// 他のオブジェクトとの衝突判定
-		bool isCollision(RenderData_Model& target) const;
-		// 衝突時すりぬけないオブジェクトの設定
-		void SetBlock(RenderData_Model& target);
-
-		// 任意のポイントを向く
-		void LookAtOnce(const Vector3& targetWorldPos, float roll = 0);
-		void LookAtOnce(const RenderData_Model& other, float roll = 0);
-		void LookAtCamera(float roll = 0);
-		void LookAtFront(float roll = 0);
+   - メンバ変数
+   - メンバ関数
+      - bool isCollision(RenderData_Model& target) const;
+        - 引数
+      		- 他オブジェクト
+   	  	- 返り値
+      		- 対象と衝突しているか否か
+   	  	- 備考
+        	- 他のオブジェクトとの衝突判定
+           
+      - void SetBlock(RenderData_Model& target);
+     	- 引数
+      		- 他オブジェクト
+   	  	- 返り値
+      		- なし
+   	  	- 備考
+        	- ここで設定したオブジェクトとは衝突時めり込まないようになる
+      
+	  - void LookAtOnce(const Vector3& targetWorldPos, float roll = 0);
+      	- 引数
+      		- 向かせたい座標
+        	- ロール値
+   	  	- 返り値
+      		- なし
+   	  	- 備考
+        	- targetWorldPos方向を向く
+           
+      - void LookAtOnce(const RenderData_Model& other, float roll = 0);
+        - 引数
+      		- 他オブジェクト
+        	- ロール値
+   	  	- 返り値
+      		- なし
+   	  	- 備考
+        	- other方向を向く
+	  
+	  - void LookAtCamera(float roll = 0);
+         - 引数
+        	- ロール値
+   	  	- 返り値
+      		- なし
+   	  	- 備考
+        	- カメラ方向を向く
+      
+      - void LookAtFront(float roll = 0);
+     	- 引数
+      		- ロール値
+   	  	- 返り値
+      		- なし
+   	  	- 備考
+        	- 正面(-Z)方向を向く
 
 		// ワールド位置を返す
-		Matrix4x4 GetWorldMatrix() const;
-		Vector3 GetWorldPosition() const;
-
-		// 描画
-		void Draw();
-		void DrawAABB();
-		void DrawImGui();
-
-	private:
-		// 前フレーム位置、回転、スケール
-		Transforms preTransforms;
-		// 後フレーム位置、回転、スケール
-		//Transforms preTransforms;
-		// 前フレームAABB
-		std::vector<AABB> preAABB;
-		// 後フレームAABB
-		//std::vector<AABB> preAABB;
-
-	};
+	  -	Matrix4x4 GetWorldMatrix() const;
+     	- 引数
+      		- なし
+   	  	- 返り値
+      		- 最新のワールドマトリックス
+   	  	- 備考
+        	- なし
+           
+	  - Vector3 GetWorldPosition() const;
+     	- 引数
+      		- なし
+   	  	- 返り値
+      		- 最新のワールドポジション
+   	  	- 備考
+        	- なし
+           
+     - void Draw();
+      	- 引数
+      		- なし
+   	  	- 返り値
+      		- なし
+   	  	- 備考
+        	- 描画
+    
+     - void DrawAABB();
+       - 引数
+      		- なし
+   	 　- 返り値
+      		- なし
+   	 　- 備考
+        	- 衝突判定用AABBの描画
+           
+     - void DrawImGui();
+       　- 引数
+      		- なし
+   	  	- 返り値
+      		- ImGuiの描画
+   	  	- 備考
+        	- なし
 
 - Game::GetDebugCamera();
    - つかわないでほしい
