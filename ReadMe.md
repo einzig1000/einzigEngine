@@ -228,43 +228,33 @@
 - class RenderData_Model;
    - メンバ変数
       - Transforms transforms;
-        オブジェクトのSRT + worldMatrix + 親オブジェクト
-      - Vector3 lastMove;
-        １つ前のフレームからどれだけ移動したか
-      - bool movedThisFrame;
-        このフレームで移動したか
-      - Vector3 pivot;
-        rotateを変更したときの回転中心
+        - Vector3 scale : オブジェクトの拡縮量
+        - Vector3 rotate : オブジェクトの回転量
+        - Vector3 translate: オブジェクトの移動量
+        - Matrix4x4 World : オブジェクトのワールドマトリックス
+        - Matrix4x4* parentWorld : 親のワールドマトリックス
+      - Vector3 lastMove : １つ前のフレームからどれだけ移動したか
+      - bool movedThisFrame : このフレームで移動したか
+      - Vector3 pivot : transforms.rotateを変更したときの回転中心
       - Transforms uvTransform;
-        テクスチャのuvTransform
-      - Vector3 velocity;
-        速度
-      - Vector3 acceleration;
-      　加速度
-   	  -	Vector3 gravity;
-      重力
-      -	uint32_t color;
-      カラー
-	  -	uint32_t model;
-	   モデルＩＤ
-      -	uint32_t texture;
-      テクスチャＩＤ
+        - Vector3 scale : テクスチャの拡縮量
+        - Vector3 rotate : テクスチャの回転量
+        - Vector3 translate: テクスチャの移動量
+      - Vector3 velocity : 速度
+      - Vector3 acceleration : 加速度
+   	  -	Vector3 gravity : 重力
+      -	uint32_t color : カラー
+	  -	uint32_t model : モデルＩＤ
+      -	uint32_t texture : テクスチャＩＤ
    	  - DrawOptions options;
-      オプション
-     	wireframeをtrueにするとワイヤーフレーム描画される
-     	enableLightingをfalseにするとライティングされなくなる
-     	blendModeを変更するとブレンドモードが変更される
-   	  - std::vector<AABB> aabb;
-      衝突判定用のAABBが入っている。特に設定しなければAABBが自動生成される
-   	  - float mass;
-      重さ。衝突したとき自身の方が軽かったら自身の動きは止まる。自身の方が重かったら相手にも速度が伝播する
-   	  - int ID;
-      オブジェクトID。気にしなくていい。
-   	  - bool inPicture;
-      画面内に映っているかどうか
-   	  - int isCollisionMouseRay;
-      マウスレイとの衝突順
-      -1:非衝突, 0:最初に衝突, 1:2番目
+      	- bool wireframe : trueにするとワイヤーフレーム描画される
+      	- bool enableLighting : falseにするとライティングされなくなる
+      	- BlendMode blendMode : 変更するとブレンドモードが変更される
+   	  - std::vector<AABB> aabb : 衝突判定用のAABBが入っている。特に設定しなければAABBが自動生成される
+   	  - float mass : 重さ。衝突したとき自身の方が軽かったら自身の動きは止まる。自身の方が重かったら相手にも速度が伝播する
+   	  - int ID : オブジェクトID。気にしなくていい。
+   	  - bool inPicture : 画面内に映っているかどうか
+   	  - int isCollisionMouseRay : マウスレイとの衝突順 -1:非衝突, 0:最初に衝突, 1:2番目
 
 
    - メンバ関数 
