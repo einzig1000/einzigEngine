@@ -12,18 +12,6 @@
 #pragma comment(lib, "dxcompiler")
 
 
-template <typename T>
-constexpr const T& my_min(const T& a, const T& b)
-{
-    return (a < b) ? a : b;
-}
-
-template <typename T>
-constexpr const T& my_max(const T& a, const T& b)
-{
-    return (a > b) ? a : b;
-}
-
 template <typename T, size_t Rows, size_t Cols>
 void FlipYAxis(T(&arr)[Rows][Cols])
 {
@@ -75,6 +63,7 @@ bool IsCollision(const Ray& r, const Plane& p);
 bool IsCollision(const Ray& r, const AABB& aabb);
 bool IsCollision(const Ray& r, const Triangle& t);
 bool IsCollision(const AABB& aabb1, const AABB& aabb2);
+bool IsLooseCollision(const AABB& aabb1, const AABB& aabb2, float threshold = 0.1f);
 bool IsCollision(const AABB& aabb, const Sphere& s);
 bool IsCollision(const AABB& aabb, const Segment& s);
 bool IsCollision(const Ray& ray, const std::vector<VertexData>& vertices, const AABB& aabb, const Transforms& data);

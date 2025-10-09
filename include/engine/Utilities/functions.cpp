@@ -305,6 +305,21 @@ bool IsCollision(const AABB& aabb1, const AABB& aabb2)
     return true;
 }
 
+
+bool IsLooseCollision(const AABB& aabb1, const AABB& aabb2, float threshold)
+{
+    // 各軸の重なり量（侵入量）を計算
+    float dx = my_min(aabb1.max.x, aabb2.max.x) - my_max(aabb1.min.x, aabb2.min.x);
+    float dy = my_min(aabb1.max.y, aabb2.max.y) - my_max(aabb1.min.y, aabb2.min.y);
+    float dz = my_min(aabb1.max.z, aabb2.max.z) - my_max(aabb1.min.z, aabb2.min.z);
+
+    // どれかの軸で分離している（侵入量が負）なら衝突していない
+    if (dx <= 0.0f || dy <= 0.0f || dz <= 0.0f) return false;
+
+    // 侵入量がすべて threshold より大きければ衝突とみなす
+    return (dx > threshold && dy > threshold && dz > threshold);
+}
+
 bool IsCollision(const AABB& aabb, const Sphere& s)
 {
     // 最近接点を求めるf

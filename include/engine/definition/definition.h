@@ -22,6 +22,48 @@
 #define WIDTH 1280
 #define HEIGHT 720
 
+template <typename T>
+constexpr const T& my_min(const T& a, const T& b)
+{
+    return (a < b) ? a : b;
+}
+
+template <typename T>
+constexpr T my_min(std::initializer_list<T> list)
+{
+    auto it = list.begin();
+    T result = *it;
+    ++it;
+    for (; it != list.end(); ++it)
+    {
+        if (*it < result)
+            result = *it;
+    }
+    return result;
+}
+
+
+template <typename T>
+constexpr const T& my_max(const T& a, const T& b)
+{
+    return (a > b) ? a : b;
+}
+
+template <typename T>
+constexpr T my_max(std::initializer_list<T> list)
+{
+    auto it = list.begin();
+    T result = *it;
+    ++it;
+    for (; it != list.end(); ++it)
+    {
+        if (*it > result)
+            result = *it;
+    }
+    return result;
+}
+
+
 enum class PHASE
 {
     Phase_None,
@@ -54,7 +96,6 @@ enum class Anker
 };
 
 
-class Quaternion;
 
 enum class Direction
 {
@@ -797,6 +838,11 @@ struct Matrix4x4
 };
 
 
+struct CollisionInf
+{
+	Vector2int pair;  // 衝突したオブジェクトのAABBの番号ペア
+    Vector3 depth;    // 浸入深度
+};
 
 struct Sphere
 {
@@ -813,7 +859,7 @@ struct SphereXYZ
 struct Plane
 {
     Vector3 normal; // 法線
-    float distance;
+    float distance = 0.0f;
 };
 
 struct Triangle
@@ -908,7 +954,7 @@ struct AABB
     Vector3 min;
     Vector3 max;
 
-    Vector3 center()
+    Vector3 center()const
     {
         return Vector3{
             (min.x + max.x) / 2.0f,
@@ -916,6 +962,19 @@ struct AABB
             (min.z + max.z) / 2.0f,
         };
     };
+
+    Vector3 GetCollisionDepth(const AABB& other)const
+    {
+        Vector3 depth;
+        depth.x = my_min(max.x, other.max.x) - my_max(min.x, other.min.x);
+        depth.y = my_min(max.y, other.max.y) - my_max(min.y, other.min.y);
+        depth.z = my_min(max.z, other.max.z) - my_max(min.z, other.min.z);
+        if (depth.x <= 0.0f || depth.y <= 0.0f || depth.z <= 0.0f)
+        {
+            return { 0.0f, 0.0f, 0.0f };
+        }
+        return depth;
+    }
 };
 
 struct Object3D

@@ -100,8 +100,8 @@ private:
 	// 動的頂点バッファの確保
 	bool EnsureDynamicVB(size_t requiredVertexCount);
 
-	WindowManager* windowManager;
-	DirectXManager* dxManager;
+	WindowManager* windowManager = nullptr;
+	DirectXManager* dxManager = nullptr;
 
 	// 頂点リソースと頂点データと使用済み頂点数
 
@@ -141,7 +141,7 @@ private:
 
 	// ライト
 	Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource;
-	DirectionalLight* directionalLightData;
+	DirectionalLight* directionalLightData = nullptr;
 
 	// カメラ
 	CameraController* cameraController = nullptr;
@@ -150,9 +150,9 @@ private:
 	std::array<Plane, 6> frustumPlanes_;// 視錐台を構成する6つの平面
 
 	// 入力
-	Input* inputManager_;
-	int wheelDelta;
+	Input* inputManager_ = nullptr;
+	int wheelDelta = 0;
 
 	// プリミティブモード
-	bool WireframeMode;
+	bool WireframeMode = false;
 };
