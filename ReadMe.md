@@ -88,7 +88,7 @@
    - 返り値
       - オーディオの音量
    - 備考
-      - 
+      - オーディオの音量の取得
   
 - void Game::GetMasterVolume();
    - 引数
@@ -96,7 +96,7 @@
    - 返り値
       - マスターの音量
    - 備考
-      - 
+      - マスター音量の取得
 
 - bool Game::IsAudioPlaying(const uint32_t& audioId);
    - 引数
@@ -108,34 +108,124 @@
   
 
 ## ライト系
-- Game::SetLightColor(const Vector4 color);
+- void Game::SetLightColor(const Vector4 color);
    - 引数
-      - 
+      - 変更後のライト色
    - 返り値
       - オーディオが再生されているか
    - 備考
-      - 
+      - ライトの色を変えたい気分の時に
  
-
-- Game::SetLightDirection(const Vector3 direction);
-- Game::SetLightIntensity(float intensity);
-- Game::ToggleLightMode(const uint32_t mode);
+- void Game::SetLightDirection(const Vector3 direction);
+   - 引数
+      - 変更後のライトの向き
+   - 返り値
+      - なし
+   - 備考
+      - ライトの向きを変えたい気分の時に
+  
+- void Game::SetLightIntensity(float intensity);
+   - 引数
+      - 変更後のライトの輝度
+   - 返り値
+      - なし
+   - 備考
+      - ライトの輝度を変えたい気分の時に(0.0f ~ 1.0f)
+  
+- void Game::ToggleLightMode(const uint32_t mode);
+   - 引数
+      - ライトモード
+   - 返り値
+      - なし
+   - 備考
+      - 0:ハーフランバート  1:ランバート  2:ライトなし
 
 ## 入力系
-- Game::GetMousePosition();
-- Game::GetMouseRay();
-- Game::IsCollisionMouseRayAABB(uint32_t objectNumber, const Transforms& data);
-- Game::GetMousePress(int i);
-- Game::GetMousePrePress(int i)
-- Game::GetMouseWheel();
+- Vector2 Game::GetMousePosition();
+   - 引数
+      - なし
+   - 返り値
+      - マウスの2D平面座標
+   - 備考
+      - なし
+  
+- Ray Game::GetMouseRay();
+   - 引数
+      - なし
+   - 返り値
+      - マウスのレイ
+   - 備考
+      - なし
+  
+- bool Game::IsCollisionMouseRayObject(uint32_t objectNumber, const Transforms& data);
+   - 引数
+      - オブジェクトID
+      - 当たり判定とりたいオブジェクトのTransforms
+   - 返り値
+      - マウスの2D平面座標
+   - 備考
+      - マウスのレイとオブジェクトの衝突判定
+  
+- bool Game::GetMousePress(int i);
+   - 引数
+      - マウスボタンのID
+   - 返り値
+      - IDに対応するボタンがクリックされているか
+   - 備考
+      - 0 = 左クリック  1 = 右クリック  2 = ミドルボタン
+  
+- bool Game::GetMousePrePress(int i)
+   - 引数
+      - マウスボタンのID
+   - 返り値
+      - IDに対応するボタンが１フレーム前にクリックされていたか
+   - 備考
+      - 0 = 左クリック  1 = 右クリック  2 = ミドルボタン
+  
+- uint32_t Game::GetMouseWheel();
+   - 引数
+      - なし
+   - 返り値
+      - マウスホイール量
+   - 備考
+      - 0 = 左クリック  1 = 右クリック  2 = ミドルボタン
 
 ## カメラ系
-- Game::MoveCenterTarget(Vector3 target, int spendFrame, EaseType easetype);
+- void Game::MoveCenterTarget(Vector3 target, int spendFrame, EaseType easetype);
+   - 引数
+      - 変更後のカメラ回転中心座標
+      - 何フレームで変更完了するか
+      - 変更までのイージング
+   - 返り値
+      - なし
+   - 備考
+      - MoveCenterTarget(Vector3{0.0f,0.0f,0.0f}, 120, EaseType::IN_BACK);のように使えば120フレームかけて回転中心が{0.0f,0.0f,0.0f}になる
+  
 - Game::MoveRotateTarget(Vector3 target, int spendFrame, EaseType easetype);
+   - 引数
+      - 変更後のカメラ回転量
+      - 何フレームで変更完了するか
+      - 変更までのイージング
+   - 返り値
+      - なし
+   - 備考
+      - MoveRotateTarget(Vector3{0.0f,0.0f,0.0f}, 120, EaseType::IN_BACK);のように使えば120フレームかけて回転量が{0.0f,0.0f,0.0f}になる
+  
 - Game::MoveDistanceTarget(float target, int spendFrame, EaseType easetype);
-- Game::SetControlModeCamera(bool mode);
+   - 引数
+      - 変更後のカメラ回転中心からの距離
+      - 何フレームで変更完了するか
+      - 変更までのイージング
+   - 返り値
+      - なし
+   - 備考
+      - MoveDistanceTarget(10.0f, 120, EaseType::IN_BACK);のように使えば120フレームかけて回転中心からの距離が10.0fになる
+  
 - Game::GetCamera();
+   - つかわないでほしい
+
 - Game::GetDebugCamera();
+   - つかわないでほしい
 
 ## 
 - Game::toggleWireframeMode();
