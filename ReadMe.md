@@ -257,7 +257,6 @@
    	  - int isCollisionMouseRay : マウスレイとの衝突順 -1:非衝突, 0:最初に衝突, 1:2番目
 
    - メンバ変数
-   - メンバ関数
       - bool isCollision(RenderData_Model& target) const;
         - 引数
       		- 他オブジェクト
