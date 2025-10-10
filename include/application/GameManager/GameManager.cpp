@@ -3,10 +3,13 @@
 GameManager::GameManager()
 {
 	frame = 0;
+	uint32_t tex = Game::LoadTexture("resources/Prototypes/texture/uvChecker.png");
 
 	sprite.texture = Game::LoadTexture("resources/Prototypes/texture/uvChecker.png");
 	ground.model = Game::LoadOBJ("resources/Prototypes/model/", "cube.obj");
-	ground.texture = Game::LoadTexture("resources/Prototypes/texture/uvChecker.png");
+	ground.texture = tex;
+	groun.model = Game::LoadOBJ("resources/Prototypes/model/", "cube.obj");
+	groun.texture = tex;
 	player.model = Game::LoadOBJ("resources/Minecraft/blaze/", "blaze.obj");
 	player.model = Game::LoadOBJ("resources/Prototypes/model/", "corn.obj");
 	player.texture = Game::LoadTexture("resources/Prototypes/texture/uvChecker.png");
@@ -17,7 +20,9 @@ GameManager::GameManager()
 	ground.transforms.scale = { 10.0f,1.0f,10.0f };
 
 	player.SetBlock(ground);
-	ground.SetBlock(player);
+	//player.SetBlock(ground);
+	player.SetBlock(groun);
+	//ground.SetBlock(player);
 }
 
 GameManager::~GameManager()
@@ -77,4 +82,7 @@ void GameManager::Draw()
 	ground.Draw();
 	ground.DrawAABB();
 	ground.DrawImGui();
+	groun.Draw();
+	groun.DrawAABB();
+	groun.DrawImGui();
 }

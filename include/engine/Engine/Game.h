@@ -276,7 +276,7 @@ public:
 	// マウス
 	static Vector2 GetMousePosition();
 	static Ray GetMouseRay();
-	static bool IsCollisionMouseRayAABB(uint32_t objectNumber, const Transforms& data);
+	//static bool IsCollisionMouseRayObject(uint32_t objectNumber, const Transforms& data);
 	// 0 = 左クリック  1 = 右クリック  2 = ミドルボタン
 	static bool GetMousePress(int i);
 	// 0 = 左クリック  1 = 右クリック  2 = ミドルボタン

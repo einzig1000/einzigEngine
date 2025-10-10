@@ -1473,21 +1473,21 @@ uint32_t Engine::GetMouseWheel()
 	return delta;
 }
 
-bool Engine::IsCollisionMouseRayAABB(uint32_t objectNumber, const Transforms& data)
-{
-	std::vector<AABB> aabbs = CreateAABB(data, objectNumber);
-	Ray ray = inputManager_->GetMouseController()->GetMouseRay();
-
-	// どれか1つでも衝突すればtrue
-	for (const auto& aabb : aabbs)
-	{
-		if (IsCollision(ray, objects[objectNumber].modelData.vertices, aabb, data))
-		{
-			return true;
-		}
-	}
-	return false;
-}
+//bool Engine::IsCollisionMouseRayObject(uint32_t objectNumber, const Transforms& data)
+//{
+//	std::vector<AABB> aabbs = CreateAABB(data, objectNumber);
+//	Ray ray = inputManager_->GetMouseController()->GetMouseRay();
+//
+//	// どれか1つでも衝突すればtrue
+//	for (const auto& aabb : aabbs)
+//	{
+//		if (IsCollision(ray, objects[objectNumber].modelData.vertices, aabb, data))
+//		{
+//			return true;
+//		}
+//	}
+//	return false;
+//}
 
 bool Engine::GetMousePress(int i)
 {

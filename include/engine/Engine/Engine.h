@@ -68,7 +68,7 @@ public:
 	Ray GetMouseRay();
 	bool GetMousePress(int i);
 	bool GetMousePrePress(int i);
-	bool IsCollisionMouseRayAABB(uint32_t objectNumber, const Transforms& data);
+	//bool IsCollisionMouseRayObject(uint32_t objectNumber, const Transforms& data);
 
 	// カメラ
 	void MoveCenterTarget(Vector3 target, int spendFrame, EaseType easetype);
