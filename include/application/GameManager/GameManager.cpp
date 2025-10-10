@@ -18,6 +18,7 @@ GameManager::GameManager()
 	player.gravity.y = 0.01f;
 
 	ground.transforms.scale = { 10.0f,1.0f,10.0f };
+	groun.transforms.translate = { 0.0f,1.0f,0.0f };
 
 	player.SetBlock(ground);
 	//player.SetBlock(ground);
