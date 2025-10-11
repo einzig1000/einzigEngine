@@ -38,7 +38,7 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 	cameraController = new CameraController();
 	debugCameraController = new CameraController();
 	cameraController->cameraMode_ = false;
-	debugCamera = true;
+	debugCamera = false;
 
 	// インプット系
 	inputManager_ = new Input(windowManager->GetHwnd(), windowManager->Getwidth(), windowManager->Getheight(), &cameraController->viewProjectionMatrix, &debugCameraController->viewProjectionMatrix, &debugCamera);
@@ -1532,17 +1532,17 @@ bool Engine::GetMousePrePress(int i)
 }
 
 // カメラ操作
-void Engine::MoveCenterTarget(Vector3 target, int spendFrame, EaseType easetype)
+void Engine::MoveCameraCenter(Vector3 target, int spendFrame, EaseType easetype)
 {
 	cameraController->SetCenterTarget(target, spendFrame, easetype);
 }
 
-void Engine::MoveRotateTarget(Vector3 target, int spendFrame, EaseType easetype)
+void Engine::MoveCameraRotate(Vector3 target, int spendFrame, EaseType easetype)
 {
 	cameraController->SetRotateTarget(target, spendFrame, easetype);
 }
 
-void Engine::MoveDistanceTarget(float target, int spendFrame, EaseType easetype)
+void Engine::MoveCameraDistance(float target, int spendFrame, EaseType easetype)
 {
 	cameraController->SetDistanceTarget(target, spendFrame, easetype);
 }

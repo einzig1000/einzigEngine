@@ -71,9 +71,9 @@ public:
 	//bool IsCollisionMouseRayObject(uint32_t objectNumber, const Transforms& data);
 
 	// カメラ
-	void MoveCenterTarget(Vector3 target, int spendFrame, EaseType easetype);
-	void MoveRotateTarget(Vector3 target, int spendFrame, EaseType easetype);
-	void MoveDistanceTarget(float target, int spendFrame, EaseType easetype);
+	void MoveCameraCenter(Vector3 target, int spendFrame, EaseType easetype);
+	void MoveCameraRotate(Vector3 target, int spendFrame, EaseType easetype);
+	void MoveCameraDistance(float target, int spendFrame, EaseType easetype);
 	void SetControlModeCamera(bool mode);
 	CameraController* GetCamera();
 	CameraController* GetDebugCamera();

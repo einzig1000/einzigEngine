@@ -284,9 +284,9 @@ public:
 	static uint32_t GetMouseWheel();
 
 	// カメラ
-	static void MoveCenterTarget(Vector3 target, int spendFrame, EaseType easetype);
-	static void MoveRotateTarget(Vector3 target, int spendFrame, EaseType easetype);
-	static void MoveDistanceTarget(float target, int spendFrame, EaseType easetype);
+	static void MoveCameraCenter(Vector3 target, int spendFrame, EaseType easetype);
+	static void MoveCameraRotate(Vector3 target, int spendFrame, EaseType easetype);
+	static void MoveCameraDistance(float target, int spendFrame, EaseType easetype);
 	static void SetControlModeCamera(bool mode);
 	static CameraController* GetCamera();
 	static CameraController* GetDebugCamera();

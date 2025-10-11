@@ -13,6 +13,8 @@ public:
 
 private:
 
+	Vector3 cameraRotate = { 1.13f,0.0f,0.0f };
+
 	int frame;
 
 	Game::RenderData_Model player;

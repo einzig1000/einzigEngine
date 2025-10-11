@@ -156,19 +156,19 @@ uint32_t Game::GetMouseWheel()
 	return engine->GetMouseWheel();
 }
 
-void Game::MoveCenterTarget(Vector3 target, int spendFrame, EaseType easetype)
+void Game::MoveCameraCenter(Vector3 target, int spendFrame, EaseType easetype)
 {
-	engine->MoveCenterTarget(target, spendFrame, easetype);
+	engine->MoveCameraCenter(target, spendFrame, easetype);
 }
 
-void Game::MoveRotateTarget(Vector3 target, int spendFrame, EaseType easetype)
+void Game::MoveCameraRotate(Vector3 target, int spendFrame, EaseType easetype)
 {
-	engine->MoveRotateTarget(target, spendFrame, easetype);
+	engine->MoveCameraRotate(target, spendFrame, easetype);
 }
 
-void Game::MoveDistanceTarget(float target, int spendFrame, EaseType easetype)
+void Game::MoveCameraDistance(float target, int spendFrame, EaseType easetype)
 {
-	engine->MoveDistanceTarget(target, spendFrame, easetype);
+	engine->MoveCameraDistance(target, spendFrame, easetype);
 }
 
 void Game::SetControlModeCamera(bool mode)
@@ -423,9 +423,32 @@ void Game::RenderData_Model::Updata(std::vector<Object3D>& objects)
 
 			this->aabb = CreateAABB(this->transforms, this->model);
 
-			//Inf = isCollisionAABBInf(*target);
 
+			{
+				XMVECTOR scaleVec = XMVectorSet(this->transforms.scale.x, this->transforms.scale.y, this->transforms.scale.z, 0.0f);
+				XMVECTOR pivotVec = XMVectorSet(this->pivot.x, this->pivot.y, this->pivot.z, 0.0f);
+				XMVECTOR translateVec = XMVectorSet(this->transforms.translate.x, this->transforms.translate.y, this->transforms.translate.z, 0.0f);
+				XMVECTOR rotEuler = XMVectorSet(this->transforms.rotate.x, this->transforms.rotate.y, this->transforms.rotate.z, 0.0f);
+				XMMATRIX S = XMMatrixScalingFromVector(scaleVec);
+				XMMATRIX Tneg = XMMatrixTranslationFromVector(XMVectorNegate(pivotVec));
+				XMVECTOR quatEuler = XMQuaternionRotationRollPitchYawFromVector(rotEuler);
+				XMMATRIX R = XMMatrixRotationQuaternion(quatEuler);
+				XMMATRIX Tpos = XMMatrixTranslationFromVector(pivotVec);
+				XMMATRIX T = XMMatrixTranslationFromVector(translateVec);
+				XMMATRIX world = S * Tneg * R * Tpos * T;
+				if (this->transforms.parentWorld)
+				{
+					XMFLOAT4X4 parentF4; std::memcpy(&parentF4, this->transforms.parentWorld, sizeof(parentF4));
+					XMMATRIX parentM = XMLoadFloat4x4(&parentF4);
+					world = parentM * world;
+				}
+				XMFLOAT4X4 tmp; XMStoreFloat4x4(&tmp, world);
+				for (int i = 0; i < 4; ++i)
+					for (int j = 0; j < 4; ++j)
+						this->transforms.World.m[i][j] = tmp.m[i][j];
 
+				this->aabb = CreateAABB(this->transforms, this->model);
+			}
 
 			//Vector3 offset = transforms.translate;
 			//
