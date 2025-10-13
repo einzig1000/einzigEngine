@@ -37,8 +37,8 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 	// カメラ
 	cameraController = new CameraController();
 	debugCameraController = new CameraController();
-	cameraController->cameraMode_ = false;
-	debugCamera = false;
+	cameraController->cameraMode_ = false; // メインカメラは常に操作可能
+	debugCamera = false;	// 最初はデバッグカメラ
 
 	// インプット系
 	inputManager_ = new Input(windowManager->GetHwnd(), windowManager->Getwidth(), windowManager->Getheight(), &cameraController->viewProjectionMatrix, &debugCameraController->viewProjectionMatrix, &debugCamera);
@@ -187,7 +187,7 @@ void Engine::UpdateCamera()
 	}
 
 	// 左シフト＋左クリックでカメラターゲットをオブジェクトに合わせる
-	if (GetHitKey::keys[DIK_LSHIFT])
+	if (GetHitKey::IsPressedNow(DIK_LSHIFT))
 	{
 		if (Game::GetMousePress(0) && !GetMousePrePress(0))
 		{

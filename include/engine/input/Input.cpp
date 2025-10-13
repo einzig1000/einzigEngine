@@ -19,6 +19,15 @@ void Input::Update()
     getPadState_->Update();
     mouseController_->Update();
 
+
+    //if (GetHitKey::keys[DIK_SPACE])spaceLog[0] = true;
+    //else spaceLog[0] = false;
+
+    //for (int i = 29; i > 0; --i)
+    //{
+    //    spaceLog[i] = spaceLog[i - 1];
+    //}
+
     //if (GetHitKey::keys[DIK_A] ||
     //    GetPadState::leftStickX < -10000 ||
     //    GetPadState::buttons[PAD_LEFT])

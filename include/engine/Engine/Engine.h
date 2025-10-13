@@ -129,7 +129,7 @@ private:
 	std::vector<Material*> materialData;
 	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> wvpResources;
 	std::vector<TransformationMatrix*> wvpData;
-	size_t drawCallIndex;
+	size_t drawCallIndex = 0;
 
 	// ラインはその他の3Dオブジェクトと比べて必要な情報量が少ないから他のと一緒に扱ったら余計な容量使う。はず
 	size_t kMaxDrawLineCallPerFrame = 2560;
@@ -137,7 +137,7 @@ private:
 	std::vector<Material*> materialDataLine;
 	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> wvpResourceLine;
 	std::vector<TransformationMatrix*> wvpDataLine;
-	size_t drawLineCallIndex;
+	size_t drawLineCallIndex = 0;
 
 	// ライト
 	Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource;

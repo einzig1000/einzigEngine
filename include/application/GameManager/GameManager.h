@@ -1,5 +1,11 @@
 #pragma once
 #include "include/engine/Engine/Game.h"
+#include "Enemy.h"
+#include "Player.h"
+
+#define blockW 1
+#define blockY 200
+#define enemyN 10
 
 class GameManager
 {
@@ -10,18 +16,18 @@ public:
 	void Update();
 	void Draw();
 
+	void FrameTwoVerticalPoints(const Vector3& p1, const Vector3& p2, float padding, int spendFrame, EaseType easing);
+
 
 private:
 
-	Vector3 cameraRotate = { 1.13f,0.0f,0.0f };
 
 	int frame;
 
-	Game::RenderData_Model player;
-	Game::RenderData_Model ground;
-	Game::RenderData_Model groun;
-	Game::RenderData_Sprite	sprite;
+	Player* player_;
+	Enemy* enemy_[enemyN];
+	Game::RenderData_Model block_[blockW][blockY];
 
-	float roll = 0.0f;
+	bool spaceLog[30];
 };
 
