@@ -61,7 +61,7 @@ void Player::Update()
 	}
 	default:
 		break;
-	}
+	} 
 
 	if (bullet_->Update(data.GetWorldPosition(), 攻撃中, 落下高度))
 	{
