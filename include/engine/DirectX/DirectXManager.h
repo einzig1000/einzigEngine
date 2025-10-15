@@ -11,9 +11,8 @@
 #include "DirectX/SynchronizationManager.h"
 #include "DirectX/ViewportScissorManager.h"
 
+#include "Resource/ResourceManager.h"
 #include "input/Input.h"
-#include "Audio/AudioManager.h"
-#include "Texture/TextureManager.h"
 #include <memory>
 
 class DirectXManager
@@ -29,8 +28,7 @@ public:
     const D3D12_RENDER_TARGET_VIEW_DESC& GetRtvDesc() const { return swapChainManager->GetRtvDesc(); }
     PipelineStateManager* GetPipelineStateManager() const { return pipelineStateManager.get(); }
 
-    AudioManager* GetAudioManager() const { return audioManager_.get(); }
-    TextureManager* GetTextureManager() const { return textureManager_.get(); }
+	ResourceManager* GetResourceManager() const { return resourceManager_.get(); }
 
     void BeginFrame();
     void EndFrame();
@@ -45,8 +43,8 @@ private:
     std::unique_ptr<SynchronizationManager> synchronizationManager;
     std::unique_ptr<ViewportScissorManager> viewportScissorManager;
 
+    std::unique_ptr<ResourceManager> resourceManager_;
+
     D3D12_RESOURCE_BARRIER barrier = {};
 
-    std::unique_ptr<AudioManager> audioManager_;
-    std::unique_ptr<TextureManager> textureManager_;
 };

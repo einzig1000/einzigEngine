@@ -1,14 +1,13 @@
-#include "Texture/TextureManager.h"
+#include "Resource/Texture/TextureManager.h"
 #include "externals/DirectXTex/d3dx12.h"
 #include "externals/DirectXTex/DirectXTex.h"
 #include "Utilities/functions.h"
 #include "cassert"
 
-TextureManager::TextureManager(ID3D12Device* device, ID3D12DescriptorHeap* srvDescriptorHeap)
-    :device_(device), srvDescriptorHeap_(srvDescriptorHeap)
+TextureManager::TextureManager()
 {
-    assert(device_ != nullptr && "ID3D12Device* device cannot be null.");
-    assert(srvDescriptorHeap_ != nullptr && "ID3D12DescriptorHeap* srvDescriptorHeap cannot be null.");
+    //assert(device_ != nullptr && "ID3D12Device* device cannot be null.");
+    //assert(srvDescriptorHeap_ != nullptr && "ID3D12DescriptorHeap* srvDescriptorHeap cannot be null.");
 }
 
 TextureManager::~TextureManager()
@@ -17,7 +16,7 @@ TextureManager::~TextureManager()
 }
 
 
-uint32_t TextureManager::LoadTexture(const std::string& filePath, ID3D12GraphicsCommandList* commandList)
+uint32_t TextureManager::LoadTexture(const std::string& filePath, ID3D12GraphicsCommandList* commandList, ID3D12DescriptorHeap* srvDescriptorHeap, ID3D12Device* device)
 {
     // ボックスを作成
     TextureData text;
@@ -39,14 +38,14 @@ uint32_t TextureManager::LoadTexture(const std::string& filePath, ID3D12Graphics
 
 
     // テクスチャリソースとSRVの作成
-    text.textureResource = CreateTextureResource(device_, text.metadata);
-    Microsoft::WRL::ComPtr<ID3D12Resource> tempIntermediateResource = UploadTextureData(text.textureResource.Get(), text.mipImage, device_, commandList);
+    text.textureResource = CreateTextureResource(device, text.metadata);
+    Microsoft::WRL::ComPtr<ID3D12Resource> tempIntermediateResource = UploadTextureData(text.textureResource.Get(), text.mipImage, device, commandList);
     intermediateUploadResources_.push_back(tempIntermediateResource);
 
 
-    const uint32_t descriptorSizeSRV = device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-    D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = GetCPUDescriptorHandle(srvDescriptorHeap_, descriptorSizeSRV, text.number + 1);
-    text.textureSrvHandleGPU = GetGPUDescriptorHandle(srvDescriptorHeap_, descriptorSizeSRV, text.number + 1);
+    const uint32_t descriptorSizeSRV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = GetCPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, text.number + 1);
+    text.textureSrvHandleGPU = GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, text.number + 1);
 
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
     srvDesc.Format = text.metadata.format;
@@ -54,7 +53,7 @@ uint32_t TextureManager::LoadTexture(const std::string& filePath, ID3D12Graphics
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
     srvDesc.Texture2D.MipLevels = UINT(text.metadata.mipLevels);
 
-    device_->CreateShaderResourceView(text.textureResource.Get(), &srvDesc, textureSrvHandleCPU);
+    device->CreateShaderResourceView(text.textureResource.Get(), &srvDesc, textureSrvHandleCPU);
 
     textures_.push_back(std::move(text));
 
@@ -63,13 +62,13 @@ uint32_t TextureManager::LoadTexture(const std::string& filePath, ID3D12Graphics
 
 TextureData* TextureManager::GetTexture(uint32_t textureID)
 {
-    for (auto& t : textures_)
+    if (textureID < textures_.size())
     {
-        if (t.number == textureID)
-        {
-            return &t;
-        }
+        return &textures_[textureID];
     }
-    Log("存在しないテクスチャIDです:%d", textureID);
-    return nullptr;
+    else
+    {
+        Log("存在しないテクスチャIDです:%d", textureID);
+        return nullptr;
+    }
 }

@@ -80,7 +80,20 @@ public:
 		void DrawAABB();
 		void DrawImGui();
 
+		
+
 	private:
+
+		// 衝突フラグ
+		unsigned int CollisionFlags = 0x00000000;
+		// 前フレームの衝突フラグ
+		unsigned int preCollisionFlags = 0x00000000;
+		// 衝突したときの反発係数
+		//const float restitution = 0.0f;
+		// 衝突方向に応じた行動
+		void CollisionAction(const Vector3& depth, RenderData_Model& target);
+
+		
 		// 前フレーム位置、回転、スケール
 		Transforms preTransforms;
 		// 後フレーム位置、回転、スケール
@@ -276,7 +289,7 @@ public:
 	// マウス
 	static Vector2 GetMousePosition();
 	static Ray GetMouseRay();
-	//static bool IsCollisionMouseRayObject(uint32_t objectNumber, const Transforms& data);
+	//static bool IsCollisionMouseRayAABB(uint32_t objectNumber, const Transforms& data);
 	// 0 = 左クリック  1 = 右クリック  2 = ミドルボタン
 	static bool GetMousePress(int i);
 	// 0 = 左クリック  1 = 右クリック  2 = ミドルボタン
@@ -306,7 +319,7 @@ public:
 	static std::vector<AABB> CreateAABB(const Transforms& transforms, uint32_t objectNumber);
 
 	// プリミティブモードの設定
-	static void toggleWireframeMode();
+	static void toggleWireframeMode(bool mode);
 
 	// モデルリストの取得
 	static std::vector<Game::RenderData_Model*> GetModelList() { return renderModels; }

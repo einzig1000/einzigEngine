@@ -135,16 +135,6 @@ void CameraController::Update()
 
 #ifdef _DEBUG
 #endif
-    ImGui::Begin("camera");
-    ImGui::DragFloat3("cameraCenter", &center_.x, 0.01f);
-    ImGui::DragFloat3("cameraRotate", &transform_.rotate.x, 0.01f);
-    ImGui::DragFloat("cameraDistance", &distance_, 0.1f);
-    ImGui::DragFloat3("cameratransform_.translate", &transform_.translate.x, 0.01f);
-    ImGui::DragFloat3("cameratransform_.rotate", &transform_.rotate.x, 0.01f);
-    ImGui::Text("push SPACE key : change cameraMode");
-    ImGui::Checkbox("cameraMode", &cameraMode_);
-    ImGui::Checkbox("cameraModeMode", &cameraModeMode_);
-    ImGui::End();
 
     //////////////////////////////////////////////
     ///               カメラ移動               ///
@@ -214,6 +204,16 @@ void CameraController::Update()
 
 void CameraController::Draw()
 {
+    ImGui::Begin("camera");
+    ImGui::DragFloat3("cameraCenter", &center_.x, 0.01f);
+    ImGui::DragFloat3("cameraRotate", &transform_.rotate.x, 0.01f);
+    ImGui::DragFloat("cameraDistance", &distance_, 0.1f);
+    ImGui::DragFloat3("cameratransform_.translate", &transform_.translate.x, 0.01f);
+    ImGui::DragFloat3("cameratransform_.rotate", &transform_.rotate.x, 0.01f);
+    ImGui::Text("push SPACE key : change cameraMode");
+    ImGui::Checkbox("cameraMode", &cameraMode_);
+    ImGui::Checkbox("cameraModeMode", &cameraModeMode_);
+    ImGui::End();
     Game::DrawSphere({ {0.1f,0.1f,0.1f}, {0.0f,0.0f,0.0f}, center_ }, { 0,0,0 }, 12, 0, 0xFFFFFFFF, sphereOptions);
 }
 

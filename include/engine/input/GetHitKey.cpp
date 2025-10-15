@@ -94,9 +94,9 @@ void GetHitKey::Update()
 
 
 
-	//memcpy(preKeys, keys, 256);
-	//keyboard_->Acquire();
-	//keyboard_->GetDeviceState(sizeof(keys), keys);
+    //memcpy(preKeys, keys, 256);
+    //keyboard_->Acquire();
+    //keyboard_->GetDeviceState(sizeof(keys), keys);
 }
 
 bool GetHitKey::IsPressedNow(BYTE key)
@@ -116,7 +116,7 @@ bool GetHitKey::IsReleased(BYTE key)
     return (ks.prev && !ks.curr);
 }
 
-uint32_t GetHitKey::HoldFrames(BYTE key) 
+uint32_t GetHitKey::HoldFrames(BYTE key)
 {
     return keys_[key].holdFrames;
 }

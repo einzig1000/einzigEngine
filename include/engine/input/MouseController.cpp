@@ -21,6 +21,48 @@ void MouseController::SetMousePosition()
     position_ = Vector2{ float(mousePosScreen.x),float(mousePosScreen.y) };
 }
 
+bool MouseController::GetMousePress(int i)
+{
+    // 左クリック
+    if (i == 0)
+    {
+        return Buttens.leftButton;
+    }
+    // 右クリック
+    else if (i == 1)
+    {
+        return Buttens.rightButton;
+    }
+    // ミドルボタン（マウスホイールクリック）
+    else if (i == 2)
+    {
+        return Buttens.middleButton;
+    }
+
+    return false;
+}
+
+bool MouseController::GetMousePrePress(int i)
+{
+    // 左クリック
+    if (i == 0)
+    {
+        return preButtens.leftButton;
+    }
+    // 右クリック
+    else if (i == 1)
+    {
+        return preButtens.rightButton;
+    }
+    // ミドルボタン（マウスホイールクリック）
+    else if (i == 2)
+    {
+        return preButtens.middleButton;
+    }
+
+    return false;
+}
+
 void MouseController::SetMouseRay()
 {
     // 左下が０、右上が１とした時のマウスポジション

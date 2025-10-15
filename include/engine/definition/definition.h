@@ -21,6 +21,7 @@
 
 #define WIDTH 1280
 #define HEIGHT 720
+#define eps 1e-6f
 
 template <typename T>
 constexpr const T& my_min(const T& a, const T& b)
@@ -67,6 +68,7 @@ constexpr T my_max(std::initializer_list<T> list)
 enum class PHASE
 {
     Phase_None,
+    Phase_Test,
     Phase_Title,
     Phase_GameScene,
     Phase_StageSelect,
@@ -837,6 +839,20 @@ struct Matrix4x4
     }
 };
 
+struct CollisionFlags
+{
+    enum
+    {
+        NONE = 0x00000000,
+        FRONT = 0x00000001,
+        BACK = 0x00000002,
+        LEFT = 0x00000004,
+        RIGHT = 0x00000008,
+        TOP = 0x00000010,
+        BOTTOM = 0x00000020,
+        INSIDE = 0x00000040,
+	};
+};
 
 struct CollisionInf
 {
@@ -882,13 +898,6 @@ struct Transforms
     Vector3 translate = { 0,0,0 };
     Matrix4x4 World;
     Matrix4x4* parentWorld = nullptr;
-};
-
-struct VertexData
-{
-    Vector4 position;
-    Vector2 texcoord;
-    Vector3 normal;
 };
 
 struct Line
@@ -942,21 +951,11 @@ struct MaterialData
     std::string textureFilePath;
 };
 
-struct ModelData
+enum class CollisionResult
 {
-    std::vector<VertexData> vertices;
-    MaterialData material;
-};
-
-
-
-
-struct KeyState
-{
-    bool curr = false;           // 今フレームの押下状態
-    bool prev = false;           // 前フレームの押下状態
-    uint32_t holdFrames = 0;     // curr==true のときの連続押下フレーム数（1..）, curr==false のときは 0
-    uint32_t lastHoldOnRelease = 0; // 直近のリリース時に押されていたフレーム数（release イベント時に更新）
+    非衝突,
+    接触,
+    衝突
 };
 
 struct AABB
@@ -976,15 +975,28 @@ struct AABB
     Vector3 GetCollisionDepth(const AABB& other)const
     {
         Vector3 depth;
-        depth.x = my_min(max.x, other.max.x) - my_max(min.x, other.min.x);
-        depth.y = my_min(max.y, other.max.y) - my_max(min.y, other.min.y);
-        depth.z = my_min(max.z, other.max.z) - my_max(min.z, other.min.z);
+        depth.x = my_min(this->max.x, other.max.x) - my_max(this->min.x, other.min.x);
+        depth.y = my_min(this->max.y, other.max.y) - my_max(this->min.y, other.min.y);
+        depth.z = my_min(this->max.z, other.max.z) - my_max(this->min.z, other.min.z);
         if (depth.x <= 0.0f || depth.y <= 0.0f || depth.z <= 0.0f)
         {
             return { 0.0f, 0.0f, 0.0f };
         }
         return depth;
     }
+};
+
+struct VertexData
+{
+    Vector4 position;
+    Vector2 texcoord;
+    Vector3 normal;
+};
+
+struct ModelData
+{
+    std::vector<VertexData> vertices;
+    MaterialData material;
 };
 
 struct Object3D
@@ -1005,6 +1017,9 @@ struct Object3D
 
     // 識別ナンバー
     uint32_t number = 0;
+
+	// ファイルパス
+    std::string filePath;
 };
 
 struct TextureData
@@ -1012,10 +1027,19 @@ struct TextureData
     DirectX::TexMetadata metadata;
     DirectX::ScratchImage mipImage;
     uint32_t number;
+	std::string filePath;
     Microsoft::WRL::ComPtr<ID3D12Resource> textureResource;
     D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU;
 };
 
+
+struct KeyState
+{
+    bool curr = false;           // 今フレームの押下状態
+    bool prev = false;           // 前フレームの押下状態
+    uint32_t holdFrames = 0;     // curr==true のときの連続押下フレーム数（1..）, curr==false のときは 0
+    uint32_t lastHoldOnRelease = 0; // 直近のリリース時に押されていたフレーム数（release イベント時に更新）
+};
 struct DrawData
 {
     D3D12_VERTEX_BUFFER_VIEW vertexBufferView;

@@ -13,7 +13,7 @@ class GetHitKey
 public:
 	GetHitKey(HWND hwnd);
 	void Update();
-    
+
 	// 今押しているか
 	static bool IsPressedNow(BYTE key);
 	// 押した瞬間（今フレームで押された）
