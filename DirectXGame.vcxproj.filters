@@ -124,6 +124,24 @@
     <Filter Include="engine\DrawSystem">
       <UniqueIdentifier>{c33b27c6-9c84-4600-b956-0acdc8f3c453}</UniqueIdentifier>
     </Filter>
+    <Filter Include="application\GameManeger\Phase">
+      <UniqueIdentifier>{e81b7604-cb9c-4ea4-9294-38c65d0c2c9a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManeger\Phase\BattlePhase">
+      <UniqueIdentifier>{4981549d-8a7a-45c3-af1b-6be7c79803f5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManeger\Phase\PhaseParent">
+      <UniqueIdentifier>{0e641bc6-709a-4dc4-b0e7-deb84efc8c1b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManeger\Phase\TestPhase">
+      <UniqueIdentifier>{86bff4f6-f2b3-4425-a46e-802f7182bacd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManeger\Phase\TitlePhase">
+      <UniqueIdentifier>{194b88de-4e02-404e-8a08-59bdab644321}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManeger\Phase\GameScenePhase">
+      <UniqueIdentifier>{187336b4-48e9-448a-a699-e7a55fb56ae1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -180,16 +198,16 @@
     <ClCompile Include="include\application\GameManager\GameManager.cpp">
       <Filter>application\GameManeger</Filter>
     </ClCompile>
-    <ClCompile Include="Enemy.cpp">
+    <ClCompile Include="include\application\Enemy\Enemy.cpp">
       <Filter>application\Enemy</Filter>
     </ClCompile>
-    <ClCompile Include="Player.cpp">
+    <ClCompile Include="include\application\Player\Player.cpp">
       <Filter>application\Player</Filter>
     </ClCompile>
-    <ClCompile Include="EnemyBullet.cpp">
+    <ClCompile Include="include\application\Enemy\EnemyBullet\EnemyBullet.cpp">
       <Filter>application\Enemy\EnemyBullet</Filter>
     </ClCompile>
-    <ClCompile Include="PlayerBullet.cpp">
+    <ClCompile Include="include\application\Player\PlayerBullet\PlayerBullet.cpp">
       <Filter>application\Player\PlayerBullet</Filter>
     </ClCompile>
     <ClCompile Include="include\engine\Resource\Audio\AudioManager.cpp">
@@ -239,6 +257,21 @@
     </ClCompile>
     <ClCompile Include="include\engine\Window\WindowManager.cpp">
       <Filter>engine\WindowManager</Filter>
+    </ClCompile>
+    <ClCompile Include="include\application\Phase\BattlePhase\BattlePhase.cpp">
+      <Filter>application\GameManeger\Phase\BattlePhase</Filter>
+    </ClCompile>
+    <ClCompile Include="include\application\Phase\PhaseParent\PhaseParent.cpp">
+      <Filter>application\GameManeger\Phase\PhaseParent</Filter>
+    </ClCompile>
+    <ClCompile Include="include\application\Phase\TestPhase\TestPhase.cpp">
+      <Filter>application\GameManeger\Phase\TestPhase</Filter>
+    </ClCompile>
+    <ClCompile Include="include\application\Phase\TitlePhase\TitlePhase.cpp">
+      <Filter>application\GameManeger\Phase\TitlePhase</Filter>
+    </ClCompile>
+    <ClCompile Include="include\application\Phase\GameScenePhase\GameScenePhase.cpp">
+      <Filter>application\GameManeger\Phase\GameScenePhase</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -296,16 +329,16 @@
     <ClInclude Include="include\application\GameManager\GameManager.h">
       <Filter>application\GameManeger</Filter>
     </ClInclude>
-    <ClInclude Include="Enemy.h">
+    <ClInclude Include="include\application\Enemy\Enemy.h">
       <Filter>application\Enemy</Filter>
     </ClInclude>
-    <ClInclude Include="Player.h">
+    <ClInclude Include="include\application\Player\Player.h">
       <Filter>application\Player</Filter>
     </ClInclude>
-    <ClInclude Include="EnemyBullet.h">
+    <ClInclude Include="include\application\Enemy\EnemyBullet\EnemyBullet.h">
       <Filter>application\Enemy\EnemyBullet</Filter>
     </ClInclude>
-    <ClInclude Include="PlayerBullet.h">
+    <ClInclude Include="include\application\Player\PlayerBullet\PlayerBullet.h">
       <Filter>application\Player\PlayerBullet</Filter>
     </ClInclude>
     <ClInclude Include="include\engine\Resource\Audio\AudioManager.h">
@@ -355,6 +388,21 @@
     </ClInclude>
     <ClInclude Include="include\engine\Window\WindowManager.h">
       <Filter>engine\WindowManager</Filter>
+    </ClInclude>
+    <ClInclude Include="include\application\Phase\BattlePhase\BattlePhase.h">
+      <Filter>application\GameManeger\Phase\BattlePhase</Filter>
+    </ClInclude>
+    <ClInclude Include="include\application\Phase\PhaseParent\PhaseParent.h">
+      <Filter>application\GameManeger\Phase\PhaseParent</Filter>
+    </ClInclude>
+    <ClInclude Include="include\application\Phase\TestPhase\TestPhase.h">
+      <Filter>application\GameManeger\Phase\TestPhase</Filter>
+    </ClInclude>
+    <ClInclude Include="include\application\Phase\TitlePhase\TitlePhase.h">
+      <Filter>application\GameManeger\Phase\TitlePhase</Filter>
+    </ClInclude>
+    <ClInclude Include="include\application\Phase\GameScenePhase\GameScenePhase.h">
+      <Filter>application\GameManeger\Phase\GameScenePhase</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
