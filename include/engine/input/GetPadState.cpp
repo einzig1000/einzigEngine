@@ -51,10 +51,10 @@ void GetPadState::Update()
             rightStickX[i] = state[i].Gamepad.sThumbRX;
             rightStickY[i] = state[i].Gamepad.sThumbRY;
             
-            Vector2 leftStick = { float(leftStickX[i]) / 32767.0f, float(leftStickY[i]) / 32767.0f };
-            leftStickDir[i] = leftStick;// .Normalized();
-            Vector2 rightStick = { float(rightStickX[i]) / 32767.0f, float(rightStickY[i]) / 32767.0f };
-            rightStickDir[i] = rightStick;// .Normalized();
+            Vector2 leftStick = { float(leftStickX[i]), float(leftStickY[i]) };
+            leftStickDir[i] = leftStick.Normalized();
+            Vector2 rightStick = { float(rightStickX[i]), float(rightStickY[i]) };
+            rightStickDir[i] = rightStick.Normalized();
             isConnect[i] = true;
         }
         else

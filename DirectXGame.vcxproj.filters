@@ -16,9 +16,6 @@
     <Filter Include="engine">
       <UniqueIdentifier>{3c73d613-c635-4919-a08d-bf6252a7fc44}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\TextureManager">
-      <UniqueIdentifier>{ed7ac647-ed94-43e8-abdb-459374cc9331}</UniqueIdentifier>
-    </Filter>
     <Filter Include="engine\Utilities">
       <UniqueIdentifier>{25a66c38-75c8-4dae-8e78-1d7b5c01cf2e}</UniqueIdentifier>
     </Filter>
@@ -42,9 +39,6 @@
     </Filter>
     <Filter Include="engine\input\GetPadState">
       <UniqueIdentifier>{6cdbe87c-683b-4dee-b8c3-f22dd1b10c44}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="engine\input\Input">
-      <UniqueIdentifier>{fa67fb13-219c-43c1-8e19-8bf1f07e96f1}</UniqueIdentifier>
     </Filter>
     <Filter Include="engine\imgui">
       <UniqueIdentifier>{de365176-a23e-4aa1-b692-75dc75ada7eb}</UniqueIdentifier>
@@ -79,9 +73,6 @@
     <Filter Include="engine\definition">
       <UniqueIdentifier>{2d11e023-36d8-40a2-a5cd-ac9aef762785}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\AudioManager">
-      <UniqueIdentifier>{d6981e3b-9d2e-4acf-aaf3-0a1a631f2860}</UniqueIdentifier>
-    </Filter>
     <Filter Include="engine\Application">
       <UniqueIdentifier>{24c1e14d-3c15-48b9-9b53-6d5405a3ce02}</UniqueIdentifier>
     </Filter>
@@ -105,6 +96,33 @@
     </Filter>
     <Filter Include="engine\Shader\Particle">
       <UniqueIdentifier>{cb625b4a-e4fc-4a27-ba56-21e5c5776d36}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\Enemy">
+      <UniqueIdentifier>{abdfdc17-e3cb-4ad2-b9fc-add654cd0044}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\Player">
+      <UniqueIdentifier>{882eb66c-4058-4220-aba2-6a0748dbd9dd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\Enemy\EnemyBullet">
+      <UniqueIdentifier>{ecb70071-ae45-4aa7-a2f2-06870f68a62c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\Player\PlayerBullet">
+      <UniqueIdentifier>{87ab720d-f9cb-45c7-91a1-3d4f1014c18e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\ResourceManager">
+      <UniqueIdentifier>{43c00ddd-45c1-4e1c-be41-8ad55ac6082e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\ResourceManager\AudioManager">
+      <UniqueIdentifier>{d6981e3b-9d2e-4acf-aaf3-0a1a631f2860}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\ResourceManager\ModelManager">
+      <UniqueIdentifier>{d4effc7f-c81e-44f4-90f2-167be6354b4c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\ResourceManager\TextureManager">
+      <UniqueIdentifier>{5ac7ac8c-cfc8-4b8e-80bf-d8b5369d0613}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\DrawSystem">
+      <UniqueIdentifier>{c33b27c6-9c84-4600-b956-0acdc8f3c453}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -132,12 +150,6 @@
     <ClCompile Include="externals\imgui\imgui_widgets.cpp">
       <Filter>engine\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="include\engine\Audio\AudioManager.cpp">
-      <Filter>engine\AudioManager</Filter>
-    </ClCompile>
-    <ClCompile Include="include\engine\Camera\CameraController.cpp">
-      <Filter>engine\CameraController</Filter>
-    </ClCompile>
     <ClCompile Include="include\engine\DirectX\CommandContextManager.cpp">
       <Filter>engine\DirectXManager\CommandContextManager</Filter>
     </ClCompile>
@@ -153,15 +165,6 @@
     <ClCompile Include="include\engine\DirectX\DirectXManager.cpp">
       <Filter>engine\DirectXManager</Filter>
     </ClCompile>
-    <ClCompile Include="include\engine\Engine\Engine.cpp">
-      <Filter>engine\Application</Filter>
-    </ClCompile>
-    <ClCompile Include="include\engine\input\GetHitKey.cpp">
-      <Filter>engine\input\GetHitKey</Filter>
-    </ClCompile>
-    <ClCompile Include="include\engine\input\MouseController.cpp">
-      <Filter>engine\input\MouseController</Filter>
-    </ClCompile>
     <ClCompile Include="include\engine\DirectX\PipelineStateManager.cpp">
       <Filter>engine\DirectXManager\PipelineStateManager</Filter>
     </ClCompile>
@@ -171,35 +174,71 @@
     <ClCompile Include="include\engine\DirectX\SynchronizationManager.cpp">
       <Filter>engine\DirectXManager\SynchronizationManager</Filter>
     </ClCompile>
-    <ClCompile Include="include\engine\Texture\TextureManager.cpp">
-      <Filter>engine\TextureManager</Filter>
-    </ClCompile>
     <ClCompile Include="include\engine\DirectX\ViewportScissorManager.cpp">
       <Filter>engine\DirectXManager\ViewportScissorManager</Filter>
-    </ClCompile>
-    <ClCompile Include="include\engine\Utilities\Easings.cpp">
-      <Filter>engine\Utilities\Easings</Filter>
-    </ClCompile>
-    <ClCompile Include="include\engine\Utilities\functions.cpp">
-      <Filter>engine\Utilities\functions</Filter>
-    </ClCompile>
-    <ClCompile Include="include\engine\Window\WindowManager.cpp">
-      <Filter>engine\WindowManager</Filter>
-    </ClCompile>
-    <ClCompile Include="include\engine\input\GetPadState.cpp">
-      <Filter>engine\input\GetPadState</Filter>
     </ClCompile>
     <ClCompile Include="include\application\GameManager\GameManager.cpp">
       <Filter>application\GameManeger</Filter>
     </ClCompile>
+    <ClCompile Include="Enemy.cpp">
+      <Filter>application\Enemy</Filter>
+    </ClCompile>
+    <ClCompile Include="Player.cpp">
+      <Filter>application\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="EnemyBullet.cpp">
+      <Filter>application\Enemy\EnemyBullet</Filter>
+    </ClCompile>
+    <ClCompile Include="PlayerBullet.cpp">
+      <Filter>application\Player\PlayerBullet</Filter>
+    </ClCompile>
+    <ClCompile Include="include\engine\Resource\Audio\AudioManager.cpp">
+      <Filter>engine\ResourceManager\AudioManager</Filter>
+    </ClCompile>
+    <ClCompile Include="include\engine\Resource\Model\ModelManager.cpp">
+      <Filter>engine\ResourceManager\ModelManager</Filter>
+    </ClCompile>
+    <ClCompile Include="include\engine\Resource\Texture\TextureManager.cpp">
+      <Filter>engine\ResourceManager\TextureManager</Filter>
+    </ClCompile>
+    <ClCompile Include="include\engine\Resource\ResourceManager.cpp">
+      <Filter>engine\ResourceManager</Filter>
+    </ClCompile>
+    <ClCompile Include="include\engine\input\GetHitKey.cpp">
+      <Filter>engine\input\GetHitKey</Filter>
+    </ClCompile>
     <ClCompile Include="include\engine\input\Input.cpp">
-      <Filter>engine\input\Input</Filter>
+      <Filter>engine\input</Filter>
+    </ClCompile>
+    <ClCompile Include="include\engine\input\MouseController.cpp">
+      <Filter>engine\input\MouseController</Filter>
+    </ClCompile>
+    <ClCompile Include="include\engine\input\GetPadState.cpp">
+      <Filter>engine\input\GetPadState</Filter>
+    </ClCompile>
+    <ClCompile Include="include\engine\DrawSystem\DrawSystem.cpp">
+      <Filter>engine\DrawSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="include\engine\Utilities\functions.cpp">
+      <Filter>engine\Utilities\functions</Filter>
+    </ClCompile>
+    <ClCompile Include="include\engine\Utilities\Easings.cpp">
+      <Filter>engine\Utilities\Easings</Filter>
+    </ClCompile>
+    <ClCompile Include="include\engine\Camera\CameraController.cpp">
+      <Filter>engine\CameraController</Filter>
     </ClCompile>
     <ClCompile Include="include\engine\definition\definition.cpp">
       <Filter>engine\definition</Filter>
     </ClCompile>
     <ClCompile Include="include\engine\Engine\Game.cpp">
       <Filter>engine\Application</Filter>
+    </ClCompile>
+    <ClCompile Include="include\engine\Engine\Engine.cpp">
+      <Filter>engine\Application</Filter>
+    </ClCompile>
+    <ClCompile Include="include\engine\Window\WindowManager.cpp">
+      <Filter>engine\WindowManager</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -227,15 +266,6 @@
     <ClInclude Include="externals\imgui\imstb_truetype.h">
       <Filter>engine\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\Audio\AudioManager.h">
-      <Filter>engine\AudioManager</Filter>
-    </ClInclude>
-    <ClInclude Include="include\engine\Camera\CameraController.h">
-      <Filter>engine\CameraController</Filter>
-    </ClInclude>
-    <ClInclude Include="include\engine\definition\definition.h">
-      <Filter>engine\definition</Filter>
-    </ClInclude>
     <ClInclude Include="include\engine\DirectX\CommandContextManager.h">
       <Filter>engine\DirectXManager\CommandContextManager</Filter>
     </ClInclude>
@@ -251,15 +281,6 @@
     <ClInclude Include="include\engine\DirectX\DirectXManager.h">
       <Filter>engine\DirectXManager</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\Engine\Engine.h">
-      <Filter>engine\Application</Filter>
-    </ClInclude>
-    <ClInclude Include="include\engine\input\GetHitKey.h">
-      <Filter>engine\input\GetHitKey</Filter>
-    </ClInclude>
-    <ClInclude Include="include\engine\input\MouseController.h">
-      <Filter>engine\input\MouseController</Filter>
-    </ClInclude>
     <ClInclude Include="include\engine\DirectX\PipelineStateManager.h">
       <Filter>engine\DirectXManager\PipelineStateManager</Filter>
     </ClInclude>
@@ -269,11 +290,50 @@
     <ClInclude Include="include\engine\DirectX\SynchronizationManager.h">
       <Filter>engine\DirectXManager\SynchronizationManager</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\Texture\TextureManager.h">
-      <Filter>engine\TextureManager</Filter>
-    </ClInclude>
     <ClInclude Include="include\engine\DirectX\ViewportScissorManager.h">
       <Filter>engine\DirectXManager\ViewportScissorManager</Filter>
+    </ClInclude>
+    <ClInclude Include="include\application\GameManager\GameManager.h">
+      <Filter>application\GameManeger</Filter>
+    </ClInclude>
+    <ClInclude Include="Enemy.h">
+      <Filter>application\Enemy</Filter>
+    </ClInclude>
+    <ClInclude Include="Player.h">
+      <Filter>application\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="EnemyBullet.h">
+      <Filter>application\Enemy\EnemyBullet</Filter>
+    </ClInclude>
+    <ClInclude Include="PlayerBullet.h">
+      <Filter>application\Player\PlayerBullet</Filter>
+    </ClInclude>
+    <ClInclude Include="include\engine\Resource\Audio\AudioManager.h">
+      <Filter>engine\ResourceManager\AudioManager</Filter>
+    </ClInclude>
+    <ClInclude Include="include\engine\Resource\Model\ModelManager.h">
+      <Filter>engine\ResourceManager\ModelManager</Filter>
+    </ClInclude>
+    <ClInclude Include="include\engine\Resource\ResourceManager.h">
+      <Filter>engine\ResourceManager</Filter>
+    </ClInclude>
+    <ClInclude Include="include\engine\Resource\Texture\TextureManager.h">
+      <Filter>engine\ResourceManager\TextureManager</Filter>
+    </ClInclude>
+    <ClInclude Include="include\engine\input\Input.h">
+      <Filter>engine\input</Filter>
+    </ClInclude>
+    <ClInclude Include="include\engine\input\GetHitKey.h">
+      <Filter>engine\input\GetHitKey</Filter>
+    </ClInclude>
+    <ClInclude Include="include\engine\input\GetPadState.h">
+      <Filter>engine\input\GetPadState</Filter>
+    </ClInclude>
+    <ClInclude Include="include\engine\input\MouseController.h">
+      <Filter>engine\input\MouseController</Filter>
+    </ClInclude>
+    <ClInclude Include="include\engine\DrawSystem\DrawSystem.h">
+      <Filter>engine\DrawSystem</Filter>
     </ClInclude>
     <ClInclude Include="include\engine\Utilities\Easings.h">
       <Filter>engine\Utilities\Easings</Filter>
@@ -281,20 +341,20 @@
     <ClInclude Include="include\engine\Utilities\functions.h">
       <Filter>engine\Utilities\functions</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\Window\WindowManager.h">
-      <Filter>engine\WindowManager</Filter>
+    <ClInclude Include="include\engine\Camera\CameraController.h">
+      <Filter>engine\CameraController</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\input\GetPadState.h">
-      <Filter>engine\input\GetPadState</Filter>
-    </ClInclude>
-    <ClInclude Include="include\application\GameManager\GameManager.h">
-      <Filter>application\GameManeger</Filter>
-    </ClInclude>
-    <ClInclude Include="include\engine\input\Input.h">
-      <Filter>engine\input\Input</Filter>
+    <ClInclude Include="include\engine\definition\definition.h">
+      <Filter>engine\definition</Filter>
     </ClInclude>
     <ClInclude Include="include\engine\Engine\Game.h">
       <Filter>engine\Application</Filter>
+    </ClInclude>
+    <ClInclude Include="include\engine\Engine\Engine.h">
+      <Filter>engine\Application</Filter>
+    </ClInclude>
+    <ClInclude Include="include\engine\Window\WindowManager.h">
+      <Filter>engine\WindowManager</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

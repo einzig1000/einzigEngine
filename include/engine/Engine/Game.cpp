@@ -203,9 +203,9 @@ std::vector<AABB> Game::CreateAABB(const Transforms& transforms, uint32_t object
 	return engine->CreateAABB(transforms, objectNumber);
 }
 
-void Game::toggleWireframeMode()
+void Game::toggleWireframeMode(bool mode)
 {
-	engine->toggleWireframeMode();
+	engine->toggleWireframeMode(mode);
 }
 
 bool Game::IsAABBInFrustum(const AABB& aabb, const Matrix4x4& worldMatrix)
@@ -252,22 +252,22 @@ void Game::RenderData_Model::Updata(std::vector<Object3D>& objects)
 	// 今フレームの移動量
 	this->lastMove = this->transforms.translate - this->preTransforms.translate;
 
-	auto changed = [](float a, float b, float eps) { return ((a - b) > eps) || ((a - b) < eps); };
+	auto changed = [](float a, float b) { return ((a - b) > eps) || ((a - b) < eps); };
 	constexpr float epsT = 1e-6f;
 	constexpr float epsR = 1e-6f;
 	constexpr float epsS = 1e-6f;
 
 	// S/R/Tに変化があったか
 	this->movedThisFrame =
-		changed(this->lastMove.x, 0.0f, epsT) ||
-		changed(this->lastMove.y, 0.0f, epsT) || 
-		changed(this->lastMove.z, 0.0f, epsT) ||
-		changed(this->transforms.rotate.x, this->preTransforms.rotate.x, epsR) ||
-		changed(this->transforms.rotate.y, this->preTransforms.rotate.y, epsR) ||
-		changed(this->transforms.rotate.z, this->preTransforms.rotate.z, epsR) ||
-		changed(this->transforms.scale.x, this->preTransforms.scale.x, epsS) ||
-		changed(this->transforms.scale.y, this->preTransforms.scale.y, epsS) ||
-		changed(this->transforms.scale.z, this->preTransforms.scale.z, epsS);
+		changed(this->lastMove.x, 0.0f) ||
+		changed(this->lastMove.y, 0.0f) || 
+		changed(this->lastMove.z, 0.0f) ||
+		changed(this->transforms.rotate.x, this->preTransforms.rotate.x) ||
+		changed(this->transforms.rotate.y, this->preTransforms.rotate.y) ||
+		changed(this->transforms.rotate.z, this->preTransforms.rotate.z) ||
+		changed(this->transforms.scale.x, this->preTransforms.scale.x) ||
+		changed(this->transforms.scale.y, this->preTransforms.scale.y) ||
+		changed(this->transforms.scale.z, this->preTransforms.scale.z);
 
 
 	//if (this->movedThisFrame)
@@ -657,6 +657,9 @@ void Game::RenderData_Model::DrawImGui()
 
 	ImGui::End();
 }
+
+void Game::RenderData_Model::CollisionAction(const Vector3& depth, RenderData_Model& target)
+{}
 
 std::optional<CollisionInf> Game::RenderData_Model::isCollisionAABBInf(RenderData_Model& target) const
 {

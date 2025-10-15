@@ -10,6 +10,7 @@
 #include "Window/WindowManager.h"
 #include "DirectX/DirectXManager.h"
 #include "Engine/Game.h"
+#include "Resource/Texture/TextureManager.h"
 
 #include <DirectXMath.h>
 #include <filesystem>
@@ -33,12 +34,16 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 	{
 		dxManager = new DirectXManager(windowManager->GetHwnd(), width, height);
 	}
+	if (!drawSystem)
+	{
+		drawSystem = new DrawSystem(dxManager);
+	}
 
 	// カメラ
 	cameraController = new CameraController();
 	debugCameraController = new CameraController();
-	cameraController->cameraMode_ = false;
-	debugCamera = false;
+	cameraController->cameraMode_ = false; // メインカメラは常に操作可能
+	debugCamera = false;	// 最初はデバッグカメラ
 
 	// インプット系
 	inputManager_ = new Input(windowManager->GetHwnd(), windowManager->Getwidth(), windowManager->Getheight(), &cameraController->viewProjectionMatrix, &debugCameraController->viewProjectionMatrix, &debugCamera);
@@ -57,33 +62,13 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 		dxManager->GetsrvDescriptorHeap()->GetGPUDescriptorHandleForHeapStart()
 	);
 
-	// 頂点リソース
-	vertexResourceSize = static_cast<UINT>(sizeof(VertexData) * 1024); // 三角形
-	vertexResource = CreateBufferResource(dxManager->GetDevice(), vertexResourceSize);
-
-	hr = vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexMappedPtr));
-	assert(SUCCEEDED(hr));
-
-	materialResources.resize(kMaxDrawCallPerFrame);
-	materialData.resize(kMaxDrawCallPerFrame);
-	wvpResources.resize(kMaxDrawCallPerFrame);
-	wvpData.resize(kMaxDrawCallPerFrame);
-	for (size_t i = 0; i < kMaxDrawCallPerFrame; ++i)
+	instancingResource = CreateBufferResource(dxManager->GetDevice(), sizeof(TransformationMatrix) * kNumInstance);
+	instancingResource->Map(0, nullptr, reinterpret_cast<void**>(&instancingData));
+	for (uint32_t index = 0; index < kNumInstance; ++index)
 	{
-		materialResources[i] = CreateBufferResource(dxManager->GetDevice(), sizeof(Material));
-		materialResources[i]->Map(0, nullptr, reinterpret_cast<void**>(&materialData[i]));
-		wvpResources[i] = CreateBufferResource(dxManager->GetDevice(), sizeof(TransformationMatrix));
-		wvpResources[i]->Map(0, nullptr, reinterpret_cast<void**>(&wvpData[i]));
+		instancingData[index].WVP = Matrix4x4::MakeIdentity4x4();
+		instancingData[index].World = Matrix4x4::MakeIdentity4x4();
 	}
-
-
-	materialResourceLine.resize(kMaxDrawLineCallPerFrame);
-	materialDataLine.resize(kMaxDrawLineCallPerFrame);
-	wvpResourceLine.resize(kMaxDrawLineCallPerFrame);
-	wvpDataLine.resize(kMaxDrawLineCallPerFrame);
-	InitializeLineResources(dxManager->GetDevice());
-
-
 
 	// インデックスリソース
 	indexResource = CreateBufferResource(dxManager->GetDevice(), sizeof(uint32_t) * 6);
@@ -105,19 +90,6 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 	indexBufferView.Format = DXGI_FORMAT_R32_UINT;
 
 
-	// 光源の設定
-	directionalLightResource = CreateBufferResource(dxManager->GetDevice(), sizeof(DirectionalLight));
-	directionalLightData = nullptr;
-	directionalLightResource->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData));
-	directionalLightData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-	directionalLightData->direction = { 0.0f, -1.0f, 0.0f };
-	directionalLightData->intensity = 1.0f;
-
-	// プリミティブモードの設定
-	WireframeMode = false;
-
-	drawCallIndex = 0;
-	drawLineCallIndex = 0;
 	wheelDelta = 0;
 
 }
@@ -150,25 +122,18 @@ void Engine::BeginFrame()
 	ImGui::NewFrame();
 	//ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
 
-	// ???
-	vertexDataUsed = 0;
-
-	// ライトを更新
-	UpdateLight();
-
 	// カメラを更新
 	UpdateCamera();
+
+	// 描画関数初期化
+	if (!debugCamera)drawSystem->BeginFrame(cameraController->viewProjectionMatrix);
+	else drawSystem->BeginFrame(debugCameraController->viewProjectionMatrix);
 
 	// インプット系を更新
 	inputManager_->Update();
 
 	// DirectXを更新
 	dxManager->BeginFrame();
-}
-void Engine::UpdateLight()
-{
-	// ライトの向きを正規化
-	directionalLightData->direction = (directionalLightData->direction.Normalized());
 }
 void Engine::UpdateCamera()
 {
@@ -187,7 +152,7 @@ void Engine::UpdateCamera()
 	}
 
 	// 左シフト＋左クリックでカメラターゲットをオブジェクトに合わせる
-	if (GetHitKey::keys[DIK_LSHIFT])
+	if (GetHitKey::IsPressedNow(DIK_LSHIFT))
 	{
 		if (Game::GetMousePress(0) && !GetMousePrePress(0))
 		{
@@ -201,7 +166,6 @@ void Engine::UpdateCamera()
 		}
 	}
 
-
 	ImGui::Text("---------------camera---------------");
 	ImGui::Checkbox("switchDebugCamera", &debugCamera);
 }
@@ -210,12 +174,17 @@ void Engine::EndFrame()
 	wheelDelta = 0;
 
 	//cameraController->Draw();
+	if (!debugCamera)
+	{
+		cameraController->Draw();
+	}
+	else
+	{
+		debugCameraController->Draw();
+	}
 	ImGui::Render();
 
 	dxManager->EndFrame();
-
-	drawCallIndex = 0;
-	drawLineCallIndex = 0;
 }
 
 
@@ -229,8 +198,9 @@ void Engine::UpdateTransforms()
 #pragma endregion
 
 #pragma region 座標更新 & 描画範囲内判定
-	
+
 	// オブジェクト更新
+	std::vector<Object3D> objects = dxManager->GetResourceManager()->GetModelManager()->objects;
 	for (auto& rd : modelList)
 	{
 		rd->Updata(objects);
@@ -300,55 +270,10 @@ void Engine::UpdateTransforms()
 // 終了処理
 void Engine::Finalize()
 {
-	// 解放処理
-	for (size_t i = 0; i < kMaxDrawCallPerFrame; ++i)
-	{
-		if (materialResources[i])
-		{
-			materialResources[i]->Unmap(0, nullptr);
-			materialResources[i].Reset();
-			materialData[i] = nullptr;
-		}
-		if (wvpResources[i])
-		{
-			wvpResources[i]->Unmap(0, nullptr);
-			wvpResources[i].Reset();
-			wvpData[i] = nullptr;
-		}
-	}
-	for (size_t i = 0; i < kMaxDrawLineCallPerFrame; ++i)
-	{
-		if (materialResourceLine[i])
-		{
-			materialResourceLine[i]->Unmap(0, nullptr);
-			materialResourceLine[i].Reset();
-			materialDataLine[i] = nullptr;
-		}
-		if (wvpResourceLine[i])
-		{
-			wvpResourceLine[i]->Unmap(0, nullptr);
-			wvpResourceLine[i].Reset();
-			wvpDataLine[i] = nullptr;
-		}
-	}
-
 	// ImGuiの終了処理
 	ImGui_ImplDX12_Shutdown();
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
-
-
-	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>>().swap(materialResources);
-	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>>().swap(wvpResources);
-	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>>().swap(materialResourceLine);
-	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>>().swap(wvpResourceLine);
-
-	vertexResource.Reset();
-	vertexResourceLine.Reset();
-	indexResource.Reset();
-	directionalLightResource.Reset();
-
-	objects.clear();
 
 	// COMの終了処理
 	CoUninitialize();
@@ -358,6 +283,8 @@ void Engine::Finalize()
 	windowManager = nullptr;
 	delete dxManager;
 	dxManager = nullptr;
+	delete drawSystem;
+	drawSystem = nullptr;
 	delete cameraController;
 	cameraController = nullptr;
 	delete debugCameraController;
@@ -369,603 +296,111 @@ void Engine::Finalize()
 // リソース読み込み
 uint32_t Engine::LoadTexture(const std::string& filePath)
 {
-	return dxManager->GetTextureManager()->LoadTexture(filePath, dxManager->GetCommandList());
+	return dxManager->GetResourceManager()->GetTextureManager()->LoadTexture(filePath, dxManager->GetCommandList(),dxManager->GetsrvDescriptorHeap(), dxManager->GetDevice());
 }
 
 uint32_t Engine::LoadOBJ(const std::string& directoryPath, const std::string& filename)
 {
-	// ボックスを作成
-	Object3D obj;
-	// モデルデータ
-	obj.modelData = LoadOBJFile(directoryPath, filename);
-	// 変換行列
-	obj.transform = { {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f} };
-	// AABB .obj → .csv へ拡張子を変換して渡す
-	std::string csvFilename = filename;
-	size_t dotPos = csvFilename.rfind('.');
-	if (dotPos != std::string::npos)
-		csvFilename.replace(dotPos, csvFilename.length() - dotPos, ".csv");
-	else
-		csvFilename += ".csv";
-	csvFilename = directoryPath + csvFilename;
-	obj.aabb = LoadAABB(csvFilename, obj.modelData);
-	// 識別ナンバー
-	obj.number = static_cast<uint32_t>(objects.size());
-
-	// まず空のObject3Dをvectorに追加し、参照を取得
-	objects.push_back(obj);
-	Object3D& ref = objects.back();
-
-	// 頂点バッファ作成
-	ref.vertexBufferSize = sizeof(VertexData) * UINT(ref.modelData.vertices.size());
-	ref.vertexBuffer = CreateBufferResource(dxManager->GetDevice(), ref.vertexBufferSize);
-	VertexData* vData = nullptr;
-	ref.vertexBuffer->Map(0, nullptr, reinterpret_cast<void**>(&vData));
-	std::memcpy(vData, ref.modelData.vertices.data(), ref.vertexBufferSize);
-	ref.vertexBuffer->Unmap(0, nullptr);
-
-	ref.vertexBufferView.BufferLocation = ref.vertexBuffer->GetGPUVirtualAddress();
-	ref.vertexBufferView.SizeInBytes = static_cast<UINT>(ref.vertexBufferSize);
-	ref.vertexBufferView.StrideInBytes = sizeof(VertexData);
-
-	return ref.number;
-}
-
-std::vector<AABB> Engine::LoadAABB(const std::string& csvPath, const ModelData& model)
-{
-	std::vector<AABB> aabbs;
-	if (std::filesystem::exists(csvPath))
-	{
-		aabbs = LoadAABBFromCSV(csvPath);
-	}
-	else
-	{
-		// 今までの方法でAABBを1つ作成
-		AABB aabb = CreateLocalAABB(model);
-		aabbs.push_back(aabb);
-		SaveAABBToCSV(csvPath, aabbs);
-	}
-	return aabbs;
+	return dxManager->GetResourceManager()->GetModelManager()->LoadModel(directoryPath, filename, dxManager->GetDevice());
 }
 
 uint32_t Engine::LoadAudio(const std::string& filePath)
 {
-	return dxManager->GetAudioManager()->LoadAudio(filePath);
+	return dxManager->GetResourceManager()->GetAudioManager()->LoadAudio(filePath);
 }
 
 TextureData* Engine::GetTexture(uint32_t textureNumber)
 {
-	TextureData* tex = dxManager->GetTextureManager()->GetTexture(textureNumber);
-	return tex;
+	return dxManager->GetResourceManager()->GetTextureManager()->GetTexture(textureNumber);
 }
-
 
 // 描画
 void Engine::Drawobj(Game::RenderData_Model& renderData)
 {
-	// 画面内か判定
-	if (!renderData.inPicture)return;
-
-	// 描画
-	{
-		// 描画回数上限
-		if (drawCallIndex >= kMaxDrawCallPerFrame) return;
-
-		if (renderData.model >= objects.size()) return;
-
-		// RootSignatureとPSOを設定
-		dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
-		if (renderData.options.wireframe || WireframeMode)
-		{	// ワイヤーフレーム用PSOを設定
-			dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(BlendMode::Wireframe, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
-		}
-		else
-		{	// Triangle用PSOを設定
-			dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(renderData.options.blendMode, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
-		}
-
-		// 描画するモデルの検索
-		Object3D& obj = objects[renderData.model];
-		// 頂点数の取得
-		const uint32_t kSumVertex = static_cast<uint32_t>(obj.modelData.vertices.size());
-
-		// WVP行列
-		wvpData[drawCallIndex]->World = renderData.transforms.World;
-		if (!debugCamera)
-		{
-			wvpData[drawCallIndex]->WVP = renderData.transforms.World * cameraController->viewProjectionMatrix;
-		}
-		else
-		{
-			wvpData[drawCallIndex]->WVP = renderData.transforms.World * debugCameraController->viewProjectionMatrix;
-		}
-
-		const TextureData* tex = dxManager->GetTextureManager()->GetTexture(renderData.texture);
-		if (!tex) return;
-
-		Vector4 color = ConvertUintToVector4(renderData.color);
-		materialData[drawCallIndex]->color = color;
-		materialData[drawCallIndex]->enableLighting = renderData.options.enableLighting;
-		Matrix4x4 uvTransformMatrix = Matrix4x4::MakeIdentity4x4();
-		uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeScaleMatrix(renderData.uvTransform.scale));
-		uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(renderData.uvTransform.rotate.z));
-		uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(renderData.uvTransform.translate));
-		materialData[drawCallIndex]->uvTransform = uvTransformMatrix;
-
-
-		// 頂点バッファをバインド（描画に使う頂点データを指定）
-		dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &obj.vertexBufferView);
-		// プリミティブトポロジ（描画する形状の種類：三角形リスト）を設定
-		dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		// ルートパラメータ0にマテリアル用定数バッファ（色・ライティング情報など）をバインド
-		dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources[drawCallIndex]->GetGPUVirtualAddress());
-		// ルートパラメータ1にWVP（ワールド・ビュー・プロジェクション）用定数バッファをバインド
-		dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources[drawCallIndex]->GetGPUVirtualAddress());
-		// ルートパラメータ2にテクスチャのSRV（シェーダリソースビュー）をバインド
-		dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
-		// ルートパラメータ3にディレクショナルライト用定数バッファをバインド
-		dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
-		// 頂点数分のインスタンス描画を実行（実際に描画コマンドを発行）
-		dxManager->GetCommandList()->DrawInstanced(kSumVertex, 1, 0, 0);
-
-		drawCallIndex++;
-	}
+	drawSystem->Drawobj(renderData);
 }
 
 void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions)
 {
-	// 描画回数上限
-	if (drawCallIndex >= kMaxDrawCallPerFrame) return;
+	//// 描画回数上限
+	//if (drawCallIndex >= kMaxDrawCallPerFrame) return;
 
-	// RootSignatureとPSOを設定
-	dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
-	if (drawOptions.wireframe || WireframeMode)
-	{	 // ワイヤーフレーム用PSOを設定
-		dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(BlendMode::Wireframe, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
-	}
-	else
-	{	// Triangle用PSOを設定
-		dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(drawOptions.blendMode, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
-	}
+	//// RootSignatureとPSOを設定
+	//dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
+	//if (drawOptions.wireframe || WireframeMode)
+	//{	 // ワイヤーフレーム用PSOを設定
+	//	dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(BlendMode::Wireframe, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
+	//}
+	//else
+	//{	// Triangle用PSOを設定
+	//	dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(drawOptions.blendMode, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
+	//}
 
-	// 必要な頂点数
-	const uint32_t kSumVertex = kSubdivision * kSubdivision * 6;
-	// 必要な頂点数分配列を拡張
-	if (vertexDataUsed + kSumVertex > vertexData.size())
-	{
-		vertexData.resize(vertexDataUsed + kSumVertex);
-	}
+	//// 必要な頂点数
+	//const uint32_t kSumVertex = kSubdivision * kSubdivision * 6;
+	//// 必要な頂点数分配列を拡張
+	//if (vertexDataUsed + kSumVertex > vertexData.size())
+	//{
+	//	vertexData.resize(vertexDataUsed + kSumVertex);
+	//}
 
-	// 頂点
-	CreateSphere(&vertexData[vertexDataUsed], kSubdivision);
-
-
-	// 1. オブジェクトのスケール行列
-	Matrix4x4 scaleMatrix = Matrix4x4::MakeScaleMatrix(transform.scale);
-
-	// 2. ワールド空間での最終的な位置への移動行列
-	Matrix4x4 translateMatrix = Matrix4x4::MakeTranslateMatrix(transform.translate);
-
-	// 3. 回転の中心への移動 (centerを原点に移動)
-	Matrix4x4 toRotationCenter = Matrix4x4::MakeTranslateMatrix({ -center.x, -center.y, -center.z });
-
-	// 4. 回転行列 (transform.rotate を center を中心とする回転として使う)
-	Matrix4x4 rotateXMatrix = Matrix4x4::MakeRotateXMatrix(transform.rotate.x);
-	Matrix4x4 rotateYMatrix = Matrix4x4::MakeRotateYMatrix(transform.rotate.y);
-	Matrix4x4 rotateZMatrix = Matrix4x4::MakeRotateZMatrix(transform.rotate.z);
-	Matrix4x4 rotationMatrix = rotateZMatrix * rotateXMatrix * rotateYMatrix;
-
-	// 5. 回転後、元の回転中心の位置に戻す
-	Matrix4x4 fromRotationCenter = Matrix4x4::MakeTranslateMatrix(center);
-
-	// 最終的なワールド行列の構築
-	Matrix4x4 worldMatrix =
-		scaleMatrix *		 // 1. 拡縮はどうでもいい
-		toRotationCenter *	 // 2. 回転中心を原点に移動
-		rotationMatrix *	 // 3. 原点で回転 (centerを中心とした回転)
-		fromRotationCenter * // 4. 回転したものを元の回転中心に戻す
-		translateMatrix;	 // 5. 最終的なワールド位置へ移動
-
-	// WVP行列
-	Matrix4x4 wvpMatrix;
-	if (!debugCamera)
-	{
-		wvpMatrix = worldMatrix * cameraController->viewProjectionMatrix;
-	}
-	else
-	{
-		wvpMatrix = worldMatrix * debugCameraController->viewProjectionMatrix;
-	}
-
-	wvpData[drawCallIndex]->World = worldMatrix;
-	wvpData[drawCallIndex]->WVP = wvpMatrix;
-
-	// テクスチャ
-	const TextureData* tex = dxManager->GetTextureManager()->GetTexture(textureNumber);
-	if (!tex)return;
-
-	// マテリアル
-	Vector4 color = ConvertUintToVector4(materialColor);
-	materialData[drawCallIndex]->color = color;
-	materialData[drawCallIndex]->enableLighting = drawOptions.enableLighting;
-	Matrix4x4 uvTransformMatrix = Matrix4x4::MakeIdentity4x4();
-	//uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeScaleMatrix(drawOptions.uvTransform.scale));
-	//uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(drawOptions.uvTransform.rotate.z));
-	//uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(drawOptions.uvTransform.translate));
-	materialData[drawCallIndex]->uvTransform = uvTransformMatrix;
+	//// 頂点
+	//CreateSphere(&vertexData[vertexDataUsed], kSubdivision);
 
 
-	// 頂点リソース
-	VertexData* vData = nullptr;
-	HRESULT hr = vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vData));
-	if (FAILED(hr) || vData == nullptr) return;
-	std::memcpy(vData + vertexDataUsed, &vertexData[vertexDataUsed], sizeof(VertexData) * kSumVertex);
-	vertexResource->Unmap(0, nullptr);
+	//// 1. オブジェクトのスケール行列
+	//Matrix4x4 scaleMatrix = Matrix4x4::MakeScaleMatrix(transform.scale);
 
-	// 頂点バッファビュー
-	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
-	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress() + sizeof(VertexData) * vertexDataUsed;
-	vertexBufferView.SizeInBytes = sizeof(VertexData) * static_cast<UINT>(kSumVertex);
-	vertexBufferView.StrideInBytes = sizeof(VertexData);
+	//// 2. ワールド空間での最終的な位置への移動行列
+	//Matrix4x4 translateMatrix = Matrix4x4::MakeTranslateMatrix(transform.translate);
 
-	// 描画処理
-	dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
-	dxManager->GetCommandList()->IASetIndexBuffer(&indexBufferView);
-	// 形状を設定
-	dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	// CBVを設定する マテリアル用のCBufferの場所を設定
-	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources[drawCallIndex]->GetGPUVirtualAddress());
-	// CBVを設定する wvp用のCBufferの場所を設定
-	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources[drawCallIndex]->GetGPUVirtualAddress());
-	// SRVのDescriptorTableの先頭を設定。２はrootParameters[2]。
-	dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
-	// CBVを設定する ディレクショナルライト用のCBufferの場所を設定
-	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
+	//// 3. 回転の中心への移動 (centerを原点に移動)
+	//Matrix4x4 toRotationCenter = Matrix4x4::MakeTranslateMatrix({ -center.x, -center.y, -center.z });
 
-	dxManager->GetCommandList()->DrawInstanced(kSumVertex, 1, 0, 0);
+	//// 4. 回転行列 (transform.rotate を center を中心とする回転として使う)
+	//Matrix4x4 rotateXMatrix = Matrix4x4::MakeRotateXMatrix(transform.rotate.x);
+	//Matrix4x4 rotateYMatrix = Matrix4x4::MakeRotateYMatrix(transform.rotate.y);
+	//Matrix4x4 rotateZMatrix = Matrix4x4::MakeRotateZMatrix(transform.rotate.z);
+	//Matrix4x4 rotationMatrix = rotateZMatrix * rotateXMatrix * rotateYMatrix;
 
-	drawCallIndex++;
-	vertexDataUsed += kSumVertex;
-}
+	//// 5. 回転後、元の回転中心の位置に戻す
+	//Matrix4x4 fromRotationCenter = Matrix4x4::MakeTranslateMatrix(center);
 
-void Engine::DrawTriangle(Game::RenderData_Triangle& renderData)
-{
-	// 描画回数上限
-	if (drawCallIndex >= kMaxDrawCallPerFrame) return;
+	//// 最終的なワールド行列の構築
+	//Matrix4x4 worldMatrix =
+	//	scaleMatrix *		 // 1. 拡縮はどうでもいい
+	//	toRotationCenter *	 // 2. 回転中心を原点に移動
+	//	rotationMatrix *	 // 3. 原点で回転 (centerを中心とした回転)
+	//	fromRotationCenter * // 4. 回転したものを元の回転中心に戻す
+	//	translateMatrix;	 // 5. 最終的なワールド位置へ移動
 
-	// RootSignatureとPSOを設定
-	dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
-	if (renderData.options.wireframe || WireframeMode)
-	{	 // ワイヤーフレーム用PSOを設定
-		dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(BlendMode::Wireframe, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
-	}
-	else
-	{	// Triangle用PSOを設定
-		dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(renderData.options.blendMode, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
-	}
+	//// WVP行列
+	//Matrix4x4 wvpMatrix;
+	//if (!debugCamera)
+	//{
+	//	wvpMatrix = worldMatrix * cameraController->viewProjectionMatrix;
+	//}
+	//else
+	//{
+	//	wvpMatrix = worldMatrix * debugCameraController->viewProjectionMatrix;
+	//}
 
-	// 必要な頂点数
-	const uint32_t kSumVertex = 3;
-	// 必要な頂点数分配列を拡張
-	if (vertexDataUsed + kSumVertex > vertexData.size())
-	{
-		vertexData.resize(vertexDataUsed + kSumVertex);
-	}
+	//wvpData[drawCallIndex]->World = worldMatrix;
+	//wvpData[drawCallIndex]->WVP = wvpMatrix;
 
-	// テクスチャ
-	const TextureData* tex = dxManager->GetTextureManager()->GetTexture(renderData.texture);
-	if (!tex) return;
+	//// テクスチャ
+	//const TextureData* tex = dxManager->GetResourceManager()->GetTextureManager()->GetTexture(textureNumber);
+	//if (!tex)return;
 
-	// 上
-	vertexData[vertexDataUsed + 0].position = { renderData.pos1.x, renderData.pos1.y, renderData.pos1.z, 1.0f };
-	vertexData[vertexDataUsed + 0].texcoord = { 0.5f, 0.0f };
-	vertexData[vertexDataUsed + 0].normal = { 0.0f, 0.0f, -1.0f };
-
-	// 右下
-	vertexData[vertexDataUsed + 1].position = { renderData.pos2.x, renderData.pos2.y, renderData.pos2.z, 1.0f };
-	vertexData[vertexDataUsed + 1].texcoord = { 1.0f, 1.0f };
-	vertexData[vertexDataUsed + 1].normal = { 0.0f, 0.0f, -1.0f };
-
-	// 左下
-	vertexData[vertexDataUsed + 2].position = { renderData.pos3.x,renderData.pos3.y, renderData.pos3.z, 1.0f };
-	vertexData[vertexDataUsed + 2].texcoord = { 0.0f, 1.0f };
-	vertexData[vertexDataUsed + 2].normal = { 0.0f, 0.0f, -1.0f };
-
-	// WVP行列
-	Matrix4x4 world = Matrix4x4::MakeAffineMatrix(renderData.transform.scale, renderData.transform.rotate, renderData.transform.translate);
-	Matrix4x4 viewProj;
-	if (!debugCamera)
-	{
-		viewProj = cameraController->viewProjectionMatrix;
-	}
-	else
-	{
-		viewProj = debugCameraController->viewProjectionMatrix;
-	}
-	Matrix4x4 wvpMatrix = world * viewProj;
-
-	wvpData[drawCallIndex]->World = world;
-	wvpData[drawCallIndex]->WVP = wvpMatrix;
-
-	// マテリアル
-	Vector4 color = ConvertUintToVector4(renderData.color);
-	materialData[drawCallIndex]->color = color;
-	materialData[drawCallIndex]->enableLighting = renderData.options.enableLighting;
-	Matrix4x4 uvTransformMatrix = Matrix4x4::MakeIdentity4x4();
-	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeScaleMatrix(renderData.uvTransform.scale));
-	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(renderData.uvTransform.rotate.z));
-	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(renderData.uvTransform.translate));
-	materialData[drawCallIndex]->uvTransform = uvTransformMatrix;
-
-	// 頂点リソース
-	VertexData* vData = nullptr;
-	HRESULT hr = vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vData));
-	if (FAILED(hr) || vData == nullptr) return;
-	std::memcpy(vData + vertexDataUsed, &vertexData[vertexDataUsed], sizeof(VertexData) * kSumVertex);
-	vertexResource->Unmap(0, nullptr);
-
-	// 頂点リソースにコピー
-	if (!EnsureDynamicVB(vertexDataUsed + kSumVertex)) return;
-	memcpy(vertexMappedPtr + vertexDataUsed, &vertexData[vertexDataUsed], sizeof(VertexData) * kSumVertex);
-
-	// 頂点バッファビュー
-	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
-	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress() + sizeof(VertexData) * (vertexDataUsed);
-	vertexBufferView.SizeInBytes = sizeof(VertexData) * static_cast<UINT>(kSumVertex);
-	vertexBufferView.StrideInBytes = sizeof(VertexData);
-
-
-	// RootSignatureを設定。
-	dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
-	// 形状を設定
-	dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	// CBVを設定する マテリアル用のCBufferの場所を設定
-	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources[drawCallIndex]->GetGPUVirtualAddress());
-	// CBVを設定する wvp用のCBufferの場所を設定
-	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources[drawCallIndex]->GetGPUVirtualAddress());
-	// SRVのDescriptorTableの先頭を設定。２はrootParameters[2]。
-	dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
-	// CBVを設定する ディレクショナルライト用のCBufferの場所を設定
-	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
-
-	// 描画
-	dxManager->GetCommandList()->DrawInstanced(3, 1, 0, 0);
-
-	drawCallIndex++;
-	vertexDataUsed += kSumVertex;
-}
-
-void Engine::DrawSprite(Game::RenderData_Sprite& renderData)
-{
-	// 描画回数上限
-	if (drawCallIndex >= kMaxDrawCallPerFrame) return;
-
-	// RootSignatureとPSOを設定 - Triangle
-	dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
-	dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(renderData.options.blendMode, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE)); // Triangle用PSOを設定
-
-	// 必要な頂点数
-	const uint32_t kSumVertex = 4;
-	// 必要な頂点数分配列を拡張
-	if (vertexDataUsed + kSumVertex > vertexData.size())
-	{
-		vertexData.resize(vertexDataUsed + kSumVertex);
-	}
-
-	// テクスチャ
-	const TextureData* tex = dxManager->GetTextureManager()->GetTexture(renderData.texture);
-	if (!tex)return;
-
-	// 頂点
-	float halfWidth = static_cast<float>(tex->metadata.width) * 0.5f;
-	float halfHeight = static_cast<float>(tex->metadata.height) * 0.5f;
-
-	// 左下 (index 0)
-	vertexData[vertexDataUsed + 0].position = { -halfWidth, -halfHeight, 0.0f, 1.0f };
-	vertexData[vertexDataUsed + 0].texcoord = { 0.0f, 0.0f };
-	vertexData[vertexDataUsed + 0].normal = { 0.0f, 0.0f, -1.0f };
-
-	// 左上 (index 1)
-	vertexData[vertexDataUsed + 1].position = { halfWidth, -halfHeight, 0.0f, 1.0f };
-	vertexData[vertexDataUsed + 1].texcoord = { 1.0f, 0.0f };
-	vertexData[vertexDataUsed + 1].normal = { 0.0f, 0.0f, -1.0f };
-
-	// 右下 (index 2)
-	vertexData[vertexDataUsed + 2].position = { -halfWidth, halfHeight, 0.0f, 1.0f };
-	vertexData[vertexDataUsed + 2].texcoord = { 0.0f, 1.0f };
-	vertexData[vertexDataUsed + 2].normal = { 0.0f, 0.0f, -1.0f };
-
-	// 右上 (index 3)
-	vertexData[vertexDataUsed + 3].position = { halfWidth, halfHeight, 0.0f, 1.0f };
-	vertexData[vertexDataUsed + 3].texcoord = { 1.0f, 1.0f };
-	vertexData[vertexDataUsed + 3].normal = { 0.0f, 0.0f, -1.0f };
-
-	// アンカーによる位置調整
-	switch (renderData.anker)
-	{
-	case Anker::Center:
-	{
-		// 左下 (index 0)
-		vertexData[vertexDataUsed + 0].position.x;
-		vertexData[vertexDataUsed + 0].position.y;
-		// 左上 (index 1)
-		vertexData[vertexDataUsed + 1].position.x;
-		vertexData[vertexDataUsed + 1].position.y;
-		// 右下 (index 2)
-		vertexData[vertexDataUsed + 2].position.x;
-		vertexData[vertexDataUsed + 2].position.y;
-		// 右上 (index 3)
-		vertexData[vertexDataUsed + 3].position.x;
-		vertexData[vertexDataUsed + 3].position.y;
-		break;
-	}
-	case Anker::CenterLeft:
-	{
-		// 左下 (index 0)
-		vertexData[vertexDataUsed + 0].position.x += halfWidth;
-		vertexData[vertexDataUsed + 0].position.y;
-		// 左上 (index 1)
-		vertexData[vertexDataUsed + 1].position.x += halfWidth;
-		vertexData[vertexDataUsed + 1].position.y;
-		// 右下 (index 2)
-		vertexData[vertexDataUsed + 2].position.x += halfWidth;
-		vertexData[vertexDataUsed + 2].position.y;
-		// 右上 (index 3)
-		vertexData[vertexDataUsed + 3].position.x += halfWidth;
-		vertexData[vertexDataUsed + 3].position.y;
-		break;
-	}
-	case Anker::CenterRight:
-	{
-		// 左下 (index 0)
-		vertexData[vertexDataUsed + 0].position.x += -halfWidth;
-		vertexData[vertexDataUsed + 0].position.y;
-		// 左上 (index 1)
-		vertexData[vertexDataUsed + 1].position.x += -halfWidth;
-		vertexData[vertexDataUsed + 1].position.y;
-		// 右下 (index 2)
-		vertexData[vertexDataUsed + 2].position.x += -halfWidth;
-		vertexData[vertexDataUsed + 2].position.y;
-		// 右上 (index 3)
-		vertexData[vertexDataUsed + 3].position.x += -halfWidth;
-		vertexData[vertexDataUsed + 3].position.y;
-		break;
-	}
-	case Anker::CenterTop:
-	{
-		// 左下 (index 0)
-		vertexData[vertexDataUsed + 0].position.x;
-		vertexData[vertexDataUsed + 0].position.y += halfHeight;
-		// 左上 (index 1)
-		vertexData[vertexDataUsed + 1].position.x;
-		vertexData[vertexDataUsed + 1].position.y += halfHeight;
-		// 右下 (index 2)
-		vertexData[vertexDataUsed + 2].position.x;
-		vertexData[vertexDataUsed + 2].position.y += halfHeight;
-		// 右上 (index 3)
-		vertexData[vertexDataUsed + 3].position.x;
-		vertexData[vertexDataUsed + 3].position.y += halfHeight;
-		break;
-	}
-	case Anker::CenterDown:
-	{
-		// 左下 (index 0)
-		vertexData[vertexDataUsed + 0].position.x;
-		vertexData[vertexDataUsed + 0].position.y += -halfHeight;
-		// 左上 (index 1)
-		vertexData[vertexDataUsed + 1].position.x;
-		vertexData[vertexDataUsed + 1].position.y += -halfHeight;
-		// 右下 (index 2)
-		vertexData[vertexDataUsed + 2].position.x;
-		vertexData[vertexDataUsed + 2].position.y += -halfHeight;
-		// 右上 (index 3)
-		vertexData[vertexDataUsed + 3].position.x;
-		vertexData[vertexDataUsed + 3].position.y += -halfHeight;
-		break;
-	}
-	case Anker::LeftTop:
-	{
-		// 左下 (index 0)
-		vertexData[vertexDataUsed + 0].position.x += halfWidth;
-		vertexData[vertexDataUsed + 0].position.y += halfHeight;
-		// 左上 (index 1)
-		vertexData[vertexDataUsed + 1].position.x += halfWidth;
-		vertexData[vertexDataUsed + 1].position.y += halfHeight;
-		// 右下 (index 2)
-		vertexData[vertexDataUsed + 2].position.x += halfWidth;
-		vertexData[vertexDataUsed + 2].position.y += halfHeight;
-		// 右上 (index 3)
-		vertexData[vertexDataUsed + 3].position.x += halfWidth;
-		vertexData[vertexDataUsed + 3].position.y += halfHeight;
-		break;
-	}
-	case Anker::RightTop:
-	{
-		// 左下 (index 0)
-		vertexData[vertexDataUsed + 0].position.x += -halfWidth;
-		vertexData[vertexDataUsed + 0].position.y += halfHeight;
-		// 左上 (index 1)
-		vertexData[vertexDataUsed + 1].position.x += -halfWidth;
-		vertexData[vertexDataUsed + 1].position.y += halfHeight;
-		// 右下 (index 2)
-		vertexData[vertexDataUsed + 2].position.x += -halfWidth;
-		vertexData[vertexDataUsed + 2].position.y += halfHeight;
-		// 右上 (index 3)
-		vertexData[vertexDataUsed + 3].position.x += -halfWidth;
-		vertexData[vertexDataUsed + 3].position.y += halfHeight;
-		break;
-	}
-	case Anker::LeftDown:
-	{
-		// 左下 (index 0)
-		vertexData[vertexDataUsed + 0].position.x += halfWidth;
-		vertexData[vertexDataUsed + 0].position.y += -halfHeight;
-		// 左上 (index 1)
-		vertexData[vertexDataUsed + 1].position.x += halfWidth;
-		vertexData[vertexDataUsed + 1].position.y += -halfHeight;
-		// 右下 (index 2)
-		vertexData[vertexDataUsed + 2].position.x += halfWidth;
-		vertexData[vertexDataUsed + 2].position.y += -halfHeight;
-		// 右上 (index 3)
-		vertexData[vertexDataUsed + 3].position.x += halfWidth;
-		vertexData[vertexDataUsed + 3].position.y += -halfHeight;
-		break;
-	}
-	case Anker::RightDown:
-	{
-		// 左下 (index 0)
-		vertexData[vertexDataUsed + 0].position.x += -halfWidth;
-		vertexData[vertexDataUsed + 0].position.y += -halfHeight;
-		// 左上 (index 1)
-		vertexData[vertexDataUsed + 1].position.x += -halfWidth;
-		vertexData[vertexDataUsed + 1].position.y += -halfHeight;
-		// 右下 (index 2)
-		vertexData[vertexDataUsed + 2].position.x += -halfWidth;
-		vertexData[vertexDataUsed + 2].position.y += -halfHeight;
-		// 右上 (index 3)
-		vertexData[vertexDataUsed + 3].position.x += -halfWidth;
-		vertexData[vertexDataUsed + 3].position.y += -halfHeight;
-		break;
-	}
-	default:
-		break;
-	}
-
-
-	// WVP行列
-	Matrix4x4 orthoProjectionMatrix = Matrix4x4::MakeOrthographicMatrix(
-		0.0f, 0.0f,
-		static_cast<float>(windowManager->Getwidth()),
-		static_cast<float>(windowManager->Getheight()),
-		0.0f, 100.0f);
-	Matrix4x4 world = Matrix4x4::MakeAffineMatrix(renderData.transforms.scale, renderData.transforms.rotate, renderData.transforms.translate);
-	Matrix4x4 wvpMatrix = (world * orthoProjectionMatrix);
-
-	wvpData[drawCallIndex]->World = world;
-	wvpData[drawCallIndex]->WVP = wvpMatrix;
-
-
-	// マテリアル
-	float uvCenterX = (renderData.pivot.x) - (halfWidth);
-	float uvCenterY = (renderData.pivot.y) - (halfHeight);
-	uvCenterX = uvCenterX / halfWidth / 2;
-	uvCenterY = uvCenterY / halfHeight / 2;
-
-	Matrix4x4 toCenter = Matrix4x4::MakeTranslateMatrix({ -uvCenterX, -uvCenterY, 0.0f });
-	Matrix4x4 fromCenter = Matrix4x4::MakeTranslateMatrix({ uvCenterX, uvCenterY, 0.0f });
-	Matrix4x4 uvTransformMatrix = Matrix4x4::MakeIdentity4x4();
-	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeScaleMatrix(renderData.uvTransform.scale));
-	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(renderData.uvTransform.rotate.z));
-
-	uvTransformMatrix = (fromCenter * (uvTransformMatrix * toCenter));
-
-	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(renderData.uvTransform.translate));
-
-
-	Vector4 color = ConvertUintToVector4(renderData.color);
-	materialData[drawCallIndex]->color = color;
-	materialData[drawCallIndex]->enableLighting = false;
-	materialData[drawCallIndex]->uvTransform = uvTransformMatrix;
+	//// マテリアル
+	//Vector4 color = ConvertUintToVector4(materialColor);
+	//materialData[drawCallIndex]->color = color;
+	//materialData[drawCallIndex]->enableLighting = drawOptions.enableLighting;
+	//Matrix4x4 uvTransformMatrix = Matrix4x4::MakeIdentity4x4();
+	////uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeScaleMatrix(drawOptions.uvTransform.scale));
+	////uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(drawOptions.uvTransform.rotate.z));
+	////uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(drawOptions.uvTransform.translate));
+	//materialData[drawCallIndex]->uvTransform = uvTransformMatrix;
 
 
 	//// 頂点リソース
@@ -977,150 +412,43 @@ void Engine::DrawSprite(Game::RenderData_Sprite& renderData)
 
 	//// 頂点バッファビュー
 	//D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
-	//vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress() + sizeof(VertexData) * (vertexDataUsed);
+	//vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress() + sizeof(VertexData) * vertexDataUsed;
 	//vertexBufferView.SizeInBytes = sizeof(VertexData) * static_cast<UINT>(kSumVertex);
 	//vertexBufferView.StrideInBytes = sizeof(VertexData);
 
-	// スプライトの中心座標
-	Vector2 center = { renderData.transforms.translate.x, renderData.transforms.translate.y };
+	//// 描画処理
+	//dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
+	//dxManager->GetCommandList()->IASetIndexBuffer(&indexBufferView);
+	//// 形状を設定
+	//dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	//// CBVを設定する マテリアル用のCBufferの場所を設定
+	//dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources[drawCallIndex]->GetGPUVirtualAddress());
+	//// CBVを設定する wvp用のCBufferの場所を設定
+	//dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources[drawCallIndex]->GetGPUVirtualAddress());
+	//// SRVのDescriptorTableの先頭を設定。２はrootParameters[2]。
+	//dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
+	//// CBVを設定する ディレクショナルライト用のCBufferの場所を設定
+	//dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 
+	//dxManager->GetCommandList()->DrawInstanced(kSumVertex, 1, 0, 0);
 
-	halfWidth *= renderData.transforms.scale.x;
-	halfHeight *= renderData.transforms.scale.y;
+	//drawCallIndex++;
+	//vertexDataUsed += kSumVertex;
+}
 
-	// アンカーに応じて中心座標を補正
-	switch (renderData.anker)
-	{
-	case Anker::CenterLeft:
-		center.x += halfWidth;
-		break;
-	case Anker::CenterRight:
-		center.x -= halfWidth;
-		break;
-	case Anker::CenterTop:
-		center.y += halfHeight;
-		break;
-	case Anker::CenterDown:
-		center.y -= halfHeight;
-		break;
-	case Anker::LeftTop:
-		center.x += halfWidth;
-		center.y += halfHeight;
-		break;
-	case Anker::RightTop:
-		center.x -= halfWidth;
-		center.y += halfHeight;
-		break;
-	case Anker::LeftDown:
-		center.x += halfWidth;
-		center.y -= halfHeight;
-		break;
-	case Anker::RightDown:
-		center.x -= halfWidth;
-		center.y -= halfHeight;
-		break;
-	default:
-		break;
-	}
+void Engine::DrawTriangle(Game::RenderData_Triangle& renderData)
+{
+	drawSystem->DrawTriangle(renderData);
+}
 
-	// スプライトのAABB
-	float left = center.x - halfWidth;
-	float right = center.x + halfWidth;
-	float top = center.y - halfHeight;
-	float bottom = center.y + halfHeight;
-
-	// マウス座標取得
-	Vector2 mousePos = Game::GetMousePosition();
-
-	// 当たり判定
-	renderData.isCollisionMouseRay = (mousePos.x >= left && mousePos.x <= right && mousePos.y >= top && mousePos.y <= bottom);
-
-
-	// GPUバッファ容量確保 + 書き込み（永続Map）
-	if (!EnsureDynamicVB(vertexDataUsed + kSumVertex)) return;
-	memcpy(vertexMappedPtr + vertexDataUsed, &vertexData[vertexDataUsed], sizeof(VertexData) * kSumVertex);
-
-	// 頂点バッファビュー
-	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
-	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress() + sizeof(VertexData) * (vertexDataUsed);
-	vertexBufferView.SizeInBytes = sizeof(VertexData) * static_cast<UINT>(kSumVertex);
-	vertexBufferView.StrideInBytes = sizeof(VertexData);
-	
-	// Spriteの描画
-	dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
-	dxManager->GetCommandList()->IASetIndexBuffer(&indexBufferView);
-	// 形状を設定
-	dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	// CBVを設定する マテリアル用のCBufferの場所を設定
-	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources[drawCallIndex]->GetGPUVirtualAddress());
-	// CBVを設定する wvp用のCBufferの場所を設定
-	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources[drawCallIndex]->GetGPUVirtualAddress());
-	// SRVのDescriptorTableの先頭を設定。２はrootParameters[2]。
-	dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
-	// CBVを設定する ディレクショナルライト用のCBufferの場所を設定
-	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
-
-	// 描画
-	dxManager->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
-
-	drawCallIndex++;
-	vertexDataUsed += kSumVertex;
+void Engine::DrawSprite(Game::RenderData_Sprite& renderData)
+{
+	drawSystem->DrawSprite(renderData);
 }
 
 void Engine::DrawLine(const Vector3& start, const Vector3& end, const uint32_t& materialColor)
 {
-	if (drawLineCallIndex >= kMaxDrawLineCallPerFrame) return;
-
-	// RootSignatureとPSOを設定 - Line
-	dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
-	dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(BlendMode::kBlendModeNormal, D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE)); // Line用PSOを設定
-
-	// 頂点データの準備
-	VertexData vertices[2];
-	vertices[0].position = { start.x, start.y, start.z, 1.0f };
-	vertices[1].position = { end.x, end.y, end.z, 1.0f };
-
-	UINT offset = static_cast<UINT>(drawLineCallIndex * 2);
-
-	// 頂点バッファへのデータ書き込み
-	memcpy(lineMappedPtr + offset, vertices, sizeof(VertexData) * 2);
-
-	// 頂点バッファビューの設定
-	D3D12_VERTEX_BUFFER_VIEW vertexBufferViewLine{};
-	vertexBufferViewLine.BufferLocation = vertexResourceLine->GetGPUVirtualAddress() + sizeof(VertexData) * offset;
-	vertexBufferViewLine.SizeInBytes = sizeof(VertexData) * 2;
-	vertexBufferViewLine.StrideInBytes = sizeof(VertexData);
-	dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferViewLine);
-
-	// プリミティブトポロジーの設定
-	dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST); // 直線を設定
-
-	// マテリアル定数バッファの更新
-	Vector4 color = ConvertUintToVector4(materialColor);
-	materialDataLine[drawLineCallIndex]->color = color;
-	materialDataLine[drawLineCallIndex]->enableLighting = 0; // 線にライト要らない
-	materialDataLine[drawLineCallIndex]->uvTransform = Matrix4x4::MakeIdentity4x4(); // 線にUV変換いらない
-	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResourceLine[drawLineCallIndex]->GetGPUVirtualAddress());// b1にバインド
-
-	// WVP行列定数バッファの更新 (カメラのWVP行列を使用)
-	Matrix4x4 wvpMatrix = cameraController->viewProjectionMatrix;
-	if (!debugCamera)
-	{
-		wvpMatrix = cameraController->viewProjectionMatrix;
-	}
-	else
-	{
-		wvpMatrix = debugCameraController->viewProjectionMatrix;
-	}
-	wvpDataLine[drawLineCallIndex]->WVP = wvpMatrix;
-	wvpDataLine[drawLineCallIndex]->World = Matrix4x4::MakeIdentity4x4();
-	dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResourceLine[drawLineCallIndex]->GetGPUVirtualAddress()); // b0にバインド
-
-
-	// 描画コマンドの発行
-	dxManager->GetCommandList()->DrawInstanced(2, 1, 0, 0);
-
-	drawLineCallIndex++;
+	drawSystem->DrawLine(start, end, materialColor);
 }
 
 void Engine::DrawParticle(Game::RenderData_Particle& renderData)
@@ -1422,37 +750,37 @@ bool Engine::IsAABBInFrustum(const AABB& aabb, const Matrix4x4& worldMatrix)
 // 音
 void Engine::PlayAudio(const uint32_t& audioId, bool loop)
 {
-	dxManager->GetAudioManager()->PlayAudio(audioId, loop);
+	dxManager->GetResourceManager()->GetAudioManager()->PlayAudio(audioId, loop);
 }
 
 void Engine::StopAudio(const uint32_t& audioId)
 {
-	dxManager->GetAudioManager()->StopAudio(audioId);
+	dxManager->GetResourceManager()->GetAudioManager()->StopAudio(audioId);
 }
 
 void Engine::SetAudioVolume(const uint32_t& audioId, float volume)
 {
-	dxManager->GetAudioManager()->SetVolume(audioId, volume);
+	dxManager->GetResourceManager()->GetAudioManager()->SetVolume(audioId, volume);
 }
 
 void Engine::SetMasterVolume(float volume)
 {
-	dxManager->GetAudioManager()->SetMasterVolume(volume);
+	dxManager->GetResourceManager()->GetAudioManager()->SetMasterVolume(volume);
 }
 
 float Engine::GetVolume(const uint32_t& audioId)
 {
-	return dxManager->GetAudioManager()->GetVolume(audioId);
+	return dxManager->GetResourceManager()->GetAudioManager()->GetVolume(audioId);
 }
 
 float Engine::GetMasterVolume()
 {
-	return dxManager->GetAudioManager()->GetMasterVolume();
+	return dxManager->GetResourceManager()->GetAudioManager()->GetMasterVolume();
 }
 
 bool Engine::IsAudioPlaying(const uint32_t& audioId)
 {
-	return dxManager->GetAudioManager()->IsAudioPlaying(audioId);
+	return dxManager->GetResourceManager()->GetAudioManager()->IsAudioPlaying(audioId);
 }
 
 
@@ -1469,66 +797,17 @@ Ray Engine::GetMouseRay()
 
 uint32_t Engine::GetMouseWheel()
 {
-	uint32_t delta = wheelDelta;
-	return delta;
+	return wheelDelta;
 }
-
-//bool Engine::IsCollisionMouseRayObject(uint32_t objectNumber, const Transforms& data)
-//{
-//	std::vector<AABB> aabbs = CreateAABB(data, objectNumber);
-//	Ray ray = inputManager_->GetMouseController()->GetMouseRay();
-//
-//	// どれか1つでも衝突すればtrue
-//	for (const auto& aabb : aabbs)
-//	{
-//		if (IsCollision(ray, objects[objectNumber].modelData.vertices, aabb, data))
-//		{
-//			return true;
-//		}
-//	}
-//	return false;
-//}
 
 bool Engine::GetMousePress(int i)
 {
-	// 左クリック
-	if (i == 0)
-	{
-		return inputManager_->GetMouseController()->Buttens.leftButton;
-	}
-	// 右クリック
-	else if (i == 1)
-	{
-		return inputManager_->GetMouseController()->Buttens.rightButton;
-	}
-	// ミドルボタン（マウスホイールクリック）
-	else if (i == 2)
-	{
-		return inputManager_->GetMouseController()->Buttens.middleButton;
-	}
-
-	return false;
+	return inputManager_->GetMouseController()->GetMousePress(i);
 }
 
 bool Engine::GetMousePrePress(int i)
 {
-	// 左クリック
-	if (i == 0)
-	{
-		return inputManager_->GetMouseController()->preButtens.leftButton;
-	}
-	// 右クリック
-	else if (i == 1)
-	{
-		return inputManager_->GetMouseController()->preButtens.rightButton;
-	}
-	// ミドルボタン（マウスホイールクリック）
-	else if (i == 2)
-	{
-		return inputManager_->GetMouseController()->preButtens.middleButton;
-	}
-
-	return false;
+	return inputManager_->GetMouseController()->GetMousePrePress(i);
 }
 
 // カメラ操作
@@ -1584,48 +863,11 @@ CameraController* Engine::GetDebugCamera()
 //	}
 //}
 
-// 座標とかない、本当にただモデルの形のAABBを作るだけの関数（LoadOBJの時のAABB初期化用）
-AABB Engine::CreateLocalAABB(const ModelData& model)
-{
-	AABB localAABB;
-
-	// 最小値と最大値を初期化
-	localAABB.min.x = (std::numeric_limits<float>::max)();
-	localAABB.min.y = (std::numeric_limits<float>::max)();
-	localAABB.min.z = (std::numeric_limits<float>::max)();
-
-	localAABB.max.x = std::numeric_limits<float>::lowest();
-
-	// 頂点データ空だったらエラー出すべきだけどunityシステムあるかもだから落とさない
-	if (model.vertices.empty())
-	{
-		localAABB.min = { 0.0f, 0.0f, 0.0f };
-		localAABB.max = { 0.0f, 0.0f, 0.0f };
-		return localAABB;
-	}
-
-	// 全ての頂点を調べてAABBの最小値と最大値を更新
-	for (const auto& vertex : model.vertices)
-	{
-		// 各軸の最小値を更新
-		if (vertex.position.x < localAABB.min.x) localAABB.min.x = vertex.position.x;
-		if (vertex.position.y < localAABB.min.y) localAABB.min.y = vertex.position.y;
-		if (vertex.position.z < localAABB.min.z) localAABB.min.z = vertex.position.z;
-
-		// 各軸の最大値を更新
-		if (vertex.position.x > localAABB.max.x) localAABB.max.x = vertex.position.x;
-		if (vertex.position.y > localAABB.max.y) localAABB.max.y = vertex.position.y;
-		if (vertex.position.z > localAABB.max.z) localAABB.max.z = vertex.position.z;
-	}
-
-	return localAABB;
-}
-
 // CreateLocalAABBでつくったAABBに座標を適応させる（当たり判定の毎フレーム更新用）
 std::vector<AABB>  Engine::CreateAABB(const Transforms& transforms, uint32_t objectNumber)
 {
 	Matrix4x4 worldMatrix = transforms.World;
-	Object3D& obj = objects[objectNumber];
+	Object3D& obj = dxManager->GetResourceManager()->GetModelManager()->objects[objectNumber];
 	std::vector<AABB> result;
 
 	for (const auto& localAABB : obj.aabb)
@@ -1660,112 +902,7 @@ std::vector<AABB>  Engine::CreateAABB(const Transforms& transforms, uint32_t obj
 	return result;
 }
 
-void Engine::toggleWireframeMode()
+void Engine::toggleWireframeMode(bool mode)
 {
-	if (WireframeMode)WireframeMode = false;
-	else WireframeMode = true;
-}
-
-
-void Engine::InitializeLineResources(ID3D12Device* device)
-{
-	HRESULT hr;
-
-	// Line用VB確保（2頂点 * 最大本数）
-	vertexResourceSizeLine = static_cast<UINT>(sizeof(VertexData) * 2 * kMaxDrawLineCallPerFrame);
-	vertexResourceLine = CreateBufferResource(device, vertexResourceSizeLine);
-	// 永続Map
-	hr = vertexResourceLine->Map(0, nullptr, reinterpret_cast<void**>(&lineMappedPtr));
-	assert(SUCCEEDED(hr));
-
-	// ヒーププロパティ (アップロード用)
-	D3D12_HEAP_PROPERTIES heapProperties{};
-	heapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
-
-	// WVPバッファの記述 (定数バッファは256バイトアライメントが必要)
-	D3D12_RESOURCE_DESC wvpBufferDesc{};
-	wvpBufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	wvpBufferDesc.Width = (sizeof(TransformationMatrix) + 0xff) & ~0xff; // 256バイトアライメント
-	wvpBufferDesc.Height = 1;
-	wvpBufferDesc.DepthOrArraySize = 1;
-	wvpBufferDesc.MipLevels = 1;
-	wvpBufferDesc.Format = DXGI_FORMAT_UNKNOWN;
-	wvpBufferDesc.SampleDesc.Count = 1;
-	wvpBufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-
-	// マテリアルバッファの記述 (各マテリアルは小さい)
-	D3D12_RESOURCE_DESC materialBufferDesc{};
-	materialBufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	materialBufferDesc.Width = sizeof(Material); // 1つのMaterial構造体のサイズ
-	materialBufferDesc.Height = 1;
-	materialBufferDesc.DepthOrArraySize = 1;
-	materialBufferDesc.MipLevels = 1;
-	materialBufferDesc.Format = DXGI_FORMAT_UNKNOWN;
-	materialBufferDesc.SampleDesc.Count = 1;
-	materialBufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-
-	for (size_t i = 0; i < kMaxDrawLineCallPerFrame; ++i)
-	{
-		// マテリアルリソースの作成とマップ
-		hr = device->CreateCommittedResource(
-			&heapProperties,
-			D3D12_HEAP_FLAG_NONE,
-			&materialBufferDesc, // materialBufferDesc を使用
-			D3D12_RESOURCE_STATE_GENERIC_READ,
-			nullptr,
-			IID_PPV_ARGS(&materialResourceLine[i]));
-		assert(SUCCEEDED(hr));
-		materialResourceLine[i]->SetName(L"materialResourceLine");
-		materialResourceLine[i]->Map(0, nullptr, reinterpret_cast<void**>(&materialDataLine[i]));
-
-		// WVPリソースの作成とマップ
-		hr = device->CreateCommittedResource(
-			&heapProperties,
-			D3D12_HEAP_FLAG_NONE,
-			&wvpBufferDesc, // wvpBufferDesc を使用
-			D3D12_RESOURCE_STATE_GENERIC_READ,
-			nullptr,
-			IID_PPV_ARGS(&wvpResourceLine[i]));
-		assert(SUCCEEDED(hr));
-		wvpResourceLine[i]->SetName(L"wvpResourceLine");
-		wvpResourceLine[i]->Map(0, nullptr, reinterpret_cast<void**>(&wvpDataLine[i]));
-	}
-}
-
-bool Engine::EnsureDynamicVB(size_t requiredVertexCount)
-{
-	// まだMapしていなければここで永続Map
-	if (!vertexMappedPtr && vertexResource)
-	{
-		HRESULT hr0 = vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexMappedPtr));
-		if (FAILED(hr0) || !vertexMappedPtr) return false;
-	}
-
-	size_t requiredBytes = requiredVertexCount * sizeof(VertexData);
-	if (requiredBytes <= vertexResourceSize) return true;
-
-	// 2倍成長でリサイズ
-	size_t currentCount = vertexResourceSize / sizeof(VertexData);
-	size_t newCount = my_max(requiredVertexCount, currentCount ? currentCount * 2 : size_t(1024));
-	UINT newSizeBytes = static_cast<UINT>(newCount * sizeof(VertexData));
-
-	auto newResource = CreateBufferResource(dxManager->GetDevice(), newSizeBytes);
-	if (!newResource) return false;
-
-	// 新リソースを永続Map
-	VertexData* newMapped = nullptr;
-	HRESULT hr = newResource->Map(0, nullptr, reinterpret_cast<void**>(&newMapped));
-	if (FAILED(hr) || !newMapped) return false;
-
-	// 旧内容をコピー
-	if (vertexMappedPtr && vertexDataUsed > 0)
-	{
-		memcpy(newMapped, vertexMappedPtr, vertexDataUsed * sizeof(VertexData));
-		vertexResource->Unmap(0, nullptr);
-	}
-
-	vertexResource = newResource;
-	vertexMappedPtr = newMapped;
-	vertexResourceSize = newSizeBytes;
-	return true;
+	drawSystem->toggleWireframeMode(mode);
 }

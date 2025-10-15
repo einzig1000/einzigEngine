@@ -9,6 +9,7 @@
 #include "Window/WindowManager.h"
 #include "DirectX/DirectXManager.h"
 #include "Camera/CameraController.h"
+#include "DrawSystem/DrawSystem.h"
 
 class Engine
 {
@@ -27,7 +28,6 @@ public:
 
 	// リソース読み込み
 	uint32_t LoadOBJ(const std::string& directoryPath, const std::string& filename);
-	std::vector<AABB> LoadAABB(const std::string& csvPath, const ModelData& model);
 	uint32_t LoadTexture(const std::string& filePath);
 	uint32_t LoadAudio(const std::string& filePath);
 
@@ -57,10 +57,10 @@ public:
 	bool IsAudioPlaying(const uint32_t& audioId);
 
 	// ライト
-	void SetLightColor(const Vector4 color) { directionalLightData->color = color; }
-	void SetLightDirection(const Vector3 direction) { directionalLightData->direction = direction; }
-	void SetLightIntensity(float intensity) { directionalLightData->intensity = intensity; }
-	void ToggleLightMode(const uint32_t mode) { directionalLightData->mode = mode; }
+	void SetLightColor(const Vector4 color) { drawSystem->SetLightColor(color); }
+	void SetLightDirection(const Vector3 direction) { drawSystem->SetLightDirection(direction); }
+	void SetLightIntensity(float intensity) { drawSystem->SetLightIntensity(intensity); }
+	void ToggleLightMode(const uint32_t mode) { drawSystem->ToggleLightMode(mode); }
 
 	// マウス
 	Vector2 GetMousePosition();
@@ -68,7 +68,6 @@ public:
 	Ray GetMouseRay();
 	bool GetMousePress(int i);
 	bool GetMousePrePress(int i);
-	//bool IsCollisionMouseRayObject(uint32_t objectNumber, const Transforms& data);
 
 	// カメラ
 	void MoveCameraCenter(Vector3 target, int spendFrame, EaseType easetype);
@@ -86,62 +85,31 @@ public:
 	std::vector<AABB>  CreateAABB(const Transforms& transforms, uint32_t objectNumber);
 
 	// プリミティブモードの設定
-	void toggleWireframeMode();
+	void toggleWireframeMode(bool mode);
 
 private:
 	// カメラ更新
 	void UpdateCamera();
-	// ライト更新
-	void UpdateLight();
-	// ただモデルの形のAABBを作るだけの関数（LoadOBJの時のAABB初期化用）
-	AABB CreateLocalAABB(const ModelData& model);
-	// ライン頂点リソースの初期化
-	void InitializeLineResources(ID3D12Device* device);
-	// 動的頂点バッファの確保
-	bool EnsureDynamicVB(size_t requiredVertexCount);
 
 	WindowManager* windowManager = nullptr;
 	DirectXManager* dxManager = nullptr;
+	DrawSystem* drawSystem = nullptr;
 
-	// 頂点リソースと頂点データと使用済み頂点数
 
-	// モデル
-	std::vector<Object3D> objects;
-
-	// 三角形
-	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;
-	UINT vertexResourceSize;
-	std::vector<VertexData> vertexData;
-	size_t vertexDataUsed = 0;
-	VertexData* vertexMappedPtr = nullptr; // 永続Mapポインタ
-
-	// 線
-	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceLine;
-	UINT vertexResourceSizeLine;
-	VertexData* lineMappedPtr = nullptr; // 永続Mapポインタ
+	const uint32_t kNumInstance = 10;
+	Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource = nullptr;
+	TransformationMatrix* instancingData = nullptr; // 永続Mapポインタ
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> indexResource;
 	D3D12_INDEX_BUFFER_VIEW indexBufferView;
 
-	// 使い回す定数バッファ（マテリアル/WVP）をフレーム数分用意
-	size_t kMaxDrawCallPerFrame = 1280;
-	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> materialResources;
-	std::vector<Material*> materialData;
-	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> wvpResources;
-	std::vector<TransformationMatrix*> wvpData;
-	size_t drawCallIndex;
-
-	// ラインはその他の3Dオブジェクトと比べて必要な情報量が少ないから他のと一緒に扱ったら余計な容量使う。はず
-	size_t kMaxDrawLineCallPerFrame = 2560;
-	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> materialResourceLine;
-	std::vector<Material*> materialDataLine;
-	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> wvpResourceLine;
-	std::vector<TransformationMatrix*> wvpDataLine;
-	size_t drawLineCallIndex;
-
-	// ライト
-	Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource;
-	DirectionalLight* directionalLightData = nullptr;
+	//// ラインはその他の3Dオブジェクトと比べて必要な情報量が少ないから他のと一緒に扱ったら余計な容量使う。はず
+	//size_t kMaxDrawLineCallPerFrame = 2560;
+	//std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> materialResourceLine;
+	//std::vector<Material*> materialDataLine;
+	//std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> wvpResourceLine;
+	//std::vector<TransformationMatrix*> wvpDataLine;
+	//size_t drawLineCallIndex = 0;
 
 	// カメラ
 	CameraController* cameraController = nullptr;
@@ -153,6 +121,4 @@ private:
 	Input* inputManager_ = nullptr;
 	int wheelDelta = 0;
 
-	// プリミティブモード
-	bool WireframeMode = false;
 };

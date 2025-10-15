@@ -12,6 +12,8 @@ public:
 	void SetMouseButtenState();
 
 	Vector2 GetMousePosition() const { return position_; }
+	bool GetMousePress(int i);
+	bool GetMousePrePress(int i);
 	Ray GetMouseRay() const { return ray_; }
 
 	mouseButtenState Buttens;

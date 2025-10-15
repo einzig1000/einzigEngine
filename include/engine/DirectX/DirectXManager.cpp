@@ -15,8 +15,7 @@ DirectXManager::DirectXManager(HWND hwnd, int width, int height)
     synchronizationManager = std::make_unique<SynchronizationManager>(deviceManager->GetDevice());
     viewportScissorManager = std::make_unique<ViewportScissorManager>(width, height);
 
-    audioManager_ = std::make_unique<AudioManager>();
-    textureManager_ = std::make_unique<TextureManager>(GetDevice(), GetsrvDescriptorHeap());
+	resourceManager_ = std::make_unique<ResourceManager>();
 
     Log("コンストラクタ実行成功 : DirectXManager");
 }

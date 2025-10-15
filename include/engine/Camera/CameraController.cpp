@@ -10,7 +10,8 @@ CameraController::CameraController()
 
     // カメラ
     transform_.translate = { 0.0f, 0.0f, 0.0f };
-    transform_.rotate = { 1.13f, 0.0f, 0.0f };
+    //transform_.rotate = { 1.13f, 0.0f, 0.0f };
+    transform_.rotate = { 0.0f, std::numbers::pi_v<float> / -2.0f, 0.0f };
     center_ = { 0.0f, 0.0f, 0.0f };
     distance_ = 35.60f;
 
@@ -19,6 +20,7 @@ CameraController::CameraController()
     preRotate_.y = transform_.rotate.y;
 
     sphereOptions.enableLighting = false;
+    projectionMatrix_ = Matrix4x4::MakePerspectiveFovMatrix(0.45f, float(1280) / float(720), 0.1f, 100.0f);
 }
 
 void CameraController::Update()
@@ -37,12 +39,12 @@ void CameraController::Update()
 
 #pragma region カメラ回転
         // クリックした瞬間
-        if (pressMouse2_ && prePressMouse2_ == 0 && !GetHitKey::keys[DIK_LSHIFT])
+        if (pressMouse2_ && prePressMouse2_ == 0 && !GetHitKey::IsPressedNow(DIK_LSHIFT))
         {
             preMousePosition_ = Game::GetMousePosition();
         }
         // クリックしている最中
-        if (pressMouse2_ && !GetHitKey::keys[DIK_LSHIFT])
+        if (pressMouse2_ && !GetHitKey::IsPressedNow(DIK_LSHIFT))
         {
             mousePosition_ = Game::GetMousePosition();
             mousePositionGap_.x = mousePosition_.x - preMousePosition_.x;
@@ -51,7 +53,7 @@ void CameraController::Update()
             transform_.rotate.y = (mousePositionGap_.x / 100.0f) + (preRotate_.y);
         }
         // クリックやめた瞬間
-        if (prePressMouse2_ && pressMouse2_ == 0 && !GetHitKey::keys[DIK_LSHIFT])
+        if (prePressMouse2_ && pressMouse2_ == 0 && !GetHitKey::IsPressedNow(DIK_LSHIFT))
         {
             preRotate_ = transform_.rotate;
         }
@@ -59,11 +61,11 @@ void CameraController::Update()
 #pragma endregion
 
 #pragma region 回転中心
-        if (prePressMouse2_ == 0 && pressMouse2_ && GetHitKey::keys[DIK_LSHIFT])
+        if (prePressMouse2_ == 0 && pressMouse2_ && GetHitKey::IsPressedNow(DIK_LSHIFT))
         {
             preMousePosition_ = Game::GetMousePosition();
         }
-        if (pressMouse2_ && GetHitKey::keys[DIK_LSHIFT])
+        if (pressMouse2_ && GetHitKey::IsPressedNow(DIK_LSHIFT))
         {
             mousePosition_ = Game::GetMousePosition();
             mousePositionGap_.x = float(mousePosition_.x - preMousePosition_.x);
@@ -98,7 +100,7 @@ void CameraController::Update()
             // Centerを移動
             center_ = preCenter_ + -right * (mousePositionGap_.x * panSpeed) - up * (mousePositionGap_.y * panSpeed);
         }
-        if (prePressMouse2_ && pressMouse2_ == 0 && GetHitKey::keys[DIK_LSHIFT])
+        if (prePressMouse2_ && pressMouse2_ == 0 && GetHitKey::IsPressedNow(DIK_LSHIFT))
         {
             preCenter_ = center_;
         }
@@ -133,16 +135,6 @@ void CameraController::Update()
 
 #ifdef _DEBUG
 #endif
-    ImGui::Begin("camera");
-    ImGui::DragFloat3("cameraCenter", &center_.x, 0.01f);
-    ImGui::DragFloat3("cameraRotate", &transform_.rotate.x, 0.01f);
-    ImGui::DragFloat("cameraDistance", &distance_, 0.1f);
-    ImGui::DragFloat3("cameratransform_.translate", &transform_.translate.x, 0.01f);
-    ImGui::DragFloat3("cameratransform_.rotate", &transform_.rotate.x, 0.01f);
-    ImGui::Text("push SPACE key : change cameraMode");
-    ImGui::Checkbox("cameraMode", &cameraMode_);
-    ImGui::Checkbox("cameraModeMode", &cameraModeMode_);
-    ImGui::End();
 
     //////////////////////////////////////////////
     ///               カメラ移動               ///
@@ -206,12 +198,22 @@ void CameraController::Update()
 
     // ビュー・射影・ビューポート行列
     viewMatrix_ = (cameraMatrix_.Inverse());
-    projectionMatrix_ = Matrix4x4::MakePerspectiveFovMatrix(0.45f, float(1280) / float(720), 0.1f, 100.0f);
+    //projectionMatrix_ = Matrix4x4::MakePerspectiveFovMatrix(0.45f, float(1280) / float(720), 0.1f, 100.0f);
     viewProjectionMatrix = (viewMatrix_ * projectionMatrix_);
 }
 
 void CameraController::Draw()
 {
+    ImGui::Begin("camera");
+    ImGui::DragFloat3("cameraCenter", &center_.x, 0.01f);
+    ImGui::DragFloat3("cameraRotate", &transform_.rotate.x, 0.01f);
+    ImGui::DragFloat("cameraDistance", &distance_, 0.1f);
+    ImGui::DragFloat3("cameratransform_.translate", &transform_.translate.x, 0.01f);
+    ImGui::DragFloat3("cameratransform_.rotate", &transform_.rotate.x, 0.01f);
+    ImGui::Text("push SPACE key : change cameraMode");
+    ImGui::Checkbox("cameraMode", &cameraMode_);
+    ImGui::Checkbox("cameraModeMode", &cameraModeMode_);
+    ImGui::End();
     Game::DrawSphere({ {0.1f,0.1f,0.1f}, {0.0f,0.0f,0.0f}, center_ }, { 0,0,0 }, 12, 0, 0xFFFFFFFF, sphereOptions);
 }
 

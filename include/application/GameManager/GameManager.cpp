@@ -1,33 +1,59 @@
 #include "GameManager.h"
+#include "engine/Camera/CameraController.h"
 
 GameManager::GameManager()
 {
 	frame = 0;
-	uint32_t tex = Game::LoadTexture("resources/Prototypes/texture/uvChecker.png");
+	uint32_t playerTex = Game::LoadTexture("resources/Prototypes/texture/uvChecker.png");
+	uint32_t playerModel = Game::LoadOBJ("resources/Prototypes/model/", "cube.obj");
 
-	sprite.texture = Game::LoadTexture("resources/Prototypes/texture/uvChecker.png");
-	ground.model = Game::LoadOBJ("resources/Prototypes/model/", "cube.obj");
-	ground.texture = tex;
-	groun.model = Game::LoadOBJ("resources/Prototypes/model/", "cube.obj");
-	groun.texture = tex;
-	player.model = Game::LoadOBJ("resources/Minecraft/blaze/", "blaze.obj");
-	player.model = Game::LoadOBJ("resources/Prototypes/model/", "corn.obj");
-	player.texture = Game::LoadTexture("resources/Prototypes/texture/uvChecker.png");
+	uint32_t blockTex = Game::LoadTexture("resources/Prototypes/texture/white1x1.png");
+	uint32_t blockModel = Game::LoadOBJ("resources/Prototypes/model/", "cube.obj");
 
-	player.transforms.translate = { 0.0f,10.0f,0.0f };
-	player.gravity.y = 0.01f;
+	uint32_t enemyTex = Game::LoadTexture("resources/Prototypes/texture/white1x1.png");
+	uint32_t enemyModel = Game::LoadOBJ("resources/Prototypes/model/", "corn.obj");
 
-	ground.transforms.scale = { 10.0f,1.0f,10.0f };
-	groun.transforms.translate = { 0.0f,-1.0f,0.0f };
+	// プレイヤー生成
+	player_ = new Player(playerTex, playerModel);
 
-	player.SetBlock(ground);
-	//player.SetBlock(ground);
-	player.SetBlock(groun);
-	//ground.SetBlock(player);
+	// ブロック生成
+	for (uint32_t x = 0; x < blockW; ++x)
+	{
+		for (uint32_t y = 0; y < blockY; ++y)
+		{
+			block_[x][y].model = blockTex;
+			block_[x][y].texture = blockModel;
+			block_[x][y].transforms.translate = { (float)x, -1.0f, (float)y };
+			player_->SetBlock(block_[x][y]);
+		}
+	}
+
+	// エネミー生成
+	for (uint32_t i = 0; i < enemyN; ++i)
+	{
+		enemy_[i] = new Enemy(enemyTex, enemyModel);
+	}
+
+	// ログ初期化
+	for (auto& log : spaceLog)
+	{
+		log = false;
+	}
+
+	// カメラ初期化
+	Game::MoveCameraRotate(Vector3{ 0.0f,-std::numbers::pi_v<float> / 2.0f,0.0f }, 0, EaseType::IN_BACK);
 }
 
 GameManager::~GameManager()
 {
+	delete player_;
+	player_ = nullptr;
+
+	for (uint32_t i = 0; i < enemyN; ++i)
+	{
+		delete enemy_[i];
+		enemy_[i] = nullptr;
+	}
 
 }
 
@@ -35,100 +61,86 @@ void GameManager::Update()
 {
 	if (frame > 1)
 	{
-		// ジャンプ
-		if (GetHitKey::keys[DIK_SPACE] && !GetHitKey::preKeys[DIK_SPACE])
-		{
-			player.velocity.y += 0.3f;
-			player.gravity.y = 0.01f;
-		}
-		if (GetPadState::buttons[0][PAD_A] && !GetPadState::preButtons[0][PAD_A])
-		{
-			player.velocity.y += 0.3f;
-			player.gravity.y = 0.01f;
-		}
+		player_->Update();
 
-		//if (GetHitKey::keys[DIK_W] || GetHitKey::keys[DIK_S])
-		//{
-		//	if (GetHitKey::keys[DIK_W])
-		//		player.velocity.z = 0.03f;
-		//	if (GetHitKey::keys[DIK_S])
-		//		player.velocity.z = -0.03f;
-		//}
-		//else player.velocity.z = 0.0f;
-		//
-		//if (GetHitKey::keys[DIK_D] || GetHitKey::keys[DIK_A])
-		//{
-		//	if (GetHitKey::keys[DIK_D])
-		//		player.velocity.x = 0.03f;
-		//	if (GetHitKey::keys[DIK_A])
-		//		player.velocity.x = -0.03f;
-		//}
-		//else player.velocity.x = 0.0f;
-
-		// 
-		if (GetHitKey::keys[DIK_1])
+		for (uint32_t i = 0; i < enemyN; ++i)
 		{
-			player.LookAtFront();
+			enemy_[i]->Update(*player_);
 		}
-		if (GetHitKey::keys[DIK_2])
-		{
-			player.LookAtCamera(roll);
-		}
-
-		if (GetPadState::buttons[0][PAD_DOWN])
-		{
-			player.transforms.translate.z -= 0.1f;
-		}
-		if (GetPadState::buttons[0][PAD_UP])
-		{
-			player.transforms.translate.z += 0.1f;
-		}
-		if (GetPadState::buttons[0][PAD_RIGHT])
-		{
-			player.transforms.translate.x += 0.1f;
-		}
-		if (GetPadState::buttons[0][PAD_LEFT])
-		{
-			player.transforms.translate.x -= 0.1f;
-		}
-
-		// 
-		if (GetPadState::rightStickDir[0].x > 0.25f)
-		{
-			cameraRotate.y += 0.1f;
-		}
-		else if (GetPadState::rightStickDir[0].x < -0.25f)
-		{
-			cameraRotate.y -= 0.1f;
-		}
-		if (GetPadState::rightStickDir[0].y > 0.25f)
-		{
-			cameraRotate.x -= 0.03f;
-		}
-		else if (GetPadState::rightStickDir[0].y < -0.25f)
-		{
-			cameraRotate.x += 0.03f;
-		}
-
 	}
 
-	Game::MoveCameraRotate(cameraRotate, 0, EaseType::IN_BACK);
-	
-	roll += 0.01f;
+	Vector3 Dpos = player_->data.GetWorldPosition();
+	Vector3 Upos = player_->data.GetWorldPosition();
+	Vector3 Mpos = player_->data.GetWorldPosition();
+
+	Dpos.y = -1.0f;
+
+	if (Mpos.y < 10.0f)
+	{
+		Mpos.y = 10.0f;
+		Upos.y = 20.0f;
+	}
+	if (Mpos.y > 10.0f)
+	{
+		Upos.y = Mpos.y + 10.0f;
+	}
+
+	//ImGui::Begin("a");
+	//ImGui::Text("Dpos.y: %.2f", Dpos.y);
+	//ImGui::Text("Upos.y: %.2f", Upos.y);
+	//ImGui::Text("Mpos.y: %.2f", Mpos.y);
+	//ImGui::End();
+
+	FrameTwoVerticalPoints(Upos, Dpos, 0.0f, 0, EaseType::IN_BACK);
+
 	frame++;
 }
 
 void GameManager::Draw()
 {
-	//Game::DrawLine(Vector3{ 0,0,0 }, Vector3{ 100,100,100 }, 0xFFFFFFFF);
-	//sprite.Draw();
-	player.Draw();
-	//player.DrawAABB();
-	//player.DrawImGui();
-	ground.Draw();
-	//ground.DrawAABB();
-	//ground.DrawImGui();
-	//groun.Draw();
-	//groun.DrawAABB();
-	//groun.DrawImGui();
+	for (uint32_t x = 0; x < blockW; ++x)
+	{
+		for (uint32_t y = 0; y < blockY; ++y)
+		{
+			block_[x][y].Draw();
+		}
+	}
+
+	for (uint32_t i = 0; i < enemyN; ++i)
+	{
+		enemy_[i]->Draw();
+	}
+
+	player_->Draw();
+}
+
+void GameManager::FrameTwoVerticalPoints(const Vector3& p1, const Vector3& p2,
+	float padding = 0.0f,
+	int spendFrame = 20,
+	EaseType easing = EaseType::OUT_CUBIC)
+{
+	// 中点を回転中心に
+	const Vector3 mid{
+		(p1.x + p2.x) * 0.5f,
+		(p1.y + p2.y) * 0.5f,
+		(p1.z + p2.z) * 0.5f
+	};
+
+	// 垂直FOV（CameraController::Update と同じ値に合わせる）
+	constexpr float fovY = 0.45f; // rad
+	const float dy = std::fabs(p1.y - p2.y);
+	const float halfSpan = dy * 0.5f + padding;
+
+	// 垂直方向に収めるのに必要な距離（少しマージンを掛ける）
+	float targetDistance = halfSpan / std::tan(fovY * 0.5f);
+	targetDistance *= 1.02f; // 2% の余裕
+
+	// 近遠クリップに配慮（Update内の near=0.1f, far=100.0f に合わせる）
+	targetDistance = std::clamp(targetDistance, 0.11f, 99.99f);
+
+	// 回転は変えず、中心と距離のみ変更（イージング適用）
+	//const int frames = (spendFrame <= 0) ? 1 : spendFrame;
+	Game::MoveCameraCenter(mid, spendFrame, easing);
+	Game::MoveCameraDistance(targetDistance, spendFrame, easing);
+
 }
