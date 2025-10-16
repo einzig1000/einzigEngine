@@ -151,8 +151,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="include\application\Phase\BattlePhase\BattlePhase.cpp" />
-    <ClCompile Include="include\application\Enemy\Enemy.cpp" />
-    <ClCompile Include="include\application\Enemy\EnemyBullet\EnemyBullet.cpp" />
     <ClCompile Include="externals\imgui\imgui.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Disabled</Optimization>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MinSpace</Optimization>
@@ -244,15 +242,11 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="include\engine\Window\WindowManager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="include\application\Phase\PhaseParent\PhaseParent.cpp" />
-    <ClCompile Include="include\application\Player\Player.cpp" />
-    <ClCompile Include="include\application\Player\PlayerBullet\PlayerBullet.cpp" />
     <ClCompile Include="include\application\Phase\TestPhase\TestPhase.cpp" />
     <ClCompile Include="include\application\Phase\TitlePhase\TitlePhase.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\application\Phase\BattlePhase\BattlePhase.h" />
-    <ClInclude Include="include\application\Enemy\Enemy.h" />
-    <ClInclude Include="include\application\Enemy\EnemyBullet\EnemyBullet.h" />
     <ClInclude Include="externals\imgui\imconfig.h" />
     <ClInclude Include="externals\imgui\imgui.h" />
     <ClInclude Include="externals\imgui\imgui_impl_dx12.h" />
@@ -289,8 +283,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="include\engine\Utilities\functions.h" />
     <ClInclude Include="include\engine\Window\WindowManager.h" />
     <ClInclude Include="include\application\Phase\PhaseParent\PhaseParent.h" />
-    <ClInclude Include="include\application\Player\Player.h" />
-    <ClInclude Include="include\application\Player\PlayerBullet\PlayerBullet.h" />
     <ClInclude Include="include\application\Phase\TestPhase\TestPhase.h" />
     <ClInclude Include="include\application\Phase\TitlePhase\TitlePhase.h" />
   </ItemGroup>

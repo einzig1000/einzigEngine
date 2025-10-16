@@ -214,6 +214,10 @@ LONG WINAPI ExportDump(EXCEPTION_POINTERS* exception);
 /// <returns>作成されたバッファリソース</returns>
 Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(ID3D12Device* device, size_t sizeInBytes);
 
+
+Microsoft::WRL::ComPtr<ID3D12Resource> CreateConstantBufferResource(
+	ID3D12Device* device, size_t sizeInBytes);
+
 /// <summary>
 /// HLSL シェーダーをコンパイルする関数
 /// </summary>
@@ -296,4 +300,4 @@ MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const st
 /// <param name="directoryPath">OBJ ファイルのディレクトリパス</param>
 /// <param name="filename">OBJ ファイル名</param>
 /// <returns>構築されたモデルデータ</returns>
-ModelData LoadOBJFile(const std::string& directoryPath, const std::string& filename);
+ModelData LoadModelFile(const std::string& directoryPath, const std::string& filename);

@@ -36,4 +36,5 @@ struct DirectionalLight
     float32_t3 direction;
     float intensity;
     int mode;
+    float32_t3 padding;
 };

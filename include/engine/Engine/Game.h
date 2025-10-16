@@ -259,13 +259,13 @@ public:
 	static void Finalize();
 
 	// リソース読み込み
-	static uint32_t LoadOBJ(const std::string& directoryPath, const std::string& filename);
+	static uint32_t LoadModel(const std::string& directoryPath, const std::string& filename);
 	static uint32_t LoadTexture(const std::string& filePath);
 	static uint32_t LoadAudio(const std::string& filePath);
 	static TextureData* GetTexture(uint32_t textureNumber);
 
 	// 描画
-	static void Drawobj(Game::RenderData_Model& renderData);
+	static void DrawModel(Game::RenderData_Model& renderData);
 	static void DrawSprite(Game::RenderData_Sprite& renderData);
 	static void DrawTriangle(Game::RenderData_Triangle& renderData);
 	static void DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
@@ -326,7 +326,7 @@ public:
 
 private:
 	// 描画オブジェクトは画面内か
-	static bool IsAABBInFrustum(const AABB& aabb, const Matrix4x4& worldMatrix);
+	static bool InFrustum(const AABB& aabb);
 
 
 

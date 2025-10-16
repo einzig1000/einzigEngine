@@ -1,9 +1,9 @@
-// Object3d.VS.hlsl
+// Particle.VS.hlsl
 
 #include "Particle.hlsli"
 
-// TransformationMatrix: レジスタ b1 に設定
-StructuredBuffer <TransformationMatrix> gTransformationMatrix : register(b1);
+// TransformationMatrix: レジスタ t1 に設定
+StructuredBuffer <TransformationMatrix> gTransformationMatrix : register(t1);
 
 VertexShaderOutput main(VertexShaderInput input, uint32_t instancedID : SV_InstanceID)
 {

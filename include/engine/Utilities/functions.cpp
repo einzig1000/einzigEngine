@@ -989,11 +989,11 @@ LONG WINAPI ExportDump(EXCEPTION_POINTERS* exception)
     return EXCEPTION_EXECUTE_HANDLER;
 }
 
-Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(ID3D12Device* device, size_t sizeInBytes)
+Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(
+    ID3D12Device* device, size_t sizeInBytes)
 {
     // ID3D12Resourceを格納するポインタ
     Microsoft::WRL::ComPtr<ID3D12Resource> pResource = nullptr;
-    //ID3D12Resource* pResource = nullptr;
 
     D3D12_HEAP_PROPERTIES heapProperties{};
     heapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
@@ -1025,6 +1025,15 @@ Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(ID3D12Device* device
     pResource->SetName(L"CreateBufferResource()");
 
     return pResource; // 作成したリソースを返す
+};
+
+Microsoft::WRL::ComPtr<ID3D12Resource> CreateConstantBufferResource(
+    ID3D12Device* device, size_t sizeInBytes)
+{
+    size_t ConstantSize;
+    ConstantSize =  (sizeInBytes + (D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1)) & ~(D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1);
+
+    return CreateBufferResource(device, ConstantSize);
 };
 
 Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible)
@@ -1285,7 +1294,7 @@ MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const st
 }
 
 // objファイルを読み込む関数
-ModelData LoadOBJFile(const std::string& directoryPath, const std::string& filename)
+ModelData LoadModelFile(const std::string& directoryPath, const std::string& filename)
 {
     /////////////////
     // 変数宣言

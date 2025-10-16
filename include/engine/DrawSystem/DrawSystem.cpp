@@ -8,14 +8,14 @@ DrawSystem::DrawSystem(DirectXManager* dxManager)
 	viewProjectionMatrix_ = Matrix4x4::MakeIdentity4x4();
 
 	// ライト
-	directionalLightResource_ = CreateBufferResource(dxManager->GetDevice(), sizeof(DirectionalLight));
+	directionalLightResource_ = CreateConstantBufferResource(dxManager->GetDevice(), sizeof(DirectionalLight));
 	directionalLightData_ = nullptr;
 	directionalLightResource_->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData_));
 	directionalLightData_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
 	directionalLightData_->direction = { 0.0f, -1.0f, 0.0f };
 	directionalLightData_->intensity = 1.0f;
 
-	 // 描画コールカウント初期化
+	// 描画コールカウント初期化
 	drawCallIndex_ = 0;
 	// 1フレームに呼び出せる描画コールの最大数
 	kMaxDrawCallPerFrame_ = 1280;
@@ -38,6 +38,9 @@ DrawSystem::DrawSystem(DirectXManager* dxManager)
 		wvpResources_[i] = CreateBufferResource(dxManager->GetDevice(), sizeof(TransformationMatrix));
 		wvpResources_[i]->Map(0, nullptr, reinterpret_cast<void**>(&wvpData_[i]));
 	}
+
+	instancingSrvIndex_ = dxManager_->GetDescriptorHeapManager()->AllocateSRVSlot();
+	EnsureInstanceBuffer(kNumInstance_);
 }
 
 DrawSystem::~DrawSystem()
@@ -58,6 +61,15 @@ DrawSystem::~DrawSystem()
 		}
 	}
 
+	if (instancingResource_)
+	{
+		instancingResource_->Unmap(0, nullptr);
+		instancingResource_.Reset();
+		instancingData_ = nullptr;
+		instancingCapacity_ = 0;
+		instancingSrvHandleCPU_ = {};
+		instancingSrvHandleGPU_ = {};
+	}
 
 	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>>().swap(materialResources_);
 	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>>().swap(wvpResources_);
@@ -79,71 +91,199 @@ void DrawSystem::BeginFrame(Matrix4x4& viewProjectionMatrix)
 
 	// ライトの向きを正規化
 	directionalLightData_->direction = (directionalLightData_->direction.Normalized());
+
 }
 
-void DrawSystem::Drawobj(Game::RenderData_Model& renderData)
+void DrawSystem::DrawParticle(Game::RenderData_Particle& renderData)
+{
+	//{
+	//	// 描画回数上限
+	//	if (drawCallIndex_ >= kMaxDrawCallPerFrame_) return;
+	//
+	//	// モデルの検索
+	//	Object3D* obj = dxManager_->GetResourceManager()->GetModelManager()->GetModel(renderData.model);
+	//	if (!obj) return;
+	//
+	//	// テクスチャの検索
+	//	const TextureData* tex = dxManager_->GetResourceManager()->GetTextureManager()->GetTexture(renderData.texture);
+	//	if (!tex) return;
+	//
+	//	// RootSignatureとPSOを設定
+	//	dxManager_->GetCommandList()->SetGraphicsRootSignature(dxManager_->GetPipelineStateManager()->GetRootSignature_particle()); // 共通のルートシグネチャ
+	//	if (renderData.options.wireframe || wireframeMode_)
+	//	{	// ワイヤーフレーム用PSOを設定
+	//		dxManager_->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetParticlePipelineState(BlendMode::kBlendModeNormal));
+	//	}
+	//	else
+	//	{	// Triangle用PSOを設定
+	//		dxManager_->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetParticlePipelineState(renderData.options.blendMode));
+	//	}
+	//
+	//	// 頂点数の取得
+	//	const uint32_t kSumVertex = static_cast<uint32_t>(obj->modelData.vertices.size());
+	//
+	//	// WVP行列
+	//	for (uint32_t i = 0; i < kNumInstance_; ++i)
+	//	{
+	//		Matrix4x4 world = renderData.transforms.World;
+	//		instancingData_[i].World = world;
+	//		instancingData_[i].WVP = world * viewProjectionMatrix_;
+	//	}
+	//
+	//	// マテリアル
+	//	Vector4 color = ConvertUintToVector4(renderData.color);
+	//	materialData_[drawCallIndex_]->color = color;
+	//	materialData_[drawCallIndex_]->enableLighting = renderData.options.enableLighting;
+	//	Matrix4x4 uvTransformMatrix = Matrix4x4::MakeIdentity4x4();
+	//	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeScaleMatrix(renderData.uvTransform.scale));
+	//	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(renderData.uvTransform.rotate.z));
+	//	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(renderData.uvTransform.translate));
+	//	materialData_[drawCallIndex_]->uvTransform = uvTransformMatrix;
+	//
+	//	// 頂点バッファをバインド（描画に使う頂点データを指定）
+	//	dxManager_->GetCommandList()->IASetVertexBuffers(0, 1, &obj->vertexBufferView);
+	//	// プリミティブトポロジ（描画する形状の種類：三角形リスト）を設定
+	//	dxManager_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	//	// ルートパラメータ0にマテリアル用定数バッファ（色・ライティング情報など）をバインド
+	//	dxManager_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources_[drawCallIndex_]->GetGPUVirtualAddress());
+	//	// ルートパラメータ1にWVP（ワールド・ビュー・プロジェクション）用定数バッファをバインド
+	//	//dxManager_->GetCommandList()->SetGraphicsRootConstantBufferView(1, instancingResource_->GetGPUVirtualAddress());
+	//	// ルートパラメータ3にディレクショナルライト用定数バッファをバインド
+	//	dxManager_->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress());
+	//
+	//	// ルートパラメータ4にインスタンシング用SRVをバインド
+	//	dxManager_->GetCommandList()->SetGraphicsRootDescriptorTable(4, instancingSrvHandleGPU_);
+	//	// ルートパラメータ2にテクスチャのSRV（シェーダリソースビュー）をバインド
+	//	dxManager_->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
+	//	// 頂点数分のインスタンス描画を実行（実際に描画コマンドを発行）
+	//	dxManager_->GetCommandList()->DrawInstanced(kSumVertex, kNumInstance_, 0, 0);
+	//
+	//	drawCallIndex_++;
+	//}
+	// 描画回数上限
+	if (drawCallIndex_ >= kMaxDrawCallPerFrame_) return;
+	
+	// モデルの検索
+	Object3D* obj = dxManager_->GetResourceManager()->GetModelManager()->GetModel(renderData.mono.model);
+	if (!obj) return;
+	
+	// テクスチャの検索
+	const TextureData* tex = dxManager_->GetResourceManager()->GetTextureManager()->GetTexture(renderData.mono.texture);
+	if (!tex) return;
+	
+	// RootSignatureとPSOを設定
+	dxManager_->GetCommandList()->SetGraphicsRootSignature(dxManager_->GetPipelineStateManager()->GetRootSignature_particle()); // 共通のルートシグネチャ
+	if (renderData.mono.options.wireframe || wireframeMode_)
+	{	// ワイヤーフレーム用PSOを設定
+		dxManager_->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetParticlePipelineState(BlendMode::kBlendModeNormal));
+	}
+	else
+	{	// Triangle用PSOを設定
+		dxManager_->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetParticlePipelineState(renderData.mono.options.blendMode));
+	}
+	
+	// 頂点数の取得
+	const uint32_t kSumVertex = static_cast<uint32_t>(obj->modelData.vertices.size());
+	
+	
+	Vector4 color = ConvertUintToVector4(renderData.mono.color);
+	materialData_[drawCallIndex_]->color = color;
+	materialData_[drawCallIndex_]->enableLighting = renderData.mono.options.enableLighting;
+	Matrix4x4 uvTransformMatrix = Matrix4x4::MakeIdentity4x4();
+	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeScaleMatrix(renderData.mono.uvTransform.scale));
+	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(renderData.mono.uvTransform.rotate.z));
+	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(renderData.mono.uvTransform.translate));
+	materialData_[drawCallIndex_]->uvTransform = uvTransformMatrix;
+	
+	// WVP行列
+	for (uint32_t i = 0; i < kNumInstance_; ++i)
+	{
+		Matrix4x4 world = renderData.mono.transforms.World;
+		instancingData_[i].World = world;
+		instancingData_[i].WVP = world * viewProjectionMatrix_;
+	}
+
+	// 頂点バッファをバインド（描画に使う頂点データを指定）
+	dxManager_->GetCommandList()->IASetVertexBuffers(0, 1, &obj->vertexBufferView);
+	// プリミティブトポロジ（描画する形状の種類：三角形リスト）を設定
+	dxManager_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	// ルートパラメータ0にマテリアル用定数バッファ（色・ライティング情報など）をバインド
+	dxManager_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources_[drawCallIndex_]->GetGPUVirtualAddress());
+	// ルートパラメータ1にWVP（ワールド・ビュー・プロジェクション）用定数バッファをバインド
+	//dxManager_->GetCommandList()->SetGraphicsRootConstantBufferView(1, instancingResource_->GetGPUVirtualAddress());
+	// ルートパラメータ3にディレクショナルライト用定数バッファをバインド
+	dxManager_->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress());
+
+	// ルートパラメータ4にインスタンシング用SRVをバインド
+	dxManager_->GetCommandList()->SetGraphicsRootDescriptorTable(4, dxManager_->GetDescriptorHeapManager()->GetGPUHandleAt(instancingSrvIndex_));
+	// ルートパラメータ2にテクスチャのSRV（シェーダリソースビュー）をバインド
+	dxManager_->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
+	// 頂点数分のインスタンス描画を実行（実際に描画コマンドを発行）
+	dxManager_->GetCommandList()->DrawInstanced(kSumVertex, kNumInstance_, 0, 0);
+
+	drawCallIndex_++;
+}
+
+void DrawSystem::DrawModel(Game::RenderData_Model& renderData)
 {
 	// 画面内か判定
 	if (!renderData.inPicture)return;
 
-	// 描画
-	{
-		// 描画回数上限
-		if (drawCallIndex_ >= kMaxDrawCallPerFrame_) return;
+	// 描画回数上限
+	if (drawCallIndex_ >= kMaxDrawCallPerFrame_) return;
 
-		// モデルの検索
-		Object3D* obj = dxManager_->GetResourceManager()->GetModelManager()->GetModel(renderData.model);
-		if (!obj) return;
+	// モデルの検索
+	Object3D* obj = dxManager_->GetResourceManager()->GetModelManager()->GetModel(renderData.model);
+	if (!obj) return;
 
-		// テクスチャの検索
-		const TextureData* tex = dxManager_->GetResourceManager()->GetTextureManager()->GetTexture(renderData.texture);
-		if (!tex) return;
+	// テクスチャの検索
+	const TextureData* tex = dxManager_->GetResourceManager()->GetTextureManager()->GetTexture(renderData.texture);
+	if (!tex) return;
 
-		// RootSignatureとPSOを設定
-		dxManager_->GetCommandList()->SetGraphicsRootSignature(dxManager_->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
-		if (renderData.options.wireframe || wireframeMode_)
-		{	// ワイヤーフレーム用PSOを設定
-			dxManager_->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetPipelineState(BlendMode::Wireframe, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
-		}
-		else
-		{	// Triangle用PSOを設定
-			dxManager_->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetPipelineState(renderData.options.blendMode, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
-		}
-
-		// 頂点数の取得
-		const uint32_t kSumVertex = static_cast<uint32_t>(obj->modelData.vertices.size());
-
-		// WVP行列
-		wvpData_[drawCallIndex_]->World = renderData.transforms.World;
-		wvpData_[drawCallIndex_]->WVP = renderData.transforms.World * viewProjectionMatrix_;
-
-		Vector4 color = ConvertUintToVector4(renderData.color);
-		materialData_[drawCallIndex_]->color = color;
-		materialData_[drawCallIndex_]->enableLighting = renderData.options.enableLighting;
-		Matrix4x4 uvTransformMatrix = Matrix4x4::MakeIdentity4x4();
-		uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeScaleMatrix(renderData.uvTransform.scale));
-		uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(renderData.uvTransform.rotate.z));
-		uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(renderData.uvTransform.translate));
-		materialData_[drawCallIndex_]->uvTransform = uvTransformMatrix;
-
-
-		// 頂点バッファをバインド（描画に使う頂点データを指定）
-		dxManager_->GetCommandList()->IASetVertexBuffers(0, 1, &obj->vertexBufferView);
-		// プリミティブトポロジ（描画する形状の種類：三角形リスト）を設定
-		dxManager_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		// ルートパラメータ0にマテリアル用定数バッファ（色・ライティング情報など）をバインド
-		dxManager_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources_[drawCallIndex_]->GetGPUVirtualAddress());
-		// ルートパラメータ1にWVP（ワールド・ビュー・プロジェクション）用定数バッファをバインド
-		dxManager_->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources_[drawCallIndex_]->GetGPUVirtualAddress());
-		// ルートパラメータ2にテクスチャのSRV（シェーダリソースビュー）をバインド
-		dxManager_->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
-		// ルートパラメータ3にディレクショナルライト用定数バッファをバインド
-		dxManager_->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress());
-		// 頂点数分のインスタンス描画を実行（実際に描画コマンドを発行）
-		dxManager_->GetCommandList()->DrawInstanced(kSumVertex, 1, 0, 0);
-
-		drawCallIndex_++;
+	// RootSignatureとPSOを設定
+	dxManager_->GetCommandList()->SetGraphicsRootSignature(dxManager_->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
+	if (renderData.options.wireframe || wireframeMode_)
+	{	// ワイヤーフレーム用PSOを設定
+		dxManager_->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetPipelineState(BlendMode::Wireframe, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
 	}
+	else
+	{	// Triangle用PSOを設定
+		dxManager_->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetPipelineState(renderData.options.blendMode, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
+	}
+
+	// 頂点数の取得
+	const uint32_t kSumVertex = static_cast<uint32_t>(obj->modelData.vertices.size());
+
+	// WVP行列
+	wvpData_[drawCallIndex_]->World = renderData.transforms.World;
+	wvpData_[drawCallIndex_]->WVP = renderData.transforms.World * viewProjectionMatrix_;
+
+	// マテリアル
+	Vector4 color = ConvertUintToVector4(renderData.color);
+	materialData_[drawCallIndex_]->color = color;
+	materialData_[drawCallIndex_]->enableLighting = renderData.options.enableLighting;
+	Matrix4x4 uvTransformMatrix = Matrix4x4::MakeIdentity4x4();
+	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeScaleMatrix(renderData.uvTransform.scale));
+	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(renderData.uvTransform.rotate.z));
+	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(renderData.uvTransform.translate));
+	materialData_[drawCallIndex_]->uvTransform = uvTransformMatrix;
+
+	// 頂点バッファをバインド（描画に使う頂点データを指定）
+	dxManager_->GetCommandList()->IASetVertexBuffers(0, 1, &obj->vertexBufferView);
+	// プリミティブトポロジ（描画する形状の種類：三角形リスト）を設定
+	dxManager_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	// ルートパラメータ0にマテリアル用定数バッファ（色・ライティング情報など）をバインド
+	dxManager_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources_[drawCallIndex_]->GetGPUVirtualAddress());
+	// ルートパラメータ1にWVP（ワールド・ビュー・プロジェクション）用定数バッファをバインド
+	dxManager_->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources_[drawCallIndex_]->GetGPUVirtualAddress());
+	// ルートパラメータ2にテクスチャのSRV（シェーダリソースビュー）をバインド
+	dxManager_->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
+	// ルートパラメータ3にディレクショナルライト用定数バッファをバインド
+	dxManager_->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress());
+	// 頂点数分のインスタンス描画を実行（実際に描画コマンドを発行）
+	dxManager_->GetCommandList()->DrawInstanced(kSumVertex, 1, 0, 0);
+
+	drawCallIndex_++;
 }
 
 
@@ -566,6 +706,7 @@ void DrawSystem::DrawSprite(Game::RenderData_Sprite& renderData)
 	vertexDataUsed_ += kSumVertex;
 }
 
+// 引数にstd::vector<Vector3>とベジエとか直線とか選択できるenumを渡して複数の線を描画できるようにするのもありかも
 void DrawSystem::DrawLine(const Vector3& start, const Vector3& end, const uint32_t& materialColor)
 {
 	if (drawCallIndex_ >= kMaxDrawCallPerFrame_) return;
@@ -673,5 +814,57 @@ bool DrawSystem::EnsureDynamicVB(size_t requiredVertexCount)
 	vertexResource_ = newResource;
 	vertexMappedPtr_ = newMapped;
 	vertexResourceSize_ = newSizeBytes;
+	return true;
+}
+
+
+bool DrawSystem::EnsureInstanceBuffer(size_t requiredInstanceCount)
+{
+	// 既存容量で足りる場合
+	if (instancingResource_ && instancingCapacity_ >= requiredInstanceCount)
+	{
+		return true;
+	}
+
+	// 新しい容量（2倍成長＋最低64）
+	uint32_t newCapacity = static_cast<uint32_t>(
+		std::max<size_t>(requiredInstanceCount, instancingCapacity_ ? instancingCapacity_ * 2ull : 64ull)
+		);
+	size_t newSizeBytes = sizeof(TransformationMatrix) * static_cast<size_t>(newCapacity);
+
+	// 新リソース作成（Uploadバッファ）
+	auto newResource = CreateBufferResource(dxManager_->GetDevice() , newSizeBytes);
+	if (!newResource) return false;
+
+	TransformationMatrix* newMapped = nullptr;
+	HRESULT hr = newResource->Map(0, nullptr, reinterpret_cast<void**>(&newMapped));
+	if (FAILED(hr) || !newMapped) return false;
+
+	// 古いリソースを解放
+	if (instancingResource_)
+	{
+		instancingResource_->Unmap(0, nullptr);
+		instancingResource_.Reset();
+		instancingData_ = nullptr;
+	}
+
+	instancingResource_ = newResource;
+	instancingData_ = newMapped;
+	instancingCapacity_ = newCapacity;
+
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+	srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+	srvDesc.Buffer.FirstElement = 0;
+	srvDesc.Buffer.NumElements = newCapacity;
+	srvDesc.Buffer.StructureByteStride = sizeof(TransformationMatrix);
+
+	// 現在のヒープにおける該当インデックスのハンドルを取得して作り直す
+	//dxManager->GetDescriptorHeapManager()->GetCPUHandleAt(dxManager->GetDescriptorHeapManager()->AllocateSRVSlot()),
+	instancingSrvHandleCPU_ = dxManager_->GetDescriptorHeapManager()->GetCPUHandleAt(instancingSrvIndex_);
+	instancingSrvHandleGPU_ = dxManager_->GetDescriptorHeapManager()->GetGPUHandleAt(instancingSrvIndex_);
+
+	dxManager_->GetDevice()->CreateShaderResourceView(instancingResource_.Get(), &srvDesc, instancingSrvHandleCPU_);
 	return true;
 }

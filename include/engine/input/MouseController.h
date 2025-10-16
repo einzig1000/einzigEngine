@@ -6,6 +6,7 @@ class MouseController
 public:
 	MouseController(HWND hwnd, uint32_t width, uint32_t height, Matrix4x4* viewProjectionMatrix, Matrix4x4* debugViewProjectionMatrix, bool* debugCameraMode);
 	void Update();
+	void EndFrame();
 
 	void SetMousePosition();
 	void SetMouseRay();
@@ -18,6 +19,7 @@ public:
 
 	mouseButtenState Buttens;
 	mouseButtenState preButtens;
+	int wheelDelta = 0;
 
 private:
 	Vector2 position_;

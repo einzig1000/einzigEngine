@@ -29,7 +29,7 @@ void Input::Update()
     //{
     //    left = false;
     //}
-
+    //
     //if (GetHitKey::keys[DIK_D] ||
     //    GetPadState::leftStickX > 10000 ||
     //    GetPadState::buttons[PAD_RIGHT])
@@ -40,7 +40,7 @@ void Input::Update()
     //{
     //    right = false;
     //}
-
+    //
     //if (GetHitKey::keys[DIK_W] ||
     //    GetPadState::buttons[PAD_A])
     //{
@@ -50,7 +50,7 @@ void Input::Update()
     //{
     //    jump = false;
     //}
-
+    //
     //if (GetHitKey::keys[DIK_SPACE] ||
     //    GetPadState::buttons[PAD_B] ||
     //    GetPadState::buttons[PAD_X])
@@ -61,7 +61,7 @@ void Input::Update()
     //{
     //    hide = false;
     //}
-
+    //
     //if (GetHitKey::keys[DIK_ESCAPE] ||
     //    GetPadState::buttons[PAD_START])
     //{
@@ -71,7 +71,7 @@ void Input::Update()
     //{
     //    Pause = false;
     //}
-
+    //
     //if (GetHitKey::preKeys[DIK_SPACE] ||
     //    GetPadState::preButtons[PAD_B] ||
     //    GetPadState::preButtons[PAD_X]
@@ -83,5 +83,9 @@ void Input::Update()
     //{
     //    preHide = false;
     //}
+}
 
+void Input::EndFrame()
+{
+    mouseController_->EndFrame();
 }

@@ -1,5 +1,6 @@
 #pragma once
 #include "definition/definition.h"
+#include <array>
 
 struct easingSet
 {
@@ -19,16 +20,20 @@ public:
     void Update();
     void Draw();
 
+	// カメラ演出
     void SetCenterTarget(Vector3 Center, int spendFrame, EaseType easetype);
     void SetRotateTarget(Vector3 Center, int spendFrame, EaseType easetype);
     void SetDistanceTarget(float Center, int spendFrame, EaseType easetype);
 
+	// カメラ情報取得
     Vector3 GetCenter() const { return center_; }
     float GetDistance() const { return distance_; }
     void SetDistance(float target) { distance_ = target; }
 
+	// 視錐台内にAABBがあるか
+	bool InFrustum(const AABB& aabb);
+
     bool cameraMode_;
-    bool cameraModeMode_;
 
 private:
 
@@ -69,10 +74,9 @@ private:
     // 演出によるカメラ距離の変更中
     easingSet easeDistance_;
 
+    void CreateFrustumPlanes();
+    std::array<Plane, 6> frustumPlanes_;// 視錐台を構成する6つの平面
 
-    //////////////////////////////////////////////
-    ///               カメラ移動               ///
-    ////////////////////////////////////////////// 
 public:
     Matrix4x4 viewportMatrix;
     Matrix4x4 viewProjectionMatrix;

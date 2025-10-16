@@ -97,18 +97,6 @@
     <Filter Include="engine\Shader\Particle">
       <UniqueIdentifier>{cb625b4a-e4fc-4a27-ba56-21e5c5776d36}</UniqueIdentifier>
     </Filter>
-    <Filter Include="application\Enemy">
-      <UniqueIdentifier>{abdfdc17-e3cb-4ad2-b9fc-add654cd0044}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="application\Player">
-      <UniqueIdentifier>{882eb66c-4058-4220-aba2-6a0748dbd9dd}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="application\Enemy\EnemyBullet">
-      <UniqueIdentifier>{ecb70071-ae45-4aa7-a2f2-06870f68a62c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="application\Player\PlayerBullet">
-      <UniqueIdentifier>{87ab720d-f9cb-45c7-91a1-3d4f1014c18e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="engine\ResourceManager">
       <UniqueIdentifier>{43c00ddd-45c1-4e1c-be41-8ad55ac6082e}</UniqueIdentifier>
     </Filter>
@@ -197,18 +185,6 @@
     </ClCompile>
     <ClCompile Include="include\application\GameManager\GameManager.cpp">
       <Filter>application\GameManeger</Filter>
-    </ClCompile>
-    <ClCompile Include="include\application\Enemy\Enemy.cpp">
-      <Filter>application\Enemy</Filter>
-    </ClCompile>
-    <ClCompile Include="include\application\Player\Player.cpp">
-      <Filter>application\Player</Filter>
-    </ClCompile>
-    <ClCompile Include="include\application\Enemy\EnemyBullet\EnemyBullet.cpp">
-      <Filter>application\Enemy\EnemyBullet</Filter>
-    </ClCompile>
-    <ClCompile Include="include\application\Player\PlayerBullet\PlayerBullet.cpp">
-      <Filter>application\Player\PlayerBullet</Filter>
     </ClCompile>
     <ClCompile Include="include\engine\Resource\Audio\AudioManager.cpp">
       <Filter>engine\ResourceManager\AudioManager</Filter>
@@ -328,18 +304,6 @@
     </ClInclude>
     <ClInclude Include="include\application\GameManager\GameManager.h">
       <Filter>application\GameManeger</Filter>
-    </ClInclude>
-    <ClInclude Include="include\application\Enemy\Enemy.h">
-      <Filter>application\Enemy</Filter>
-    </ClInclude>
-    <ClInclude Include="include\application\Player\Player.h">
-      <Filter>application\Player</Filter>
-    </ClInclude>
-    <ClInclude Include="include\application\Enemy\EnemyBullet\EnemyBullet.h">
-      <Filter>application\Enemy\EnemyBullet</Filter>
-    </ClInclude>
-    <ClInclude Include="include\application\Player\PlayerBullet\PlayerBullet.h">
-      <Filter>application\Player\PlayerBullet</Filter>
     </ClInclude>
     <ClInclude Include="include\engine\Resource\Audio\AudioManager.h">
       <Filter>engine\ResourceManager\AudioManager</Filter>

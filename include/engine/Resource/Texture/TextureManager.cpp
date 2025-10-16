@@ -2,6 +2,7 @@
 #include "externals/DirectXTex/d3dx12.h"
 #include "externals/DirectXTex/DirectXTex.h"
 #include "Utilities/functions.h"
+#include "DirectX/DescriptorHeapManager.h"
 #include "cassert"
 
 TextureManager::TextureManager()
@@ -16,7 +17,7 @@ TextureManager::~TextureManager()
 }
 
 
-uint32_t TextureManager::LoadTexture(const std::string& filePath, ID3D12GraphicsCommandList* commandList, ID3D12DescriptorHeap* srvDescriptorHeap, ID3D12Device* device)
+uint32_t TextureManager::LoadTexture(const std::string& filePath, ID3D12GraphicsCommandList* commandList, DescriptorHeapManager* descriptorHeap, ID3D12Device* device)
 {
     // ボックスを作成
     TextureData text;
@@ -42,10 +43,9 @@ uint32_t TextureManager::LoadTexture(const std::string& filePath, ID3D12Graphics
     Microsoft::WRL::ComPtr<ID3D12Resource> tempIntermediateResource = UploadTextureData(text.textureResource.Get(), text.mipImage, device, commandList);
     intermediateUploadResources_.push_back(tempIntermediateResource);
 
-
-    const uint32_t descriptorSizeSRV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-    D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = GetCPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, text.number + 1);
-    text.textureSrvHandleGPU = GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, text.number + 1);
+    uint32_t slot = descriptorHeap->AllocateSRVSlot();
+    D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = descriptorHeap->GetCPUHandleAt(slot);
+    text.textureSrvHandleGPU = descriptorHeap->GetGPUHandleAt(slot);
 
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
     srvDesc.Format = text.metadata.format;

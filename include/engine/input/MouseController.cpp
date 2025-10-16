@@ -6,19 +6,24 @@ MouseController::MouseController(HWND hwnd, uint32_t width, uint32_t height, Mat
     :width_(width), height_(height), viewProjectionMatrix_(viewProjectionMatrix), debugViewProjectionMatrix_(debugViewProjectionMatrix), debugCameraMode_(debugCameraMode)
 {
     hwnd_ = hwnd;
+    wheelDelta = 0;
 }
 
-void MouseController::SetMousePosition()
+void MouseController::Update()
 {
-    // hwnd: ゲームウィンドウのハンドル（WindowManagerなどから取得）
-    POINT mousePosScreen;
-    GetCursorPos(&mousePosScreen); // 画面座標で取得
+    // マウスポジション取得
+    SetMousePosition();
 
-    // クライアント座標（ウィンドウ左上基準）に変換
-    ScreenToClient(hwnd_, &mousePosScreen);
+    // マウスレイ取得
+    SetMouseRay();
 
-    // mousePosScreen.x, mousePosScreen.y がウィンドウ内のマウス座標
-    position_ = Vector2{ float(mousePosScreen.x),float(mousePosScreen.y) };
+    // マウスボタン状態取得
+    SetMouseButtenState();
+}
+
+void MouseController::EndFrame()
+{
+    wheelDelta = 0;
 }
 
 bool MouseController::GetMousePress(int i)
@@ -63,6 +68,19 @@ bool MouseController::GetMousePrePress(int i)
     return false;
 }
 
+void MouseController::SetMousePosition()
+{
+    // hwnd: ゲームウィンドウのハンドル（WindowManagerなどから取得）
+    POINT mousePosScreen;
+    GetCursorPos(&mousePosScreen); // 画面座標で取得
+
+    // クライアント座標（ウィンドウ左上基準）に変換
+    ScreenToClient(hwnd_, &mousePosScreen);
+
+    // mousePosScreen.x, mousePosScreen.y がウィンドウ内のマウス座標
+    position_ = Vector2{ float(mousePosScreen.x),float(mousePosScreen.y) };
+}
+
 void MouseController::SetMouseRay()
 {
     // 左下が０、右上が１とした時のマウスポジション
@@ -104,16 +122,4 @@ void MouseController::SetMouseButtenState()
     Buttens.leftButton = (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
     Buttens.rightButton = (GetAsyncKeyState(VK_RBUTTON) & 0x8000) != 0;
     Buttens.middleButton = (GetAsyncKeyState(VK_MBUTTON) & 0x8000) != 0;
-}
-
-void MouseController::Update()
-{
-    // マウスポジション取得
-    SetMousePosition();
-
-    // マウスレイ取得
-    SetMouseRay();
-
-	// マウスボタン状態取得
-    SetMouseButtenState();
 }

@@ -38,37 +38,37 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 	{
 		drawSystem = new DrawSystem(dxManager);
 	}
+	if (!cameraController)
+	{
+		cameraController = new CameraController();
+		cameraController->cameraMode_ = false; // メインカメラは常に操作可能
+	}
+	if (!debugCameraController)
+	{
+		debugCameraController = new CameraController();
+	}
+	if (!inputManager_)
+	{
+		inputManager_ = new Input(windowManager->GetHwnd(), windowManager->Getwidth(), windowManager->Getheight(), &cameraController->viewProjectionMatrix, &debugCameraController->viewProjectionMatrix, &debugCamera);
+	}
 
 	// カメラ
-	cameraController = new CameraController();
-	debugCameraController = new CameraController();
-	cameraController->cameraMode_ = false; // メインカメラは常に操作可能
 	debugCamera = false;	// 最初はデバッグカメラ
 
-	// インプット系
-	inputManager_ = new Input(windowManager->GetHwnd(), windowManager->Getwidth(), windowManager->Getheight(), &cameraController->viewProjectionMatrix, &debugCameraController->viewProjectionMatrix, &debugCamera);
-
-	/// imguiの初期化
+	// imguiの初期化
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGui::StyleColorsDark();
 	ImGui_ImplWin32_Init(windowManager->GetHwnd());
+	uint32_t slot = dxManager->GetDescriptorHeapManager()->AllocateSRVSlot();
 	ImGui_ImplDX12_Init(
 		dxManager->GetDevice(),
 		dxManager->GetSwapChainDesc().BufferCount,
 		dxManager->GetRtvDesc().Format,
-		dxManager->GetsrvDescriptorHeap(),
-		dxManager->GetsrvDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
-		dxManager->GetsrvDescriptorHeap()->GetGPUDescriptorHandleForHeapStart()
+		dxManager->GetDescriptorHeapManager()->GetSRVDescriptorHeap(),
+		dxManager->GetDescriptorHeapManager()->GetCPUHandleAt(slot),                    // ImGuiフォントSRV用のCPUハンドル
+		dxManager->GetDescriptorHeapManager()->GetGPUHandleAt(slot)                     // ImGuiフォントSRV用のGPUハンドル
 	);
-
-	instancingResource = CreateBufferResource(dxManager->GetDevice(), sizeof(TransformationMatrix) * kNumInstance);
-	instancingResource->Map(0, nullptr, reinterpret_cast<void**>(&instancingData));
-	for (uint32_t index = 0; index < kNumInstance; ++index)
-	{
-		instancingData[index].WVP = Matrix4x4::MakeIdentity4x4();
-		instancingData[index].World = Matrix4x4::MakeIdentity4x4();
-	}
 
 	// インデックスリソース
 	indexResource = CreateBufferResource(dxManager->GetDevice(), sizeof(uint32_t) * 6);
@@ -90,7 +90,7 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 	indexBufferView.Format = DXGI_FORMAT_R32_UINT;
 
 
-	wheelDelta = 0;
+	inputManager_->GetMouseController()->wheelDelta = 0;
 
 }
 
@@ -107,7 +107,7 @@ bool Engine::ProcessMessage()
 		if (msg.message == WM_MOUSEWHEEL)
 		{
 			// ホイールの回転量を加算　クリックはboolで回転量はintだからmessageを使う。らしい。なんで？
-			wheelDelta += GET_WHEEL_DELTA_WPARAM(msg.wParam);
+			inputManager_->GetMouseController()->wheelDelta += GET_WHEEL_DELTA_WPARAM(msg.wParam);
 		}
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
@@ -141,16 +141,6 @@ void Engine::UpdateCamera()
 	cameraController->Update();
 	debugCameraController->Update();
 
-	// 視錐台平面を更新
-	if (!debugCamera)
-	{
-		CreateFrustumPlanes(cameraController->viewProjectionMatrix);
-	}
-	else
-	{
-		CreateFrustumPlanes(debugCameraController->viewProjectionMatrix);
-	}
-
 	// 左シフト＋左クリックでカメラターゲットをオブジェクトに合わせる
 	if (GetHitKey::IsPressedNow(DIK_LSHIFT))
 	{
@@ -171,18 +161,11 @@ void Engine::UpdateCamera()
 }
 void Engine::EndFrame()
 {
-	wheelDelta = 0;
-
-	//cameraController->Draw();
-	if (!debugCamera)
-	{
-		cameraController->Draw();
-	}
-	else
-	{
-		debugCameraController->Draw();
-	}
+	if (!debugCamera) cameraController->Draw();
+	else debugCameraController->Draw();
 	ImGui::Render();
+
+	inputManager_->EndFrame();
 
 	dxManager->EndFrame();
 }
@@ -296,10 +279,10 @@ void Engine::Finalize()
 // リソース読み込み
 uint32_t Engine::LoadTexture(const std::string& filePath)
 {
-	return dxManager->GetResourceManager()->GetTextureManager()->LoadTexture(filePath, dxManager->GetCommandList(),dxManager->GetsrvDescriptorHeap(), dxManager->GetDevice());
+	return dxManager->GetResourceManager()->GetTextureManager()->LoadTexture(filePath, dxManager->GetCommandList(),dxManager->GetDescriptorHeapManager(), dxManager->GetDevice());
 }
 
-uint32_t Engine::LoadOBJ(const std::string& directoryPath, const std::string& filename)
+uint32_t Engine::LoadModel(const std::string& directoryPath, const std::string& filename)
 {
 	return dxManager->GetResourceManager()->GetModelManager()->LoadModel(directoryPath, filename, dxManager->GetDevice());
 }
@@ -315,9 +298,9 @@ TextureData* Engine::GetTexture(uint32_t textureNumber)
 }
 
 // 描画
-void Engine::Drawobj(Game::RenderData_Model& renderData)
+void Engine::DrawModel(Game::RenderData_Model& renderData)
 {
-	drawSystem->Drawobj(renderData);
+	drawSystem->DrawModel(renderData);
 }
 
 void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions)
@@ -453,298 +436,216 @@ void Engine::DrawLine(const Vector3& start, const Vector3& end, const uint32_t& 
 
 void Engine::DrawParticle(Game::RenderData_Particle& renderData)
 {
-	if (renderData.frame >= renderData.emissionDelay)
-	{
-		for (int i = 0; i < renderData.particlesPerEmission; ++i)
-		{
-			// AABB逆転対策
-			AABB buf = renderData.emitterAABB;
-			renderData.emitterAABB.min.x = my_min(buf.min.x, buf.max.x);
-			renderData.emitterAABB.max.x = my_max(buf.min.x, buf.max.x);
-			renderData.emitterAABB.min.y = my_min(buf.min.y, buf.max.y);
-			renderData.emitterAABB.max.y = my_max(buf.min.y, buf.max.y);
-			renderData.emitterAABB.min.z = my_min(buf.min.z, buf.max.z);
-			renderData.emitterAABB.max.z = my_max(buf.min.z, buf.max.z);
-
-			// フレームリセット
-			renderData.frame = 0;
-
-			////////////// オブジェクト作成 //////////////
-			Game::RenderData_Model model;
-
-			// エミッターがAABB型だった場合
-			if (renderData.option.emitterShape == true)
-			{
-				// エミッターが内部を指す場合
-				if (renderData.option.spawnInsideEmitter == true)
-				{
-					model.transforms.translate.x = RandomFloat(renderData.emitterAABB.min.x, renderData.emitterAABB.max.x, 3);
-					model.transforms.translate.y = RandomFloat(renderData.emitterAABB.min.y, renderData.emitterAABB.max.y, 3);
-					model.transforms.translate.z = RandomFloat(renderData.emitterAABB.min.z, renderData.emitterAABB.max.z, 3);
-				}
-				// エミッターが外殻を指す場合
-				else
-				{
-					int i = RandomInt(1, 6);
-					if (i == 1 || i == 2)
-					{
-						if (i == 1)
-						{
-							model.transforms.translate.x = renderData.emitterAABB.min.x;
-						}
-						else
-						{
-							model.transforms.translate.x = renderData.emitterAABB.max.x;
-						}
-						model.transforms.translate.y = RandomFloat(renderData.emitterAABB.min.y, renderData.emitterAABB.max.y, 3);
-						model.transforms.translate.z = RandomFloat(renderData.emitterAABB.min.z, renderData.emitterAABB.max.z, 3);
-					}
-					else if (i == 3 || i == 4)
-					{
-						if (i == 3)
-						{
-							model.transforms.translate.y = renderData.emitterAABB.min.y;
-						}
-						else
-						{
-							model.transforms.translate.y = renderData.emitterAABB.max.y;
-						}
-						model.transforms.translate.x = RandomFloat(renderData.emitterAABB.min.x, renderData.emitterAABB.max.x, 3);
-						model.transforms.translate.z = RandomFloat(renderData.emitterAABB.min.z, renderData.emitterAABB.max.z, 3);
-					}
-					else if (i == 5 || i == 6)
-					{
-						if (i == 5)
-						{
-							model.transforms.translate.z = renderData.emitterAABB.min.z;
-						}
-						else
-						{
-							model.transforms.translate.z = renderData.emitterAABB.max.z;
-						}
-						model.transforms.translate.y = RandomFloat(renderData.emitterAABB.min.y, renderData.emitterAABB.max.y, 3);
-						model.transforms.translate.x = RandomFloat(renderData.emitterAABB.min.x, renderData.emitterAABB.max.x, 3);
-					}
-				}
-			}
-			// エミッターが球型だった場合
-			else
-			{
-				// エミッターが内部を指す場合
-				if (renderData.option.spawnInsideEmitter == true)
-				{
-					Vector3 center = renderData.emitterSphere.center;
-					Vector3 radius = renderData.emitterSphere.radius;
-
-					// ランダムな方向（単位ベクトル）を生成
-					float theta = RandomFloat(0.0f, 2.0f * float(std::numbers::pi), 3);       // 0〜2π
-					float phi = RandomFloat(0.0f, float(std::numbers::pi), 3);              // 0〜π
-					float r = RandomFloat(0.0f, 1.0f, 3);            // 0〜1（球内）
-
-					// 球内部の距離に合わせてスケーリング（立方根で均等分布）
-					r = pow(r, 1.0f / 3.0f);
-
-					// 球面座標系から直交座標系へ変換
-					float x = r * sin(phi) * cos(theta) * radius.x;
-					float y = r * sin(phi) * sin(theta) * radius.y;
-					float z = r * cos(phi) * radius.z;
-
-					model.transforms.translate.x = center.x + x;
-					model.transforms.translate.y = center.y + y;
-					model.transforms.translate.z = center.z + z;
-				}
-				// エミッターが外殻を指す場合
-				else
-				{
-					Vector3 center = renderData.emitterSphere.center;
-					Vector3 radius = renderData.emitterSphere.radius;
-
-					// ランダムな方向（単位ベクトル）を生成
-					float theta = RandomFloat(0.0f, 2.0f * float(std::numbers::pi), 3); // 0〜2π
-					float phi = RandomFloat(0.0f, float(std::numbers::pi), 3);        // 0〜π
-
-					// r = 1.0f 固定 → 外殻のみ
-					float x = sin(phi) * cos(theta) * radius.x;
-					float y = sin(phi) * sin(theta) * radius.y;
-					float z = cos(phi) * radius.z;
-
-					model.transforms.translate.x = center.x + x;
-					model.transforms.translate.y = center.y + y;
-					model.transforms.translate.z = center.z + z;
-				}
-
-			}
-
-			model.transforms.rotate = renderData.mono.transforms.rotate;
-			model.transforms.scale = renderData.mono.transforms.scale;
-			model.model = renderData.mono.model;
-			model.texture = renderData.mono.texture;
-			model.color = renderData.mono.color;
-			model.options = renderData.mono.options;
-
-			// 速度設定
-			ParticleInf inf;
-			if (renderData.option.targetDirection == true)
-			{
-				inf.velocity = renderData.target - Vector3{ (renderData.emitterAABB.max + renderData.emitterAABB.min) / 2.0f };
-			}
-			else
-			{
-				inf.velocity = renderData.target - model.transforms.translate;
-			}
-			inf.velocity.Normalize();
-			inf.velocity *= renderData.velocity;
-
-			// 人生設計
-			inf.liveTime = renderData.liveMax;
-
-			// リストに追加
-			renderData.GetModelList().push_back(model);
-			renderData.GetInfList().push_back(inf);
-		}
-	}
-
-
-	for (int i = 0; i < renderData.GetModelList().size(); ++i)
-	{
-		if (renderData.GetInfList()[i].liveTime > 0)
-		{
-			// 更新
-			renderData.GetModelList()[i].transforms.translate += renderData.GetInfList()[i].velocity;
-			renderData.GetModelList()[i].transforms.rotate += renderData.AddRotate;
-			renderData.GetModelList()[i].transforms.scale += renderData.AddScale;
-
-			//static float floatColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-			//ImGui::ColorEdit4("model2.color", floatColor, 1);
-			//Vector4 vector4Color = { floatColor[0], floatColor[1], floatColor[2], floatColor[3] };
-			//model1PreColor = ConvertVector4ToUint(vector4Color);
-			//renderData.GetModelList()[i].color -= renderData.AddColor;
-
-			if (renderData.GetModelList()[i].transforms.scale.x < 0)
-				renderData.GetModelList()[i].transforms.scale.x = 0.0f;
-			if (renderData.GetModelList()[i].transforms.scale.y < 0)
-				renderData.GetModelList()[i].transforms.scale.y = 0.0f;
-			if (renderData.GetModelList()[i].transforms.scale.z < 0)
-				renderData.GetModelList()[i].transforms.scale.z = 0.0f;
-
-			// ワールド行列更新
-			renderData.GetModelList()[i].transforms.World =
-				Matrix4x4::MakeAffineMatrix(
-					renderData.GetModelList()[i].transforms.scale,
-					renderData.GetModelList()[i].transforms.rotate,
-					renderData.GetModelList()[i].transforms.translate);
-
-			// 人生消費
-			renderData.GetInfList()[i].liveTime--;
-
-			// 描画
-			renderData.GetModelList()[i].Draw();
-		}
-
-		if (
-			// 生存時間０の時
-			renderData.GetInfList()[i].liveTime <= 0
-			// 大きさ０の時
-			|| (renderData.GetModelList()[i].transforms.scale.x <= 0.0f || renderData.GetModelList()[i].transforms.scale.y <= 0.0f || renderData.GetModelList()[i].transforms.scale.z <= 0.0f)
-			// アルファ値０の時
-			//|| renderData.GetModelList()[i].color
-			)
-		{
-			renderData.GetModelList().erase(renderData.GetModelList().begin() + i);
-			renderData.GetInfList().erase(renderData.GetInfList().begin() + i);
-		}
-	}
-
-	renderData.frame++;
+	drawSystem->DrawParticle(renderData);
+	//if (renderData.frame >= renderData.emissionDelay)
+	//{
+	//	for (int i = 0; i < renderData.particlesPerEmission; ++i)
+	//	{
+	//		// AABB逆転対策
+	//		AABB buf = renderData.emitterAABB;
+	//		renderData.emitterAABB.min.x = my_min(buf.min.x, buf.max.x);
+	//		renderData.emitterAABB.max.x = my_max(buf.min.x, buf.max.x);
+	//		renderData.emitterAABB.min.y = my_min(buf.min.y, buf.max.y);
+	//		renderData.emitterAABB.max.y = my_max(buf.min.y, buf.max.y);
+	//		renderData.emitterAABB.min.z = my_min(buf.min.z, buf.max.z);
+	//		renderData.emitterAABB.max.z = my_max(buf.min.z, buf.max.z);
+	//
+	//		// フレームリセット
+	//		renderData.frame = 0;
+	//
+	//		////////////// オブジェクト作成 //////////////
+	//		Game::RenderData_Model model;
+	//
+	//		// エミッターがAABB型だった場合
+	//		if (renderData.option.emitterShape == true)
+	//		{
+	//			// エミッターが内部を指す場合
+	//			if (renderData.option.spawnInsideEmitter == true)
+	//			{
+	//				model.transforms.translate.x = RandomFloat(renderData.emitterAABB.min.x, renderData.emitterAABB.max.x, 3);
+	//				model.transforms.translate.y = RandomFloat(renderData.emitterAABB.min.y, renderData.emitterAABB.max.y, 3);
+	//				model.transforms.translate.z = RandomFloat(renderData.emitterAABB.min.z, renderData.emitterAABB.max.z, 3);
+	//			}
+	//			// エミッターが外殻を指す場合
+	//			else
+	//			{
+	//				int i = RandomInt(1, 6);
+	//				if (i == 1 || i == 2)
+	//				{
+	//					if (i == 1)
+	//					{
+	//						model.transforms.translate.x = renderData.emitterAABB.min.x;
+	//					}
+	//					else
+	//					{
+	//						model.transforms.translate.x = renderData.emitterAABB.max.x;
+	//					}
+	//					model.transforms.translate.y = RandomFloat(renderData.emitterAABB.min.y, renderData.emitterAABB.max.y, 3);
+	//					model.transforms.translate.z = RandomFloat(renderData.emitterAABB.min.z, renderData.emitterAABB.max.z, 3);
+	//				}
+	//				else if (i == 3 || i == 4)
+	//				{
+	//					if (i == 3)
+	//					{
+	//						model.transforms.translate.y = renderData.emitterAABB.min.y;
+	//					}
+	//					else
+	//					{
+	//						model.transforms.translate.y = renderData.emitterAABB.max.y;
+	//					}
+	//					model.transforms.translate.x = RandomFloat(renderData.emitterAABB.min.x, renderData.emitterAABB.max.x, 3);
+	//					model.transforms.translate.z = RandomFloat(renderData.emitterAABB.min.z, renderData.emitterAABB.max.z, 3);
+	//				}
+	//				else if (i == 5 || i == 6)
+	//				{
+	//					if (i == 5)
+	//					{
+	//						model.transforms.translate.z = renderData.emitterAABB.min.z;
+	//					}
+	//					else
+	//					{
+	//						model.transforms.translate.z = renderData.emitterAABB.max.z;
+	//					}
+	//					model.transforms.translate.y = RandomFloat(renderData.emitterAABB.min.y, renderData.emitterAABB.max.y, 3);
+	//					model.transforms.translate.x = RandomFloat(renderData.emitterAABB.min.x, renderData.emitterAABB.max.x, 3);
+	//				}
+	//			}
+	//		}
+	//		// エミッターが球型だった場合
+	//		else
+	//		{
+	//			// エミッターが内部を指す場合
+	//			if (renderData.option.spawnInsideEmitter == true)
+	//			{
+	//				Vector3 center = renderData.emitterSphere.center;
+	//				Vector3 radius = renderData.emitterSphere.radius;
+	//
+	//				// ランダムな方向（単位ベクトル）を生成
+	//				float theta = RandomFloat(0.0f, 2.0f * float(std::numbers::pi), 3);       // 0〜2π
+	//				float phi = RandomFloat(0.0f, float(std::numbers::pi), 3);              // 0〜π
+	//				float r = RandomFloat(0.0f, 1.0f, 3);            // 0〜1（球内）
+	//
+	//				// 球内部の距離に合わせてスケーリング（立方根で均等分布）
+	//				r = pow(r, 1.0f / 3.0f);
+	//
+	//				// 球面座標系から直交座標系へ変換
+	//				float x = r * sin(phi) * cos(theta) * radius.x;
+	//				float y = r * sin(phi) * sin(theta) * radius.y;
+	//				float z = r * cos(phi) * radius.z;
+	//
+	//				model.transforms.translate.x = center.x + x;
+	//				model.transforms.translate.y = center.y + y;
+	//				model.transforms.translate.z = center.z + z;
+	//			}
+	//			// エミッターが外殻を指す場合
+	//			else
+	//			{
+	//				Vector3 center = renderData.emitterSphere.center;
+	//				Vector3 radius = renderData.emitterSphere.radius;
+	// 
+	//				// ランダムな方向（単位ベクトル）を生成
+	//				float theta = RandomFloat(0.0f, 2.0f * float(std::numbers::pi), 3); // 0〜2π
+	//				float phi = RandomFloat(0.0f, float(std::numbers::pi), 3);        // 0〜π
+	// 
+	//				// r = 1.0f 固定 → 外殻のみ
+	//				float x = sin(phi) * cos(theta) * radius.x;
+	//				float y = sin(phi) * sin(theta) * radius.y;
+	//				float z = cos(phi) * radius.z;
+	// 
+	//				model.transforms.translate.x = center.x + x;
+	//				model.transforms.translate.y = center.y + y;
+	//				model.transforms.translate.z = center.z + z;
+	//			}
+	// 
+	//		}
+	// 
+	//		model.transforms.rotate = renderData.mono.transforms.rotate;
+	//		model.transforms.scale = renderData.mono.transforms.scale;
+	//		model.model = renderData.mono.model;
+	//		model.texture = renderData.mono.texture;
+	//		model.color = renderData.mono.color;
+	//		model.options = renderData.mono.options;
+	// 
+	//		// 速度設定
+	//		ParticleInf inf;
+	//		if (renderData.option.targetDirection == true)
+	//		{
+	//			inf.velocity = renderData.target - Vector3{ (renderData.emitterAABB.max + renderData.emitterAABB.min) / 2.0f };
+	//		}
+	//		else
+	//		{
+	//			inf.velocity = renderData.target - model.transforms.translate;
+	//		}
+	//		inf.velocity.Normalize();
+	//		inf.velocity *= renderData.velocity;
+	// 
+	//		// 人生設計
+	//		inf.liveTime = renderData.liveMax;
+	// 
+	//		// リストに追加
+	//		renderData.GetModelList().push_back(model);
+	//		renderData.GetInfList().push_back(inf);
+	//	}
+	//}
+	// 
+	// 
+	//for (int i = 0; i < renderData.GetModelList().size(); ++i)
+	//{
+	//	if (renderData.GetInfList()[i].liveTime > 0)
+	//	{
+	//		// 更新
+	//		renderData.GetModelList()[i].transforms.translate += renderData.GetInfList()[i].velocity;
+	//		renderData.GetModelList()[i].transforms.rotate += renderData.AddRotate;
+	//		renderData.GetModelList()[i].transforms.scale += renderData.AddScale;
+	// 
+	//		//static float floatColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	//		//ImGui::ColorEdit4("model2.color", floatColor, 1);
+	//		//Vector4 vector4Color = { floatColor[0], floatColor[1], floatColor[2], floatColor[3] };
+	//		//model1PreColor = ConvertVector4ToUint(vector4Color);
+	//		//renderData.GetModelList()[i].color -= renderData.AddColor;
+	// 
+	//		if (renderData.GetModelList()[i].transforms.scale.x < 0)
+	//			renderData.GetModelList()[i].transforms.scale.x = 0.0f;
+	//		if (renderData.GetModelList()[i].transforms.scale.y < 0)
+	//			renderData.GetModelList()[i].transforms.scale.y = 0.0f;
+	//		if (renderData.GetModelList()[i].transforms.scale.z < 0)
+	//			renderData.GetModelList()[i].transforms.scale.z = 0.0f;
+	// 
+	//		// ワールド行列更新
+	//		renderData.GetModelList()[i].transforms.World =
+	//			Matrix4x4::MakeAffineMatrix(
+	//				renderData.GetModelList()[i].transforms.scale,
+	//				renderData.GetModelList()[i].transforms.rotate,
+	//				renderData.GetModelList()[i].transforms.translate);
+	// 
+	//		// 人生消費
+	//		renderData.GetInfList()[i].liveTime--;
+	// 
+	//		// 描画
+	//		renderData.GetModelList()[i].Draw();
+	//	}
+	// 
+	//	if (
+	//		// 生存時間０の時
+	//		renderData.GetInfList()[i].liveTime <= 0
+	//		// 大きさ０の時
+	//		|| (renderData.GetModelList()[i].transforms.scale.x <= 0.0f || renderData.GetModelList()[i].transforms.scale.y <= 0.0f || renderData.GetModelList()[i].transforms.scale.z <= 0.0f)
+	//		// アルファ値０の時
+	//		//|| renderData.GetModelList()[i].color
+	//		)
+	//	{
+	//		renderData.GetModelList().erase(renderData.GetModelList().begin() + i);
+	//		renderData.GetInfList().erase(renderData.GetInfList().begin() + i);
+	//	}
+	//}
+	// 
+	//renderData.frame++;
 }
 
-void Engine::CreateFrustumPlanes(const Matrix4x4& viewProjectionMatrix)
+bool Engine::InFrustum(const AABB& aabb)
 {
-	// Left Plane
-	frustumPlanes_[0].normal.x = viewProjectionMatrix.m[0][3] + viewProjectionMatrix.m[0][0];
-	frustumPlanes_[0].normal.y = viewProjectionMatrix.m[1][3] + viewProjectionMatrix.m[1][0];
-	frustumPlanes_[0].normal.z = viewProjectionMatrix.m[2][3] + viewProjectionMatrix.m[2][0];
-	frustumPlanes_[0].distance = viewProjectionMatrix.m[3][3] + viewProjectionMatrix.m[3][0];
-	// Right Plane
-	frustumPlanes_[1].normal.x = viewProjectionMatrix.m[0][3] - viewProjectionMatrix.m[0][0];
-	frustumPlanes_[1].normal.y = viewProjectionMatrix.m[1][3] - viewProjectionMatrix.m[1][0];
-	frustumPlanes_[1].normal.z = viewProjectionMatrix.m[2][3] - viewProjectionMatrix.m[2][0];
-	frustumPlanes_[1].distance = viewProjectionMatrix.m[3][3] - viewProjectionMatrix.m[3][0];
-	// Bottom Plane
-	frustumPlanes_[2].normal.x = viewProjectionMatrix.m[0][3] + viewProjectionMatrix.m[0][1];
-	frustumPlanes_[2].normal.y = viewProjectionMatrix.m[1][3] + viewProjectionMatrix.m[1][1];
-	frustumPlanes_[2].normal.z = viewProjectionMatrix.m[2][3] + viewProjectionMatrix.m[2][1];
-	frustumPlanes_[2].distance = viewProjectionMatrix.m[3][3] + viewProjectionMatrix.m[3][1];
-	// Top Plane
-	frustumPlanes_[3].normal.x = viewProjectionMatrix.m[0][3] - viewProjectionMatrix.m[0][1];
-	frustumPlanes_[3].normal.y = viewProjectionMatrix.m[1][3] - viewProjectionMatrix.m[1][1];
-	frustumPlanes_[3].normal.z = viewProjectionMatrix.m[2][3] - viewProjectionMatrix.m[2][1];
-	frustumPlanes_[3].distance = viewProjectionMatrix.m[3][3] - viewProjectionMatrix.m[3][1];
-	// Near Plane
-	frustumPlanes_[4].normal.x = viewProjectionMatrix.m[0][2];
-	frustumPlanes_[4].normal.y = viewProjectionMatrix.m[1][2];
-	frustumPlanes_[4].normal.z = viewProjectionMatrix.m[2][2];
-	frustumPlanes_[4].distance = viewProjectionMatrix.m[3][2];
-	// Far Plane
-	frustumPlanes_[5].normal.x = viewProjectionMatrix.m[0][3] - viewProjectionMatrix.m[0][2];
-	frustumPlanes_[5].normal.y = viewProjectionMatrix.m[1][3] - viewProjectionMatrix.m[1][2];
-	frustumPlanes_[5].normal.z = viewProjectionMatrix.m[2][3] - viewProjectionMatrix.m[2][2];
-	frustumPlanes_[5].distance = viewProjectionMatrix.m[3][3] - viewProjectionMatrix.m[3][2];
-
-	// 各平面を正規化
-	for (int i = 0; i < 6; ++i)
-	{
-		float length = sqrt(frustumPlanes_[i].normal.x * frustumPlanes_[i].normal.x +
-			frustumPlanes_[i].normal.y * frustumPlanes_[i].normal.y +
-			frustumPlanes_[i].normal.z * frustumPlanes_[i].normal.z);
-		frustumPlanes_[i].normal = frustumPlanes_[i].normal / length;
-		frustumPlanes_[i].distance /= length;
-	}
-}
-
-bool Engine::IsAABBInFrustum(const AABB& aabb, const Matrix4x4& worldMatrix)
-{
-	// AABBの8つの頂点をワールド空間に変換
-	Vector3 points[8];
-	//points[0] = Transform(Vector3{ aabb.min.x, aabb.min.y, aabb.min.z }, worldMatrix);
-	//points[1] = Transform(Vector3{ aabb.max.x, aabb.min.y, aabb.min.z }, worldMatrix);
-	//points[2] = Transform(Vector3{ aabb.max.x, aabb.max.y, aabb.min.z }, worldMatrix);
-	//points[3] = Transform(Vector3{ aabb.min.x, aabb.max.y, aabb.min.z }, worldMatrix);
-	//points[4] = Transform(Vector3{ aabb.min.x, aabb.min.y, aabb.max.z }, worldMatrix);
-	//points[5] = Transform(Vector3{ aabb.max.x, aabb.min.y, aabb.max.z }, worldMatrix);
-	//points[6] = Transform(Vector3{ aabb.max.x, aabb.max.y, aabb.max.z }, worldMatrix);
-	//points[7] = Transform(Vector3{ aabb.min.x, aabb.max.y, aabb.max.z }, worldMatrix);
-
-	points[0] = Vector3{ aabb.min.x, aabb.min.y, aabb.min.z };
-	points[1] = Vector3{ aabb.max.x, aabb.min.y, aabb.min.z };
-	points[2] = Vector3{ aabb.max.x, aabb.max.y, aabb.min.z };
-	points[3] = Vector3{ aabb.min.x, aabb.max.y, aabb.min.z };
-	points[4] = Vector3{ aabb.min.x, aabb.min.y, aabb.max.z };
-	points[5] = Vector3{ aabb.max.x, aabb.min.y, aabb.max.z };
-	points[6] = Vector3{ aabb.max.x, aabb.max.y, aabb.max.z };
-	points[7] = Vector3{ aabb.min.x, aabb.max.y, aabb.max.z };
-
-	// 6つの各平面に対してテスト
-	for (const auto& plane : frustumPlanes_)
-	{
-		int inCount = 0;
-		// AABBのすべての頂点が平面の裏側にあるかチェック
-		for (int i = 0; i < 8; ++i)
-		{
-			float dist = plane.normal.Dot(points[i]) + plane.distance;
-			if (dist >= 0)
-			{
-				inCount++;
-			}
-		}
-		// すべての頂点が平面の裏側にある場合は、AABBは視錐台の外
-		if (inCount == 0)
-		{
-			return false;
-		}
-	}
-
-	return true; // どの平面の外側にもない場合は、視錐台内にあると判定
+	if (!debugCamera) return cameraController->InFrustum(aabb);
+	else return debugCameraController->InFrustum(aabb);
 }
 
 // 音
@@ -797,7 +698,7 @@ Ray Engine::GetMouseRay()
 
 uint32_t Engine::GetMouseWheel()
 {
-	return wheelDelta;
+	return inputManager_->GetMouseController()->wheelDelta;
 }
 
 bool Engine::GetMousePress(int i)
