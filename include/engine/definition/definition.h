@@ -185,39 +185,15 @@ struct Vector2
     }
 
     // ベクトルの長さ 
-    float Length() const
-    {
-        return std::sqrt(x * x + y * y);
-    }
+    float Length() const;
     // 平方根計算をしてない長澤
-    float LengthSq() const
-    {
-        return x * x + y * y;
-    }
+    float LengthSq() const;
     // ベクトルを正規化　※　自身を変更する　※
-    Vector2& Normalize()
-    {
-        float len = Length();
-        const float EPSILON = 0.00001f;
-        if (std::abs(len) > EPSILON)
-        {
-            x /= len;
-            y /= len;
-        }
-        return *this;
-    }
+    Vector2& Normalize();
     // 正規化された新しいベクトルを返す　※　自身は変更されない　※
-    Vector2 Normalized() const
-    {
-        Vector2 result = *this;
-        result.Normalize();
-        return result;
-    }
+    Vector2 Normalized() const;
     // 内積
-    float Dot(const Vector2& rhs) const
-    {
-        return x * rhs.x + y * rhs.y;
-    }
+    float Dot(const Vector2& rhs) const;
 };
 
 struct Vector3
@@ -298,57 +274,19 @@ struct Vector3
     }
 
     // ベクトルの長さ
-    float Length() const
-    {
-        return std::sqrt(x * x + y * y + z * z);
-    }
+    float Length() const;
     // 平方根計算をしてない長澤
-    float LengthSq() const
-    {
-        return x * x + y * y + z * z;
-    }
+    float LengthSq() const;
     // ベクトルを正規化　※　自身を変更する　※
-    Vector3& Normalize()
-    {
-        float len = Length();
-        if (std::abs(len) > 0.00001f)
-        { // ゼロ除算は殺すって言わなかった？
-            x /= len;
-            y /= len;
-            z /= len;
-        }
-        return *this;
-    }
+    Vector3& Normalize();
     // 正規化された新しいベクトルを返す　※　自身は変更されない　※
-    Vector3 Normalized() const
-    {
-        Vector3 result = *this;
-        result.Normalize();
-        return result;
-    }
+    Vector3 Normalized() const;
     // 内積
-    float Dot(const Vector3& rhs) const
-    {
-        return x * rhs.x + y * rhs.y + z * rhs.z;
-    }
+    float Dot(const Vector3& rhs) const;
     // 外積
-    Vector3 Cross(const Vector3& rhs) const
-    {
-        return Vector3(
-            y * rhs.z - z * rhs.y,
-            z * rhs.x - x * rhs.z,
-            x * rhs.y - y * rhs.x
-        );
-    }
+    Vector3 Cross(const Vector3& rhs) const;
     // 反射角
-    Vector3 Reflect(const Vector3& input, const Vector3& normal)
-    {
-        Vector3 result;
-
-        result = input - ((normal * (input.Dot(normal))) * 2);
-
-        return result;
-    }
+    Vector3 Reflect(const Vector3& input, const Vector3& normal);
 };
 
 struct Vector4
@@ -397,41 +335,15 @@ struct Vector4
     }
 
     // ベクトルの長さ
-    float Length() const
-    {
-        return std::sqrt(x * x + y * y + z * z + w * w);
-    }
+    float Length() const;
     // 平方根計算をしてない長澤
-    float LengthSq() const
-    {
-        return x * x + y * y + z * z + w * w;
-    }
+    float LengthSq() const;
     // ベクトルを正規化　※　自身を変更する　※
-    Vector4& Normalize()
-    {
-        float len = Length();
-        const float EPSILON = 0.00001f;
-        if (std::abs(len) > EPSILON)
-        {
-            x /= len;
-            y /= len;
-            z /= len;
-            w /= len;
-        }
-        return *this;
-    }
+    Vector4& Normalize();
     // 正規化された新しいベクトルを返す　※　自身は変更されない　※
-    Vector4 Normalized() const
-    {
-        Vector4 result = *this;
-        result.Normalize();
-        return result;
-    }
+    Vector4 Normalized() const;
     // 内積
-    float Dot(const Vector4& rhs) const
-    {
-        return x * rhs.x + y * rhs.y + z * rhs.z + w * rhs.w;
-    }
+    float Dot(const Vector4& rhs) const;
 };
 
 struct Matrix3x3
@@ -585,258 +497,29 @@ struct Matrix4x4
     }
 
     // 逆行列
-    Matrix4x4 Inverse() const
-    {
-        Matrix4x4 Return{};
-
-        float A = (m[0][0] * m[1][1] * m[2][2] * m[3][3]) + (m[0][0] * m[1][2] * m[2][3] * m[3][1]) + (m[0][0] * m[1][3] * m[2][1] * m[3][2])
-            - (m[0][0] * m[1][3] * m[2][2] * m[3][1]) - (m[0][0] * m[1][2] * m[2][1] * m[3][3]) - (m[0][0] * m[1][1] * m[2][3] * m[3][2])
-            - (m[0][1] * m[1][0] * m[2][2] * m[3][3]) - (m[0][2] * m[1][0] * m[2][3] * m[3][1]) - (m[0][3] * m[1][0] * m[2][1] * m[3][2])
-            + (m[0][3] * m[1][0] * m[2][2] * m[3][1]) + (m[0][2] * m[1][0] * m[2][1] * m[3][3]) + (m[0][1] * m[1][0] * m[2][3] * m[3][2])
-            + (m[0][1] * m[1][2] * m[2][0] * m[3][3]) + (m[0][2] * m[1][3] * m[2][0] * m[3][1]) + (m[0][3] * m[1][1] * m[2][0] * m[3][2])
-            - (m[0][3] * m[1][2] * m[2][0] * m[3][1]) - (m[0][2] * m[1][1] * m[2][0] * m[3][3]) - (m[0][1] * m[1][3] * m[2][0] * m[3][2])
-            - (m[0][1] * m[1][2] * m[2][3] * m[3][0]) - (m[0][2] * m[1][3] * m[2][1] * m[3][0]) - (m[0][3] * m[1][1] * m[2][2] * m[3][0])
-            + (m[0][3] * m[1][2] * m[2][1] * m[3][0]) + (m[0][2] * m[1][1] * m[2][3] * m[3][0]) + (m[0][1] * m[1][3] * m[2][2] * m[3][0]);
-
-        Return.m[0][0] = (1 / A) * ((m[1][1] * m[2][2] * m[3][3]) + (m[1][2] * m[2][3] * m[3][1]) + (m[1][3] * m[2][1] * m[3][2]) - (m[1][3] * m[2][2] * m[3][1]) - (m[1][2] * m[2][1] * m[3][3]) - (m[1][1] * m[2][3] * m[3][2]));
-        Return.m[0][1] = (1 / A) * ((m[0][3] * m[2][2] * m[3][1]) + (m[0][2] * m[2][1] * m[3][3]) + (m[0][1] * m[2][3] * m[3][2]) - (m[0][1] * m[2][2] * m[3][3]) - (m[0][2] * m[2][3] * m[3][1]) - (m[0][3] * m[2][1] * m[3][2]));
-        Return.m[0][2] = (1 / A) * ((m[0][1] * m[1][2] * m[3][3]) + (m[0][2] * m[1][3] * m[3][1]) + (m[0][3] * m[1][1] * m[3][2]) - (m[0][3] * m[1][2] * m[3][1]) - (m[0][2] * m[1][1] * m[3][3]) - (m[0][1] * m[1][3] * m[3][2]));
-        Return.m[0][3] = (1 / A) * ((m[0][3] * m[1][2] * m[2][1]) + (m[0][2] * m[1][1] * m[2][3]) + (m[0][1] * m[1][3] * m[2][2]) - (m[0][1] * m[1][2] * m[2][3]) - (m[0][2] * m[1][3] * m[2][1]) - (m[0][3] * m[1][1] * m[2][2]));
-
-        Return.m[1][0] = (1 / A) * ((m[1][3] * m[2][2] * m[3][0]) + (m[1][2] * m[2][0] * m[3][3]) + (m[1][0] * m[2][3] * m[3][2]) - (m[1][0] * m[2][2] * m[3][3]) - (m[1][2] * m[2][3] * m[3][0]) - (m[1][3] * m[2][0] * m[3][2]));
-        Return.m[1][1] = (1 / A) * ((m[0][0] * m[2][2] * m[3][3]) + (m[0][2] * m[2][3] * m[3][0]) + (m[0][3] * m[2][0] * m[3][2]) - (m[0][3] * m[2][2] * m[3][0]) - (m[0][2] * m[2][0] * m[3][3]) - (m[0][0] * m[2][3] * m[3][2]));
-        Return.m[1][2] = (1 / A) * ((m[0][3] * m[1][2] * m[3][0]) + (m[0][2] * m[1][0] * m[3][3]) + (m[0][0] * m[1][3] * m[3][2]) - (m[0][0] * m[1][2] * m[3][3]) - (m[0][2] * m[1][3] * m[3][0]) - (m[0][3] * m[1][0] * m[3][2]));
-        Return.m[1][3] = (1 / A) * ((m[0][0] * m[1][2] * m[2][3]) + (m[0][2] * m[1][3] * m[2][0]) + (m[0][3] * m[1][0] * m[2][2]) - (m[0][3] * m[1][2] * m[2][0]) - (m[0][2] * m[1][0] * m[2][3]) - (m[0][0] * m[1][3] * m[2][2]));
-
-        Return.m[2][0] = (1 / A) * ((m[1][0] * m[2][1] * m[3][3]) + (m[1][1] * m[2][3] * m[3][0]) + (m[1][3] * m[2][0] * m[3][1]) - (m[1][3] * m[2][1] * m[3][0]) - (m[1][1] * m[2][0] * m[3][3]) - (m[1][0] * m[2][3] * m[3][1]));
-        Return.m[2][1] = (1 / A) * ((m[0][3] * m[2][1] * m[3][0]) + (m[0][1] * m[2][0] * m[3][3]) + (m[0][0] * m[2][3] * m[3][1]) - (m[0][0] * m[2][1] * m[3][3]) - (m[0][1] * m[2][3] * m[3][0]) - (m[0][3] * m[2][0] * m[3][1]));
-        Return.m[2][2] = (1 / A) * ((m[0][0] * m[1][1] * m[3][3]) + (m[0][1] * m[1][3] * m[3][0]) + (m[0][3] * m[1][0] * m[3][1]) - (m[0][3] * m[1][1] * m[3][0]) - (m[0][1] * m[1][0] * m[3][3]) - (m[0][0] * m[1][3] * m[3][1]));
-        Return.m[2][3] = (1 / A) * ((m[0][3] * m[1][1] * m[2][0]) + (m[0][1] * m[1][0] * m[2][3]) + (m[0][0] * m[1][3] * m[2][1]) - (m[0][0] * m[1][1] * m[2][3]) - (m[0][1] * m[1][3] * m[2][0]) - (m[0][3] * m[1][0] * m[2][1]));
-
-        Return.m[3][0] = (1 / A) * ((m[1][2] * m[2][1] * m[3][0]) + (m[1][1] * m[2][0] * m[3][2]) + (m[1][0] * m[2][2] * m[3][1]) - (m[1][0] * m[2][1] * m[3][2]) - (m[1][1] * m[2][2] * m[3][0]) - (m[1][2] * m[2][0] * m[3][1]));
-        Return.m[3][1] = (1 / A) * ((m[0][0] * m[2][1] * m[3][2]) + (m[0][1] * m[2][2] * m[3][0]) + (m[0][2] * m[2][0] * m[3][1]) - (m[0][2] * m[2][1] * m[3][0]) - (m[0][1] * m[2][0] * m[3][2]) - (m[0][0] * m[2][2] * m[3][1]));
-        Return.m[3][2] = (1 / A) * ((m[0][2] * m[1][1] * m[3][0]) + (m[0][1] * m[1][0] * m[3][2]) + (m[0][0] * m[1][2] * m[3][1]) - (m[0][0] * m[1][1] * m[3][2]) - (m[0][1] * m[1][2] * m[3][0]) - (m[0][2] * m[1][0] * m[3][1]));
-        Return.m[3][3] = (1 / A) * ((m[0][0] * m[1][1] * m[2][2]) + (m[0][1] * m[1][2] * m[2][0]) + (m[0][2] * m[1][0] * m[2][1]) - (m[0][2] * m[1][1] * m[2][0]) - (m[0][1] * m[1][0] * m[2][2]) - (m[0][0] * m[1][2] * m[2][1]));
-
-        return Return;
-    }
+    Matrix4x4 Inverse() const;
     // 転置行列
-    Matrix4x4 Transpose() const
-    {
-        Matrix4x4 Return{};
-
-        for (int i = 0; i < 4; ++i)
-        {
-            for (int j = 0; j < 4; ++j)
-            {
-                Return.m[i][j] = m[j][i];
-            }
-        }
-
-        return Return;
-    }
+    Matrix4x4 Transpose() const;
     // 単位行列
-    Matrix4x4 MakeIdentity()
-    {
-        for (int i = 0; i < 4; ++i)
-        {
-            for (int j = 0; j < 4; ++j)
-            {
-                m[i][j] = (i == j) ? 1.0f : 0.0f;
-            }
-        }
-    }
-    static Matrix4x4 MakeIdentity4x4()
-    {
-        Matrix4x4 Return{};
-
-        for (int i = 0; i < 4; ++i)
-        {
-            Return.m[i][i] = 1.0f;
-        }
-
-        return Return;
-    }
+    static Matrix4x4 MakeIdentity4x4();
     // 平行移動行列
-    static Matrix4x4 MakeTranslateMatrix(const Vector3& translate)
-    {
-        Matrix4x4 result = MakeIdentity4x4();
-        result.m[3][0] = translate.x;
-        result.m[3][1] = translate.y;
-        result.m[3][2] = translate.z;
-        return result;
-    }
+    static Matrix4x4 MakeTranslateMatrix(const Vector3& translate);
     // 拡縮行列
-    static Matrix4x4 MakeScaleMatrix(const Vector3& scale)
-    {
-        Matrix4x4 result = MakeIdentity4x4();
-        result.m[0][0] = scale.x;
-        result.m[1][1] = scale.y;
-        result.m[2][2] = scale.z;
-
-        return result;
-    }
+    static Matrix4x4 MakeScaleMatrix(const Vector3& scale);
     // Ｘ軸回転行列
-    static Matrix4x4 MakeRotateXMatrix(float radian)
-    {
-        Matrix4x4 Return{};
-
-        Return.m[0][0] = 1;
-        Return.m[1][0] = 0;
-        Return.m[2][0] = 0;
-        Return.m[3][0] = 0;
-        Return.m[0][1] = 0;
-        Return.m[1][1] = std::cos(radian);
-        Return.m[2][1] = -std::sin(radian);
-        Return.m[3][1] = 0;
-        Return.m[0][2] = 0;
-        Return.m[1][2] = std::sin(radian);
-        Return.m[2][2] = std::cos(radian);
-        Return.m[3][2] = 0;
-        Return.m[0][3] = 0;
-        Return.m[1][3] = 0;
-        Return.m[2][3] = 0;
-        Return.m[3][3] = 1;
-
-        return Return;
-    }
+    static Matrix4x4 MakeRotateXMatrix(float radian);
     // Ｙ軸回転行列
-    static Matrix4x4 MakeRotateYMatrix(float radian)
-    {
-        Matrix4x4 Return{};
-
-        Return.m[0][0] = std::cos(radian);
-        Return.m[1][0] = 0;
-        Return.m[2][0] = std::sin(radian);
-        Return.m[3][0] = 0;
-        Return.m[0][1] = 0;
-        Return.m[1][1] = 1;
-        Return.m[2][1] = 0;
-        Return.m[3][1] = 0;
-        Return.m[0][2] = -std::sin(radian);
-        Return.m[1][2] = 0;
-        Return.m[2][2] = std::cos(radian);
-        Return.m[3][2] = 0;
-        Return.m[0][3] = 0;
-        Return.m[1][3] = 0;
-        Return.m[2][3] = 0;
-        Return.m[3][3] = 1;
-
-        return Return;
-    }
+    static Matrix4x4 MakeRotateYMatrix(float radian);
     // Ｚ軸回転行列
-    static Matrix4x4 MakeRotateZMatrix(float radian)
-    {
-        Matrix4x4 Return{};
-
-        Return.m[0][0] = std::cos(radian);
-        Return.m[1][0] = -std::sin(radian);
-        Return.m[2][0] = 0;
-        Return.m[3][0] = 0;
-        Return.m[0][1] = std::sin(radian);
-        Return.m[1][1] = std::cos(radian);
-        Return.m[2][1] = 0;
-        Return.m[3][1] = 0;
-        Return.m[0][2] = 0;
-        Return.m[1][2] = 0;
-        Return.m[2][2] = 1;
-        Return.m[3][2] = 0;
-        Return.m[0][3] = 0;
-        Return.m[1][3] = 0;
-        Return.m[2][3] = 0;
-        Return.m[3][3] = 1;
-
-        return Return;
-    }
+    static Matrix4x4 MakeRotateZMatrix(float radian);
     // ３次元アフィン変換行列
-    static Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Vector3& translate)
-    {
-        Matrix4x4 Return{};
-
-        Matrix4x4 scaleMatrix = MakeScaleMatrix(scale);
-        Matrix4x4 rotateXMatrix = MakeRotateXMatrix(rotate.x);
-        Matrix4x4 rotateYMatrix = MakeRotateYMatrix(rotate.y);
-        Matrix4x4 rotateZMatrix = MakeRotateZMatrix(rotate.z);
-        Matrix4x4 rotateXYZMatrix = rotateZMatrix * rotateXMatrix * rotateYMatrix;
-        Matrix4x4 translateMatrix = MakeTranslateMatrix(translate);
-        Matrix4x4 resultMatrix = scaleMatrix * rotateXYZMatrix * translateMatrix;
-
-        return resultMatrix;
-    }
+    static Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Vector3& translate);
     // 透視投影行列
-    static Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip, float farClip)
-    {
-        Matrix4x4 Return{};
-
-        float tanHalfFovY = std::tan(fovY / 2.0f);
-        Return.m[0][0] = 1.0f / (aspectRatio * tanHalfFovY);
-        Return.m[1][1] = 1.0f / tanHalfFovY;
-        Return.m[2][2] = farClip / (farClip - nearClip);
-        Return.m[3][2] = (-nearClip * farClip) / (farClip - nearClip);
-        Return.m[2][3] = 1.0f;
-
-        return Return;
-    }
+    static Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip, float farClip);
     // 正射影行列(平行投影行列)
-    static Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip)
-    {
-        Matrix4x4 Return{};
-
-        Return.m[0][0] = 2.0f / (right - left);
-        Return.m[0][1] = 0.0f;
-        Return.m[0][2] = 0.0f;
-        Return.m[0][3] = 0.0f;
-
-        Return.m[1][0] = 0.0f;
-        Return.m[1][1] = 2.0f / (top - bottom);
-        Return.m[1][2] = 0.0f;
-        Return.m[1][3] = 0.0f;
-
-        Return.m[2][0] = 0.0f;
-        Return.m[2][1] = 1.0f / (farClip - nearClip);
-        Return.m[2][2] = 0.0f;
-        Return.m[2][3] = 0.0f;
-
-        Return.m[3][0] = (left + right) / (left - right);
-        Return.m[3][1] = (top + bottom) / (bottom - top);
-        Return.m[3][2] = (nearClip) / (nearClip - farClip);
-        Return.m[3][3] = 1.0f;
-
-        return Return;
-    }
+    static Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip);
     // ビューポート変換
-    static Matrix4x4 MakeViewPortMatrix(float left, float top, float width, float height, float minD, float maxD)
-    {
-        Matrix4x4 Return{};
-        //// 最小深度値
-        //float minD = 0;
-        //// 最大深度値
-        //float maxD = 1;
-
-
-        Return.m[0][0] = width / 2.0f;
-        Return.m[0][1] = 0.0f;
-        Return.m[0][2] = 0.0f;
-        Return.m[0][3] = 0.0f;
-
-        Return.m[1][0] = 0.0f;
-        Return.m[1][1] = -height / 2.0f;
-        Return.m[1][2] = 0.0f;
-        Return.m[1][3] = 0.0f;
-
-        Return.m[2][0] = 0.0f;
-        Return.m[2][1] = 0.0f;
-        Return.m[2][2] = maxD - minD;
-        Return.m[2][3] = 0.0f;
-
-        Return.m[3][0] = left + (width / 2.0f);
-        Return.m[3][1] = top + (height / 2.0f);
-        Return.m[3][2] = minD;
-        Return.m[3][3] = 1.0f;
-
-
-        return Return;
-    }
+    static Matrix4x4 MakeViewPortMatrix(float left, float top, float width, float height, float minD, float maxD);
 };
 
 struct CollisionFlags
@@ -963,27 +646,9 @@ struct AABB
     Vector3 min;
     Vector3 max;
 
-    Vector3 center()const
-    {
-        return Vector3{
-            (min.x + max.x) / 2.0f,
-            (min.y + max.y) / 2.0f,
-            (min.z + max.z) / 2.0f,
-        };
-    };
+    Vector3 center()const;
 
-    Vector3 GetCollisionDepth(const AABB& other)const
-    {
-        Vector3 depth;
-        depth.x = my_min(this->max.x, other.max.x) - my_max(this->min.x, other.min.x);
-        depth.y = my_min(this->max.y, other.max.y) - my_max(this->min.y, other.min.y);
-        depth.z = my_min(this->max.z, other.max.z) - my_max(this->min.z, other.min.z);
-        if (depth.x <= 0.0f || depth.y <= 0.0f || depth.z <= 0.0f)
-        {
-            return { 0.0f, 0.0f, 0.0f };
-        }
-        return depth;
-    }
+    Vector3 GetCollisionDepth(const AABB& other)const;
 };
 
 struct VertexData
@@ -1099,13 +764,13 @@ struct DrawOptions
 
 struct DrawParticleOptions
 {
-    // エミッターはAABB型か球型か
+    /// エミッターはAABB型か球型か
     // true = AABB　false = 球
     bool emitterShape = true;
-    // 全パーティクルがtarget方向に向かうかエミッターとtargetの垂直方向に向かうか
+    /// 全パーティクルがtarget方向に向かうかエミッターとtargetの垂直方向に向かうか
     // trueなら垂直方向、falseならtarget方向
     bool targetDirection = true;
-    // エミッター内部でも発生するか外殻上でのみ発生するか
+    /// エミッター内部でも発生するか外殻上でのみ発生するか
     // trueなら内部でも発生、falseなら外殻のみ
     bool spawnInsideEmitter = true;
     // ビルボードか否か

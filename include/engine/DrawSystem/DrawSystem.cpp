@@ -200,6 +200,7 @@ void DrawSystem::DrawParticle(Game::RenderData_Particle& renderData)
 	{
 		Matrix4x4 world = renderData.mono.transforms.World;
 		instancingData_[i].World = world;
+		instancingData_[i].World.m[3][0] += i * 20;
 		instancingData_[i].WVP = world * viewProjectionMatrix_;
 	}
 
