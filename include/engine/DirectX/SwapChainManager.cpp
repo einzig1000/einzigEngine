@@ -21,6 +21,7 @@ void SwapChainManager::InitializeSwapChainInternal(ID3D12Device* device, ID3D12C
     swapChainDesc.Width = width;
     swapChainDesc.Height = height;
     swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    //swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
     swapChainDesc.SampleDesc.Count = 1;
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     swapChainDesc.BufferCount = 2;
@@ -46,6 +47,7 @@ void SwapChainManager::InitializeRenderTargetView(ID3D12Device* device)
     assert(SUCCEEDED(hr));
 
     rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+    //rtvDesc.Format = swapChainDesc.Format;
     rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
 
     D3D12_CPU_DESCRIPTOR_HANDLE rtvStartHandle = rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();

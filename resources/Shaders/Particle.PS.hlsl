@@ -1,4 +1,4 @@
-// Object3d.PS.hlsl
+// Particle.PS.hlsl
 
 #include "Particle.hlsli"
 

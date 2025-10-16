@@ -6,7 +6,6 @@ CameraController::CameraController()
 {
     mousePositionGap_ = { 0,0 };
     cameraMode_ = true;
-    cameraModeMode_ = true;
 
     // カメラ
     transform_.translate = { 0.0f, 0.0f, 0.0f };
@@ -120,6 +119,7 @@ void CameraController::Update()
 #pragma endregion
     }
 
+	// カメラ演出
     if (easeRotate_.easingFlag)
     {
         MovingRotate();
@@ -133,61 +133,29 @@ void CameraController::Update()
         MovingDistance();
     }
 
-#ifdef _DEBUG
-#endif
-
     //////////////////////////////////////////////
     ///               カメラ移動               ///
     ////////////////////////////////////////////// 
+    // カメラ初期値
+    Vector3 cameraLocalPos = { 0.0f, 0.0f, -distance_ };
 
-    if (cameraModeMode_)
-    {
-        ////  カメラを原点で回転させた後に移動  ////（カメラのscaleとtranslateは動かさない）
+    // カメラに回転適用
+    Matrix4x4 cameraRotateMatrix = Matrix4x4::MakeAffineMatrix(
+        { 1,1,1 },
+        transform_.rotate,
+        { 0,0,0 }
+    );
 
-        // カメラ初期値
-        Vector3 cameraLocalPos = { 0.0f, 0.0f, -distance_ };
-
-        // カメラに回転適用（カメラのscaleとtranslateはマジで動かさない）
-        Matrix4x4 cameraRotateMatrix = Matrix4x4::MakeAffineMatrix(
-            { 1,1,1 },
-            transform_.rotate,
-            { 0,0,0 }
-        );
-
-        // cameraLocalPos　に　回転適用したマトリックスを適用させる　＝　原点上で回転
-        Vector3 rotatedCameraPos = {
-            cameraLocalPos.x * cameraRotateMatrix.m[0][0] + cameraLocalPos.y * cameraRotateMatrix.m[1][0] + cameraLocalPos.z * cameraRotateMatrix.m[2][0],
-            cameraLocalPos.x * cameraRotateMatrix.m[0][1] + cameraLocalPos.y * cameraRotateMatrix.m[1][1] + cameraLocalPos.z * cameraRotateMatrix.m[2][1],
-            cameraLocalPos.x * cameraRotateMatrix.m[0][2] + cameraLocalPos.y * cameraRotateMatrix.m[1][2] + cameraLocalPos.z * cameraRotateMatrix.m[2][2]
-        };
+    // cameraLocalPos　に　回転適用したマトリックスを適用させる　＝　原点上で回転
+    Vector3 rotatedCameraPos = {
+        cameraLocalPos.x * cameraRotateMatrix.m[0][0] + cameraLocalPos.y * cameraRotateMatrix.m[1][0] + cameraLocalPos.z * cameraRotateMatrix.m[2][0],
+        cameraLocalPos.x * cameraRotateMatrix.m[0][1] + cameraLocalPos.y * cameraRotateMatrix.m[1][1] + cameraLocalPos.z * cameraRotateMatrix.m[2][1],
+        cameraLocalPos.x * cameraRotateMatrix.m[0][2] + cameraLocalPos.y * cameraRotateMatrix.m[1][2] + cameraLocalPos.z * cameraRotateMatrix.m[2][2]
+    };
 
 
-        // 原点上で回転したrotatedCameraPosに　cameraCenterを足せば中心がcameraCenterに変わる
-        transform_.translate = (center_ + rotatedCameraPos);
-        //transform_.translate = cameraLocalPos;
-    }
-    else
-    {
-        Vector3 cameraLocalPos = { center_.x - transform_.translate.x, center_.y - transform_.translate.y, center_.z - transform_.translate.z };
-
-        // カメラに回転適用（カメラのscaleとtranslateはマジで動かさない）
-        Matrix4x4 cameraRotateMatrix = Matrix4x4::MakeAffineMatrix(
-            { 1,1,1 },
-            transform_.rotate,
-            { 0,0,0 }
-        );
-
-        // cameraLocalPos　に　回転適用したマトリックスを適用させる　＝　カメラの座標で回転
-        Vector3 rotatedCameraPos = {
-            cameraLocalPos.x * cameraRotateMatrix.m[0][0] + cameraLocalPos.y * cameraRotateMatrix.m[1][0] + cameraLocalPos.z * cameraRotateMatrix.m[2][0],
-            cameraLocalPos.x * cameraRotateMatrix.m[0][1] + cameraLocalPos.y * cameraRotateMatrix.m[1][1] + cameraLocalPos.z * cameraRotateMatrix.m[2][1],
-            cameraLocalPos.x * cameraRotateMatrix.m[0][2] + cameraLocalPos.y * cameraRotateMatrix.m[1][2] + cameraLocalPos.z * cameraRotateMatrix.m[2][2]
-        };
-
-
-        // 原点上で回転したrotatedCameraPosに　cameraCenterを足せば中心がcameraCenterに変わる
-        center_ = rotatedCameraPos + transform_.translate;
-    }
+    // 原点上で回転したrotatedCameraPosに　cameraCenterを足せば中心がcameraCenterに変わる
+    transform_.translate = (center_ + rotatedCameraPos);
 
     // カメラ行列を作成
     cameraMatrix_ = Matrix4x4::MakeAffineMatrix(
@@ -198,8 +166,9 @@ void CameraController::Update()
 
     // ビュー・射影・ビューポート行列
     viewMatrix_ = (cameraMatrix_.Inverse());
-    //projectionMatrix_ = Matrix4x4::MakePerspectiveFovMatrix(0.45f, float(1280) / float(720), 0.1f, 100.0f);
     viewProjectionMatrix = (viewMatrix_ * projectionMatrix_);
+
+    CreateFrustumPlanes();
 }
 
 void CameraController::Draw()
@@ -212,9 +181,89 @@ void CameraController::Draw()
     ImGui::DragFloat3("cameratransform_.rotate", &transform_.rotate.x, 0.01f);
     ImGui::Text("push SPACE key : change cameraMode");
     ImGui::Checkbox("cameraMode", &cameraMode_);
-    ImGui::Checkbox("cameraModeMode", &cameraModeMode_);
     ImGui::End();
     Game::DrawSphere({ {0.1f,0.1f,0.1f}, {0.0f,0.0f,0.0f}, center_ }, { 0,0,0 }, 12, 0, 0xFFFFFFFF, sphereOptions);
+}
+
+void CameraController::CreateFrustumPlanes()
+{
+    // Left Plane
+    frustumPlanes_[0].normal.x = viewProjectionMatrix.m[0][3] + viewProjectionMatrix.m[0][0];
+    frustumPlanes_[0].normal.y = viewProjectionMatrix.m[1][3] + viewProjectionMatrix.m[1][0];
+    frustumPlanes_[0].normal.z = viewProjectionMatrix.m[2][3] + viewProjectionMatrix.m[2][0];
+    frustumPlanes_[0].distance = viewProjectionMatrix.m[3][3] + viewProjectionMatrix.m[3][0];
+    // Right Plane
+    frustumPlanes_[1].normal.x = viewProjectionMatrix.m[0][3] - viewProjectionMatrix.m[0][0];
+    frustumPlanes_[1].normal.y = viewProjectionMatrix.m[1][3] - viewProjectionMatrix.m[1][0];
+    frustumPlanes_[1].normal.z = viewProjectionMatrix.m[2][3] - viewProjectionMatrix.m[2][0];
+    frustumPlanes_[1].distance = viewProjectionMatrix.m[3][3] - viewProjectionMatrix.m[3][0];
+    // Bottom Plane
+    frustumPlanes_[2].normal.x = viewProjectionMatrix.m[0][3] + viewProjectionMatrix.m[0][1];
+    frustumPlanes_[2].normal.y = viewProjectionMatrix.m[1][3] + viewProjectionMatrix.m[1][1];
+    frustumPlanes_[2].normal.z = viewProjectionMatrix.m[2][3] + viewProjectionMatrix.m[2][1];
+    frustumPlanes_[2].distance = viewProjectionMatrix.m[3][3] + viewProjectionMatrix.m[3][1];
+    // Top Plane
+    frustumPlanes_[3].normal.x = viewProjectionMatrix.m[0][3] - viewProjectionMatrix.m[0][1];
+    frustumPlanes_[3].normal.y = viewProjectionMatrix.m[1][3] - viewProjectionMatrix.m[1][1];
+    frustumPlanes_[3].normal.z = viewProjectionMatrix.m[2][3] - viewProjectionMatrix.m[2][1];
+    frustumPlanes_[3].distance = viewProjectionMatrix.m[3][3] - viewProjectionMatrix.m[3][1];
+    // Near Plane
+    frustumPlanes_[4].normal.x = viewProjectionMatrix.m[0][2];
+    frustumPlanes_[4].normal.y = viewProjectionMatrix.m[1][2];
+    frustumPlanes_[4].normal.z = viewProjectionMatrix.m[2][2];
+    frustumPlanes_[4].distance = viewProjectionMatrix.m[3][2];
+    // Far Plane
+    frustumPlanes_[5].normal.x = viewProjectionMatrix.m[0][3] - viewProjectionMatrix.m[0][2];
+    frustumPlanes_[5].normal.y = viewProjectionMatrix.m[1][3] - viewProjectionMatrix.m[1][2];
+    frustumPlanes_[5].normal.z = viewProjectionMatrix.m[2][3] - viewProjectionMatrix.m[2][2];
+    frustumPlanes_[5].distance = viewProjectionMatrix.m[3][3] - viewProjectionMatrix.m[3][2];
+
+    // 各平面を正規化
+    for (int i = 0; i < 6; ++i)
+    {
+        float length = sqrt(frustumPlanes_[i].normal.x * frustumPlanes_[i].normal.x +
+            frustumPlanes_[i].normal.y * frustumPlanes_[i].normal.y +
+            frustumPlanes_[i].normal.z * frustumPlanes_[i].normal.z);
+        frustumPlanes_[i].normal = frustumPlanes_[i].normal / length;
+        frustumPlanes_[i].distance /= length;
+    }
+}
+
+bool CameraController::InFrustum(const AABB& aabb)
+{
+    // AABBの8つの頂点をワールド空間に変換
+    Vector3 points[8];
+
+    points[0] = Vector3{ aabb.min.x, aabb.min.y, aabb.min.z };
+    points[1] = Vector3{ aabb.max.x, aabb.min.y, aabb.min.z };
+    points[2] = Vector3{ aabb.max.x, aabb.max.y, aabb.min.z };
+    points[3] = Vector3{ aabb.min.x, aabb.max.y, aabb.min.z };
+    points[4] = Vector3{ aabb.min.x, aabb.min.y, aabb.max.z };
+    points[5] = Vector3{ aabb.max.x, aabb.min.y, aabb.max.z };
+    points[6] = Vector3{ aabb.max.x, aabb.max.y, aabb.max.z };
+    points[7] = Vector3{ aabb.min.x, aabb.max.y, aabb.max.z };
+
+    // 6つの各平面に対してテスト
+    for (const auto& plane : frustumPlanes_)
+    {
+        int inCount = 0;
+        // AABBのすべての頂点が平面の裏側にあるかチェック
+        for (int i = 0; i < 8; ++i)
+        {
+            float dist = plane.normal.Dot(points[i]) + plane.distance;
+            if (dist >= 0)
+            {
+                inCount++;
+            }
+        }
+        // すべての頂点が平面の裏側にある場合は、AABBは視錐台の外
+        if (inCount == 0)
+        {
+            return false;
+        }
+    }
+
+    return true; // どの平面の外側にもない場合は、視錐台内にあると判定
 }
 
 // 実際に動かす

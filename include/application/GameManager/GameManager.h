@@ -1,11 +1,12 @@
 #pragma once
-#include "include/engine/Engine/Game.h"
-#include "Enemy.h"
-#include "Player.h"
+#include <memory>
+#include "Game.h"
+#include "Phase/TestPhase/TestPhase.h"
+#include "Phase/BattlePhase/BattlePhase.h"
+#include "Phase/TitlePhase/TitlePhase.h"
+#include "Phase/GameScenePhase/GameScenePhase.h"
 
-#define blockW 1
-#define blockY 200
-#define enemyN 10
+
 
 class GameManager
 {
@@ -16,18 +17,16 @@ public:
 	void Update();
 	void Draw();
 
-	void FrameTwoVerticalPoints(const Vector3& p1, const Vector3& p2, float padding, int spendFrame, EaseType easing);
-
 
 private:
+	// フェーズ
+	PHASE phase_ = PHASE::Phase_None;
+	PHASE requestPhase_ = PHASE::Phase_None;
 
-
-	int frame;
-
-	Player* player_;
-	Enemy* enemy_[enemyN];
-	Game::RenderData_Model block_[blockW][blockY];
-
-	bool spaceLog[30];
+	// フェーズクラス
+	std::unique_ptr<TestPhase> testPhase_;
+	std::unique_ptr<BattlePhase> battlePhase_;
+	std::unique_ptr<TitlePhase> titlePhase_;
+	std::unique_ptr<GameScenePhase> gameScenePhase_;
 };
 

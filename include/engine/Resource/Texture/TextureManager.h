@@ -6,6 +6,8 @@
 #include <map>
 #include "definition/definition.h"
 
+class DescriptorHeapManager;
+
 class TextureManager
 {
 public:
@@ -15,7 +17,7 @@ public:
     uint32_t LoadTexture(
         const std::string& filePath, 
         ID3D12GraphicsCommandList* commandList,
-        ID3D12DescriptorHeap* srvDescriptorHeap,
+        DescriptorHeapManager* descriptorHeap,
         ID3D12Device* device
     );
     TextureData* GetTexture(uint32_t textureID);

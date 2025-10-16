@@ -40,9 +40,9 @@ void Game::Finalize()
 	engine = nullptr;
 }
 
-uint32_t Game::LoadOBJ(const std::string& directoryPath, const std::string& filename)
+uint32_t Game::LoadModel(const std::string& directoryPath, const std::string& filename)
 {
-	return engine->LoadOBJ(directoryPath, filename);
+	return engine->LoadModel(directoryPath, filename);
 }
 
 uint32_t Game::LoadTexture(const std::string& filePath)
@@ -208,9 +208,9 @@ void Game::toggleWireframeMode(bool mode)
 	engine->toggleWireframeMode(mode);
 }
 
-bool Game::IsAABBInFrustum(const AABB& aabb, const Matrix4x4& worldMatrix)
+bool Game::InFrustum(const AABB& aabb)
 {
-	return engine->IsAABBInFrustum(aabb, worldMatrix);
+	return engine->InFrustum(aabb);
 }
 
 
@@ -367,7 +367,7 @@ void Game::RenderData_Model::Updata(std::vector<Object3D>& objects)
 	bool inFrustum = false;
 	for (const auto& aabb : this->aabb)
 	{
-		if (IsAABBInFrustum(aabb, this->transforms.World))
+		if (InFrustum(aabb))
 		{
 			inFrustum = true;
 			break;
@@ -580,7 +580,7 @@ void Game::RenderData_Model::LookAtFront(float roll)
 
 void Game::RenderData_Model::Draw()
 {
-	engine->Drawobj(*this);
+	engine->DrawModel(*this);
 }
 
 void Game::RenderData_Model::DrawAABB()

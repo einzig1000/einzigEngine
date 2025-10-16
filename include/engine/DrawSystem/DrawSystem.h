@@ -12,7 +12,7 @@ public:
 
 	void BeginFrame(Matrix4x4& viewProjectionMatrix);
 
-	void Drawobj(Game::RenderData_Model& renderData);
+	void DrawModel(Game::RenderData_Model& renderData);
 	void DrawTriangle(Game::RenderData_Triangle& renderData);
 	void DrawSprite(Game::RenderData_Sprite& renderData);
 	void DrawParticle(Game::RenderData_Particle& renderData);
@@ -26,8 +26,14 @@ public:
 	void toggleWireframeMode(bool mode) { wireframeMode_ = mode; }
 
 private:
+	uint32_t instancingSrvIndex_ = UINT32_MAX;
+
+
 	// 動的頂点バッファの確保
 	bool EnsureDynamicVB(size_t requiredVertexCount);
+
+	// インスタンシング用バッファの確保/拡張
+	bool EnsureInstanceBuffer(size_t requiredInstanceCount);
 
 	// DirectXマネージャー
 	DirectXManager* dxManager_ = nullptr;
@@ -46,7 +52,7 @@ private:
 	// 描画コールカウント
 	size_t drawCallIndex_ = 0;
 	// 1フレームに呼び出せる描画コールの最大数
-	size_t kMaxDrawCallPerFrame_ = 0;
+	size_t kMaxDrawCallPerFrame_ = 1280;
 	// 現フレームで描画されている頂点数(モデルは除く)
 	size_t vertexDataUsed_ = 0;
 
@@ -66,9 +72,17 @@ private:
 	VertexData* vertexMappedPtr_ = nullptr; // 永続Mapポインタ
 
 
-	//const uint32_t kNumInstance = 10;
-	//Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource = nullptr;
-	//TransformationMatrix* instancingData = nullptr; // 永続Mapポインタ
+	// インスタンシング（構造化バッファ or Uploadバッファ＋SRV）
+	Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource_ = nullptr;
+	// 
+	TransformationMatrix* instancingData_ = nullptr; // 永続Mapポインタ
+
+	uint32_t instancingCapacity_ = 0; // いま確保している最大インスタンス数
+	const uint32_t kNumInstance_ = 10;
+	D3D12_CPU_DESCRIPTOR_HANDLE instancingSrvHandleCPU_;
+	D3D12_GPU_DESCRIPTOR_HANDLE instancingSrvHandleGPU_;
+
+
 
 };
 

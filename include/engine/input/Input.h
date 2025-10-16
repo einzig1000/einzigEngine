@@ -9,6 +9,7 @@ class Input
 public:
     Input(HWND hwnd, uint32_t width, uint32_t height, Matrix4x4* viewProjectionMatrix, Matrix4x4* debugViewProjectionMatrix, bool* debugCameraMode);
     void Update();
+    void EndFrame();
 
     MouseController* GetMouseController() const { return mouseController_.get(); }
 
