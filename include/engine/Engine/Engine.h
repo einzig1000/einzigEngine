@@ -26,11 +26,10 @@ public:
 	// 終了処理
 	void Finalize();
 
-	// リソース読み込み
+	// リソース
 	uint32_t LoadModel(const std::string& directoryPath, const std::string& filename);
 	uint32_t LoadTexture(const std::string& filePath);
 	uint32_t LoadAudio(const std::string& filePath);
-
 	TextureData* GetTexture(uint32_t textureNumber);
 
 	// 描画

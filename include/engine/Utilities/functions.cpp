@@ -597,6 +597,35 @@ void Log(const std::string& message, const D3D12_RESOURCE_BARRIER& barrier)
         Log("Barrier is not of type TRANSITION.");
     }
 }
+// D3D12_RESOURCE_STATES を文字列に変換する関数
+std::string ResourceStateToString(D3D12_RESOURCE_STATES state)
+{
+    switch (state)
+    {
+    case D3D12_RESOURCE_STATE_COMMON: return "COMMON";
+    case D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER: return "VERTEX_AND_CONSTANT_BUFFER";
+    case D3D12_RESOURCE_STATE_INDEX_BUFFER: return "INDEX_BUFFER";
+    case D3D12_RESOURCE_STATE_RENDER_TARGET: return "RENDER_TARGET";
+    case D3D12_RESOURCE_STATE_UNORDERED_ACCESS: return "UNORDERED_ACCESS";
+    case D3D12_RESOURCE_STATE_DEPTH_WRITE: return "DEPTH_WRITE";
+    case D3D12_RESOURCE_STATE_DEPTH_READ: return "DEPTH_READ";
+    case D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE: return "NON_PIXEL_SHADER_RESOURCE";
+    case D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE: return "PIXEL_SHADER_RESOURCE";
+    case D3D12_RESOURCE_STATE_STREAM_OUT: return "STREAM_OUT";
+    case D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT: return "INDIRECT_ARGUMENT";
+    case D3D12_RESOURCE_STATE_COPY_DEST: return "COPY_DEST";
+    case D3D12_RESOURCE_STATE_COPY_SOURCE: return "COPY_SOURCE";
+    case D3D12_RESOURCE_STATE_RESOLVE_DEST: return "RESOLVE_DEST";
+    case D3D12_RESOURCE_STATE_RESOLVE_SOURCE: return "RESOLVE_SOURCE";
+    case D3D12_RESOURCE_STATE_VIDEO_DECODE_READ: return "VIDEO_DECODE_READ";
+    case D3D12_RESOURCE_STATE_VIDEO_DECODE_WRITE: return "VIDEO_DECODE_WRITE";
+    case D3D12_RESOURCE_STATE_VIDEO_PROCESS_READ: return "VIDEO_PROCESS_READ";
+    case D3D12_RESOURCE_STATE_VIDEO_PROCESS_WRITE: return "VIDEO_PROCESS_WRITE";
+    case D3D12_RESOURCE_STATE_VIDEO_ENCODE_READ: return "VIDEO_ENCODE_READ";
+    case D3D12_RESOURCE_STATE_VIDEO_ENCODE_WRITE: return "VIDEO_ENCODE_WRITE";
+    default: return "UNKNOWN_STATE";
+    }
+}
 // RootSignatureの状態をログに出力する関数
 void Log(const D3D12_ROOT_SIGNATURE_DESC& desc)
 {
@@ -752,50 +781,6 @@ float RandomFloat(float min, float max, int decimalPlaces)
 
 #pragma endregion
 
-#pragma region Load
-
-std::vector<AABB> LoadAABBFromCSV(const std::string& csvPath)
-{
-    std::vector<AABB> aabbs;
-    std::ifstream file(csvPath);
-    if (!file.is_open()) return aabbs;
-
-    std::string line;
-    // 1行目はヘッダーなのでスキップ
-    std::getline(file, line);
-
-    while (std::getline(file, line))
-    {
-        std::istringstream ss(line);
-        std::string token;
-        std::vector<float> values;
-        while (std::getline(ss, token, ','))
-        {
-            values.push_back(std::stof(token));
-        }
-        if (values.size() == 6)
-        {
-            AABB aabb;
-            aabb.min = { values[0], values[1], values[2] };
-            aabb.max = { values[3], values[4], values[5] };
-            aabbs.push_back(aabb);
-        }
-    }
-    return aabbs;
-}
-
-void SaveAABBToCSV(const std::string& csvPath, const std::vector<AABB>& aabbs)
-{
-    std::ofstream file(csvPath);
-    file << "min_x,min_y,min_z,max_x,max_y,max_z\n";
-    for (const auto& aabb : aabbs)
-    {
-        file << aabb.min.x << "," << aabb.min.y << "," << aabb.min.z << ","
-            << aabb.max.x << "," << aabb.max.y << "," << aabb.max.z << "\n";
-    }
-}
-
-#pragma endregion
 
 
 Vector4 ConvertUintToVector4(uint32_t color)
@@ -932,36 +917,6 @@ std::string ConvertString(const std::wstring& str)
     std::string result(sizeNeeded, 0);
     WideCharToMultiByte(CP_UTF8, 0, str.data(), static_cast<int>(str.size()), result.data(), sizeNeeded, NULL, NULL);
     return result;
-}
-
-// D3D12_RESOURCE_STATES を文字列に変換する関数
-std::string ResourceStateToString(D3D12_RESOURCE_STATES state)
-{
-    switch (state)
-    {
-    case D3D12_RESOURCE_STATE_COMMON: return "COMMON";
-    case D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER: return "VERTEX_AND_CONSTANT_BUFFER";
-    case D3D12_RESOURCE_STATE_INDEX_BUFFER: return "INDEX_BUFFER";
-    case D3D12_RESOURCE_STATE_RENDER_TARGET: return "RENDER_TARGET";
-    case D3D12_RESOURCE_STATE_UNORDERED_ACCESS: return "UNORDERED_ACCESS";
-    case D3D12_RESOURCE_STATE_DEPTH_WRITE: return "DEPTH_WRITE";
-    case D3D12_RESOURCE_STATE_DEPTH_READ: return "DEPTH_READ";
-    case D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE: return "NON_PIXEL_SHADER_RESOURCE";
-    case D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE: return "PIXEL_SHADER_RESOURCE";
-    case D3D12_RESOURCE_STATE_STREAM_OUT: return "STREAM_OUT";
-    case D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT: return "INDIRECT_ARGUMENT";
-    case D3D12_RESOURCE_STATE_COPY_DEST: return "COPY_DEST";
-    case D3D12_RESOURCE_STATE_COPY_SOURCE: return "COPY_SOURCE";
-    case D3D12_RESOURCE_STATE_RESOLVE_DEST: return "RESOLVE_DEST";
-    case D3D12_RESOURCE_STATE_RESOLVE_SOURCE: return "RESOLVE_SOURCE";
-    case D3D12_RESOURCE_STATE_VIDEO_DECODE_READ: return "VIDEO_DECODE_READ";
-    case D3D12_RESOURCE_STATE_VIDEO_DECODE_WRITE: return "VIDEO_DECODE_WRITE";
-    case D3D12_RESOURCE_STATE_VIDEO_PROCESS_READ: return "VIDEO_PROCESS_READ";
-    case D3D12_RESOURCE_STATE_VIDEO_PROCESS_WRITE: return "VIDEO_PROCESS_WRITE";
-    case D3D12_RESOURCE_STATE_VIDEO_ENCODE_READ: return "VIDEO_ENCODE_READ";
-    case D3D12_RESOURCE_STATE_VIDEO_ENCODE_WRITE: return "VIDEO_ENCODE_WRITE";
-    default: return "UNKNOWN_STATE";
-    }
 }
 
 
@@ -1143,275 +1098,4 @@ Microsoft::WRL::ComPtr<IDxcBlob> CompileShader(
     shaderResult->Release();
     // 実行用のバイナリを返却
     return shaderBlob;
-}
-
-
-// 2,
-Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource(ID3D12Device* device, const DirectX::TexMetadata& metadata)
-{
-    // 1,metadataを基にResourceの設定
-    D3D12_RESOURCE_DESC resourceDesc{};
-    resourceDesc.Width = UINT(metadata.width);
-    resourceDesc.Height = UINT(metadata.height);
-    resourceDesc.MipLevels = UINT16(metadata.mipLevels); // mipmapの数
-    resourceDesc.DepthOrArraySize = UINT16(metadata.arraySize); // 奥行き or 配列Textureの配列数
-    resourceDesc.Format = metadata.format; // TextureのFormat
-
-    resourceDesc.SampleDesc.Count = 1; // サンプリングカウント。１固定
-    resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION(metadata.dimension); // Textureの次元数。普段使ってるのは２次元
-
-    // 2,利用するHeapの設定
-    D3D12_HEAP_PROPERTIES heapProperties{};
-    heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
-
-    // 3,Resourceを生成する
-    Microsoft::WRL::ComPtr<ID3D12Resource> resource = nullptr;
-    HRESULT hr = device->CreateCommittedResource(
-        &heapProperties, // Heapの設定
-        D3D12_HEAP_FLAG_NONE, // Heapの特殊な設定
-        &resourceDesc, // Resourceの設定
-        D3D12_RESOURCE_STATE_COPY_DEST, // 初回のResourceState.Textureは基本読むだけ
-        nullptr, // Clear最適解。使わないのでnullptr
-        IID_PPV_ARGS(&resource) // 作成するResourceポインタへのポインタ
-    );
-    assert(SUCCEEDED(hr));
-    resource->SetName(L"CreateTextureResource()");
-
-    return resource;
-}
-
-// 3,TextureResourceにデータを転送する
-[[nodiscard]]
-Microsoft::WRL::ComPtr<ID3D12Resource> UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages, ID3D12Device* device, ID3D12GraphicsCommandList* commandList)
-{
-    std::vector<D3D12_SUBRESOURCE_DATA> subresources;
-    DirectX::PrepareUpload(device, mipImages.GetImages(), mipImages.GetImageCount(), mipImages.GetMetadata(), subresources);
-    uint64_t intermediateSize = GetRequiredIntermediateSize(texture, 0, UINT(subresources.size()));
-    Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource = CreateBufferResource(device, intermediateSize);
-    UpdateSubresources(commandList, texture, intermediateResource.Get(), 0, 0, UINT(subresources.size()), subresources.data());
-    // Tetureへの転送後は利用できるよう、D3D12_RESOURCE_STATE_COPY_DESTからD3D12_RESOURCE_STATE_GENERIC_READ ResourceStateを変更する
-    D3D12_RESOURCE_BARRIER barrier{};
-    barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-    barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-    barrier.Transition.pResource = texture;
-    barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-    barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
-    barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_GENERIC_READ;
-    commandList->ResourceBarrier(1, &barrier);
-    return intermediateResource;
-}
-
-// DepthStencilTextureを作る
-Microsoft::WRL::ComPtr<ID3D12Resource> CreateDepthStencilTextureResource(ID3D12Device* device, int32_t width, int32_t height)
-{
-    // 生成するResourceの設定
-    D3D12_RESOURCE_DESC resourceDesc{};
-    resourceDesc.Width = width;
-    resourceDesc.Height = height;
-    resourceDesc.MipLevels = 1; // mipmapの数
-    resourceDesc.DepthOrArraySize = 1; // 奥行き or 配列Textureの配列数
-    resourceDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT; // TextureのFormat
-    resourceDesc.SampleDesc.Count = 1; // サンプリングカウント。１固定
-    resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D; // ２次元
-    resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL; // DepthStencilとして使うよーとういう通知
-
-    // 利用するHeapの設定
-    D3D12_HEAP_PROPERTIES heapProperties{};
-    heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT; // VRAM上に作る
-
-    // 深度値のクリア設定
-    D3D12_CLEAR_VALUE depthClearValue{};
-    depthClearValue.DepthStencil.Depth = 1.0f; // 1.0f(１番遠い状態)でクリア
-    depthClearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT; // フォーマット。Resourceろあわせる
-
-    // Resourceの生成
-    Microsoft::WRL::ComPtr<ID3D12Resource> resource = nullptr;
-    HRESULT hr = device->CreateCommittedResource(
-        &heapProperties,
-        D3D12_HEAP_FLAG_NONE,
-        &resourceDesc,
-        D3D12_RESOURCE_STATE_DEPTH_WRITE,
-        &depthClearValue,
-        IID_PPV_ARGS(&resource)
-    );
-    assert(SUCCEEDED(hr));
-
-    return resource;
-}
-
-D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index)
-{
-    D3D12_CPU_DESCRIPTOR_HANDLE handleCPU = descriptorHeap->GetCPUDescriptorHandleForHeapStart();
-    handleCPU.ptr += (descriptorSize * index);
-    return handleCPU;
-}
-D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index)
-{
-    D3D12_GPU_DESCRIPTOR_HANDLE handleGPU = descriptorHeap->GetGPUDescriptorHandleForHeapStart();
-    handleGPU.ptr += (descriptorSize * index);
-    return handleGPU;
-}
-
-// mtlファイルを読み込む関数
-MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename)
-{
-    /////////////////
-    // 変数宣言
-    /////////////////
-    MaterialData materialData;
-    std::string line;
-
-    /////////////////
-    // ファイルを開く
-    /////////////////
-    std::ifstream file(directoryPath + "/" + filename);
-    assert(file.is_open());
-
-    /////////////////
-    // MaterialDataを構築する
-    /////////////////
-    while (std::getline(file, line))
-    {
-        std::string identifier;
-        std::istringstream s(line);
-        s >> identifier;
-
-        // 
-        if (identifier == "map_KD")
-        {
-            std::string textureFilename;
-            s >> textureFilename;
-            materialData.textureFilePath = directoryPath + "/" + textureFilename;
-        }
-
-
-    }
-
-    /////////////////
-    // 構築したMaterialDataをreturnする
-    /////////////////
-    return materialData;
-}
-
-// objファイルを読み込む関数
-ModelData LoadModelFile(const std::string& directoryPath, const std::string& filename)
-{
-    /////////////////
-    // 変数宣言
-    /////////////////
-    ModelData modelData;
-    std::vector<Vector4> positions;
-    std::vector<Vector3> normals;
-    std::vector<Vector2> texcoords;
-    std::string line;
-
-    /////////////////
-    // ファイルをひらく
-    /////////////////
-    std::ifstream file(directoryPath + "/" + filename);
-    assert(file.is_open());
-
-    /////////////////
-    // ModelDataを構築する
-    /////////////////
-    while (std::getline(file, line))
-    {
-        std::string identifier;
-        std::istringstream s(line);
-        s >> identifier;
-        // 頂点位置
-        if (identifier == "v")
-        {
-            Vector4 position;
-            s >> position.x >> position.y >> position.z;
-            position.x *= -1.0f;
-            position.w = 1.0f;
-            positions.push_back(position);
-        }
-        // 頂点テクスチャ座標
-        else if (identifier == "vt")
-        {
-            Vector2 texcoord;
-            s >> texcoord.x >> texcoord.y;
-            texcoord.y = 1.0f - texcoord.y;
-            texcoords.push_back(texcoord);
-        }
-        // 頂点法線
-        else if (identifier == "vn")
-        {
-            Vector3 normal;
-            s >> normal.x >> normal.y >> normal.z;
-            normal.x *= -1.0f;
-            normals.push_back(normal);
-        }
-        // 面
-        else if (identifier == "f")
-        {
-            // 1行分の頂点定義をすべて取得
-            std::vector<std::string> vertexDefs;
-            std::string vertexDefinition;
-            while (s >> vertexDefinition)
-            {
-                vertexDefs.push_back(vertexDefinition);
-            }
-
-            // 3頂点未満は無視
-            if (vertexDefs.size() < 3) continue;
-
-            // 四角形を三角形２つに五角形を三角形３つに変換
-            for (size_t i = 1; i + 1 < vertexDefs.size(); ++i)
-            {
-                VertexData triangle[3];
-                std::string vdefs[3] = { vertexDefs[0], vertexDefs[i], vertexDefs[i + 1] };
-
-                for (int faceVertex = 0; faceVertex < 3; ++faceVertex)
-                {
-                    std::istringstream v(vdefs[faceVertex]);
-                    std::vector<std::string> components;
-                    std::string index;
-                    while (std::getline(v, index, '/'))
-                    {
-                        components.push_back(index);
-                    }
-
-                    uint32_t posIndex = (components.size() > 0 && !components[0].empty()) ? std::stoi(components[0]) : 0;
-                    uint32_t uvIndex = (components.size() > 1 && !components[1].empty()) ? std::stoi(components[1]) : 0;
-                    uint32_t normIndex = (components.size() > 2 && !components[2].empty()) ? std::stoi(components[2]) : 0;
-
-                    Vector4 position = { 0,0,0,1 };
-                    Vector2 texcoord = { 0,0 };
-                    Vector3 normal = { 0,0,0 };
-
-                    if (posIndex > 0 && posIndex <= positions.size())
-                        position = positions[posIndex - 1];
-                    if (uvIndex > 0 && uvIndex <= texcoords.size())
-                        texcoord = texcoords[uvIndex - 1];
-                    if (normIndex > 0 && normIndex <= normals.size())
-                        normal = normals[normIndex - 1];
-
-                    triangle[faceVertex] = { position, texcoord, normal };
-                }
-
-                // 頂点の順序を逆にして追加（右手系→左手系変換のため）
-                modelData.vertices.push_back(triangle[2]);
-                modelData.vertices.push_back(triangle[1]);
-                modelData.vertices.push_back(triangle[0]);
-            }
-        }
-
-        // mtllib
-        else if (identifier == "mtllib")
-        {
-            // materialTemplateLibraryファイルの名前を取得する
-            std::string materialFilename;
-            s >> materialFilename;
-            // 基本的にmtlはobjファイルと同一階層に配置指せるので、ディレクトリ名とファイル名を渡す
-            modelData.material = LoadMaterialTemplateFile(directoryPath, materialFilename);
-        }
-    }
-
-    /////////////////
-    // 構築したModelDataをreturnする
-    /////////////////
-    return modelData;
 }

@@ -38,12 +38,16 @@ uint32_t DescriptorHeapManager::AllocateSRVSlot()
 
 D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeapManager::GetCPUHandleAt(uint32_t i) const
 {
-    return GetCPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, i);
+    D3D12_CPU_DESCRIPTOR_HANDLE handleCPU = srvDescriptorHeap.Get()->GetCPUDescriptorHandleForHeapStart();
+    handleCPU.ptr += (descriptorSizeSRV * i);
+    return handleCPU;
 }
 
 D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeapManager::GetGPUHandleAt(uint32_t i) const
 {
-    return GetGPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, i);
+    D3D12_GPU_DESCRIPTOR_HANDLE handleGPU = srvDescriptorHeap.Get()->GetGPUDescriptorHandleForHeapStart();
+    handleGPU.ptr += (descriptorSizeSRV * i);
+    return handleGPU;
 }
 
 SRVAllocation DescriptorHeapManager::CreateSRV(ID3D12Resource* resource, const D3D12_SHADER_RESOURCE_VIEW_DESC* desc)

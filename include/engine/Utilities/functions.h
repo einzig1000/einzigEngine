@@ -132,12 +132,12 @@ float RandomFloat(float min, float max, int decimalPlaces);
 
 #pragma endregion
 
-#pragma region Load
-
-std::vector<AABB> LoadAABBFromCSV(const std::string& csvPath);
-void SaveAABBToCSV(const std::string& csvPath, const std::vector<AABB>& aabbs);
-
-#pragma endregion
+//#pragma region Load
+//
+//std::vector<AABB> LoadAABBFromCSV(const std::string& csvPath);
+//void SaveAABBToCSV(const std::string& csvPath, const std::vector<AABB>& aabbs);
+//
+//#pragma endregion
 
 /// <summary>
 /// 角度をラジアンに変換
@@ -214,7 +214,12 @@ LONG WINAPI ExportDump(EXCEPTION_POINTERS* exception);
 /// <returns>作成されたバッファリソース</returns>
 Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(ID3D12Device* device, size_t sizeInBytes);
 
-
+/// <summary>
+/// 定数バッファリソースを作成する関数
+/// </summary>
+/// <param name="device">DirectX 12 デバイス</param>
+/// <param name="sizeInBytes">バッファのサイズ (バイト単位)</param>
+/// <returns>作成された定数バッファリソース</returns>
 Microsoft::WRL::ComPtr<ID3D12Resource> CreateConstantBufferResource(
 	ID3D12Device* device, size_t sizeInBytes);
 
@@ -238,66 +243,3 @@ Microsoft::WRL::ComPtr<IDxcBlob> CompileShader(const std::wstring& filePath, con
 /// <param name="shaderVisible">シェーダーからアクセス可能かどうか</param>
 /// <returns>作成されたディスクリプタヒープ</returns>
 Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible);
-
-/// <summary>
-/// テクスチャのメタデータを基に DirectX 12 のテクスチャリソースを作成する関数
-/// </summary>
-/// <param name="device">DirectX 12 デバイス</param>
-/// <param name="metadata">テクスチャのメタデータ</param>
-/// <returns>作成されたテクスチャリソース</returns>
-Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource(ID3D12Device* device, const DirectX::TexMetadata& metadata);
-
-/// <summary>
-/// テクスチャデータを GPU にアップロードする関数
-/// </summary>
-/// <param name="texture">アップロード先のテクスチャリソース</param>
-/// <param name="mipImages">ミップマップデータ</param>
-/// <param name="device">DirectX 12 デバイス</param>
-/// <param name="commandList">コマンドリスト</param>
-/// <returns>アップロードに使用した中間リソース</returns>
-[[nodiscard]]
-Microsoft::WRL::ComPtr<ID3D12Resource> UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages, ID3D12Device* device, ID3D12GraphicsCommandList* commandList);
-
-/// <summary>
-/// 深度ステンシルテクスチャリソースを作成する関数
-/// </summary>
-/// <param name="device">DirectX 12 デバイス</param>
-/// <param name="width">テクスチャの幅</param>
-/// <param name="height">テクスチャの高さ</param>
-/// <returns>作成された深度ステンシルテクスチャリソース</returns>
-Microsoft::WRL::ComPtr<ID3D12Resource> CreateDepthStencilTextureResource(ID3D12Device* device, int32_t width, int32_t height);
-
-
-/// <summary>
-/// 指定されたインデックスの CPU ディスクリプタハンドルを取得する関数
-/// </summary>
-/// <param name="descriptorHeap">ディスクリプタヒープ</param>
-/// <param name="descriptorSize">ディスクリプタのサイズ</param>
-/// <param name="index">インデックス</param>
-/// <returns>取得した CPU ディスクリプタハンドル</returns>
-D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index);
-
-/// <summary>
-/// 指定されたインデックスの GPU ディスクリプタハンドルを取得する関数
-/// </summary>
-/// <param name="descriptorHeap">ディスクリプタヒープ</param>
-/// <param name="descriptorSize">ディスクリプタのサイズ</param>
-/// <param name="index">インデックス</param>
-/// <returns>取得した GPU ディスクリプタハンドル</returns>
-D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index);
-
-/// <summary>
-/// MTL ファイルを読み込み、マテリアルデータを構築する関数
-/// </summary>
-/// <param name="directoryPath">MTL ファイルのディレクトリパス</param>
-/// <param name="filename">MTL ファイル名</param>
-/// <returns>構築されたマテリアルデータ</returns>
-MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
-
-/// <summary>
-/// OBJ ファイルを読み込み、モデルデータを構築する関数
-/// </summary>
-/// <param name="directoryPath">OBJ ファイルのディレクトリパス</param>
-/// <param name="filename">OBJ ファイル名</param>
-/// <returns>構築されたモデルデータ</returns>
-ModelData LoadModelFile(const std::string& directoryPath, const std::string& filename);
