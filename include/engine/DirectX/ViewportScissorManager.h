@@ -4,11 +4,12 @@
 class ViewportScissorManager
 {
 public:
-    ViewportScissorManager(int width, int height);
+    ViewportScissorManager();
     ~ViewportScissorManager();
+    void Resize();
 
-    const D3D12_VIEWPORT& GetViewport() const { return viewport; }
-    const D3D12_RECT& GetScissorRect() const { return scissorRect; }
+    const D3D12_VIEWPORT& GetViewport() { return viewport; }
+    const D3D12_RECT& GetScissorRect() { return scissorRect; }
 
 private:
     D3D12_VIEWPORT viewport;

@@ -32,7 +32,7 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 	}
 	if (!dxManager)
 	{
-		dxManager = new DirectXManager(windowManager->GetHwnd(), width, height);
+		dxManager = new DirectXManager(windowManager->GetHwnd());
 	}
 	if (!drawSystem)
 	{
@@ -41,7 +41,7 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 	if (!cameraController)
 	{
 		cameraController = new CameraController();
-		cameraController->cameraMode_ = false; // メインカメラは常に操作可能
+		cameraController->cameraMode_ = false; // メインカメラは常に操作不能
 	}
 	if (!debugCameraController)
 	{
@@ -49,7 +49,7 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 	}
 	if (!inputManager_)
 	{
-		inputManager_ = new Input(windowManager->GetHwnd(), windowManager->Getwidth(), windowManager->Getheight(), &cameraController->viewProjectionMatrix, &debugCameraController->viewProjectionMatrix, &debugCamera);
+		inputManager_ = new Input(windowManager->GetHwnd(), &cameraController->viewProjectionMatrix, &debugCameraController->viewProjectionMatrix, &debugCamera);
 	}
 
 	// カメラ
@@ -63,8 +63,8 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 	uint32_t slot = dxManager->GetDescriptorHeapManager()->AllocateSRVSlot();
 	ImGui_ImplDX12_Init(
 		dxManager->GetDevice(),
-		dxManager->GetSwapChainDesc().BufferCount,
-		dxManager->GetRtvDesc().Format,
+		dxManager->GetSwapChain()->GetSwapChainDesc().BufferCount,
+		dxManager->GetSwapChain()->GetRtvDesc().Format,
 		dxManager->GetDescriptorHeapManager()->GetSRVDescriptorHeap(),
 		dxManager->GetDescriptorHeapManager()->GetCPUHandleAt(slot),                    // ImGuiフォントSRV用のCPUハンドル
 		dxManager->GetDescriptorHeapManager()->GetGPUHandleAt(slot)                     // ImGuiフォントSRV用のGPUハンドル
@@ -121,6 +121,11 @@ void Engine::BeginFrame()
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
 	//ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
+
+	if (GetHitKey::IsPressedDown(DIK_F12))
+	{
+		ToggleFullscreen();
+	}
 
 	// カメラを更新
 	UpdateCamera();
@@ -279,7 +284,7 @@ void Engine::Finalize()
 // リソース読み込み
 uint32_t Engine::LoadTexture(const std::string& filePath)
 {
-	return dxManager->GetResourceManager()->GetTextureManager()->LoadTexture(filePath, dxManager->GetCommandList(),dxManager->GetDescriptorHeapManager(), dxManager->GetDevice());
+	return dxManager->GetResourceManager()->GetTextureManager()->LoadTexture(filePath, dxManager->GetCommandContextManager()->GetCommandList(), dxManager->GetDescriptorHeapManager(), dxManager->GetDevice());
 }
 
 uint32_t Engine::LoadModel(const std::string& directoryPath, const std::string& filename)
@@ -742,6 +747,22 @@ CameraController* Engine::GetDebugCamera()
 	return debugCameraController;
 }
 
+// ウィンドウ操作
+void Engine::ToggleFullscreen()
+{
+	windowManager->ToggleFullscreen();
+
+	// DirectXのリサイズ処理
+	dxManager->Resize();
+
+	// 描画システムのリサイズ処理
+	drawSystem->Resize();
+
+	// カメラのアスペクト比を更新
+	cameraController->Resize();
+	debugCameraController->Resize();
+}
+
 //// カメラシェイク開始
 //void Engine::StartCameraShake(float intensity, float duration, float frequency)
 //{
@@ -803,7 +824,7 @@ std::vector<AABB>  Engine::CreateAABB(const Transforms& transforms, uint32_t obj
 	return result;
 }
 
-void Engine::toggleWireframeMode(bool mode)
+void Engine::toggleWireframeMode()
 {
-	drawSystem->toggleWireframeMode(mode);
+	drawSystem->toggleWireframeMode();
 }

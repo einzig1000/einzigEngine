@@ -11,6 +11,7 @@ public:
 	~DrawSystem();
 
 	void BeginFrame(Matrix4x4& viewProjectionMatrix);
+	void Resize();
 
 	void DrawModel(Game::RenderData_Model& renderData);
 	void DrawTriangle(Game::RenderData_Triangle& renderData);
@@ -23,7 +24,7 @@ public:
 	void SetLightIntensity(float intensity) { directionalLightData_->intensity = intensity; }
 	void ToggleLightMode(const uint32_t mode) { directionalLightData_->mode = mode; }
 
-	void toggleWireframeMode(bool mode) { wireframeMode_ = mode; }
+	void toggleWireframeMode() { wireframeMode_ = !wireframeMode_; }
 
 private:
 	uint32_t instancingSrvIndex_ = UINT32_MAX;
@@ -40,6 +41,9 @@ private:
 
 	// カメラビュープロジェクション行列
 	Matrix4x4 viewProjectionMatrix_;
+	// 正射影行列
+	Matrix4x4 orthoProjectionMatrix_;
+
 
 	// プリミティブモード
 	bool wireframeMode_ = false;
@@ -52,7 +56,7 @@ private:
 	// 描画コールカウント
 	size_t drawCallIndex_ = 0;
 	// 1フレームに呼び出せる描画コールの最大数
-	size_t kMaxDrawCallPerFrame_ = 1280;
+	size_t kMaxDrawCallPerFrame_ = 1024;
 	// 現フレームで描画されている頂点数(モデルは除く)
 	size_t vertexDataUsed_ = 0;
 

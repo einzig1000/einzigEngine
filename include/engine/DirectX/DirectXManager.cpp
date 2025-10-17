@@ -4,16 +4,16 @@
 #include "externals/imgui/imgui_impl_win32.h"
 
 
-DirectXManager::DirectXManager(HWND hwnd, int width, int height)
+DirectXManager::DirectXManager(HWND hwnd)
 {
     deviceManager = std::make_unique<DeviceManager>();
     commandContextManager = std::make_unique<CommandContextManager>(deviceManager->GetDevice());
-    swapChainManager = std::make_unique<SwapChainManager>(deviceManager->GetDevice(), commandContextManager->GetCommandQueue(), hwnd, width, height);
-    depthStencilManager = std::make_unique<DepthStencilManager>(deviceManager->GetDevice(), width, height);
+    swapChainManager = std::make_unique<SwapChainManager>(deviceManager->GetDevice(), commandContextManager->GetCommandQueue(), hwnd);
+    depthStencilManager = std::make_unique<DepthStencilManager>(deviceManager->GetDevice());
     pipelineStateManager = std::make_unique<PipelineStateManager>(deviceManager->GetDevice());
     descriptorHeapManager = std::make_unique<DescriptorHeapManager>(deviceManager->GetDevice());
     synchronizationManager = std::make_unique<SynchronizationManager>(deviceManager->GetDevice());
-    viewportScissorManager = std::make_unique<ViewportScissorManager>(width, height);
+    viewportScissorManager = std::make_unique<ViewportScissorManager>();
 
 	resourceManager_ = std::make_unique<ResourceManager>();
 
@@ -93,7 +93,19 @@ void DirectXManager::EndFrame()
 
     // GPU同期
     synchronizationManager->WaitForGPU();
+}
 
-    // コマンドリストをリセット
-    //commandContextManager->ResetCommandList();
+void DirectXManager::Resize()
+{
+    // スワップチェーンのリサイズ
+    swapChainManager->Resize(
+        GetDevice(),
+        GetCommandContextManager()->GetCommandQueue());
+
+	// デプスステンシルバッファのリサイズ
+    depthStencilManager->Resize(
+        GetDevice());
+
+    // ビューポートとシザー矩形の更新
+    viewportScissorManager->Resize();
 }

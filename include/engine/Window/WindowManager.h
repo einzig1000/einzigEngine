@@ -15,15 +15,34 @@ public:
     ~WindowManager();
 
     HWND GetHwnd() const { return hwnd; }
-    uint32_t Getwidth() const { return width; }
-    uint32_t Getheight() const { return height; }
+
+    // 追加: フルスクリーン制御API
+    void SetFullscreen(bool enable);
+    void ToggleFullscreen();
+    bool IsFullscreen() const { return isFullscreen; }
+
+    // ウィンドウサイズ
+    static uint32_t winWidth_;
+    static uint32_t winHeight_;
 
 private:
     HWND hwnd;
     WNDCLASS wc;
 
-    uint32_t width;
-    uint32_t height;
+
+    // フルスクリーン制御
+    bool isFullscreen = false;
+    DWORD windowedStyle = 0;
+    DWORD windowedExStyle = 0;
+    WINDOWPLACEMENT windowedPlacement{};
+
+	// フルスクリーン制御用関数
+	// フルスクリーンモードにする
+    void EnterBorderlessFullscreen();
+	// フルスクリーンモード解除
+    void ExitBorderlessFullscreen();
+	// クライアントサイズ更新
+    void UpdateClientSize();
 
     void RegisterWindowClass();
     void CreateMainWindow(int width, int height, const std::wstring& title);

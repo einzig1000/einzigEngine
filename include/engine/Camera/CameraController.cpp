@@ -1,6 +1,6 @@
 #include "Camera/CameraController.h"
 #include "Engine/Game.h"
-
+#include "Window/WindowManager.h"
 
 CameraController::CameraController()
 {
@@ -9,8 +9,7 @@ CameraController::CameraController()
 
     // カメラ
     transform_.translate = { 0.0f, 0.0f, 0.0f };
-    //transform_.rotate = { 1.13f, 0.0f, 0.0f };
-    transform_.rotate = { 0.0f, std::numbers::pi_v<float> / -2.0f, 0.0f };
+    transform_.rotate = { 1.13f, 0.0f, 0.0f };
     center_ = { 0.0f, 0.0f, 0.0f };
     distance_ = 35.60f;
 
@@ -19,7 +18,8 @@ CameraController::CameraController()
     preRotate_.y = transform_.rotate.y;
 
     sphereOptions.enableLighting = false;
-    projectionMatrix_ = Matrix4x4::MakePerspectiveFovMatrix(0.45f, float(1280) / float(720), 0.1f, 100.0f);
+
+    Resize();
 }
 
 void CameraController::Update()
@@ -169,6 +169,12 @@ void CameraController::Update()
     viewProjectionMatrix = (viewMatrix_ * projectionMatrix_);
 
     CreateFrustumPlanes();
+}
+
+void CameraController::Resize()
+{
+    projectionMatrix_ = Matrix4x4::MakePerspectiveFovMatrix(0.45f, float(WindowManager::winWidth_) / float(WindowManager::winHeight_), 0.1f, 100.0f);
+    //viewportMatrix = Matrix4x4::MakeViewPortMatrix(0.0f, 0.0f, float(WindowManager::winWidth_), float(WindowManager::winHeight_), 0.0f, 1.0f);
 }
 
 void CameraController::Draw()

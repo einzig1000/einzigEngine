@@ -203,9 +203,9 @@ std::vector<AABB> Game::CreateAABB(const Transforms& transforms, uint32_t object
 	return engine->CreateAABB(transforms, objectNumber);
 }
 
-void Game::toggleWireframeMode(bool mode)
+void Game::toggleWireframeMode()
 {
-	engine->toggleWireframeMode(mode);
+	engine->toggleWireframeMode();
 }
 
 bool Game::InFrustum(const AABB& aabb)

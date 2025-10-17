@@ -18,20 +18,20 @@
 class DirectXManager
 {
 public:
-    DirectXManager(HWND hwnd, int width, int height);
+    DirectXManager(HWND hwnd);
     ~DirectXManager();
 
     ID3D12Device* GetDevice() const { return deviceManager->GetDevice(); }
-    ID3D12GraphicsCommandList* GetCommandList() const { return commandContextManager->GetCommandList(); }
+	CommandContextManager* GetCommandContextManager() const { return commandContextManager.get(); }
     DescriptorHeapManager* GetDescriptorHeapManager() const { return descriptorHeapManager.get(); }
-    const DXGI_SWAP_CHAIN_DESC1& GetSwapChainDesc() const { return swapChainManager->GetSwapChainDesc(); };
-    const D3D12_RENDER_TARGET_VIEW_DESC& GetRtvDesc() const { return swapChainManager->GetRtvDesc(); }
+    SwapChainManager* GetSwapChain() const { return swapChainManager.get(); };
     PipelineStateManager* GetPipelineStateManager() const { return pipelineStateManager.get(); }
 
 	ResourceManager* GetResourceManager() const { return resourceManager_.get(); }
 
     void BeginFrame();
     void EndFrame();
+	void Resize();
 
 private:
     std::unique_ptr<DeviceManager> deviceManager;

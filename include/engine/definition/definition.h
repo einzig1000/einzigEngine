@@ -723,9 +723,9 @@ struct D3DResourceLeakChecker
 
 struct mouseButtenState
 {
-    bool leftButton;
-    bool rightButton;
-    bool middleButton;
+    bool leftButton = false;
+    bool rightButton = false;
+    bool middleButton = false;
 };
 
 

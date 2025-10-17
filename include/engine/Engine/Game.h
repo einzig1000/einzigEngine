@@ -320,7 +320,7 @@ public:
 	static std::vector<AABB> CreateAABB(const Transforms& transforms, uint32_t objectNumber);
 
 	// プリミティブモードの設定
-	static void toggleWireframeMode(bool mode);
+	static void toggleWireframeMode();
 
 	// モデルリストの取得
 	static std::vector<Game::RenderData_Model*> GetModelList() { return renderModels; }
