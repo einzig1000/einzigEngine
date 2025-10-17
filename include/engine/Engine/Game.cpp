@@ -576,8 +576,6 @@ void Game::RenderData_Model::LookAtFront(float roll)
 	LookAtOnce(frontPos, roll);
 }
 
-
-
 void Game::RenderData_Model::Draw()
 {
 	engine->DrawModel(*this);
@@ -683,6 +681,7 @@ std::optional<CollisionInf> Game::RenderData_Model::isCollisionAABBInf(RenderDat
 	if (result.pair == Vector2int{ -1, -1 }) return std::nullopt;
 	return result;
 }
+
 
 
 

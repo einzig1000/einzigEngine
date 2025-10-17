@@ -6,8 +6,8 @@ TestPhase::TestPhase()
 	uint32_t playerTex = Game::LoadTexture("resources/Prototypes/texture/monsterBall.png");
 	uint32_t playerModel = Game::LoadModel("resources/Prototypes/model/", "cube.obj");
 
-	uint32_t enemyTex = Game::LoadTexture("resources/Prototypes/texture/uvChecker.png");
-	uint32_t enemyModel = Game::LoadModel("resources/Prototypes/model/", "corn.obj");
+	uint32_t enemyTex = Game::LoadTexture("resources/Prototypes/texture/circle.png");
+	uint32_t enemyModel = Game::LoadModel("resources/Prototypes/model/", "plane.obj");
 
 	model_.model = playerModel;
 	model_.texture = playerTex;
@@ -16,12 +16,14 @@ TestPhase::TestPhase()
 	particle_.mono.model = enemyModel;
 	// パーティクルテクスチャ
 	particle_.mono.texture = enemyTex;
+	// パーティクル描画オプション
+	particle_.mono.options.blendMode = BlendMode::kBlendModeAdd;
 	// パーティクル初期回転量
 	particle_.mono.transforms.rotate = { 0.0f,0.0f,0.0f };
 	// パーティクル初期拡縮量
 	particle_.mono.transforms.scale = { 0.1f,0.1f,0.1f };
 	// パーティクル初期カラー
-	particle_.mono.color = 0x000000FF;
+	particle_.mono.color = 0xFFFFFFFF;
 
 	// パーティクル毎フレーム加算される回転量
 	particle_.AddRotate = { 0.2f,0.2f,0.2f };
@@ -52,6 +54,8 @@ void TestPhase::Initialize()
 
 void TestPhase::Update()
 {
+	particle_.mono.LookAtCamera(roll_);
+	roll_ += 0.02f;
 }
 
 

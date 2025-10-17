@@ -78,7 +78,7 @@ private:
 	TransformationMatrix* instancingData_ = nullptr; // 永続Mapポインタ
 
 	uint32_t instancingCapacity_ = 0; // いま確保している最大インスタンス数
-	const uint32_t kNumInstance_ = 10;
+	const uint32_t kNumInstance_ = 100;
 	D3D12_CPU_DESCRIPTOR_HANDLE instancingSrvHandleCPU_;
 	D3D12_GPU_DESCRIPTOR_HANDLE instancingSrvHandleGPU_;
 
