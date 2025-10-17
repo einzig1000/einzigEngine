@@ -24,10 +24,11 @@ struct PixelShaderOutput
 {
     float32_t4 color : SV_TARGET0;
 };
-struct TransformationMatrix
+struct ParticleInstance
 {
-    float32_t4x4 WVP;
-    float32_t4x4 World;
+    float32_t4x4 WVP; // 64 bytes
+    float32_t4x4 World; // 64 bytes
+    float32_t4 velocity; // 16 bytes (例: xyz=速度, w=未使用/寿命など)
 };
 
 struct DirectionalLight

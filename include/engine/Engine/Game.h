@@ -197,6 +197,7 @@ public:
 		Vector3 target;
 		// パーティクルが飛んでく扇形の中心角　0ならdirection方向まっすぐ 2πなら全方位(0～2π)
 		Vector2 centralAngle = { 0.0f, 0.0f };
+		TransformationMatrix transformationMatrix;
 		// 速度
 		float velocity = 1.0f;
 		// emissionDelayフレームごとにパーティクルが生まれる

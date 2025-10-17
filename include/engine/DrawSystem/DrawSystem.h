@@ -75,7 +75,7 @@ private:
 	// インスタンシング（構造化バッファ or Uploadバッファ＋SRV）
 	Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource_ = nullptr;
 	// 
-	TransformationMatrix* instancingData_ = nullptr; // 永続Mapポインタ
+	Game::RenderData_Particle* instancingData_ = nullptr; // 永続Mapポインタ
 
 	uint32_t instancingCapacity_ = 0; // いま確保している最大インスタンス数
 	const uint32_t kNumInstance_ = 100;

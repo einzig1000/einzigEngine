@@ -135,8 +135,8 @@ void DrawSystem::DrawParticle(Game::RenderData_Particle& renderData)
 	{
 		Matrix4x4 world = renderData.mono.transforms.World;
 		world.m[3][0] += static_cast<float>(i) * 0.2f;
-		instancingData_[i].World = world;
-		instancingData_[i].WVP = world * viewProjectionMatrix_;
+		instancingData_[i].transformationMatrix.World = world;
+		instancingData_[i].transformationMatrix.WVP = world * viewProjectionMatrix_;
 	}
 
 	// 頂点バッファをバインド（描画に使う頂点データを指定）
@@ -145,8 +145,6 @@ void DrawSystem::DrawParticle(Game::RenderData_Particle& renderData)
 	dxManager_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	// ルートパラメータ0にマテリアル用定数バッファ（色・ライティング情報など）をバインド
 	dxManager_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources_[drawCallIndex_]->GetGPUVirtualAddress());
-	// ルートパラメータ1にWVP（ワールド・ビュー・プロジェクション）用定数バッファをバインド
-	//dxManager_->GetCommandList()->SetGraphicsRootConstantBufferView(1, instancingResource_->GetGPUVirtualAddress());
 	// ルートパラメータ3にディレクショナルライト用定数バッファをバインド
 	dxManager_->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress());
 
@@ -766,13 +764,13 @@ bool DrawSystem::EnsureInstanceBuffer(size_t requiredInstanceCount)
 	uint32_t newCapacity = static_cast<uint32_t>(
 		std::max<size_t>(requiredInstanceCount, instancingCapacity_ ? instancingCapacity_ * 2ull : 64ull)
 		);
-	size_t newSizeBytes = sizeof(TransformationMatrix) * static_cast<size_t>(newCapacity);
+	size_t newSizeBytes = sizeof(Game::RenderData_Particle) * static_cast<size_t>(newCapacity);
 
 	// 新リソース作成（Uploadバッファ）
 	auto newResource = CreateBufferResource(dxManager_->GetDevice() , newSizeBytes);
 	if (!newResource) return false;
 
-	TransformationMatrix* newMapped = nullptr;
+	Game::RenderData_Particle* newMapped = nullptr;
 	HRESULT hr = newResource->Map(0, nullptr, reinterpret_cast<void**>(&newMapped));
 	if (FAILED(hr) || !newMapped) return false;
 
@@ -794,10 +792,10 @@ bool DrawSystem::EnsureInstanceBuffer(size_t requiredInstanceCount)
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
 	srvDesc.Buffer.FirstElement = 0;
 	srvDesc.Buffer.NumElements = newCapacity;
-	srvDesc.Buffer.StructureByteStride = sizeof(TransformationMatrix);
+	srvDesc.Buffer.StructureByteStride = sizeof(Game::RenderData_Particle);
 
 	// 現在のヒープにおける該当インデックスのハンドルを取得して作り直す
-	uint32_t slot = dxManager_->GetDescriptorHeapManager()->AllocateSRVSlot();
+	//uint32_t slot = dxManager_->GetDescriptorHeapManager()->AllocateSRVSlot();
 	instancingSrvHandleCPU_ = dxManager_->GetDescriptorHeapManager()->GetCPUHandleAt(instancingSrvIndex_);
 	instancingSrvHandleGPU_ = dxManager_->GetDescriptorHeapManager()->GetGPUHandleAt(instancingSrvIndex_);
 

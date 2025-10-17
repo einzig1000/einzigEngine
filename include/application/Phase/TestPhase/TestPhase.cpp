@@ -42,6 +42,37 @@ TestPhase::TestPhase()
 	particle_.emissionDelay = 1;
 	// パーティクルエミッター形状
 	particle_.option.emitterShape = true;
+
+
+	particle1_.mono.model = playerModel;
+	// パーティクルテクスチャ
+	particle1_.mono.texture = playerTex;
+	// パーティクル描画オプション
+	particle1_.mono.options.blendMode = BlendMode::kBlendModeAdd;
+	// パーティクル初期回転量
+	particle1_.mono.transforms.rotate = { 0.0f,0.0f,0.0f };
+	// パーティクル初期拡縮量
+	particle1_.mono.transforms.scale = { 0.1f,0.1f,0.1f };
+	// パーティクル初期カラー
+	particle1_.mono.color = 0xFFFFFFFF;
+
+	// パーティクル毎フレーム加算される回転量
+	particle1_.AddRotate = { 0.2f,0.2f,0.2f };
+	// パーティクル毎フレーム加算される拡縮量
+	particle1_.AddScale = { -0.005f,-0.005f,-0.005f };
+	// パーティクル飛んでく向き
+	particle1_.target = { 10.0f, 0.0f, 0.0f };
+	// パーティクルエミッター
+	particle1_.emitterAABB = { { 1.0f, 1.0f, 1.0f }, { 3.0f, 3.0f, 3.0f } };
+	particle1_.emitterSphere = { { 0.0f, 0.0f, 0.0f }, { 2.0f, 2.0f, 2.0f } };
+	// パーティクル速度
+	particle1_.velocity = 0.01f;
+	// パーティクル生存時間
+	particle1_.liveMax = 1000;
+	// パーティクル生まれるスパン/frame
+	particle1_.emissionDelay = 1;
+	// パーティクルエミッター形状
+	particle1_.option.emitterShape = true;
 }
 
 TestPhase::~TestPhase()
@@ -69,4 +100,6 @@ void TestPhase::Draw()
 	particle_.DrawImGui();
 	particle_.Draw();
 	particle_.DrawEmitter();
+
+	particle1_.Draw();
 }

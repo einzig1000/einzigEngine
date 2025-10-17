@@ -807,11 +807,14 @@ enum class EaseType
     OUT_BOUNCE,
 };
 
-struct ParticleInf
+struct ParticleInstance
 {
-    Vector3 velocity;
-    int liveTime = 0;
+    Matrix4x4 WVP;
+    Matrix4x4 World;
+    Vector4   velocity;
 };
+
+
 
 //enum class DestructionType
 //{

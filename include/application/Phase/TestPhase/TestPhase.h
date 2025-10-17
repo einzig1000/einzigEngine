@@ -14,6 +14,7 @@ public:
 
 private:
 	Game::RenderData_Particle particle_;
+	Game::RenderData_Particle particle1_;
 	Game::RenderData_Model model_;
 
 	int frame_;
