@@ -703,6 +703,35 @@ void Game::RenderData_Particle::Draw()
 	engine->DrawParticle(*this);
 }
 
+void Game::RenderData_Particle::DrawImGui()
+{
+	ImGui::Begin("str.c_str()");
+
+	ImGui::Text("Shape");
+	ImGui::Checkbox("toggleShape", &this->option.emitterShape);
+	ImGui::Checkbox("toggleInOut", &this->option.spawnInsideEmitter);
+	ImGui::DragFloat3("aabb.min	", &this->emitterAABB.min.x, 0.1f);
+	ImGui::DragFloat3("aabb.max	", &this->emitterAABB.max.x, 0.1f);
+	ImGui::DragFloat3("Sphere.center", &this->emitterSphere.center.x, 0.1f);
+	ImGui::DragFloat3("Sphere.radius", &this->emitterSphere.radius.x, 0.1f);
+
+	ImGui::Text("InitializeTransforms");
+	ImGui::DragFloat3("scale	", &this->mono.transforms.scale.x, 0.1f);
+	ImGui::DragFloat3("rotate	", &this->mono.transforms.rotate.x, 0.1f);
+	ImGui::Text("AddTransforms/frame");
+	ImGui::DragFloat3("AddScale	", &this->AddScale.x, 0.1f);
+	ImGui::DragFloat3("AddRotate", &this->AddRotate.x, 0.1f);
+	ImGui::DragFloat("velocity	", &this->velocity, 0.01f);
+	ImGui::Checkbox("toggletarget", &this->option.targetDirection);
+
+	ImGui::Text("direction");
+	ImGui::DragFloat3("target	", &this->target.x, 0.01f);
+	ImGui::DragInt("emissionDelay	", &this->emissionDelay);
+	ImGui::DragInt("particlesPerEmission	", &this->particlesPerEmission);
+
+	ImGui::End();
+}
+
 void Game::RenderData_Particle::DrawEmitter()
 {
 	// エミッターがAABB

@@ -96,71 +96,6 @@ void DrawSystem::BeginFrame(Matrix4x4& viewProjectionMatrix)
 
 void DrawSystem::DrawParticle(Game::RenderData_Particle& renderData)
 {
-	//{
-	//	// 描画回数上限
-	//	if (drawCallIndex_ >= kMaxDrawCallPerFrame_) return;
-	//
-	//	// モデルの検索
-	//	Object3D* obj = dxManager_->GetResourceManager()->GetModelManager()->GetModel(renderData.model);
-	//	if (!obj) return;
-	//
-	//	// テクスチャの検索
-	//	const TextureData* tex = dxManager_->GetResourceManager()->GetTextureManager()->GetTexture(renderData.texture);
-	//	if (!tex) return;
-	//
-	//	// RootSignatureとPSOを設定
-	//	dxManager_->GetCommandList()->SetGraphicsRootSignature(dxManager_->GetPipelineStateManager()->GetRootSignature_particle()); // 共通のルートシグネチャ
-	//	if (renderData.options.wireframe || wireframeMode_)
-	//	{	// ワイヤーフレーム用PSOを設定
-	//		dxManager_->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetParticlePipelineState(BlendMode::kBlendModeNormal));
-	//	}
-	//	else
-	//	{	// Triangle用PSOを設定
-	//		dxManager_->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetParticlePipelineState(renderData.options.blendMode));
-	//	}
-	//
-	//	// 頂点数の取得
-	//	const uint32_t kSumVertex = static_cast<uint32_t>(obj->modelData.vertices.size());
-	//
-	//	// WVP行列
-	//	for (uint32_t i = 0; i < kNumInstance_; ++i)
-	//	{
-	//		Matrix4x4 world = renderData.transforms.World;
-	//		instancingData_[i].World = world;
-	//		instancingData_[i].WVP = world * viewProjectionMatrix_;
-	//	}
-	//
-	//	// マテリアル
-	//	Vector4 color = ConvertUintToVector4(renderData.color);
-	//	materialData_[drawCallIndex_]->color = color;
-	//	materialData_[drawCallIndex_]->enableLighting = renderData.options.enableLighting;
-	//	Matrix4x4 uvTransformMatrix = Matrix4x4::MakeIdentity4x4();
-	//	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeScaleMatrix(renderData.uvTransform.scale));
-	//	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(renderData.uvTransform.rotate.z));
-	//	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(renderData.uvTransform.translate));
-	//	materialData_[drawCallIndex_]->uvTransform = uvTransformMatrix;
-	//
-	//	// 頂点バッファをバインド（描画に使う頂点データを指定）
-	//	dxManager_->GetCommandList()->IASetVertexBuffers(0, 1, &obj->vertexBufferView);
-	//	// プリミティブトポロジ（描画する形状の種類：三角形リスト）を設定
-	//	dxManager_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	//	// ルートパラメータ0にマテリアル用定数バッファ（色・ライティング情報など）をバインド
-	//	dxManager_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources_[drawCallIndex_]->GetGPUVirtualAddress());
-	//	// ルートパラメータ1にWVP（ワールド・ビュー・プロジェクション）用定数バッファをバインド
-	//	//dxManager_->GetCommandList()->SetGraphicsRootConstantBufferView(1, instancingResource_->GetGPUVirtualAddress());
-	//	// ルートパラメータ3にディレクショナルライト用定数バッファをバインド
-	//	dxManager_->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress());
-	//
-	//	// ルートパラメータ4にインスタンシング用SRVをバインド
-	//	dxManager_->GetCommandList()->SetGraphicsRootDescriptorTable(4, instancingSrvHandleGPU_);
-	//	// ルートパラメータ2にテクスチャのSRV（シェーダリソースビュー）をバインド
-	//	dxManager_->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
-	//	// 頂点数分のインスタンス描画を実行（実際に描画コマンドを発行）
-	//	dxManager_->GetCommandList()->DrawInstanced(kSumVertex, kNumInstance_, 0, 0);
-	//
-	//	drawCallIndex_++;
-	//}
-	// 描画回数上限
 	if (drawCallIndex_ >= kMaxDrawCallPerFrame_) return;
 	
 	// モデルの検索
@@ -199,8 +134,8 @@ void DrawSystem::DrawParticle(Game::RenderData_Particle& renderData)
 	for (uint32_t i = 0; i < kNumInstance_; ++i)
 	{
 		Matrix4x4 world = renderData.mono.transforms.World;
+		world.m[3][0] += static_cast<float>(i) * 0.2f;
 		instancingData_[i].World = world;
-		instancingData_[i].World.m[3][0] += i * 20;
 		instancingData_[i].WVP = world * viewProjectionMatrix_;
 	}
 
@@ -862,7 +797,7 @@ bool DrawSystem::EnsureInstanceBuffer(size_t requiredInstanceCount)
 	srvDesc.Buffer.StructureByteStride = sizeof(TransformationMatrix);
 
 	// 現在のヒープにおける該当インデックスのハンドルを取得して作り直す
-	//dxManager->GetDescriptorHeapManager()->GetCPUHandleAt(dxManager->GetDescriptorHeapManager()->AllocateSRVSlot()),
+	uint32_t slot = dxManager_->GetDescriptorHeapManager()->AllocateSRVSlot();
 	instancingSrvHandleCPU_ = dxManager_->GetDescriptorHeapManager()->GetCPUHandleAt(instancingSrvIndex_);
 	instancingSrvHandleGPU_ = dxManager_->GetDescriptorHeapManager()->GetGPUHandleAt(instancingSrvIndex_);
 

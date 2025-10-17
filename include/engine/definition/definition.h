@@ -705,11 +705,6 @@ struct KeyState
     uint32_t holdFrames = 0;     // curr==true のときの連続押下フレーム数（1..）, curr==false のときは 0
     uint32_t lastHoldOnRelease = 0; // 直近のリリース時に押されていたフレーム数（release イベント時に更新）
 };
-struct DrawData
-{
-    D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
-    const TextureData* texture;
-};
 
 struct D3DResourceLeakChecker
 {

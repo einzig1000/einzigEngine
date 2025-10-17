@@ -191,7 +191,7 @@ public:
 	{
 	public:
 		// エミッター範囲
-		AABB emitterAABB;
+		AABB emitterAABB = { Vector3{ -1.0f, -1.0f, -1.0f }, Vector3{ 1.0f, 1.0f, 1.0f } };
 		SphereXYZ emitterSphere;
 		// エミッター範囲中心から見た時の飛んでく方向
 		Vector3 target;
@@ -224,6 +224,7 @@ public:
 
 		// 描画
 		void Draw();
+		void DrawImGui();
 		void DrawEmitter();
 
 		void Reset()

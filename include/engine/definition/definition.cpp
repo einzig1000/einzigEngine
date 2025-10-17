@@ -1,9 +1,6 @@
 #include "definition.h"
 
 
-#pragma region Vector3
-#pragma endregion
-
 #pragma region Vector2
 
 float Vector2::Length() const
