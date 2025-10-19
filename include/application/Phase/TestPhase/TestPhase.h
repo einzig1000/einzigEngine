@@ -18,4 +18,6 @@ private:
 
 	int frame_;
 
+	float roll_ = 0.0f;
+
 };

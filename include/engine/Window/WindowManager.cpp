@@ -1,4 +1,8 @@
 #include "Window/WindowManager.h"
+#pragma comment(lib, "winmm.lib")
+
+uint32_t WindowManager::winWidth_;
+uint32_t WindowManager::winHeight_;
 
 // ウィンドウプロシージャ(クリックした、×を押した等のイベントを処理する関数)
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
@@ -25,14 +29,27 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 
 WindowManager::WindowManager(int width, int height, const std::wstring& title)
-    : width(width), height(height)
 {
+	winWidth_ = width;
+	winHeight_ = height;
+	timeBeginPeriod(1); // タイマー精度を1msに設定
     RegisterWindowClass();
     CreateMainWindow(width, height, title);
 }
 
-WindowManager::~WindowManager() {
-    CloseWindow(hwnd);
+WindowManager::~WindowManager()
+{
+    // フルスクリーン中なら復帰してから破棄
+    if (isFullscreen)
+    {
+        ExitBorderlessFullscreen();
+    }
+    // DestroyWindow の方が確実に破棄できます
+    if (hwnd)
+    {
+        DestroyWindow(hwnd);
+        hwnd = nullptr;
+    }
 }
 
 void WindowManager::RegisterWindowClass() {
@@ -50,7 +67,8 @@ void WindowManager::RegisterWindowClass() {
     RegisterClass(&wc);
 }
 
-void WindowManager::CreateMainWindow(int width, int height, const std::wstring& title) {
+void WindowManager::CreateMainWindow(int width, int height, const std::wstring& title) 
+{
     // ウィンドウサイズを表す構造体にクライアント領域を入れる
     RECT wrc = { 0,0,width,height };
     // クライアント領域を元に実際のサイズのwrcを変更してもらう
@@ -73,4 +91,91 @@ void WindowManager::CreateMainWindow(int width, int height, const std::wstring& 
 
 
     ShowWindow(hwnd, SW_SHOW);
+}
+
+void WindowManager::SetFullscreen(bool enable)
+{
+	// すでにその状態なら何もしない
+    if (enable == isFullscreen) return;
+	// フルスクリーン切り替え
+    if (enable)
+    {
+        EnterBorderlessFullscreen();
+    }
+	// 解除
+    else
+    {
+        ExitBorderlessFullscreen();
+    }
+	// ウィンドウサイズ更新
+	UpdateClientSize();
+}
+
+void WindowManager::ToggleFullscreen()
+{
+    SetFullscreen(!isFullscreen);
+}
+
+// isFullscreen = trueになる
+void WindowManager::EnterBorderlessFullscreen()
+{
+    if (!hwnd) return;
+
+    // 現在のウィンドウ情報を保存
+    windowedStyle = static_cast<DWORD>(GetWindowLongPtr(hwnd, GWL_STYLE));
+    windowedExStyle = static_cast<DWORD>(GetWindowLongPtr(hwnd, GWL_EXSTYLE));
+    windowedPlacement.length = sizeof(WINDOWPLACEMENT);
+    GetWindowPlacement(hwnd, &windowedPlacement);
+
+    // 対象モニタのワークエリアではなくモニタ全体を使用
+    HMONITOR hMon = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+    MONITORINFO mi{};
+    mi.cbSize = sizeof(mi);
+    GetMonitorInfo(hMon, &mi);
+
+    // ボーダーレスにしてモニタ全体へフィット
+    SetWindowLongPtr(hwnd, GWL_STYLE, windowedStyle & ~(WS_OVERLAPPEDWINDOW));
+    SetWindowLongPtr(hwnd, GWL_EXSTYLE, windowedExStyle | WS_EX_APPWINDOW);
+
+    SetWindowPos(
+        hwnd,
+        HWND_TOP,
+        mi.rcMonitor.left,
+        mi.rcMonitor.top,
+        mi.rcMonitor.right - mi.rcMonitor.left,
+        mi.rcMonitor.bottom - mi.rcMonitor.top,
+        SWP_NOOWNERZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW
+    );
+
+    isFullscreen = true;
+}
+
+// isFullscreen = falseになる
+void WindowManager::ExitBorderlessFullscreen()
+{
+    if (!hwnd) return;
+
+    // 元のスタイルへ戻す
+    SetWindowLongPtr(hwnd, GWL_STYLE, windowedStyle);
+    SetWindowLongPtr(hwnd, GWL_EXSTYLE, windowedExStyle);
+
+    // ウィンドウ配置と枠を復元
+    SetWindowPlacement(hwnd, &windowedPlacement);
+    SetWindowPos(
+        hwnd,
+        nullptr,
+        0, 0, 0, 0,
+        SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW
+    );
+
+    isFullscreen = false;
+}
+
+void WindowManager::UpdateClientSize()
+{
+    if (!hwnd) return;
+    RECT rc{};
+    GetClientRect(hwnd, &rc);
+    winWidth_ = static_cast<uint32_t>(rc.right - rc.left);
+    winHeight_ = static_cast<uint32_t>(rc.bottom - rc.top);
 }

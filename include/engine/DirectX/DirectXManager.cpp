@@ -4,18 +4,20 @@
 #include "externals/imgui/imgui_impl_win32.h"
 
 
-DirectXManager::DirectXManager(HWND hwnd, int width, int height)
+DirectXManager::DirectXManager(HWND hwnd)
 {
     deviceManager = std::make_unique<DeviceManager>();
     commandContextManager = std::make_unique<CommandContextManager>(deviceManager->GetDevice());
-    swapChainManager = std::make_unique<SwapChainManager>(deviceManager->GetDevice(), commandContextManager->GetCommandQueue(), hwnd, width, height);
-    depthStencilManager = std::make_unique<DepthStencilManager>(deviceManager->GetDevice(), width, height);
+    swapChainManager = std::make_unique<SwapChainManager>(deviceManager->GetDevice(), commandContextManager->GetCommandQueue(), hwnd);
+    depthStencilManager = std::make_unique<DepthStencilManager>(deviceManager->GetDevice());
     pipelineStateManager = std::make_unique<PipelineStateManager>(deviceManager->GetDevice());
     descriptorHeapManager = std::make_unique<DescriptorHeapManager>(deviceManager->GetDevice());
     synchronizationManager = std::make_unique<SynchronizationManager>(deviceManager->GetDevice());
-    viewportScissorManager = std::make_unique<ViewportScissorManager>(width, height);
+    viewportScissorManager = std::make_unique<ViewportScissorManager>();
+
 
 	resourceManager_ = std::make_unique<ResourceManager>();
+    fixFPS_ = std::make_unique<FixFPS>();
 
     Log("コンストラクタ実行成功 : DirectXManager");
 }
@@ -41,7 +43,7 @@ void DirectXManager::BeginFrame()
     barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
     commandContextManager->GetCommandList()->ResourceBarrier(1, &barrier);
 
-    // 描画先のRTVとDSVを設定
+    // 描画先のRTVとDSVを指定
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = swapChainManager->GetCurrentRTVHandle();
     D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = depthStencilManager->GetDSVHandle();
     commandContextManager->GetCommandList()->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
@@ -51,7 +53,7 @@ void DirectXManager::BeginFrame()
     commandContextManager->GetCommandList()->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
     commandContextManager->GetCommandList()->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
-    // ディスクリプタヒープを設定 (SRV用)
+    // SRV用のディスクリプタヒープを指定
     ID3D12DescriptorHeap* descriptorHeaps[] = { descriptorHeapManager->GetSRVDescriptorHeap() };
     commandContextManager->GetCommandList()->SetDescriptorHeaps(1, descriptorHeaps);
 
@@ -73,8 +75,6 @@ void DirectXManager::EndFrame()
     barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
     commandContextManager->GetCommandList()->ResourceBarrier(1, &barrier);
 
-    // --- ここにGPU-CPU同期の待機処理を追加 ---
-
     // コマンドリストを確定・実行
     HRESULT hr = commandContextManager->GetCommandList()->Close();
     if (FAILED(hr))
@@ -94,6 +94,21 @@ void DirectXManager::EndFrame()
     // GPU同期
     synchronizationManager->WaitForGPU();
 
-    // コマンドリストをリセット
-    //commandContextManager->ResetCommandList();
+	// FPS制限
+    fixFPS_->UpdateFixFPS();
+}
+
+void DirectXManager::Resize()
+{
+    // スワップチェーンのリサイズ
+    swapChainManager->Resize(
+        GetDevice(),
+        GetCommandContextManager()->GetCommandQueue());
+
+	// デプスステンシルバッファのリサイズ
+    depthStencilManager->Resize(
+        GetDevice());
+
+    // ビューポートとシザー矩形の更新
+    viewportScissorManager->Resize();
 }

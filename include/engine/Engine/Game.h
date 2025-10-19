@@ -191,7 +191,7 @@ public:
 	{
 	public:
 		// エミッター範囲
-		AABB emitterAABB;
+		AABB emitterAABB = { Vector3{ -1.0f, -1.0f, -1.0f }, Vector3{ 1.0f, 1.0f, 1.0f } };
 		SphereXYZ emitterSphere;
 		// エミッター範囲中心から見た時の飛んでく方向
 		Vector3 target;
@@ -224,6 +224,7 @@ public:
 
 		// 描画
 		void Draw();
+		void DrawImGui();
 		void DrawEmitter();
 
 		void Reset()
@@ -319,7 +320,7 @@ public:
 	static std::vector<AABB> CreateAABB(const Transforms& transforms, uint32_t objectNumber);
 
 	// プリミティブモードの設定
-	static void toggleWireframeMode(bool mode);
+	static void toggleWireframeMode();
 
 	// モデルリストの取得
 	static std::vector<Game::RenderData_Model*> GetModelList() { return renderModels; }

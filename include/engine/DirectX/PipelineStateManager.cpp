@@ -1,6 +1,7 @@
 #include "DirectX/PipelineStateManager.h"
 #include <string>
 #include "Utilities/functions.h"
+#include <filesystem>
 
 #pragma comment(lib, "dxcompiler.lib")
 
@@ -436,7 +437,7 @@ Microsoft::WRL::ComPtr<IDxcBlob> PipelineStateManager::GetOrCompileShader(const 
     {
         return it->second;
     }
-    Microsoft::WRL::ComPtr<IDxcBlob> blob = CompileShader(path, target, dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
+    Microsoft::WRL::ComPtr<IDxcBlob> blob = CompileShader(path, target);
     assert(blob);
     shaderCache_.emplace(std::move(key), blob);
     return blob;
@@ -483,4 +484,94 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineStateManager::CreatePipeline
     hr = device->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&pso));
     assert(SUCCEEDED(hr));
     return pso;
+}
+
+Microsoft::WRL::ComPtr<IDxcBlob> PipelineStateManager::CompileShader(
+    // CompileするShaderファイルへのパス
+    const std::wstring& filePath,
+    // Compilerに仕様するProfile
+    const wchar_t* profile)
+    //// 初期化で生成したものを３つ
+    //IDxcUtils* dxcUtils,
+    //IDxcCompiler3* dxcCompiler,
+    //IDxcIncludeHandler* includeHandler)
+{
+    ///////////////////////////////////////
+    //// 1 hlslファイルを読む
+    ///////////////////////////////////////
+    // これからシェーダーをコンパイルする旨をログに出す
+    Log(ConvertString(std::format(L"Begin CompileShader, path:{}, profile:{}", filePath, profile)));
+    // hlslファイルを読む
+    IDxcBlobEncoding* shaderSource = nullptr;
+    HRESULT hr = dxcUtils->LoadFile(filePath.c_str(), nullptr, &shaderSource);
+    // 読めなかったら停止する
+    assert(SUCCEEDED(hr));
+    // 読み込んだファイルの内容を設定する
+    DxcBuffer shaderSourceBuffer;
+    shaderSourceBuffer.Ptr = shaderSource->GetBufferPointer();
+    shaderSourceBuffer.Size = shaderSource->GetBufferSize();
+    shaderSourceBuffer.Encoding = DXC_CP_UTF8;
+
+    ///////////////////////////////////////
+    //// 2 Compileする
+    ///////////////////////////////////////
+    LPCWSTR arguments[] = {
+        filePath.c_str(),			// コンパイル対象のhlslファイル名
+        L"-E", L"main",				// エントリーポイントの指定。基本的にmain
+        L"-T", profile,				// ShaderProfileの設定
+        L"-Zi", L"-Qembed_debug",	// デバック用の情報を埋め込む
+        L"-Od",						// 最適化を外しておく
+        L"-Zpr",					// 目盛レイアウトは行優先
+    };
+    // 実際にシェーダーをコンパイルする
+    IDxcResult* shaderResult = nullptr;
+    hr = dxcCompiler->Compile(
+        &shaderSourceBuffer,	// 読み込んだファイル
+        arguments,				// コンパイルオプション
+        _countof(arguments),	// コンパイルオプションの数
+        includeHandler.Get(),	// includeが含まれた諸々
+        IID_PPV_ARGS(&shaderResult)// コンパイル結果
+    );
+    // コンパイルエラーではなくdxcが起動出来ないなど致命的な状況
+    assert(SUCCEEDED(hr));
+
+    ///////////////////////////////////////
+    //// 3 警告・エラーが出ていないか確認する
+    ///////////////////////////////////////
+    // 警告・エラーが出たらログにだして止める
+    IDxcBlobUtf8* shaderError = nullptr;
+    IDxcBlobUtf16* outputName = nullptr;
+    shaderResult->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&shaderError), &outputName);
+
+    if (shaderError != nullptr && shaderError->GetStringLength() != 0)
+    {
+        Log(shaderError->GetStringPointer());
+        assert(false); // コンパイルエラーが発生した場合は停止
+    }
+
+    ///////////////////////////////////////
+    //// 4 Compile結果を受け取って返す
+    ///////////////////////////////////////
+    // コンパイル結果から実行用のバイナリ部分を取得
+    IDxcBlob* shaderBlob = nullptr;
+    //hr = shaderResult->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&shaderBlob), nullptr);
+    if (shaderResult->HasOutput(DXC_OUT_OBJECT))
+    {
+        IDxcBlobWide* dummyOutputName = nullptr;
+        hr = shaderResult->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&shaderBlob), &dummyOutputName);
+        //hr = shaderResult->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&shaderBlob), nullptr);
+    }
+    else
+    {
+        hr = E_FAIL;
+        shaderBlob = nullptr;
+    }
+    assert(SUCCEEDED(hr));
+    // 成功したログを出す
+    Log(ConvertString(std::format(L"Compile Succeeded. path:{}\n", filePath, profile)));
+    // もう使わないリソースを解放
+    shaderSource->Release();
+    shaderResult->Release();
+    // 実行用のバイナリを返却
+    return shaderBlob;
 }

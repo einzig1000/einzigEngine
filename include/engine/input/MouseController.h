@@ -4,7 +4,7 @@
 class MouseController
 {
 public:
-	MouseController(HWND hwnd, uint32_t width, uint32_t height, Matrix4x4* viewProjectionMatrix, Matrix4x4* debugViewProjectionMatrix, bool* debugCameraMode);
+	MouseController(HWND hwnd, Matrix4x4* viewProjectionMatrix, Matrix4x4* debugViewProjectionMatrix, bool* debugCameraMode);
 	void Update();
 	void EndFrame();
 
@@ -27,8 +27,6 @@ private:
 
 	HWND hwnd_;
 	bool* debugCameraMode_;
-	uint32_t width_;
-	uint32_t height_;
 	Matrix4x4* viewProjectionMatrix_;
 	Matrix4x4* debugViewProjectionMatrix_;
 };

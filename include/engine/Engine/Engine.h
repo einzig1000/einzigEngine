@@ -14,16 +14,12 @@
 class Engine
 {
 public:
-	// 初期化
-	void Initialize(int width, int height, const std::wstring& title);
-
 	// メインループ用
+	void Initialize(int width, int height, const std::wstring& title);
 	bool ProcessMessage();
 	void BeginFrame();
 	void UpdateTransforms();
 	void EndFrame();
-
-	// 終了処理
 	void Finalize();
 
 	// リソース
@@ -34,7 +30,6 @@ public:
 
 	// 描画
 	void DrawModel(Game::RenderData_Model& renderData);
-	//void DrawSphere(Game::RenderData_Sphere& renderData);
 	void DrawTriangle(Game::RenderData_Triangle& renderData);
 	void DrawSprite(Game::RenderData_Sprite& renderData);
 	void DrawParticle(Game::RenderData_Particle& renderData);
@@ -66,6 +61,14 @@ public:
 	bool GetMousePress(int i);
 	bool GetMousePrePress(int i);
 
+	/// キーボード
+	//bool GetKeyboardPress(int key);
+	//bool GetKeyboardPrePress(int key);
+
+	/// ゲームパッド
+	//PadState GetPadState();
+	//PadState GetPrePadState();
+
 	// カメラ
 	void MoveCameraCenter(Vector3 target, int spendFrame, EaseType easetype);
 	void MoveCameraRotate(Vector3 target, int spendFrame, EaseType easetype);
@@ -74,19 +77,26 @@ public:
 	CameraController* GetCamera();
 	CameraController* GetDebugCamera();
 
-	// カメラシェイク
+	/// カメラシェイク
 	//void StartCameraShake(float intensity, float duration, float frequency = 25.0f);
 	//bool IsCameraShaking();
+
+	// フルスクリーン切り替え
+	void ToggleFullscreen();
+	// カメラモード切り替え
+	void ToggleCameraMode();
 
 	// AABBの作成
 	std::vector<AABB>  CreateAABB(const Transforms& transforms, uint32_t objectNumber);
 
 	// プリミティブモードの設定
-	void toggleWireframeMode(bool mode);
+	void toggleWireframeMode();
 
 private:
 	// カメラ更新
 	void UpdateCamera();
+	void UpdataDebugInfo();
+	bool isDebugInfo = true;
 
 	// ウィンドウ関連
 	WindowManager* windowManager = nullptr;

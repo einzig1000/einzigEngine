@@ -18,7 +18,9 @@ public:
 
     CameraController();
     void Update();
-    void Draw();
+    void Draw(bool debugCamera);
+    void Resize();
+
 
 	// カメラ演出
     void SetCenterTarget(Vector3 Center, int spendFrame, EaseType easetype);
@@ -40,6 +42,7 @@ private:
     void MovingCenter();
     void MovingRotate();
     void MovingDistance();
+
     //////////////////////////////////////////////
     ///              カメラ回転                ///
     //////////////////////////////////////////////
@@ -74,6 +77,9 @@ private:
     // 演出によるカメラ距離の変更中
     easingSet easeDistance_;
 
+	//////////////////////////////////////////////
+	///             視錐台判定用              ///
+	//////////////////////////////////////////////
     void CreateFrustumPlanes();
     std::array<Plane, 6> frustumPlanes_;// 視錐台を構成する6つの平面
 

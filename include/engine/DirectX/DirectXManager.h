@@ -10,6 +10,7 @@
 #include "DirectX/DescriptorHeapManager.h"
 #include "DirectX/SynchronizationManager.h"
 #include "DirectX/ViewportScissorManager.h"
+#include "FixFPS/FixFPS.h"
 
 #include "Resource/ResourceManager.h"
 #include "input/Input.h"
@@ -18,20 +19,22 @@
 class DirectXManager
 {
 public:
-    DirectXManager(HWND hwnd, int width, int height);
+    DirectXManager(HWND hwnd);
     ~DirectXManager();
 
     ID3D12Device* GetDevice() const { return deviceManager->GetDevice(); }
-    ID3D12GraphicsCommandList* GetCommandList() const { return commandContextManager->GetCommandList(); }
+	CommandContextManager* GetCommandContextManager() const { return commandContextManager.get(); }
     DescriptorHeapManager* GetDescriptorHeapManager() const { return descriptorHeapManager.get(); }
-    const DXGI_SWAP_CHAIN_DESC1& GetSwapChainDesc() const { return swapChainManager->GetSwapChainDesc(); };
-    const D3D12_RENDER_TARGET_VIEW_DESC& GetRtvDesc() const { return swapChainManager->GetRtvDesc(); }
+    SwapChainManager* GetSwapChain() const { return swapChainManager.get(); };
     PipelineStateManager* GetPipelineStateManager() const { return pipelineStateManager.get(); }
 
 	ResourceManager* GetResourceManager() const { return resourceManager_.get(); }
 
+	float GetDeltaTime() const { return fixFPS_->GetDeltaTime(); }
+
     void BeginFrame();
     void EndFrame();
+	void Resize();
 
 private:
     std::unique_ptr<DeviceManager> deviceManager;
@@ -44,6 +47,7 @@ private:
     std::unique_ptr<ViewportScissorManager> viewportScissorManager;
 
     std::unique_ptr<ResourceManager> resourceManager_;
+    std::unique_ptr<FixFPS> fixFPS_;
 
     D3D12_RESOURCE_BARRIER barrier = {};
 

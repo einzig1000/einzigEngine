@@ -1,19 +1,20 @@
 #include "DirectX/ViewportScissorManager.h"
 #include "Utilities/functions.h"
+#include "Window/WindowManager.h"
 
-ViewportScissorManager::ViewportScissorManager(int width, int height)
+ViewportScissorManager::ViewportScissorManager()
 {
-    viewport.Width = float(width);
-    viewport.Height = float(height);
+    viewport.Width = FLOAT(WindowManager::winWidth_);
+    viewport.Height = FLOAT(WindowManager::winHeight_);
     viewport.TopLeftX = 0;
     viewport.TopLeftY = 0;
     viewport.MinDepth = 0.0f;
     viewport.MaxDepth = 1.0f;
 
     scissorRect.left = 0;
-    scissorRect.right = width;
+    scissorRect.right = LONG(WindowManager::winWidth_);
     scissorRect.top = 0;
-    scissorRect.bottom = height;
+    scissorRect.bottom = LONG(WindowManager::winHeight_);
 
     Log("コンストラクタ実行成功 : ViewportScissorManager");
 }
@@ -21,4 +22,18 @@ ViewportScissorManager::ViewportScissorManager(int width, int height)
 ViewportScissorManager::~ViewportScissorManager()
 {
     Log("デストラクタ実行成功 : ViewportScissorManager");
+}
+
+void ViewportScissorManager::Resize()
+{
+    scissorRect.left = 0;
+    scissorRect.right = LONG(WindowManager::winWidth_);
+    scissorRect.top = 0;
+    scissorRect.bottom = LONG(WindowManager::winHeight_);
+    viewport.Width = FLOAT(WindowManager::winWidth_);
+    viewport.Height = FLOAT(WindowManager::winHeight_);
+    viewport.TopLeftX = 0;
+    viewport.TopLeftY = 0;
+    viewport.MinDepth = 0.0f;
+    viewport.MaxDepth = 1.0f;
 }

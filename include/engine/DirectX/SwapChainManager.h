@@ -7,7 +7,7 @@
 class SwapChainManager
 {
 public:
-    SwapChainManager(ID3D12Device* device, ID3D12CommandQueue* commandQueue, HWND hwnd, int width, int height);
+    SwapChainManager(ID3D12Device* device, ID3D12CommandQueue* commandQueue, HWND hwnd);
     ~SwapChainManager();
 
     UINT GetCurrentBackBufferIndex() const { return backBufferIndex; }
@@ -20,6 +20,8 @@ public:
     void Present();
     void UpdateBackBufferIndex();
 
+    void Resize(ID3D12Device* device, ID3D12CommandQueue* commandQueue);
+
 private:
     Microsoft::WRL::ComPtr<IDXGISwapChain4> swapChain;
     Microsoft::WRL::ComPtr<ID3D12Resource> swapChainResources[2];
@@ -29,6 +31,6 @@ private:
     D3D12_RENDER_TARGET_VIEW_DESC rtvDesc;
     UINT backBufferIndex;
 
-    void InitializeSwapChainInternal(ID3D12Device* device, ID3D12CommandQueue* commandQueue, HWND hwnd, int width, int height);
+    void InitializeSwapChainInternal(ID3D12Device* device, ID3D12CommandQueue* commandQueue, HWND hwnd);
     void InitializeRenderTargetView(ID3D12Device* device);
 };

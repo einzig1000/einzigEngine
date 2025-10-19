@@ -51,4 +51,17 @@ private:
         IDxcBlob* vsBlob,
         IDxcBlob* psBlob
     );
+
+
+    /// <summary>
+    /// 指定されたタイプと数のディスクリプタヒープを作成する関数
+    /// </summary>
+    /// <param name="device">DirectX 12 デバイス</param>
+    /// <param name="heapType">ディスクリプタヒープのタイプ</param>
+    /// <param name="numDescriptors">ディスクリプタの数</param>
+    /// <param name="shaderVisible">シェーダーからアクセス可能かどうか</param>
+    /// <returns>作成されたディスクリプタヒープ</returns>
+    Microsoft::WRL::ComPtr<IDxcBlob> CompileShader(
+        const std::wstring& filePath, 
+        const wchar_t* profile);
 };

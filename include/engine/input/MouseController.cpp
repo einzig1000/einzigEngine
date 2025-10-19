@@ -1,9 +1,10 @@
 #include "input/MouseController.h"
 #include "Utilities/functions.h"
+#include "Window/WindowManager.h"
 #include "Game.h"
 
-MouseController::MouseController(HWND hwnd, uint32_t width, uint32_t height, Matrix4x4* viewProjectionMatrix, Matrix4x4* debugViewProjectionMatrix, bool* debugCameraMode)
-    :width_(width), height_(height), viewProjectionMatrix_(viewProjectionMatrix), debugViewProjectionMatrix_(debugViewProjectionMatrix), debugCameraMode_(debugCameraMode)
+MouseController::MouseController(HWND hwnd, Matrix4x4* viewProjectionMatrix, Matrix4x4* debugViewProjectionMatrix, bool* debugCameraMode)
+    :viewProjectionMatrix_(viewProjectionMatrix), debugViewProjectionMatrix_(debugViewProjectionMatrix), debugCameraMode_(debugCameraMode)
 {
     hwnd_ = hwnd;
     wheelDelta = 0;
@@ -84,8 +85,8 @@ void MouseController::SetMousePosition()
 void MouseController::SetMouseRay()
 {
     // 左下が０、右上が１とした時のマウスポジション
-    float ndcX = (position_.x / width_) * 2.0f - 1.0f;
-    float ndcY = 1.0f - (position_.y / height_) * 2.0f; // Yは上下反転
+    float ndcX = (position_.x / WindowManager::winWidth_) * 2.0f - 1.0f;
+    float ndcY = 1.0f - (position_.y / WindowManager::winHeight_) * 2.0f; // Yは上下反転
 
     // クリップ空間でZ=0(near)とZ=1(far)の2点を作る
     Vector4 nearPoint = { ndcX, ndcY, 0.0f, 1.0f };
