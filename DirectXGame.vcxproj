@@ -150,6 +150,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="include\engine\FixFPS\FixFPS.cpp" />
     <ClCompile Include="include\application\Phase\BattlePhase\BattlePhase.cpp" />
     <ClCompile Include="externals\imgui\imgui.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Disabled</Optimization>
@@ -246,6 +247,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="include\application\Phase\TitlePhase\TitlePhase.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\engine\FixFPS\FixFPS.h" />
     <ClInclude Include="include\application\Phase\BattlePhase\BattlePhase.h" />
     <ClInclude Include="externals\imgui\imconfig.h" />
     <ClInclude Include="externals\imgui\imgui.h" />

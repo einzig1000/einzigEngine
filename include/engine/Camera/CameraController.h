@@ -18,7 +18,7 @@ public:
 
     CameraController();
     void Update();
-    void Draw();
+    void Draw(bool debugCamera);
     void Resize();
 
 

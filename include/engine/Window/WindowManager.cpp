@@ -1,4 +1,5 @@
 #include "Window/WindowManager.h"
+#pragma comment(lib, "winmm.lib")
 
 uint32_t WindowManager::winWidth_;
 uint32_t WindowManager::winHeight_;
@@ -31,6 +32,7 @@ WindowManager::WindowManager(int width, int height, const std::wstring& title)
 {
 	winWidth_ = width;
 	winHeight_ = height;
+	timeBeginPeriod(1); // タイマー精度を1msに設定
     RegisterWindowClass();
     CreateMainWindow(width, height, title);
 }

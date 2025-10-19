@@ -10,6 +10,7 @@
 #include "DirectX/DescriptorHeapManager.h"
 #include "DirectX/SynchronizationManager.h"
 #include "DirectX/ViewportScissorManager.h"
+#include "FixFPS/FixFPS.h"
 
 #include "Resource/ResourceManager.h"
 #include "input/Input.h"
@@ -29,6 +30,8 @@ public:
 
 	ResourceManager* GetResourceManager() const { return resourceManager_.get(); }
 
+	float GetDeltaTime() const { return fixFPS_->GetDeltaTime(); }
+
     void BeginFrame();
     void EndFrame();
 	void Resize();
@@ -44,6 +47,7 @@ private:
     std::unique_ptr<ViewportScissorManager> viewportScissorManager;
 
     std::unique_ptr<ResourceManager> resourceManager_;
+    std::unique_ptr<FixFPS> fixFPS_;
 
     D3D12_RESOURCE_BARRIER barrier = {};
 

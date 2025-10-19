@@ -222,24 +222,3 @@ Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(ID3D12Device* device
 /// <returns>作成された定数バッファリソース</returns>
 Microsoft::WRL::ComPtr<ID3D12Resource> CreateConstantBufferResource(
 	ID3D12Device* device, size_t sizeInBytes);
-
-/// <summary>
-/// HLSL シェーダーをコンパイルする関数
-/// </summary>
-/// <param name="filePath">シェーダーファイルのパス</param>
-/// <param name="profile">コンパイルに使用するプロファイル</param>
-/// <param name="dxcUtils">DXC ユーティリティ</param>
-/// <param name="dxcCompiler">DXC コンパイラ</param>
-/// <param name="includeHandler">インクルードハンドラ</param>
-/// <returns>コンパイルされたシェーダーバイナリ</returns>
-Microsoft::WRL::ComPtr<IDxcBlob> CompileShader(const std::wstring& filePath, const wchar_t* profile, IDxcUtils* dxcUtils, IDxcCompiler3* dxcCompiler, IDxcIncludeHandler* includeHandler);
-
-/// <summary>
-/// 指定されたタイプと数のディスクリプタヒープを作成する関数
-/// </summary>
-/// <param name="device">DirectX 12 デバイス</param>
-/// <param name="heapType">ディスクリプタヒープのタイプ</param>
-/// <param name="numDescriptors">ディスクリプタの数</param>
-/// <param name="shaderVisible">シェーダーからアクセス可能かどうか</param>
-/// <returns>作成されたディスクリプタヒープ</returns>
-Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible);

@@ -36,8 +36,17 @@ void SynchronizationManager::WaitForGPU()
 {
     if (fence->GetCompletedValue() < fenceValue)
     {
-        HRESULT hr = fence->SetEventOnCompletion(fenceValue, fenceEvent);
+        HANDLE eventHandle = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+        if (eventHandle == nullptr)
+        {
+            // エラー処理: イベントの作成に失敗した場合
+            Log("エラー: GPU待機用イベントの作成に失敗しました");
+            assert(false);
+            return;
+        }
+        HRESULT hr = fence->SetEventOnCompletion(fenceValue, eventHandle);
         assert(SUCCEEDED(hr));
-        WaitForSingleObject(fenceEvent, INFINITE);
+        WaitForSingleObject(eventHandle, INFINITE);
+        CloseHandle(eventHandle);
     }
 }

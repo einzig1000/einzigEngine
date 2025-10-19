@@ -122,17 +122,15 @@ void Engine::BeginFrame()
 	ImGui::NewFrame();
 	//ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
 
-	if (GetHitKey::IsPressedDown(DIK_F12))
-	{
-		ToggleFullscreen();
-	}
-
 	// カメラを更新
 	UpdateCamera();
 
 	// 描画関数初期化
 	if (!debugCamera)drawSystem->BeginFrame(cameraController->viewProjectionMatrix);
 	else drawSystem->BeginFrame(debugCameraController->viewProjectionMatrix);
+
+	// デバッグ情報更新
+	UpdataDebugInfo();
 
 	// インプット系を更新
 	inputManager_->Update();
@@ -160,14 +158,43 @@ void Engine::UpdateCamera()
 			}
 		}
 	}
+}
+void Engine::UpdataDebugInfo()
+{
+	if (GetHitKey::IsPressedDown(DIK_F1))
+	{
+		isDebugInfo = !isDebugInfo;
+	}
+	if (GetHitKey::IsPressedDown(DIK_F3))
+	{
+		ToggleCameraMode();
+	}
+	if (GetHitKey::IsPressedDown(DIK_F12))
+	{
+		ToggleFullscreen();
+	}
 
-	ImGui::Text("---------------camera---------------");
-	ImGui::Checkbox("switchDebugCamera", &debugCamera);
+	if (isDebugInfo)
+	{
+		static float fpsSmooth = 60.0f;
+		float dt = dxManager->GetDeltaTime();
+		float fps = (dt > 0.0f) ? 1.0f / dt : 0.0f;
+		// 指数移動平均で平滑化（α=0.1）
+		fpsSmooth += (fps - fpsSmooth) * 0.1f;
+
+		ImGui::Begin("------debug info------");
+		ImGui::Text("F1  : Hide this");
+		ImGui::Text("F3  : Toggle Camera Mode");
+		ImGui::Text("F12 : Toggle Fullscreen");
+		ImGui::Text("DeltaTime: %.3f ms", dxManager->GetDeltaTime() * 1000.0f);
+		ImGui::Text("FPS: %.1f ", 1.0f / dxManager->GetDeltaTime());
+		ImGui::End();
+	}
 }
 void Engine::EndFrame()
 {
-	if (!debugCamera) cameraController->Draw();
-	else debugCameraController->Draw();
+	if (!debugCamera) cameraController->Draw(debugCamera);
+	else debugCameraController->Draw(debugCamera);
 	ImGui::Render();
 
 	inputManager_->EndFrame();
@@ -827,4 +854,9 @@ std::vector<AABB>  Engine::CreateAABB(const Transforms& transforms, uint32_t obj
 void Engine::toggleWireframeMode()
 {
 	drawSystem->toggleWireframeMode();
+}
+
+void Engine::ToggleCameraMode()
+{
+	debugCamera = !debugCamera;
 }

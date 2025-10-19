@@ -249,6 +249,9 @@
     <ClCompile Include="include\application\Phase\GameScenePhase\GameScenePhase.cpp">
       <Filter>application\GameManeger\Phase\GameScenePhase</Filter>
     </ClCompile>
+    <ClCompile Include="include\engine\FixFPS\FixFPS.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="externals\imgui\imconfig.h">
@@ -367,6 +370,9 @@
     </ClInclude>
     <ClInclude Include="include\application\Phase\GameScenePhase\GameScenePhase.h">
       <Filter>application\GameManeger\Phase\GameScenePhase</Filter>
+    </ClInclude>
+    <ClInclude Include="include\engine\FixFPS\FixFPS.h">
+      <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

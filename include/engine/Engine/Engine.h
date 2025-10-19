@@ -83,6 +83,8 @@ public:
 
 	// フルスクリーン切り替え
 	void ToggleFullscreen();
+	// カメラモード切り替え
+	void ToggleCameraMode();
 
 	// AABBの作成
 	std::vector<AABB>  CreateAABB(const Transforms& transforms, uint32_t objectNumber);
@@ -93,6 +95,8 @@ public:
 private:
 	// カメラ更新
 	void UpdateCamera();
+	void UpdataDebugInfo();
+	bool isDebugInfo = true;
 
 	// ウィンドウ関連
 	WindowManager* windowManager = nullptr;

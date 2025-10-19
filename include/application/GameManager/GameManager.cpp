@@ -15,7 +15,6 @@ GameManager::GameManager()
 
 GameManager::~GameManager()
 {
-
 }
 
 void GameManager::Update()
