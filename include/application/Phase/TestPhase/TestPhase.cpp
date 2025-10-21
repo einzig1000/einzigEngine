@@ -82,7 +82,7 @@ void TestPhase::Update()
 void TestPhase::Draw()
 {
 	model_.Draw();
-	//model_.DrawAABB();
+	model_.DrawAABB();
 	model_.DrawImGui();
 
 	sprite_.Draw();

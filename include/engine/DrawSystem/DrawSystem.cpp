@@ -720,8 +720,8 @@ void DrawSystem::DrawLine(RenderData_Line& renderData)
 				{
 					float t = static_cast<float>(j) / static_cast<float>(subdivision);
 					Vector3 point =
-						(p0 * std::pow(1.0f - t, 3)) +
-						(p1 * (3.0f * std::pow(1.0f - t, 2) * t)) +
+						(p0 * std::powf(1.0f - t, 3)) +
+						(p1 * (3.0f * std::powf(1.0f - t, 2) * t)) +
 						(p2 * (3.0f * (1.0f - t) * t * t)) +
 						(p3 * (t * t * t));
 					points.push_back(point);
@@ -752,41 +752,6 @@ void DrawSystem::DrawLine(RenderData_Line& renderData)
 		}
 		break;
 	}
-	//case LineType::SplineCurve:
-	//{
-	//	// スプライン曲線の補完点を計算
-	//	if (mainPoints.size() >= 3)
-	//	{
-	//		for (size_t i = 0; i < mainPoints.size() - 1; ++i)
-	//		{
-	//			Vector3 p0 = (i == 1) ? mainPoints[i] : mainPoints[i - 1];
-	//			Vector3 p1 = mainPoints[i];
-	//			Vector3 p2 = mainPoints[i + 1];
-	//			Vector3 p3 = (i + 2 < mainPoints.size()) ? mainPoints[i + 2] : mainPoints[i + 1];
-
-	//			if (i == 1)
-	//			{
-	//				points.push_back(p1); // 最初だけ始点を追加
-	//			}
-	//			for (int j = 1; j <= subdivision; ++j)
-	//			{
-	//				float t = static_cast<float>(j) / static_cast<float>(subdivision);
-	//				Vector3 point = (((p1 * 2.0f) +
-	//					(-p0 + p2) * t +
-	//					((p0 * 2.0f) - (p1 * 5.0f) + (p2 * 4.0f) - p3) * t * t +
-	//					(-p0 + (p1 * 3.0f) - (p2 * 3.0f) + p3) * t * t * t)) * 0.5f;
-	//				points.push_back(point);
-	//			}
-	//		}
-	//	}
-	//	else
-	//	{
-	//		points = mainPoints;
-	//		Log("DrawLine制御点不足  ID:%d  name:%s", renderData.ID, renderData.name);
-	//		return;
-	//	}
-	//	break;
-	//}
 	case LineType::SplineCurve:
 	{
 		if (mainPoints.size() >= 3)
