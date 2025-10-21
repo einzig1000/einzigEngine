@@ -19,8 +19,20 @@ TextureManager::~TextureManager()
 
 uint32_t TextureManager::LoadTexture(const std::string& filePath, ID3D12GraphicsCommandList* commandList, DescriptorHeapManager* descriptorHeap, ID3D12Device* device)
 {
+    auto exists = std::find_if(
+        textures_.begin(), textures_.end(),
+        [&filePath](const TextureData& tex) { return tex.filePath == filePath; }
+	);
+    if (exists != textures_.end())
+    {
+        return exists->number;
+	}
+
     // ボックスを作成
     TextureData text;
+
+	// ファイルパスを保存
+    text.filePath = filePath;
 
     // テクスチャファイルを読んでプログラムを扱えるようにする
     DirectX::ScratchImage image{};

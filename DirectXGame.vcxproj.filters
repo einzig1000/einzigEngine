@@ -130,6 +130,9 @@
     <Filter Include="application\GameManeger\Phase\GameScenePhase">
       <UniqueIdentifier>{187336b4-48e9-448a-a699-e7a55fb56ae1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="engine\DrawSystem\RenderDataClass">
+      <UniqueIdentifier>{7d8d53d3-04c0-4caa-ac10-735e5054f1f5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -252,6 +255,9 @@
     <ClCompile Include="include\engine\FixFPS\FixFPS.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="RenderData.cpp">
+      <Filter>engine\DrawSystem\RenderDataClass</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="externals\imgui\imconfig.h">
@@ -373,6 +379,9 @@
     </ClInclude>
     <ClInclude Include="include\engine\FixFPS\FixFPS.h">
       <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderData.h">
+      <Filter>engine\DrawSystem\RenderDataClass</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

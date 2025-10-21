@@ -11,45 +11,56 @@ ModelManager::~ModelManager()
 {}
 
 
-uint32_t ModelManager::LoadModel(const std::string & directoryPath, const std::string & filename, ID3D12Device* device)
+uint32_t ModelManager::LoadModel(const std::string& directoryPath, const std::string& filename, ID3D12Device* device)
 {
-	// ボックスを作成
-	Object3D obj;
-	// モデルデータ
-	obj.modelData = LoadModelFile(directoryPath, filename);
-	// 変換行列
-	obj.transform = { {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f} };
-	// AABB .obj → .csv へ拡張子を変換して渡す
-	std::string csvFilename = filename;
-	size_t dotPos = csvFilename.rfind('.');
-	if (dotPos != std::string::npos)
-		csvFilename.replace(dotPos, csvFilename.length() - dotPos, ".csv");
-	else
-		csvFilename += ".csv";
-	csvFilename = directoryPath + csvFilename;
-	obj.aabb = LoadAABB(csvFilename, obj.modelData);
-	// 識別ナンバー
-	obj.number = static_cast<uint32_t>(objects.size());
-	// ファイルパス
-	obj.filePath = directoryPath + "/" + filename;
+    auto path = directoryPath + "/" + filename;
 
-	// まず空のObject3Dをvectorに追加し、参照を取得
-	objects.push_back(obj);
-	Object3D& ref = objects.back();
+    auto exists = std::find_if(
+        objects.begin(), objects.end(),
+        [&path](const Object3D& model) { return model.filePath == path; }
+    );
+    if (exists != objects.end())
+    {
+        return exists->number;
+    }
 
-	// 頂点バッファ作成
-	ref.vertexBufferSize = sizeof(VertexData) * UINT(ref.modelData.vertices.size());
-	ref.vertexBuffer = CreateBufferResource(device, ref.vertexBufferSize);
-	VertexData* vData = nullptr;
-	ref.vertexBuffer->Map(0, nullptr, reinterpret_cast<void**>(&vData));
-	std::memcpy(vData, ref.modelData.vertices.data(), ref.vertexBufferSize);
-	ref.vertexBuffer->Unmap(0, nullptr);
+    // ボックスを作成
+    Object3D obj;
+    // モデルデータ
+    obj.modelData = LoadModelFile(directoryPath, filename);
+    // 変換行列
+    obj.transform = { {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f} };
+    // AABB .obj → .csv へ拡張子を変換して渡す
+    std::string csvFilename = filename;
+    size_t dotPos = csvFilename.rfind('.');
+    if (dotPos != std::string::npos)
+        csvFilename.replace(dotPos, csvFilename.length() - dotPos, ".csv");
+    else
+        csvFilename += ".csv";
+    csvFilename = directoryPath + csvFilename;
+    obj.aabb = LoadAABB(csvFilename, obj.modelData);
+    // 識別ナンバー
+    obj.number = static_cast<uint32_t>(objects.size());
+    // ファイルパス
+    obj.filePath = path;
 
-	ref.vertexBufferView.BufferLocation = ref.vertexBuffer->GetGPUVirtualAddress();
-	ref.vertexBufferView.SizeInBytes = static_cast<UINT>(ref.vertexBufferSize);
-	ref.vertexBufferView.StrideInBytes = sizeof(VertexData);
+    // まず空のObject3Dをvectorに追加し、参照を取得
+    objects.push_back(obj);
+    Object3D& ref = objects.back();
 
-	return ref.number;
+    // 頂点バッファ作成
+    ref.vertexBufferSize = sizeof(VertexData) * UINT(ref.modelData.vertices.size());
+    ref.vertexBuffer = CreateBufferResource(device, ref.vertexBufferSize);
+    VertexData* vData = nullptr;
+    ref.vertexBuffer->Map(0, nullptr, reinterpret_cast<void**>(&vData));
+    std::memcpy(vData, ref.modelData.vertices.data(), ref.vertexBufferSize);
+    ref.vertexBuffer->Unmap(0, nullptr);
+
+    ref.vertexBufferView.BufferLocation = ref.vertexBuffer->GetGPUVirtualAddress();
+    ref.vertexBufferView.SizeInBytes = static_cast<UINT>(ref.vertexBufferSize);
+    ref.vertexBufferView.StrideInBytes = sizeof(VertexData);
+
+    return ref.number;
 }
 
 Object3D* ModelManager::GetModel(uint32_t modelID)

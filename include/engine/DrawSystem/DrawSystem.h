@@ -11,13 +11,12 @@ public:
 	~DrawSystem();
 
 	void BeginFrame(Matrix4x4& viewProjectionMatrix);
-	void Resize();
 
-	void DrawModel(Game::RenderData_Model& renderData);
-	void DrawTriangle(Game::RenderData_Triangle& renderData);
-	void DrawSprite(Game::RenderData_Sprite& renderData);
+	void DrawModel(RenderData_Model& renderData);
+	void DrawTriangle(RenderData_Triangle& renderData);
+	void DrawSprite(RenderData_Sprite& renderData);
 	void DrawParticle(Game::RenderData_Particle& renderData);
-	void DrawLine(const Vector3& start, const Vector3& end, const uint32_t& materialColor);
+	void DrawLine(RenderData_Line& renderData);
 
 	void SetLightColor(const Vector4 color) { directionalLightData_->color = color; }
 	void SetLightDirection(const Vector3 direction) { directionalLightData_->direction = direction; }
@@ -87,6 +86,9 @@ private:
 	D3D12_GPU_DESCRIPTOR_HANDLE instancingSrvHandleGPU_;
 
 
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> indexResource;
+	D3D12_INDEX_BUFFER_VIEW indexBufferView;
 
 };
 
