@@ -154,20 +154,6 @@ uint32_t ConvertVector4ToUint(Vector4 color);
 
 
 
-
-
-
-
-
-
-
-/// <summary>
-/// 球体の頂点データを生成する関数
-/// </summary>
-/// <param name="vertexData">頂点データを格納する配列</param>
-/// <param name="kSubdivision">球体の分割数</param>
-void CreateSphere(VertexData* vertexData, uint32_t kSubdivision);
-
 /// <summary>
 /// UTF-8 文字列をワイド文字列 (UTF-16) に変換する関数
 /// </summary>
@@ -181,6 +167,20 @@ std::wstring ConvertString(const std::string& str);
 /// <param name="str">変換するワイド文字列</param>
 /// <returns>変換された UTF-8 文字列</returns>
 std::string ConvertString(const std::wstring& str);
+
+
+
+
+
+
+
+
+/// <summary>
+/// 球体の頂点データを生成する関数
+/// </summary>
+/// <param name="vertexData">頂点データを格納する配列</param>
+/// <param name="kSubdivision">球体の分割数</param>
+void CreateSphere(VertexData* vertexData, uint32_t kSubdivision);
 
 /// <summary>
 /// D3D12_RESOURCE_STATES を文字列に変換する関数

@@ -772,6 +772,12 @@ struct DrawParticleOptions
     bool toCamera = false;
 };
 
+enum class LineType
+{
+    Line,
+    BezierCurve,
+    SplineCurve,
+};
 
 enum class EaseType
 {
@@ -820,3 +826,4 @@ struct ParticleInf
 //    // 小さくなっていく
 //    ToSmall,
 //};
+

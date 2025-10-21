@@ -13,8 +13,13 @@ public:
 	void Draw();
 
 private:
+	RenderData_Model model_;
 	Game::RenderData_Particle particle_;
-	Game::RenderData_Model model_;
+	RenderData_Sprite sprite_;
+	RenderData_Triangle triangle_;
+	RenderData_Line line_;
+	RenderData_Line line2_;
+	RenderData_Line line3_;
 
 	int frame_;
 

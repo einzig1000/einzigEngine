@@ -11,6 +11,7 @@
 #include "DirectX/DirectXManager.h"
 #include "Engine/Game.h"
 #include "Resource/Texture/TextureManager.h"
+#include "RenderData.h"
 
 #include <DirectXMath.h>
 #include <filesystem>
@@ -70,24 +71,6 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 		dxManager->GetDescriptorHeapManager()->GetGPUHandleAt(slot)                     // ImGuiフォントSRV用のGPUハンドル
 	);
 
-	// インデックスリソース
-	indexResource = CreateBufferResource(dxManager->GetDevice(), sizeof(uint32_t) * 6);
-	uint32_t* indexData = nullptr;
-	indexResource->Map(0, nullptr, reinterpret_cast<void**>(&indexData));
-	indexData[0] = 0;
-	indexData[1] = 1;
-	indexData[2] = 2;
-	indexData[3] = 1;
-	indexData[4] = 3;
-	indexData[5] = 2;
-	indexResource->Unmap(0, nullptr);
-
-	// リソースの先頭のアドレスから使う
-	indexBufferView.BufferLocation = indexResource->GetGPUVirtualAddress();
-	// 仕様するリソースのサイズはインデックス６つ分のサイズ
-	indexBufferView.SizeInBytes = sizeof(uint32_t) * 6;
-	// インデックスはuint32_tとする
-	indexBufferView.Format = DXGI_FORMAT_R32_UINT;
 
 
 	inputManager_->GetMouseController()->wheelDelta = 0;
@@ -149,7 +132,7 @@ void Engine::UpdateCamera()
 	{
 		if (Game::GetMousePress(0) && !GetMousePrePress(0))
 		{
-			for (auto& rd : Game::GetModelList())
+			for (auto& rd : RenderData_Model::renderModels)
 			{
 				if (rd->isCollisionMouseRay == 0)
 				{
@@ -208,7 +191,7 @@ void Engine::UpdateTransforms()
 
 #pragma region モデルリスト取得
 
-	const auto& modelList = Game::GetModelList();
+	const auto& modelList = RenderData_Model::renderModels;
 
 #pragma endregion
 
@@ -228,7 +211,7 @@ void Engine::UpdateTransforms()
 	// マウスレイ取得
 	const Ray mouseRay = inputManager_->GetMouseController()->GetMouseRay();
 	// モデルと衝突までの距離セット構造体
-	struct HitInfo { Game::RenderData_Model* rdm; float distance; };
+	struct HitInfo { RenderData_Model* rdm; float distance; };
 	// のリスト
 	std::vector<HitInfo> hits;
 	// のリサイズ(リサイズではない)
@@ -330,7 +313,7 @@ TextureData* Engine::GetTexture(uint32_t textureNumber)
 }
 
 // 描画
-void Engine::DrawModel(Game::RenderData_Model& renderData)
+void Engine::DrawModel(RenderData_Model& renderData)
 {
 	drawSystem->DrawModel(renderData);
 }
@@ -451,19 +434,19 @@ void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint
 	//vertexDataUsed += kSumVertex;
 }
 
-void Engine::DrawTriangle(Game::RenderData_Triangle& renderData)
+void Engine::DrawTriangle(RenderData_Triangle& renderData)
 {
 	drawSystem->DrawTriangle(renderData);
 }
 
-void Engine::DrawSprite(Game::RenderData_Sprite& renderData)
+void Engine::DrawSprite(RenderData_Sprite& renderData)
 {
 	drawSystem->DrawSprite(renderData);
 }
 
-void Engine::DrawLine(const Vector3& start, const Vector3& end, const uint32_t& materialColor)
+void Engine::DrawLine(RenderData_Line& renderData)
 {
-	drawSystem->DrawLine(start, end, materialColor);
+	drawSystem->DrawLine(renderData);
 }
 
 void Engine::DrawParticle(Game::RenderData_Particle& renderData)
@@ -783,7 +766,7 @@ void Engine::ToggleFullscreen()
 	dxManager->Resize();
 
 	// 描画システムのリサイズ処理
-	drawSystem->Resize();
+	//drawSystem->Resize();
 
 	// カメラのアスペクト比を更新
 	cameraController->Resize();

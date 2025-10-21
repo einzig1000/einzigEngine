@@ -1,12 +1,17 @@
 #include "DrawSystem.h"
 #include "DirectX/DirectXManager.h"
 #include "Window/WindowManager.h"
+#include "Utilities/functions.h"
 
 DrawSystem::DrawSystem(DirectXManager* dxManager)
 	:dxManager_(dxManager)
 {
-	// ウィンドウサイズ設定
-	Resize();
+	// 正射影行列
+	orthoProjectionMatrix_ = Matrix4x4::MakeOrthographicMatrix(
+		0.0f, 0.0f,
+		static_cast<float>(WindowManager::winWidth_),
+		static_cast<float>(WindowManager::winHeight_),
+		0.0f, 100.0f);
 
 	// カメラマトリックス
 	viewProjectionMatrix_ = Matrix4x4::MakeIdentity4x4();
@@ -45,6 +50,26 @@ DrawSystem::DrawSystem(DirectXManager* dxManager)
 
 	instancingSrvIndex_ = dxManager_->GetDescriptorHeapManager()->AllocateSRVSlot();
 	EnsureInstanceBuffer(kNumInstance_);
+
+
+	// インデックスリソース
+	indexResource = CreateBufferResource(dxManager->GetDevice(), sizeof(uint32_t) * 6);
+	uint32_t* indexData = nullptr;
+	indexResource->Map(0, nullptr, reinterpret_cast<void**>(&indexData));
+	indexData[0] = 0;
+	indexData[1] = 1;
+	indexData[2] = 2;
+	indexData[3] = 1;
+	indexData[4] = 3;
+	indexData[5] = 2;
+	indexResource->Unmap(0, nullptr);
+
+	// リソースの先頭のアドレスから使う
+	indexBufferView.BufferLocation = indexResource->GetGPUVirtualAddress();
+	// 仕様するリソースのサイズはインデックス６つ分のサイズ
+	indexBufferView.SizeInBytes = sizeof(uint32_t) * 6;
+	// インデックスはuint32_tとする
+	indexBufferView.Format = DXGI_FORMAT_R32_UINT;
 }
 
 DrawSystem::~DrawSystem()
@@ -96,16 +121,6 @@ void DrawSystem::BeginFrame(Matrix4x4& viewProjectionMatrix)
 	// ライトの向きを正規化
 	directionalLightData_->direction = (directionalLightData_->direction.Normalized());
 
-}
-
-void DrawSystem::Resize()
-{
-	// 正射影行列の更新
-	orthoProjectionMatrix_ = Matrix4x4::MakeOrthographicMatrix(
-		0.0f, 0.0f,
-		static_cast<float>(WindowManager::winWidth_),
-		static_cast<float>(WindowManager::winHeight_),
-		0.0f, 100.0f);
 }
 
 void DrawSystem::DrawParticle(Game::RenderData_Particle& renderData)
@@ -174,7 +189,7 @@ void DrawSystem::DrawParticle(Game::RenderData_Particle& renderData)
 	drawCallIndex_++;
 }
 
-void DrawSystem::DrawModel(Game::RenderData_Model& renderData)
+void DrawSystem::DrawModel(RenderData_Model& renderData)
 {
 	// 画面内か判定
 	if (!renderData.inPicture)return;
@@ -236,7 +251,7 @@ void DrawSystem::DrawModel(Game::RenderData_Model& renderData)
 	drawCallIndex_++;
 }
 
-void DrawSystem::DrawTriangle(Game::RenderData_Triangle& renderData)
+void DrawSystem::DrawTriangle(RenderData_Triangle& renderData)
 {
 	// 描画回数上限
 	if (drawCallIndex_ >= kMaxDrawCallPerFrame_) return;
@@ -280,7 +295,7 @@ void DrawSystem::DrawTriangle(Game::RenderData_Triangle& renderData)
 	vertexData_[vertexDataUsed_ + 2].normal = { 0.0f, 0.0f, -1.0f };
 
 	// WVP行列
-	Matrix4x4 world = Matrix4x4::MakeAffineMatrix(renderData.transform.scale, renderData.transform.rotate, renderData.transform.translate);
+	Matrix4x4 world = Matrix4x4::MakeAffineMatrix(renderData.transforms.scale, renderData.transforms.rotate, renderData.transforms.translate);
 	Matrix4x4 wvpMatrix = world * viewProjectionMatrix_;
 
 	wvpData_[drawCallIndex_]->World = world;
@@ -335,7 +350,7 @@ void DrawSystem::DrawTriangle(Game::RenderData_Triangle& renderData)
 	vertexDataUsed_ += kSumVertex;
 }
 
-void DrawSystem::DrawSprite(Game::RenderData_Sprite& renderData)
+void DrawSystem::DrawSprite(RenderData_Sprite& renderData)
 {
 	// 描画回数上限
 	if (drawCallIndex_ >= kMaxDrawCallPerFrame_) return;
@@ -609,9 +624,17 @@ void DrawSystem::DrawSprite(Game::RenderData_Sprite& renderData)
 	float right = center.x + halfWidth;
 	float top = center.y - halfHeight;
 	float bottom = center.y + halfHeight;
+	
+	left *= float(WindowManager::winWidth_) / 1280.0f;
+	right *= float(WindowManager::winWidth_) / 1280.0f;
+	top *= float(WindowManager::winHeight_) / 720.0f;
+	bottom *= float(WindowManager::winHeight_) / 720.0f;
 
 	// マウス座標取得
 	Vector2 mousePos = Game::GetMousePosition();
+	// マウス座標は仮想座標へ変換してから衝突判定に使う。
+	float windowWidth = float(WindowManager::winWidth_);
+	float windowHeight = float(WindowManager::winHeight_);
 
 	// 当たり判定
 	renderData.isCollisionMouseRay = (mousePos.x >= left && mousePos.x <= right && mousePos.y >= top && mousePos.y <= bottom);
@@ -629,7 +652,7 @@ void DrawSystem::DrawSprite(Game::RenderData_Sprite& renderData)
 
 	// Spriteの描画
 	dxManager_->GetCommandContextManager()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
-	//dxManager_->GetCommandContextManager()->GetCommandList()->IASetIndexBuffer(&indexBufferView_);
+	dxManager_->GetCommandContextManager()->GetCommandList()->IASetIndexBuffer(&indexBufferView);
 	// 形状を設定
 	dxManager_->GetCommandContextManager()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	// CBVを設定する マテリアル用のCBufferの場所を設定
@@ -648,38 +671,195 @@ void DrawSystem::DrawSprite(Game::RenderData_Sprite& renderData)
 	vertexDataUsed_ += kSumVertex;
 }
 
-// 引数にstd::vector<Vector3>とベジエとか直線とか選択できるenumを渡して複数の線を描画できるようにするのもありかも
-void DrawSystem::DrawLine(const Vector3& start, const Vector3& end, const uint32_t& materialColor)
+void DrawSystem::DrawLine(RenderData_Line& renderData)
 {
 	if (drawCallIndex_ >= kMaxDrawCallPerFrame_) return;
+
+	// 2点未満
+	if (renderData.points.size() < 2) return;
 
 	// RootSignatureとPSOを設定 - Line
 	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootSignature(dxManager_->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
 	dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetPipelineState(BlendMode::kBlendModeNormal, D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE)); // Line用PSOを設定
 
+	// 指定された点
+	std::vector<Vector3> mainPoints;
+	for (size_t i = 1; i < renderData.points.size(); ++i)
+	{
+		mainPoints.push_back(renderData.points[i]);
+	}
+	// 曲線だった場合の補完点も含めた点リスト(points同士を直線で結ぶ)
+	std::vector<Vector3> points;
+
+	// 補完の分割数
+	const int subdivision = my_max(uint32_t(1), renderData.kSubdivision);
+
+	switch (renderData.lineType)
+	{
+	case LineType::Line:
+	{
+		points = mainPoints;
+		break;
+	}
+	case LineType::BezierCurve:
+	{
+		if (mainPoints.size() >= 4)
+		{
+			for (size_t i = 0; i + 3 < mainPoints.size(); i += 3)
+			{
+				const Vector3& p0 = mainPoints[i];
+				const Vector3& p1 = mainPoints[i + 1];
+				const Vector3& p2 = mainPoints[i + 2];
+				const Vector3& p3 = mainPoints[i + 3];
+
+				if (i == 0)
+				{
+					points.push_back(p0); // 最初だけ始点を追加
+				}
+				for (int j = 0; j <= subdivision; ++j)
+				{
+					float t = static_cast<float>(j) / static_cast<float>(subdivision);
+					Vector3 point =
+						(p0 * std::pow(1.0f - t, 3)) +
+						(p1 * (3.0f * std::pow(1.0f - t, 2) * t)) +
+						(p2 * (3.0f * (1.0f - t) * t * t)) +
+						(p3 * (t * t * t));
+					points.push_back(point);
+				}
+			}
+		}
+		else if (mainPoints.size() == 3)
+		{
+			const Vector3& p0 = mainPoints[0];
+			const Vector3& p1 = mainPoints[1];
+			const Vector3& p2 = mainPoints[2];
+
+			for (int j = 0; j <= subdivision; ++j)
+			{
+				float t = static_cast<float>(j) / static_cast<float>(subdivision);
+				Vector3 a01 = p0 + (p1 - p0) * t;
+				Vector3 a12 = p1 + (p2 - p1) * t;
+				Vector3 point = a01 + (a12 - a01) * t;
+
+				points.push_back(point);
+			}
+		}
+		else
+		{
+			points = mainPoints;
+			Log("DrawLine制御点不足  ID:%d  name:%s", renderData.ID, renderData.name);
+			return;
+		}
+		break;
+	}
+	//case LineType::SplineCurve:
+	//{
+	//	// スプライン曲線の補完点を計算
+	//	if (mainPoints.size() >= 3)
+	//	{
+	//		for (size_t i = 0; i < mainPoints.size() - 1; ++i)
+	//		{
+	//			Vector3 p0 = (i == 1) ? mainPoints[i] : mainPoints[i - 1];
+	//			Vector3 p1 = mainPoints[i];
+	//			Vector3 p2 = mainPoints[i + 1];
+	//			Vector3 p3 = (i + 2 < mainPoints.size()) ? mainPoints[i + 2] : mainPoints[i + 1];
+
+	//			if (i == 1)
+	//			{
+	//				points.push_back(p1); // 最初だけ始点を追加
+	//			}
+	//			for (int j = 1; j <= subdivision; ++j)
+	//			{
+	//				float t = static_cast<float>(j) / static_cast<float>(subdivision);
+	//				Vector3 point = (((p1 * 2.0f) +
+	//					(-p0 + p2) * t +
+	//					((p0 * 2.0f) - (p1 * 5.0f) + (p2 * 4.0f) - p3) * t * t +
+	//					(-p0 + (p1 * 3.0f) - (p2 * 3.0f) + p3) * t * t * t)) * 0.5f;
+	//				points.push_back(point);
+	//			}
+	//		}
+	//	}
+	//	else
+	//	{
+	//		points = mainPoints;
+	//		Log("DrawLine制御点不足  ID:%d  name:%s", renderData.ID, renderData.name);
+	//		return;
+	//	}
+	//	break;
+	//}
+	case LineType::SplineCurve:
+	{
+		if (mainPoints.size() >= 3)
+		{
+			for (size_t i = 0; i < mainPoints.size() - 1; ++i)
+			{
+				const Vector3& p1 = mainPoints[i];
+				const Vector3& p2 = mainPoints[i + 1];
+				const Vector3& p0 = (i == 0) ? p1 : mainPoints[i - 1];
+				const Vector3& p3 = (i + 2 < mainPoints.size()) ? mainPoints[i + 2] : p2;
+
+				if (i == 0)
+				{
+					points.push_back(p1); // 最初だけ始点を追加
+				}
+
+				for (int j = 1; j <= subdivision; ++j)
+				{
+					float t = static_cast<float>(j) / static_cast<float>(subdivision);
+					Vector3 point =
+						(((p1 * 2.0f) +
+							(-p0 + p2) * t +
+							((p0 * 2.0f) - (p1 * 5.0f) + (p2 * 4.0f) - p3) * t * t +
+							(-p0 + (p1 * 3.0f) - (p2 * 3.0f) + p3) * t * t * t)) * 0.5f;
+					points.push_back(point);
+				}
+			}
+		}
+		else
+		{
+			points = mainPoints;
+			Log("DrawLine制御点不足  ID:%d  name:%s", renderData.ID, renderData.name);
+			return;
+		}
+		break;
+	}
+
+	default:
+	{
+		break;
+	}
+	}
+
+	// [p0,p1,p1,p2,p2,p3,...] の形に展開
+	std::vector<Vector3> out;
+
+	out.reserve((points.size() - 1) * 2);
+	for (size_t i = 0; i + 1 < points.size(); ++i)
+	{
+		out.push_back(points[i]);
+		out.push_back(points[i + 1]);
+	}
+
+
 	// 頂点数の取得
-	const uint32_t kSumVertex = 2;
+	const uint32_t kSumVertex = static_cast<uint32_t>(out.size());
 	// 必要な頂点数分配列を拡張
 	if (vertexDataUsed_ + kSumVertex > vertexData_.size())
 	{
 		vertexData_.resize(vertexDataUsed_ + kSumVertex);
 	}
 
-	// 始点
-	vertexData_[vertexDataUsed_ + 0].position = { start.x, start.y, start.z, 1.0f };
-
-	// 終点
-	vertexData_[vertexDataUsed_ + 1].position = { end.x, end.y, end.z, 1.0f };
+	for (size_t i = 0; i < out.size(); i++)
+	{
+		vertexData_[vertexDataUsed_ + i].position = { out[i].x, out[i].y, out[i].z, 1.0f };
+	}
 
 	// WVP行列
-	Matrix4x4 world = Matrix4x4::MakeIdentity4x4();
-	Matrix4x4 wvpMatrix = viewProjectionMatrix_;
-
-	wvpData_[drawCallIndex_]->World = world;
-	wvpData_[drawCallIndex_]->WVP = wvpMatrix;
+	wvpData_[drawCallIndex_]->World = Matrix4x4::MakeIdentity4x4();
+	wvpData_[drawCallIndex_]->WVP = viewProjectionMatrix_;
 
 	// マテリアル定数バッファの更新
-	Vector4 color = ConvertUintToVector4(materialColor);
+	Vector4 color = ConvertUintToVector4(renderData.color);
 	materialData_[drawCallIndex_]->color = color;
 	materialData_[drawCallIndex_]->enableLighting = 0;
 	materialData_[drawCallIndex_]->uvTransform = Matrix4x4::MakeIdentity4x4(); // 線にUV変換いらない
@@ -710,7 +890,7 @@ void DrawSystem::DrawLine(const Vector3& start, const Vector3& end, const uint32
 	// CBVを設定する wvp用のCBufferの場所を設定
 	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources_[drawCallIndex_]->GetGPUVirtualAddress()); // b0にバインド
 	// 描画コマンドの発行
-	dxManager_->GetCommandContextManager()->GetCommandList()->DrawInstanced(2, 1, 0, 0);
+	dxManager_->GetCommandContextManager()->GetCommandList()->DrawInstanced(kSumVertex, 1, 0, 0);
 
 
 	drawCallIndex_++;

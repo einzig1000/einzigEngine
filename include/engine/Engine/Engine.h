@@ -29,11 +29,12 @@ public:
 	TextureData* GetTexture(uint32_t textureNumber);
 
 	// 描画
-	void DrawModel(Game::RenderData_Model& renderData);
-	void DrawTriangle(Game::RenderData_Triangle& renderData);
-	void DrawSprite(Game::RenderData_Sprite& renderData);
+	void DrawModel(RenderData_Model& renderData);
+	void DrawTriangle(RenderData_Triangle& renderData);
+	void DrawSprite(RenderData_Sprite& renderData);
 	void DrawParticle(Game::RenderData_Particle& renderData);
-	void DrawLine(const Vector3& start, const Vector3& end, const uint32_t& materialColor);
+	void DrawLine(RenderData_Line& renderData);
+	//void DrawLine(const Vector3& start, const Vector3& end, const uint32_t& materialColor);
 	void DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
 
 	// AABBが視錐台内にあるか判定する関数
@@ -111,8 +112,5 @@ private:
 	CameraController* debugCameraController = nullptr;
 	bool debugCamera = false;
 
-
-	Microsoft::WRL::ComPtr<ID3D12Resource> indexResource;
-	D3D12_INDEX_BUFFER_VIEW indexBufferView;
 
 };
