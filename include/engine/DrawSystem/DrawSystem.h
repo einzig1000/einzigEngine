@@ -11,11 +11,13 @@ public:
 	~DrawSystem();
 
 	void BeginFrame(Matrix4x4& viewProjectionMatrix);
+	void EndFrame();
+	void Update_ParticleInstanceData();
 
 	void DrawModel(RenderData_Model& renderData);
 	void DrawTriangle(RenderData_Triangle& renderData);
 	void DrawSprite(RenderData_Sprite& renderData);
-	void DrawParticle(Game::RenderData_Particle& renderData);
+	void DrawParticle(RenderData_Particle& renderData);
 	void DrawLine(RenderData_Line& renderData);
 
 	void SetLightColor(const Vector4 color) { directionalLightData_->color = color; }
@@ -31,9 +33,6 @@ private:
 
 	// 動的頂点バッファの確保
 	bool EnsureDynamicVB(size_t requiredVertexCount);
-
-	// インスタンシング用バッファの確保/拡張
-	bool EnsureInstanceBuffer(size_t requiredInstanceCount);
 
 	// DirectXマネージャー
 	DirectXManager* dxManager_ = nullptr;
@@ -56,8 +55,7 @@ private:
 	size_t drawCallIndex_ = 0;
 	// 1フレームに呼び出せる描画コールの最大数
 	size_t kMaxDrawCallPerFrame_ = 1024;
-	// 現フレームで描画されている頂点数(モデルは除く)
-	size_t vertexDataUsed_ = 0;
+
 
 	// 描画コールごとのデータ
 	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> materialResources_{};
@@ -67,6 +65,16 @@ private:
 	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> wvpResources_{};
 	// ワールドビュー射影行列の永続Mapポインタ
 	std::vector<TransformationMatrix*> wvpData_{};
+	// 現フレームで描画されている頂点数(モデルは除く)
+	size_t vertexDataUsed_ = 0;
+
+	// インスタンシング（構造化バッファ）
+	Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource_ = nullptr; // 単一の連続バッファ
+	ParticleInf* instancingMappedPtr_ = nullptr; // 先頭への永続Mapポインタ
+	size_t instancingDataUsed_ = 0;              // 現フレームで使用しているインスタンス数
+	uint32_t kMaxInstanceCount_ = 4096;          // 最大インスタンス数
+	uint32_t activeInstanceCount_ = 0;			 // 現在アクティブなインスタンス数
+
 
 	// 三角形
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource_ = nullptr;
@@ -74,14 +82,6 @@ private:
 	std::vector<VertexData> vertexData_{};
 	VertexData* vertexMappedPtr_ = nullptr; // 永続Mapポインタ
 
-
-	// インスタンシング（構造化バッファ or Uploadバッファ＋SRV）
-	Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource_ = nullptr;
-	// 
-	TransformationMatrix* instancingData_ = nullptr; // 永続Mapポインタ
-
-	uint32_t instancingCapacity_ = 0; // いま確保している最大インスタンス数
-	const uint32_t kNumInstance_ = 100;
 	D3D12_CPU_DESCRIPTOR_HANDLE instancingSrvHandleCPU_;
 	D3D12_GPU_DESCRIPTOR_HANDLE instancingSrvHandleGPU_;
 

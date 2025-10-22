@@ -245,7 +245,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="include\application\Phase\PhaseParent\PhaseParent.cpp" />
     <ClCompile Include="include\application\Phase\TestPhase\TestPhase.cpp" />
     <ClCompile Include="include\application\Phase\TitlePhase\TitlePhase.cpp" />
-    <ClCompile Include="RenderData.cpp" />
+    <ClCompile Include="include\engine\DrawSystem\RenderData\RenderData.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\engine\FixFPS\FixFPS.h" />
@@ -288,7 +288,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="include\application\Phase\PhaseParent\PhaseParent.h" />
     <ClInclude Include="include\application\Phase\TestPhase\TestPhase.h" />
     <ClInclude Include="include\application\Phase\TitlePhase\TitlePhase.h" />
-    <ClInclude Include="RenderData.h" />
+    <ClInclude Include="include\engine\DrawSystem\RenderData\RenderData.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

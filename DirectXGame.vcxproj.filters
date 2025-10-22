@@ -133,6 +133,9 @@
     <Filter Include="engine\DrawSystem\RenderDataClass">
       <UniqueIdentifier>{7d8d53d3-04c0-4caa-ac10-735e5054f1f5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="engine\FixFPS">
+      <UniqueIdentifier>{8ed84834-c43a-4dda-a3bf-3b95cd1b75fd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -252,11 +255,11 @@
     <ClCompile Include="include\application\Phase\GameScenePhase\GameScenePhase.cpp">
       <Filter>application\GameManeger\Phase\GameScenePhase</Filter>
     </ClCompile>
-    <ClCompile Include="include\engine\FixFPS\FixFPS.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderData.cpp">
+    <ClCompile Include="include\engine\DrawSystem\RenderData\RenderData.cpp">
       <Filter>engine\DrawSystem\RenderDataClass</Filter>
+    </ClCompile>
+    <ClCompile Include="include\engine\FixFPS\FixFPS.cpp">
+      <Filter>engine\FixFPS</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -377,11 +380,11 @@
     <ClInclude Include="include\application\Phase\GameScenePhase\GameScenePhase.h">
       <Filter>application\GameManeger\Phase\GameScenePhase</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\FixFPS\FixFPS.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="RenderData.h">
+    <ClInclude Include="include\engine\DrawSystem\RenderData\RenderData.h">
       <Filter>engine\DrawSystem\RenderDataClass</Filter>
+    </ClInclude>
+    <ClInclude Include="include\engine\FixFPS\FixFPS.h">
+      <Filter>engine\FixFPS</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

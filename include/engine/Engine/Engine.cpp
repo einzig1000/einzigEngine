@@ -11,7 +11,7 @@
 #include "DirectX/DirectXManager.h"
 #include "Engine/Game.h"
 #include "Resource/Texture/TextureManager.h"
-#include "RenderData.h"
+#include "DrawSystem/RenderData/RenderData.h"
 
 #include <DirectXMath.h>
 #include <filesystem>
@@ -113,7 +113,7 @@ void Engine::BeginFrame()
 	else drawSystem->BeginFrame(debugCameraController->viewProjectionMatrix);
 
 	// デバッグ情報更新
-	UpdataDebugInfo();
+	UpdateDebugInfo();
 
 	// インプット系を更新
 	inputManager_->Update();
@@ -142,7 +142,7 @@ void Engine::UpdateCamera()
 		}
 	}
 }
-void Engine::UpdataDebugInfo()
+void Engine::UpdateDebugInfo()
 {
 	if (GetHitKey::IsPressedDown(DIK_F1))
 	{
@@ -180,8 +180,13 @@ void Engine::EndFrame()
 	else debugCameraController->Draw(debugCamera);
 	ImGui::Render();
 
+	// パーティクル更新
+	drawSystem->EndFrame();
+
+	// インプット系終了処理
 	inputManager_->EndFrame();
 
+	// DirectX終了処理
 	dxManager->EndFrame();
 }
 
@@ -201,7 +206,7 @@ void Engine::UpdateTransforms()
 	std::vector<Object3D> objects = dxManager->GetResourceManager()->GetModelManager()->objects;
 	for (auto& rd : modelList)
 	{
-		rd->Updata(objects);
+		rd->Update(objects);
 	}
 
 #pragma endregion
@@ -449,7 +454,7 @@ void Engine::DrawLine(RenderData_Line& renderData)
 	drawSystem->DrawLine(renderData);
 }
 
-void Engine::DrawParticle(Game::RenderData_Particle& renderData)
+void Engine::DrawParticle(RenderData_Particle& renderData)
 {
 	drawSystem->DrawParticle(renderData);
 	//if (renderData.frame >= renderData.emissionDelay)

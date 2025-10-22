@@ -209,71 +209,10 @@ void PipelineStateManager::InitializeRootSignature_particle(ID3D12Device * devic
     }
     hr = device->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature_particle));
     assert(SUCCEEDED(hr));
-
-    //HRESULT hr;
-    //
-    //// DescriptorRange for SRV (t0)
-    //D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
-    //descriptorRange[0].BaseShaderRegister = 0; // t0 レジスタ
-    //descriptorRange[0].NumDescriptors = 1;
-    //descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-    //descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-    //
-    //D3D12_ROOT_PARAMETER rootParameters[4] = {};
-    //
-    //// ルートパラメータ0: Material (register b0)
-    //rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-    //rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-    //rootParameters[0].DescriptorTable.pDescriptorRanges = descriptorRange;
-    //rootParameters[0].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
-    //
-    //// ルートパラメータ1: TransformationMatrix (WVP, World) (register b1)
-    //rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-    //rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL; // VS, PS 両方からアクセス可能
-    //rootParameters[1].Descriptor.ShaderRegister = 1; // b1
-    //
-    //// ルートパラメータ2: Texture (SRV) Descriptor Table (register t0)
-    //rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-    //rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; // PSからのみアクセス
-    //rootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRange;
-    //rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
-    //
-    //
-    //D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};
-    //staticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-    //staticSamplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-    //staticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-    //staticSamplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-    //staticSamplers[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
-    //staticSamplers[0].ShaderRegister = 0; // s0 レジスタ
-    //staticSamplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-    //
-    //D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc{};
-    //rootSignatureDesc.pParameters = rootParameters;
-    //rootSignatureDesc.NumParameters = _countof(rootParameters);
-    //rootSignatureDesc.pStaticSamplers = staticSamplers;
-    //rootSignatureDesc.NumStaticSamplers = _countof(staticSamplers);
-    //rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-    //
-    //
-    //Microsoft::WRL::ComPtr<ID3DBlob> signatureBlob = nullptr;
-    //Microsoft::WRL::ComPtr<ID3DBlob> errorBlob = nullptr;
-    //hr = D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1_0, &signatureBlob, &errorBlob);
-    //if (FAILED(hr))
-    //{
-    //    if (errorBlob)
-    //    {
-    //        Log(reinterpret_cast<char*>(errorBlob->GetBufferPointer()));
-    //    }
-    //    assert(false);
-    //}
-    //hr = device->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature_particle));
-    //assert(SUCCEEDED(hr));
 }
 
 void PipelineStateManager::CreateAllPSOs(ID3D12Device* device)
 {
-
 #pragma region ブレンド設定の定義
  
     // 不透明
@@ -366,10 +305,23 @@ void PipelineStateManager::CreateAllPSOs(ID3D12Device* device)
 
 #pragma endregion
 
-#pragma region 事前コンパイル
+#pragma region 深度設定の定義
 
-    Microsoft::WRL::ComPtr<IDxcBlob> vsObj = GetOrCompileShader(L"resources/Shaders/Object3D.VS.hlsl", L"vs_6_0");
-    Microsoft::WRL::ComPtr<IDxcBlob> psObj = GetOrCompileShader(L"resources/Shaders/Object3D.PS.hlsl", L"ps_6_0");
+    // 深度設定
+    D3D12_DEPTH_STENCIL_DESC depthWriteDesc{};      // 通常
+    depthWriteDesc.DepthEnable = TRUE;
+    depthWriteDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+    depthWriteDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+
+    D3D12_DEPTH_STENCIL_DESC depthTestOnlyDesc= depthWriteDesc; // パーティクル
+    depthTestOnlyDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+
+#pragma endregion
+
+#pragma region シェーダーコンパイル
+
+    Microsoft::WRL::ComPtr<IDxcBlob> vsModel = GetOrCompileShader(L"resources/Shaders/Object3D.VS.hlsl", L"vs_6_0");
+    Microsoft::WRL::ComPtr<IDxcBlob> psModel = GetOrCompileShader(L"resources/Shaders/Object3D.PS.hlsl", L"ps_6_0");
     Microsoft::WRL::ComPtr<IDxcBlob> vsParticle = GetOrCompileShader(L"resources/Shaders/Particle.VS.hlsl", L"vs_6_0");
     Microsoft::WRL::ComPtr<IDxcBlob> psParticle = GetOrCompileShader(L"resources/Shaders/Particle.PS.hlsl", L"ps_6_0");
     Microsoft::WRL::ComPtr<IDxcBlob> vsLine = GetOrCompileShader(L"resources/Shaders/Line.VS.hlsl", L"vs_6_0");
@@ -398,32 +350,33 @@ void PipelineStateManager::CreateAllPSOs(ID3D12Device* device)
 
 #pragma endregion
 
+
 #pragma region PSOの生成
 
     // Object（三角形）: 同じVS/PSをブレンド違いで使い回す
-    trianglePSOs[BlendMode::kBlendModeNone] = CreatePipelineState(device, rootSignature_object.Get(), blendOpaqueDesc, rasterizerSolidDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, triangleInputElementDescs, _countof(triangleInputElementDescs), vsObj.Get(), psObj.Get());
-    trianglePSOs[BlendMode::kBlendModeNormal] = CreatePipelineState(device, rootSignature_object.Get(), blendTransparentDesc, rasterizerSolidDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, triangleInputElementDescs, _countof(triangleInputElementDescs), vsObj.Get(), psObj.Get());
-    trianglePSOs[BlendMode::kBlendModeAdd] = CreatePipelineState(device, rootSignature_object.Get(), blendAddDesc, rasterizerSolidDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, triangleInputElementDescs, _countof(triangleInputElementDescs), vsObj.Get(), psObj.Get());
-    trianglePSOs[BlendMode::kBlendModeSub] = CreatePipelineState(device, rootSignature_object.Get(), blendSubDesc, rasterizerSolidDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, triangleInputElementDescs, _countof(triangleInputElementDescs), vsObj.Get(), psObj.Get());
-    trianglePSOs[BlendMode::kBlendModeMul] = CreatePipelineState(device, rootSignature_object.Get(), blendMulDesc, rasterizerSolidDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, triangleInputElementDescs, _countof(triangleInputElementDescs), vsObj.Get(), psObj.Get());
-    trianglePSOs[BlendMode::kBlendModeScreen] = CreatePipelineState(device, rootSignature_object.Get(), blendScreenDesc, rasterizerSolidDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, triangleInputElementDescs, _countof(triangleInputElementDescs), vsObj.Get(), psObj.Get());
-    trianglePSOs[BlendMode::Wireframe] = CreatePipelineState(device, rootSignature_object.Get(), blendOpaqueDesc, rasterizerWireframeDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, triangleInputElementDescs, _countof(triangleInputElementDescs), vsObj.Get(), psObj.Get());
+    trianglePSOs[BlendMode::kBlendModeNone] = CreatePipelineState(device, rootSignature_object.Get(), blendOpaqueDesc, rasterizerSolidDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, triangleInputElementDescs, _countof(triangleInputElementDescs), vsModel.Get(), psModel.Get(), depthWriteDesc);
+    trianglePSOs[BlendMode::kBlendModeNormal] = CreatePipelineState(device, rootSignature_object.Get(), blendTransparentDesc, rasterizerSolidDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, triangleInputElementDescs, _countof(triangleInputElementDescs), vsModel.Get(), psModel.Get(), depthWriteDesc);
+    trianglePSOs[BlendMode::kBlendModeAdd] = CreatePipelineState(device, rootSignature_object.Get(), blendAddDesc, rasterizerSolidDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, triangleInputElementDescs, _countof(triangleInputElementDescs), vsModel.Get(), psModel.Get(), depthWriteDesc);
+    trianglePSOs[BlendMode::kBlendModeSub] = CreatePipelineState(device, rootSignature_object.Get(), blendSubDesc, rasterizerSolidDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, triangleInputElementDescs, _countof(triangleInputElementDescs), vsModel.Get(), psModel.Get(), depthWriteDesc);
+    trianglePSOs[BlendMode::kBlendModeMul] = CreatePipelineState(device, rootSignature_object.Get(), blendMulDesc, rasterizerSolidDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, triangleInputElementDescs, _countof(triangleInputElementDescs), vsModel.Get(), psModel.Get(), depthWriteDesc);
+    trianglePSOs[BlendMode::kBlendModeScreen] = CreatePipelineState(device, rootSignature_object.Get(), blendScreenDesc, rasterizerSolidDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, triangleInputElementDescs, _countof(triangleInputElementDescs), vsModel.Get(), psModel.Get(), depthWriteDesc);
+    trianglePSOs[BlendMode::Wireframe] = CreatePipelineState(device, rootSignature_object.Get(), blendOpaqueDesc, rasterizerWireframeDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, triangleInputElementDescs, _countof(triangleInputElementDescs), vsModel.Get(), psModel.Get(), depthWriteDesc);
 
     // Particle（三角形）
-    particlePSOs[BlendMode::kBlendModeNone] = CreatePipelineState(device, rootSignature_particle.Get(), blendOpaqueDesc, rasterizerSolidDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, particleInputElementDescs, _countof(particleInputElementDescs), vsParticle.Get(), psParticle.Get());
-    particlePSOs[BlendMode::kBlendModeNormal] = CreatePipelineState(device, rootSignature_particle.Get(), blendTransparentDesc, rasterizerSolidDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, particleInputElementDescs, _countof(particleInputElementDescs), vsParticle.Get(), psParticle.Get());
-    particlePSOs[BlendMode::kBlendModeAdd] = CreatePipelineState(device, rootSignature_particle.Get(), blendAddDesc, rasterizerSolidDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, particleInputElementDescs, _countof(particleInputElementDescs), vsParticle.Get(), psParticle.Get());
-    particlePSOs[BlendMode::kBlendModeSub] = CreatePipelineState(device, rootSignature_particle.Get(), blendSubDesc, rasterizerSolidDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, particleInputElementDescs, _countof(particleInputElementDescs), vsParticle.Get(), psParticle.Get());
-    particlePSOs[BlendMode::kBlendModeMul] = CreatePipelineState(device, rootSignature_particle.Get(), blendMulDesc, rasterizerSolidDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, particleInputElementDescs, _countof(particleInputElementDescs), vsParticle.Get(), psParticle.Get());
-    particlePSOs[BlendMode::kBlendModeScreen] = CreatePipelineState(device, rootSignature_particle.Get(), blendScreenDesc, rasterizerSolidDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, particleInputElementDescs, _countof(particleInputElementDescs), vsParticle.Get(), psParticle.Get());
+    particlePSOs[BlendMode::kBlendModeNone] = CreatePipelineState(device, rootSignature_particle.Get(), blendOpaqueDesc, rasterizerSolidDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, particleInputElementDescs, _countof(particleInputElementDescs), vsParticle.Get(), psParticle.Get(), depthTestOnlyDesc);
+    particlePSOs[BlendMode::kBlendModeNormal] = CreatePipelineState(device, rootSignature_particle.Get(), blendTransparentDesc, rasterizerSolidDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, particleInputElementDescs, _countof(particleInputElementDescs), vsParticle.Get(), psParticle.Get(), depthTestOnlyDesc);
+    particlePSOs[BlendMode::kBlendModeAdd] = CreatePipelineState(device, rootSignature_particle.Get(), blendAddDesc, rasterizerSolidDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, particleInputElementDescs, _countof(particleInputElementDescs), vsParticle.Get(), psParticle.Get(), depthTestOnlyDesc);
+    particlePSOs[BlendMode::kBlendModeSub] = CreatePipelineState(device, rootSignature_particle.Get(), blendSubDesc, rasterizerSolidDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, particleInputElementDescs, _countof(particleInputElementDescs), vsParticle.Get(), psParticle.Get(), depthTestOnlyDesc);
+    particlePSOs[BlendMode::kBlendModeMul] = CreatePipelineState(device, rootSignature_particle.Get(), blendMulDesc, rasterizerSolidDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, particleInputElementDescs, _countof(particleInputElementDescs), vsParticle.Get(), psParticle.Get(), depthTestOnlyDesc);
+    particlePSOs[BlendMode::kBlendModeScreen] = CreatePipelineState(device, rootSignature_particle.Get(), blendScreenDesc, rasterizerSolidDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, particleInputElementDescs, _countof(particleInputElementDescs), vsParticle.Get(), psParticle.Get(), depthTestOnlyDesc);
 
     // Line
-    linePSOs[BlendMode::kBlendModeNone] = CreatePipelineState(device, rootSignature_object.Get(), blendOpaqueDesc, rasterizerLineDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE, lineInputElementDescs, _countof(lineInputElementDescs), vsLine.Get(), psLine.Get());
-    linePSOs[BlendMode::kBlendModeNormal] = CreatePipelineState(device, rootSignature_object.Get(), blendTransparentDesc, rasterizerLineDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE, lineInputElementDescs, _countof(lineInputElementDescs), vsLine.Get(), psLine.Get());
-    linePSOs[BlendMode::kBlendModeAdd] = CreatePipelineState(device, rootSignature_object.Get(), blendAddDesc, rasterizerLineDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE, lineInputElementDescs, _countof(lineInputElementDescs), vsLine.Get(), psLine.Get());
-    linePSOs[BlendMode::kBlendModeSub] = CreatePipelineState(device, rootSignature_object.Get(), blendSubDesc, rasterizerLineDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE, lineInputElementDescs, _countof(lineInputElementDescs), vsLine.Get(), psLine.Get());
-    linePSOs[BlendMode::kBlendModeMul] = CreatePipelineState(device, rootSignature_object.Get(), blendMulDesc, rasterizerLineDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE, lineInputElementDescs, _countof(lineInputElementDescs), vsLine.Get(), psLine.Get());
-    linePSOs[BlendMode::kBlendModeScreen] = CreatePipelineState(device, rootSignature_object.Get(), blendScreenDesc, rasterizerLineDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE, lineInputElementDescs, _countof(lineInputElementDescs), vsLine.Get(), psLine.Get());
+    linePSOs[BlendMode::kBlendModeNone] = CreatePipelineState(device, rootSignature_object.Get(), blendOpaqueDesc, rasterizerLineDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE, lineInputElementDescs, _countof(lineInputElementDescs), vsLine.Get(), psLine.Get(), depthWriteDesc);
+    linePSOs[BlendMode::kBlendModeNormal] = CreatePipelineState(device, rootSignature_object.Get(), blendTransparentDesc, rasterizerLineDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE, lineInputElementDescs, _countof(lineInputElementDescs), vsLine.Get(), psLine.Get(), depthWriteDesc);
+    linePSOs[BlendMode::kBlendModeAdd] = CreatePipelineState(device, rootSignature_object.Get(), blendAddDesc, rasterizerLineDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE, lineInputElementDescs, _countof(lineInputElementDescs), vsLine.Get(), psLine.Get(), depthWriteDesc);
+    linePSOs[BlendMode::kBlendModeSub] = CreatePipelineState(device, rootSignature_object.Get(), blendSubDesc, rasterizerLineDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE, lineInputElementDescs, _countof(lineInputElementDescs), vsLine.Get(), psLine.Get(), depthWriteDesc);
+    linePSOs[BlendMode::kBlendModeMul] = CreatePipelineState(device, rootSignature_object.Get(), blendMulDesc, rasterizerLineDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE, lineInputElementDescs, _countof(lineInputElementDescs), vsLine.Get(), psLine.Get(), depthWriteDesc);
+    linePSOs[BlendMode::kBlendModeScreen] = CreatePipelineState(device, rootSignature_object.Get(), blendScreenDesc, rasterizerLineDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE, lineInputElementDescs, _countof(lineInputElementDescs), vsLine.Get(), psLine.Get(), depthWriteDesc);
 
 #pragma endregion
 
@@ -451,7 +404,8 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineStateManager::CreatePipeline
     D3D12_PRIMITIVE_TOPOLOGY_TYPE primitiveType,
     const D3D12_INPUT_ELEMENT_DESC* inputElementDescs, 
     UINT numInputElements, 
-    IDxcBlob* vsBlob, IDxcBlob* psBlob)
+    IDxcBlob* vsBlob, IDxcBlob* psBlob,
+    const D3D12_DEPTH_STENCIL_DESC& depthStencilDesc)
 {
     HRESULT hr;
 
@@ -460,10 +414,10 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineStateManager::CreatePipeline
     inputLayoutDesc.pInputElementDescs = inputElementDescs;
     inputLayoutDesc.NumElements = numInputElements;
 
-    D3D12_DEPTH_STENCIL_DESC depthStencilDesc{};
-    depthStencilDesc.DepthEnable = true;
-    depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-    depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+    //D3D12_DEPTH_STENCIL_DESC depthStencilDesc{};
+    //depthStencilDesc.DepthEnable = depthEnable;
+    //depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+    //depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 
     D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc{};
     graphicsPipelineStateDesc.pRootSignature = rs;
@@ -491,10 +445,6 @@ Microsoft::WRL::ComPtr<IDxcBlob> PipelineStateManager::CompileShader(
     const std::wstring& filePath,
     // Compilerに仕様するProfile
     const wchar_t* profile)
-    //// 初期化で生成したものを３つ
-    //IDxcUtils* dxcUtils,
-    //IDxcCompiler3* dxcCompiler,
-    //IDxcIncludeHandler* includeHandler)
 {
     ///////////////////////////////////////
     //// 1 hlslファイルを読む

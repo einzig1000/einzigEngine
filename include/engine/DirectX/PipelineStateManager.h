@@ -49,7 +49,8 @@ private:
         const D3D12_INPUT_ELEMENT_DESC* inputElementDescs,
         UINT numInputElements,
         IDxcBlob* vsBlob,
-        IDxcBlob* psBlob
+        IDxcBlob* psBlob,
+        const D3D12_DEPTH_STENCIL_DESC& depthStencilDesc
     );
 
 

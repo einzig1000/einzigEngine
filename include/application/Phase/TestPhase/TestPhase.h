@@ -14,7 +14,7 @@ public:
 
 private:
 	RenderData_Model model_;
-	Game::RenderData_Particle particle_;
+	RenderData_Particle particle_;
 	RenderData_Sprite sprite_;
 	RenderData_Triangle triangle_;
 	RenderData_Line line_;

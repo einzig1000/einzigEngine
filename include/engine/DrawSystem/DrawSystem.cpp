@@ -2,6 +2,7 @@
 #include "DirectX/DirectXManager.h"
 #include "Window/WindowManager.h"
 #include "Utilities/functions.h"
+#include "Camera/CameraController.h"
 
 DrawSystem::DrawSystem(DirectXManager* dxManager)
 	:dxManager_(dxManager)
@@ -26,16 +27,14 @@ DrawSystem::DrawSystem(DirectXManager* dxManager)
 
 	// 描画コールカウント初期化
 	drawCallIndex_ = 0;
-	// 1フレームに呼び出せる描画コールの最大数
-	kMaxDrawCallPerFrame_ = 1024;
 
 	// 頂点リソース
 	vertexResourceSize_ = static_cast<UINT>(sizeof(VertexData) * 1024); // 三角形
 	vertexResource_ = CreateBufferResource(dxManager->GetDevice(), vertexResourceSize_);
-
 	HRESULT hr = vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vertexMappedPtr_));
 	assert(SUCCEEDED(hr));
 
+	kMaxDrawCallPerFrame_ = 1024;
 	materialResources_.resize(kMaxDrawCallPerFrame_);
 	materialData_.resize(kMaxDrawCallPerFrame_);
 	wvpResources_.resize(kMaxDrawCallPerFrame_);
@@ -47,9 +46,71 @@ DrawSystem::DrawSystem(DirectXManager* dxManager)
 		wvpResources_[i] = CreateBufferResource(dxManager->GetDevice(), sizeof(TransformationMatrix));
 		wvpResources_[i]->Map(0, nullptr, reinterpret_cast<void**>(&wvpData_[i]));
 	}
+	vertexDataUsed_ = 0;
 
-	instancingSrvIndex_ = dxManager_->GetDescriptorHeapManager()->AllocateSRVSlot();
-	EnsureInstanceBuffer(kNumInstance_);
+	// パーティクル用：単一の連続バッファ + SRV(t1)
+	{
+		//const uint32_t capacity = kMaxInstanceCount_;
+		instancingResource_ = CreateBufferResource(dxManager_->GetDevice(), sizeof(ParticleInf) * kMaxInstanceCount_);
+		assert(instancingResource_);
+
+		HRESULT hr = instancingResource_->Map(0, nullptr, reinterpret_cast<void**>(&instancingMappedPtr_));
+		assert(SUCCEEDED(hr) && instancingMappedPtr_);
+		instancingDataUsed_ = 0;
+
+		D3D12_SHADER_RESOURCE_VIEW_DESC srv{};
+		srv.Format = DXGI_FORMAT_UNKNOWN;
+		srv.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		srv.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+		srv.Buffer.FirstElement = 0;
+		srv.Buffer.NumElements = kMaxInstanceCount_;
+		srv.Buffer.StructureByteStride = sizeof(ParticleInf);
+
+		instancingSrvIndex_ = dxManager_->GetDescriptorHeapManager()->AllocateSRVSlot();
+		assert(instancingSrvIndex_ != UINT32_MAX);
+		instancingSrvHandleCPU_ = dxManager_->GetDescriptorHeapManager()->GetCPUHandleAt(instancingSrvIndex_);
+		instancingSrvHandleGPU_ = dxManager_->GetDescriptorHeapManager()->GetGPUHandleAt(instancingSrvIndex_);
+		dxManager_->GetDevice()->CreateShaderResourceView(instancingResource_.Get(), &srv, instancingSrvHandleCPU_);
+	}
+
+	//kMaxInstanceCount_ = 2048;
+	//instancingResource_.resize(kMaxInstanceCount_);
+	//instancingData_.resize(kMaxInstanceCount_);
+	//for (size_t i = 0; i < kMaxInstanceCount_; ++i)
+	//{
+	//	instancingResource_[i] = CreateBufferResource(dxManager->GetDevice(), sizeof(ParticleInf));
+	//	instancingResource_[i]->Map(0, nullptr, reinterpret_cast<void**>(&instancingData_[i]));
+	//}
+	//instancingDataUsed_ = 0;
+
+	//{
+	//	// 1つの連続バッファで ParticleInf を capacity 個分確保
+	//	const uint32_t capacity = kMaxInstanceCount_;
+	//	Microsoft::WRL::ComPtr<ID3D12Resource> instancingBuffer =
+	//		CreateBufferResource(dxManager_->GetDevice(), sizeof(ParticleInf) * capacity);
+	//
+	//	ParticleInf* mapped = nullptr;
+	//	hr = instancingBuffer->Map(0, nullptr, reinterpret_cast<void**>(&mapped));
+	//	assert(SUCCEEDED(hr));
+	//	// 既存のベクタ使いではなく、単一バッファ＋先頭ポインタに置き換える設計を推奨
+	//	// 例: instancingResource_.clear(); instancingResource_.shrink_to_fit();
+	//	//     instancingResource_.push_back(instancingBuffer);
+	//	//     instancingData_.clear(); instancingData_.push_back(mapped);
+	//
+	//	// SRVを作成
+	//	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+	//	srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+	//	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	//	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+	//	srvDesc.Buffer.FirstElement = 0;
+	//	srvDesc.Buffer.NumElements = capacity;
+	//	srvDesc.Buffer.StructureByteStride = sizeof(ParticleInf);
+	//
+	//	instancingSrvIndex_ = dxManager_->GetDescriptorHeapManager()->AllocateSRVSlot();
+	//	auto cpu = dxManager_->GetDescriptorHeapManager()->GetCPUHandleAt(instancingSrvIndex_);
+	//	dxManager_->GetDevice()->CreateShaderResourceView(instancingBuffer.Get(), &srvDesc, cpu);
+	//}
+	//EnsureInstanceBuffer(kNumInstance_);
 
 
 	// インデックスリソース
@@ -94,11 +155,11 @@ DrawSystem::~DrawSystem()
 	{
 		instancingResource_->Unmap(0, nullptr);
 		instancingResource_.Reset();
-		instancingData_ = nullptr;
-		instancingCapacity_ = 0;
-		instancingSrvHandleCPU_ = {};
-		instancingSrvHandleGPU_ = {};
+		instancingMappedPtr_ = nullptr;
 	}
+
+	instancingSrvHandleCPU_ = {};
+	instancingSrvHandleGPU_ = {};
 
 	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>>().swap(materialResources_);
 	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>>().swap(wvpResources_);
@@ -115,15 +176,89 @@ void DrawSystem::BeginFrame(Matrix4x4& viewProjectionMatrix)
 	// 三角形用頂点データの初期化
 	vertexDataUsed_ = 0;
 
+	// パーティクル用データの初期化
+	instancingDataUsed_ = 0;
+
 	// カメラマトリックスの更新
 	viewProjectionMatrix_ = viewProjectionMatrix;
 
 	// ライトの向きを正規化
 	directionalLightData_->direction = (directionalLightData_->direction.Normalized());
-
 }
 
-void DrawSystem::DrawParticle(Game::RenderData_Particle& renderData)
+void DrawSystem::EndFrame()
+{
+	// パーティクルの更新
+	Update_ParticleInstanceData();
+}
+
+void DrawSystem::Update_ParticleInstanceData()
+{
+	for (uint32_t i = 0; i < activeInstanceCount_; ++i)
+	{
+		bool isAlive = true;
+
+		/// 寿命管理
+		if (instancingMappedPtr_[i].liveTime > 0)
+		{
+			instancingMappedPtr_[i].liveTime -= 1;
+			if (instancingMappedPtr_[i].liveTime <= 0)isAlive = false;
+		}
+
+
+		/// 拡縮管理
+		instancingMappedPtr_[i].scale.velocity += instancingMappedPtr_[i].scale.acceleration * dxManager_->GetDeltaTime();
+		instancingMappedPtr_[i].scale.value += instancingMappedPtr_[i].scale.velocity * dxManager_->GetDeltaTime();
+		if (instancingMappedPtr_[i].scale.value.x <= 0.0f ||
+			instancingMappedPtr_[i].scale.value.y <= 0.0f ||
+			instancingMappedPtr_[i].scale.value.z <= 0.0f)  // XYZ 全てが0以下になったら消す
+		{
+			isAlive = false;
+		}
+
+		/// 座標管理
+		instancingMappedPtr_[i].translate.velocity += instancingMappedPtr_[i].translate.acceleration * dxManager_->GetDeltaTime();
+		instancingMappedPtr_[i].translate.value += instancingMappedPtr_[i].translate.velocity * dxManager_->GetDeltaTime();
+
+		/// 回転管理
+		instancingMappedPtr_[i].rotate.velocity += instancingMappedPtr_[i].rotate.acceleration * dxManager_->GetDeltaTime();
+		instancingMappedPtr_[i].rotate.value += instancingMappedPtr_[i].rotate.velocity * dxManager_->GetDeltaTime();
+		if (instancingMappedPtr_[i].isBillboard) /// ビルボード
+		{
+			Vector3 direction = (Game::GetCamera()->transform_.translate - instancingMappedPtr_[i].translate.value).Normalized();
+			float yaw = std::atan2(direction.x, direction.z); // Y軸回り
+			float pitch = std::asin(-direction.y);            // X軸回り
+			instancingMappedPtr_[i].rotate.value = { pitch, yaw, instancingMappedPtr_[i].rotate.value.z };
+		}
+
+		/// 行列再計算
+		const Vector3& sc = instancingMappedPtr_[i].scale.value;
+		const Vector3& rt = instancingMappedPtr_[i].rotate.value;
+		const Vector3& tr = instancingMappedPtr_[i].translate.value;
+
+		Matrix4x4 world = Matrix4x4::MakeAffineMatrix(sc, rt, tr);
+		Matrix4x4 wvp = world * viewProjectionMatrix_;
+		instancingMappedPtr_[i].World = world;
+		instancingMappedPtr_[i].WVP = wvp;
+
+
+		/// 死んでたら削除
+		if (!isAlive)
+		{
+			// 末尾とスワップして削除
+			const uint32_t last = activeInstanceCount_ - 1;
+			if (i != last)
+			{
+				instancingMappedPtr_[i] = instancingMappedPtr_[last];
+			}
+			activeInstanceCount_--;
+			// スワップで入ってきた粒子を同じ i で再評価するため i++ しない
+			continue;
+		}
+	}
+}
+
+void DrawSystem::DrawParticle(RenderData_Particle& renderData)
 {
 	if (drawCallIndex_ >= kMaxDrawCallPerFrame_) return;
 	
@@ -149,7 +284,7 @@ void DrawSystem::DrawParticle(Game::RenderData_Particle& renderData)
 	// 頂点数の取得
 	const uint32_t kSumVertex = static_cast<uint32_t>(obj->modelData.vertices.size());
 	
-	
+	// マテリアルデータ
 	Vector4 color = ConvertUintToVector4(renderData.mono.color);
 	materialData_[drawCallIndex_]->color = color;
 	materialData_[drawCallIndex_]->enableLighting = renderData.mono.options.enableLighting;
@@ -158,33 +293,74 @@ void DrawSystem::DrawParticle(Game::RenderData_Particle& renderData)
 	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(renderData.mono.uvTransform.rotate.z));
 	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(renderData.mono.uvTransform.translate));
 	materialData_[drawCallIndex_]->uvTransform = uvTransformMatrix;
-	
-	// WVP行列
-	for (uint32_t i = 0; i < kNumInstance_; ++i)
+
+	// パーティクル生成
+	if (renderData.frame % renderData.emissionDelay == 0)
 	{
-		Matrix4x4 world = renderData.mono.transforms.World;
-		world.m[3][0] += static_cast<float>(i) * 0.2f;
-		instancingData_[i].World = world;
-		instancingData_[i].WVP = world * viewProjectionMatrix_;
+		// 発生数が０未満なら０に補正
+		if (renderData.particlesPerEmission < 0)renderData.particlesPerEmission = 0;
+		// 発生間隔が１未満なら１に補正
+		if (renderData.emissionDelay < 1)renderData.emissionDelay = 1;
+		// 描画可能数を超えないように補正
+		if (activeInstanceCount_ + renderData.particlesPerEmission <= kMaxInstanceCount_)
+		{
+			// パーティクル生成
+			for (uint32_t i = 0; i < renderData.particlesPerEmission; ++i)
+			{
+				// 位置
+				particleSRT translate = renderData.translate;
+				translate.value.x = RandomFloat(renderData.emitterAABB.min.x, renderData.emitterAABB.max.x);
+				translate.value.y = RandomFloat(renderData.emitterAABB.min.y, renderData.emitterAABB.max.y);
+				translate.value.z = RandomFloat(renderData.emitterAABB.min.z, renderData.emitterAABB.max.z);
+
+				// 拡縮
+				particleSRT scale = renderData.scale;
+
+				// 回転
+				particleSRT rotate = renderData.rotate;
+				if (renderData.isBillboard)	// ビルボード
+				{
+					Vector3 direction = (Game::GetCamera()->transform_.translate - instancingMappedPtr_[i].translate.value).Normalized();
+					float yaw = std::atan2(direction.x, direction.z); // Y軸回り
+					float pitch = std::asin(-direction.y);            // X軸回り
+					rotate.value = { pitch, yaw, 0.0f };
+				}
+
+				// データセット
+				instancingMappedPtr_[activeInstanceCount_ + i].scale = scale;
+				instancingMappedPtr_[activeInstanceCount_ + i].rotate = rotate;
+				instancingMappedPtr_[activeInstanceCount_ + i].translate = translate;
+
+				Matrix4x4 world = Matrix4x4::MakeAffineMatrix(scale.value, rotate.value, translate.value);
+				Matrix4x4 wvp = world * viewProjectionMatrix_;
+				instancingMappedPtr_[activeInstanceCount_ + i].World = world;
+				instancingMappedPtr_[activeInstanceCount_ + i].WVP = wvp;
+
+				instancingMappedPtr_[activeInstanceCount_ + i].liveTime = renderData.liveMax;
+				instancingMappedPtr_[activeInstanceCount_ + i].color = color;
+				instancingMappedPtr_[activeInstanceCount_ + i].isBillboard = renderData.isBillboard;
+			}
+
+			// アクティブ数を増やす
+			activeInstanceCount_ += renderData.particlesPerEmission;
+		}
 	}
 
-	// 頂点バッファをバインド（描画に使う頂点データを指定）
-	dxManager_->GetCommandContextManager()->GetCommandList()->IASetVertexBuffers(0, 1, &obj->vertexBufferView);
-	// プリミティブトポロジ（描画する形状の種類：三角形リスト）を設定
-	dxManager_->GetCommandContextManager()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	// ルートパラメータ0にマテリアル用定数バッファ（色・ライティング情報など）をバインド
-	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources_[drawCallIndex_]->GetGPUVirtualAddress());
-	// ルートパラメータ1にWVP（ワールド・ビュー・プロジェクション）用定数バッファをバインド
-	//dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(1, instancingResource_->GetGPUVirtualAddress());
-	// ルートパラメータ3にディレクショナルライト用定数バッファをバインド
-	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress());
 
-	// ルートパラメータ4にインスタンシング用SRVをバインド
+
+	// SRVをバインド（RP4: t1 VS可視）
 	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(4, dxManager_->GetDescriptorHeapManager()->GetGPUHandleAt(instancingSrvIndex_));
-	// ルートパラメータ2にテクスチャのSRV（シェーダリソースビュー）をバインド
+	// テクスチャ（RP2: t0 PS）
 	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
-	// 頂点数分のインスタンス描画を実行（実際に描画コマンドを発行）
-	dxManager_->GetCommandContextManager()->GetCommandList()->DrawInstanced(kSumVertex, kNumInstance_, 0, 0);
+
+	// 描画
+	dxManager_->GetCommandContextManager()->GetCommandList()->IASetVertexBuffers(0, 1, &obj->vertexBufferView);
+	dxManager_->GetCommandContextManager()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources_[drawCallIndex_]->GetGPUVirtualAddress());
+	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress());
+	dxManager_->GetCommandContextManager()->GetCommandList()->DrawInstanced(kSumVertex, activeInstanceCount_, 0, 0);
+
+	renderData.frame++;
 
 	drawCallIndex_++;
 }
@@ -902,53 +1078,73 @@ bool DrawSystem::EnsureDynamicVB(size_t requiredVertexCount)
 }
 
 
-bool DrawSystem::EnsureInstanceBuffer(size_t requiredInstanceCount)
-{
-	// 既存容量で足りる場合
-	if (instancingResource_ && instancingCapacity_ >= requiredInstanceCount)
-	{
-		return true;
-	}
-
-	// 新しい容量（2倍成長＋最低64）
-	uint32_t newCapacity = static_cast<uint32_t>(
-		std::max<size_t>(requiredInstanceCount, instancingCapacity_ ? instancingCapacity_ * 2ull : 64ull)
-		);
-	size_t newSizeBytes = sizeof(TransformationMatrix) * static_cast<size_t>(newCapacity);
-
-	// 新リソース作成（Uploadバッファ）
-	auto newResource = CreateBufferResource(dxManager_->GetDevice() , newSizeBytes);
-	if (!newResource) return false;
-
-	TransformationMatrix* newMapped = nullptr;
-	HRESULT hr = newResource->Map(0, nullptr, reinterpret_cast<void**>(&newMapped));
-	if (FAILED(hr) || !newMapped) return false;
-
-	// 古いリソースを解放
-	if (instancingResource_)
-	{
-		instancingResource_->Unmap(0, nullptr);
-		instancingResource_.Reset();
-		instancingData_ = nullptr;
-	}
-
-	instancingResource_ = newResource;
-	instancingData_ = newMapped;
-	instancingCapacity_ = newCapacity;
-
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-	srvDesc.Format = DXGI_FORMAT_UNKNOWN;
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
-	srvDesc.Buffer.FirstElement = 0;
-	srvDesc.Buffer.NumElements = newCapacity;
-	srvDesc.Buffer.StructureByteStride = sizeof(TransformationMatrix);
-
-	// 現在のヒープにおける該当インデックスのハンドルを取得して作り直す
-	uint32_t slot = dxManager_->GetDescriptorHeapManager()->AllocateSRVSlot();
-	instancingSrvHandleCPU_ = dxManager_->GetDescriptorHeapManager()->GetCPUHandleAt(instancingSrvIndex_);
-	instancingSrvHandleGPU_ = dxManager_->GetDescriptorHeapManager()->GetGPUHandleAt(instancingSrvIndex_);
-
-	dxManager_->GetDevice()->CreateShaderResourceView(instancingResource_.Get(), &srvDesc, instancingSrvHandleCPU_);
-	return true;
-}
+//bool DrawSystem::EnsureInstanceBuffer(size_t requiredInstanceCount)
+//{
+//	// 既存容量で足りる場合
+//	if (instancingResource_ && instancingCapacity_ >= requiredInstanceCount)
+//	{
+//		return true;
+//	}
+//
+//	// 新しい容量（2倍成長＋最低64）
+//	uint32_t newCapacity = static_cast<uint32_t>(
+//		std::max<size_t>(requiredInstanceCount, instancingCapacity_ ? instancingCapacity_ * 2ull : 64ull)
+//		);
+//	size_t newSizeBytes = sizeof(ParticleInf) * static_cast<size_t>(newCapacity);
+//
+//	// 新リソース作成（Uploadバッファ）
+//	auto newResource = CreateBufferResource(dxManager_->GetDevice() , newSizeBytes);
+//	if (!newResource) return false;
+//
+//	ParticleInf* newMapped = nullptr;
+//	HRESULT hr = newResource->Map(0, nullptr, reinterpret_cast<void**>(&newMapped));
+//	if (FAILED(hr) || !newMapped) return false;
+//
+//	// 古いリソースを解放
+//	if (instancingResource_)
+//	{
+//		instancingResource_->Unmap(0, nullptr);
+//		instancingResource_.Reset();
+//		instancingData_ = nullptr;
+//	}
+//
+//	instancingResource_ = newResource;
+//	instancingData_ = newMapped;
+//	instancingCapacity_ = newCapacity;
+//
+//	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+//	srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+//	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+//	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+//	srvDesc.Buffer.FirstElement = 0;
+//	srvDesc.Buffer.NumElements = newCapacity;
+//	srvDesc.Buffer.StructureByteStride = sizeof(ParticleInf);
+//
+//	// 現在のヒープにおける該当インデックスのハンドルを取得して作り直す
+//	instancingSrvIndex_ = dxManager_->GetDescriptorHeapManager()->AllocateSRVSlot();
+//	instancingSrvHandleCPU_ = dxManager_->GetDescriptorHeapManager()->GetCPUHandleAt(instancingSrvIndex_);
+//	instancingSrvHandleGPU_ = dxManager_->GetDescriptorHeapManager()->GetGPUHandleAt(instancingSrvIndex_);
+//
+//	dxManager_->GetDevice()->CreateShaderResourceView(instancingResource_.Get(), &srvDesc, instancingSrvHandleCPU_);
+//
+//
+//	return true;
+//}
+////
+//// パーティクル作成時の初期化
+//bool DrawSystem::CreateNewParticle(uint32_t sum, ParticleInf inf)
+//{
+//	//assert(instanceDataUsed_ + sum <= instancingCapacity_);
+//
+//	//// 初期化
+//	//for (uint32_t i = instanceDataUsed_; i < instanceDataUsed_ + sum; ++i)
+//	//{
+//	//	instancingData_[i].transform.scale = inf.transform.scale;
+//	//	instancingData_[i].transform.rotate = inf.transform.rotate;
+//	//	instancingData_[i].transform.translate = inf.transform.translate;
+//	//	instancingData_[i].velocity = inf.velocity;
+//	//	instancingData_[i].liveTime = inf.liveTime;
+//	//}
+//
+//	//return true;
+//}

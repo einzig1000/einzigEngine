@@ -55,6 +55,7 @@ Vector4 Transform(const Vector4& v, const Matrix4x4& m);
 
 
 #pragma region collision
+
 bool IsCollision(const Sphere& s1, const Sphere& s2);
 bool IsCollision(const Sphere& s, const Plane& p);
 bool IsCollision(const Segment& s, const Plane& p);
@@ -128,16 +129,9 @@ void Log(std::ofstream& os, const std::string& message);
 #pragma region Rand
 
 int RandomInt(int min, int max);
-float RandomFloat(float min, float max, int decimalPlaces);
+float RandomFloat(float min, float max, int decimalPlaces = 2);
 
 #pragma endregion
-
-//#pragma region Load
-//
-//std::vector<AABB> LoadAABBFromCSV(const std::string& csvPath);
-//void SaveAABBToCSV(const std::string& csvPath, const std::vector<AABB>& aabbs);
-//
-//#pragma endregion
 
 /// <summary>
 /// 角度をラジアンに変換
