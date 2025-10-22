@@ -42,24 +42,26 @@ TestPhase::TestPhase()
 	particle_.mono.transforms.scale = { 0.1f,0.1f,0.1f };
 	// パーティクル初期カラー
 	particle_.mono.color = 0xFFFFFFFF;
+	// 
+	particle_.mono.options.blendMode = BlendMode::kBlendModeAdd;
 
-	// パーティクル毎フレーム加算される回転量
-	particle_.AddRotate = { 0.2f,0.2f,0.2f };
-	// パーティクル毎フレーム加算される拡縮量
-	particle_.AddScale = { -0.005f,-0.005f,-0.005f };
-	// パーティクル飛んでく向き
-	particle_.target = { 10.0f, 0.0f, 0.0f };
-	// パーティクルエミッター
-	particle_.emitterAABB = { { -1.0f, -1.0f, -1.0f }, { 1.0f, 1.0f, 1.0f } };
-	particle_.emitterSphere = { { 0.0f, 0.0f, 0.0f }, { 2.0f, 2.0f, 2.0f } };
-	// パーティクル速度
-	particle_.velocity = 0.01f;
-	// パーティクル生存時間
-	particle_.liveMax = 1000;
-	// パーティクル生まれるスパン/frame
-	particle_.emissionDelay = 1;
-	// パーティクルエミッター形状
-	particle_.option.emitterShape = true;
+	//// パーティクル毎フレーム加算される回転量
+	//particle_.AddRotate = { 0.2f,0.2f,0.2f };
+	//// パーティクル毎フレーム加算される拡縮量
+	//particle_.AddScale = { -0.005f,-0.005f,-0.005f };
+	//// パーティクル飛んでく向き
+	//particle_.target = { 10.0f, 0.0f, 0.0f };
+	//// パーティクルエミッター
+	//particle_.emitterAABB = { { -1.0f, -1.0f, -1.0f }, { 1.0f, 1.0f, 1.0f } };
+	//particle_.emitterSphere = { { 0.0f, 0.0f, 0.0f }, { 2.0f, 2.0f, 2.0f } };
+	//// パーティクル速度
+	//particle_.velocity = 0.01f;
+	//// パーティクル生存時間
+	//particle_.liveMax = 1000;
+	//// パーティクル生まれるスパン/frame
+	//particle_.emissionDelay = 1;
+	//// パーティクルエミッター形状
+	//particle_.option.emitterShape = true;
 }
 
 TestPhase::~TestPhase()
@@ -72,7 +74,16 @@ void TestPhase::Initialize()
 
 void TestPhase::Update()
 {
-	particle_.mono.LookAtCamera(roll_);
+	if (GetHitKey::IsPressedDown(DIK_1))
+	{
+		model_.texture = Game::LoadTexture("resources/Prototypes/texture/uvChecker.png");
+	}
+	else if	(GetHitKey::IsPressedDown(DIK_2))
+	{
+		model_.texture = Game::LoadTexture("resources/Prototypes/texture/circle.png");
+	}
+	
+
 
 	//model_.LookAtCamera(roll_);
 	roll_ += 0.02f;
@@ -91,12 +102,14 @@ void TestPhase::Draw()
 	triangle_.Draw();
 	triangle_.DrawImGui();
 
-	line_.Draw();
-	line_.DrawImGui();
-	line2_.Draw();
-	line2_.DrawImGui();
-	line3_.Draw();
-	line3_.DrawImGui();
-
 	particle_.Draw();
+	particle_.DrawImGui();
+	particle_.DrawEmitter();
+
+	//line_.Draw();
+	//line_.DrawImGui();
+	//line2_.Draw();
+	//line2_.DrawImGui();
+	//line3_.Draw();
+	//line3_.DrawImGui();
 }

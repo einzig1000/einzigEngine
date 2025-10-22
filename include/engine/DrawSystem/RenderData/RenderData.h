@@ -7,7 +7,7 @@ class RenderData_Model
 public:
     RenderData_Model();
     ~RenderData_Model();
-    void Updata(std::vector<Object3D>& objects);
+    void Update(std::vector<Object3D>& objects);
 
     // 今フレーム位置、回転、スケール
     Transforms transforms;
@@ -190,4 +190,57 @@ public:
 private:
 
     static std::vector<RenderData_Line*> renderLines;
+};
+
+class RenderData_Particle
+{
+public:
+
+    RenderData_Particle();
+    ~RenderData_Particle();
+
+    // ID
+    int ID = 0;
+    std::string name = "NULL";
+
+    /// エミッター範囲
+    AABB emitterAABB = { Vector3{ -1.0f, -1.0f, -1.0f }, Vector3{ 1.0f, 1.0f, 1.0f } };
+    SphereXYZ emitterSphere;
+    /// エミッター範囲中心から見た時の飛んでく方向
+    Vector3 target;
+
+    /// パーティクル１粒
+    RenderData_Model mono;
+
+    particleSRT scale = particleSRT{ Vector3{0.5f,0.5f,0.1f},Vector3{-0.01f,-0.01f,-0.01f},Vector3{0.0f,0.0f,0.0f} };
+    particleSRT rotate = particleSRT{ Vector3{0.3f,0.3f,0.3f},Vector3{0.0f,0.0f,0.0f},Vector3{0.0f,0.0f,0.0f} };
+    particleSRT translate = particleSRT{ Vector3{0.0f,0.0f,0.0f},Vector3{0.0f,-0.1f,0.0f},Vector3{0.0f,0.0f,0.0f} };
+
+
+
+    /// ビルボードか
+	bool isBillboard = true;
+
+    /// 現在存在するパーティクル数
+    uint32_t currentSum = 0;
+
+    /// フレーム
+	uint32_t frame = 0;
+
+    /// 生まれる周期
+	uint32_t emissionDelay = 1;
+
+    /// １フレームで生まれる量
+    uint32_t particlesPerEmission = 1;
+
+    /// 寿命(マイナスの時は不老)
+	int liveMax = 300;
+
+    void Draw();
+    void DrawImGui();
+    void DrawEmitter();
+
+private:
+
+    static std::vector<RenderData_Particle*> renderParticles;
 };

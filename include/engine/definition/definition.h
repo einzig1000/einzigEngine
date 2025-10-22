@@ -64,7 +64,7 @@ constexpr T my_max(std::initializer_list<T> list)
     return result;
 }
 
-
+// ゲームのフェーズ
 enum class PHASE
 {
     Phase_None,
@@ -75,13 +75,7 @@ enum class PHASE
     Phase_GameClear,
 };
 
-enum class LookAtMode
-{
-    None,
-    Target,
-    Front
-};
-
+// スプライトのアンカー位置
 enum class Anker
 {
     Center,
@@ -98,15 +92,7 @@ enum class Anker
 };
 
 
-
-enum class Direction
-{
-    None = -1,
-    Left = 0,
-    Right = 1,
-    Down = 2,
-    Up = 3,
-};
+#pragma region 基盤構造体
 
 struct Vector2int
 {
@@ -522,125 +508,39 @@ struct Matrix4x4
     static Matrix4x4 MakeViewPortMatrix(float left, float top, float width, float height, float minD, float maxD);
 };
 
-struct CollisionFlags
-{
-    enum
-    {
-        NONE = 0x00000000,
-        FRONT = 0x00000001,
-        BACK = 0x00000002,
-        LEFT = 0x00000004,
-        RIGHT = 0x00000008,
-        TOP = 0x00000010,
-        BOTTOM = 0x00000020,
-        INSIDE = 0x00000040,
-	};
-};
+#pragma endregion
 
-struct CollisionInf
-{
-	Vector2int pair;  // 衝突したオブジェクトのAABBの番号ペア
-    Vector3 depth;    // 浸入深度
-};
 
+#pragma region 幾何構造体
+
+// 球
 struct Sphere
 {
     Vector3 center;
     float radius = 1.0f;
 };
 
+// 楕円体
 struct SphereXYZ
 {
     Vector3 center;
     Vector3 radius = { 1.0f, 1.0f, 1.0f };
 };
 
+// 平面
 struct Plane
 {
     Vector3 normal; // 法線
     float distance = 0.0f;
 };
 
+// 三角形
 struct Triangle
 {
     Vector3 vertices[3];
 };
 
-struct Vertex
-{
-    Vector2 LT;
-    Vector2 RT;
-    Vector2 LB;
-    Vector2 RB;
-};
-
-struct Transforms
-{
-    Vector3 scale = { 1,1,1 };
-    Vector3 rotate = { 0,0,0 };
-    Vector3 translate = { 0,0,0 };
-    Matrix4x4 World;
-    Matrix4x4* parentWorld = nullptr;
-};
-
-struct Line
-{
-    // 始点
-    Vector3 origin;
-    // 終点ベクトル
-    Vector3 diff;
-};
-
-struct Ray
-{
-    // 始点
-    Vector3 origin;
-    // 終点ベクトル
-    Vector3 diff;
-};
-
-struct Segment
-{
-    // 始点
-    Vector3 origin;
-    // 終点ベクトル
-    Vector3 diff;
-};
-
-struct Material
-{
-    Vector4 color;
-    int32_t enableLighting;
-    float padding[3];
-    Matrix4x4 uvTransform;
-};
-
-struct TransformationMatrix
-{
-    Matrix4x4 WVP;
-    Matrix4x4 World;
-};
-
-struct DirectionalLight
-{
-    Vector4 color;
-    Vector3 direction;
-    float intensity;//輝度
-    int mode;
-};
-
-struct MaterialData
-{
-    std::string textureFilePath;
-};
-
-enum class CollisionResult
-{
-    非衝突,
-    接触,
-    衝突
-};
-
+// 軸平行境界ボックス(Axis Aligned Bounding Box)
 struct AABB
 {
     Vector3 min;
@@ -651,6 +551,45 @@ struct AABB
     Vector3 GetCollisionDepth(const AABB& other)const;
 };
 
+// 線分
+struct Line
+{
+    // 始点
+    Vector3 origin;
+    // 終点
+    Vector3 diff;
+};
+
+// 半直線
+struct Ray
+{
+    // 始点
+    Vector3 origin;
+    // 終点ベクトル
+    Vector3 diff;
+};
+
+// 直線
+struct Segment
+{
+    // 始点ベクトル
+    Vector3 origin;
+    // 終点ベクトル
+    Vector3 diff;
+};
+
+#pragma endregion
+
+
+#pragma region モデルデータ構造体
+
+// 材質データ(今はテクスチャパスしかいれてない.質感とか追加するようになったら使うのかも)
+struct MaterialData
+{
+    std::string textureFilePath;
+};
+
+// 頂点データ
 struct VertexData
 {
     Vector4 position;
@@ -658,15 +597,34 @@ struct VertexData
     Vector3 normal;
 };
 
+// 頂点データと材質データ
 struct ModelData
 {
     std::vector<VertexData> vertices;
     MaterialData material;
 };
 
+// 変換情報
+struct Transforms
+{
+    Vector3 scale = { 1,1,1 };
+    Vector3 rotate = { 0,0,0 };
+    Vector3 translate = { 0,0,0 };
+    Matrix4x4 World;
+    Matrix4x4* parentWorld = nullptr;
+};
+
+struct TransformationMatrix
+{
+    Matrix4x4 WVP;
+    Matrix4x4 World;
+    //Matrix4x4* parentWorld = nullptr;
+};
+
+// 3Dオブジェクトデータ
 struct Object3D
 {
-    // モデルデータ
+    // モデルデータ（頂点データと材質データ）
     ModelData modelData;
 
     // 頂点バッファ
@@ -676,6 +634,7 @@ struct Object3D
 
     // 変換行列
     Transforms transform;
+    //TransformationMatrix matrix;
 
     // AABB
     std::vector<AABB> aabb;
@@ -687,6 +646,7 @@ struct Object3D
     std::string filePath;
 };
 
+// テクスチャデータ
 struct TextureData
 {
     DirectX::TexMetadata metadata;
@@ -697,6 +657,10 @@ struct TextureData
     D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU;
 };
 
+#pragma endregion
+
+
+#pragma region 入力構造体
 
 struct KeyState
 {
@@ -706,21 +670,6 @@ struct KeyState
     uint32_t lastHoldOnRelease = 0; // 直近のリリース時に押されていたフレーム数（release イベント時に更新）
 };
 
-struct D3DResourceLeakChecker
-{
-    ~D3DResourceLeakChecker()
-    {
-        // リソースリーク確認
-        Microsoft::WRL::ComPtr <IDXGIDebug1> debug;
-        if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&debug))))
-        {
-            debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_ALL);
-            debug->ReportLiveObjects(DXGI_DEBUG_APP, DXGI_DEBUG_RLO_ALL);
-            debug->ReportLiveObjects(DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_ALL);
-        }
-    }
-};
-
 struct mouseButtenState
 {
     bool leftButton = false;
@@ -728,6 +677,10 @@ struct mouseButtenState
     bool middleButton = false;
 };
 
+#pragma endregion
+
+
+#pragma region 描画オプション構造体
 
 enum class BlendMode
 {
@@ -757,6 +710,14 @@ struct DrawOptions
     BlendMode blendMode = BlendMode::kBlendModeNormal;
 };
 
+struct Material
+{
+    Vector4 color;
+    int32_t enableLighting;
+    float padding[3];
+    Matrix4x4 uvTransform;
+};
+
 struct DrawParticleOptions
 {
     /// エミッターはAABB型か球型か
@@ -771,6 +732,96 @@ struct DrawParticleOptions
     // ビルボードか否か
     bool toCamera = false;
 };
+
+#pragma endregion
+
+
+#pragma region 衝突判定構造体
+
+enum class CollisionResult
+{
+    非衝突,
+    接触,
+    衝突
+};
+
+struct CollisionFlags
+{
+    enum
+    {
+        NONE = 0x00000000,
+        FRONT = 0x00000001,
+        BACK = 0x00000002,
+        LEFT = 0x00000004,
+        RIGHT = 0x00000008,
+        TOP = 0x00000010,
+        BOTTOM = 0x00000020,
+        INSIDE = 0x00000040,
+	};
+};
+
+struct CollisionInf
+{
+	Vector2int pair;  // 衝突したオブジェクトのAABBの番号ペア
+    Vector3 depth;    // 浸入深度
+};
+
+#pragma endregion
+
+
+struct particleSRT
+{
+    Vector3 value;
+	Vector3 velocity;
+	Vector3 acceleration;
+};
+
+struct ParticleInf
+{
+    particleSRT scale = particleSRT{ Vector3{1.0f,1.0f,1.0f},Vector3{-0.1f,-0.1f,-0.1f},Vector3{0.0f,0.0f,0.0f} };
+	particleSRT rotate = particleSRT{ Vector3{0.1f,0.1f,0.1f},Vector3{0.0f,0.0f,0.0f},Vector3{0.0f,0.0f,0.0f} };
+	particleSRT translate = particleSRT{ Vector3{0.0f,0.0f,0.0f},Vector3{0.0f,-0.1f,0.0f},Vector3{0.0f,0.0f,0.0f} };
+
+    Matrix4x4 World;
+    Matrix4x4 WVP;
+
+    uint32_t liveTime = 0;
+    Vector4 color;
+    bool isBillboard;
+};
+
+enum class Direction
+{
+    None = -1,
+    Left = 0,
+    Right = 1,
+    Down = 2,
+    Up = 3,
+};
+
+struct DirectionalLight
+{
+    Vector4 color;
+    Vector3 direction;
+    float intensity;//輝度
+    int mode;
+};
+
+struct D3DResourceLeakChecker
+{
+    ~D3DResourceLeakChecker()
+    {
+        // リソースリーク確認
+        Microsoft::WRL::ComPtr <IDXGIDebug1> debug;
+        if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&debug))))
+        {
+            debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_ALL);
+            debug->ReportLiveObjects(DXGI_DEBUG_APP, DXGI_DEBUG_RLO_ALL);
+            debug->ReportLiveObjects(DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_ALL);
+        }
+    }
+};
+
 
 enum class LineType
 {
@@ -812,13 +863,6 @@ enum class EaseType
     IN_BOUNCE,
     OUT_BOUNCE,
 };
-
-struct ParticleInf
-{
-    Vector3 velocity;
-    int liveTime = 0;
-};
-
 //enum class DestructionType
 //{
 //    // 透明になっていく

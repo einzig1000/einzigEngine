@@ -1,4 +1,4 @@
-#include "RenderData.h"
+#include "DrawSystem/RenderData/RenderData.h"
 #include "Game.h"
 #include "Camera/CameraController.h"
 using namespace DirectX;
@@ -7,6 +7,7 @@ std::vector<RenderData_Model*> RenderData_Model::renderModels;
 std::vector<RenderData_Sprite*> RenderData_Sprite::renderSprites;
 std::vector<RenderData_Triangle*> RenderData_Triangle::renderTriangles;
 std::vector<RenderData_Line*> RenderData_Line::renderLines;
+std::vector<RenderData_Particle*> RenderData_Particle::renderParticles;
 
 #pragma region model
 
@@ -25,7 +26,7 @@ RenderData_Model::~RenderData_Model()
 	}
 }
 
-void RenderData_Model::Updata(std::vector<Object3D>& objects)
+void RenderData_Model::Update(std::vector<Object3D>& objects)
 {
 #pragma region 前フレーム情報保存
 
@@ -655,14 +656,14 @@ void RenderData_Line::DrawImGui()
 	std::string num = std::to_string(this->ID);
 
 	ImGui::Begin(str.c_str());
-	
+
 	ImGui::Text("color");
 	Vector4 preColor = ConvertUintToVector4(color);
 	float floatColor[4] = { preColor.x, preColor.y, preColor.z, preColor.w };
 	ImGui::ColorEdit4((num + " : color").c_str(), floatColor, 1);
 	Vector4 vector4Color = { floatColor[0], floatColor[1], floatColor[2], floatColor[3] };
 	color = ConvertVector4ToUint(vector4Color);
-	
+
 	ImGui::Text("LineType");
 	const char* items[] =
 	{ "Line","BezierCurve", "SplineCurve" };
@@ -676,7 +677,7 @@ void RenderData_Line::DrawImGui()
 
 	ImGui::Text("kSubdivision");
 	ImGui::DragInt((num + " : kSubdivision").c_str(), (int*)&kSubdivision, 1, 1, 100);
-	
+
 	ImGui::Text("points");
 	size_t i = 1;
 	for (i = 1; i < points.size(); ++i)
@@ -689,7 +690,7 @@ void RenderData_Line::DrawImGui()
 			--i;
 		}
 	}
-	
+
 	ImGui::Text("addPoint");
 	ImGui::DragFloat3((num + " : addPoint").c_str(), &points[0].x, 0.1f);
 	if (ImGui::Button((num + " : AddPoint").c_str()))
@@ -698,6 +699,187 @@ void RenderData_Line::DrawImGui()
 		points.push_back(newPoint);
 	}
 	ImGui::End();
+}
+
+#pragma endregion
+
+#pragma region particle
+
+RenderData_Particle::RenderData_Particle()
+{
+	renderParticles.push_back(this);
+	this->ID = int(renderParticles.size());
+}
+
+RenderData_Particle::~RenderData_Particle()
+{
+	auto it = std::find(renderParticles.begin(), renderParticles.end(), this);
+	if (it != renderParticles.end())
+	{
+		renderParticles.erase(it);
+	}
+}
+
+void RenderData_Particle::Draw()
+{
+	Game::DrawParticle(*this);
+}
+
+void RenderData_Particle::DrawImGui()
+{
+	std::string str;
+	if (this->name != "NULL") str = this->name;
+	else str = "particle : " + std::to_string(this->ID);
+
+	std::string num = std::to_string(this->ID) + ":";
+
+	ImGui::Begin(str.c_str());
+	ImGui::Text("scale");
+	ImGui::DragFloat3(("S.val" + num).c_str(), &this->scale.value.x, 0.01f);
+	ImGui::DragFloat3(("S.vel" + num).c_str(), &this->scale.velocity.x, 0.01f);
+	ImGui::DragFloat3(("S.acc" + num).c_str(), &this->scale.acceleration.x, 0.01f);
+	ImGui::Text("rotate");
+	ImGui::DragFloat3(("R.val" + num).c_str(), &this->rotate.value.x, 0.01f);
+	ImGui::DragFloat3(("R.vel" + num).c_str(), &this->rotate.velocity.x, 0.01f);
+	ImGui::DragFloat3(("R.acc" + num).c_str(), &this->rotate.acceleration.x, 0.01f);
+	ImGui::Text("translate");
+	ImGui::DragFloat3(("T.val" + num).c_str(), &this->translate.value.x, 0.01f);
+	ImGui::DragFloat3(("T.vel" + num).c_str(), &this->translate.velocity.x, 0.01f);
+	ImGui::DragFloat3(("T.acc" + num).c_str(), &this->translate.acceleration.x, 0.01f);
+
+	ImGui::Text("density");
+	int particlesPerEmission = int(this->particlesPerEmission);
+	ImGui::DragInt(("particlePerEmission" + num).c_str(), &particlesPerEmission);
+	if (particlesPerEmission < 0)particlesPerEmission = 0;
+	this->particlesPerEmission = uint32_t(particlesPerEmission);
+	int emissionDelay = int(this->emissionDelay);
+	ImGui::DragInt(("emissionDelay" + num).c_str(), &emissionDelay);
+	if (emissionDelay < 1)emissionDelay = 1;
+	this->emissionDelay = uint32_t(emissionDelay);
+
+	ImGui::Text("lifetime");
+	ImGui::DragInt(("liveMax" + num).c_str(), &this->liveMax);
+
+	ImGui::Text("color");
+	Vector4 preColor = ConvertUintToVector4(this->mono.color);
+	float floatColor[4] = { preColor.x, preColor.y, preColor.z, preColor.w };
+	ImGui::ColorEdit4((num + "color").c_str(), floatColor, 1);
+	Vector4 vector4Color = { floatColor[0], floatColor[1], floatColor[2], floatColor[3] };
+	this->mono.color = ConvertVector4ToUint(vector4Color);
+	ImGui::Text("option");
+	ImGui::Checkbox("Billboard", &this->isBillboard);
+
+	if (ImGui::Button("save"))
+	{
+		this->mono.texture = Game::LoadTexture("resources/Prototypes/texture/uvChecker.png");
+	}
+
+	//ImGui::Text("Shape");
+	//ImGui::Checkbox("toggleShape", &this->option.emitterShape);
+	//ImGui::Checkbox("toggleInOut", &this->option.spawnInsideEmitter);
+	//ImGui::DragFloat3("aabb.min	", &this->emitterAABB.min.x, 0.1f);
+	//ImGui::DragFloat3("aabb.max	", &this->emitterAABB.max.x, 0.1f);
+	//ImGui::DragFloat3("Sphere.center", &this->emitterSphere.center.x, 0.1f);
+	//ImGui::DragFloat3("Sphere.radius", &this->emitterSphere.radius.x, 0.1f);
+	//
+	//ImGui::Text("InitializeTransforms");
+	//ImGui::DragFloat3("scale	", &this->mono.transforms.scale.x, 0.1f);
+	//ImGui::DragFloat3("rotate	", &this->mono.transforms.rotate.x, 0.1f);
+	//ImGui::Text("AddTransforms/frame");
+	//ImGui::DragFloat3("AddScale	", &this->AddScale.x, 0.1f);
+	//ImGui::DragFloat3("AddRotate", &this->AddRotate.x, 0.1f);
+	//ImGui::DragFloat("velocity	", &this->velocity, 0.01f);
+	//ImGui::Checkbox("toggletarget", &this->option.targetDirection);
+	//
+	//ImGui::Text("direction");
+	//ImGui::DragFloat3("target	", &this->target.x, 0.01f);
+	//ImGui::DragInt("emissionDelay	", &this->emissionDelay);
+	//ImGui::DragInt("particlesPerEmission	", &this->particlesPerEmission);
+
+	ImGui::End();
+}
+
+void RenderData_Particle::DrawEmitter()
+{
+	Vector3 p[8];
+	p[0] = { this->emitterAABB.min.x, this->emitterAABB.min.y, this->emitterAABB.min.z };
+	p[1] = { this->emitterAABB.max.x, this->emitterAABB.min.y, this->emitterAABB.min.z };
+	p[2] = { this->emitterAABB.max.x, this->emitterAABB.max.y, this->emitterAABB.min.z };
+	p[3] = { this->emitterAABB.min.x, this->emitterAABB.max.y, this->emitterAABB.min.z };
+	p[4] = { this->emitterAABB.min.x, this->emitterAABB.min.y, this->emitterAABB.max.z };
+	p[5] = { this->emitterAABB.max.x, this->emitterAABB.min.y, this->emitterAABB.max.z };
+	p[6] = { this->emitterAABB.max.x, this->emitterAABB.max.y, this->emitterAABB.max.z };
+	p[7] = { this->emitterAABB.min.x, this->emitterAABB.max.y, this->emitterAABB.max.z };
+
+	RenderData_Line line;
+	line.color = 0xFF0000FF;
+	line.points.push_back(p[0]);
+	line.points.push_back(p[1]);
+	line.points.push_back(p[2]);
+	line.points.push_back(p[3]);
+	line.points.push_back(p[0]);
+
+	line.points.push_back(p[4]);
+	line.points.push_back(p[5]);
+	line.points.push_back(p[6]);
+	line.points.push_back(p[7]);
+	line.points.push_back(p[4]);
+
+	line.points.push_back(p[5]);
+	line.points.push_back(p[1]);
+	line.points.push_back(p[2]);
+	line.points.push_back(p[6]);
+	line.points.push_back(p[7]);
+	line.points.push_back(p[3]);
+
+	line.Draw();
+
+
+	//// エミッターがAABB
+	//if (this->option.emitterShape)
+	//{
+	//	Vector3 p[8];
+	//	p[0] = { this->emitterAABB.min.x, this->emitterAABB.min.y, this->emitterAABB.min.z };
+	//	p[1] = { this->emitterAABB.max.x, this->emitterAABB.min.y, this->emitterAABB.min.z };
+	//	p[2] = { this->emitterAABB.max.x, this->emitterAABB.max.y, this->emitterAABB.min.z };
+	//	p[3] = { this->emitterAABB.min.x, this->emitterAABB.max.y, this->emitterAABB.min.z };
+	//	p[4] = { this->emitterAABB.min.x, this->emitterAABB.min.y, this->emitterAABB.max.z };
+	//	p[5] = { this->emitterAABB.max.x, this->emitterAABB.min.y, this->emitterAABB.max.z };
+	//	p[6] = { this->emitterAABB.max.x, this->emitterAABB.max.y, this->emitterAABB.max.z };
+	//	p[7] = { this->emitterAABB.min.x, this->emitterAABB.max.y, this->emitterAABB.max.z };
+	//
+	//	RenderData_Line line;
+	//	line.color = 0xFF0000FF;
+	//	line.points.push_back(p[0]);
+	//	line.points.push_back(p[1]);
+	//	line.points.push_back(p[2]);
+	//	line.points.push_back(p[3]);
+	//	line.points.push_back(p[0]);
+	//
+	//	line.points.push_back(p[4]);
+	//	line.points.push_back(p[5]);
+	//	line.points.push_back(p[6]);
+	//	line.points.push_back(p[7]);
+	//	line.points.push_back(p[4]);
+	//
+	//	line.points.push_back(p[5]);
+	//	line.points.push_back(p[1]);
+	//	line.points.push_back(p[2]);
+	//	line.points.push_back(p[6]);
+	//	line.points.push_back(p[7]);
+	//	line.points.push_back(p[3]);
+	//
+	//	line.Draw();
+	//}
+	//// 
+	//else
+	//{
+	//	Transforms transforms;
+	//	transforms.scale = this->emitterSphere.radius;
+	//	DrawOptions option;
+	//
+	//	//engine->DrawSphere(transforms, this->emitterSphere.center, 12, 0, 0xFFFFFF22, option);
+	//}
 }
 
 #pragma endregion

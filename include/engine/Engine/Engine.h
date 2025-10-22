@@ -32,7 +32,7 @@ public:
 	void DrawModel(RenderData_Model& renderData);
 	void DrawTriangle(RenderData_Triangle& renderData);
 	void DrawSprite(RenderData_Sprite& renderData);
-	void DrawParticle(Game::RenderData_Particle& renderData);
+	void DrawParticle(RenderData_Particle& renderData);
 	void DrawLine(RenderData_Line& renderData);
 	//void DrawLine(const Vector3& start, const Vector3& end, const uint32_t& materialColor);
 	void DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
@@ -96,7 +96,7 @@ public:
 private:
 	// カメラ更新
 	void UpdateCamera();
-	void UpdataDebugInfo();
+	void UpdateDebugInfo();
 	bool isDebugInfo = true;
 
 	// ウィンドウ関連

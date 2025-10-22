@@ -178,12 +178,12 @@ void ModelManager::SaveAABBToCSV(const std::string& csvPath, const std::vector<A
 
 
 // mtlファイルを読み込む関数
-MaterialData ModelManager::LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename)
+std::string ModelManager::LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename)
 {
     /////////////////
     // 変数宣言
     /////////////////
-    MaterialData materialData;
+    std::string filePath;
     std::string line;
 
     /////////////////
@@ -206,14 +206,14 @@ MaterialData ModelManager::LoadMaterialTemplateFile(const std::string& directory
         {
             std::string textureFilename;
             s >> textureFilename;
-            materialData.textureFilePath = directoryPath + "/" + textureFilename;
+            filePath = directoryPath + "/" + textureFilename;
         }
     }
 
     /////////////////
     // 構築したMaterialDataをreturnする
     /////////////////
-    return materialData;
+    return filePath;
 }
 
 // objファイルを読み込む関数
@@ -329,7 +329,7 @@ ModelData ModelManager::LoadModelFile(const std::string& directoryPath, const st
             std::string materialFilename;
             s >> materialFilename;
             // 基本的にmtlはobjファイルと同一階層に配置指せるので、ディレクトリ名とファイル名を渡す
-            modelData.material = LoadMaterialTemplateFile(directoryPath, materialFilename);
+            //modelData = LoadMaterialTemplateFile(directoryPath, materialFilename);
         }
     }
 

@@ -25,7 +25,7 @@ private:
 
 	void SaveAABBToCSV(const std::string& csvPath, const std::vector<AABB>& aabbs);
 
-	MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
+	std::string LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
 
 	std::vector<AABB> LoadAABB(const std::string& csvPath, const ModelData& model);
 	AABB CreateLocalAABB(const ModelData& model);
