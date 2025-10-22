@@ -133,13 +133,6 @@ float RandomFloat(float min, float max, int decimalPlaces = 2);
 
 #pragma endregion
 
-//#pragma region Load
-//
-//std::vector<AABB> LoadAABBFromCSV(const std::string& csvPath);
-//void SaveAABBToCSV(const std::string& csvPath, const std::vector<AABB>& aabbs);
-//
-//#pragma endregion
-
 /// <summary>
 /// 角度をラジアンに変換
 /// </summary>
