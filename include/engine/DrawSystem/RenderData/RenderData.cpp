@@ -731,9 +731,12 @@ void RenderData_Particle::DrawImGui()
 	if (this->name != "NULL") str = this->name;
 	else str = "particle : " + std::to_string(this->ID);
 
-	std::string num = std::to_string(this->ID) + ":";
+	std::string num = ":" + std::to_string(this->ID);
 
 	ImGui::Begin(str.c_str());
+	ImGui::Text("Emitter");
+	ImGui::DragFloat3(("AABB.min" + num).c_str(), &this->emitterAABB.min.x, 0.1f);
+	ImGui::DragFloat3(("AABB.max" + num).c_str(), &this->emitterAABB.max.x, 0.1f);
 	ImGui::Text("scale");
 	ImGui::DragFloat3(("S.val" + num).c_str(), &this->scale.value.x, 0.01f);
 	ImGui::DragFloat3(("S.vel" + num).c_str(), &this->scale.velocity.x, 0.01f);

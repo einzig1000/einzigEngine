@@ -261,7 +261,8 @@ void DrawSystem::Update_ParticleInstanceData()
 void DrawSystem::DrawParticle(RenderData_Particle& renderData)
 {
 	if (drawCallIndex_ >= kMaxDrawCallPerFrame_) return;
-	
+
+	 
 	// モデルの検索
 	Object3D* obj = dxManager_->GetResourceManager()->GetModelManager()->GetModel(renderData.mono.model);
 	if (!obj) return;
@@ -288,11 +289,8 @@ void DrawSystem::DrawParticle(RenderData_Particle& renderData)
 	Vector4 color = ConvertUintToVector4(renderData.mono.color);
 	materialData_[drawCallIndex_]->color = color;
 	materialData_[drawCallIndex_]->enableLighting = renderData.mono.options.enableLighting;
-	Matrix4x4 uvTransformMatrix = Matrix4x4::MakeIdentity4x4();
-	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeScaleMatrix(renderData.mono.uvTransform.scale));
-	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(renderData.mono.uvTransform.rotate.z));
-	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(renderData.mono.uvTransform.translate));
-	materialData_[drawCallIndex_]->uvTransform = uvTransformMatrix;
+	materialData_[drawCallIndex_]->uvTransform = Matrix4x4::MakeIdentity4x4();
+
 
 	// パーティクル生成
 	if (renderData.frame % renderData.emissionDelay == 0)
@@ -308,6 +306,13 @@ void DrawSystem::DrawParticle(RenderData_Particle& renderData)
 			for (uint32_t i = 0; i < renderData.particlesPerEmission; ++i)
 			{
 				// 位置
+				AABB aabb = renderData.emitterAABB;
+				renderData.emitterAABB.min.x = my_min(aabb.min.x, aabb.max.x);
+				renderData.emitterAABB.max.x = my_max(aabb.min.x, aabb.max.x);
+				renderData.emitterAABB.min.y = my_min(aabb.min.y, aabb.max.y);
+				renderData.emitterAABB.max.y = my_max(aabb.min.y, aabb.max.y);
+				renderData.emitterAABB.min.z = my_min(aabb.min.z, aabb.max.z);
+				renderData.emitterAABB.max.z = my_max(aabb.min.z, aabb.max.z);
 				particleSRT translate = renderData.translate;
 				translate.value.x = RandomFloat(renderData.emitterAABB.min.x, renderData.emitterAABB.max.x);
 				translate.value.y = RandomFloat(renderData.emitterAABB.min.y, renderData.emitterAABB.max.y);
