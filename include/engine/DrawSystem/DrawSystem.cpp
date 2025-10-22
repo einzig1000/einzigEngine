@@ -964,7 +964,6 @@ void DrawSystem::DrawLine(RenderData_Line& renderData)
 		}
 		break;
 	}
-
 	default:
 	{
 		break;
