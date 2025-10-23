@@ -31,19 +31,17 @@ TestPhase::TestPhase()
 	line3_.points.push_back(Vector3{ -10.0f,0.0f,0.0f });
 	line3_.lineType = LineType::SplineCurve;
 
-	particle_.mono.model = enemyModel;
+	particle_.model = playerModel;
 	// パーティクルテクスチャ
-	particle_.mono.texture = enemyTex;
-	// パーティクル描画オプション
-	particle_.mono.options.blendMode = BlendMode::kBlendModeAdd;
-	// パーティクル初期回転量
-	particle_.mono.transforms.rotate = { 0.0f,0.0f,0.0f };
-	// パーティクル初期拡縮量
-	particle_.mono.transforms.scale = { 0.1f,0.1f,0.1f };
+	particle_.texture = playerTex;
 	// パーティクル初期カラー
-	particle_.mono.color = 0xFFFFFFFF;
-	// 
-	particle_.mono.options.blendMode = BlendMode::kBlendModeAdd;
+	particle_.color = 0xFFFFFFFF;
+
+	particle2_.model = enemyModel;
+	// パーティクルテクスチャ
+	particle2_.texture = enemyTex;
+	// パーティクル初期カラー
+	particle2_.color = 0xFFFFFFFF;
 
 	//// パーティクル毎フレーム加算される回転量
 	//particle_.AddRotate = { 0.2f,0.2f,0.2f };
@@ -105,6 +103,9 @@ void TestPhase::Draw()
 	particle_.Draw();
 	particle_.DrawImGui();
 	particle_.DrawEmitter();
+	particle2_.Draw();
+	particle2_.DrawImGui();
+	particle2_.DrawEmitter();
 
 	line_.Draw();
 	line_.DrawImGui();

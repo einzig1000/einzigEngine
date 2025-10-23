@@ -423,6 +423,12 @@ void RenderData_Model::DrawImGui()
 
 	ImGui::Begin(str.c_str());
 
+	//if (ImGui::TreeNode("-----------transforms-----------"))
+	//{
+	//	ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+	//	ImGui::TreePop();
+	//}
+
 	ImGui::Text("transforms");
 	ImGui::DragFloat3((num + "scale").c_str(), &transforms.scale.x, 0.01f);
 	ImGui::DragFloat3((num + "translate").c_str(), &transforms.translate.x, 0.01f);
@@ -731,9 +737,12 @@ void RenderData_Particle::DrawImGui()
 	if (this->name != "NULL") str = this->name;
 	else str = "particle : " + std::to_string(this->ID);
 
-	std::string num = std::to_string(this->ID) + ":";
+	std::string num = ":" + std::to_string(this->ID);
 
 	ImGui::Begin(str.c_str());
+	ImGui::Text("Emitter");
+	ImGui::DragFloat3(("AABB.min" + num).c_str(), &this->emitterAABB.min.x, 0.1f);
+	ImGui::DragFloat3(("AABB.max" + num).c_str(), &this->emitterAABB.max.x, 0.1f);
 	ImGui::Text("scale");
 	ImGui::DragFloat3(("S.val" + num).c_str(), &this->scale.value.x, 0.01f);
 	ImGui::DragFloat3(("S.vel" + num).c_str(), &this->scale.velocity.x, 0.01f);
@@ -761,17 +770,17 @@ void RenderData_Particle::DrawImGui()
 	ImGui::DragInt(("liveMax" + num).c_str(), &this->liveMax);
 
 	ImGui::Text("color");
-	Vector4 preColor = ConvertUintToVector4(this->mono.color);
+	Vector4 preColor = ConvertUintToVector4(this->color);
 	float floatColor[4] = { preColor.x, preColor.y, preColor.z, preColor.w };
 	ImGui::ColorEdit4((num + "color").c_str(), floatColor, 1);
 	Vector4 vector4Color = { floatColor[0], floatColor[1], floatColor[2], floatColor[3] };
-	this->mono.color = ConvertVector4ToUint(vector4Color);
+	this->color = ConvertVector4ToUint(vector4Color);
 	ImGui::Text("option");
 	ImGui::Checkbox("Billboard", &this->isBillboard);
 
 	if (ImGui::Button("save"))
 	{
-		this->mono.texture = Game::LoadTexture("resources/Prototypes/texture/uvChecker.png");
+		this->texture = Game::LoadTexture("resources/Prototypes/texture/uvChecker.png");
 	}
 
 	//ImGui::Text("Shape");

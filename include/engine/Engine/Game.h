@@ -161,22 +161,4 @@ public:
 	static bool InFrustum(const AABB& aabb);
 
 private:
-
-
-
-	//// モデルリスト
-	//static std::vector<Game::RenderData_Model*> renderModels;
-
-	//static void AddModel(Game::RenderData_Model* model)
-	//{
-	//	renderModels.push_back(model);
-	//}
-	//static void SubModel(Game::RenderData_Model* model)
-	//{
-	//	auto it = std::find(renderModels.begin(), renderModels.end(), model);
-	//	if (it != renderModels.end())
-	//	{
-	//		renderModels.erase(it);
-	//	}
-	//}
 };
