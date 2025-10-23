@@ -4,6 +4,21 @@
 
 class DirectXManager;
 
+namespace
+{
+	struct EmitterPool
+	{
+		Microsoft::WRL::ComPtr<ID3D12Resource> buffer;
+		ParticleInf* mapped = nullptr;
+		uint32_t capacity = 0;
+		uint32_t activeCount = 0;
+		uint32_t srvIndex = UINT32_MAX;
+		D3D12_CPU_DESCRIPTOR_HANDLE srvCPU{};
+		D3D12_GPU_DESCRIPTOR_HANDLE srvGPU{};
+	};
+	std::unordered_map<RenderData_Particle*, EmitterPool> s_particlePools;
+}
+
 class DrawSystem
 {
 public:

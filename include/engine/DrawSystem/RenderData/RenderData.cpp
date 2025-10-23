@@ -423,6 +423,12 @@ void RenderData_Model::DrawImGui()
 
 	ImGui::Begin(str.c_str());
 
+	//if (ImGui::TreeNode("-----------transforms-----------"))
+	//{
+	//	ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+	//	ImGui::TreePop();
+	//}
+
 	ImGui::Text("transforms");
 	ImGui::DragFloat3((num + "scale").c_str(), &transforms.scale.x, 0.01f);
 	ImGui::DragFloat3((num + "translate").c_str(), &transforms.translate.x, 0.01f);

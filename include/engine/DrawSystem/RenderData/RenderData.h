@@ -213,7 +213,7 @@ public:
     uint32_t model;
     uint32_t texture;
     uint32_t color = 0xFFFFFFFF;
-    particleSRT scale = particleSRT{ Vector3{0.5f,0.5f,0.1f},Vector3{-0.01f,-0.01f,-0.01f},Vector3{0.0f,0.0f,0.0f} };
+    particleSRT scale = particleSRT{ Vector3{0.5f,0.5f,0.5f},Vector3{-0.01f,-0.01f,-0.01f},Vector3{0.0f,0.0f,0.0f} };
     particleSRT rotate = particleSRT{ Vector3{0.3f,0.3f,0.3f},Vector3{0.0f,0.0f,0.0f},Vector3{0.0f,0.0f,0.0f} };
     particleSRT translate = particleSRT{ Vector3{0.0f,0.0f,0.0f},Vector3{0.0f,-0.1f,0.0f},Vector3{0.0f,0.0f,0.0f} };
 

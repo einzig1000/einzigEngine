@@ -158,6 +158,17 @@ DrawSystem::~DrawSystem()
 		instancingMappedPtr_ = nullptr;
 	}
 
+	for (auto& it : s_particlePools)
+	{
+		if (it.second.buffer)
+		{
+			it.second.buffer->Unmap(0, nullptr);
+			it.second.buffer.Reset();
+			it.second.mapped = nullptr;
+		}
+	}
+	s_particlePools.clear();
+
 	instancingSrvHandleCPU_ = {};
 	instancingSrvHandleGPU_ = {};
 
@@ -194,69 +205,138 @@ void DrawSystem::EndFrame()
 
 void DrawSystem::Update_ParticleInstanceData()
 {
-	for (uint32_t i = 0; i < activeInstanceCount_; ++i)
+	for (auto& it : s_particlePools)
 	{
-		bool isAlive = true;
+		EmitterPool& pool = it.second;
+		if (!pool.mapped || pool.activeCount == 0) continue;
 
-		/// 寿命管理
-		if (instancingMappedPtr_[i].liveTime > 0)
+		for (uint32_t i = 0; i < pool.activeCount; /* 手動で増減 */)
 		{
-			instancingMappedPtr_[i].liveTime -= 1;
-			if (instancingMappedPtr_[i].liveTime <= 0)isAlive = false;
-		}
+			bool isAlive = true;
 
-
-		/// 拡縮管理
-		instancingMappedPtr_[i].scale.velocity += instancingMappedPtr_[i].scale.acceleration * dxManager_->GetDeltaTime();
-		instancingMappedPtr_[i].scale.value += instancingMappedPtr_[i].scale.velocity * dxManager_->GetDeltaTime();
-		if (instancingMappedPtr_[i].scale.value.x <= 0.0f ||
-			instancingMappedPtr_[i].scale.value.y <= 0.0f ||
-			instancingMappedPtr_[i].scale.value.z <= 0.0f)  // XYZ 全てが0以下になったら消す
-		{
-			isAlive = false;
-		}
-
-		/// 座標管理
-		instancingMappedPtr_[i].translate.velocity += instancingMappedPtr_[i].translate.acceleration * dxManager_->GetDeltaTime();
-		instancingMappedPtr_[i].translate.value += instancingMappedPtr_[i].translate.velocity * dxManager_->GetDeltaTime();
-
-		/// 回転管理
-		instancingMappedPtr_[i].rotate.velocity += instancingMappedPtr_[i].rotate.acceleration * dxManager_->GetDeltaTime();
-		instancingMappedPtr_[i].rotate.value += instancingMappedPtr_[i].rotate.velocity * dxManager_->GetDeltaTime();
-		if (instancingMappedPtr_[i].isBillboard) /// ビルボード
-		{
-			Vector3 direction = (Game::GetCamera()->transform_.translate - instancingMappedPtr_[i].translate.value).Normalized();
-			float yaw = std::atan2(direction.x, direction.z); // Y軸回り
-			float pitch = std::asin(-direction.y);            // X軸回り
-			instancingMappedPtr_[i].rotate.value = { pitch, yaw, instancingMappedPtr_[i].rotate.value.z };
-		}
-
-		/// 行列再計算
-		const Vector3& sc = instancingMappedPtr_[i].scale.value;
-		const Vector3& rt = instancingMappedPtr_[i].rotate.value;
-		const Vector3& tr = instancingMappedPtr_[i].translate.value;
-
-		Matrix4x4 world = Matrix4x4::MakeAffineMatrix(sc, rt, tr);
-		Matrix4x4 wvp = world * viewProjectionMatrix_;
-		instancingMappedPtr_[i].World = world;
-		instancingMappedPtr_[i].WVP = wvp;
-
-
-		/// 死んでたら削除
-		if (!isAlive)
-		{
-			// 末尾とスワップして削除
-			const uint32_t last = activeInstanceCount_ - 1;
-			if (i != last)
+			// 寿命
+			if (pool.mapped[i].liveTime > 0)
 			{
-				instancingMappedPtr_[i] = instancingMappedPtr_[last];
+				pool.mapped[i].liveTime -= 1;
+				if (pool.mapped[i].liveTime <= 0) isAlive = false;
 			}
-			activeInstanceCount_--;
-			// スワップで入ってきた粒子を同じ i で再評価するため i++ しない
-			continue;
+
+			// 拡縮
+			pool.mapped[i].scale.velocity += pool.mapped[i].scale.acceleration * dxManager_->GetDeltaTime();
+			pool.mapped[i].scale.value += pool.mapped[i].scale.velocity * dxManager_->GetDeltaTime();
+			if (pool.mapped[i].scale.value.x <= 0.0f ||
+				pool.mapped[i].scale.value.y <= 0.0f ||
+				pool.mapped[i].scale.value.z <= 0.0f)
+			{
+				isAlive = false;
+			}
+
+			// 平行移動
+			pool.mapped[i].translate.velocity += pool.mapped[i].translate.acceleration * dxManager_->GetDeltaTime();
+			pool.mapped[i].translate.value += pool.mapped[i].translate.velocity * dxManager_->GetDeltaTime();
+
+			// 回転
+			pool.mapped[i].rotate.velocity += pool.mapped[i].rotate.acceleration * dxManager_->GetDeltaTime();
+			pool.mapped[i].rotate.value += pool.mapped[i].rotate.velocity * dxManager_->GetDeltaTime();
+
+			// ビルボード
+			if (pool.mapped[i].isBillboard)
+			{
+				Vector3 direction = (Game::GetCamera()->transform_.translate - pool.mapped[i].translate.value).Normalized();
+				float yaw = std::atan2(direction.x, direction.z); // Y軸
+				float pitch = std::asin(-direction.y);              // X軸
+				pool.mapped[i].rotate.value = { pitch, yaw, pool.mapped[i].rotate.value.z };
+			}
+
+			// 行列
+			const Vector3& sc = pool.mapped[i].scale.value;
+			const Vector3& rt = pool.mapped[i].rotate.value;
+			const Vector3& tr = pool.mapped[i].translate.value;
+
+			Matrix4x4 world = Matrix4x4::MakeAffineMatrix(sc, rt, tr);
+			Matrix4x4 wvp = world * viewProjectionMatrix_;
+			pool.mapped[i].World = world;
+			pool.mapped[i].WVP = wvp;
+
+			// 死亡なら末尾とスワップして詰める
+			if (!isAlive)
+			{
+				const uint32_t last = pool.activeCount - 1;
+				if (i != last)
+				{
+					pool.mapped[i] = pool.mapped[last];
+				}
+				pool.activeCount--;
+				continue; // iは増やさない（入れ替わった要素を再評価）
+			}
+			++i;
 		}
 	}
 }
+//{
+//	for (uint32_t i = 0; i < activeInstanceCount_; ++i)
+//	{
+//		bool isAlive = true;
+//
+//		/// 寿命管理
+//		if (instancingMappedPtr_[i].liveTime > 0)
+//		{
+//			instancingMappedPtr_[i].liveTime -= 1;
+//			if (instancingMappedPtr_[i].liveTime <= 0)isAlive = false;
+//		}
+//
+//
+//		/// 拡縮管理
+//		instancingMappedPtr_[i].scale.velocity += instancingMappedPtr_[i].scale.acceleration * dxManager_->GetDeltaTime();
+//		instancingMappedPtr_[i].scale.value += instancingMappedPtr_[i].scale.velocity * dxManager_->GetDeltaTime();
+//		if (instancingMappedPtr_[i].scale.value.x <= 0.0f ||
+//			instancingMappedPtr_[i].scale.value.y <= 0.0f ||
+//			instancingMappedPtr_[i].scale.value.z <= 0.0f)  // XYZ 全てが0以下になったら消す
+//		{
+//			isAlive = false;
+//		}
+//
+//		/// 座標管理
+//		instancingMappedPtr_[i].translate.velocity += instancingMappedPtr_[i].translate.acceleration * dxManager_->GetDeltaTime();
+//		instancingMappedPtr_[i].translate.value += instancingMappedPtr_[i].translate.velocity * dxManager_->GetDeltaTime();
+//
+//		/// 回転管理
+//		instancingMappedPtr_[i].rotate.velocity += instancingMappedPtr_[i].rotate.acceleration * dxManager_->GetDeltaTime();
+//		instancingMappedPtr_[i].rotate.value += instancingMappedPtr_[i].rotate.velocity * dxManager_->GetDeltaTime();
+//		if (instancingMappedPtr_[i].isBillboard) /// ビルボード
+//		{
+//			Vector3 direction = (Game::GetCamera()->transform_.translate - instancingMappedPtr_[i].translate.value).Normalized();
+//			float yaw = std::atan2(direction.x, direction.z); // Y軸回り
+//			float pitch = std::asin(-direction.y);            // X軸回り
+//			instancingMappedPtr_[i].rotate.value = { pitch, yaw, instancingMappedPtr_[i].rotate.value.z };
+//		}
+//
+//		/// 行列再計算
+//		const Vector3& sc = instancingMappedPtr_[i].scale.value;
+//		const Vector3& rt = instancingMappedPtr_[i].rotate.value;
+//		const Vector3& tr = instancingMappedPtr_[i].translate.value;
+//
+//		Matrix4x4 world = Matrix4x4::MakeAffineMatrix(sc, rt, tr);
+//		Matrix4x4 wvp = world * viewProjectionMatrix_;
+//		instancingMappedPtr_[i].World = world;
+//		instancingMappedPtr_[i].WVP = wvp;
+//
+//
+//		/// 死んでたら削除
+//		if (!isAlive)
+//		{
+//			// 末尾とスワップして削除
+//			const uint32_t last = activeInstanceCount_ - 1;
+//			if (i != last)
+//			{
+//				instancingMappedPtr_[i] = instancingMappedPtr_[last];
+//			}
+//			activeInstanceCount_--;
+//			// スワップで入ってきた粒子を同じ i で再評価するため i++ しない
+//			continue;
+//		}
+//	}
+//}
 
 void DrawSystem::DrawParticle(RenderData_Particle& renderData)
 {
@@ -291,117 +371,103 @@ void DrawSystem::DrawParticle(RenderData_Particle& renderData)
 	materialData_[drawCallIndex_]->enableLighting = true;
 	materialData_[drawCallIndex_]->uvTransform = Matrix4x4::MakeIdentity4x4();
 
-	// =========================
-	// エミッター毎のプール確保 or 取得
-	// =========================
-	//struct EmitterPool
-	//{
-	//	Microsoft::WRL::ComPtr<ID3D12Resource> buffer;
-	//	ParticleInf* mapped = nullptr;
-	//	uint32_t capacity = 0;
-	//	uint32_t activeCount = 0;
-	//	uint32_t srvIndex = UINT32_MAX;
-	//};
-	//
-	//auto& pool = particlePools_[&renderData];
-	//if (!pool.buffer)
-	//{
-	//	pool.capacity = kMaxInstanceCount_;
-	//	pool.buffer = CreateBufferResource(dxManager_->GetDevice(), sizeof(ParticleInf) * pool.capacity);
-	//	assert(pool.buffer);
-	//
-	//	HRESULT hr = pool.buffer->Map(0, nullptr, reinterpret_cast<void**>(&pool.mapped));
-	//	assert(SUCCEEDED(hr) && pool.mapped);
-	//
-	//	// SRV作成
-	//	D3D12_SHADER_RESOURCE_VIEW_DESC srv{};
-	//	srv.Format = DXGI_FORMAT_UNKNOWN;
-	//	srv.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	//	srv.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
-	//	srv.Buffer.FirstElement = 0;
-	//	srv.Buffer.NumElements = pool.capacity;
-	//	srv.Buffer.StructureByteStride = sizeof(ParticleInf);
-	//
-	//	pool.srvIndex = dxManager_->GetDescriptorHeapManager()->AllocateSRVSlot();
-	//	assert(pool.srvIndex != UINT32_MAX);
-	//	auto cpu = dxManager_->GetDescriptorHeapManager()->GetCPUHandleAt(pool.srvIndex);
-	//	dxManager_->GetDevice()->CreateShaderResourceView(pool.buffer.Get(), &srv, cpu);
-	//}
+	// エミッター用プールを取得/初期化
+	auto& pool = s_particlePools[&renderData];
+	if (!pool.buffer)
+	{
+		pool.capacity = kMaxInstanceCount_; // 既存の定数を流用
+		pool.buffer = CreateBufferResource(dxManager_->GetDevice(), sizeof(ParticleInf) * pool.capacity);
+		assert(pool.buffer);
 
+		HRESULT hr = pool.buffer->Map(0, nullptr, reinterpret_cast<void**>(&pool.mapped));
+		assert(SUCCEEDED(hr) && pool.mapped);
 
-	// 発生間隔が１未満なら１に補正
-	if (renderData.emissionDelay < 1)renderData.emissionDelay = 1;
+		// SRV作成
+		D3D12_SHADER_RESOURCE_VIEW_DESC srv{};
+		srv.Format = DXGI_FORMAT_UNKNOWN;
+		srv.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		srv.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+		srv.Buffer.FirstElement = 0;
+		srv.Buffer.NumElements = pool.capacity;
+		srv.Buffer.StructureByteStride = sizeof(ParticleInf);
+
+		pool.srvIndex = dxManager_->GetDescriptorHeapManager()->AllocateSRVSlot();
+		assert(pool.srvIndex != UINT32_MAX);
+		pool.srvCPU = dxManager_->GetDescriptorHeapManager()->GetCPUHandleAt(pool.srvIndex);
+		pool.srvGPU = dxManager_->GetDescriptorHeapManager()->GetGPUHandleAt(pool.srvIndex);
+		dxManager_->GetDevice()->CreateShaderResourceView(pool.buffer.Get(), &srv, pool.srvCPU);
+	}
+
+	// 発生
+	if (renderData.emissionDelay < 1) renderData.emissionDelay = 1;
 	if (renderData.frame % renderData.emissionDelay == 0)
 	{
-		// 発生数が０未満なら０に補正
-		if (renderData.particlesPerEmission < 0)renderData.particlesPerEmission = 0;
-		// 描画可能数を超えないように補正
-		if (activeInstanceCount_ + renderData.particlesPerEmission <= kMaxInstanceCount_)
+		if (renderData.particlesPerEmission < 0) renderData.particlesPerEmission = 0;
+
+		if (pool.activeCount + static_cast<uint32_t>(renderData.particlesPerEmission) <= pool.capacity)
 		{
-			// パーティクル生成
+			// AABBを正規化
+			AABB aabb = renderData.emitterAABB;
+			renderData.emitterAABB.min.x = my_min(aabb.min.x, aabb.max.x);
+			renderData.emitterAABB.max.x = my_max(aabb.min.x, aabb.max.x);
+			renderData.emitterAABB.min.y = my_min(aabb.min.y, aabb.max.y);
+			renderData.emitterAABB.max.y = my_max(aabb.min.y, aabb.max.y);
+			renderData.emitterAABB.min.z = my_min(aabb.min.z, aabb.max.z);
+			renderData.emitterAABB.max.z = my_max(aabb.min.z, aabb.max.z);
+
 			for (int i = 0; i < renderData.particlesPerEmission; ++i)
 			{
-				// 位置
-				AABB aabb = renderData.emitterAABB;
-				renderData.emitterAABB.min.x = my_min(aabb.min.x, aabb.max.x);
-				renderData.emitterAABB.max.x = my_max(aabb.min.x, aabb.max.x);
-				renderData.emitterAABB.min.y = my_min(aabb.min.y, aabb.max.y);
-				renderData.emitterAABB.max.y = my_max(aabb.min.y, aabb.max.y);
-				renderData.emitterAABB.min.z = my_min(aabb.min.z, aabb.max.z);
-				renderData.emitterAABB.max.z = my_max(aabb.min.z, aabb.max.z);
-				particleSRT translate = renderData.translate;
-				translate.value.x = RandomFloat(renderData.emitterAABB.min.x, renderData.emitterAABB.max.x);
-				translate.value.y = RandomFloat(renderData.emitterAABB.min.y, renderData.emitterAABB.max.y);
-				translate.value.z = RandomFloat(renderData.emitterAABB.min.z, renderData.emitterAABB.max.z);
+				const uint32_t idx = pool.activeCount + static_cast<uint32_t>(i);
 
-				// 拡縮
-				particleSRT scale = renderData.scale;
+				// 平行移動（発生位置）
+				particleSRT t = renderData.translate;
+				t.value.x = RandomFloat(renderData.emitterAABB.min.x, renderData.emitterAABB.max.x);
+				t.value.y = RandomFloat(renderData.emitterAABB.min.y, renderData.emitterAABB.max.y);
+				t.value.z = RandomFloat(renderData.emitterAABB.min.z, renderData.emitterAABB.max.z);
 
-				// 回転
-				particleSRT rotate = renderData.rotate;
-				if (renderData.isBillboard)	// ビルボード
+				// 拡縮・回転
+				particleSRT s = renderData.scale;
+				particleSRT r = renderData.rotate;
+
+				// 初期ビルボード向き
+				if (renderData.isBillboard)
 				{
-					Vector3 direction = (Game::GetCamera()->transform_.translate - instancingMappedPtr_[i].translate.value).Normalized();
-					float yaw = std::atan2(direction.x, direction.z); // Y軸回り
-					float pitch = std::asin(-direction.y);            // X軸回り
-					rotate.value = { pitch, yaw, 0.0f };
+					Vector3 direction = (Game::GetCamera()->transform_.translate - t.value).Normalized();
+					float yaw = std::atan2(direction.x, direction.z); // Y軸
+					float pitch = std::asin(-direction.y);              // X軸
+					r.value = { pitch, yaw, 0.0f };
 				}
 
-				// データセット
-				instancingMappedPtr_[activeInstanceCount_ + i].scale = scale;
-				instancingMappedPtr_[activeInstanceCount_ + i].rotate = rotate;
-				instancingMappedPtr_[activeInstanceCount_ + i].translate = translate;
+				// セット
+				pool.mapped[idx].scale = s;
+				pool.mapped[idx].rotate = r;
+				pool.mapped[idx].translate = t;
+				pool.mapped[idx].liveTime = renderData.liveMax;
+				pool.mapped[idx].color = color;
+				pool.mapped[idx].isBillboard = renderData.isBillboard;
 
-				Matrix4x4 world = Matrix4x4::MakeAffineMatrix(scale.value, rotate.value, translate.value);
-				Matrix4x4 wvp = world * viewProjectionMatrix_;
-				instancingMappedPtr_[activeInstanceCount_ + i].World = world;
-				instancingMappedPtr_[activeInstanceCount_ + i].WVP = wvp;
-
-				instancingMappedPtr_[activeInstanceCount_ + i].liveTime = renderData.liveMax;
-				instancingMappedPtr_[activeInstanceCount_ + i].color = color;
-				instancingMappedPtr_[activeInstanceCount_ + i].isBillboard = renderData.isBillboard;
+				Matrix4x4 world = Matrix4x4::MakeAffineMatrix(s.value, r.value, t.value);
+				pool.mapped[idx].World = world;
+				pool.mapped[idx].WVP = world * viewProjectionMatrix_;
 			}
-
-			// アクティブ数を増やす
-			activeInstanceCount_ += renderData.particlesPerEmission;
+			pool.activeCount += static_cast<uint32_t>(renderData.particlesPerEmission);
 		}
 	}
 
-	// SRVをバインド（RP4: t1 VS可視）
-	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(4, dxManager_->GetDescriptorHeapManager()->GetGPUHandleAt(instancingSrvIndex_));
-	// テクスチャ（RP2: t0 PS）
+	// SRV（t1 VS）をこのプールのものに
+	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(4, pool.srvGPU);
+	// テクスチャ（t0 PS）
 	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
 
-	// 描画
+	// ジオメトリ・ドロー
 	dxManager_->GetCommandContextManager()->GetCommandList()->IASetVertexBuffers(0, 1, &obj->vertexBufferView);
 	dxManager_->GetCommandContextManager()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources_[drawCallIndex_]->GetGPUVirtualAddress());
 	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress());
-	dxManager_->GetCommandContextManager()->GetCommandList()->DrawInstanced(kSumVertex, activeInstanceCount_, 0, 0);
+	dxManager_->GetCommandContextManager()->GetCommandList()->DrawInstanced(kSumVertex, pool.activeCount, 0, 0);
 
-	// renderData.currentSum =  
+	renderData.currentSum = pool.activeCount;
 	renderData.frame++;
-
 	drawCallIndex_++;
 }
 
