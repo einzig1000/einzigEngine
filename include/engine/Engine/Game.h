@@ -75,9 +75,6 @@ public:
 	//	//std::vector<ParticleInf> InfList;
 	//};
 
-
-
-
 	// 初期化
 	static void Initialize(int width, int height, const std::wstring& title);
 
@@ -95,6 +92,7 @@ public:
 	static uint32_t LoadTexture(const std::string& filePath);
 	static uint32_t LoadAudio(const std::string& filePath);
 	static TextureData* GetTexture(uint32_t textureNumber);
+	static size_t GetTextureCount();
 
 	// 描画
 	static void DrawModel(RenderData_Model& renderData);

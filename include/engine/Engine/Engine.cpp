@@ -317,6 +317,11 @@ TextureData* Engine::GetTexture(uint32_t textureNumber)
 	return dxManager->GetResourceManager()->GetTextureManager()->GetTexture(textureNumber);
 }
 
+size_t Engine::GetTextureCount()
+{
+	return dxManager->GetResourceManager()->GetTextureManager()->GetTextureCount();
+}
+
 // 描画
 void Engine::DrawModel(RenderData_Model& renderData)
 {

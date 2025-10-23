@@ -27,6 +27,7 @@ public:
 	uint32_t LoadTexture(const std::string& filePath);
 	uint32_t LoadAudio(const std::string& filePath);
 	TextureData* GetTexture(uint32_t textureNumber);
+	size_t GetTextureCount();
 
 	// 描画
 	void DrawModel(RenderData_Model& renderData);
@@ -34,7 +35,6 @@ public:
 	void DrawSprite(RenderData_Sprite& renderData);
 	void DrawParticle(RenderData_Particle& renderData);
 	void DrawLine(RenderData_Line& renderData);
-	//void DrawLine(const Vector3& start, const Vector3& end, const uint32_t& materialColor);
 	void DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
 
 	// AABBが視錐台内にあるか判定する関数

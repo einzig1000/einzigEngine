@@ -86,8 +86,6 @@ TextureData* TextureManager::GetTexture(uint32_t textureID)
 }
 
 
-
-
 // 2,
 Microsoft::WRL::ComPtr<ID3D12Resource> TextureManager::CreateTextureResource(ID3D12Device* device, const DirectX::TexMetadata& metadata)
 {

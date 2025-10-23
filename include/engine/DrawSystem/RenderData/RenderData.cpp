@@ -423,42 +423,80 @@ void RenderData_Model::DrawImGui()
 
 	ImGui::Begin(str.c_str());
 
-	//if (ImGui::TreeNode("-----------transforms-----------"))
-	//{
-	//	ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
-	//	ImGui::TreePop();
-	//}
-
-	ImGui::Text("transforms");
-	ImGui::DragFloat3((num + "scale").c_str(), &transforms.scale.x, 0.01f);
-	ImGui::DragFloat3((num + "translate").c_str(), &transforms.translate.x, 0.01f);
-	ImGui::DragFloat3((num + "rotate").c_str(), &transforms.rotate.x, 0.01f);
-	ImGui::DragFloat3((num + "pivot").c_str(), &pivot.x, 0.01f);
-	ImGui::Text("uvTransform");
-	ImGui::DragFloat3((num + "UVscale").c_str(), &uvTransform.scale.x, 0.01f);
-	ImGui::DragFloat3((num + "UVtranslate").c_str(), &uvTransform.translate.x, 0.01f);
-	ImGui::DragFloat3((num + "UVrotate").c_str(), &uvTransform.rotate.x, 0.01f);
-	ImGui::Text("velocity");
-	ImGui::DragFloat3((num + "lastMove").c_str(), &lastMove.x, 0.01f);
-	ImGui::DragFloat3((num + "velocity").c_str(), &velocity.x, 0.01f);
-	ImGui::DragFloat3((num + "acceleration").c_str(), &acceleration.x, 0.01f);
-	ImGui::DragFloat3((num + "gravity").c_str(), &gravity.x, 0.01f);
-	ImGui::Text("color");
-	Vector4 preColor = ConvertUintToVector4(color);
-	float floatColor[4] = { preColor.x, preColor.y, preColor.z, preColor.w };
-	ImGui::ColorEdit4((num + "color").c_str(), floatColor, 1);
-	Vector4 vector4Color = { floatColor[0], floatColor[1], floatColor[2], floatColor[3] };
-	color = ConvertVector4ToUint(vector4Color);
-	ImGui::Text("option");
-	ImGui::Checkbox("wireFrame", &options.wireframe);
-	ImGui::Checkbox("lighting", &options.enableLighting);
-	bool lookAt = false;
-	ImGui::Checkbox("lookAt", &lookAt);
-	if (lookAt)
+	if (ImGui::TreeNode("----------transforms-----------"))
 	{
-		Game::GetDebugCamera()->SetCenterTarget(transforms.translate, 0, EaseType::IN_BACK);
+		ImGui::DragFloat3((num + "scale").c_str(), &transforms.scale.x, 0.01f);
+		ImGui::DragFloat3((num + "translate").c_str(), &transforms.translate.x, 0.01f);
+		ImGui::DragFloat3((num + "rotate").c_str(), &transforms.rotate.x, 0.01f);
+		ImGui::DragFloat3((num + "pivot").c_str(), &pivot.x, 0.01f);
+		ImGui::TreePop();
 	}
-	ImGui::Text("isCollisionMouse : %d", isCollisionMouseRay);
+	if (ImGui::TreeNode("----------uvTransforms---------"))
+	{
+		ImGui::DragFloat3((num + "UVscale").c_str(), &uvTransform.scale.x, 0.01f);
+		ImGui::DragFloat3((num + "UVtranslate").c_str(), &uvTransform.translate.x, 0.01f);
+		ImGui::DragFloat3((num + "UVrotate").c_str(), &uvTransform.rotate.x, 0.01f);
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------velocity-------------"))
+	{
+		ImGui::DragFloat3((num + "lastMove").c_str(), &lastMove.x, 0.01f);
+		ImGui::DragFloat3((num + "velocity").c_str(), &velocity.x, 0.01f);
+		ImGui::DragFloat3((num + "acceleration").c_str(), &acceleration.x, 0.01f);
+		ImGui::DragFloat3((num + "gravity").c_str(), &gravity.x, 0.01f);
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------model & texture------"))
+	{
+		size_t textureCount = Game::GetTextureCount();
+
+		for (size_t i = 0; i < textureCount; ++i)
+		{
+			TextureData* texData = Game::GetTexture(static_cast<uint32_t>(i));
+			if (texData)
+			{
+				ImGui::Image((ImTextureID)texData->textureSrvHandleGPU.ptr, ImVec2(32, 32));
+				
+				// 6個並べたら改行
+				if ((i + 1) % 6 != 0 && i < textureCount - 1)
+				{
+					ImGui::SameLine();
+				}
+				if (ImGui::IsItemClicked())
+				{
+					this->texture = static_cast<uint32_t>(i);
+				}
+			}
+		}
+
+		//ImGui::Text("model : %d", model);
+
+		//ImGui::InputFloat((num + "model").c_str(), reinterpret_cast<int*>(&model));
+		//ImGui::InputInt((num + "texture").c_str(), reinterpret_cast<int*>(&texture));
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------color----------------"))
+	{
+		Vector4 preColor = ConvertUintToVector4(color);
+		float floatColor[4] = { preColor.x, preColor.y, preColor.z, preColor.w };
+		ImGui::ColorEdit4((num + "color").c_str(), floatColor, 1);
+		Vector4 vector4Color = { floatColor[0], floatColor[1], floatColor[2], floatColor[3] };
+		color = ConvertVector4ToUint(vector4Color);
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------option---------------"))
+	{
+		ImGui::Checkbox("wireFrame", &options.wireframe);
+		ImGui::Checkbox("lighting", &options.enableLighting);
+		bool lookAt = false;
+		ImGui::Checkbox("lookAt", &lookAt);
+		if (lookAt)
+		{
+			Game::GetDebugCamera()->SetCenterTarget(transforms.translate, 0, EaseType::IN_BACK);
+		}
+		ImGui::Text("isCollisionMouse : %d", isCollisionMouseRay);
+		ImGui::TreePop();
+	}
 
 	ImGui::End();
 }
@@ -538,6 +576,29 @@ void RenderData_Sprite::DrawImGui()
 	ImGui::ColorEdit4((num + "color").c_str(), floatColor, 1);
 	Vector4 vector4Color = { floatColor[0], floatColor[1], floatColor[2], floatColor[3] };
 	color = ConvertVector4ToUint(vector4Color);
+	ImGui::Text("texture");
+	{
+		size_t textureCount = Game::GetTextureCount();
+
+		for (size_t i = 0; i < textureCount; ++i)
+		{
+			TextureData* texData = Game::GetTexture(static_cast<uint32_t>(i));
+			if (texData)
+			{
+				ImGui::Image((ImTextureID)texData->textureSrvHandleGPU.ptr, ImVec2(32, 32));
+
+				// 6個並べたら改行
+				if ((i + 1) % 6 != 0 && i < textureCount - 1)
+				{
+					ImGui::SameLine();
+				}
+				if (ImGui::IsItemClicked())
+				{
+					this->texture = static_cast<uint32_t>(i);
+				}
+			}
+		}
+	}
 	ImGui::Text("Anker");
 	const char* items[] =
 	{ "Center","CenterLeft","CenterRight","CenterTop","CenterDown","LeftTop","RightTop","LeftDown","RightDown" };
@@ -606,6 +667,27 @@ void RenderData_Triangle::DrawImGui()
 	ImGui::DragFloat3((num + "pos1").c_str(), &pos1.x, 0.1f);
 	ImGui::DragFloat3((num + "pos2").c_str(), &pos2.x, 0.1f);
 	ImGui::DragFloat3((num + "pos3").c_str(), &pos3.x, 0.1f);
+	ImGui::Text("texture");
+	size_t textureCount = Game::GetTextureCount();
+
+	for (size_t i = 0; i < textureCount; ++i)
+	{
+		TextureData* texData = Game::GetTexture(static_cast<uint32_t>(i));
+		if (texData)
+		{
+			ImGui::Image((ImTextureID)texData->textureSrvHandleGPU.ptr, ImVec2(32, 32));
+
+			// 6個並べたら改行
+			if ((i + 1) % 6 != 0 && i < textureCount - 1)
+			{
+				ImGui::SameLine();
+			}
+			if (ImGui::IsItemClicked())
+			{
+				this->texture = static_cast<uint32_t>(i);
+			}
+		}
+	}
 	ImGui::Text("pivot");
 	//ImGui::DragFloat2((num + "pivot").c_str(), &pivot.x, 0.1f);
 	ImGui::Text("color");
@@ -755,6 +837,29 @@ void RenderData_Particle::DrawImGui()
 	ImGui::DragFloat3(("T.val" + num).c_str(), &this->translate.value.x, 0.01f);
 	ImGui::DragFloat3(("T.vel" + num).c_str(), &this->translate.velocity.x, 0.01f);
 	ImGui::DragFloat3(("T.acc" + num).c_str(), &this->translate.acceleration.x, 0.01f);
+
+	ImGui::Text("texture");
+	size_t textureCount = Game::GetTextureCount();
+
+	for (size_t i = 0; i < textureCount; ++i)
+	{
+		TextureData* texData = Game::GetTexture(static_cast<uint32_t>(i));
+		if (texData)
+		{
+			ImGui::Image((ImTextureID)texData->textureSrvHandleGPU.ptr, ImVec2(32, 32));
+
+			// 6個並べたら改行
+			if ((i + 1) % 6 != 0 && i < textureCount - 1)
+			{
+				ImGui::SameLine();
+			}
+			if (ImGui::IsItemClicked())
+			{
+				this->texture = static_cast<uint32_t>(i);
+			}
+		}
+	}
+	
 
 	ImGui::Text("density");
 	int particlesPerEmission = int(this->particlesPerEmission);

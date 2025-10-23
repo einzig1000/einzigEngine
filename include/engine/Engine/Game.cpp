@@ -60,6 +60,11 @@ TextureData* Game::GetTexture(uint32_t textureNumber)
 	return engine->GetTexture(textureNumber);
 }
 
+size_t Game::GetTextureCount()
+{
+	return engine->GetTextureCount();
+}
+
 void Game::DrawModel(RenderData_Model& renderData)
 {
 	engine->DrawModel(renderData);

@@ -9,6 +9,9 @@ TestPhase::TestPhase()
 	uint32_t enemyTex = Game::LoadTexture("resources/Prototypes/texture/circle.png");
 	uint32_t enemyModel = Game::LoadModel("resources/Prototypes/model/", "plane.obj");
 
+	uint32_t enemyTex2 = Game::LoadTexture("resources/Prototypes/texture/monsterBall.png");
+	uint32_t enemyTex3 = Game::LoadTexture("resources/Prototypes/texture/white1x1.png");
+
 	model_.model = playerModel;
 	model_.texture = playerTex;
 	model_.name = "player";
