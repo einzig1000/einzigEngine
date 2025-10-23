@@ -210,13 +210,20 @@ public:
     Vector3 target;
 
     /// パーティクル１粒
-    RenderData_Model mono;
-
+    uint32_t model;
+    uint32_t texture;
+    uint32_t color = 0xFFFFFFFF;
     particleSRT scale = particleSRT{ Vector3{0.5f,0.5f,0.1f},Vector3{-0.01f,-0.01f,-0.01f},Vector3{0.0f,0.0f,0.0f} };
     particleSRT rotate = particleSRT{ Vector3{0.3f,0.3f,0.3f},Vector3{0.0f,0.0f,0.0f},Vector3{0.0f,0.0f,0.0f} };
     particleSRT translate = particleSRT{ Vector3{0.0f,0.0f,0.0f},Vector3{0.0f,-0.1f,0.0f},Vector3{0.0f,0.0f,0.0f} };
 
 
+
+    // 発生設定
+    int particlesPerEmission = 1;   // 1フレで生む数
+    int emissionDelay = 10;         // 生成間隔フレーム
+    int liveMax = 300;              // 寿命フレーム(マイナスの時は不老)
+    uint32_t frame = 0;             // 経過フレーム
 
     /// ビルボードか
 	bool isBillboard = true;
@@ -224,17 +231,6 @@ public:
     /// 現在存在するパーティクル数
     uint32_t currentSum = 0;
 
-    /// フレーム
-	uint32_t frame = 0;
-
-    /// 生まれる周期
-	uint32_t emissionDelay = 1;
-
-    /// １フレームで生まれる量
-    uint32_t particlesPerEmission = 1;
-
-    /// 寿命(マイナスの時は不老)
-	int liveMax = 300;
 
     void Draw();
     void DrawImGui();

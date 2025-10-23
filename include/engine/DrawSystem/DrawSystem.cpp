@@ -264,46 +264,82 @@ void DrawSystem::DrawParticle(RenderData_Particle& renderData)
 
 	 
 	// モデルの検索
-	Object3D* obj = dxManager_->GetResourceManager()->GetModelManager()->GetModel(renderData.mono.model);
+	Object3D* obj = dxManager_->GetResourceManager()->GetModelManager()->GetModel(renderData.model);
 	if (!obj) return;
 	
 	// テクスチャの検索
-	const TextureData* tex = dxManager_->GetResourceManager()->GetTextureManager()->GetTexture(renderData.mono.texture);
+	const TextureData* tex = dxManager_->GetResourceManager()->GetTextureManager()->GetTexture(renderData.texture);
 	if (!tex) return;
 	
 	// RootSignatureとPSOを設定
 	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootSignature(dxManager_->GetPipelineStateManager()->GetRootSignature_particle()); // 共通のルートシグネチャ
-	if (renderData.mono.options.wireframe || wireframeMode_)
+	if (wireframeMode_)
 	{	// ワイヤーフレーム用PSOを設定
 		dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetParticlePipelineState(BlendMode::kBlendModeNormal));
 	}
 	else
 	{	// Triangle用PSOを設定
-		dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetParticlePipelineState(renderData.mono.options.blendMode));
+		dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetParticlePipelineState(BlendMode::kBlendModeAdd));
 	}
 	
 	// 頂点数の取得
 	const uint32_t kSumVertex = static_cast<uint32_t>(obj->modelData.vertices.size());
 	
 	// マテリアルデータ
-	Vector4 color = ConvertUintToVector4(renderData.mono.color);
+	Vector4 color = ConvertUintToVector4(renderData.color);
 	materialData_[drawCallIndex_]->color = color;
-	materialData_[drawCallIndex_]->enableLighting = renderData.mono.options.enableLighting;
+	materialData_[drawCallIndex_]->enableLighting = true;
 	materialData_[drawCallIndex_]->uvTransform = Matrix4x4::MakeIdentity4x4();
 
+	// =========================
+	// エミッター毎のプール確保 or 取得
+	// =========================
+	//struct EmitterPool
+	//{
+	//	Microsoft::WRL::ComPtr<ID3D12Resource> buffer;
+	//	ParticleInf* mapped = nullptr;
+	//	uint32_t capacity = 0;
+	//	uint32_t activeCount = 0;
+	//	uint32_t srvIndex = UINT32_MAX;
+	//};
+	//
+	//auto& pool = particlePools_[&renderData];
+	//if (!pool.buffer)
+	//{
+	//	pool.capacity = kMaxInstanceCount_;
+	//	pool.buffer = CreateBufferResource(dxManager_->GetDevice(), sizeof(ParticleInf) * pool.capacity);
+	//	assert(pool.buffer);
+	//
+	//	HRESULT hr = pool.buffer->Map(0, nullptr, reinterpret_cast<void**>(&pool.mapped));
+	//	assert(SUCCEEDED(hr) && pool.mapped);
+	//
+	//	// SRV作成
+	//	D3D12_SHADER_RESOURCE_VIEW_DESC srv{};
+	//	srv.Format = DXGI_FORMAT_UNKNOWN;
+	//	srv.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	//	srv.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+	//	srv.Buffer.FirstElement = 0;
+	//	srv.Buffer.NumElements = pool.capacity;
+	//	srv.Buffer.StructureByteStride = sizeof(ParticleInf);
+	//
+	//	pool.srvIndex = dxManager_->GetDescriptorHeapManager()->AllocateSRVSlot();
+	//	assert(pool.srvIndex != UINT32_MAX);
+	//	auto cpu = dxManager_->GetDescriptorHeapManager()->GetCPUHandleAt(pool.srvIndex);
+	//	dxManager_->GetDevice()->CreateShaderResourceView(pool.buffer.Get(), &srv, cpu);
+	//}
 
-	// パーティクル生成
+
+	// 発生間隔が１未満なら１に補正
+	if (renderData.emissionDelay < 1)renderData.emissionDelay = 1;
 	if (renderData.frame % renderData.emissionDelay == 0)
 	{
 		// 発生数が０未満なら０に補正
 		if (renderData.particlesPerEmission < 0)renderData.particlesPerEmission = 0;
-		// 発生間隔が１未満なら１に補正
-		if (renderData.emissionDelay < 1)renderData.emissionDelay = 1;
 		// 描画可能数を超えないように補正
 		if (activeInstanceCount_ + renderData.particlesPerEmission <= kMaxInstanceCount_)
 		{
 			// パーティクル生成
-			for (uint32_t i = 0; i < renderData.particlesPerEmission; ++i)
+			for (int i = 0; i < renderData.particlesPerEmission; ++i)
 			{
 				// 位置
 				AABB aabb = renderData.emitterAABB;
@@ -351,8 +387,6 @@ void DrawSystem::DrawParticle(RenderData_Particle& renderData)
 		}
 	}
 
-
-
 	// SRVをバインド（RP4: t1 VS可視）
 	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(4, dxManager_->GetDescriptorHeapManager()->GetGPUHandleAt(instancingSrvIndex_));
 	// テクスチャ（RP2: t0 PS）
@@ -365,6 +399,7 @@ void DrawSystem::DrawParticle(RenderData_Particle& renderData)
 	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress());
 	dxManager_->GetCommandContextManager()->GetCommandList()->DrawInstanced(kSumVertex, activeInstanceCount_, 0, 0);
 
+	// renderData.currentSum =  
 	renderData.frame++;
 
 	drawCallIndex_++;

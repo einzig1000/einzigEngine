@@ -31,21 +31,17 @@ TestPhase::TestPhase()
 	line3_.points.push_back(Vector3{ -10.0f,0.0f,0.0f });
 	line3_.lineType = LineType::SplineCurve;
 
-	particle_.mono.model = enemyModel;
+	particle_.model = playerModel;
 	// パーティクルテクスチャ
-	particle_.mono.texture = enemyTex;
-	// パーティクル描画オプション
-	particle_.mono.options.blendMode = BlendMode::kBlendModeAdd;
+	particle_.texture = playerTex;
 	// パーティクル初期カラー
-	particle_.mono.color = 0xFFFFFFFF;
+	particle_.color = 0xFFFFFFFF;
 
-	particle2_.mono.model = enemyModel;
+	particle2_.model = enemyModel;
 	// パーティクルテクスチャ
-	particle2_.mono.texture = enemyTex;
-	// パーティクル描画オプション
-	particle2_.mono.options.blendMode = BlendMode::kBlendModeAdd;
+	particle2_.texture = enemyTex;
 	// パーティクル初期カラー
-	particle2_.mono.color = 0xFFFFFFFF;
+	particle2_.color = 0xFFFFFFFF;
 
 	//// パーティクル毎フレーム加算される回転量
 	//particle_.AddRotate = { 0.2f,0.2f,0.2f };
