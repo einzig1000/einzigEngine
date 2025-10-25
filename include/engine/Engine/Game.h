@@ -100,7 +100,9 @@ public:
 	static void DrawTriangle(RenderData_Triangle& renderData);
 	static void DrawLine(RenderData_Line& renderData);
 	static void DrawParticle(RenderData_Particle& renderData);
-	static void DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
+
+	static void AddSphere(Vector3 pos, Vector3 radius, uint32_t color);
+	static void AddAABB(AABB aabb, uint32_t color);
 
 	// 音
 	static void PlayAudio(const uint32_t& audioId, bool loop);

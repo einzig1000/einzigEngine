@@ -136,6 +136,9 @@
     <Filter Include="engine\FixFPS">
       <UniqueIdentifier>{8ed84834-c43a-4dda-a3bf-3b95cd1b75fd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="engine\Utilities\Json">
+      <UniqueIdentifier>{2c7c8756-3efa-42f1-99a8-61e1c4ba9f9f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -261,6 +264,9 @@
     <ClCompile Include="include\engine\FixFPS\FixFPS.cpp">
       <Filter>engine\FixFPS</Filter>
     </ClCompile>
+    <ClCompile Include="include\engine\Utilities\JsonManager.cpp">
+      <Filter>engine\Utilities\Json</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="externals\imgui\imconfig.h">
@@ -385,6 +391,9 @@
     </ClInclude>
     <ClInclude Include="include\engine\FixFPS\FixFPS.h">
       <Filter>engine\FixFPS</Filter>
+    </ClInclude>
+    <ClInclude Include="include\engine\Utilities\JsonManager.h">
+      <Filter>engine\Utilities\Json</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

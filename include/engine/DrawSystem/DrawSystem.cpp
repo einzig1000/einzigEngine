@@ -273,70 +273,6 @@ void DrawSystem::Update_ParticleInstanceData()
 		}
 	}
 }
-//{
-//	for (uint32_t i = 0; i < activeInstanceCount_; ++i)
-//	{
-//		bool isAlive = true;
-//
-//		/// 寿命管理
-//		if (instancingMappedPtr_[i].liveTime > 0)
-//		{
-//			instancingMappedPtr_[i].liveTime -= 1;
-//			if (instancingMappedPtr_[i].liveTime <= 0)isAlive = false;
-//		}
-//
-//
-//		/// 拡縮管理
-//		instancingMappedPtr_[i].scale.velocity += instancingMappedPtr_[i].scale.acceleration * dxManager_->GetDeltaTime();
-//		instancingMappedPtr_[i].scale.value += instancingMappedPtr_[i].scale.velocity * dxManager_->GetDeltaTime();
-//		if (instancingMappedPtr_[i].scale.value.x <= 0.0f ||
-//			instancingMappedPtr_[i].scale.value.y <= 0.0f ||
-//			instancingMappedPtr_[i].scale.value.z <= 0.0f)  // XYZ 全てが0以下になったら消す
-//		{
-//			isAlive = false;
-//		}
-//
-//		/// 座標管理
-//		instancingMappedPtr_[i].translate.velocity += instancingMappedPtr_[i].translate.acceleration * dxManager_->GetDeltaTime();
-//		instancingMappedPtr_[i].translate.value += instancingMappedPtr_[i].translate.velocity * dxManager_->GetDeltaTime();
-//
-//		/// 回転管理
-//		instancingMappedPtr_[i].rotate.velocity += instancingMappedPtr_[i].rotate.acceleration * dxManager_->GetDeltaTime();
-//		instancingMappedPtr_[i].rotate.value += instancingMappedPtr_[i].rotate.velocity * dxManager_->GetDeltaTime();
-//		if (instancingMappedPtr_[i].isBillboard) /// ビルボード
-//		{
-//			Vector3 direction = (Game::GetCamera()->transform_.translate - instancingMappedPtr_[i].translate.value).Normalized();
-//			float yaw = std::atan2(direction.x, direction.z); // Y軸回り
-//			float pitch = std::asin(-direction.y);            // X軸回り
-//			instancingMappedPtr_[i].rotate.value = { pitch, yaw, instancingMappedPtr_[i].rotate.value.z };
-//		}
-//
-//		/// 行列再計算
-//		const Vector3& sc = instancingMappedPtr_[i].scale.value;
-//		const Vector3& rt = instancingMappedPtr_[i].rotate.value;
-//		const Vector3& tr = instancingMappedPtr_[i].translate.value;
-//
-//		Matrix4x4 world = Matrix4x4::MakeAffineMatrix(sc, rt, tr);
-//		Matrix4x4 wvp = world * viewProjectionMatrix_;
-//		instancingMappedPtr_[i].World = world;
-//		instancingMappedPtr_[i].WVP = wvp;
-//
-//
-//		/// 死んでたら削除
-//		if (!isAlive)
-//		{
-//			// 末尾とスワップして削除
-//			const uint32_t last = activeInstanceCount_ - 1;
-//			if (i != last)
-//			{
-//				instancingMappedPtr_[i] = instancingMappedPtr_[last];
-//			}
-//			activeInstanceCount_--;
-//			// スワップで入ってきた粒子を同じ i で再評価するため i++ しない
-//			continue;
-//		}
-//	}
-//}
 
 void DrawSystem::DrawParticle(RenderData_Particle& renderData)
 {
@@ -406,37 +342,426 @@ void DrawSystem::DrawParticle(RenderData_Particle& renderData)
 
 		if (pool.activeCount + static_cast<uint32_t>(renderData.particlesPerEmission) <= pool.capacity)
 		{
-			// AABBを正規化
-			AABB aabb = renderData.emitterAABB;
-			renderData.emitterAABB.min.x = my_min(aabb.min.x, aabb.max.x);
-			renderData.emitterAABB.max.x = my_max(aabb.min.x, aabb.max.x);
-			renderData.emitterAABB.min.y = my_min(aabb.min.y, aabb.max.y);
-			renderData.emitterAABB.max.y = my_max(aabb.min.y, aabb.max.y);
-			renderData.emitterAABB.min.z = my_min(aabb.min.z, aabb.max.z);
-			renderData.emitterAABB.max.z = my_max(aabb.min.z, aabb.max.z);
+			// AABB使うなら修正
+			if (!renderData.useSphereEmitter)
+			{
+				AABB aabb = renderData.emitterAABB;
+				renderData.emitterAABB.min.x = my_min(aabb.min.x, aabb.max.x);
+				renderData.emitterAABB.max.x = my_max(aabb.min.x, aabb.max.x);
+				renderData.emitterAABB.min.y = my_min(aabb.min.y, aabb.max.y);
+				renderData.emitterAABB.max.y = my_max(aabb.min.y, aabb.max.y);
+				renderData.emitterAABB.min.z = my_min(aabb.min.z, aabb.max.z);
+				renderData.emitterAABB.max.z = my_max(aabb.min.z, aabb.max.z);
+			}
 
 			for (int i = 0; i < renderData.particlesPerEmission; ++i)
 			{
 				const uint32_t idx = pool.activeCount + static_cast<uint32_t>(i);
 
-				// 平行移動（発生位置）
-				particleSRT t = renderData.translate;
-				t.value.x = RandomFloat(renderData.emitterAABB.min.x, renderData.emitterAABB.max.x);
-				t.value.y = RandomFloat(renderData.emitterAABB.min.y, renderData.emitterAABB.max.y);
-				t.value.z = RandomFloat(renderData.emitterAABB.min.z, renderData.emitterAABB.max.z);
+#pragma region translate
 
-				// 拡縮・回転
+				particleSRT t = renderData.translate;
+
+				// エミッター形状が球体の場合
+				if (renderData.useSphereEmitter)
+				{
+					// エミッターが内部を指す場合
+					if (renderData.emitFromInside == true)
+					{
+						Vector3 center = renderData.emitterSphere.center;
+						Vector3 radius = renderData.emitterSphere.radius;
+
+						// ランダムな方向（単位ベクトル）を生成
+						float theta = RandomFloat(0.0f, 2.0f * float(std::numbers::pi), 3);       // 0〜2π
+						float phi = RandomFloat(0.0f, float(std::numbers::pi), 3);              // 0〜π
+						float r = RandomFloat(0.0f, 1.0f, 3);            // 0〜1（球内）
+
+						// 球内部の距離に合わせてスケーリング（立方根で均等分布）
+						r = pow(r, 1.0f / 3.0f);
+
+						// 球面座標系から直交座標系へ変換
+						float x = r * sin(phi) * cos(theta) * radius.x;
+						float y = r * sin(phi) * sin(theta) * radius.y;
+						float z = r * cos(phi) * radius.z;
+
+						t.value.x = center.x + x;
+						t.value.y = center.y + y;
+						t.value.z = center.z + z;
+					}
+					// エミッターが外殻を指す場合
+					else
+					{
+						Vector3 center = renderData.emitterSphere.center;
+						Vector3 radius = renderData.emitterSphere.radius;
+
+						// ランダムな方向（単位ベクトル）を生成
+						float theta = RandomFloat(0.0f, 2.0f * float(std::numbers::pi), 3); // 0〜2π
+						float phi = RandomFloat(0.0f, float(std::numbers::pi), 3);        // 0〜π
+
+						// r = 1.0f 固定 → 外殻のみ
+						float x = sin(phi) * cos(theta) * radius.x;
+						float y = sin(phi) * sin(theta) * radius.y;
+						float z = cos(phi) * radius.z;
+
+						t.value.x = center.x + x;
+						t.value.y = center.y + y;
+						t.value.z = center.z + z;
+					}
+				}
+				// エミッター形状がAABBの場合
+				else
+				{
+					// エミッターが内部を指す場合
+					if (renderData.emitFromInside == true)
+					{
+						t.value.x = RandomFloat(renderData.emitterAABB.min.x, renderData.emitterAABB.max.x);
+						t.value.y = RandomFloat(renderData.emitterAABB.min.y, renderData.emitterAABB.max.y);
+						t.value.z = RandomFloat(renderData.emitterAABB.min.z, renderData.emitterAABB.max.z);
+					}
+					// エミッターが外殻を指す場合
+					else
+					{
+						int i = RandomInt(1, 6);
+						if (i == 1 || i == 2)
+						{
+							if (i == 1)
+							{
+								t.value.x = renderData.emitterAABB.min.x;
+							}
+							else
+							{
+								t.value.x = renderData.emitterAABB.max.x;
+							}
+							t.value.y = RandomFloat(renderData.emitterAABB.min.y, renderData.emitterAABB.max.y, 3);
+							t.value.z = RandomFloat(renderData.emitterAABB.min.z, renderData.emitterAABB.max.z, 3);
+						}
+						else if (i == 3 || i == 4)
+						{
+							if (i == 3)
+							{
+								t.value.y = renderData.emitterAABB.min.y;
+							}
+							else
+							{
+								t.value.y = renderData.emitterAABB.max.y;
+							}
+							t.value.x = RandomFloat(renderData.emitterAABB.min.x, renderData.emitterAABB.max.x, 3);
+							t.value.z = RandomFloat(renderData.emitterAABB.min.z, renderData.emitterAABB.max.z, 3);
+						}
+						else if (i == 5 || i == 6)
+						{
+							if (i == 5)
+							{
+								t.value.z = renderData.emitterAABB.min.z;
+							}
+							else
+							{
+								t.value.z = renderData.emitterAABB.max.z;
+							}
+							t.value.y = RandomFloat(renderData.emitterAABB.min.y, renderData.emitterAABB.max.y, 3);
+							t.value.x = RandomFloat(renderData.emitterAABB.min.x, renderData.emitterAABB.max.x, 3);
+						}
+					}
+				}
+
+				// target方向に向かわせる場合(ここでvelocity決定)
+				if (renderData.useTarget)
+				{
+					Vector3 axis = (renderData.target - t.value).Normalized();
+
+					// 生成位置依存の拡散
+					if (renderData.spawnDependent)
+					{
+						// エミッター中心
+						Vector3 center;
+						if (renderData.useSphereEmitter) center = renderData.emitterSphere.center;
+						else
+						{
+							center = Vector3{
+								(renderData.emitterAABB.min.x + renderData.emitterAABB.max.x) * 0.5f,
+								(renderData.emitterAABB.min.y + renderData.emitterAABB.max.y) * 0.5f,
+								(renderData.emitterAABB.min.z + renderData.emitterAABB.max.z) * 0.5f
+							};
+						}
+
+						// 生成位置から見た放射状ベクトル
+						Vector3 radial = (t.value - center).Normalized();
+
+						// 奇跡的に中心と同じ位置に生成された場合の対策
+						if (radial.LengthSq() <= eps) { radial = axis; }
+
+						// 
+						float fullDeg = my_max(0.0f, my_min(360.0f, renderData.spreadAngle));
+						const float halfRad = (fullDeg * 0.5f) * (std::numbers::pi_v<float> / 180.0f);
+
+						if (fullDeg <= 0.0f)
+						{
+							// 完全に target 方向へ集中
+							t.velocity = axis * renderData.speed;
+						}
+						else if (fullDeg >= 360.0f)
+						{
+							// 完全に生成位置から見た放射状（例: 右側に生まれたら右へ）
+							t.velocity = radial * renderData.speed;
+						}
+						else
+						{
+							float dot = axis.Dot(radial);
+							dot = my_max(-1.0f, my_min(1.0f, dot));
+							float angle = std::acos(dot);
+
+							Vector3 dir;
+							if (angle <= halfRad || angle < 1e-6f)
+							{
+								dir = radial;
+							}
+							else
+							{
+								// 球面線形補間（Slerp）で axis -> radial を半角分だけ寄せる
+								float tParam = halfRad / angle;
+								float sinA = std::sin(angle);
+								float w0 = std::sin((1.0f - tParam) * angle) / sinA;
+								float w1 = std::sin(tParam * angle) / sinA;
+								dir = (axis * w0) + (radial * w1);
+								dir = dir.Normalized();
+							}
+							t.velocity = dir * renderData.speed;
+						}
+					}
+					else
+					{
+						// 完全ランダム拡散
+						t.velocity = axis * renderData.speed;
+
+						// 拡散
+						if (renderData.spreadAngle > 0.0f)
+						{
+							// ランダムな角度を生成
+							float angle = RandomFloat(-renderData.spreadAngle / 2.0f, renderData.spreadAngle / 2.0f, 3);
+							// 回転行列を作成
+							Matrix4x4 rotationMatrix = Matrix4x4::MakeRotateYMatrix(angle);
+							// 方向ベクトルを回転
+							t.velocity = Vector3(
+								rotationMatrix.m[0][0] * t.velocity.x + rotationMatrix.m[1][0] * t.velocity.y + rotationMatrix.m[2][0] * t.velocity.z,
+								rotationMatrix.m[0][1] * t.velocity.x + rotationMatrix.m[1][1] * t.velocity.y + rotationMatrix.m[2][1] * t.velocity.z,
+								rotationMatrix.m[0][2] * t.velocity.x + rotationMatrix.m[1][2] * t.velocity.y + rotationMatrix.m[2][2] * t.velocity.z
+							);
+						}
+					}
+				}
+				else
+				{
+					if (renderData.translate.isRandom_velocity)
+					{
+						AABB aabbbbb = renderData.translate.randomRange_velocity;
+						renderData.translate.randomRange_velocity.min.x = my_min(aabbbbb.min.x, aabbbbb.max.x);
+						renderData.translate.randomRange_velocity.max.x = my_max(aabbbbb.min.x, aabbbbb.max.x);
+						renderData.translate.randomRange_velocity.min.y = my_min(aabbbbb.min.y, aabbbbb.max.y);
+						renderData.translate.randomRange_velocity.max.y = my_max(aabbbbb.min.y, aabbbbb.max.y);
+						renderData.translate.randomRange_velocity.min.z = my_min(aabbbbb.min.z, aabbbbb.max.z);
+						renderData.translate.randomRange_velocity.max.z = my_max(aabbbbb.min.z, aabbbbb.max.z);
+						t.velocity.x = RandomFloat(renderData.translate.randomRange_velocity.min.x, renderData.translate.randomRange_velocity.max.x, 3);
+						t.velocity.y = RandomFloat(renderData.translate.randomRange_velocity.min.y, renderData.translate.randomRange_velocity.max.y, 3);
+						t.velocity.z = RandomFloat(renderData.translate.randomRange_velocity.min.z, renderData.translate.randomRange_velocity.max.z, 3);
+					}
+					if (renderData.translate.isRandom_acceleration)
+					{
+						AABB aabbbbb = renderData.translate.randomRange_acceleration;
+						renderData.translate.randomRange_acceleration.min.x = my_min(aabbbbb.min.x, aabbbbb.max.x);
+						renderData.translate.randomRange_acceleration.max.x = my_max(aabbbbb.min.x, aabbbbb.max.x);
+						renderData.translate.randomRange_acceleration.min.y = my_min(aabbbbb.min.y, aabbbbb.max.y);
+						renderData.translate.randomRange_acceleration.max.y = my_max(aabbbbb.min.y, aabbbbb.max.y);
+						renderData.translate.randomRange_acceleration.min.z = my_min(aabbbbb.min.z, aabbbbb.max.z);
+						renderData.translate.randomRange_acceleration.max.z = my_max(aabbbbb.min.z, aabbbbb.max.z);
+						t.acceleration.x = RandomFloat(renderData.translate.randomRange_acceleration.min.x, renderData.translate.randomRange_acceleration.max.x, 3);
+						t.acceleration.y = RandomFloat(renderData.translate.randomRange_acceleration.min.y, renderData.translate.randomRange_acceleration.max.y, 3);
+						t.acceleration.z = RandomFloat(renderData.translate.randomRange_acceleration.min.z, renderData.translate.randomRange_acceleration.max.z, 3);
+					}
+
+					//// target 未使用時：生成位置依存モードなら放射状に飛ぶ
+					//if (renderData.spawnDependent)
+					//{
+					//	Vector3 center = renderData.useSphereEmitter
+					//		? renderData.emitterSphere.center
+					//		: Vector3{
+					//			(renderData.emitterAABB.min.x + renderData.emitterAABB.max.x) * 0.5f,
+					//			(renderData.emitterAABB.min.y + renderData.emitterAABB.max.y) * 0.5f,
+					//			(renderData.emitterAABB.min.z + renderData.emitterAABB.max.z) * 0.5f
+					//	};
+					//	Vector3 radial = (t.value - center).Normalized();
+					//	if (radial.LengthSq() <= eps) { radial = Vector3{ 0.0f, 1.0f, 0.0f }; }
+					//	t.velocity = radial * renderData.speed; // spreadAngle はここでは放射状固定（交差回避を優先）
+					//}
+				}
+
+				//// target方向に向かわせる場合
+				//if (renderData.useTarget)
+				//{
+				//	Vector3 direction = (renderData.target - t.value).Normalized();
+				//	t.velocity = direction * renderData.speed;
+				// 
+				//	// 拡散
+				//	if (renderData.spreadAngle > 0.0f)
+				//	{
+				//		// ランダムな角度を生成
+				//		float angle = RandomFloat(-renderData.spreadAngle / 2.0f, renderData.spreadAngle / 2.0f, 3);
+				//		// 回転行列を作成
+				//		Matrix4x4 rotationMatrix = Matrix4x4::MakeRotateYMatrix(angle);
+				//		// 方向ベクトルを回転
+				//		t.velocity = Vector3(
+				//			rotationMatrix.m[0][0] * t.velocity.x + rotationMatrix.m[1][0] * t.velocity.y + rotationMatrix.m[2][0] * t.velocity.z,
+				//			rotationMatrix.m[0][1] * t.velocity.x + rotationMatrix.m[1][1] * t.velocity.y + rotationMatrix.m[2][1] * t.velocity.z,
+				//			rotationMatrix.m[0][2] * t.velocity.x + rotationMatrix.m[1][2] * t.velocity.y + rotationMatrix.m[2][2] * t.velocity.z
+				//		);
+				//	}
+				//}
+
+				//if (renderData.useTarget)
+				//{
+				//	Vector3 direction = (renderData.target - t.value).Normalized();
+				//
+				//	// 拡散（円錐／半球／全方位を角度で制御）
+				//	// spreadAngle は「全角度」[deg]（0, 30, 180, 360 など）
+				//	{
+				//		// ベース方向（無効ならY軸にフォールバック）
+				//		Vector3 w = direction.LengthSq() > eps ? direction : Vector3{ 0.0f, 1.0f, 0.0f };
+				//
+				//		// 角度正規化 [0,360]
+				//		float fullDeg = renderData.spreadAngle;
+				//		if (fullDeg < 0.0f) fullDeg = 0.0f;
+				//		if (fullDeg > 360.0f) fullDeg = 360.0f;
+				//
+				//		const float halfRad = (fullDeg * 0.5f) * (std::numbers::pi_v<float> / 180.0f);
+				//
+				//		if (halfRad <= 0.0f)
+				//		{
+				//			// 集中（spread=0）
+				//			t.velocity = w * renderData.speed;
+				//		}
+				//		else
+				//		{
+				//			// コーン一様サンプリング（半角＝halfRad）
+				//			const float cosMax = std::cos(halfRad);
+				//			const float u = RandomFloat(0.0f, 1.0f, 3);                      // [0,1]
+				//			const float cosTheta = 1.0f - u * (1.0f - cosMax);                // [cosMax,1]
+				//			const float sinTheta = std::sqrt(my_max(0.0f, 1.0f - cosTheta * cosTheta));
+				//			const float phi = RandomFloat(0.0f, 2.0f * std::numbers::pi_v<float>, 3);
+				//
+				//			// w を軸とする正規直交基底を作成
+				//			const Vector3 up = (std::abs(w.y) < 0.999f) ? Vector3{ 0.0f, 1.0f, 0.0f } : Vector3{ 1.0f, 0.0f, 0.0f };
+				//			const Vector3 uvec = w.Cross(up).Normalized();
+				//			const Vector3 vvec = w.Cross(uvec); // 既に正規直交
+				//
+				//			// コーン内方向
+				//			Vector3 dir = uvec * (sinTheta * std::cos(phi))
+				//				+ vvec * (sinTheta * std::sin(phi))
+				//				+ w * cosTheta;
+				//
+				//			t.velocity = dir.Normalized() * renderData.speed;
+				//		}
+				//	}
+				//}
+
+#pragma endregion
+
+#pragma region scale
 				particleSRT s = renderData.scale;
+				if (renderData.scale.isRandom_value)
+				{
+					AABB aabbbbb = renderData.scale.randomRange_value;
+					renderData.scale.randomRange_value.min.x = my_min(aabbbbb.min.x, aabbbbb.max.x);
+					renderData.scale.randomRange_value.max.x = my_max(aabbbbb.min.x, aabbbbb.max.x);
+					renderData.scale.randomRange_value.min.y = my_min(aabbbbb.min.y, aabbbbb.max.y);
+					renderData.scale.randomRange_value.max.y = my_max(aabbbbb.min.y, aabbbbb.max.y);
+					renderData.scale.randomRange_value.min.z = my_min(aabbbbb.min.z, aabbbbb.max.z);
+					renderData.scale.randomRange_value.max.z = my_max(aabbbbb.min.z, aabbbbb.max.z);
+					s.value.x = RandomFloat(renderData.scale.randomRange_value.min.x, renderData.scale.randomRange_value.max.x, 3);
+					s.value.y = RandomFloat(renderData.scale.randomRange_value.min.y, renderData.scale.randomRange_value.max.y, 3);
+					s.value.z = RandomFloat(renderData.scale.randomRange_value.min.z, renderData.scale.randomRange_value.max.z, 3);
+				}
+				if (renderData.scale.isRandom_velocity)
+				{
+					AABB aabbbbb = renderData.scale.randomRange_velocity;
+					renderData.scale.randomRange_velocity.min.x = my_min(aabbbbb.min.x, aabbbbb.max.x);
+					renderData.scale.randomRange_velocity.max.x = my_max(aabbbbb.min.x, aabbbbb.max.x);
+					renderData.scale.randomRange_velocity.min.y = my_min(aabbbbb.min.y, aabbbbb.max.y);
+					renderData.scale.randomRange_velocity.max.y = my_max(aabbbbb.min.y, aabbbbb.max.y);
+					renderData.scale.randomRange_velocity.min.z = my_min(aabbbbb.min.z, aabbbbb.max.z);
+					renderData.scale.randomRange_velocity.max.z = my_max(aabbbbb.min.z, aabbbbb.max.z);
+					s.velocity.x = RandomFloat(renderData.scale.randomRange_velocity.min.x, renderData.scale.randomRange_velocity.max.x, 3);
+					s.velocity.y = RandomFloat(renderData.scale.randomRange_velocity.min.y, renderData.scale.randomRange_velocity.max.y, 3);
+					s.velocity.z = RandomFloat(renderData.scale.randomRange_velocity.min.z, renderData.scale.randomRange_velocity.max.z, 3);
+				}
+				if (renderData.scale.isRandom_acceleration)
+				{
+					AABB aabbbbb = renderData.scale.randomRange_acceleration;
+					renderData.scale.randomRange_acceleration.min.x = my_min(aabbbbb.min.x, aabbbbb.max.x);
+					renderData.scale.randomRange_acceleration.max.x = my_max(aabbbbb.min.x, aabbbbb.max.x);
+					renderData.scale.randomRange_acceleration.min.y = my_min(aabbbbb.min.y, aabbbbb.max.y);
+					renderData.scale.randomRange_acceleration.max.y = my_max(aabbbbb.min.y, aabbbbb.max.y);
+					renderData.scale.randomRange_acceleration.min.z = my_min(aabbbbb.min.z, aabbbbb.max.z);
+					renderData.scale.randomRange_acceleration.max.z = my_max(aabbbbb.min.z, aabbbbb.max.z);
+					s.acceleration.x = RandomFloat(renderData.scale.randomRange_acceleration.min.x, renderData.scale.randomRange_acceleration.max.x, 3);
+					s.acceleration.y = RandomFloat(renderData.scale.randomRange_acceleration.min.y, renderData.scale.randomRange_acceleration.max.y, 3);
+					s.acceleration.z = RandomFloat(renderData.scale.randomRange_acceleration.min.z, renderData.scale.randomRange_acceleration.max.z, 3);
+				}
+
+#pragma endregion
+
+#pragma region rotate
+
 				particleSRT r = renderData.rotate;
 
-				// 初期ビルボード向き
+				// ビルボードは生まれた瞬間からビルボード
 				if (renderData.isBillboard)
 				{
 					Vector3 direction = (Game::GetCamera()->transform_.translate - t.value).Normalized();
 					float yaw = std::atan2(direction.x, direction.z); // Y軸
-					float pitch = std::asin(-direction.y);              // X軸
+					float pitch = std::asin(-direction.y);            // X軸
 					r.value = { pitch, yaw, 0.0f };
 				}
+				// ビルボードではないかつランダム回転指定がある場合
+				else if (renderData.rotate.isRandom_value)
+				{
+					AABB aabbbbb = renderData.rotate.randomRange_value;
+					renderData.rotate.randomRange_value.min.x = my_min(aabbbbb.min.x, aabbbbb.max.x);
+					renderData.rotate.randomRange_value.max.x = my_max(aabbbbb.min.x, aabbbbb.max.x);
+					renderData.rotate.randomRange_value.min.y = my_min(aabbbbb.min.y, aabbbbb.max.y);
+					renderData.rotate.randomRange_value.max.y = my_max(aabbbbb.min.y, aabbbbb.max.y);
+					renderData.rotate.randomRange_value.min.z = my_min(aabbbbb.min.z, aabbbbb.max.z);
+					renderData.rotate.randomRange_value.max.z = my_max(aabbbbb.min.z, aabbbbb.max.z);
+					r.value.x = RandomFloat(renderData.rotate.randomRange_value.min.x, renderData.rotate.randomRange_value.max.x, 3);
+					r.value.y = RandomFloat(renderData.rotate.randomRange_value.min.y, renderData.rotate.randomRange_value.max.y, 3);
+					r.value.z = RandomFloat(renderData.rotate.randomRange_value.min.z, renderData.rotate.randomRange_value.max.z, 3);
+				}
+				if (renderData.rotate.isRandom_velocity)
+				{
+					AABB aabbbbb = renderData.rotate.randomRange_velocity;
+					renderData.rotate.randomRange_velocity.min.x = my_min(aabbbbb.min.x, aabbbbb.max.x);
+					renderData.rotate.randomRange_velocity.max.x = my_max(aabbbbb.min.x, aabbbbb.max.x);
+					renderData.rotate.randomRange_velocity.min.y = my_min(aabbbbb.min.y, aabbbbb.max.y);
+					renderData.rotate.randomRange_velocity.max.y = my_max(aabbbbb.min.y, aabbbbb.max.y);
+					renderData.rotate.randomRange_velocity.min.z = my_min(aabbbbb.min.z, aabbbbb.max.z);
+					renderData.rotate.randomRange_velocity.max.z = my_max(aabbbbb.min.z, aabbbbb.max.z);
+					r.velocity.x = RandomFloat(renderData.rotate.randomRange_velocity.min.x, renderData.rotate.randomRange_velocity.max.x, 3);
+					r.velocity.y = RandomFloat(renderData.rotate.randomRange_velocity.min.y, renderData.rotate.randomRange_velocity.max.y, 3);
+					r.velocity.z = RandomFloat(renderData.rotate.randomRange_velocity.min.z, renderData.rotate.randomRange_velocity.max.z, 3);
+				}
+				if (renderData.rotate.isRandom_acceleration)
+				{
+					AABB aabbbbb = renderData.rotate.randomRange_acceleration;
+					renderData.rotate.randomRange_acceleration.min.x = my_min(aabbbbb.min.x, aabbbbb.max.x);
+					renderData.rotate.randomRange_acceleration.max.x = my_max(aabbbbb.min.x, aabbbbb.max.x);
+					renderData.rotate.randomRange_acceleration.min.y = my_min(aabbbbb.min.y, aabbbbb.max.y);
+					renderData.rotate.randomRange_acceleration.max.y = my_max(aabbbbb.min.y, aabbbbb.max.y);
+					renderData.rotate.randomRange_acceleration.min.z = my_min(aabbbbb.min.z, aabbbbb.max.z);
+					renderData.rotate.randomRange_acceleration.max.z = my_max(aabbbbb.min.z, aabbbbb.max.z);
+					r.acceleration.x = RandomFloat(renderData.rotate.randomRange_acceleration.min.x, renderData.rotate.randomRange_acceleration.max.x, 3);
+					r.acceleration.y = RandomFloat(renderData.rotate.randomRange_acceleration.min.y, renderData.rotate.randomRange_acceleration.max.y, 3);
+					r.acceleration.z = RandomFloat(renderData.rotate.randomRange_acceleration.min.z, renderData.rotate.randomRange_acceleration.max.z, 3);
+				}
+
+#pragma endregion
 
 				// セット
 				pool.mapped[idx].scale = s;
@@ -1143,6 +1468,197 @@ void DrawSystem::DrawLine(RenderData_Line& renderData)
 	vertexDataUsed_ += kSumVertex;
 }
 
+void DrawSystem::AddSphere(Vector3 pos, Vector3 radius, uint32_t color)
+{
+	// 描画回数上限
+	if (drawCallIndex_ >= kMaxDrawCallPerFrame_) return;
+
+	// RootSignatureとPSOを設定（Line用）
+	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootSignature(
+		dxManager_->GetPipelineStateManager()->GetRootSignature());
+	dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(
+		dxManager_->GetPipelineStateManager()->GetPipelineState(BlendMode::kBlendModeNormal, D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE));
+
+	// 経度/緯度の分割数
+	const uint32_t kSubdivision = 10;
+	// 経度分割１つ分の角度
+	const float kLonEvery = float((2 * std::numbers::pi_v<float>) / kSubdivision);
+	// 緯度分割１つ分の角度
+	const float kLatEvery = float(std::numbers::pi_v<float> / kSubdivision);
+
+	// 必要な頂点数
+	const uint32_t kSumVertex = (kSubdivision * kSubdivision) * 6;
+	//const uint32_t kSumVertex = 1000;
+
+	// 必要頂点数分確保
+	if (vertexDataUsed_ + kSumVertex > vertexData_.size())
+	{
+		vertexData_.resize(vertexDataUsed_ + kSumVertex);
+	}
+
+	// 緯度の方向に分割 -π/2 ～ π/2
+	for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex)
+	{
+		// 現在の緯度と次の緯度
+		const float lat = float(-std::numbers::pi_v<float> / 2.0f + latIndex * kLatEvery);
+		const float nextLat = lat + kLatEvery;
+
+		// 経度方向に分割 0 ～ 2π
+		for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex)
+		{
+			// 現在の経度と次の経度
+			const float lon = lonIndex * kLonEvery;
+			const float nextLon = (lonIndex + 1) * kLonEvery;
+
+			// 頂点データの開始インデックス
+			const uint32_t start = ((latIndex * kSubdivision + lonIndex) * 6) + vertexDataUsed_;
+
+			// 頂点データを設定 (三角形1)
+			vertexData_[start + 0].position = { std::cos(lat) * std::cos(lon) * radius.x, std::sin(lat) * radius.y, std::cos(lat) * std::sin(lon) * radius.z, 1.0f };
+			vertexData_[start + 2].position = { std::cos(nextLat) * std::cos(nextLon) * radius.x, std::sin(nextLat) * radius.y, std::cos(nextLat) * std::sin(nextLon) * radius.z, 1.0f };
+			vertexData_[start + 1].position = { std::cos(nextLat) * std::cos(lon) * radius.x, std::sin(nextLat) * radius.y, std::cos(nextLat) * std::sin(lon) * radius.z, 1.0f };
+
+			// 頂点データを設定 (三角形2)
+			vertexData_[start + 3].position = { std::cos(lat) * std::cos(lon) * radius.x, std::sin(lat) * radius.y, std::cos(lat) * std::sin(lon) * radius.z, 1.0f };
+			vertexData_[start + 5].position = { std::cos(lat) * std::cos(nextLon) * radius.x, std::sin(lat) * radius.y, std::cos(lat) * std::sin(nextLon) * radius.z, 1.0f };
+			vertexData_[start + 4].position = { std::cos(nextLat) * std::cos(nextLon) * radius.x, std::sin(nextLat) * radius.y, std::cos(nextLat) * std::sin(nextLon) * radius.z, 1.0f };
+
+		}
+	}
+
+	// WVP（ラインはワールド焼き込み済みなのでWorld=I, WVP=VP）
+	wvpData_[drawCallIndex_]->World = Matrix4x4::MakeIdentity4x4();
+	wvpData_[drawCallIndex_]->WVP = viewProjectionMatrix_;
+
+	// マテリアル（ラインはテクスチャ不要）
+	materialData_[drawCallIndex_]->color = ConvertUintToVector4(color);
+	materialData_[drawCallIndex_]->enableLighting = false;
+	materialData_[drawCallIndex_]->uvTransform = Matrix4x4::MakeIdentity4x4();
+
+	// Upload（動的VB）
+	if (!EnsureDynamicVB(vertexDataUsed_ + kSumVertex)) return;
+	std::memcpy(vertexMappedPtr_ + vertexDataUsed_, &vertexData_[vertexDataUsed_], sizeof(VertexData) * kSumVertex);
+
+	// VBVを作成（w 個分）
+	D3D12_VERTEX_BUFFER_VIEW vbv{};
+	vbv.BufferLocation = vertexResource_->GetGPUVirtualAddress() + sizeof(VertexData) * vertexDataUsed_;
+	vbv.SizeInBytes = static_cast<UINT>(sizeof(VertexData) * kSumVertex);
+	vbv.StrideInBytes = sizeof(VertexData);
+
+	// バインドと描画
+	auto* cmd = dxManager_->GetCommandContextManager()->GetCommandList();
+	cmd->IASetVertexBuffers(0, 1, &vbv);
+	cmd->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
+	cmd->SetGraphicsRootConstantBufferView(0, materialResources_[drawCallIndex_]->GetGPUVirtualAddress());
+	cmd->SetGraphicsRootConstantBufferView(1, wvpResources_[drawCallIndex_]->GetGPUVirtualAddress());
+	cmd->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress());
+	cmd->DrawInstanced(static_cast<UINT>(kSumVertex), 1, 0, 0);
+
+	// カウンタ更新
+	drawCallIndex_++;
+	vertexDataUsed_ += kSumVertex;
+}
+
+void DrawSystem::AddAABB(AABB aabb, uint32_t color)
+{
+	// 描画回数上限
+	if (drawCallIndex_ >= kMaxDrawCallPerFrame_) return;
+
+	// RootSignatureとPSOを設定（Line用）
+	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootSignature(
+		dxManager_->GetPipelineStateManager()->GetRootSignature());
+	dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(
+		dxManager_->GetPipelineStateManager()->GetPipelineState(BlendMode::kBlendModeNormal, D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE));
+
+	// 頂点は8個
+	Vector3 p[8] = {
+		{ aabb.min.x, aabb.min.y, aabb.min.z }, // 0
+		{ aabb.max.x, aabb.min.y, aabb.min.z }, // 1
+		{ aabb.max.x, aabb.max.y, aabb.min.z }, // 2
+		{ aabb.min.x, aabb.max.y, aabb.min.z }, // 3
+		{ aabb.min.x, aabb.min.y, aabb.max.z }, // 4
+		{ aabb.max.x, aabb.min.y, aabb.max.z }, // 5
+		{ aabb.max.x, aabb.max.y, aabb.max.z }, // 6
+		{ aabb.min.x, aabb.max.y, aabb.max.z }, // 7
+	};
+
+	// ラインの始点終点に分けると3 * 8個
+	const uint32_t kSumVertex = 24;
+
+	// 必要頂点数分確保
+	if (vertexDataUsed_ + kSumVertex > vertexData_.size())
+	{
+		vertexData_.resize(vertexDataUsed_ + kSumVertex);
+	}
+
+	for (size_t i = 0; i < kSumVertex; ++i)
+	{
+		vertexData_[vertexDataUsed_ + i].texcoord = { 0.0f, 0.0f };
+		vertexData_[vertexDataUsed_ + i].normal = { 0.0f, 0.0f, -1.0f };
+	}
+
+	// 底面（z=min）
+	vertexData_[vertexDataUsed_ + 0].position = { p[0].x, p[0].y, p[0].z, 1.0f };
+	vertexData_[vertexDataUsed_ + 1].position = { p[1].x, p[1].y, p[1].z, 1.0f };
+	vertexData_[vertexDataUsed_ + 2].position = { p[1].x, p[1].y, p[1].z, 1.0f };
+	vertexData_[vertexDataUsed_ + 3].position = { p[2].x, p[2].y, p[2].z, 1.0f };
+	vertexData_[vertexDataUsed_ + 4].position = { p[2].x, p[2].y, p[2].z, 1.0f };
+	vertexData_[vertexDataUsed_ + 5].position = { p[3].x, p[3].y, p[3].z, 1.0f };
+	vertexData_[vertexDataUsed_ + 6].position = { p[3].x, p[3].y, p[3].z, 1.0f };
+	vertexData_[vertexDataUsed_ + 7].position = { p[0].x, p[0].y, p[0].z, 1.0f };
+
+	// 上面（z=max）
+	vertexData_[vertexDataUsed_ + 8].position = { p[4].x, p[4].y, p[4].z, 1.0f };
+	vertexData_[vertexDataUsed_ + 9].position = { p[5].x, p[5].y, p[5].z, 1.0f };
+	vertexData_[vertexDataUsed_ + 10].position = { p[5].x, p[5].y, p[5].z, 1.0f };
+	vertexData_[vertexDataUsed_ + 11].position = { p[6].x, p[6].y, p[6].z, 1.0f };
+	vertexData_[vertexDataUsed_ + 12].position = { p[6].x, p[6].y, p[6].z, 1.0f };
+	vertexData_[vertexDataUsed_ + 13].position = { p[7].x, p[7].y, p[7].z, 1.0f };
+	vertexData_[vertexDataUsed_ + 14].position = { p[7].x, p[7].y, p[7].z, 1.0f };
+	vertexData_[vertexDataUsed_ + 15].position = { p[4].x, p[4].y, p[4].z, 1.0f };
+
+	// 側面（縦）
+	vertexData_[vertexDataUsed_ + 16].position = { p[0].x, p[0].y, p[0].z, 1.0f };
+	vertexData_[vertexDataUsed_ + 17].position = { p[4].x, p[4].y, p[4].z, 1.0f };
+	vertexData_[vertexDataUsed_ + 18].position = { p[1].x, p[1].y, p[1].z, 1.0f };
+	vertexData_[vertexDataUsed_ + 19].position = { p[5].x, p[5].y, p[5].z, 1.0f };
+	vertexData_[vertexDataUsed_ + 20].position = { p[2].x, p[2].y, p[2].z, 1.0f };
+	vertexData_[vertexDataUsed_ + 21].position = { p[6].x, p[6].y, p[6].z, 1.0f };
+	vertexData_[vertexDataUsed_ + 22].position = { p[3].x, p[3].y, p[3].z, 1.0f };
+	vertexData_[vertexDataUsed_ + 23].position = { p[7].x, p[7].y, p[7].z, 1.0f };
+
+	// WVP
+	wvpData_[drawCallIndex_]->World = Matrix4x4::MakeIdentity4x4();
+	wvpData_[drawCallIndex_]->WVP = viewProjectionMatrix_;
+
+	// マテリアル（ラインはテクスチャ不要）
+	materialData_[drawCallIndex_]->color = ConvertUintToVector4(color);
+	materialData_[drawCallIndex_]->enableLighting = false;
+	materialData_[drawCallIndex_]->uvTransform = Matrix4x4::MakeIdentity4x4();
+
+	// Upload（動的VB）
+	if (!EnsureDynamicVB(vertexDataUsed_ + kSumVertex)) return;
+	std::memcpy(vertexMappedPtr_ + vertexDataUsed_, &vertexData_[vertexDataUsed_], sizeof(VertexData) * kSumVertex);
+
+	// VBVを作成
+	D3D12_VERTEX_BUFFER_VIEW vbv{};
+	vbv.BufferLocation = vertexResource_->GetGPUVirtualAddress() + sizeof(VertexData) * vertexDataUsed_;
+	vbv.SizeInBytes = sizeof(VertexData) * kSumVertex;
+	vbv.StrideInBytes = sizeof(VertexData);
+
+	// バインドと描画
+	auto* cmd = dxManager_->GetCommandContextManager()->GetCommandList();
+	cmd->IASetVertexBuffers(0, 1, &vbv);
+	cmd->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
+	cmd->SetGraphicsRootConstantBufferView(0, materialResources_[drawCallIndex_]->GetGPUVirtualAddress());
+	cmd->SetGraphicsRootConstantBufferView(1, wvpResources_[drawCallIndex_]->GetGPUVirtualAddress());
+	cmd->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress());
+	cmd->DrawInstanced(kSumVertex, 1, 0, 0);
+
+	// カウンタ更新
+	drawCallIndex_++;
+	vertexDataUsed_ += kSumVertex;
+}
 
 bool DrawSystem::EnsureDynamicVB(size_t requiredVertexCount)
 {

@@ -90,9 +90,14 @@ void Game::DrawParticle(RenderData_Particle& renderData)
 	engine->DrawParticle(renderData);
 }
 
-void Game::DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions)
+void Game::AddSphere(Vector3 pos, Vector3 radius, uint32_t color)
 {
-	engine->DrawSphere(transform, center, kSubdivision, textureNumber, materialColor, drawOptions);
+	engine->AddSphere(pos, radius, color);
+}
+
+void Game::AddAABB(AABB aabb, uint32_t color)
+{
+	engine->AddAABB(aabb, color);
 }
 
 void Game::PlayAudio(const uint32_t& audioId, bool loop)

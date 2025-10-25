@@ -16,6 +16,7 @@ private:
 	RenderData_Model model_;
 	RenderData_Particle particle_;
 	RenderData_Particle particle2_;
+	RenderData_Particle particle3_;
 	RenderData_Sprite sprite_;
 	RenderData_Triangle triangle_;
 	RenderData_Line line_;

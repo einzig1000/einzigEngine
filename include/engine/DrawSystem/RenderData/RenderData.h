@@ -39,7 +39,7 @@ public:
     float mass = 1.0f;
     // ID
     int ID = 0;
-    std::string name = "NULL";
+    std::optional<std::string> name;
     // 画面内に存在するか
     bool inPicture = false;
     // マウスとの衝突判定
@@ -118,7 +118,7 @@ public:
     bool isCollisionMouseRay = false;
     // ID
     int ID = 0;
-    std::string name = "NULL";
+    std::optional<std::string> name;
 
     void Draw();
     void DrawImGui();
@@ -153,7 +153,7 @@ public:
     DrawOptions options;
     // ID
     int ID = 0;
-    std::string name = "NULL";
+    std::optional<std::string> name;
 
     void Draw();
     void DrawImGui();
@@ -175,7 +175,7 @@ public:
     std::vector<Vector3> points;
     // ID
     int ID = 0;
-    std::string name = "NULL";
+    std::optional<std::string> name;
     // 色
     uint32_t color = 0xFFFFFFFF;
     // ラインタイプ
@@ -199,25 +199,49 @@ public:
     RenderData_Particle();
     ~RenderData_Particle();
 
+    /// 基本的にここから
+
+    // ID
+    std::optional<std::string> name;
+
+    // ファイルパス
+    std::string filePath = "resources/Prototypes/particle/aaa";
+
+    /// パーティクル１粒
+    uint32_t model = 0;
+    uint32_t texture = 0;
+    void LoadJson();
+
+    void Draw();
+    void DrawImGui();
+    void DrawEmitter();
+
+    /// ここまでしか書き換えない
+
+
+
     // ID
     int ID = 0;
-    std::string name = "NULL";
+    uint32_t color = 0xFFFFFFFF;
+
+	// パーティクルのSRT変化量
+    particleSRT scale;
+    particleSRT rotate;
+    particleSRT translate;
 
     /// エミッター範囲
     AABB emitterAABB = { Vector3{ -1.0f, -1.0f, -1.0f }, Vector3{ 1.0f, 1.0f, 1.0f } };
     SphereXYZ emitterSphere;
+	bool useSphereEmitter = false;  // 球体エミッターを使うかどうか
+    bool emitFromInside = true;     // エミッターの内側から発生するか外殻から発生するか
+	
+
     /// エミッター範囲中心から見た時の飛んでく方向
+	bool useTarget = false; // ターゲット方向に飛ばすかどうか
+	bool spawnDependent = false; // 発生位置に依存した方向に飛ばすかどうか
     Vector3 target;
-
-    /// パーティクル１粒
-    uint32_t model;
-    uint32_t texture;
-    uint32_t color = 0xFFFFFFFF;
-    particleSRT scale = particleSRT{ Vector3{0.5f,0.5f,0.5f},Vector3{-0.01f,-0.01f,-0.01f},Vector3{0.0f,0.0f,0.0f} };
-    particleSRT rotate = particleSRT{ Vector3{0.3f,0.3f,0.3f},Vector3{0.0f,0.0f,0.0f},Vector3{0.0f,0.0f,0.0f} };
-    particleSRT translate = particleSRT{ Vector3{0.0f,0.0f,0.0f},Vector3{0.0f,-0.1f,0.0f},Vector3{0.0f,0.0f,0.0f} };
-
-
+	float speed = 1.0f;      // 速度
+	float spreadAngle = 0.0f; // 拡散角度
 
     // 発生設定
     int particlesPerEmission = 1;   // 1フレで生む数
@@ -230,11 +254,6 @@ public:
 
     /// 現在存在するパーティクル数
     uint32_t currentSum = 0;
-
-
-    void Draw();
-    void DrawImGui();
-    void DrawEmitter();
 
 private:
 

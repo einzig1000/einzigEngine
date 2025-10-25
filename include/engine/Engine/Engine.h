@@ -35,7 +35,8 @@ public:
 	void DrawSprite(RenderData_Sprite& renderData);
 	void DrawParticle(RenderData_Particle& renderData);
 	void DrawLine(RenderData_Line& renderData);
-	void DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions);
+	void AddSphere(Vector3 pos, Vector3 radius, uint32_t color);
+	void AddAABB(AABB aabb, uint32_t color);
 
 	// AABBが視錐台内にあるか判定する関数
 	bool InFrustum(const AABB& aabb);

@@ -71,8 +71,6 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 		dxManager->GetDescriptorHeapManager()->GetGPUHandleAt(slot)                     // ImGuiフォントSRV用のGPUハンドル
 	);
 
-
-
 	inputManager_->GetMouseController()->wheelDelta = 0;
 
 }
@@ -328,120 +326,14 @@ void Engine::DrawModel(RenderData_Model& renderData)
 	drawSystem->DrawModel(renderData);
 }
 
-void Engine::DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions)
+void Engine::AddSphere(Vector3 pos, Vector3 radius, uint32_t color)
 {
-	//// 描画回数上限
-	//if (drawCallIndex >= kMaxDrawCallPerFrame) return;
+	drawSystem->AddSphere(pos, radius, color);
+}
 
-	//// RootSignatureとPSOを設定
-	//dxManager->GetCommandList()->SetGraphicsRootSignature(dxManager->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
-	//if (drawOptions.wireframe || WireframeMode)
-	//{	 // ワイヤーフレーム用PSOを設定
-	//	dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(BlendMode::Wireframe, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
-	//}
-	//else
-	//{	// Triangle用PSOを設定
-	//	dxManager->GetCommandList()->SetPipelineState(dxManager->GetPipelineStateManager()->GetPipelineState(drawOptions.blendMode, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
-	//}
-
-	//// 必要な頂点数
-	//const uint32_t kSumVertex = kSubdivision * kSubdivision * 6;
-	//// 必要な頂点数分配列を拡張
-	//if (vertexDataUsed + kSumVertex > vertexData.size())
-	//{
-	//	vertexData.resize(vertexDataUsed + kSumVertex);
-	//}
-
-	//// 頂点
-	//CreateSphere(&vertexData[vertexDataUsed], kSubdivision);
-
-
-	//// 1. オブジェクトのスケール行列
-	//Matrix4x4 scaleMatrix = Matrix4x4::MakeScaleMatrix(transform.scale);
-
-	//// 2. ワールド空間での最終的な位置への移動行列
-	//Matrix4x4 translateMatrix = Matrix4x4::MakeTranslateMatrix(transform.translate);
-
-	//// 3. 回転の中心への移動 (centerを原点に移動)
-	//Matrix4x4 toRotationCenter = Matrix4x4::MakeTranslateMatrix({ -center.x, -center.y, -center.z });
-
-	//// 4. 回転行列 (transform.rotate を center を中心とする回転として使う)
-	//Matrix4x4 rotateXMatrix = Matrix4x4::MakeRotateXMatrix(transform.rotate.x);
-	//Matrix4x4 rotateYMatrix = Matrix4x4::MakeRotateYMatrix(transform.rotate.y);
-	//Matrix4x4 rotateZMatrix = Matrix4x4::MakeRotateZMatrix(transform.rotate.z);
-	//Matrix4x4 rotationMatrix = rotateZMatrix * rotateXMatrix * rotateYMatrix;
-
-	//// 5. 回転後、元の回転中心の位置に戻す
-	//Matrix4x4 fromRotationCenter = Matrix4x4::MakeTranslateMatrix(center);
-
-	//// 最終的なワールド行列の構築
-	//Matrix4x4 worldMatrix =
-	//	scaleMatrix *		 // 1. 拡縮はどうでもいい
-	//	toRotationCenter *	 // 2. 回転中心を原点に移動
-	//	rotationMatrix *	 // 3. 原点で回転 (centerを中心とした回転)
-	//	fromRotationCenter * // 4. 回転したものを元の回転中心に戻す
-	//	translateMatrix;	 // 5. 最終的なワールド位置へ移動
-
-	//// WVP行列
-	//Matrix4x4 wvpMatrix;
-	//if (!debugCamera)
-	//{
-	//	wvpMatrix = worldMatrix * cameraController->viewProjectionMatrix;
-	//}
-	//else
-	//{
-	//	wvpMatrix = worldMatrix * debugCameraController->viewProjectionMatrix;
-	//}
-
-	//wvpData[drawCallIndex]->World = worldMatrix;
-	//wvpData[drawCallIndex]->WVP = wvpMatrix;
-
-	//// テクスチャ
-	//const TextureData* tex = dxManager->GetResourceManager()->GetTextureManager()->GetTexture(textureNumber);
-	//if (!tex)return;
-
-	//// マテリアル
-	//Vector4 color = ConvertUintToVector4(materialColor);
-	//materialData[drawCallIndex]->color = color;
-	//materialData[drawCallIndex]->enableLighting = drawOptions.enableLighting;
-	//Matrix4x4 uvTransformMatrix = Matrix4x4::MakeIdentity4x4();
-	////uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeScaleMatrix(drawOptions.uvTransform.scale));
-	////uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(drawOptions.uvTransform.rotate.z));
-	////uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(drawOptions.uvTransform.translate));
-	//materialData[drawCallIndex]->uvTransform = uvTransformMatrix;
-
-
-	//// 頂点リソース
-	//VertexData* vData = nullptr;
-	//HRESULT hr = vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vData));
-	//if (FAILED(hr) || vData == nullptr) return;
-	//std::memcpy(vData + vertexDataUsed, &vertexData[vertexDataUsed], sizeof(VertexData) * kSumVertex);
-	//vertexResource->Unmap(0, nullptr);
-
-	//// 頂点バッファビュー
-	//D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
-	//vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress() + sizeof(VertexData) * vertexDataUsed;
-	//vertexBufferView.SizeInBytes = sizeof(VertexData) * static_cast<UINT>(kSumVertex);
-	//vertexBufferView.StrideInBytes = sizeof(VertexData);
-
-	//// 描画処理
-	//dxManager->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
-	//dxManager->GetCommandList()->IASetIndexBuffer(&indexBufferView);
-	//// 形状を設定
-	//dxManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	//// CBVを設定する マテリアル用のCBufferの場所を設定
-	//dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources[drawCallIndex]->GetGPUVirtualAddress());
-	//// CBVを設定する wvp用のCBufferの場所を設定
-	//dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources[drawCallIndex]->GetGPUVirtualAddress());
-	//// SRVのDescriptorTableの先頭を設定。２はrootParameters[2]。
-	//dxManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
-	//// CBVを設定する ディレクショナルライト用のCBufferの場所を設定
-	//dxManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
-
-	//dxManager->GetCommandList()->DrawInstanced(kSumVertex, 1, 0, 0);
-
-	//drawCallIndex++;
-	//vertexDataUsed += kSumVertex;
+void Engine::AddAABB(AABB aabb, uint32_t color)
+{
+	drawSystem->AddAABB(aabb, color);
 }
 
 void Engine::DrawTriangle(RenderData_Triangle& renderData)

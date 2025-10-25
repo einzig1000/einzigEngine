@@ -35,6 +35,9 @@ public:
 	void DrawParticle(RenderData_Particle& renderData);
 	void DrawLine(RenderData_Line& renderData);
 
+	void AddSphere(Vector3 pos, Vector3 radius, uint32_t color);
+	void AddAABB(AABB aabb, uint32_t color);
+
 	void SetLightColor(const Vector4 color) { directionalLightData_->color = color; }
 	void SetLightDirection(const Vector3 direction) { directionalLightData_->direction = direction; }
 	void SetLightIntensity(float intensity) { directionalLightData_->intensity = intensity; }

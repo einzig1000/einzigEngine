@@ -1,0 +1,79 @@
+{
+  "ID": 2,
+  "color": [
+    1.0,
+    1.0,
+    1.0,
+    1.0
+  ],
+  "emissionDelay": 10,
+  "emitterAABB": {
+    "max": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "min": [
+      -1.0,
+      -1.0,
+      -1.0
+    ]
+  },
+  "filePath": "Resource",
+  "isBillboard": true,
+  "liveMax": 300,
+  "particlesPerEmission": 1,
+  "rotate": {
+    "acceleration": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "value": [
+      0.30000001192092896,
+      0.30000001192092896,
+      0.30000001192092896
+    ],
+    "velocity": [
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  "scale": {
+    "acceleration": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "value": [
+      0.5,
+      0.5,
+      0.5
+    ],
+    "velocity": [
+      -0.009999999776482582,
+      -0.009999999776482582,
+      -0.009999999776482582
+    ]
+  },
+  "schema_version": 1,
+  "texture_index": 1,
+  "translate": {
+    "acceleration": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "value": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "velocity": [
+      0.0,
+      -0.10000000149011612,
+      0.0
+    ]
+  }
+}

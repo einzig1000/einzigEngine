@@ -771,16 +771,22 @@ struct CollisionInf
 
 struct particleSRT
 {
-    Vector3 value;
+	bool isRandom_value = false; // trueならランダム生成
+    Vector3 value = { 1.0f,1.0f,1.0f };
+    AABB randomRange_value;
+	bool isRandom_velocity = false; // trueならランダム生成
 	Vector3 velocity;
+	AABB randomRange_velocity;
+	bool isRandom_acceleration = false; // trueならランダム生成
+	AABB randomRange_acceleration;
 	Vector3 acceleration;
 };
 
 struct ParticleInf
 {
-    particleSRT scale = particleSRT{ Vector3{1.0f,1.0f,1.0f},Vector3{-0.1f,-0.1f,-0.1f},Vector3{0.0f,0.0f,0.0f} };
-	particleSRT rotate = particleSRT{ Vector3{0.1f,0.1f,0.1f},Vector3{0.0f,0.0f,0.0f},Vector3{0.0f,0.0f,0.0f} };
-	particleSRT translate = particleSRT{ Vector3{0.0f,0.0f,0.0f},Vector3{0.0f,-0.1f,0.0f},Vector3{0.0f,0.0f,0.0f} };
+    particleSRT scale;
+    particleSRT rotate;
+    particleSRT translate;
 
     Matrix4x4 World;
     Matrix4x4 WVP;
