@@ -71,7 +71,7 @@ Object3D* ModelManager::GetModel(uint32_t modelID)
 	}
 	else
 	{
-		Log("存在しないテクスチャIDです:%d", modelID);
+		Log("存在しないモデルIDです:%d", modelID);
 		return nullptr;
 	}
 }
