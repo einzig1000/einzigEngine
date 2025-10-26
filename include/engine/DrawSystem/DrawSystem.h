@@ -9,7 +9,7 @@ namespace
 	struct EmitterPool
 	{
 		Microsoft::WRL::ComPtr<ID3D12Resource> buffer;
-		ParticleInf* mapped = nullptr;
+		ParticleMonoInf* mapped = nullptr;
 		uint32_t capacity = 0;
 		uint32_t activeCount = 0;
 		uint32_t srvIndex = UINT32_MAX;
@@ -44,6 +44,8 @@ public:
 	void ToggleLightMode(const uint32_t mode) { directionalLightData_->mode = mode; }
 
 	void toggleWireframeMode() { wireframeMode_ = !wireframeMode_; }
+
+	static void ReleaseParticlePool(RenderData_Particle* rd);
 
 private:
 	uint32_t instancingSrvIndex_ = UINT32_MAX;

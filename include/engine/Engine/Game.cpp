@@ -10,6 +10,10 @@ static Engine* engine = new Engine;
 
 void Game::Initialize(int width, int height, const std::wstring& title)
 {
+#ifdef DEBUG
+	D3DResourceLeakChecker checker;
+#endif // DEBUG
+
 	engine->Initialize(width, height, title);
 }
 

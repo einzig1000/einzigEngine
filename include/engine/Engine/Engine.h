@@ -58,7 +58,7 @@ public:
 
 	// マウス
 	Vector2 GetMousePosition();
-	uint32_t GetMouseWheel();
+	int GetMouseWheel();
 	Ray GetMouseRay();
 	bool GetMousePress(int i);
 	bool GetMousePrePress(int i);

@@ -34,20 +34,8 @@ TestPhase::TestPhase()
 	line3_.points.push_back(Vector3{ -10.0f,0.0f,0.0f });
 	line3_.lineType = LineType::SplineCurve;
 
-	particle_.model = playerModel;
-	particle_.texture = playerTex;
 	particle_.filePath = "resources/Prototypes/particle/aaa";
-	//particle_.LoadJson();
-
-	particle2_.model = enemyModel;
-	particle2_.texture = enemyTex;
-	particle2_.filePath = "resources/Prototypes/particle/bbb";
-	//particle2_.LoadJson();
-
-	particle3_.model = enemyModel;
-	particle3_.texture = enemyTex;
-	particle3_.filePath = "resources/Prototypes/particle/ccc";
-	//particle3_.LoadJson();
+	particle_.LoadJson();
 
 }
 
@@ -80,12 +68,6 @@ void TestPhase::Draw()
 	particle_.Draw();
 	particle_.DrawImGui();
 	particle_.DrawEmitter();
-	//particle2_.Draw();
-	//particle2_.DrawImGui();
-	//particle2_.DrawEmitter();
-	//particle3_.Draw();
-	//particle3_.DrawImGui();
-	//particle3_.DrawEmitter();
 
 	line_.Draw();
 	line_.DrawImGui();

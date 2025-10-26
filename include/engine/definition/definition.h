@@ -2,6 +2,9 @@
 // 標準ライブラリ
 #include <vector>
 #include <string>
+#include <cmath>
+#include <cstdint>
+#include <numbers>
 
 // Windows/DirectX
 #include <initguid.h>
@@ -76,7 +79,7 @@ enum class PHASE
 };
 
 // スプライトのアンカー位置
-enum class Anker
+enum class Anchor
 {
     Center,
 
@@ -547,6 +550,8 @@ struct AABB
     Vector3 max;
 
     Vector3 center()const;
+	// min,maxが入れ替わる可能性があれば毎フレーム飛び出したい
+	void Fix();
 
     Vector3 GetCollisionDepth(const AABB& other)const;
 };
@@ -718,21 +723,6 @@ struct Material
     Matrix4x4 uvTransform;
 };
 
-struct DrawParticleOptions
-{
-    /// エミッターはAABB型か球型か
-    // true = AABB　false = 球
-    bool emitterShape = true;
-    /// 全パーティクルがtarget方向に向かうかエミッターとtargetの垂直方向に向かうか
-    // trueなら垂直方向、falseならtarget方向
-    bool targetDirection = true;
-    /// エミッター内部でも発生するか外殻上でのみ発生するか
-    // trueなら内部でも発生、falseなら外殻のみ
-    bool spawnInsideEmitter = true;
-    // ビルボードか否か
-    bool toCamera = false;
-};
-
 #pragma endregion
 
 
@@ -769,7 +759,47 @@ struct CollisionInf
 #pragma endregion
 
 
-struct particleSRT
+#pragma region パーティクルデータ構造体
+
+// パーティクル情報
+
+struct ParticleResource
+{
+    uint32_t model = 0;
+	uint32_t texture = 0;
+};
+
+struct ParticleEmitter
+{
+    AABB emitterAABB = { Vector3{ -1.0f, -1.0f, -1.0f }, Vector3{ 1.0f, 1.0f, 1.0f } };
+    SphereXYZ emitterSphere;
+    bool useSphereEmitter = false;  // 球体エミッターを使うかどうか
+    bool emitFromInside = true;
+};
+
+struct ParticleTarget
+{
+    bool useTarget = false; // ターゲット方向に飛ばすかどうか
+    bool spawnDependent = false; // 発生位置に依存した方向に飛ばすかどうか
+    Vector3 target;
+    float speed = 1.0f;      // 速度
+    float spreadAngle = 0.0f; // 拡散角度
+};
+
+struct ParticleDensity
+{
+    int particlesPerEmission = 1;   // 1フレで生む数
+    int emissionDelay = 10;         // 生成間隔フレーム
+    int liveMax = 300;              // 寿命フレーム(マイナスの時は不老)
+    uint32_t frame = 0;             // 経過フレーム
+};
+
+struct ParticleOption
+{
+    bool isBillboard = true;    // ビルボードかどうか
+};
+
+struct ParticleSRT
 {
 	bool isRandom_value = false; // trueならランダム生成
     Vector3 value = { 1.0f,1.0f,1.0f };
@@ -782,19 +812,52 @@ struct particleSRT
 	Vector3 acceleration;
 };
 
+struct ParticleMaterial
+{
+    uint32_t color;
+    Matrix4x4 uvTransform;
+};
+
 struct ParticleInf
 {
-    particleSRT scale;
-    particleSRT rotate;
-    particleSRT translate;
+    ParticleResource resource;
+    ParticleEmitter emitter;
+    ParticleTarget target;
+    ParticleDensity density;
+    ParticleOption option;
+    ParticleSRT scale;
+    ParticleSRT rotate;
+    ParticleSRT translate;
+	ParticleMaterial material;
+};
+
+// パーティクルインスタンス情報
+struct ParticleMonoInf
+{
+    ParticleSRT scale;
+    ParticleSRT rotate;
+    ParticleSRT translate;
 
     Matrix4x4 World;
     Matrix4x4 WVP;
 
     uint32_t liveTime = 0;
     Vector4 color;
-    bool isBillboard;
+    uint32_t isBillboard;
+	uint32_t padding[3];
 };
+
+struct ParticleMonoInfGPU 
+{
+    Matrix4x4 World; 
+    Matrix4x4 WVP;
+    Vector4 color;
+    uint32_t liveTime;
+    uint32_t isBillboard; 
+    uint32_t padding[2];
+};
+
+#pragma endregion
 
 enum class Direction
 {
@@ -827,7 +890,6 @@ struct D3DResourceLeakChecker
         }
     }
 };
-
 
 enum class LineType
 {

@@ -18,62 +18,6 @@ class CameraController;
 class Game
 {
 public:
-	//class RenderData_Particle
-	//{
-	//public:
-	//	// エミッター範囲
-	//	AABB emitterAABB = { Vector3{ -1.0f, -1.0f, -1.0f }, Vector3{ 1.0f, 1.0f, 1.0f } };
-	//	SphereXYZ emitterSphere;
-	//	// エミッター範囲中心から見た時の飛んでく方向
-	//	Vector3 target;
-	//	// パーティクルが飛んでく扇形の中心角　0ならdirection方向まっすぐ 2πなら全方位(0～2π)
-	//	Vector2 centralAngle = { 0.0f, 0.0f };
-	//	// 速度
-	//	float velocity = 1.0f;
-	//	// emissionDelayフレームごとにパーティクルが生まれる
-	//	int emissionDelay = 10;
-	//	// emissionDelayフレームごとに〇個生まれる
-	//	int particlesPerEmission = 1;
-	//	// 誕生クールタイム
-	//	int frame = 0;
-	//	// 死亡クールタイム
-	//	int liveMax = 10;
-	//	// 描画オプション
-	//	DrawParticleOptions option;
-	//
-	//
-	//	//// 消滅方法
-	//	//DestructionType destructionType = DestructionType::ToSmall;
-	//	// パーティクルの毎フレーム回転量
-	//	Vector3 AddRotate;
-	//	// パーティクルの毎フレーム拡縮量
-	//	Vector3 AddScale;
-	//	// パーティクルの毎フレームカラー変化量
-	//	Vector4 AddColor;
-	//	// パーティクル一粒の情報
-	//	RenderData_Model mono;
-	//
-	//	// 描画
-	//	void Draw();
-	//	void DrawImGui();
-	//	void DrawEmitter();
-	//
-	//	//void Reset()
-	//	//{
-	//	//	modelList.clear();
-	//	//	InfList.clear();
-	//	//};
-	//
-	//	// constのない意味なしゲッター
-	//	//std::vector<RenderData_Model>& GetModelList() { return modelList; }
-	//	//std::vector<ParticleInf>& GetInfList() { return InfList; }
-	//
-	//
-	//private:
-	//
-	//	//std::vector<RenderData_Model>modelList;
-	//	//std::vector<ParticleInf> InfList;
-	//};
 
 	// 初期化
 	static void Initialize(int width, int height, const std::wstring& title);
@@ -153,9 +97,6 @@ public:
 
 	// プリミティブモードの設定
 	static void toggleWireframeMode();
-
-	// モデルリストの取得
-	//static std::vector<Game::RenderData_Model*> GetModelList() { return renderModels; }
 
 	// 描画オブジェクトは画面内か
 	static bool InFrustum(const AABB& aabb);

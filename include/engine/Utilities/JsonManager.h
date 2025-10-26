@@ -12,13 +12,13 @@ class RenderData_Particle;
 class JsonManager
 {
 public:
-	static bool SaveToJson(const RenderData_Particle& p, const std::string& path);
+	static bool SaveToJson(RenderData_Particle& p, const std::string& path);
 	static bool LoadFromJson(RenderData_Particle& p, const std::string& path);
 
 private:
 	static json Vec3ToJson(const Vector3& v);
-	static Vector3 JsonToVec3(const json& j, const Vector3& def);
+	static Vector3 JsonToVec3(const json& j, const Vector3& def = { 0,0,0 });
 	static json Vec4ToJson(const Vector4& v);
-	static Vector4 JsonToVec4(const json& j, const Vector4& def);
+	static Vector4 JsonToVec4(const json& j, const Vector4& def = { 0,0,0,0 });
 };
 
