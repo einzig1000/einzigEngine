@@ -28,6 +28,7 @@ public:
 	uint32_t LoadAudio(const std::string& filePath);
 	TextureData* GetTexture(uint32_t textureNumber);
 	size_t GetTextureCount();
+	size_t GetModelCount();
 
 	// 描画
 	void DrawModel(RenderData_Model& renderData);

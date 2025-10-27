@@ -48,71 +48,6 @@ DrawSystem::DrawSystem(DirectXManager* dxManager)
 	}
 	vertexDataUsed_ = 0;
 
-	// パーティクル用：単一の連続バッファ + SRV(t1)
-	{
-		//const uint32_t capacity = kMaxInstanceCount_;
-		instancingResource_ = CreateBufferResource(dxManager_->GetDevice(), sizeof(ParticleInf) * kMaxInstanceCount_);
-		assert(instancingResource_);
-
-		HRESULT hr = instancingResource_->Map(0, nullptr, reinterpret_cast<void**>(&instancingMappedPtr_));
-		assert(SUCCEEDED(hr) && instancingMappedPtr_);
-		instancingDataUsed_ = 0;
-
-		D3D12_SHADER_RESOURCE_VIEW_DESC srv{};
-		srv.Format = DXGI_FORMAT_UNKNOWN;
-		srv.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		srv.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
-		srv.Buffer.FirstElement = 0;
-		srv.Buffer.NumElements = kMaxInstanceCount_;
-		srv.Buffer.StructureByteStride = sizeof(ParticleInf);
-
-		instancingSrvIndex_ = dxManager_->GetDescriptorHeapManager()->AllocateSRVSlot();
-		assert(instancingSrvIndex_ != UINT32_MAX);
-		instancingSrvHandleCPU_ = dxManager_->GetDescriptorHeapManager()->GetCPUHandleAt(instancingSrvIndex_);
-		instancingSrvHandleGPU_ = dxManager_->GetDescriptorHeapManager()->GetGPUHandleAt(instancingSrvIndex_);
-		dxManager_->GetDevice()->CreateShaderResourceView(instancingResource_.Get(), &srv, instancingSrvHandleCPU_);
-	}
-
-	//kMaxInstanceCount_ = 2048;
-	//instancingResource_.resize(kMaxInstanceCount_);
-	//instancingData_.resize(kMaxInstanceCount_);
-	//for (size_t i = 0; i < kMaxInstanceCount_; ++i)
-	//{
-	//	instancingResource_[i] = CreateBufferResource(dxManager->GetDevice(), sizeof(ParticleInf));
-	//	instancingResource_[i]->Map(0, nullptr, reinterpret_cast<void**>(&instancingData_[i]));
-	//}
-	//instancingDataUsed_ = 0;
-
-	//{
-	//	// 1つの連続バッファで ParticleInf を capacity 個分確保
-	//	const uint32_t capacity = kMaxInstanceCount_;
-	//	Microsoft::WRL::ComPtr<ID3D12Resource> instancingBuffer =
-	//		CreateBufferResource(dxManager_->GetDevice(), sizeof(ParticleInf) * capacity);
-	//
-	//	ParticleInf* mapped = nullptr;
-	//	hr = instancingBuffer->Map(0, nullptr, reinterpret_cast<void**>(&mapped));
-	//	assert(SUCCEEDED(hr));
-	//	// 既存のベクタ使いではなく、単一バッファ＋先頭ポインタに置き換える設計を推奨
-	//	// 例: instancingResource_.clear(); instancingResource_.shrink_to_fit();
-	//	//     instancingResource_.push_back(instancingBuffer);
-	//	//     instancingData_.clear(); instancingData_.push_back(mapped);
-	//
-	//	// SRVを作成
-	//	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-	//	srvDesc.Format = DXGI_FORMAT_UNKNOWN;
-	//	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	//	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
-	//	srvDesc.Buffer.FirstElement = 0;
-	//	srvDesc.Buffer.NumElements = capacity;
-	//	srvDesc.Buffer.StructureByteStride = sizeof(ParticleInf);
-	//
-	//	instancingSrvIndex_ = dxManager_->GetDescriptorHeapManager()->AllocateSRVSlot();
-	//	auto cpu = dxManager_->GetDescriptorHeapManager()->GetCPUHandleAt(instancingSrvIndex_);
-	//	dxManager_->GetDevice()->CreateShaderResourceView(instancingBuffer.Get(), &srvDesc, cpu);
-	//}
-	//EnsureInstanceBuffer(kNumInstance_);
-
-
 	// インデックスリソース
 	indexResource = CreateBufferResource(dxManager->GetDevice(), sizeof(uint32_t) * 6);
 	uint32_t* indexData = nullptr;
@@ -151,13 +86,6 @@ DrawSystem::~DrawSystem()
 		}
 	}
 
-	if (instancingResource_)
-	{
-		instancingResource_->Unmap(0, nullptr);
-		instancingResource_.Reset();
-		instancingMappedPtr_ = nullptr;
-	}
-
 	for (auto& it : s_particlePools)
 	{
 		if (it.second.buffer)
@@ -168,9 +96,6 @@ DrawSystem::~DrawSystem()
 		}
 	}
 	s_particlePools.clear();
-
-	instancingSrvHandleCPU_ = {};
-	instancingSrvHandleGPU_ = {};
 
 	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>>().swap(materialResources_);
 	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>>().swap(wvpResources_);
@@ -186,9 +111,6 @@ void DrawSystem::BeginFrame(Matrix4x4& viewProjectionMatrix)
 
 	// 三角形用頂点データの初期化
 	vertexDataUsed_ = 0;
-
-	// パーティクル用データの初期化
-	instancingDataUsed_ = 0;
 
 	// カメラマトリックスの更新
 	viewProjectionMatrix_ = viewProjectionMatrix;
@@ -274,6 +196,7 @@ void DrawSystem::Update_ParticleInstanceData()
 	}
 }
 
+
 void DrawSystem::DrawParticle(RenderData_Particle& renderData)
 {
 	if (drawCallIndex_ >= kMaxDrawCallPerFrame_) return;
@@ -312,7 +235,7 @@ void DrawSystem::DrawParticle(RenderData_Particle& renderData)
 	if (!pool.buffer)
 	{
 		pool.capacity = kMaxInstanceCount_; // 既存の定数を流用
-		pool.buffer = CreateBufferResource(dxManager_->GetDevice(), sizeof(ParticleInf) * pool.capacity);
+		pool.buffer = CreateBufferResource(dxManager_->GetDevice(), sizeof(ParticleMonoInf) * pool.capacity);
 		assert(pool.buffer);
 
 		HRESULT hr = pool.buffer->Map(0, nullptr, reinterpret_cast<void**>(&pool.mapped));
@@ -325,7 +248,7 @@ void DrawSystem::DrawParticle(RenderData_Particle& renderData)
 		srv.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
 		srv.Buffer.FirstElement = 0;
 		srv.Buffer.NumElements = pool.capacity;
-		srv.Buffer.StructureByteStride = sizeof(ParticleInf);
+		srv.Buffer.StructureByteStride = sizeof(ParticleMonoInf);
 
 		pool.srvIndex = dxManager_->GetDescriptorHeapManager()->AllocateSRVSlot();
 		assert(pool.srvIndex != UINT32_MAX);
@@ -1367,6 +1290,7 @@ void DrawSystem::DrawLine(RenderData_Line& renderData)
 	vertexDataUsed_ += kSumVertex;
 }
 
+
 void DrawSystem::AddSphere(Vector3 pos, Vector3 radius, uint32_t color)
 {
 	// 描画回数上限
@@ -1410,7 +1334,7 @@ void DrawSystem::AddSphere(Vector3 pos, Vector3 radius, uint32_t color)
 			const float nextLon = (lonIndex + 1) * kLonEvery;
 
 			// 頂点データの開始インデックス
-			const uint32_t start = ((latIndex * kSubdivision + lonIndex) * 6) + vertexDataUsed_;
+			const uint32_t start = ((latIndex * kSubdivision + lonIndex) * 6) + uint32_t(vertexDataUsed_);
 
 			// 頂点データを設定 (三角形1)
 			vertexData_[start + 0].position = { std::cos(lat) * std::cos(lon) * radius.x, std::sin(lat) * radius.y, std::cos(lat) * std::sin(lon) * radius.z, 1.0f };
@@ -1559,6 +1483,7 @@ void DrawSystem::AddAABB(AABB aabb, uint32_t color)
 	vertexDataUsed_ += kSumVertex;
 }
 
+
 bool DrawSystem::EnsureDynamicVB(size_t requiredVertexCount)
 {
 	// まだMapしていなければここで永続Map
@@ -1596,75 +1521,3 @@ bool DrawSystem::EnsureDynamicVB(size_t requiredVertexCount)
 	vertexResourceSize_ = newSizeBytes;
 	return true;
 }
-
-
-//bool DrawSystem::EnsureInstanceBuffer(size_t requiredInstanceCount)
-//{
-//	// 既存容量で足りる場合
-//	if (instancingResource_ && instancingCapacity_ >= requiredInstanceCount)
-//	{
-//		return true;
-//	}
-//
-//	// 新しい容量（2倍成長＋最低64）
-//	uint32_t newCapacity = static_cast<uint32_t>(
-//		std::max<size_t>(requiredInstanceCount, instancingCapacity_ ? instancingCapacity_ * 2ull : 64ull)
-//		);
-//	size_t newSizeBytes = sizeof(ParticleInf) * static_cast<size_t>(newCapacity);
-//
-//	// 新リソース作成（Uploadバッファ）
-//	auto newResource = CreateBufferResource(dxManager_->GetDevice() , newSizeBytes);
-//	if (!newResource) return false;
-//
-//	ParticleInf* newMapped = nullptr;
-//	HRESULT hr = newResource->Map(0, nullptr, reinterpret_cast<void**>(&newMapped));
-//	if (FAILED(hr) || !newMapped) return false;
-//
-//	// 古いリソースを解放
-//	if (instancingResource_)
-//	{
-//		instancingResource_->Unmap(0, nullptr);
-//		instancingResource_.Reset();
-//		instancingData_ = nullptr;
-//	}
-//
-//	instancingResource_ = newResource;
-//	instancingData_ = newMapped;
-//	instancingCapacity_ = newCapacity;
-//
-//	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-//	srvDesc.Format = DXGI_FORMAT_UNKNOWN;
-//	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-//	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
-//	srvDesc.Buffer.FirstElement = 0;
-//	srvDesc.Buffer.NumElements = newCapacity;
-//	srvDesc.Buffer.StructureByteStride = sizeof(ParticleInf);
-//
-//	// 現在のヒープにおける該当インデックスのハンドルを取得して作り直す
-//	instancingSrvIndex_ = dxManager_->GetDescriptorHeapManager()->AllocateSRVSlot();
-//	instancingSrvHandleCPU_ = dxManager_->GetDescriptorHeapManager()->GetCPUHandleAt(instancingSrvIndex_);
-//	instancingSrvHandleGPU_ = dxManager_->GetDescriptorHeapManager()->GetGPUHandleAt(instancingSrvIndex_);
-//
-//	dxManager_->GetDevice()->CreateShaderResourceView(instancingResource_.Get(), &srvDesc, instancingSrvHandleCPU_);
-//
-//
-//	return true;
-//}
-////
-//// パーティクル作成時の初期化
-//bool DrawSystem::CreateNewParticle(uint32_t sum, ParticleInf inf)
-//{
-//	//assert(instanceDataUsed_ + sum <= instancingCapacity_);
-//
-//	//// 初期化
-//	//for (uint32_t i = instanceDataUsed_; i < instanceDataUsed_ + sum; ++i)
-//	//{
-//	//	instancingData_[i].transform.scale = inf.transform.scale;
-//	//	instancingData_[i].transform.rotate = inf.transform.rotate;
-//	//	instancingData_[i].transform.translate = inf.transform.translate;
-//	//	instancingData_[i].velocity = inf.velocity;
-//	//	instancingData_[i].liveTime = inf.liveTime;
-//	//}
-//
-//	//return true;
-//}

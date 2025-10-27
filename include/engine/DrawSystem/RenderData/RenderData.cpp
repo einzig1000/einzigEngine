@@ -27,7 +27,7 @@ RenderData_Model::~RenderData_Model()
 	}
 }
 
-void RenderData_Model::Update(std::vector<Object3D>& objects)
+void RenderData_Model::Update()
 {
 #pragma region 前フレーム情報保存
 
@@ -1030,7 +1030,18 @@ void RenderData_Particle::DrawImGui()
 	}
 	if (ImGui::TreeNode("----------model----------------"))
 	{
+		if (ImGui::Button("-"))
+		{
+			this->GetParticleInf().resource.model -= 1;
+		}
+		ImGui::SameLine();
 		ImGui::DragInt(("model" + num).c_str(), reinterpret_cast<int*>(&this->GetParticleInf().resource.model));
+		ImGui::SameLine();
+		if (ImGui::Button("+"))
+		{
+			this->GetParticleInf().resource.model += 1;
+		}
+		if (this->GetParticleInf().resource.model > int(Game::GetModelCount() - 1))this->GetParticleInf().resource.model = int(Game::GetModelCount() - 1);
 		if (this->GetParticleInf().resource.model < 0)this->GetParticleInf().resource.model = 0;
 		ImGui::TreePop();
 	}

@@ -844,7 +844,6 @@ struct ParticleMonoInf
     uint32_t liveTime = 0;
     Vector4 color;
     uint32_t isBillboard;
-    uint32_t padding[3];
 };
 
 struct ParticleMonoInfGPU

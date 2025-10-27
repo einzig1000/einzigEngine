@@ -176,7 +176,6 @@ void ModelManager::SaveAABBToCSV(const std::string& csvPath, const std::vector<A
     }
 }
 
-
 // mtlファイルを読み込む関数
 std::string ModelManager::LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename)
 {

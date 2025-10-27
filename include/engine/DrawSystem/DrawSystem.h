@@ -86,12 +86,8 @@ private:
 	// 現フレームで描画されている頂点数(モデルは除く)
 	size_t vertexDataUsed_ = 0;
 
-	// インスタンシング（構造化バッファ）
-	Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource_ = nullptr; // 単一の連続バッファ
-	ParticleInf* instancingMappedPtr_ = nullptr; // 先頭への永続Mapポインタ
-	size_t instancingDataUsed_ = 0;              // 現フレームで使用しているインスタンス数
+	// インスタンシング
 	uint32_t kMaxInstanceCount_ = 4096;          // 最大インスタンス数
-	uint32_t activeInstanceCount_ = 0;			 // 現在アクティブなインスタンス数
 
 
 	// 三角形
@@ -100,8 +96,6 @@ private:
 	std::vector<VertexData> vertexData_{};
 	VertexData* vertexMappedPtr_ = nullptr; // 永続Mapポインタ
 
-	D3D12_CPU_DESCRIPTOR_HANDLE instancingSrvHandleCPU_;
-	D3D12_GPU_DESCRIPTOR_HANDLE instancingSrvHandleGPU_;
 
 
 

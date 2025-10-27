@@ -7,7 +7,7 @@ class RenderData_Model
 public:
     RenderData_Model();
     ~RenderData_Model();
-    void Update(std::vector<Object3D>& objects);
+    void Update();
 
     // 今フレーム位置、回転、スケール
     Transforms transforms;

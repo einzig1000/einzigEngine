@@ -201,10 +201,11 @@ void Engine::UpdateTransforms()
 #pragma region 座標更新 & 描画範囲内判定
 
 	// オブジェクト更新
-	std::vector<Object3D> objects = dxManager->GetResourceManager()->GetModelManager()->objects;
+	std::vector<Object3D> objects = dxManager->GetResourceManager()->GetModelManager()->GetModelList();
 	for (auto& rd : modelList)
 	{
-		rd->Update(objects);
+		//rd->Update(objects);
+		rd->Update();
 	}
 
 #pragma endregion
@@ -318,6 +319,11 @@ TextureData* Engine::GetTexture(uint32_t textureNumber)
 size_t Engine::GetTextureCount()
 {
 	return dxManager->GetResourceManager()->GetTextureManager()->GetTextureCount();
+}
+
+size_t Engine::GetModelCount()
+{
+	return dxManager->GetResourceManager()->GetModelManager()->GetModelCount();
 }
 
 // 描画
@@ -701,7 +707,7 @@ void Engine::ToggleFullscreen()
 std::vector<AABB>  Engine::CreateAABB(const Transforms& transforms, uint32_t objectNumber)
 {
 	Matrix4x4 worldMatrix = transforms.World;
-	Object3D& obj = dxManager->GetResourceManager()->GetModelManager()->objects[objectNumber];
+	Object3D& obj = dxManager->GetResourceManager()->GetModelManager()->GetModelList()[objectNumber];
 	std::vector<AABB> result;
 
 	for (const auto& localAABB : obj.aabb)
