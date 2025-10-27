@@ -576,6 +576,12 @@ void RenderData_Sprite::DrawImGui()
 		ImGui::DragFloat((num + "UVrotate").c_str(), &uvTransform.rotate.z, 0.01f);
 		ImGui::TreePop();
 	}
+	if (ImGui::TreeNode("----------cutImage-------------"))
+	{
+		ImGui::DragInt2((num + "cutImageLeftTop").c_str(), &cutImageLeftTop.x, 1);
+		ImGui::DragInt2((num + "cutImageSize").c_str(), &cutImageSize.x, 1);
+		ImGui::TreePop();
+	}
 	if (ImGui::TreeNode("----------pivot----------------"))
 	{
 		ImGui::DragFloat2((num + "pivot").c_str(), &pivot.x, 0.1f);

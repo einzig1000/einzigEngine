@@ -114,6 +114,11 @@ public:
     uint32_t texture = 0;
     // 描画オプション
     DrawOptions options;
+    // 画像切り取り左上
+	Vector2int cutImageLeftTop = { 0,0 };
+    // 切り出しサイズ
+	Vector2int cutImageSize = { 0,0 };
+  
     // マウスと衝突してるか？
     bool isCollisionMouseRay = false;
     // ID

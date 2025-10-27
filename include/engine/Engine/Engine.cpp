@@ -157,6 +157,9 @@ void Engine::UpdateDebugInfo()
 
 	if (isDebugInfo)
 	{
+		if (!debugCamera) cameraController->Draw(debugCamera);
+		else debugCameraController->Draw(debugCamera);
+
 		static float fpsSmooth = 60.0f;
 		float dt = dxManager->GetDeltaTime();
 		float fps = (dt > 0.0f) ? 1.0f / dt : 0.0f;
@@ -174,8 +177,6 @@ void Engine::UpdateDebugInfo()
 }
 void Engine::EndFrame()
 {
-	if (!debugCamera) cameraController->Draw(debugCamera);
-	else debugCameraController->Draw(debugCamera);
 	ImGui::Render();
 
 	// パーティクル更新
