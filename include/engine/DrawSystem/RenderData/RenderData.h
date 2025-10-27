@@ -103,7 +103,7 @@ public:
     // UV座標
     Transforms uvTransform;
     // アンカー
-    Anker anker = Anker::Center;
+    Anchor anchor = Anchor::Center;
     // 親のワールドマトリックス
     TransformationMatrix parentTransformationMatrix;
     // 回転の中心点
@@ -180,12 +180,12 @@ public:
     uint32_t color = 0xFFFFFFFF;
     // ラインタイプ
     LineType lineType = LineType::Line;
-	// 補完分割数(線形補完時のみ有効)
-	uint32_t kSubdivision = 10;
+    // 補完分割数(線形補完時のみ有効)
+    uint32_t kSubdivision = 10;
 
     void Draw();
-	void DrawPoints();
-	void DrawImGui();
+    void DrawPoints();
+    void DrawImGui();
 
 private:
 
@@ -199,63 +199,31 @@ public:
     RenderData_Particle();
     ~RenderData_Particle();
 
-    /// 基本的にここから
-
     // ID
     std::optional<std::string> name;
 
     // ファイルパス
     std::string filePath = "resources/Prototypes/particle/aaa";
 
-    /// パーティクル１粒
-    uint32_t model = 0;
-    uint32_t texture = 0;
-    void LoadJson();
+    bool LoadJson();
 
     void Draw();
     void DrawImGui();
     void DrawEmitter();
 
-    /// ここまでしか書き換えない
-
-
-
-    // ID
-    int ID = 0;
-    uint32_t color = 0xFFFFFFFF;
-
-	// パーティクルのSRT変化量
-    particleSRT scale;
-    particleSRT rotate;
-    particleSRT translate;
-
-    /// エミッター範囲
-    AABB emitterAABB = { Vector3{ -1.0f, -1.0f, -1.0f }, Vector3{ 1.0f, 1.0f, 1.0f } };
-    SphereXYZ emitterSphere;
-	bool useSphereEmitter = false;  // 球体エミッターを使うかどうか
-    bool emitFromInside = true;     // エミッターの内側から発生するか外殻から発生するか
-	
-
-    /// エミッター範囲中心から見た時の飛んでく方向
-	bool useTarget = false; // ターゲット方向に飛ばすかどうか
-	bool spawnDependent = false; // 発生位置に依存した方向に飛ばすかどうか
-    Vector3 target;
-	float speed = 1.0f;      // 速度
-	float spreadAngle = 0.0f; // 拡散角度
-
-    // 発生設定
-    int particlesPerEmission = 1;   // 1フレで生む数
-    int emissionDelay = 10;         // 生成間隔フレーム
-    int liveMax = 300;              // 寿命フレーム(マイナスの時は不老)
-    uint32_t frame = 0;             // 経過フレーム
-
-    /// ビルボードか
-	bool isBillboard = true;
-
+    ParticleInf& GetParticleInf() { return particleInf; }
     /// 現在存在するパーティクル数
     uint32_t currentSum = 0;
 
 private:
+    ParticleInf particleInf;
+
+
+
+    int ID = 0;
+
+    // ロードした結果
+    bool loadResult = false;
 
     static std::vector<RenderData_Particle*> renderParticles;
 };

@@ -9,7 +9,7 @@ namespace
 	struct EmitterPool
 	{
 		Microsoft::WRL::ComPtr<ID3D12Resource> buffer;
-		ParticleInf* mapped = nullptr;
+		ParticleMonoInf* mapped = nullptr;
 		uint32_t capacity = 0;
 		uint32_t activeCount = 0;
 		uint32_t srvIndex = UINT32_MAX;

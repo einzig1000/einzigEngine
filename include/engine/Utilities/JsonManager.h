@@ -12,7 +12,7 @@ class RenderData_Particle;
 class JsonManager
 {
 public:
-	static bool SaveToJson(const RenderData_Particle& p, const std::string& path);
+	static bool SaveToJson(RenderData_Particle& p, const std::string& path);
 	static bool LoadFromJson(RenderData_Particle& p, const std::string& path);
 
 private:

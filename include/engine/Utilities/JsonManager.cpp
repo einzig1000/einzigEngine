@@ -8,83 +8,83 @@
 
 
 
-bool JsonManager::SaveToJson(const RenderData_Particle& p, const std::string& path)
+bool JsonManager::SaveToJson(RenderData_Particle& p, const std::string& path)
 {
     try
     {
         json j;
         if (p.name.has_value()) j["name"] = *p.name;
         j["filePath"] = p.filePath;
-        j["texture"] = p.texture;
-        j["model"] = p.model;
+        j["texture"] = p.GetParticleInf().resource.texture;
+        j["model"] = p.GetParticleInf().resource.model;
 
 
         // emitter
-        j["useSphereEmitter"] = p.useSphereEmitter;
-        j["emitFromInside"] = p.emitFromInside;
-        j["emitterAABB"]["min"] = Vec3ToJson(p.emitterAABB.min);
-        j["emitterAABB"]["max"] = Vec3ToJson(p.emitterAABB.max);
-        j["emitterSphere"]["center"] = Vec3ToJson(p.emitterSphere.center);
-        j["emitterSphere"]["radius"] = Vec3ToJson(p.emitterSphere.radius);
+        j["useSphereEmitter"] = p.GetParticleInf().emitter.useSphereEmitter;
+        j["emitFromInside"] = p.GetParticleInf().emitter.emitFromInside;
+        j["emitterAABB"]["min"] = Vec3ToJson(p.GetParticleInf().emitter.emitterAABB.min);
+        j["emitterAABB"]["max"] = Vec3ToJson(p.GetParticleInf().emitter.emitterAABB.max);
+        j["emitterSphere"]["center"] = Vec3ToJson(p.GetParticleInf().emitter.emitterSphere.center);
+        j["emitterSphere"]["radius"] = Vec3ToJson(p.GetParticleInf().emitter.emitterSphere.radius);
 
         // scale
-		j["scale"]["isRandom_value"] = p.scale.isRandom_value;
-        j["scale"]["value"] = Vec3ToJson(p.scale.value);
-        j["scale"]["randomRange_value"]["min"] = Vec3ToJson(p.scale.randomRange_value.min);
-        j["scale"]["randomRange_value"]["max"] = Vec3ToJson(p.scale.randomRange_value.max);
-		j["scale"]["isRandom_velocity"] = p.scale.isRandom_velocity;
-        j["scale"]["velocity"] = Vec3ToJson(p.scale.velocity);
-        j["scale"]["randomRange_velocity"]["min"] = Vec3ToJson(p.scale.randomRange_velocity.min);
-        j["scale"]["randomRange_velocity"]["max"] = Vec3ToJson(p.scale.randomRange_velocity.max);
-		j["scale"]["isRandom_acceleration"] = p.scale.isRandom_acceleration;
-        j["scale"]["acceleration"] = Vec3ToJson(p.scale.acceleration);
-        j["scale"]["randomRange_acceleration"]["min"] = Vec3ToJson(p.scale.randomRange_acceleration.min);
-        j["scale"]["randomRange_acceleration"]["max"] = Vec3ToJson(p.scale.randomRange_acceleration.max);
+        j["scale"]["isRandom_value"] = p.GetParticleInf().scale.isRandom_value;
+        j["scale"]["value"] = Vec3ToJson(p.GetParticleInf().scale.value);
+        j["scale"]["randomRange_value"]["min"] = Vec3ToJson(p.GetParticleInf().scale.randomRange_value.min);
+        j["scale"]["randomRange_value"]["max"] = Vec3ToJson(p.GetParticleInf().scale.randomRange_value.max);
+        j["scale"]["isRandom_velocity"] = p.GetParticleInf().scale.isRandom_velocity;
+        j["scale"]["velocity"] = Vec3ToJson(p.GetParticleInf().scale.velocity);
+        j["scale"]["randomRange_velocity"]["min"] = Vec3ToJson(p.GetParticleInf().scale.randomRange_velocity.min);
+        j["scale"]["randomRange_velocity"]["max"] = Vec3ToJson(p.GetParticleInf().scale.randomRange_velocity.max);
+        j["scale"]["isRandom_acceleration"] = p.GetParticleInf().scale.isRandom_acceleration;
+        j["scale"]["acceleration"] = Vec3ToJson(p.GetParticleInf().scale.acceleration);
+        j["scale"]["randomRange_acceleration"]["min"] = Vec3ToJson(p.GetParticleInf().scale.randomRange_acceleration.min);
+        j["scale"]["randomRange_acceleration"]["max"] = Vec3ToJson(p.GetParticleInf().scale.randomRange_acceleration.max);
         // rotate
-		j["rotate"]["isRandom_value"] = p.rotate.isRandom_value;
-        j["rotate"]["value"] = Vec3ToJson(p.rotate.value);
-        j["rotate"]["randomRange_value"]["min"] = Vec3ToJson(p.rotate.randomRange_value.min);
-        j["rotate"]["randomRange_value"]["max"] = Vec3ToJson(p.rotate.randomRange_value.max);
-		j["rotate"]["isRandom_velocity"] = p.rotate.isRandom_velocity;
-        j["rotate"]["velocity"] = Vec3ToJson(p.rotate.velocity);
-        j["rotate"]["randomRange_velocity"]["min"] = Vec3ToJson(p.rotate.randomRange_velocity.min);
-        j["rotate"]["randomRange_velocity"]["max"] = Vec3ToJson(p.rotate.randomRange_velocity.max);
-		j["rotate"]["isRandom_acceleration"] = p.rotate.isRandom_acceleration;
-        j["rotate"]["acceleration"] = Vec3ToJson(p.rotate.acceleration);
-        j["rotate"]["randomRange_acceleration"]["min"] = Vec3ToJson(p.rotate.randomRange_acceleration.min);
-        j["rotate"]["randomRange_acceleration"]["max"] = Vec3ToJson(p.rotate.randomRange_acceleration.max);
+        j["rotate"]["isRandom_value"] = p.GetParticleInf().rotate.isRandom_value;
+        j["rotate"]["value"] = Vec3ToJson(p.GetParticleInf().rotate.value);
+        j["rotate"]["randomRange_value"]["min"] = Vec3ToJson(p.GetParticleInf().rotate.randomRange_value.min);
+        j["rotate"]["randomRange_value"]["max"] = Vec3ToJson(p.GetParticleInf().rotate.randomRange_value.max);
+        j["rotate"]["isRandom_velocity"] = p.GetParticleInf().rotate.isRandom_velocity;
+        j["rotate"]["velocity"] = Vec3ToJson(p.GetParticleInf().rotate.velocity);
+        j["rotate"]["randomRange_velocity"]["min"] = Vec3ToJson(p.GetParticleInf().rotate.randomRange_velocity.min);
+        j["rotate"]["randomRange_velocity"]["max"] = Vec3ToJson(p.GetParticleInf().rotate.randomRange_velocity.max);
+        j["rotate"]["isRandom_acceleration"] = p.GetParticleInf().rotate.isRandom_acceleration;
+        j["rotate"]["acceleration"] = Vec3ToJson(p.GetParticleInf().rotate.acceleration);
+        j["rotate"]["randomRange_acceleration"]["min"] = Vec3ToJson(p.GetParticleInf().rotate.randomRange_acceleration.min);
+        j["rotate"]["randomRange_acceleration"]["max"] = Vec3ToJson(p.GetParticleInf().rotate.randomRange_acceleration.max);
         // translate
-		j["translate"]["isRandom_value"] = p.translate.isRandom_value;
-        j["translate"]["value"] = Vec3ToJson(p.translate.value);
-		j["translate"]["randomRange_value"]["min"] = Vec3ToJson(p.translate.randomRange_value.min);
-		j["translate"]["randomRange_value"]["max"] = Vec3ToJson(p.translate.randomRange_value.max);
-		j["translate"]["isRandom_velocity"] = p.translate.isRandom_velocity;
-        j["translate"]["velocity"] = Vec3ToJson(p.translate.velocity);
-		j["translate"]["randomRange_velocity"]["min"] = Vec3ToJson(p.translate.randomRange_velocity.min);
-		j["translate"]["randomRange_velocity"]["max"] = Vec3ToJson(p.translate.randomRange_velocity.max);
-		j["translate"]["isRandom_acceleration"] = p.translate.isRandom_acceleration;
-        j["translate"]["acceleration"] = Vec3ToJson(p.translate.acceleration);
-		j["translate"]["randomRange_acceleration"]["min"] = Vec3ToJson(p.translate.randomRange_acceleration.min);
-		j["translate"]["randomRange_acceleration"]["max"] = Vec3ToJson(p.translate.randomRange_acceleration.max);
+        j["translate"]["isRandom_value"] = p.GetParticleInf().translate.isRandom_value;
+        j["translate"]["value"] = Vec3ToJson(p.GetParticleInf().translate.value);
+        j["translate"]["randomRange_value"]["min"] = Vec3ToJson(p.GetParticleInf().translate.randomRange_value.min);
+        j["translate"]["randomRange_value"]["max"] = Vec3ToJson(p.GetParticleInf().translate.randomRange_value.max);
+        j["translate"]["isRandom_velocity"] = p.GetParticleInf().translate.isRandom_velocity;
+        j["translate"]["velocity"] = Vec3ToJson(p.GetParticleInf().translate.velocity);
+        j["translate"]["randomRange_velocity"]["min"] = Vec3ToJson(p.GetParticleInf().translate.randomRange_velocity.min);
+        j["translate"]["randomRange_velocity"]["max"] = Vec3ToJson(p.GetParticleInf().translate.randomRange_velocity.max);
+        j["translate"]["isRandom_acceleration"] = p.GetParticleInf().translate.isRandom_acceleration;
+        j["translate"]["acceleration"] = Vec3ToJson(p.GetParticleInf().translate.acceleration);
+        j["translate"]["randomRange_acceleration"]["min"] = Vec3ToJson(p.GetParticleInf().translate.randomRange_acceleration.min);
+        j["translate"]["randomRange_acceleration"]["max"] = Vec3ToJson(p.GetParticleInf().translate.randomRange_acceleration.max);
 
         // target
-		j["target"] = Vec3ToJson(p.target);
-		j["spreadAngle"] = p.spreadAngle;
-		j["useTarget"] = p.useTarget;
-        j["spawnDependent"] = p.spawnDependent;
-		j["speed"] = p.speed;
+        j["target"] = Vec3ToJson(p.GetParticleInf().target.target);
+        j["spreadAngle"] = p.GetParticleInf().target.spreadAngle;
+        j["useTarget"] = p.GetParticleInf().target.useTarget;
+        j["spawnDependent"] = p.GetParticleInf().target.spawnDependent;
+        j["speed"] = p.GetParticleInf().target.speed;
 
-		// color
-        Vector4 vc = ConvertUintToVector4(p.color);
+        // color
+        Vector4 vc = ConvertUintToVector4(p.GetParticleInf().material.color);
         j["color"] = Vec4ToJson(vc);
 
         // density
-        j["particlesPerEmission"] = p.particlesPerEmission;
-        j["emissionDelay"] = p.emissionDelay;
-        j["liveMax"] = p.liveMax;
+        j["particlesPerEmission"] = p.GetParticleInf().density.particlesPerEmission;
+        j["emissionDelay"] = p.GetParticleInf().density.emissionDelay;
+        j["liveMax"] = p.GetParticleInf().density.liveMax;
 
-		// billboard
-        j["isBillboard"] = p.isBillboard;
+        // billboard
+        j["isBillboard"] = p.GetParticleInf().option.isBillboard;
 
 
         // 最終出力パスは読み込みと同じく .json を付与
@@ -149,8 +149,8 @@ bool JsonManager::SaveToJson(const RenderData_Particle& p, const std::string& pa
 
 bool JsonManager::LoadFromJson(RenderData_Particle& data, const std::string& path)
 {
-        const std::string filePathStr = path.ends_with(".json") ? path : (path + ".json");
-        std::filesystem::path filePath(filePathStr);
+    const std::string filePathStr = path.ends_with(".json") ? path : (path + ".json");
+    std::filesystem::path filePath(filePathStr);
 
     try
     {
@@ -198,40 +198,35 @@ bool JsonManager::LoadFromJson(RenderData_Particle& data, const std::string& pat
         // texture
         if (j.contains("texture") && !j["texture"].is_null())
         {
-            try { data.texture = j["texture"].get<decltype(data.texture)>(); }
-            catch (...) { /* ignore invalid type */ }
-        }
-        else if (j.contains("texture_index") && !j["texture_index"].is_null())
-        {
-            try { data.texture = j["texture_index"].get<decltype(data.texture)>(); }
+            try { data.GetParticleInf().resource.texture = j["texture"].get<decltype(data.GetParticleInf().resource.texture)>(); }
             catch (...) { /* ignore invalid type */ }
         }
 
         // model
         if (j.contains("model") && !j["model"].is_null())
         {
-            try { data.model = j["model"].get<decltype(data.model)>(); }
+            try { data.GetParticleInf().resource.model = j["model"].get<decltype(data.GetParticleInf().resource.model)>(); }
             catch (...) { /* ignore invalid type */ }
         }
 
         // emitter booleans
-        data.useSphereEmitter = j.value("useSphereEmitter", data.useSphereEmitter);
-        data.emitFromInside = j.value("emitFromInside", data.emitFromInside);
+        data.GetParticleInf().emitter.useSphereEmitter = j.value("useSphereEmitter", data.GetParticleInf().emitter.useSphereEmitter);
+        data.GetParticleInf().emitter.emitFromInside = j.value("emitFromInside", data.GetParticleInf().emitter.emitFromInside);
 
         // emitterAABB
         if (j.contains("emitterAABB") && j["emitterAABB"].is_object())
         {
             const auto& ea = j["emitterAABB"];
-            if (ea.contains("min") && ea["min"].is_array()) data.emitterAABB.min = JsonToVec3(ea["min"], data.emitterAABB.min);
-            if (ea.contains("max") && ea["max"].is_array()) data.emitterAABB.max = JsonToVec3(ea["max"], data.emitterAABB.max);
+            if (ea.contains("min") && ea["min"].is_array()) data.GetParticleInf().emitter.emitterAABB.min = JsonToVec3(ea["min"], data.GetParticleInf().emitter.emitterAABB.min);
+            if (ea.contains("max") && ea["max"].is_array()) data.GetParticleInf().emitter.emitterAABB.max = JsonToVec3(ea["max"], data.GetParticleInf().emitter.emitterAABB.max);
         }
 
         // emitterSphere
         if (j.contains("emitterSphere") && j["emitterSphere"].is_object())
         {
             const auto& es = j["emitterSphere"];
-            if (es.contains("center") && es["center"].is_array()) data.emitterSphere.center = JsonToVec3(es["center"], data.emitterSphere.center);
-            if (es.contains("radius") && es["radius"].is_array()) data.emitterSphere.radius = JsonToVec3(es["radius"], data.emitterSphere.radius);
+            if (es.contains("center") && es["center"].is_array()) data.GetParticleInf().emitter.emitterSphere.center = JsonToVec3(es["center"], data.GetParticleInf().emitter.emitterSphere.center);
+            if (es.contains("radius") && es["radius"].is_array()) data.GetParticleInf().emitter.emitterSphere.radius = JsonToVec3(es["radius"], data.GetParticleInf().emitter.emitterSphere.radius);
         }
 
 
@@ -240,33 +235,33 @@ bool JsonManager::LoadFromJson(RenderData_Particle& data, const std::string& pat
         {
             const auto& s = j["scale"];
             // flags
-            if (s.contains("isRandom_value")) data.scale.isRandom_value = s["isRandom_value"].get<bool>();
-            if (s.contains("isRandom_velocity")) data.scale.isRandom_velocity = s["isRandom_velocity"].get<bool>();
-            if (s.contains("isRandom_acceleration")) data.scale.isRandom_acceleration = s["isRandom_acceleration"].get<bool>();
+            if (s.contains("isRandom_value")) data.GetParticleInf().scale.isRandom_value = s["isRandom_value"].get<bool>();
+            if (s.contains("isRandom_velocity")) data.GetParticleInf().scale.isRandom_velocity = s["isRandom_velocity"].get<bool>();
+            if (s.contains("isRandom_acceleration")) data.GetParticleInf().scale.isRandom_acceleration = s["isRandom_acceleration"].get<bool>();
 
             // values
-            if (s.contains("value") && s["value"].is_array()) data.scale.value = JsonToVec3(s["value"], data.scale.value);
-            if (s.contains("velocity") && s["velocity"].is_array()) data.scale.velocity = JsonToVec3(s["velocity"], data.scale.velocity);
-            if (s.contains("acceleration") && s["acceleration"].is_array()) data.scale.acceleration = JsonToVec3(s["acceleration"], data.scale.acceleration);
+            if (s.contains("value") && s["value"].is_array()) data.GetParticleInf().scale.value = JsonToVec3(s["value"], data.GetParticleInf().scale.value);
+            if (s.contains("velocity") && s["velocity"].is_array()) data.GetParticleInf().scale.velocity = JsonToVec3(s["velocity"], data.GetParticleInf().scale.velocity);
+            if (s.contains("acceleration") && s["acceleration"].is_array()) data.GetParticleInf().scale.acceleration = JsonToVec3(s["acceleration"], data.GetParticleInf().scale.acceleration);
 
             // random ranges
             if (s.contains("randomRange_value") && s["randomRange_value"].is_object())
             {
                 const auto& rr = s["randomRange_value"];
-                if (rr.contains("min") && rr["min"].is_array()) data.scale.randomRange_value.min = JsonToVec3(rr["min"], data.scale.randomRange_value.min);
-                if (rr.contains("max") && rr["max"].is_array()) data.scale.randomRange_value.max = JsonToVec3(rr["max"], data.scale.randomRange_value.max);
+                if (rr.contains("min") && rr["min"].is_array()) data.GetParticleInf().scale.randomRange_value.min = JsonToVec3(rr["min"], data.GetParticleInf().scale.randomRange_value.min);
+                if (rr.contains("max") && rr["max"].is_array()) data.GetParticleInf().scale.randomRange_value.max = JsonToVec3(rr["max"], data.GetParticleInf().scale.randomRange_value.max);
             }
             if (s.contains("randomRange_velocity") && s["randomRange_velocity"].is_object())
             {
                 const auto& rr = s["randomRange_velocity"];
-                if (rr.contains("min") && rr["min"].is_array()) data.scale.randomRange_velocity.min = JsonToVec3(rr["min"], data.scale.randomRange_velocity.min);
-                if (rr.contains("max") && rr["max"].is_array()) data.scale.randomRange_velocity.max = JsonToVec3(rr["max"], data.scale.randomRange_velocity.max);
+                if (rr.contains("min") && rr["min"].is_array()) data.GetParticleInf().scale.randomRange_velocity.min = JsonToVec3(rr["min"], data.GetParticleInf().scale.randomRange_velocity.min);
+                if (rr.contains("max") && rr["max"].is_array()) data.GetParticleInf().scale.randomRange_velocity.max = JsonToVec3(rr["max"], data.GetParticleInf().scale.randomRange_velocity.max);
             }
             if (s.contains("randomRange_acceleration") && s["randomRange_acceleration"].is_object())
             {
                 const auto& rr = s["randomRange_acceleration"];
-                if (rr.contains("min") && rr["min"].is_array()) data.scale.randomRange_acceleration.min = JsonToVec3(rr["min"], data.scale.randomRange_acceleration.min);
-                if (rr.contains("max") && rr["max"].is_array()) data.scale.randomRange_acceleration.max = JsonToVec3(rr["max"], data.scale.randomRange_acceleration.max);
+                if (rr.contains("min") && rr["min"].is_array()) data.GetParticleInf().scale.randomRange_acceleration.min = JsonToVec3(rr["min"], data.GetParticleInf().scale.randomRange_acceleration.min);
+                if (rr.contains("max") && rr["max"].is_array()) data.GetParticleInf().scale.randomRange_acceleration.max = JsonToVec3(rr["max"], data.GetParticleInf().scale.randomRange_acceleration.max);
             }
         }
 
@@ -275,33 +270,33 @@ bool JsonManager::LoadFromJson(RenderData_Particle& data, const std::string& pat
         {
             const auto& r = j["rotate"];
             // flags
-            if (r.contains("isRandom_value")) data.rotate.isRandom_value = r["isRandom_value"].get<bool>();
-            if (r.contains("isRandom_velocity")) data.rotate.isRandom_velocity = r["isRandom_velocity"].get<bool>();
-            if (r.contains("isRandom_acceleration")) data.rotate.isRandom_acceleration = r["isRandom_acceleration"].get<bool>();
+            if (r.contains("isRandom_value")) data.GetParticleInf().rotate.isRandom_value = r["isRandom_value"].get<bool>();
+            if (r.contains("isRandom_velocity")) data.GetParticleInf().rotate.isRandom_velocity = r["isRandom_velocity"].get<bool>();
+            if (r.contains("isRandom_acceleration")) data.GetParticleInf().rotate.isRandom_acceleration = r["isRandom_acceleration"].get<bool>();
 
             // values
-            if (r.contains("value") && r["value"].is_array()) data.rotate.value = JsonToVec3(r["value"], data.rotate.value);
-            if (r.contains("velocity") && r["velocity"].is_array()) data.rotate.velocity = JsonToVec3(r["velocity"], data.rotate.velocity);
-            if (r.contains("acceleration") && r["acceleration"].is_array()) data.rotate.acceleration = JsonToVec3(r["acceleration"], data.rotate.acceleration);
+            if (r.contains("value") && r["value"].is_array()) data.GetParticleInf().rotate.value = JsonToVec3(r["value"], data.GetParticleInf().rotate.value);
+            if (r.contains("velocity") && r["velocity"].is_array()) data.GetParticleInf().rotate.velocity = JsonToVec3(r["velocity"], data.GetParticleInf().rotate.velocity);
+            if (r.contains("acceleration") && r["acceleration"].is_array()) data.GetParticleInf().rotate.acceleration = JsonToVec3(r["acceleration"], data.GetParticleInf().rotate.acceleration);
 
             // random ranges
             if (r.contains("randomRange_value") && r["randomRange_value"].is_object())
             {
                 const auto& rr = r["randomRange_value"];
-                if (rr.contains("min") && rr["min"].is_array()) data.rotate.randomRange_value.min = JsonToVec3(rr["min"], data.rotate.randomRange_value.min);
-                if (rr.contains("max") && rr["max"].is_array()) data.rotate.randomRange_value.max = JsonToVec3(rr["max"], data.rotate.randomRange_value.max);
+                if (rr.contains("min") && rr["min"].is_array()) data.GetParticleInf().rotate.randomRange_value.min = JsonToVec3(rr["min"], data.GetParticleInf().rotate.randomRange_value.min);
+                if (rr.contains("max") && rr["max"].is_array()) data.GetParticleInf().rotate.randomRange_value.max = JsonToVec3(rr["max"], data.GetParticleInf().rotate.randomRange_value.max);
             }
             if (r.contains("randomRange_velocity") && r["randomRange_velocity"].is_object())
             {
                 const auto& rr = r["randomRange_velocity"];
-                if (rr.contains("min") && rr["min"].is_array()) data.rotate.randomRange_velocity.min = JsonToVec3(rr["min"], data.rotate.randomRange_velocity.min);
-                if (rr.contains("max") && rr["max"].is_array()) data.rotate.randomRange_velocity.max = JsonToVec3(rr["max"], data.rotate.randomRange_velocity.max);
+                if (rr.contains("min") && rr["min"].is_array()) data.GetParticleInf().rotate.randomRange_velocity.min = JsonToVec3(rr["min"], data.GetParticleInf().rotate.randomRange_velocity.min);
+                if (rr.contains("max") && rr["max"].is_array()) data.GetParticleInf().rotate.randomRange_velocity.max = JsonToVec3(rr["max"], data.GetParticleInf().rotate.randomRange_velocity.max);
             }
             if (r.contains("randomRange_acceleration") && r["randomRange_acceleration"].is_object())
             {
                 const auto& rr = r["randomRange_acceleration"];
-                if (rr.contains("min") && rr["min"].is_array()) data.rotate.randomRange_acceleration.min = JsonToVec3(rr["min"], data.rotate.randomRange_acceleration.min);
-                if (rr.contains("max") && rr["max"].is_array()) data.rotate.randomRange_acceleration.max = JsonToVec3(rr["max"], data.rotate.randomRange_acceleration.max);
+                if (rr.contains("min") && rr["min"].is_array()) data.GetParticleInf().rotate.randomRange_acceleration.min = JsonToVec3(rr["min"], data.GetParticleInf().rotate.randomRange_acceleration.min);
+                if (rr.contains("max") && rr["max"].is_array()) data.GetParticleInf().rotate.randomRange_acceleration.max = JsonToVec3(rr["max"], data.GetParticleInf().rotate.randomRange_acceleration.max);
             }
         }
 
@@ -310,67 +305,67 @@ bool JsonManager::LoadFromJson(RenderData_Particle& data, const std::string& pat
         {
             const auto& t = j["translate"];
             // flags
-            if (t.contains("isRandom_value")) data.translate.isRandom_value = t["isRandom_value"].get<bool>();
-            if (t.contains("isRandom_velocity")) data.translate.isRandom_velocity = t["isRandom_velocity"].get<bool>();
-            if (t.contains("isRandom_acceleration")) data.translate.isRandom_acceleration = t["isRandom_acceleration"].get<bool>();
+            if (t.contains("isRandom_value")) data.GetParticleInf().translate.isRandom_value = t["isRandom_value"].get<bool>();
+            if (t.contains("isRandom_velocity")) data.GetParticleInf().translate.isRandom_velocity = t["isRandom_velocity"].get<bool>();
+            if (t.contains("isRandom_acceleration")) data.GetParticleInf().translate.isRandom_acceleration = t["isRandom_acceleration"].get<bool>();
 
             // values
-            if (t.contains("value") && t["value"].is_array()) data.translate.value = JsonToVec3(t["value"], data.translate.value);
-            if (t.contains("velocity") && t["velocity"].is_array()) data.translate.velocity = JsonToVec3(t["velocity"], data.translate.velocity);
-            if (t.contains("acceleration") && t["acceleration"].is_array()) data.translate.acceleration = JsonToVec3(t["acceleration"], data.translate.acceleration);
+            if (t.contains("value") && t["value"].is_array()) data.GetParticleInf().translate.value = JsonToVec3(t["value"], data.GetParticleInf().translate.value);
+            if (t.contains("velocity") && t["velocity"].is_array()) data.GetParticleInf().translate.velocity = JsonToVec3(t["velocity"], data.GetParticleInf().translate.velocity);
+            if (t.contains("acceleration") && t["acceleration"].is_array()) data.GetParticleInf().translate.acceleration = JsonToVec3(t["acceleration"], data.GetParticleInf().translate.acceleration);
 
             // random ranges
             if (t.contains("randomRange_value") && t["randomRange_value"].is_object())
             {
                 const auto& rr = t["randomRange_value"];
-                if (rr.contains("min") && rr["min"].is_array()) data.translate.randomRange_value.min = JsonToVec3(rr["min"], data.translate.randomRange_value.min);
-                if (rr.contains("max") && rr["max"].is_array()) data.translate.randomRange_value.max = JsonToVec3(rr["max"], data.translate.randomRange_value.max);
+                if (rr.contains("min") && rr["min"].is_array()) data.GetParticleInf().translate.randomRange_value.min = JsonToVec3(rr["min"], data.GetParticleInf().translate.randomRange_value.min);
+                if (rr.contains("max") && rr["max"].is_array()) data.GetParticleInf().translate.randomRange_value.max = JsonToVec3(rr["max"], data.GetParticleInf().translate.randomRange_value.max);
             }
             if (t.contains("randomRange_velocity") && t["randomRange_velocity"].is_object())
             {
                 const auto& rr = t["randomRange_velocity"];
-                if (rr.contains("min") && rr["min"].is_array()) data.translate.randomRange_velocity.min = JsonToVec3(rr["min"], data.translate.randomRange_velocity.min);
-                if (rr.contains("max") && rr["max"].is_array()) data.translate.randomRange_velocity.max = JsonToVec3(rr["max"], data.translate.randomRange_velocity.max);
+                if (rr.contains("min") && rr["min"].is_array()) data.GetParticleInf().translate.randomRange_velocity.min = JsonToVec3(rr["min"], data.GetParticleInf().translate.randomRange_velocity.min);
+                if (rr.contains("max") && rr["max"].is_array()) data.GetParticleInf().translate.randomRange_velocity.max = JsonToVec3(rr["max"], data.GetParticleInf().translate.randomRange_velocity.max);
             }
             if (t.contains("randomRange_acceleration") && t["randomRange_acceleration"].is_object())
             {
                 const auto& rr = t["randomRange_acceleration"];
-                if (rr.contains("min") && rr["min"].is_array()) data.translate.randomRange_acceleration.min = JsonToVec3(rr["min"], data.translate.randomRange_acceleration.min);
-                if (rr.contains("max") && rr["max"].is_array()) data.translate.randomRange_acceleration.max = JsonToVec3(rr["max"], data.translate.randomRange_acceleration.max);
+                if (rr.contains("min") && rr["min"].is_array()) data.GetParticleInf().translate.randomRange_acceleration.min = JsonToVec3(rr["min"], data.GetParticleInf().translate.randomRange_acceleration.min);
+                if (rr.contains("max") && rr["max"].is_array()) data.GetParticleInf().translate.randomRange_acceleration.max = JsonToVec3(rr["max"], data.GetParticleInf().translate.randomRange_acceleration.max);
             }
         }
 
         // target
         if (j.contains("target") && j["target"].is_array())
         {
-            data.target = JsonToVec3(j["target"], data.target);
+            data.GetParticleInf().target.target = JsonToVec3(j["target"], data.GetParticleInf().target.target);
         }
 
-		// spreadAngle
-		data.spreadAngle = j.value("spreadAngle", data.spreadAngle);
+        // spreadAngle
+        data.GetParticleInf().target.spreadAngle = j.value("spreadAngle", data.GetParticleInf().target.spreadAngle);
 
-		// useTarget
-		data.useTarget = j.value("useTarget", data.useTarget);
+        // useTarget
+        data.GetParticleInf().target.useTarget = j.value("useTarget", data.GetParticleInf().target.useTarget);
 
         // speed
-		data.speed = j.value("speed", data.speed);
+        data.GetParticleInf().target.speed = j.value("speed", data.GetParticleInf().target.speed);
 
-        data.spawnDependent = j.value("spawnDependent", data.spawnDependent);
+        data.GetParticleInf().target.spawnDependent = j.value("spawnDependent", data.GetParticleInf().target.spawnDependent);
 
         // color
         if (j.contains("color") && j["color"].is_array())
         {
-            Vector4 vc = JsonToVec4(j["color"], ConvertUintToVector4(data.color));
-            data.color = ConvertVector4ToUint(vc);
+            Vector4 vc = JsonToVec4(j["color"], ConvertUintToVector4(data.GetParticleInf().material.color));
+            data.GetParticleInf().material.color = ConvertVector4ToUint(vc);
         }
 
         // density / counts
-        data.particlesPerEmission = j.value("particlesPerEmission", data.particlesPerEmission);
-        data.emissionDelay = j.value("emissionDelay", data.emissionDelay);
-        data.liveMax = j.value("liveMax", data.liveMax);
+        data.GetParticleInf().density.particlesPerEmission = j.value("particlesPerEmission", data.GetParticleInf().density.particlesPerEmission);
+        data.GetParticleInf().density.emissionDelay = j.value("emissionDelay", data.GetParticleInf().density.emissionDelay);
+        data.GetParticleInf().density.liveMax = j.value("liveMax", data.GetParticleInf().density.liveMax);
 
         // billboard
-        data.isBillboard = j.value("isBillboard", data.isBillboard);
+        data.GetParticleInf().option.isBillboard = j.value("isBillboard", data.GetParticleInf().option.isBillboard);
 
         return true;
     }
