@@ -97,10 +97,13 @@ private:
 	VertexData* vertexMappedPtr_ = nullptr; // 永続Mapポインタ
 
 
-
-
 	Microsoft::WRL::ComPtr<ID3D12Resource> indexResource;
 	D3D12_INDEX_BUFFER_VIEW indexBufferView;
+
+
+private:
+	// リサイズで入れ替えた古いVBをフレーム終了まで保持
+	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> vbHoldUntilSubmit_;
 
 };
 

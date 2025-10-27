@@ -106,6 +106,9 @@ DrawSystem::~DrawSystem()
 
 void DrawSystem::BeginFrame(Matrix4x4& viewProjectionMatrix)
 {
+	// 前フレームの不要VBを解放（EndFrame→Present→WaitForGPU 後）
+	vbHoldUntilSubmit_.clear();
+
 	// 描画コールの初期化
 	drawCallIndex_ = 0;
 
@@ -1293,14 +1296,19 @@ void DrawSystem::DrawLine(RenderData_Line& renderData)
 
 void DrawSystem::AddSphere(Vector3 pos, Vector3 radius, uint32_t color)
 {
-	// 描画回数上限
-	if (drawCallIndex_ >= kMaxDrawCallPerFrame_) return;
+	RenderData_Line Lon[10];
+	RenderData_Line Lat[10];
 
-	// RootSignatureとPSOを設定（Line用）
-	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootSignature(
-		dxManager_->GetPipelineStateManager()->GetRootSignature());
-	dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(
-		dxManager_->GetPipelineStateManager()->GetPipelineState(BlendMode::kBlendModeNormal, D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE));
+	for (int i = 0; i < 10; ++i)
+	{
+		Lon[i].color = color;
+		Lon[i].kSubdivision = 10;
+		Lon[i].lineType = LineType::Line;
+
+		Lat[i].color = color;
+		Lat[i].kSubdivision = 10;
+		Lat[i].lineType = LineType::Line;
+	}
 
 	// 経度/緯度の分割数
 	const uint32_t kSubdivision = 10;
@@ -1309,77 +1317,57 @@ void DrawSystem::AddSphere(Vector3 pos, Vector3 radius, uint32_t color)
 	// 緯度分割１つ分の角度
 	const float kLatEvery = float(std::numbers::pi_v<float> / kSubdivision);
 
-	// 必要な頂点数
-	const uint32_t kSumVertex = (kSubdivision * kSubdivision) * 6;
-	//const uint32_t kSumVertex = 1000;
-
-	// 必要頂点数分確保
-	if (vertexDataUsed_ + kSumVertex > vertexData_.size())
-	{
-		vertexData_.resize(vertexDataUsed_ + kSumVertex);
-	}
+	float lat = 0.0f;
+	float nextLat = 0.0f;
+	float lon = 0.0f;
+	float nextLon = 0.0f;
 
 	// 緯度の方向に分割 -π/2 ～ π/2
 	for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex)
 	{
 		// 現在の緯度と次の緯度
-		const float lat = float(-std::numbers::pi_v<float> / 2.0f + latIndex * kLatEvery);
-		const float nextLat = lat + kLatEvery;
+		lat = float(-std::numbers::pi_v<float> / 2.0f + latIndex * kLatEvery);
+		nextLat = float(-std::numbers::pi_v<float> / 2.0f + (latIndex + 1) * kLatEvery);
 
 		// 経度方向に分割 0 ～ 2π
 		for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex)
 		{
 			// 現在の経度と次の経度
-			const float lon = lonIndex * kLonEvery;
-			const float nextLon = (lonIndex + 1) * kLonEvery;
+			lon = lonIndex * kLonEvery;
+			nextLon = (lonIndex + 1) * kLonEvery;
 
-			// 頂点データの開始インデックス
-			const uint32_t start = ((latIndex * kSubdivision + lonIndex) * 6) + uint32_t(vertexDataUsed_);
+			Lon[latIndex].points.push_back({
+				pos.x + radius.x * std::cosf(lat) * std::cosf(lon),
+				pos.y + radius.y * std::sinf(lat),
+				pos.z + radius.z * std::cosf(lat) * std::sinf(lon),
+				});
 
-			// 頂点データを設定 (三角形1)
-			vertexData_[start + 0].position = { std::cos(lat) * std::cos(lon) * radius.x, std::sin(lat) * radius.y, std::cos(lat) * std::sin(lon) * radius.z, 1.0f };
-			vertexData_[start + 2].position = { std::cos(nextLat) * std::cos(nextLon) * radius.x, std::sin(nextLat) * radius.y, std::cos(nextLat) * std::sin(nextLon) * radius.z, 1.0f };
-			vertexData_[start + 1].position = { std::cos(nextLat) * std::cos(lon) * radius.x, std::sin(nextLat) * radius.y, std::cos(nextLat) * std::sin(lon) * radius.z, 1.0f };
+			Lon[latIndex].points.push_back({
+				pos.x + radius.x * std::cosf(lat) * std::cosf(nextLon),
+				pos.y + radius.y * std::sinf(lat),
+				pos.z + radius.z * std::cosf(lat) * std::sinf(nextLon),
+				});
 
-			// 頂点データを設定 (三角形2)
-			vertexData_[start + 3].position = { std::cos(lat) * std::cos(lon) * radius.x, std::sin(lat) * radius.y, std::cos(lat) * std::sin(lon) * radius.z, 1.0f };
-			vertexData_[start + 5].position = { std::cos(lat) * std::cos(nextLon) * radius.x, std::sin(lat) * radius.y, std::cos(lat) * std::sin(nextLon) * radius.z, 1.0f };
-			vertexData_[start + 4].position = { std::cos(nextLat) * std::cos(nextLon) * radius.x, std::sin(nextLat) * radius.y, std::cos(nextLat) * std::sin(nextLon) * radius.z, 1.0f };
+			Lat[lonIndex].points.push_back({
+				pos.x + radius.x * std::cosf(lat) * std::cosf(lon),
+				pos.y + radius.y * std::sinf(lat),
+				pos.z + radius.z * std::cosf(lat) * std::sinf(lon),
+				});
 
+			Lat[lonIndex].points.push_back({
+				pos.x + radius.x * std::cosf(nextLat) * std::cosf(lon),
+				pos.y + radius.y * std::sinf(nextLat),
+				pos.z + radius.z * std::cosf(nextLat) * std::sinf(lon),
+				});
 		}
 	}
 
-	// WVP（ラインはワールド焼き込み済みなのでWorld=I, WVP=VP）
-	wvpData_[drawCallIndex_]->World = Matrix4x4::MakeIdentity4x4();
-	wvpData_[drawCallIndex_]->WVP = viewProjectionMatrix_;
-
-	// マテリアル（ラインはテクスチャ不要）
-	materialData_[drawCallIndex_]->color = ConvertUintToVector4(color);
-	materialData_[drawCallIndex_]->enableLighting = false;
-	materialData_[drawCallIndex_]->uvTransform = Matrix4x4::MakeIdentity4x4();
-
-	// Upload（動的VB）
-	if (!EnsureDynamicVB(vertexDataUsed_ + kSumVertex)) return;
-	std::memcpy(vertexMappedPtr_ + vertexDataUsed_, &vertexData_[vertexDataUsed_], sizeof(VertexData) * kSumVertex);
-
-	// VBVを作成（w 個分）
-	D3D12_VERTEX_BUFFER_VIEW vbv{};
-	vbv.BufferLocation = vertexResource_->GetGPUVirtualAddress() + sizeof(VertexData) * vertexDataUsed_;
-	vbv.SizeInBytes = static_cast<UINT>(sizeof(VertexData) * kSumVertex);
-	vbv.StrideInBytes = sizeof(VertexData);
-
-	// バインドと描画
-	auto* cmd = dxManager_->GetCommandContextManager()->GetCommandList();
-	cmd->IASetVertexBuffers(0, 1, &vbv);
-	cmd->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
-	cmd->SetGraphicsRootConstantBufferView(0, materialResources_[drawCallIndex_]->GetGPUVirtualAddress());
-	cmd->SetGraphicsRootConstantBufferView(1, wvpResources_[drawCallIndex_]->GetGPUVirtualAddress());
-	cmd->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress());
-	cmd->DrawInstanced(static_cast<UINT>(kSumVertex), 1, 0, 0);
-
-	// カウンタ更新
-	drawCallIndex_++;
-	vertexDataUsed_ += kSumVertex;
+	// 線を描画
+	for (uint32_t i = 0; i < kSubdivision; ++i)
+	{
+		DrawLine(Lon[i]);
+		DrawLine(Lat[i]);
+	}
 }
 
 void DrawSystem::AddAABB(AABB aabb, uint32_t color)
@@ -1483,7 +1471,6 @@ void DrawSystem::AddAABB(AABB aabb, uint32_t color)
 	vertexDataUsed_ += kSumVertex;
 }
 
-
 bool DrawSystem::EnsureDynamicVB(size_t requiredVertexCount)
 {
 	// まだMapしていなければここで永続Map
@@ -1510,11 +1497,15 @@ bool DrawSystem::EnsureDynamicVB(size_t requiredVertexCount)
 	if (FAILED(hr) || !newMapped) return false;
 
 	// 旧内容をコピー
+	Microsoft::WRL::ComPtr<ID3D12Resource> oldResource = vertexResource_; // 保持用に退避
 	if (vertexMappedPtr_ && vertexDataUsed_ > 0)
 	{
 		memcpy(newMapped, vertexMappedPtr_, vertexDataUsed_ * sizeof(VertexData));
-		vertexResource_->Unmap(0, nullptr);
+		if (oldResource) { oldResource->Unmap(0, nullptr); }
 	}
+
+	// 今フレーム中は古いVBを破棄しない（参照中のDrawがあるため）
+	if (oldResource) { vbHoldUntilSubmit_.push_back(oldResource); }
 
 	vertexResource_ = newResource;
 	vertexMappedPtr_ = newMapped;
