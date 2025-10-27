@@ -621,7 +621,7 @@ void RenderData_Sprite::DrawImGui()
 		}
 		ImGui::TreePop();
 	}
-	if (ImGui::TreeNode("----------Anchor----------------"))
+	if (ImGui::TreeNode("----------Anchor---------------"))
 	{
 		const char* items[] =
 		{ "Center","CenterLeft","CenterRight","CenterTop","CenterDown","LeftTop","RightTop","LeftDown","RightDown" };
