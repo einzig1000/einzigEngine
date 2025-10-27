@@ -9,26 +9,41 @@ public:
 	ModelManager();
 	~ModelManager();
 
-
-
-	ModelData LoadModelFile(const std::string& directoryPath, const std::string& filename);
-
 	uint32_t LoadModel(
 		const std::string& directoryPath, 
 		const std::string& filename,
 		ID3D12Device* device);
     Object3D* GetModel(uint32_t modelID);
-	std::vector<Object3D> objects;
+
+	// モデル数を取得
+	size_t GetModelCount() const { return objects.size(); }
+
+	// モデルリストを取得
+	std::vector<Object3D>& GetModelList() { return objects; }
 
 private:
-	std::vector<AABB> LoadAABBFromCSV(const std::string& csvPath);
+	// モデルデータを詰める
+	std::vector<Object3D> objects;
 
-	void SaveAABBToCSV(const std::string& csvPath, const std::vector<AABB>& aabbs);
-
+	// mtlファイルを読み込む関数
 	std::string LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
 
+	// objファイルを読み込む関数
+	ModelData LoadModelFile(const std::string& directoryPath, const std::string& filename);
+
+	
+
+	// １，AABB読み込み
 	std::vector<AABB> LoadAABB(const std::string& csvPath, const ModelData& model);
+
+	// ２、AABB.csvがあれば読み込み
+	std::vector<AABB> LoadAABBFromCSV(const std::string& csvPath);
+	
+	// ２，AABB.csvがなければモデルデータから作成
 	AABB CreateLocalAABB(const ModelData& model);
+
+	// ３、AABBをCSVに保存
+	void SaveAABBToCSV(const std::string& csvPath, const std::vector<AABB>& aabbs);
 
 
 };

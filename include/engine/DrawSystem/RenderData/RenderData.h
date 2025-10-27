@@ -7,7 +7,7 @@ class RenderData_Model
 public:
     RenderData_Model();
     ~RenderData_Model();
-    void Update(std::vector<Object3D>& objects);
+    void Update();
 
     // 今フレーム位置、回転、スケール
     Transforms transforms;
@@ -39,7 +39,7 @@ public:
     float mass = 1.0f;
     // ID
     int ID = 0;
-    std::string name = "NULL";
+    std::optional<std::string> name;
     // 画面内に存在するか
     bool inPicture = false;
     // マウスとの衝突判定
@@ -103,7 +103,7 @@ public:
     // UV座標
     Transforms uvTransform;
     // アンカー
-    Anker anker = Anker::Center;
+    Anchor anchor = Anchor::Center;
     // 親のワールドマトリックス
     TransformationMatrix parentTransformationMatrix;
     // 回転の中心点
@@ -114,11 +114,16 @@ public:
     uint32_t texture = 0;
     // 描画オプション
     DrawOptions options;
+    // 画像切り取り左上
+	Vector2int cutImageLeftTop = { 0,0 };
+    // 切り出しサイズ
+	Vector2int cutImageSize = { 0,0 };
+  
     // マウスと衝突してるか？
     bool isCollisionMouseRay = false;
     // ID
     int ID = 0;
-    std::string name = "NULL";
+    std::optional<std::string> name;
 
     void Draw();
     void DrawImGui();
@@ -153,7 +158,7 @@ public:
     DrawOptions options;
     // ID
     int ID = 0;
-    std::string name = "NULL";
+    std::optional<std::string> name;
 
     void Draw();
     void DrawImGui();
@@ -175,17 +180,17 @@ public:
     std::vector<Vector3> points;
     // ID
     int ID = 0;
-    std::string name = "NULL";
+    std::optional<std::string> name;
     // 色
     uint32_t color = 0xFFFFFFFF;
     // ラインタイプ
     LineType lineType = LineType::Line;
-	// 補完分割数(線形補完時のみ有効)
-	uint32_t kSubdivision = 10;
+    // 補完分割数(線形補完時のみ有効)
+    uint32_t kSubdivision = 10;
 
     void Draw();
-	void DrawPoints();
-	void DrawImGui();
+    void DrawPoints();
+    void DrawImGui();
 
 private:
 
@@ -200,43 +205,30 @@ public:
     ~RenderData_Particle();
 
     // ID
-    int ID = 0;
-    std::string name = "NULL";
+    std::optional<std::string> name;
 
-    /// エミッター範囲
-    AABB emitterAABB = { Vector3{ -1.0f, -1.0f, -1.0f }, Vector3{ 1.0f, 1.0f, 1.0f } };
-    SphereXYZ emitterSphere;
-    /// エミッター範囲中心から見た時の飛んでく方向
-    Vector3 target;
+    // ファイルパス
+    std::string filePath = "resources/Prototypes/particle/aaa";
 
-    /// パーティクル１粒
-    uint32_t model;
-    uint32_t texture;
-    uint32_t color = 0xFFFFFFFF;
-    particleSRT scale = particleSRT{ Vector3{0.5f,0.5f,0.5f},Vector3{-0.01f,-0.01f,-0.01f},Vector3{0.0f,0.0f,0.0f} };
-    particleSRT rotate = particleSRT{ Vector3{0.3f,0.3f,0.3f},Vector3{0.0f,0.0f,0.0f},Vector3{0.0f,0.0f,0.0f} };
-    particleSRT translate = particleSRT{ Vector3{0.0f,0.0f,0.0f},Vector3{0.0f,-0.1f,0.0f},Vector3{0.0f,0.0f,0.0f} };
-
-
-
-    // 発生設定
-    int particlesPerEmission = 1;   // 1フレで生む数
-    int emissionDelay = 10;         // 生成間隔フレーム
-    int liveMax = 300;              // 寿命フレーム(マイナスの時は不老)
-    uint32_t frame = 0;             // 経過フレーム
-
-    /// ビルボードか
-	bool isBillboard = true;
-
-    /// 現在存在するパーティクル数
-    uint32_t currentSum = 0;
-
+    bool LoadJson();
 
     void Draw();
     void DrawImGui();
     void DrawEmitter();
 
+    ParticleInf& GetParticleInf() { return particleInf; }
+    /// 現在存在するパーティクル数
+    uint32_t currentSum = 0;
+
 private:
+    ParticleInf particleInf;
+
+
+
+    int ID = 0;
+
+    // ロードした結果
+    bool loadResult = false;
 
     static std::vector<RenderData_Particle*> renderParticles;
 };

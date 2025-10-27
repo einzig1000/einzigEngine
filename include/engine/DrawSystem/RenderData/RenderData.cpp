@@ -1,4 +1,5 @@
 #include "DrawSystem/RenderData/RenderData.h"
+#include "Utilities/JsonManager.h"
 #include "Game.h"
 #include "Camera/CameraController.h"
 using namespace DirectX;
@@ -26,7 +27,7 @@ RenderData_Model::~RenderData_Model()
 	}
 }
 
-void RenderData_Model::Update(std::vector<Object3D>& objects)
+void RenderData_Model::Update()
 {
 #pragma region 前フレーム情報保存
 
@@ -415,50 +416,88 @@ void RenderData_Model::DrawAABB()
 
 void RenderData_Model::DrawImGui()
 {
-	std::string str;
-	if (this->name != "NULL") str = this->name;
-	else str = "object : " + std::to_string(this->ID);
-	
+	std::optional<std::string> str;
+	if (this->name != std::nullopt) str = (this->name);
+	else str = "model : " + std::to_string(this->ID);
+
 	std::string num = std::to_string(this->ID) + ":";
 
-	ImGui::Begin(str.c_str());
+	ImGui::Begin(str->c_str());
 
-	//if (ImGui::TreeNode("-----------transforms-----------"))
-	//{
-	//	ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
-	//	ImGui::TreePop();
-	//}
-
-	ImGui::Text("transforms");
-	ImGui::DragFloat3((num + "scale").c_str(), &transforms.scale.x, 0.01f);
-	ImGui::DragFloat3((num + "translate").c_str(), &transforms.translate.x, 0.01f);
-	ImGui::DragFloat3((num + "rotate").c_str(), &transforms.rotate.x, 0.01f);
-	ImGui::DragFloat3((num + "pivot").c_str(), &pivot.x, 0.01f);
-	ImGui::Text("uvTransform");
-	ImGui::DragFloat3((num + "UVscale").c_str(), &uvTransform.scale.x, 0.01f);
-	ImGui::DragFloat3((num + "UVtranslate").c_str(), &uvTransform.translate.x, 0.01f);
-	ImGui::DragFloat3((num + "UVrotate").c_str(), &uvTransform.rotate.x, 0.01f);
-	ImGui::Text("velocity");
-	ImGui::DragFloat3((num + "lastMove").c_str(), &lastMove.x, 0.01f);
-	ImGui::DragFloat3((num + "velocity").c_str(), &velocity.x, 0.01f);
-	ImGui::DragFloat3((num + "acceleration").c_str(), &acceleration.x, 0.01f);
-	ImGui::DragFloat3((num + "gravity").c_str(), &gravity.x, 0.01f);
-	ImGui::Text("color");
-	Vector4 preColor = ConvertUintToVector4(color);
-	float floatColor[4] = { preColor.x, preColor.y, preColor.z, preColor.w };
-	ImGui::ColorEdit4((num + "color").c_str(), floatColor, 1);
-	Vector4 vector4Color = { floatColor[0], floatColor[1], floatColor[2], floatColor[3] };
-	color = ConvertVector4ToUint(vector4Color);
-	ImGui::Text("option");
-	ImGui::Checkbox("wireFrame", &options.wireframe);
-	ImGui::Checkbox("lighting", &options.enableLighting);
-	bool lookAt = false;
-	ImGui::Checkbox("lookAt", &lookAt);
-	if (lookAt)
+	if (ImGui::TreeNode("----------transforms-----------"))
 	{
-		Game::GetDebugCamera()->SetCenterTarget(transforms.translate, 0, EaseType::IN_BACK);
+		ImGui::DragFloat3((num + "scale").c_str(), &transforms.scale.x, 0.01f);
+		ImGui::DragFloat3((num + "translate").c_str(), &transforms.translate.x, 0.01f);
+		ImGui::DragFloat3((num + "rotate").c_str(), &transforms.rotate.x, 0.01f);
+		ImGui::DragFloat3((num + "pivot").c_str(), &pivot.x, 0.01f);
+		ImGui::TreePop();
 	}
-	ImGui::Text("isCollisionMouse : %d", isCollisionMouseRay);
+	if (ImGui::TreeNode("----------uvTransforms---------"))
+	{
+		ImGui::DragFloat3((num + "UVscale").c_str(), &uvTransform.scale.x, 0.01f);
+		ImGui::DragFloat3((num + "UVtranslate").c_str(), &uvTransform.translate.x, 0.01f);
+		ImGui::DragFloat3((num + "UVrotate").c_str(), &uvTransform.rotate.x, 0.01f);
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------velocity-------------"))
+	{
+		ImGui::DragFloat3((num + "lastMove").c_str(), &lastMove.x, 0.01f);
+		ImGui::DragFloat3((num + "velocity").c_str(), &velocity.x, 0.01f);
+		ImGui::DragFloat3((num + "acceleration").c_str(), &acceleration.x, 0.01f);
+		ImGui::DragFloat3((num + "gravity").c_str(), &gravity.x, 0.01f);
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------model & texture------"))
+	{
+		size_t textureCount = Game::GetTextureCount();
+
+		for (size_t i = 0; i < textureCount; ++i)
+		{
+			TextureData* texData = Game::GetTexture(static_cast<uint32_t>(i));
+			if (texData)
+			{
+				ImGui::Image((ImTextureID)texData->textureSrvHandleGPU.ptr, ImVec2(32, 32));
+				
+				// 6個並べたら改行
+				if ((i + 1) % 6 != 0 && i < textureCount - 1)
+				{
+					ImGui::SameLine();
+				}
+				if (ImGui::IsItemClicked())
+				{
+					this->texture = static_cast<uint32_t>(i);
+				}
+			}
+		}
+
+		//ImGui::Text("model : %d", model);
+
+		//ImGui::InputFloat((num + "model").c_str(), reinterpret_cast<int*>(&model));
+		//ImGui::InputInt((num + "texture").c_str(), reinterpret_cast<int*>(&texture));
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------color----------------"))
+	{
+		Vector4 preColor = ConvertUintToVector4(color);
+		float floatColor[4] = { preColor.x, preColor.y, preColor.z, preColor.w };
+		ImGui::ColorEdit4((num + "color").c_str(), floatColor, 1);
+		Vector4 vector4Color = { floatColor[0], floatColor[1], floatColor[2], floatColor[3] };
+		color = ConvertVector4ToUint(vector4Color);
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------option---------------"))
+	{
+		ImGui::Checkbox("wireFrame", &options.wireframe);
+		ImGui::Checkbox("lighting", &options.enableLighting);
+		bool lookAt = false;
+		ImGui::Checkbox("lookAt", &lookAt);
+		if (lookAt)
+		{
+			Game::GetDebugCamera()->SetCenterTarget(transforms.translate, 0, EaseType::IN_BACK);
+		}
+		ImGui::Text("isCollisionMouse : %d", isCollisionMouseRay);
+		ImGui::TreePop();
+	}
 
 	ImGui::End();
 }
@@ -515,49 +554,100 @@ void RenderData_Sprite::Draw()
 
 void RenderData_Sprite::DrawImGui()
 {
-	std::string str;
-	if (this->name != "NULL") str = this->name;
+	std::optional<std::string> str = "NULL";
+	if (this->name != std::nullopt) str = (this->name);
 	else str = "sprite : " + std::to_string(this->ID);
 
 	std::string num = std::to_string(this->ID) + ":";
 
-	ImGui::Begin(str.c_str());
-	ImGui::Text("transforms");
-	ImGui::DragFloat2((num + "scale").c_str(), &transforms.scale.x, 0.01f);
-	ImGui::DragFloat2((num + "translate").c_str(), &transforms.translate.x, 1.0f);
-	ImGui::DragFloat3((num + "rotate").c_str(), &transforms.rotate.x, 0.01f);
-	ImGui::Text("uvTransform");
-	ImGui::DragFloat2((num + "UVscale").c_str(), &uvTransform.scale.x, 0.01f);
-	ImGui::DragFloat2((num + "UVtranslate").c_str(), &uvTransform.translate.x, 0.01f);
-	ImGui::DragFloat((num + "UVrotate").c_str(), &uvTransform.rotate.z, 0.01f);
-	ImGui::Text("pivot");
-	ImGui::DragFloat2((num + "pivot").c_str(), &pivot.x, 0.1f);
-	ImGui::Text("color");
-	Vector4 preColor = ConvertUintToVector4(color);
-	float floatColor[4] = { preColor.x, preColor.y, preColor.z, preColor.w };
-	ImGui::ColorEdit4((num + "color").c_str(), floatColor, 1);
-	Vector4 vector4Color = { floatColor[0], floatColor[1], floatColor[2], floatColor[3] };
-	color = ConvertVector4ToUint(vector4Color);
-	ImGui::Text("Anker");
-	const char* items[] =
-	{ "Center","CenterLeft","CenterRight","CenterTop","CenterDown","LeftTop","RightTop","LeftDown","RightDown" };
-	int item_current = int(this->anker);
-	ImGui::Combo((num + "Anker").c_str(), &item_current, items, IM_ARRAYSIZE(items));
-	{
-		if (item_current == 0)anker = Anker::Center;
-		if (item_current == 1)anker = Anker::CenterLeft;
-		if (item_current == 2)anker = Anker::CenterRight;
-		if (item_current == 3)anker = Anker::CenterTop;
-		if (item_current == 4)anker = Anker::CenterDown;
-		if (item_current == 5)anker = Anker::LeftTop;
-		if (item_current == 6)anker = Anker::RightTop;
-		if (item_current == 7)anker = Anker::LeftDown;
-		if (item_current == 8)anker = Anker::RightDown;
-	}
+	ImGui::Begin(str->c_str());
 
-	ImGui::Text("option");
-	if (isCollisionMouseRay)ImGui::Text("isCollisionMouse : true");
-	else ImGui::Text("isCollisionMouse : false");
+	if (ImGui::TreeNode("----------transforms-----------"))
+	{
+		ImGui::DragFloat2((num + "scale").c_str(), &transforms.scale.x, 0.01f);
+		ImGui::DragFloat2((num + "translate").c_str(), &transforms.translate.x, 1.0f);
+		ImGui::DragFloat((num + "rotate").c_str(), &transforms.rotate.z, 0.01f);
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------uvTransforms---------"))
+	{
+		ImGui::DragFloat2((num + "UVscale").c_str(), &uvTransform.scale.x, 0.01f);
+		ImGui::DragFloat2((num + "UVtranslate").c_str(), &uvTransform.translate.x, 0.01f);
+		ImGui::DragFloat((num + "UVrotate").c_str(), &uvTransform.rotate.z, 0.01f);
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------cutImage-------------"))
+	{
+		ImGui::DragInt2((num + "cutImageLeftTop").c_str(), &cutImageLeftTop.x, 1);
+		ImGui::DragInt2((num + "cutImageSize").c_str(), &cutImageSize.x, 1);
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------pivot----------------"))
+	{
+		ImGui::DragFloat2((num + "pivot").c_str(), &pivot.x, 0.1f);
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------color----------------"))
+	{
+		Vector4 preColor = ConvertUintToVector4(color);
+		float floatColor[4] = { preColor.x, preColor.y, preColor.z, preColor.w };
+		ImGui::ColorEdit4((num + "color").c_str(), floatColor, 1);
+		Vector4 vector4Color = { floatColor[0], floatColor[1], floatColor[2], floatColor[3] };
+		color = ConvertVector4ToUint(vector4Color);
+
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------texture--------------"))
+	{
+		size_t textureCount = Game::GetTextureCount();
+
+		for (size_t i = 0; i < textureCount; ++i)
+		{
+			TextureData* texData = Game::GetTexture(static_cast<uint32_t>(i));
+			if (texData)
+			{
+				ImGui::Image((ImTextureID)texData->textureSrvHandleGPU.ptr, ImVec2(32, 32));
+
+				// 6個並べたら改行
+				if ((i + 1) % 6 != 0 && i < textureCount - 1)
+				{
+					ImGui::SameLine();
+				}
+				if (ImGui::IsItemClicked())
+				{
+					this->texture = static_cast<uint32_t>(i);
+				}
+			}
+		}
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------Anchor----------------"))
+	{
+		const char* items[] =
+		{ "Center","CenterLeft","CenterRight","CenterTop","CenterDown","LeftTop","RightTop","LeftDown","RightDown" };
+		int item_current = int(this->anchor);
+		ImGui::Combo((num + "Anchor").c_str(), &item_current, items, IM_ARRAYSIZE(items));
+		{
+			if (item_current == 0)anchor = Anchor::Center;
+			if (item_current == 1)anchor = Anchor::CenterLeft;
+			if (item_current == 2)anchor = Anchor::CenterRight;
+			if (item_current == 3)anchor = Anchor::CenterTop;
+			if (item_current == 4)anchor = Anchor::CenterDown;
+			if (item_current == 5)anchor = Anchor::LeftTop;
+			if (item_current == 6)anchor = Anchor::RightTop;
+			if (item_current == 7)anchor = Anchor::LeftDown;
+			if (item_current == 8)anchor = Anchor::RightDown;
+		}
+
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------option---------------"))
+	{
+		if (isCollisionMouseRay)ImGui::Text("isCollisionMouse : true");
+		else ImGui::Text("isCollisionMouse : false");
+
+		ImGui::TreePop();
+	}
 	ImGui::End();
 }
 
@@ -587,33 +677,71 @@ void RenderData_Triangle::Draw()
 
 void RenderData_Triangle::DrawImGui()
 {
-	std::string str;
-	if (this->name != "NULL") str = this->name;
+	std::optional<std::string> str;
+	if (this->name != std::nullopt) str = (this->name);
 	else str = "triangle : " + std::to_string(this->ID);
 
 	std::string num = std::to_string(this->ID) + ":";
 
-	ImGui::Begin(str.c_str());
-	ImGui::Text("transforms");
-	ImGui::DragFloat3((num + "scale").c_str(), &transforms.scale.x, 0.01f);
-	ImGui::DragFloat3((num + "translate").c_str(), &transforms.translate.x, 1.0f);
-	ImGui::DragFloat3((num + "rotate").c_str(), &transforms.rotate.x, 0.01f);
-	ImGui::Text("uvTransform");
-	ImGui::DragFloat3((num + "UVscale").c_str(), &uvTransform.scale.x, 0.01f);
-	ImGui::DragFloat3((num + "UVtranslate").c_str(), &uvTransform.translate.x, 0.01f);
-	ImGui::DragFloat((num + "UVrotate").c_str(), &uvTransform.rotate.z, 0.01f);
-	ImGui::Text("pos");
-	ImGui::DragFloat3((num + "pos1").c_str(), &pos1.x, 0.1f);
-	ImGui::DragFloat3((num + "pos2").c_str(), &pos2.x, 0.1f);
-	ImGui::DragFloat3((num + "pos3").c_str(), &pos3.x, 0.1f);
-	ImGui::Text("pivot");
-	//ImGui::DragFloat2((num + "pivot").c_str(), &pivot.x, 0.1f);
-	ImGui::Text("color");
-	Vector4 preColor = ConvertUintToVector4(color);
-	float floatColor[4] = { preColor.x, preColor.y, preColor.z, preColor.w };
-	ImGui::ColorEdit4((num + "color").c_str(), floatColor, 1);
-	Vector4 vector4Color = { floatColor[0], floatColor[1], floatColor[2], floatColor[3] };
-	color = ConvertVector4ToUint(vector4Color);
+	ImGui::Begin(str->c_str());
+
+	if (ImGui::TreeNode("----------transforms-----------"))
+	{
+		ImGui::DragFloat3((num + "scale").c_str(), &transforms.scale.x, 0.01f);
+		ImGui::DragFloat3((num + "translate").c_str(), &transforms.translate.x, 1.0f);
+		ImGui::DragFloat3((num + "rotate").c_str(), &transforms.rotate.x, 0.01f);
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------uvTransforms---------"))
+	{
+		ImGui::DragFloat3((num + "UVscale").c_str(), &uvTransform.scale.x, 0.01f);
+		ImGui::DragFloat3((num + "UVtranslate").c_str(), &uvTransform.translate.x, 0.01f);
+		ImGui::DragFloat((num + "UVrotate").c_str(), &uvTransform.rotate.z, 0.01f);
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------position-------------"))
+	{
+		ImGui::DragFloat3((num + "pos1").c_str(), &pos1.x, 0.1f);
+		ImGui::DragFloat3((num + "pos2").c_str(), &pos2.x, 0.1f);
+		ImGui::DragFloat3((num + "pos3").c_str(), &pos3.x, 0.1f);
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------position-------------"))
+	{
+		for (size_t i = 0; i < Game::GetTextureCount(); ++i)
+		{
+			TextureData* texData = Game::GetTexture(static_cast<uint32_t>(i));
+			if (texData)
+			{
+				ImGui::Image((ImTextureID)texData->textureSrvHandleGPU.ptr, ImVec2(32, 32));
+
+				// 6個並べたら改行
+				if ((i + 1) % 6 != 0 && i < Game::GetTextureCount() - 1)
+				{
+					ImGui::SameLine();
+				}
+				if (ImGui::IsItemClicked())
+				{
+					this->texture = static_cast<uint32_t>(i);
+				}
+			}
+		}
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------pivot----------------"))
+	{
+		//ImGui::DragFloat2((num + "pivot").c_str(), &pivot.x, 0.1f);
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------color----------------"))
+	{
+		Vector4 preColor = ConvertUintToVector4(color);
+		float floatColor[4] = { preColor.x, preColor.y, preColor.z, preColor.w };
+		ImGui::ColorEdit4((num + "color").c_str(), floatColor, 1);
+		Vector4 vector4Color = { floatColor[0], floatColor[1], floatColor[2], floatColor[3] };
+		color = ConvertVector4ToUint(vector4Color);
+		ImGui::TreePop();
+	}
 
 	ImGui::End();
 }
@@ -656,54 +784,71 @@ void RenderData_Line::DrawPoints()
 
 void RenderData_Line::DrawImGui()
 {
-	std::string str;
-	if (this->name != "NULL") str = this->name;
+	std::optional<std::string> str;
+	if (this->name != std::nullopt) str = (this->name);
 	else str = "line : " + std::to_string(this->ID);
-	std::string num = std::to_string(this->ID);
 
-	ImGui::Begin(str.c_str());
+	std::string num = std::to_string(this->ID) + ":";
 
-	ImGui::Text("color");
-	Vector4 preColor = ConvertUintToVector4(color);
-	float floatColor[4] = { preColor.x, preColor.y, preColor.z, preColor.w };
-	ImGui::ColorEdit4((num + " : color").c_str(), floatColor, 1);
-	Vector4 vector4Color = { floatColor[0], floatColor[1], floatColor[2], floatColor[3] };
-	color = ConvertVector4ToUint(vector4Color);
+	ImGui::Begin(str->c_str());
 
-	ImGui::Text("LineType");
-	const char* items[] =
-	{ "Line","BezierCurve", "SplineCurve" };
-	int item_current = int(this->lineType);
-	ImGui::Combo((num + "LineType").c_str(), &item_current, items, IM_ARRAYSIZE(items));
+	if (ImGui::TreeNode("----------color----------------"))
 	{
-		if (item_current == 0)lineType = LineType::Line;
-		if (item_current == 1)lineType = LineType::BezierCurve;
-		if (item_current == 2)lineType = LineType::SplineCurve;
+		Vector4 preColor = ConvertUintToVector4(color);
+		float floatColor[4] = { preColor.x, preColor.y, preColor.z, preColor.w };
+		ImGui::ColorEdit4((num + " : color").c_str(), floatColor, 1);
+		Vector4 vector4Color = { floatColor[0], floatColor[1], floatColor[2], floatColor[3] };
+		color = ConvertVector4ToUint(vector4Color);
+
+		ImGui::TreePop();
 	}
-
-	ImGui::Text("kSubdivision");
-	ImGui::DragInt((num + " : kSubdivision").c_str(), (int*)&kSubdivision, 1, 1, 100);
-
-	ImGui::Text("points");
-	size_t i = 1;
-	for (i = 1; i < points.size(); ++i)
+	if (ImGui::TreeNode("----------LineType-------------"))
 	{
-		ImGui::DragFloat3((num + "." + std::to_string(i)).c_str(), &points[i].x, 0.1f);
-		ImGui::SameLine();
-		if (ImGui::Button(("delete" + num + "." + std::to_string(i)).c_str()))
+		const char* items[] =
+		{ "Line","BezierCurve", "SplineCurve" };
+		int item_current = int(this->lineType);
+		ImGui::Combo((num + "LineType").c_str(), &item_current, items, IM_ARRAYSIZE(items));
 		{
-			points.erase(points.begin() + i);
-			--i;
+			if (item_current == 0)lineType = LineType::Line;
+			if (item_current == 1)lineType = LineType::BezierCurve;
+			if (item_current == 2)lineType = LineType::SplineCurve;
 		}
+
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------kSubdivision---------"))
+	{
+		ImGui::DragInt((num + " : kSubdivision").c_str(), (int*)&kSubdivision, 1, 1, 100);
+
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------points---------------"))
+	{
+		ImGui::Text("points");
+		size_t i = 1;
+		for (i = 1; i < points.size(); ++i)
+		{
+			ImGui::DragFloat3((num + "." + std::to_string(i)).c_str(), &points[i].x, 0.1f);
+			ImGui::SameLine();
+			if (ImGui::Button(("delete" + num + "." + std::to_string(i)).c_str()))
+			{
+				points.erase(points.begin() + i);
+				--i;
+			}
+		}
+
+		ImGui::Text("addPoint");
+		ImGui::DragFloat3((num + " : addPoint").c_str(), &points[0].x, 0.1f);
+		if (ImGui::Button((num + " : AddPoint").c_str()))
+		{
+			Vector3 newPoint = points[0];
+			points.push_back(newPoint);
+		}
+
+		ImGui::TreePop();
 	}
 
-	ImGui::Text("addPoint");
-	ImGui::DragFloat3((num + " : addPoint").c_str(), &points[0].x, 0.1f);
-	if (ImGui::Button((num + " : AddPoint").c_str()))
-	{
-		Vector3 newPoint = points[0];
-		points.push_back(newPoint);
-	}
+
 	ImGui::End();
 }
 
@@ -726,6 +871,11 @@ RenderData_Particle::~RenderData_Particle()
 	}
 }
 
+bool RenderData_Particle::LoadJson()
+{
+	return JsonManager::LoadFromJson(*this, this->filePath);
+}
+
 void RenderData_Particle::Draw()
 {
 	Game::DrawParticle(*this);
@@ -733,162 +883,241 @@ void RenderData_Particle::Draw()
 
 void RenderData_Particle::DrawImGui()
 {
-	std::string str;
-	if (this->name != "NULL") str = this->name;
+	std::optional<std::string> str;
+	if (this->name != std::nullopt) str = (this->name);
 	else str = "particle : " + std::to_string(this->ID);
 
 	std::string num = ":" + std::to_string(this->ID);
 
-	ImGui::Begin(str.c_str());
-	ImGui::Text("Emitter");
-	ImGui::DragFloat3(("AABB.min" + num).c_str(), &this->emitterAABB.min.x, 0.1f);
-	ImGui::DragFloat3(("AABB.max" + num).c_str(), &this->emitterAABB.max.x, 0.1f);
-	ImGui::Text("scale");
-	ImGui::DragFloat3(("S.val" + num).c_str(), &this->scale.value.x, 0.01f);
-	ImGui::DragFloat3(("S.vel" + num).c_str(), &this->scale.velocity.x, 0.01f);
-	ImGui::DragFloat3(("S.acc" + num).c_str(), &this->scale.acceleration.x, 0.01f);
-	ImGui::Text("rotate");
-	ImGui::DragFloat3(("R.val" + num).c_str(), &this->rotate.value.x, 0.01f);
-	ImGui::DragFloat3(("R.vel" + num).c_str(), &this->rotate.velocity.x, 0.01f);
-	ImGui::DragFloat3(("R.acc" + num).c_str(), &this->rotate.acceleration.x, 0.01f);
-	ImGui::Text("translate");
-	ImGui::DragFloat3(("T.val" + num).c_str(), &this->translate.value.x, 0.01f);
-	ImGui::DragFloat3(("T.vel" + num).c_str(), &this->translate.velocity.x, 0.01f);
-	ImGui::DragFloat3(("T.acc" + num).c_str(), &this->translate.acceleration.x, 0.01f);
+	ImGui::Begin(str->c_str());
 
-	ImGui::Text("density");
-	int particlesPerEmission = int(this->particlesPerEmission);
-	ImGui::DragInt(("particlePerEmission" + num).c_str(), &particlesPerEmission);
-	if (particlesPerEmission < 0)particlesPerEmission = 0;
-	this->particlesPerEmission = uint32_t(particlesPerEmission);
-	int emissionDelay = int(this->emissionDelay);
-	ImGui::DragInt(("emissionDelay" + num).c_str(), &emissionDelay);
-	if (emissionDelay < 1)emissionDelay = 1;
-	this->emissionDelay = uint32_t(emissionDelay);
-
-	ImGui::Text("lifetime");
-	ImGui::DragInt(("liveMax" + num).c_str(), &this->liveMax);
-
-	ImGui::Text("color");
-	Vector4 preColor = ConvertUintToVector4(this->color);
-	float floatColor[4] = { preColor.x, preColor.y, preColor.z, preColor.w };
-	ImGui::ColorEdit4((num + "color").c_str(), floatColor, 1);
-	Vector4 vector4Color = { floatColor[0], floatColor[1], floatColor[2], floatColor[3] };
-	this->color = ConvertVector4ToUint(vector4Color);
-	ImGui::Text("option");
-	ImGui::Checkbox("Billboard", &this->isBillboard);
-
-	if (ImGui::Button("save"))
+	if (ImGui::TreeNode("----------Emitter--------------"))
 	{
-		this->texture = Game::LoadTexture("resources/Prototypes/texture/uvChecker.png");
+		ImGui::Checkbox(("ToggleShape" + num).c_str(), &this->GetParticleInf().emitter.useSphereEmitter);
+		ImGui::Checkbox(("emitFromInside" + num).c_str(), &this->GetParticleInf().emitter.emitFromInside);
+		if (this->GetParticleInf().emitter.useSphereEmitter)
+		{
+			ImGui::DragFloat3(("Sphere.radius" + num).c_str(), &this->GetParticleInf().emitter.emitterSphere.radius.x, 0.1f);
+			ImGui::DragFloat3(("Sphere.center" + num).c_str(), &this->GetParticleInf().emitter.emitterSphere.center.x, 0.1f);
+		}
+		else
+		{
+			ImGui::DragFloat3(("AABB.min" + num).c_str(), &this->GetParticleInf().emitter.emitterAABB.min.x, 0.1f);
+			ImGui::DragFloat3(("AABB.max" + num).c_str(), &this->GetParticleInf().emitter.emitterAABB.max.x, 0.1f);
+		}
+		ImGui::TreePop();
 	}
+	if (ImGui::TreeNode("----------scale----------------"))
+	{
+		ImGui::Checkbox(("S.isRandom" + num).c_str(), &this->GetParticleInf().scale.isRandom_value);
+		if (this->GetParticleInf().scale.isRandom_value)
+		{
+			ImGui::DragFloat3(("S.min" + num).c_str(), &this->GetParticleInf().scale.randomRange_value.min.x, 0.01f);
+			ImGui::DragFloat3(("S.max" + num).c_str(), &this->GetParticleInf().scale.randomRange_value.max.x, 0.01f);
+		}
+		else
+		{
+			ImGui::DragFloat3(("S.val" + num).c_str(), &this->GetParticleInf().scale.value.x, 0.01f);
+		}
+		ImGui::Checkbox(("S.vel.isRandom" + num).c_str(), &this->GetParticleInf().scale.isRandom_velocity);
+		if (this->GetParticleInf().scale.isRandom_velocity)
+		{
+			ImGui::DragFloat3(("S.vel.min" + num).c_str(), &this->GetParticleInf().scale.randomRange_velocity.min.x, 0.01f);
+			ImGui::DragFloat3(("S.vel.max" + num).c_str(), &this->GetParticleInf().scale.randomRange_velocity.max.x, 0.01f);
+		}
+		else
+		{
+			ImGui::DragFloat3(("S.vel" + num).c_str(), &this->GetParticleInf().scale.velocity.x, 0.01f);
+		}
+		ImGui::Checkbox(("S.acc.isRandom" + num).c_str(), &this->GetParticleInf().scale.isRandom_acceleration);
+		if (this->GetParticleInf().scale.isRandom_acceleration)
+		{
+			ImGui::DragFloat3(("S.acc.min" + num).c_str(), &this->GetParticleInf().scale.randomRange_acceleration.min.x, 0.01f);
+			ImGui::DragFloat3(("S.acc.max" + num).c_str(), &this->GetParticleInf().scale.randomRange_acceleration.max.x, 0.01f);
+		}
+		else
+		{
+			ImGui::DragFloat3(("S.acc" + num).c_str(), &this->GetParticleInf().scale.acceleration.x, 0.01f);
+		}
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------rotate---------------"))
+	{
+		ImGui::Checkbox(("R.isRandom" + num).c_str(), &this->GetParticleInf().rotate.isRandom_value);
+		if (this->GetParticleInf().rotate.isRandom_value)
+		{
+			ImGui::DragFloat3(("R.min" + num).c_str(), &this->GetParticleInf().rotate.randomRange_value.min.x, 0.01f);
+			ImGui::DragFloat3(("R.max" + num).c_str(), &this->GetParticleInf().rotate.randomRange_value.max.x, 0.01f);
+		}
+		else
+		{
+			ImGui::DragFloat3(("R.val" + num).c_str(), &this->GetParticleInf().rotate.value.x, 0.01f);
+		}
+		ImGui::Checkbox(("R.vel.isRandom" + num).c_str(), &this->GetParticleInf().rotate.isRandom_velocity);
+		if (this->GetParticleInf().rotate.isRandom_velocity)
+		{
+			ImGui::DragFloat3(("R.vel.min" + num).c_str(), &this->GetParticleInf().rotate.randomRange_velocity.min.x, 0.01f);
+			ImGui::DragFloat3(("R.vel.max" + num).c_str(), &this->GetParticleInf().rotate.randomRange_velocity.max.x, 0.01f);
+		}
+		else
+		{
+			ImGui::DragFloat3(("R.vel" + num).c_str(), &this->GetParticleInf().rotate.velocity.x, 0.01f);
+		}
+		ImGui::Checkbox(("R.acc.isRandom" + num).c_str(), &this->GetParticleInf().rotate.isRandom_acceleration);
+		if (this->GetParticleInf().rotate.isRandom_acceleration)
+		{
+			ImGui::DragFloat3(("R.acc.min" + num).c_str(), &this->GetParticleInf().rotate.randomRange_acceleration.min.x, 0.01f);
+			ImGui::DragFloat3(("R.acc.max" + num).c_str(), &this->GetParticleInf().rotate.randomRange_acceleration.max.x, 0.01f);
+		}
+		else
+		{
+			ImGui::DragFloat3(("R.acc" + num).c_str(), &this->GetParticleInf().rotate.acceleration.x, 0.01f);
+		}
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------translate------------"))
+	{
+		//ImGui::DragFloat3(("T.val" + num).c_str(), &this->translate.value.x, 0.01f);
+		ImGui::Checkbox(("T.vel.isRandom" + num).c_str(), &this->GetParticleInf().translate.isRandom_velocity);
+		if (this->GetParticleInf().translate.isRandom_velocity)
+		{
+			ImGui::DragFloat3(("T.vel.min" + num).c_str(), &this->GetParticleInf().translate.randomRange_velocity.min.x, 0.01f);
+			ImGui::DragFloat3(("T.vel.max" + num).c_str(), &this->GetParticleInf().translate.randomRange_velocity.max.x, 0.01f);
+		}
+		else
+		{
+			ImGui::DragFloat3(("T.vel" + num).c_str(), &this->GetParticleInf().translate.velocity.x, 0.01f);
+		}
+		ImGui::Checkbox(("T.acc.isRandom" + num).c_str(), &this->GetParticleInf().translate.isRandom_acceleration);
+		if (this->GetParticleInf().translate.isRandom_acceleration)
+		{
+			ImGui::DragFloat3(("T.acc.min" + num).c_str(), &this->GetParticleInf().translate.randomRange_acceleration.min.x, 0.01f);
+			ImGui::DragFloat3(("T.acc.max" + num).c_str(), &this->GetParticleInf().translate.randomRange_acceleration.max.x, 0.01f);
+		}
+		else
+		{
+			ImGui::DragFloat3(("T.acc" + num).c_str(), &this->GetParticleInf().translate.acceleration.x, 0.01f);
+		}
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------target---------------"))
+	{
+		ImGui::Checkbox(("useTarget" + num).c_str(), &this->GetParticleInf().target.useTarget);
+		ImGui::Checkbox(("spawnDependent" + num).c_str(), &this->GetParticleInf().target.spawnDependent);
+		ImGui::DragFloat3(("target" + num).c_str(), &this->GetParticleInf().target.target.x, 0.01f);
+		ImGui::DragFloat(("speed" + num).c_str(), &this->GetParticleInf().target.speed, 0.1f);
+		ImGui::DragFloat(("angle" + num).c_str(), &this->GetParticleInf().target.spreadAngle, 0.1f);
 
-	//ImGui::Text("Shape");
-	//ImGui::Checkbox("toggleShape", &this->option.emitterShape);
-	//ImGui::Checkbox("toggleInOut", &this->option.spawnInsideEmitter);
-	//ImGui::DragFloat3("aabb.min	", &this->emitterAABB.min.x, 0.1f);
-	//ImGui::DragFloat3("aabb.max	", &this->emitterAABB.max.x, 0.1f);
-	//ImGui::DragFloat3("Sphere.center", &this->emitterSphere.center.x, 0.1f);
-	//ImGui::DragFloat3("Sphere.radius", &this->emitterSphere.radius.x, 0.1f);
-	//
-	//ImGui::Text("InitializeTransforms");
-	//ImGui::DragFloat3("scale	", &this->mono.transforms.scale.x, 0.1f);
-	//ImGui::DragFloat3("rotate	", &this->mono.transforms.rotate.x, 0.1f);
-	//ImGui::Text("AddTransforms/frame");
-	//ImGui::DragFloat3("AddScale	", &this->AddScale.x, 0.1f);
-	//ImGui::DragFloat3("AddRotate", &this->AddRotate.x, 0.1f);
-	//ImGui::DragFloat("velocity	", &this->velocity, 0.01f);
-	//ImGui::Checkbox("toggletarget", &this->option.targetDirection);
-	//
-	//ImGui::Text("direction");
-	//ImGui::DragFloat3("target	", &this->target.x, 0.01f);
-	//ImGui::DragInt("emissionDelay	", &this->emissionDelay);
-	//ImGui::DragInt("particlesPerEmission	", &this->particlesPerEmission);
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------texture--------------"))
+	{
+		size_t textureCount = Game::GetTextureCount();
+
+		for (size_t i = 0; i < textureCount; ++i)
+		{
+			TextureData* texData = Game::GetTexture(static_cast<uint32_t>(i));
+			if (texData)
+			{
+				ImGui::Image((ImTextureID)texData->textureSrvHandleGPU.ptr, ImVec2(32, 32));
+
+				// 6個並べたら改行
+				if ((i + 1) % 6 != 0 && i < textureCount - 1)
+				{
+					ImGui::SameLine();
+				}
+				if (ImGui::IsItemClicked())
+				{
+					this->GetParticleInf().resource.texture = static_cast<uint32_t>(i);
+				}
+			}
+		}
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------model----------------"))
+	{
+		if (ImGui::Button("-"))this->GetParticleInf().resource.model -= 1;
+
+		ImGui::SameLine();
+
+		// ラベルを非表示にするために "##" プレフィックスで ID を与える
+		std::string dragId = std::string("##model") + num;
+		ImGui::DragInt(dragId.c_str(), reinterpret_cast<int*>(&this->GetParticleInf().resource.model));
+
+		ImGui::SameLine();
+
+		if (ImGui::Button("+"))this->GetParticleInf().resource.model += 1;
+
+		// クランプ
+		if (this->GetParticleInf().resource.model < 0) this->GetParticleInf().resource.model = 0;
+		if (this->GetParticleInf().resource.model > int(Game::GetModelCount() - 1)) this->GetParticleInf().resource.model = int(Game::GetModelCount() - 1);
+
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------density--------------"))
+	{
+		int particlesPerEmission = int(this->GetParticleInf().density.particlesPerEmission);
+		ImGui::DragInt(("particlePerEmission" + num).c_str(), &particlesPerEmission);
+		if (particlesPerEmission < 0)particlesPerEmission = 0;
+		this->GetParticleInf().density.particlesPerEmission = uint32_t(particlesPerEmission);
+		int emissionDelay = int(this->GetParticleInf().density.emissionDelay);
+		ImGui::DragInt(("emissionDelay" + num).c_str(), &emissionDelay);
+		if (emissionDelay < 1)emissionDelay = 1;
+		this->GetParticleInf().density.emissionDelay = uint32_t(emissionDelay);
+		ImGui::Text("lifetime");
+		ImGui::DragInt(("liveMax" + num).c_str(), &this->GetParticleInf().density.liveMax);
+
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------color----------------"))
+	{
+		Vector4 preColor = ConvertUintToVector4(this->GetParticleInf().material.color);
+		float floatColor[4] = { preColor.x, preColor.y, preColor.z, preColor.w };
+		ImGui::ColorEdit4((num + "color").c_str(), floatColor, 1);
+		Vector4 vector4Color = { floatColor[0], floatColor[1], floatColor[2], floatColor[3] };
+		this->GetParticleInf().material.color = ConvertVector4ToUint(vector4Color);
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------option---------------"))
+	{
+		ImGui::Checkbox("Billboard", &this->GetParticleInf().option.isBillboard);
+		ImGui::TreePop();
+	}
+	ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+	if (ImGui::TreeNode("----------load & save----------"))
+	{
+		char buf[256];
+		if (this->filePath.size() < sizeof(buf)) memcpy(buf, this->filePath.c_str(), this->filePath.size() + 1);
+		else buf[sizeof(buf) - 1] = '\0';
+		if (ImGui::InputText(".json", buf, sizeof(buf)))
+		{
+			this->filePath = std::string(buf);
+		}
+		if (ImGui::Button("save"))
+		{
+			JsonManager::SaveToJson(*this, this->filePath);
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("load"))
+		{
+			JsonManager::LoadFromJson(*this, this->filePath);
+		}
+		ImGui::TreePop();
+	}
 
 	ImGui::End();
 }
 
 void RenderData_Particle::DrawEmitter()
 {
-	Vector3 p[8];
-	p[0] = { this->emitterAABB.min.x, this->emitterAABB.min.y, this->emitterAABB.min.z };
-	p[1] = { this->emitterAABB.max.x, this->emitterAABB.min.y, this->emitterAABB.min.z };
-	p[2] = { this->emitterAABB.max.x, this->emitterAABB.max.y, this->emitterAABB.min.z };
-	p[3] = { this->emitterAABB.min.x, this->emitterAABB.max.y, this->emitterAABB.min.z };
-	p[4] = { this->emitterAABB.min.x, this->emitterAABB.min.y, this->emitterAABB.max.z };
-	p[5] = { this->emitterAABB.max.x, this->emitterAABB.min.y, this->emitterAABB.max.z };
-	p[6] = { this->emitterAABB.max.x, this->emitterAABB.max.y, this->emitterAABB.max.z };
-	p[7] = { this->emitterAABB.min.x, this->emitterAABB.max.y, this->emitterAABB.max.z };
-
-	RenderData_Line line;
-	line.color = 0xFF0000FF;
-	line.points.push_back(p[0]);
-	line.points.push_back(p[1]);
-	line.points.push_back(p[2]);
-	line.points.push_back(p[3]);
-	line.points.push_back(p[0]);
-
-	line.points.push_back(p[4]);
-	line.points.push_back(p[5]);
-	line.points.push_back(p[6]);
-	line.points.push_back(p[7]);
-	line.points.push_back(p[4]);
-
-	line.points.push_back(p[5]);
-	line.points.push_back(p[1]);
-	line.points.push_back(p[2]);
-	line.points.push_back(p[6]);
-	line.points.push_back(p[7]);
-	line.points.push_back(p[3]);
-
-	line.Draw();
-
-
-	//// エミッターがAABB
-	//if (this->option.emitterShape)
-	//{
-	//	Vector3 p[8];
-	//	p[0] = { this->emitterAABB.min.x, this->emitterAABB.min.y, this->emitterAABB.min.z };
-	//	p[1] = { this->emitterAABB.max.x, this->emitterAABB.min.y, this->emitterAABB.min.z };
-	//	p[2] = { this->emitterAABB.max.x, this->emitterAABB.max.y, this->emitterAABB.min.z };
-	//	p[3] = { this->emitterAABB.min.x, this->emitterAABB.max.y, this->emitterAABB.min.z };
-	//	p[4] = { this->emitterAABB.min.x, this->emitterAABB.min.y, this->emitterAABB.max.z };
-	//	p[5] = { this->emitterAABB.max.x, this->emitterAABB.min.y, this->emitterAABB.max.z };
-	//	p[6] = { this->emitterAABB.max.x, this->emitterAABB.max.y, this->emitterAABB.max.z };
-	//	p[7] = { this->emitterAABB.min.x, this->emitterAABB.max.y, this->emitterAABB.max.z };
-	//
-	//	RenderData_Line line;
-	//	line.color = 0xFF0000FF;
-	//	line.points.push_back(p[0]);
-	//	line.points.push_back(p[1]);
-	//	line.points.push_back(p[2]);
-	//	line.points.push_back(p[3]);
-	//	line.points.push_back(p[0]);
-	//
-	//	line.points.push_back(p[4]);
-	//	line.points.push_back(p[5]);
-	//	line.points.push_back(p[6]);
-	//	line.points.push_back(p[7]);
-	//	line.points.push_back(p[4]);
-	//
-	//	line.points.push_back(p[5]);
-	//	line.points.push_back(p[1]);
-	//	line.points.push_back(p[2]);
-	//	line.points.push_back(p[6]);
-	//	line.points.push_back(p[7]);
-	//	line.points.push_back(p[3]);
-	//
-	//	line.Draw();
-	//}
-	//// 
-	//else
-	//{
-	//	Transforms transforms;
-	//	transforms.scale = this->emitterSphere.radius;
-	//	DrawOptions option;
-	//
-	//	//engine->DrawSphere(transforms, this->emitterSphere.center, 12, 0, 0xFFFFFF22, option);
-	//}
+	if (this->GetParticleInf().emitter.useSphereEmitter)
+	{
+		Game::AddSphere(this->GetParticleInf().emitter.emitterSphere.center, this->GetParticleInf().emitter.emitterSphere.radius, 0xFFFFFF22);
+	}
+	else
+	{
+		Game::AddAABB(this->GetParticleInf().emitter.emitterAABB, 0xFFFFFF22);
+	}
 }
 
 #pragma endregion

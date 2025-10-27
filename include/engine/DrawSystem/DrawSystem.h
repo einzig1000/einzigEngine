@@ -9,7 +9,7 @@ namespace
 	struct EmitterPool
 	{
 		Microsoft::WRL::ComPtr<ID3D12Resource> buffer;
-		ParticleInf* mapped = nullptr;
+		ParticleMonoInf* mapped = nullptr;
 		uint32_t capacity = 0;
 		uint32_t activeCount = 0;
 		uint32_t srvIndex = UINT32_MAX;
@@ -34,6 +34,9 @@ public:
 	void DrawSprite(RenderData_Sprite& renderData);
 	void DrawParticle(RenderData_Particle& renderData);
 	void DrawLine(RenderData_Line& renderData);
+
+	void AddSphere(Vector3 pos, Vector3 radius, uint32_t color);
+	void AddAABB(AABB aabb, uint32_t color);
 
 	void SetLightColor(const Vector4 color) { directionalLightData_->color = color; }
 	void SetLightDirection(const Vector3 direction) { directionalLightData_->direction = direction; }
@@ -83,12 +86,8 @@ private:
 	// 現フレームで描画されている頂点数(モデルは除く)
 	size_t vertexDataUsed_ = 0;
 
-	// インスタンシング（構造化バッファ）
-	Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource_ = nullptr; // 単一の連続バッファ
-	ParticleInf* instancingMappedPtr_ = nullptr; // 先頭への永続Mapポインタ
-	size_t instancingDataUsed_ = 0;              // 現フレームで使用しているインスタンス数
+	// インスタンシング
 	uint32_t kMaxInstanceCount_ = 4096;          // 最大インスタンス数
-	uint32_t activeInstanceCount_ = 0;			 // 現在アクティブなインスタンス数
 
 
 	// 三角形
@@ -97,13 +96,14 @@ private:
 	std::vector<VertexData> vertexData_{};
 	VertexData* vertexMappedPtr_ = nullptr; // 永続Mapポインタ
 
-	D3D12_CPU_DESCRIPTOR_HANDLE instancingSrvHandleCPU_;
-	D3D12_GPU_DESCRIPTOR_HANDLE instancingSrvHandleGPU_;
-
-
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> indexResource;
 	D3D12_INDEX_BUFFER_VIEW indexBufferView;
+
+
+private:
+	// リサイズで入れ替えた古いVBをフレーム終了まで保持
+	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> vbHoldUntilSubmit_;
 
 };
 

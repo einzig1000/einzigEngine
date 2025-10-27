@@ -5,8 +5,6 @@ using namespace DirectX;
 
 static Engine* engine = new Engine;
 
-//std::vector<Game::RenderData_Model*> Game::renderModels;
-
 
 void Game::Initialize(int width, int height, const std::wstring& title)
 {
@@ -60,6 +58,21 @@ TextureData* Game::GetTexture(uint32_t textureNumber)
 	return engine->GetTexture(textureNumber);
 }
 
+size_t Game::GetTextureCount()
+{
+	return engine->GetTextureCount();
+}
+
+size_t Game::GetModelCount()
+{
+	return engine->GetModelCount();
+}
+
+//void Game::DrawModel(RenderData_Model& renderData)
+//{
+//	engine->DrawModel(renderData);
+//}
+
 void Game::DrawModel(RenderData_Model& renderData)
 {
 	engine->DrawModel(renderData);
@@ -85,9 +98,14 @@ void Game::DrawParticle(RenderData_Particle& renderData)
 	engine->DrawParticle(renderData);
 }
 
-void Game::DrawSphere(const Transforms& transform, const Vector3& center, uint32_t kSubdivision, uint32_t textureNumber, const uint32_t& materialColor, const DrawOptions drawOptions)
+void Game::AddSphere(Vector3 pos, Vector3 radius, uint32_t color)
 {
-	engine->DrawSphere(transform, center, kSubdivision, textureNumber, materialColor, drawOptions);
+	engine->AddSphere(pos, radius, color);
+}
+
+void Game::AddAABB(AABB aabb, uint32_t color)
+{
+	engine->AddAABB(aabb, color);
 }
 
 void Game::PlayAudio(const uint32_t& audioId, bool loop)
@@ -155,11 +173,6 @@ Ray Game::GetMouseRay()
 {
 	return engine->GetMouseRay();
 }
-
-//bool Game::IsCollisionMouseRayObject(uint32_t objectNumber, const Transforms& data)
-//{
-//	return engine->IsCollisionMouseRayObject(objectNumber, data);
-//}
 
 bool Game::GetMousePress(int i)
 {

@@ -9,6 +9,9 @@ TestPhase::TestPhase()
 	uint32_t enemyTex = Game::LoadTexture("resources/Prototypes/texture/circle.png");
 	uint32_t enemyModel = Game::LoadModel("resources/Prototypes/model/", "plane.obj");
 
+	uint32_t enemyTex2 = Game::LoadTexture("resources/Prototypes/texture/monsterBall.png");
+	uint32_t enemyTex3 = Game::LoadTexture("resources/Prototypes/texture/white1x1.png");
+
 	model_.model = playerModel;
 	model_.texture = playerTex;
 	model_.name = "player";
@@ -31,35 +34,11 @@ TestPhase::TestPhase()
 	line3_.points.push_back(Vector3{ -10.0f,0.0f,0.0f });
 	line3_.lineType = LineType::SplineCurve;
 
-	particle_.model = playerModel;
-	// パーティクルテクスチャ
-	particle_.texture = playerTex;
-	// パーティクル初期カラー
-	particle_.color = 0xFFFFFFFF;
+	//particle_.model = playerModel;
+	//particle_.texture = playerTex;
+	particle_.filePath = "resources/Prototypes/particle/aaa";
+	particle_.LoadJson();
 
-	particle2_.model = enemyModel;
-	// パーティクルテクスチャ
-	particle2_.texture = enemyTex;
-	// パーティクル初期カラー
-	particle2_.color = 0xFFFFFFFF;
-
-	//// パーティクル毎フレーム加算される回転量
-	//particle_.AddRotate = { 0.2f,0.2f,0.2f };
-	//// パーティクル毎フレーム加算される拡縮量
-	//particle_.AddScale = { -0.005f,-0.005f,-0.005f };
-	//// パーティクル飛んでく向き
-	//particle_.target = { 10.0f, 0.0f, 0.0f };
-	//// パーティクルエミッター
-	//particle_.emitterAABB = { { -1.0f, -1.0f, -1.0f }, { 1.0f, 1.0f, 1.0f } };
-	//particle_.emitterSphere = { { 0.0f, 0.0f, 0.0f }, { 2.0f, 2.0f, 2.0f } };
-	//// パーティクル速度
-	//particle_.velocity = 0.01f;
-	//// パーティクル生存時間
-	//particle_.liveMax = 1000;
-	//// パーティクル生まれるスパン/frame
-	//particle_.emissionDelay = 1;
-	//// パーティクルエミッター形状
-	//particle_.option.emitterShape = true;
 }
 
 TestPhase::~TestPhase()
@@ -72,19 +51,7 @@ void TestPhase::Initialize()
 
 void TestPhase::Update()
 {
-	if (GetHitKey::IsPressedDown(DIK_1))
-	{
-		model_.texture = Game::LoadTexture("resources/Prototypes/texture/uvChecker.png");
-	}
-	else if	(GetHitKey::IsPressedDown(DIK_2))
-	{
-		model_.texture = Game::LoadTexture("resources/Prototypes/texture/circle.png");
-	}
-	
 
-
-	//model_.LookAtCamera(roll_);
-	roll_ += 0.02f;
 }
 
 
@@ -103,9 +70,6 @@ void TestPhase::Draw()
 	particle_.Draw();
 	particle_.DrawImGui();
 	particle_.DrawEmitter();
-	particle2_.Draw();
-	particle2_.DrawImGui();
-	particle2_.DrawEmitter();
 
 	line_.Draw();
 	line_.DrawImGui();

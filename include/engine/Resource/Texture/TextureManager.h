@@ -22,6 +22,9 @@ public:
     );
     TextureData* GetTexture(uint32_t textureID);
 
+	// テクスチャ数を取得
+	size_t GetTextureCount() const { return textures_.size(); }
+
 private:
     // 画像データを詰める
     std::vector<TextureData> textures_;

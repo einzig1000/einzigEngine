@@ -187,7 +187,7 @@ void CameraController::Draw(bool debugCamera)
     ImGui::DragFloat("cameraDistance", &distance_, 0.1f);
     ImGui::Checkbox("enableControl", &cameraMode_);
     ImGui::End();
-    Game::DrawSphere({ {0.1f,0.1f,0.1f}, {0.0f,0.0f,0.0f}, center_ }, { 0,0,0 }, 12, 0, 0xFFFFFFFF, sphereOptions);
+	Game::AddSphere(center_, Vector3{ 0.2f,0.2f,0.2f }, 0xFFFF00FF);
 }
 
 void CameraController::CreateFrustumPlanes()

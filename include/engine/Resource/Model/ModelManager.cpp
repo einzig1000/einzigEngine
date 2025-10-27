@@ -71,7 +71,7 @@ Object3D* ModelManager::GetModel(uint32_t modelID)
 	}
 	else
 	{
-		Log("存在しないテクスチャIDです:%d", modelID);
+		Log("存在しないモデルIDです:%d", modelID);
 		return nullptr;
 	}
 }
@@ -175,7 +175,6 @@ void ModelManager::SaveAABBToCSV(const std::string& csvPath, const std::vector<A
             << aabb.max.x << "," << aabb.max.y << "," << aabb.max.z << "\n";
     }
 }
-
 
 // mtlファイルを読み込む関数
 std::string ModelManager::LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename)

@@ -241,6 +241,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="include\engine\Utilities\Easings.cpp" />
     <ClCompile Include="include\engine\Utilities\functions.cpp" />
     <ClCompile Include="include\engine\Window\WindowManager.cpp" />
+    <ClCompile Include="include\engine\Utilities\JsonManager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="include\application\Phase\PhaseParent\PhaseParent.cpp" />
     <ClCompile Include="include\application\Phase\TestPhase\TestPhase.cpp" />
@@ -289,6 +290,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="include\application\Phase\TestPhase\TestPhase.h" />
     <ClInclude Include="include\application\Phase\TitlePhase\TitlePhase.h" />
     <ClInclude Include="include\engine\DrawSystem\RenderData\RenderData.h" />
+    <ClInclude Include="include\engine\Utilities\JsonManager.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
