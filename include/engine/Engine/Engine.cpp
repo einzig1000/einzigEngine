@@ -332,16 +332,6 @@ void Engine::DrawModel(RenderData_Model& renderData)
 	drawSystem->DrawModel(renderData);
 }
 
-void Engine::AddSphere(Vector3 pos, Vector3 radius, uint32_t color)
-{
-	drawSystem->AddSphere(pos, radius, color);
-}
-
-void Engine::AddAABB(AABB aabb, uint32_t color)
-{
-	drawSystem->AddAABB(aabb, color);
-}
-
 void Engine::DrawTriangle(RenderData_Triangle& renderData)
 {
 	drawSystem->DrawTriangle(renderData);
@@ -360,6 +350,16 @@ void Engine::DrawLine(RenderData_Line& renderData)
 void Engine::DrawParticle(RenderData_Particle& renderData)
 {
 	drawSystem->DrawParticle(renderData);
+}
+
+void Engine::AddSphere(Vector3 pos, Vector3 radius, uint32_t color)
+{
+	drawSystem->AddSphere(pos, radius, color);
+}
+
+void Engine::AddAABB(AABB aabb, uint32_t color)
+{
+	drawSystem->AddAABB(aabb, color);
 }
 
 bool Engine::InFrustum(const AABB& aabb)

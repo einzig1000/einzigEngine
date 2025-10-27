@@ -68,6 +68,11 @@ size_t Game::GetModelCount()
 	return engine->GetModelCount();
 }
 
+//void Game::DrawModel(RenderData_Model& renderData)
+//{
+//	engine->DrawModel(renderData);
+//}
+
 void Game::DrawModel(RenderData_Model& renderData)
 {
 	engine->DrawModel(renderData);

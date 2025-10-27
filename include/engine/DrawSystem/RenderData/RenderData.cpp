@@ -554,7 +554,7 @@ void RenderData_Sprite::Draw()
 
 void RenderData_Sprite::DrawImGui()
 {
-	std::optional<std::string> str;
+	std::optional<std::string> str = "NULL";
 	if (this->name != std::nullopt) str = (this->name);
 	else str = "sprite : " + std::to_string(this->ID);
 
@@ -566,7 +566,7 @@ void RenderData_Sprite::DrawImGui()
 	{
 		ImGui::DragFloat2((num + "scale").c_str(), &transforms.scale.x, 0.01f);
 		ImGui::DragFloat2((num + "translate").c_str(), &transforms.translate.x, 1.0f);
-		ImGui::DragFloat3((num + "rotate").c_str(), &transforms.rotate.x, 0.01f);
+		ImGui::DragFloat((num + "rotate").c_str(), &transforms.rotate.z, 0.01f);
 		ImGui::TreePop();
 	}
 	if (ImGui::TreeNode("----------uvTransforms---------"))

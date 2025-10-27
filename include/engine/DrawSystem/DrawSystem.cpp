@@ -975,7 +975,6 @@ void DrawSystem::DrawSprite(RenderData_Sprite& renderData)
 		break;
 	}
 
-
 	// WVP行列
 	Matrix4x4 world = Matrix4x4::MakeAffineMatrix(renderData.transforms.scale, renderData.transforms.rotate, renderData.transforms.translate);
 	Matrix4x4 wvpMatrix = (world * orthoProjectionMatrix_);
@@ -1067,6 +1066,7 @@ void DrawSystem::DrawSprite(RenderData_Sprite& renderData)
 
 	// 当たり判定
 	renderData.isCollisionMouseRay = (mousePos.x >= left && mousePos.x <= right && mousePos.y >= top && mousePos.y <= bottom);
+
 
 
 	// 動的頂点バッファを確保
