@@ -1030,19 +1030,26 @@ void RenderData_Particle::DrawImGui()
 	}
 	if (ImGui::TreeNode("----------model----------------"))
 	{
-		if (ImGui::Button("-"))
-		{
-			this->GetParticleInf().resource.model -= 1;
-		}
+		if (ImGui::Button("-"))this->GetParticleInf().resource.model -= 1;
+
 		ImGui::SameLine();
-		ImGui::DragInt(("model" + num).c_str(), reinterpret_cast<int*>(&this->GetParticleInf().resource.model));
+
+		// ラベルを非表示にするために "##" プレフィックスで ID を与える
+		std::string dragId = std::string("##model") + num;
+		ImGui::DragInt(dragId.c_str(), reinterpret_cast<int*>(&this->GetParticleInf().resource.model));
+
 		ImGui::SameLine();
-		if (ImGui::Button("+"))
-		{
-			this->GetParticleInf().resource.model += 1;
-		}
-		if (this->GetParticleInf().resource.model > int(Game::GetModelCount() - 1))this->GetParticleInf().resource.model = int(Game::GetModelCount() - 1);
-		if (this->GetParticleInf().resource.model < 0)this->GetParticleInf().resource.model = 0;
+
+		if (ImGui::Button("+"))this->GetParticleInf().resource.model += 1;
+
+		// 値表示を右に出すために同じ行の後にテキストを描く
+		ImGui::SameLine();
+		ImGui::Text("model:%d", this->GetParticleInf().resource.model);
+
+		// クランプ
+		if (this->GetParticleInf().resource.model < 0) this->GetParticleInf().resource.model = 0;
+		if (this->GetParticleInf().resource.model > int(Game::GetModelCount() - 1)) this->GetParticleInf().resource.model = int(Game::GetModelCount() - 1);
+
 		ImGui::TreePop();
 	}
 	if (ImGui::TreeNode("----------density--------------"))
@@ -1074,7 +1081,7 @@ void RenderData_Particle::DrawImGui()
 		ImGui::Checkbox("Billboard", &this->GetParticleInf().option.isBillboard);
 		ImGui::TreePop();
 	}
-	ImGui::SetNextItemOpen(true, ImGuiCond_Always);
+	ImGui::SetNextItemOpen(true, ImGuiCond_Once);
 	if (ImGui::TreeNode("----------load & save----------"))
 	{
 		char buf[256];
