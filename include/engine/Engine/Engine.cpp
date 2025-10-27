@@ -101,7 +101,10 @@ void Engine::BeginFrame()
 	ImGui_ImplDX12_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
-	//ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
+	//ImGui::DockSpaceOverViewport
+
+	// DirectXを更新
+	dxManager->BeginFrame();(ImGui::GetMainViewport());
 
 	// カメラを更新
 	UpdateCamera();
@@ -115,9 +118,6 @@ void Engine::BeginFrame()
 
 	// インプット系を更新
 	inputManager_->Update();
-
-	// DirectXを更新
-	dxManager->BeginFrame();
 }
 void Engine::UpdateCamera()
 {
