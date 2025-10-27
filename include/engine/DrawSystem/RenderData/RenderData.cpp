@@ -1042,10 +1042,6 @@ void RenderData_Particle::DrawImGui()
 
 		if (ImGui::Button("+"))this->GetParticleInf().resource.model += 1;
 
-		// 値表示を右に出すために同じ行の後にテキストを描く
-		ImGui::SameLine();
-		ImGui::Text("model:%d", this->GetParticleInf().resource.model);
-
 		// クランプ
 		if (this->GetParticleInf().resource.model < 0) this->GetParticleInf().resource.model = 0;
 		if (this->GetParticleInf().resource.model > int(Game::GetModelCount() - 1)) this->GetParticleInf().resource.model = int(Game::GetModelCount() - 1);

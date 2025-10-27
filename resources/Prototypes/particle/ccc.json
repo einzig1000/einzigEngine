@@ -1,11 +1,11 @@
 {
   "color": [
-    0.7254902124404907,
-    0.6196078658103943,
-    0.2666666805744171,
+    1.0,
+    0.003921568859368563,
+    0.003921568859368563,
     1.0
   ],
-  "emissionDelay": 60,
+  "emissionDelay": 40,
   "emitFromInside": false,
   "emitterAABB": {
     "max": [
@@ -156,7 +156,7 @@
     0.0,
     0.0
   ],
-  "texture": 0,
+  "texture": 3,
   "translate": {
     "acceleration": [
       0.0,
