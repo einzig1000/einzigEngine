@@ -1370,7 +1370,7 @@ void DrawSystem::AddSphere(Vector3 pos, Vector3 radius, uint32_t color)
 				pos.y + radius.y * std::sinf(lat),
 				pos.z + radius.z * std::cosf(lat) * std::sinf(lon),
 				});
-r
+
 			Lat[lonIndex].points.push_back({
 				pos.x + radius.x * std::cosf(nextLat) * std::cosf(lon),
 				pos.y + radius.y * std::sinf(nextLat),

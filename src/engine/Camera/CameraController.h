@@ -85,6 +85,7 @@ private:
     //////////////////////////////////////////////
     void CreateFrustumPlanes();
     std::array<Plane, 6> frustumPlanes_;// 視錐台を構成する6つの平面
+
     //////////////////////////////////////////////
     ///              カメラシェイク            ///
     //////////////////////////////////////////////
@@ -93,11 +94,6 @@ private:
     float shakeTime_ = 0.0f;			// 経過時間
     float shakeIntensity_ = 0.0f;		// 初期振幅（揺れの強さ）
     float shakeFrequency_ = 25.0f;		// 揺れる速さ
-	  //////////////////////////////////////////////
-	  ///             視錐台判定用              ///
-	  //////////////////////////////////////////////
-    void CreateFrustumPlanes();
-    std::array<Plane, 6> frustumPlanes_;// 視錐台を構成する6つの平面
 
 public:
     Matrix4x4 viewportMatrix;
