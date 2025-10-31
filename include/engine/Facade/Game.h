@@ -31,47 +31,63 @@ public:
 	// 終了処理
 	static void Finalize();
 
-	// リソース読み込み
-	static uint32_t LoadModel(const std::string& directoryPath, const std::string& filename);
-	static uint32_t LoadTexture(const std::string& filePath);
-	static uint32_t LoadAudio(const std::string& filePath);
-	static TextureData* GetTexture(uint32_t textureNumber);
-	static size_t GetTextureCount();
-	static size_t GetModelCount();
+	class Resource
+	{
+	public:
+		static uint32_t LoadModel(const std::string& directoryPath, const std::string& filename);
+		static uint32_t LoadTexture(const std::string& filePath);
+		static uint32_t LoadAudio(const std::string& filePath);
+		static TextureData* GetTexture(uint32_t textureNumber);
+		static size_t GetTextureCount();
+		static size_t GetModelCount();
+	};
 
-	// 描画
-	static void DrawModel(RenderData_Model& renderData);
-	static void DrawSprite(RenderData_Sprite& renderData);
-	static void DrawTriangle(RenderData_Triangle& renderData);
-	static void DrawLine(RenderData_Line& renderData);
-	static void DrawParticle(RenderData_Particle& renderData);
+	class DebugDraw
+	{
+	public:
+		static void AddSphere(Vector3 pos, Vector3 radius, uint32_t color);
+		static void AddAABB(AABB aabb, uint32_t color);
+	};
 
-	static void AddSphere(Vector3 pos, Vector3 radius, uint32_t color);
-	static void AddAABB(AABB aabb, uint32_t color);
+	class Audio
+	{
+	public:
+		static void PlayAudio(const uint32_t& audioId, bool loop);
+		static void StopAudio(const uint32_t& audioId);
+		static void SetAudioVolume(const uint32_t& audioId, float volume);
+		static void SetMasterVolume(float volume);
+		static float GetVolume(const uint32_t& audioId);
+		static float GetMasterVolume();
+		static bool IsAudioPlaying(const uint32_t& audioId);
+	};
 
-	// 音
-	static void PlayAudio(const uint32_t& audioId, bool loop);
-	static void StopAudio(const uint32_t& audioId);
-	static void SetAudioVolume(const uint32_t& audioId, float volume);
-	static void SetMasterVolume(float volume);
-	static float GetVolume(const uint32_t& audioId);
-	static float GetMasterVolume();
-	static bool IsAudioPlaying(const uint32_t& audioId);
+	class Light
+	{
+	public:
+		// ライト
+		static void SetLightColor(const Vector4 color);
+		static void SetLightDirection(const Vector3 direction);
+		static void ToggleLightMode(const uint32_t mode);
+		static void SetLightIntensity(float intensity);
+	};
 
-	// ライト
-	static void SetLightColor(const Vector4 color);
-	static void SetLightDirection(const Vector3 direction);
-	static void ToggleLightMode(const uint32_t mode);
-	static void SetLightIntensity(float intensity);
+	class Input
+	{
+	public:
+		class Mouse
+		{
+		public:
+			// マウス
+			static Vector2 GetMousePosition();
+			static Ray GetMouseRay();
+			// 0 = 左クリック  1 = 右クリック  2 = ミドルボタン
+			static bool GetMousePress(int i);
+			// 0 = 左クリック  1 = 右クリック  2 = ミドルボタン
+			static bool GetMousePrePress(int i);
+			static uint32_t GetMouseWheel();
+		};
 
-	// マウス
-	static Vector2 GetMousePosition();
-	static Ray GetMouseRay();
-	// 0 = 左クリック  1 = 右クリック  2 = ミドルボタン
-	static bool GetMousePress(int i);
-	// 0 = 左クリック  1 = 右クリック  2 = ミドルボタン
-	static bool GetMousePrePress(int i);
-	static uint32_t GetMouseWheel();
+	};
 
 	// カメラ
 	static void MoveCameraCenter(Vector3 target, int spendFrame, EaseType easetype);

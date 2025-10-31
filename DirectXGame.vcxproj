@@ -79,7 +79,7 @@
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)include;$(SolutionDir)codes\include;$(ProjectDir)include/application;$(ProjectDir)include/engine;$(ProjectDir)include/engine/Engine</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)include;$(SolutionDir)codes\include;$(ProjectDir)include/application;$(ProjectDir)include/engine;$(ProjectDir)include/engine/Facade</AdditionalIncludeDirectories>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
     </ClCompile>
     <Link>
@@ -105,7 +105,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)include;$(SolutionDir)codes\include;$(ProjectDir)include/application;$(ProjectDir)include/engine;$(ProjectDir)include/engine/Engine</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)include;$(SolutionDir)codes\include;$(ProjectDir)include/application;$(ProjectDir)include/engine;$(ProjectDir)include/engine/Facade</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -132,7 +132,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)include;$(SolutionDir)codes\include;$(ProjectDir)include/application;$(ProjectDir)include/engine;$(ProjectDir)include/engine/Engine</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)include;$(SolutionDir)codes\include;$(ProjectDir)include/application;$(ProjectDir)include/engine;$(ProjectDir)include/engine/Facade</AdditionalIncludeDirectories>
       <Optimization>Disabled</Optimization>
       <WholeProgramOptimization>false</WholeProgramOptimization>
     </ClCompile>
@@ -228,8 +228,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <WholeProgramOptimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</WholeProgramOptimization>
     </ClCompile>
     <ClCompile Include="include\engine\DrawSystem\DrawSystem.cpp" />
-    <ClCompile Include="include\engine\Engine\Engine.cpp" />
-    <ClCompile Include="include\engine\Engine\Game.cpp" />
+    <ClCompile Include="include\engine\Engine.cpp" />
+    <ClCompile Include="include\engine\Facade\Game.cpp" />
     <ClCompile Include="include\engine\input\GetHitKey.cpp" />
     <ClCompile Include="include\engine\input\GetPadState.cpp" />
     <ClCompile Include="include\engine\input\Input.cpp" />
@@ -273,8 +273,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="include\engine\DirectX\SynchronizationManager.h" />
     <ClInclude Include="include\engine\DirectX\ViewportScissorManager.h" />
     <ClInclude Include="include\engine\DrawSystem\DrawSystem.h" />
-    <ClInclude Include="include\engine\Engine\Engine.h" />
-    <ClInclude Include="include\engine\Engine\Game.h" />
+    <ClInclude Include="include\engine\Engine.h" />
+    <ClInclude Include="include\engine\Facade\Game.h" />
     <ClInclude Include="include\engine\input\GetHitKey.h" />
     <ClInclude Include="include\engine\input\GetPadState.h" />
     <ClInclude Include="include\engine\input\Input.h" />

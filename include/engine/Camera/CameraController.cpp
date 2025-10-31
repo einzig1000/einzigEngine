@@ -1,5 +1,5 @@
 #include "Camera/CameraController.h"
-#include "Engine/Game.h"
+#include "Facade/Game.h"
 #include "Window/WindowManager.h"
 
 CameraController::CameraController()
@@ -46,23 +46,23 @@ void CameraController::Update()
     {
         // 左クリック
         prePressMouse0_ = pressMouse0_;
-        pressMouse0_ = Game::GetMousePress(0);
+        pressMouse0_ = Game::Input::Mouse::GetMousePress(0);
         // ミドルボタン
         prePressMouse2_ = pressMouse2_;
-        pressMouse2_ = Game::GetMousePress(2);
+        pressMouse2_ = Game::Input::Mouse::GetMousePress(2);
 
-        mouseWheel_ = Game::GetMouseWheel();
+        mouseWheel_ = Game::Input::Mouse::GetMouseWheel();
 
 #pragma region カメラ回転
         // クリックした瞬間
         if (pressMouse2_ && prePressMouse2_ == 0 && !GetHitKey::IsPressedNow(DIK_LSHIFT))
         {
-            preMousePosition_ = Game::GetMousePosition();
+            preMousePosition_ = Game::Input::Mouse::GetMousePosition();
         }
         // クリックしている最中
         if (pressMouse2_ && !GetHitKey::IsPressedNow(DIK_LSHIFT))
         {
-            mousePosition_ = Game::GetMousePosition();
+            mousePosition_ = Game::Input::Mouse::GetMousePosition();
             mousePositionGap_.x = mousePosition_.x - preMousePosition_.x;
             mousePositionGap_.y = mousePosition_.y - preMousePosition_.y;
             transform_.rotate.x = (mousePositionGap_.y / 100.0f) + (preRotate_.x);
@@ -79,11 +79,11 @@ void CameraController::Update()
 #pragma region 回転中心
         if (prePressMouse2_ == 0 && pressMouse2_ && GetHitKey::IsPressedNow(DIK_LSHIFT))
         {
-            preMousePosition_ = Game::GetMousePosition();
+            preMousePosition_ = Game::Input::Mouse::GetMousePosition();
         }
         if (pressMouse2_ && GetHitKey::IsPressedNow(DIK_LSHIFT))
         {
-            mousePosition_ = Game::GetMousePosition();
+            mousePosition_ = Game::Input::Mouse::GetMousePosition();
             mousePositionGap_.x = float(mousePosition_.x - preMousePosition_.x);
             mousePositionGap_.y = float(mousePosition_.y - preMousePosition_.y);
 
@@ -211,7 +211,7 @@ void CameraController::Draw(bool debugCamera)
     ImGui::Checkbox("enableControl", &enableControl_);
 	//if (debugCamera)ImGui::Checkbox("FixReleaseCamera", &enableControl_);
     ImGui::End();
-	Game::AddSphere(center_, Vector3{ 0.2f,0.2f,0.2f }, 0xFFFF00FF);
+	Game::DebugDraw::AddSphere(center_, Vector3{ 0.2f,0.2f,0.2f }, 0xFFFF00FF);
 }
 
 void CameraController::CreateFrustumPlanes()

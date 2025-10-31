@@ -9,7 +9,7 @@
 #include "Camera/CameraController.h"
 #include "Window/WindowManager.h"
 #include "DirectX/DirectXManager.h"
-#include "Engine/Game.h"
+#include "Facade/Game.h"
 #include "Resource/Texture/TextureManager.h"
 #include "DrawSystem/RenderData/RenderData.h"
 
@@ -134,7 +134,7 @@ void Engine::UpdateCamera()
 	// 左シフト＋左クリックでカメラターゲットをオブジェクトに合わせる
 	if (GetHitKey::IsPressedNow(DIK_LSHIFT))
 	{
-		if (Game::GetMousePress(0) && !GetMousePrePress(0))
+		if (Game::Input::Mouse::GetMousePress(0) && !GetMousePrePress(0))
 		{
 			for (auto& rd : RenderData_Model::renderModels)
 			{
@@ -237,7 +237,7 @@ void Engine::UpdateTransforms()
 			float minDistance = (std::numeric_limits<float>::max)();
 			std::optional<Vector3> nearestColPos;
 
-			for (const auto& aabb : rd->aabb)
+			for (const auto& aabb : rd->aabbs)
 			{
 				std::optional<Vector3> colPos = IntersectRayModel(
 					mouseRay,

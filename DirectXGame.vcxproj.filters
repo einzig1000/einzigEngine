@@ -234,10 +234,10 @@
     <ClCompile Include="include\engine\definition\definition.cpp">
       <Filter>engine\definition</Filter>
     </ClCompile>
-    <ClCompile Include="include\engine\Engine\Game.cpp">
+    <ClCompile Include="include\engine\Facade\Game.cpp">
       <Filter>engine\Application</Filter>
     </ClCompile>
-    <ClCompile Include="include\engine\Engine\Engine.cpp">
+    <ClCompile Include="include\engine\Engine.cpp">
       <Filter>engine\Application</Filter>
     </ClCompile>
     <ClCompile Include="include\engine\Window\WindowManager.cpp">
@@ -362,10 +362,10 @@
     <ClInclude Include="include\engine\definition\definition.h">
       <Filter>engine\definition</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\Engine\Game.h">
+    <ClInclude Include="include\engine\Facade\Game.h">
       <Filter>engine\Application</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\Engine\Engine.h">
+    <ClInclude Include="include\engine\Engine.h">
       <Filter>engine\Application</Filter>
     </ClInclude>
     <ClInclude Include="include\engine\Window\WindowManager.h">

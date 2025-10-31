@@ -1,4 +1,4 @@
-#include "Engine/Game.h"
+#include "Facade/Game.h"
 #include "Engine/Engine.h"
 #include "Camera/CameraController.h"
 using namespace DirectX;
@@ -33,151 +33,130 @@ void Game::Finalize()
 	Engine::Instance().Finalize();
 }
 
-uint32_t Game::LoadModel(const std::string& directoryPath, const std::string& filename)
+uint32_t Game::Resource::LoadModel(const std::string& directoryPath, const std::string& filename)
 {
 	return Engine::Instance().LoadModel(directoryPath, filename);
 }
 
-uint32_t Game::LoadTexture(const std::string& filePath)
+
+uint32_t Game::Resource::LoadTexture(const std::string& filePath)
 {
 	return Engine::Instance().LoadTexture(filePath);
 }
 
-uint32_t Game::LoadAudio(const std::string& filePath)
+uint32_t Game::Resource::LoadAudio(const std::string& filePath)
 {
 	return Engine::Instance().LoadAudio(filePath);
 }
 
-TextureData* Game::GetTexture(uint32_t textureNumber)
+TextureData* Game::Resource::GetTexture(uint32_t textureNumber)
 {
 	return Engine::Instance().GetTexture(textureNumber);
 }
 
-size_t Game::GetTextureCount()
+size_t Game::Resource::GetTextureCount()
 {
 	return Engine::Instance().GetTextureCount();
 }
 
-size_t Game::GetModelCount()
+size_t Game::Resource::GetModelCount()
 {
 	return Engine::Instance().GetModelCount();
 }
 
-void Game::DrawModel(RenderData_Model& renderData)
-{
-	Engine::Instance().DrawModel(renderData);
-}
-
-void Game::DrawSprite(RenderData_Sprite& renderData)
-{
-	Engine::Instance().DrawSprite(renderData);
-}
-
-void Game::DrawTriangle(RenderData_Triangle& renderData)
-{
-	Engine::Instance().DrawTriangle(renderData);
-}
-
-void Game::DrawLine(RenderData_Line& renderData)
-{
-	Engine::Instance().DrawLine(renderData);
-}
-
-void Game::DrawParticle(RenderData_Particle& renderData)
-{
-	Engine::Instance().DrawParticle(renderData);
-}
-
-void Game::AddSphere(Vector3 pos, Vector3 radius, uint32_t color)
+void Game::DebugDraw::AddSphere(Vector3 pos, Vector3 radius, uint32_t color)
 {
 	Engine::Instance().AddSphere(pos, radius, color);
 }
 
-void Game::AddAABB(AABB aabb, uint32_t color)
+void Game::DebugDraw::AddAABB(AABB aabb, uint32_t color)
 {
 	Engine::Instance().AddAABB(aabb, color);
 }
 
-void Game::PlayAudio(const uint32_t& audioId, bool loop)
+
+void Game::Audio::PlayAudio(const uint32_t& audioId, bool loop)
 {
 	Engine::Instance().PlayAudio(audioId, loop);
 }
 
-void Game::StopAudio(const uint32_t& audioId)
+void Game::Audio::StopAudio(const uint32_t& audioId)
 {
 	Engine::Instance().StopAudio(audioId);
 }
 
-void Game::SetAudioVolume(const uint32_t& audioId, float volume)
+void Game::Audio::SetAudioVolume(const uint32_t& audioId, float volume)
 {
 	Engine::Instance().SetAudioVolume(audioId, volume);
 }
 
-void Game::SetMasterVolume(float volume)
+void Game::Audio::SetMasterVolume(float volume)
 {
 	Engine::Instance().SetMasterVolume(volume);
 }
 
-float Game::GetVolume(const uint32_t& audioId)
+float Game::Audio::GetVolume(const uint32_t& audioId)
 {
 	return Engine::Instance().GetVolume(audioId);
 }
 
-float Game::GetMasterVolume()
+float Game::Audio::GetMasterVolume()
 {
 	return Engine::Instance().GetMasterVolume();
 }
 
-bool Game::IsAudioPlaying(const uint32_t& audioId)
+bool Game::Audio::IsAudioPlaying(const uint32_t& audioId)
 {
 	return Engine::Instance().IsAudioPlaying(audioId);
 }
 
-void Game::SetLightColor(const Vector4 color)
+
+void Game::Light::SetLightColor(const Vector4 color)
 {
 	Engine::Instance().SetLightColor(color);
 }
 
-void Game::SetLightDirection(const Vector3 direction)
+void Game::Light::SetLightDirection(const Vector3 direction)
 {
 	Engine::Instance().SetLightDirection(direction);
 }
 
-void Game::SetLightIntensity(float intensity)
+void Game::Light::SetLightIntensity(float intensity)
 {
 	Engine::Instance().SetLightIntensity(intensity);
 }
 
-void Game::ToggleLightMode(const uint32_t mode)
+void Game::Light::ToggleLightMode(const uint32_t mode)
 {
 	Engine::Instance().ToggleLightMode(mode);
 }
 
 
-Vector2 Game::GetMousePosition()
+Vector2 Game::Input::Mouse::GetMousePosition()
 {
 	return Engine::Instance().GetMousePosition();
 }
 
-Ray Game::GetMouseRay()
+Ray Game::Input::Mouse::GetMouseRay()
 {
 	return Engine::Instance().GetMouseRay();
 }
 
-bool Game::GetMousePress(int i)
+bool Game::Input::Mouse::GetMousePress(int i)
 {
 	return Engine::Instance().GetMousePress(i);
 }
 
-bool Game::GetMousePrePress(int i)
+bool Game::Input::Mouse::GetMousePrePress(int i)
 {
 	return Engine::Instance().GetMousePrePress(i);
 }
 
-uint32_t Game::GetMouseWheel()
+uint32_t Game::Input::Mouse::GetMouseWheel()
 {
 	return Engine::Instance().GetMouseWheel();
 }
+
 
 void Game::MoveCameraCenter(Vector3 target, int spendFrame, EaseType easetype)
 {

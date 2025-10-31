@@ -34,7 +34,7 @@ public:
     // 描画オプション
     DrawOptions options;
     // 衝突判定用AABB
-    std::vector<AABB> aabb;
+    std::vector<AABB> aabbs;
     // 重さ
     float mass = 1.0f;
     // ID

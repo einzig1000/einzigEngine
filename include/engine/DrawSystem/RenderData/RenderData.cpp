@@ -1,6 +1,7 @@
 #include "DrawSystem/RenderData/RenderData.h"
 #include "Utilities/JsonManager.h"
 #include "Game.h"
+#include "Engine.h"
 #include "Camera/CameraController.h"
 using namespace DirectX;
 
@@ -32,7 +33,7 @@ void RenderData_Model::Update()
 #pragma region 前フレーム情報保存
 
 	this->preTransforms = this->transforms;
-	this->preAABB = this->aabb;
+	this->preAABB = this->aabbs;
 
 #pragma endregion
 
@@ -151,7 +152,7 @@ void RenderData_Model::Update()
 		//}
 
 		// AABB更新
-		this->aabb = Game::CreateAABB(this->transforms, this->model);
+		this->aabbs = Game::CreateAABB(this->transforms, this->model);
 	}
 
 #pragma endregion
@@ -159,7 +160,7 @@ void RenderData_Model::Update()
 #pragma region 描画範囲内判定
 
 	bool inFrustum = false;
-	for (const auto& aabb : this->aabb)
+	for (const auto& aabb : this->aabbs)
 	{
 		if (Game::InFrustum(aabb))
 		{
@@ -172,7 +173,6 @@ void RenderData_Model::Update()
 #pragma endregion
 
 #pragma region 衝突判定
-
 
 	for (auto* target : blockList)
 	{
@@ -215,7 +215,7 @@ void RenderData_Model::Update()
 				}
 			}
 
-			this->aabb = Game::CreateAABB(this->transforms, this->model);
+			this->aabbs = Game::CreateAABB(this->transforms, this->model);
 
 
 			{
@@ -241,7 +241,7 @@ void RenderData_Model::Update()
 					for (int j = 0; j < 4; ++j)
 						this->transforms.World.m[i][j] = tmp.m[i][j];
 
-				this->aabb = Game::CreateAABB(this->transforms, this->model);
+				this->aabbs = Game::CreateAABB(this->transforms, this->model);
 			}
 
 			//Vector3 offset = transforms.translate;
@@ -310,9 +310,9 @@ void RenderData_Model::Update()
 // 他のオブジェクトとの衝突判定
 bool RenderData_Model::isCollision(RenderData_Model& target) const
 {
-	for (const auto& aabb1 : target.aabb)
+	for (const auto& aabb1 : target.aabbs)
 	{
-		for (const auto& aabb2 : this->aabb)
+		for (const auto& aabb2 : this->aabbs)
 		{
 			if (IsCollision(aabb1, aabb2))
 			{
@@ -372,45 +372,14 @@ void RenderData_Model::LookAtFront(float roll)
 
 void RenderData_Model::Draw()
 {
-	Game::DrawModel(*this);
+	Engine::Instance().DrawModel(*this);
 }
 
 void RenderData_Model::DrawAABB()
 {
-	for (const auto& theOne : aabb)
+	for (size_t i = 0; i < this->aabbs.size(); ++i)
 	{
-		Vector3 p[8];
-		p[0] = { theOne.min.x, theOne.min.y, theOne.min.z };
-		p[1] = { theOne.max.x, theOne.min.y, theOne.min.z };
-		p[2] = { theOne.max.x, theOne.max.y, theOne.min.z };
-		p[3] = { theOne.min.x, theOne.max.y, theOne.min.z };
-		p[4] = { theOne.min.x, theOne.min.y, theOne.max.z };
-		p[5] = { theOne.max.x, theOne.min.y, theOne.max.z };
-		p[6] = { theOne.max.x, theOne.max.y, theOne.max.z };
-		p[7] = { theOne.min.x, theOne.max.y, theOne.max.z };
-
-		RenderData_Line line;
-		line.color = 0xFF0000FF;
-		line.points.push_back(p[0]);
-		line.points.push_back(p[1]);
-		line.points.push_back(p[2]);
-		line.points.push_back(p[3]);
-		line.points.push_back(p[0]);
-
-		line.points.push_back(p[4]);
-		line.points.push_back(p[5]);
-		line.points.push_back(p[6]);
-		line.points.push_back(p[7]);
-		line.points.push_back(p[4]);
-
-		line.points.push_back(p[5]);
-		line.points.push_back(p[1]);
-		line.points.push_back(p[2]);
-		line.points.push_back(p[6]);
-		line.points.push_back(p[7]);
-		line.points.push_back(p[3]);
-
-		line.Draw();
+		Game::DebugDraw::AddAABB(this->aabbs[i], 0xFF0000FF);
 	}
 }
 
@@ -449,11 +418,11 @@ void RenderData_Model::DrawImGui()
 	}
 	if (ImGui::TreeNode("----------model & texture------"))
 	{
-		size_t textureCount = Game::GetTextureCount();
+		size_t textureCount = Game::Resource::GetTextureCount();
 
 		for (size_t i = 0; i < textureCount; ++i)
 		{
-			TextureData* texData = Game::GetTexture(static_cast<uint32_t>(i));
+			TextureData* texData = Game::Resource::GetTexture(static_cast<uint32_t>(i));
 			if (texData)
 			{
 				ImGui::Image((ImTextureID)texData->textureSrvHandleGPU.ptr, ImVec2(32, 32));
@@ -511,13 +480,13 @@ std::optional<CollisionInf> RenderData_Model::isCollisionAABBInf(RenderData_Mode
 	result.pair = { -1, -1 };
 
 	// どのAABB同士が衝突しているか
-	for (size_t i = 0; i < target.aabb.size(); ++i)
+	for (size_t i = 0; i < target.aabbs.size(); ++i)
 	{
-		for (size_t j = 0; j < this->aabb.size(); ++j)
+		for (size_t j = 0; j < this->aabbs.size(); ++j)
 		{
-			if (IsLooseCollision(target.aabb[i], this->aabb[j], 0.001f))
+			if (IsLooseCollision(target.aabbs[i], this->aabbs[j], 0.001f))
 			{
-				Vector3 depth = this->aabb[j].GetCollisionDepth(target.aabb[i]);
+				Vector3 depth = this->aabbs[j].GetCollisionDepth(target.aabbs[i]);
 				result.pair = { static_cast<int>(i), static_cast<int>(j) };
 				result.depth = depth;
 				break;
@@ -549,7 +518,7 @@ RenderData_Sprite::~RenderData_Sprite()
 
 void RenderData_Sprite::Draw()
 {
-	Game::DrawSprite(*this);
+	Engine::Instance().DrawSprite(*this);
 }
 
 void RenderData_Sprite::DrawImGui()
@@ -599,11 +568,11 @@ void RenderData_Sprite::DrawImGui()
 	}
 	if (ImGui::TreeNode("----------texture--------------"))
 	{
-		size_t textureCount = Game::GetTextureCount();
+		size_t textureCount = Game::Resource::GetTextureCount();
 
 		for (size_t i = 0; i < textureCount; ++i)
 		{
-			TextureData* texData = Game::GetTexture(static_cast<uint32_t>(i));
+			TextureData* texData = Game::Resource::GetTexture(static_cast<uint32_t>(i));
 			if (texData)
 			{
 				ImGui::Image((ImTextureID)texData->textureSrvHandleGPU.ptr, ImVec2(32, 32));
@@ -672,7 +641,7 @@ RenderData_Triangle::~RenderData_Triangle()
 
 void RenderData_Triangle::Draw()
 {
-	Game::DrawTriangle(*this);
+	Engine::Instance().DrawTriangle(*this);
 }
 
 void RenderData_Triangle::DrawImGui()
@@ -708,15 +677,15 @@ void RenderData_Triangle::DrawImGui()
 	}
 	if (ImGui::TreeNode("----------position-------------"))
 	{
-		for (size_t i = 0; i < Game::GetTextureCount(); ++i)
+		for (size_t i = 0; i < Game::Resource::GetTextureCount(); ++i)
 		{
-			TextureData* texData = Game::GetTexture(static_cast<uint32_t>(i));
+			TextureData* texData = Game::Resource::GetTexture(static_cast<uint32_t>(i));
 			if (texData)
 			{
 				ImGui::Image((ImTextureID)texData->textureSrvHandleGPU.ptr, ImVec2(32, 32));
 
 				// 6個並べたら改行
-				if ((i + 1) % 6 != 0 && i < Game::GetTextureCount() - 1)
+				if ((i + 1) % 6 != 0 && i < Game::Resource::GetTextureCount() - 1)
 				{
 					ImGui::SameLine();
 				}
@@ -773,7 +742,7 @@ void RenderData_Line::Draw()
 		this->points.push_back(Vector3{ 0.0f,0.0f,0.0f });
 		this->points.push_back(Vector3{ 0.0f,0.0f,0.0f });
 	}
-	Game::DrawLine(*this);
+	Engine::Instance().DrawLine(*this);
 }
 
 void RenderData_Line::DrawPoints()
@@ -878,7 +847,7 @@ bool RenderData_Particle::LoadJson()
 
 void RenderData_Particle::Draw()
 {
-	Game::DrawParticle(*this);
+	Engine::Instance().DrawParticle(*this);
 }
 
 void RenderData_Particle::DrawImGui()
@@ -1012,11 +981,11 @@ void RenderData_Particle::DrawImGui()
 	}
 	if (ImGui::TreeNode("----------texture--------------"))
 	{
-		size_t textureCount = Game::GetTextureCount();
+		size_t textureCount = Game::Resource::GetTextureCount();
 
 		for (size_t i = 0; i < textureCount; ++i)
 		{
-			TextureData* texData = Game::GetTexture(static_cast<uint32_t>(i));
+			TextureData* texData = Game::Resource::GetTexture(static_cast<uint32_t>(i));
 			if (texData)
 			{
 				ImGui::Image((ImTextureID)texData->textureSrvHandleGPU.ptr, ImVec2(32, 32));
@@ -1050,7 +1019,7 @@ void RenderData_Particle::DrawImGui()
 
 		// クランプ
 		if (this->GetParticleInf().resource.model < 0) this->GetParticleInf().resource.model = 0;
-		if (this->GetParticleInf().resource.model > int(Game::GetModelCount() - 1)) this->GetParticleInf().resource.model = int(Game::GetModelCount() - 1);
+		if (this->GetParticleInf().resource.model > int(Game::Resource::GetModelCount() - 1)) this->GetParticleInf().resource.model = int(Game::Resource::GetModelCount() - 1);
 
 		ImGui::TreePop();
 	}
@@ -1112,11 +1081,11 @@ void RenderData_Particle::DrawEmitter()
 {
 	if (this->GetParticleInf().emitter.useSphereEmitter)
 	{
-		Game::AddSphere(this->GetParticleInf().emitter.emitterSphere.center, this->GetParticleInf().emitter.emitterSphere.radius, 0xFFFFFF22);
+		Game::DebugDraw::AddSphere(this->GetParticleInf().emitter.emitterSphere.center, this->GetParticleInf().emitter.emitterSphere.radius, 0xFFFFFF22);
 	}
 	else
 	{
-		Game::AddAABB(this->GetParticleInf().emitter.emitterAABB, 0xFFFFFF22);
+		Game::DebugDraw::AddAABB(this->GetParticleInf().emitter.emitterAABB, 0xFFFFFF22);
 	}
 }
 
