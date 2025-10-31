@@ -812,8 +812,8 @@ void DrawSystem::DrawSprite(RenderData_Sprite& renderData)
 	// UV座標頂点
 	if (renderData.cutImageSize.x == 0 && renderData.cutImageSize.y == 0)
 	{
-		renderData.cutImageSize.x = static_cast<float>(tex->metadata.width);
-		renderData.cutImageSize.y = static_cast<float>(tex->metadata.height);
+		renderData.cutImageSize.x = static_cast<int>(tex->metadata.width);
+		renderData.cutImageSize.y = static_cast<int>(tex->metadata.height);
 	}
 	if (renderData.cutImageLeftTop.x < 0) renderData.cutImageLeftTop.x = 0;
 	if (renderData.cutImageLeftTop.y < 0) renderData.cutImageLeftTop.y = 0;
