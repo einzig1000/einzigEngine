@@ -79,7 +79,7 @@
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)include;$(SolutionDir)codes\include;$(ProjectDir)include/application;$(ProjectDir)include/engine;$(ProjectDir)include/engine/Engine</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)src;$(SolutionDir)codes\src;$(ProjectDir)src/application;$(ProjectDir)src/engine;$(ProjectDir)src/engine/Engine</AdditionalIncludeDirectories>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
     </ClCompile>
     <Link>
@@ -105,7 +105,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)include;$(SolutionDir)codes\include;$(ProjectDir)include/application;$(ProjectDir)include/engine;$(ProjectDir)include/engine/Engine</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)src;$(SolutionDir)codes\src;$(ProjectDir)src/application;$(ProjectDir)src/engine;$(ProjectDir)src/engine/Engine</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -132,7 +132,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)include;$(SolutionDir)codes\include;$(ProjectDir)include/application;$(ProjectDir)include/engine;$(ProjectDir)include/engine/Engine</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)src;$(SolutionDir)codes\src;$(ProjectDir)src/application;$(ProjectDir)src/engine;$(ProjectDir)src/engine/Engine</AdditionalIncludeDirectories>
       <Optimization>Disabled</Optimization>
       <WholeProgramOptimization>false</WholeProgramOptimization>
     </ClCompile>
@@ -150,8 +150,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="include\engine\FixFPS\FixFPS.cpp" />
-    <ClCompile Include="include\application\Phase\BattlePhase\BattlePhase.cpp" />
+    <ClCompile Include="src\engine\FixFPS\FixFPS.cpp" />
+    <ClCompile Include="src\application\Phase\BattlePhase\BattlePhase.cpp" />
     <ClCompile Include="externals\imgui\imgui.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Disabled</Optimization>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MinSpace</Optimization>
@@ -187,70 +187,70 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MinSpace</Optimization>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">MinSpace</Optimization>
     </ClCompile>
-    <ClCompile Include="include\application\Phase\GameScenePhase\GameScenePhase.cpp" />
-    <ClCompile Include="include\application\GameManager\GameManager.cpp" />
-    <ClCompile Include="include\engine\Camera\CameraController.cpp" />
-    <ClCompile Include="include\engine\definition\definition.cpp" />
-    <ClCompile Include="include\engine\DirectX\CommandContextManager.cpp">
+    <ClCompile Include="src\application\Phase\GameScenePhase\GameScenePhase.cpp" />
+    <ClCompile Include="src\application\GameManager\GameManager.cpp" />
+    <ClCompile Include="src\engine\Camera\CameraController.cpp" />
+    <ClCompile Include="src\engine\definition\definition.cpp" />
+    <ClCompile Include="src\engine\DirectX\CommandContextManager.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">MaxSpeed</Optimization>
       <WholeProgramOptimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</WholeProgramOptimization>
     </ClCompile>
-    <ClCompile Include="include\engine\DirectX\DepthStencilManager.cpp">
+    <ClCompile Include="src\engine\DirectX\DepthStencilManager.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">MaxSpeed</Optimization>
       <WholeProgramOptimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</WholeProgramOptimization>
     </ClCompile>
-    <ClCompile Include="include\engine\DirectX\DescriptorHeapManager.cpp">
+    <ClCompile Include="src\engine\DirectX\DescriptorHeapManager.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">MaxSpeed</Optimization>
       <WholeProgramOptimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</WholeProgramOptimization>
     </ClCompile>
-    <ClCompile Include="include\engine\DirectX\DeviceManager.cpp">
+    <ClCompile Include="src\engine\DirectX\DeviceManager.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">MaxSpeed</Optimization>
       <WholeProgramOptimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</WholeProgramOptimization>
     </ClCompile>
-    <ClCompile Include="include\engine\DirectX\DirectXManager.cpp">
+    <ClCompile Include="src\engine\DirectX\DirectXManager.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">MaxSpeed</Optimization>
       <WholeProgramOptimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</WholeProgramOptimization>
     </ClCompile>
-    <ClCompile Include="include\engine\DirectX\PipelineStateManager.cpp">
+    <ClCompile Include="src\engine\DirectX\PipelineStateManager.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">MaxSpeed</Optimization>
       <WholeProgramOptimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</WholeProgramOptimization>
     </ClCompile>
-    <ClCompile Include="include\engine\DirectX\SwapChainManager.cpp">
+    <ClCompile Include="src\engine\DirectX\SwapChainManager.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">MaxSpeed</Optimization>
       <WholeProgramOptimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</WholeProgramOptimization>
     </ClCompile>
-    <ClCompile Include="include\engine\DirectX\SynchronizationManager.cpp">
+    <ClCompile Include="src\engine\DirectX\SynchronizationManager.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">MaxSpeed</Optimization>
       <WholeProgramOptimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</WholeProgramOptimization>
     </ClCompile>
-    <ClCompile Include="include\engine\DirectX\ViewportScissorManager.cpp">
+    <ClCompile Include="src\engine\DirectX\ViewportScissorManager.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">MaxSpeed</Optimization>
       <WholeProgramOptimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</WholeProgramOptimization>
     </ClCompile>
-    <ClCompile Include="include\engine\DrawSystem\DrawSystem.cpp" />
-    <ClCompile Include="include\engine\Engine\Engine.cpp" />
-    <ClCompile Include="include\engine\Engine\Game.cpp" />
-    <ClCompile Include="include\engine\input\GetHitKey.cpp" />
-    <ClCompile Include="include\engine\input\GetPadState.cpp" />
-    <ClCompile Include="include\engine\input\Input.cpp" />
-    <ClCompile Include="include\engine\input\MouseController.cpp" />
-    <ClCompile Include="include\engine\Resource\Audio\AudioManager.cpp" />
-    <ClCompile Include="include\engine\Resource\Model\ModelManager.cpp" />
-    <ClCompile Include="include\engine\Resource\ResourceManager.cpp" />
-    <ClCompile Include="include\engine\Resource\Texture\TextureManager.cpp" />
-    <ClCompile Include="include\engine\Utilities\Easings.cpp" />
-    <ClCompile Include="include\engine\Utilities\functions.cpp" />
-    <ClCompile Include="include\engine\Window\WindowManager.cpp" />
-    <ClCompile Include="include\engine\Utilities\JsonManager.cpp" />
+    <ClCompile Include="src\engine\DrawSystem\DrawSystem.cpp" />
+    <ClCompile Include="src\engine\Engine\Engine.cpp" />
+    <ClCompile Include="src\engine\Engine\Game.cpp" />
+    <ClCompile Include="src\engine\input\GetHitKey.cpp" />
+    <ClCompile Include="src\engine\input\GetPadState.cpp" />
+    <ClCompile Include="src\engine\input\Input.cpp" />
+    <ClCompile Include="src\engine\input\MouseController.cpp" />
+    <ClCompile Include="src\engine\Resource\Audio\AudioManager.cpp" />
+    <ClCompile Include="src\engine\Resource\Model\ModelManager.cpp" />
+    <ClCompile Include="src\engine\Resource\ResourceManager.cpp" />
+    <ClCompile Include="src\engine\Resource\Texture\TextureManager.cpp" />
+    <ClCompile Include="src\engine\Utilities\Easings.cpp" />
+    <ClCompile Include="src\engine\Utilities\functions.cpp" />
+    <ClCompile Include="src\engine\Window\WindowManager.cpp" />
+    <ClCompile Include="src\engine\Utilities\JsonManager.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="include\application\Phase\PhaseParent\PhaseParent.cpp" />
-    <ClCompile Include="include\application\Phase\TestPhase\TestPhase.cpp" />
-    <ClCompile Include="include\application\Phase\TitlePhase\TitlePhase.cpp" />
-    <ClCompile Include="include\engine\DrawSystem\RenderData\RenderData.cpp" />
+    <ClCompile Include="src\application\Phase\PhaseParent\PhaseParent.cpp" />
+    <ClCompile Include="src\application\Phase\TestPhase\TestPhase.cpp" />
+    <ClCompile Include="src\application\Phase\TitlePhase\TitlePhase.cpp" />
+    <ClCompile Include="src\engine\DrawSystem\RenderData\RenderData.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\engine\FixFPS\FixFPS.h" />
-    <ClInclude Include="include\application\Phase\BattlePhase\BattlePhase.h" />
+    <ClInclude Include="src\engine\FixFPS\FixFPS.h" />
+    <ClInclude Include="src\application\Phase\BattlePhase\BattlePhase.h" />
     <ClInclude Include="externals\imgui\imconfig.h" />
     <ClInclude Include="externals\imgui\imgui.h" />
     <ClInclude Include="externals\imgui\imgui_impl_dx12.h" />
@@ -259,38 +259,38 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="externals\imgui\imstb_rectpack.h" />
     <ClInclude Include="externals\imgui\imstb_textedit.h" />
     <ClInclude Include="externals\imgui\imstb_truetype.h" />
-    <ClInclude Include="include\application\Phase\GameScenePhase\GameScenePhase.h" />
-    <ClInclude Include="include\application\GameManager\GameManager.h" />
-    <ClInclude Include="include\engine\Camera\CameraController.h" />
-    <ClInclude Include="include\engine\definition\definition.h" />
-    <ClInclude Include="include\engine\DirectX\CommandContextManager.h" />
-    <ClInclude Include="include\engine\DirectX\DepthStencilManager.h" />
-    <ClInclude Include="include\engine\DirectX\DescriptorHeapManager.h" />
-    <ClInclude Include="include\engine\DirectX\DeviceManager.h" />
-    <ClInclude Include="include\engine\DirectX\DirectXManager.h" />
-    <ClInclude Include="include\engine\DirectX\PipelineStateManager.h" />
-    <ClInclude Include="include\engine\DirectX\SwapChainManager.h" />
-    <ClInclude Include="include\engine\DirectX\SynchronizationManager.h" />
-    <ClInclude Include="include\engine\DirectX\ViewportScissorManager.h" />
-    <ClInclude Include="include\engine\DrawSystem\DrawSystem.h" />
-    <ClInclude Include="include\engine\Engine\Engine.h" />
-    <ClInclude Include="include\engine\Engine\Game.h" />
-    <ClInclude Include="include\engine\input\GetHitKey.h" />
-    <ClInclude Include="include\engine\input\GetPadState.h" />
-    <ClInclude Include="include\engine\input\Input.h" />
-    <ClInclude Include="include\engine\input\MouseController.h" />
-    <ClInclude Include="include\engine\Resource\Audio\AudioManager.h" />
-    <ClInclude Include="include\engine\Resource\Model\ModelManager.h" />
-    <ClInclude Include="include\engine\Resource\ResourceManager.h" />
-    <ClInclude Include="include\engine\Resource\Texture\TextureManager.h" />
-    <ClInclude Include="include\engine\Utilities\Easings.h" />
-    <ClInclude Include="include\engine\Utilities\functions.h" />
-    <ClInclude Include="include\engine\Window\WindowManager.h" />
-    <ClInclude Include="include\application\Phase\PhaseParent\PhaseParent.h" />
-    <ClInclude Include="include\application\Phase\TestPhase\TestPhase.h" />
-    <ClInclude Include="include\application\Phase\TitlePhase\TitlePhase.h" />
-    <ClInclude Include="include\engine\DrawSystem\RenderData\RenderData.h" />
-    <ClInclude Include="include\engine\Utilities\JsonManager.h" />
+    <ClInclude Include="src\application\Phase\GameScenePhase\GameScenePhase.h" />
+    <ClInclude Include="src\application\GameManager\GameManager.h" />
+    <ClInclude Include="src\engine\Camera\CameraController.h" />
+    <ClInclude Include="src\engine\definition\definition.h" />
+    <ClInclude Include="src\engine\DirectX\CommandContextManager.h" />
+    <ClInclude Include="src\engine\DirectX\DepthStencilManager.h" />
+    <ClInclude Include="src\engine\DirectX\DescriptorHeapManager.h" />
+    <ClInclude Include="src\engine\DirectX\DeviceManager.h" />
+    <ClInclude Include="src\engine\DirectX\DirectXManager.h" />
+    <ClInclude Include="src\engine\DirectX\PipelineStateManager.h" />
+    <ClInclude Include="src\engine\DirectX\SwapChainManager.h" />
+    <ClInclude Include="src\engine\DirectX\SynchronizationManager.h" />
+    <ClInclude Include="src\engine\DirectX\ViewportScissorManager.h" />
+    <ClInclude Include="src\engine\DrawSystem\DrawSystem.h" />
+    <ClInclude Include="src\engine\Engine\Engine.h" />
+    <ClInclude Include="src\engine\Engine\Game.h" />
+    <ClInclude Include="src\engine\input\GetHitKey.h" />
+    <ClInclude Include="src\engine\input\GetPadState.h" />
+    <ClInclude Include="src\engine\input\Input.h" />
+    <ClInclude Include="src\engine\input\MouseController.h" />
+    <ClInclude Include="src\engine\Resource\Audio\AudioManager.h" />
+    <ClInclude Include="src\engine\Resource\Model\ModelManager.h" />
+    <ClInclude Include="src\engine\Resource\ResourceManager.h" />
+    <ClInclude Include="src\engine\Resource\Texture\TextureManager.h" />
+    <ClInclude Include="src\engine\Utilities\Easings.h" />
+    <ClInclude Include="src\engine\Utilities\functions.h" />
+    <ClInclude Include="src\engine\Window\WindowManager.h" />
+    <ClInclude Include="src\application\Phase\PhaseParent\PhaseParent.h" />
+    <ClInclude Include="src\application\Phase\TestPhase\TestPhase.h" />
+    <ClInclude Include="src\application\Phase\TitlePhase\TitlePhase.h" />
+    <ClInclude Include="src\engine\DrawSystem\RenderData\RenderData.h" />
+    <ClInclude Include="src\engine\Utilities\JsonManager.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

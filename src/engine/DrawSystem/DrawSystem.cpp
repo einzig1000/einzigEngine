@@ -742,7 +742,7 @@ void DrawSystem::DrawTriangle(RenderData_Triangle& renderData)
 	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(renderData.uvTransform.rotate.z));
 	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(renderData.uvTransform.translate));
 	materialData_[drawCallIndex_]->uvTransform = uvTransformMatrix;
-
+	
 	// 頂点リソース
 	VertexData* vData = nullptr;
 	HRESULT hr = vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vData));
