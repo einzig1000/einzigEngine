@@ -158,50 +158,51 @@ uint32_t Game::Input::Mouse::GetMouseWheel()
 }
 
 
-void Game::MoveCameraCenter(Vector3 target, int spendFrame, EaseType easetype)
+void Game::Camera::MoveCameraCenter(Vector3 target, int spendFrame, EaseType easetype)
 {
 	Engine::Instance().MoveCameraCenter(target, spendFrame, easetype);
 }
 
-void Game::MoveCameraRotate(Vector3 target, int spendFrame, EaseType easetype)
+void Game::Camera::MoveCameraRotate(Vector3 target, int spendFrame, EaseType easetype)
 {
 	Engine::Instance().MoveCameraRotate(target, spendFrame, easetype);
 }
 
-void Game::MoveCameraDistance(float target, int spendFrame, EaseType easetype)
+void Game::Camera::MoveCameraDistance(float target, int spendFrame, EaseType easetype)
 {
 	Engine::Instance().MoveCameraDistance(target, spendFrame, easetype);
 }
 
-void Game::SetControlModeCamera(bool mode)
+void Game::Camera::SetControlModeCamera(bool mode)
 {
 	Engine::Instance().SetControlModeCamera(mode);
 }
 
-CameraController* Game::GetCamera()
+CameraController* Game::Camera::GetCamera()
 {
 	return Engine::Instance().GetCamera();
 }
 
-CameraController* Game::GetDebugCamera()
+CameraController* Game::Camera::GetDebugCamera()
 {
 	return Engine::Instance().GetDebugCamera();
 }
 
-void Game::StartCameraShake(float intensity, float duration, float frequency)
+void Game::Camera::StartCameraShake(float intensity, float duration, float frequency)
 {
 	Engine::Instance().StartCameraShake(intensity, duration, frequency);
 }
 
-bool Game::IsCameraShaking()
+bool Game::Camera::IsCameraShaking()
 {
 	return Engine::Instance().IsCameraShaking();
 }
 
-void Game::StopCameraShake()
+void Game::Camera::StopCameraShake()
 {
 	Engine::Instance().StopCameraShake();
 }
+
 
 std::vector<AABB> Game::CreateAABB(const Transforms& transforms, uint32_t objectNumber)
 {

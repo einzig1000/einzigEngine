@@ -167,7 +167,7 @@ void DrawSystem::Update_ParticleInstanceData()
 			// ビルボード
 			if (pool.mapped[i].isBillboard)
 			{
-				Vector3 direction = (Game::GetCamera()->transform_.translate - pool.mapped[i].translate.value).Normalized();
+				Vector3 direction = (Game::Camera::GetCamera()->transform_.translate - pool.mapped[i].translate.value).Normalized();
 				float yaw = std::atan2(direction.x, direction.z); // Y軸
 				float pitch = std::asin(-direction.y);              // X軸
 				pool.mapped[i].rotate.value = { pitch, yaw, pool.mapped[i].rotate.value.z };
@@ -540,7 +540,7 @@ void DrawSystem::DrawParticle(RenderData_Particle& renderData)
 				// ビルボードは生まれた瞬間からビルボード
 				if (renderData.GetParticleInf().option.isBillboard)
 				{
-					Vector3 direction = (Game::GetCamera()->transform_.translate - t.value).Normalized();
+					Vector3 direction = (Game::Camera::GetCamera()->transform_.translate - t.value).Normalized();
 					float yaw = std::atan2(direction.x, direction.z); // Y軸
 					float pitch = std::asin(-direction.y);            // X軸
 					r.value = { pitch, yaw, 0.0f };

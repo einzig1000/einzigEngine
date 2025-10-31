@@ -87,18 +87,27 @@ public:
 			static uint32_t GetMouseWheel();
 		};
 
+		class KeyBoard
+		{
+
+		};
 	};
 
-	// カメラ
-	static void MoveCameraCenter(Vector3 target, int spendFrame, EaseType easetype);
-	static void MoveCameraRotate(Vector3 target, int spendFrame, EaseType easetype);
-	static void MoveCameraDistance(float target, int spendFrame, EaseType easetype);
-	static void SetControlModeCamera(bool mode);
-	static CameraController* GetCamera();
-	static CameraController* GetDebugCamera();
-	static void StartCameraShake(float intensity, float duration, float frequency = 25.0f);
-	static bool IsCameraShaking();
-	static void StopCameraShake();
+	class Camera
+	{
+	public:
+		static void MoveCameraCenter(Vector3 target, int spendFrame, EaseType easetype);
+		static void MoveCameraRotate(Vector3 target, int spendFrame, EaseType easetype);
+		static void MoveCameraDistance(float target, int spendFrame, EaseType easetype);
+		static void SetControlModeCamera(bool mode);
+		static CameraController* GetCamera();
+		static CameraController* GetDebugCamera();
+		static void StartCameraShake(float intensity, float duration, float frequency = 25.0f);
+		static bool IsCameraShaking();
+		static void StopCameraShake();
+	};
+
+
 
 	// AABBの作成
 	static std::vector<AABB> CreateAABB(const Transforms& transforms, uint32_t objectNumber);

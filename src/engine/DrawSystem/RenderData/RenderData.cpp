@@ -362,7 +362,7 @@ void RenderData_Model::LookAtOnce(const RenderData_Model& other, float roll)
 }
 void RenderData_Model::LookAtCamera(float roll)
 {
-	LookAtOnce(Game::GetCamera()->transform_.translate, roll);
+	LookAtOnce(Game::Camera::GetCamera()->transform_.translate, roll);
 }
 void RenderData_Model::LookAtFront(float roll)
 {
@@ -462,7 +462,7 @@ void RenderData_Model::DrawImGui()
 		ImGui::Checkbox("lookAt", &lookAt);
 		if (lookAt)
 		{
-			Game::GetDebugCamera()->SetCenterTarget(transforms.translate, 0, EaseType::IN_BACK);
+			Game::Camera::GetDebugCamera()->SetCenterTarget(transforms.translate, 0, EaseType::IN_BACK);
 		}
 		ImGui::Text("isCollisionMouse : %d", isCollisionMouseRay);
 		ImGui::TreePop();
