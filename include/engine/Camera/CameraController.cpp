@@ -5,7 +5,7 @@
 CameraController::CameraController()
 {
     mousePositionGap_ = { 0,0 };
-    cameraMode_ = true;
+    enableControl_ = true;
 
     // カメラ
     transform_.translate = { 0.0f, 0.0f, 0.0f };
@@ -24,8 +24,25 @@ CameraController::CameraController()
 
 void CameraController::Update()
 {
-    // カメラ操作可能
-    if (cameraMode_)
+
+#pragma region カメラシェイク
+
+    if (shakeActive_)
+    {
+        shakeTime_++;
+     
+        if (shakeTime_ >= shakeDuration_)
+        {
+            shakeActive_ = false;
+            shakeTime_ = 0.0f;
+        }
+    }
+
+#pragma endregion
+
+#pragma region カメラ手動操作
+
+    if (enableControl_)
     {
         // 左クリック
         prePressMouse0_ = pressMouse0_;
@@ -119,7 +136,10 @@ void CameraController::Update()
 #pragma endregion
     }
 
-	// カメラ演出
+#pragma endregion
+
+#pragma region カメラ演出処理
+
     if (easeRotate_.easingFlag)
     {
         MovingRotate();
@@ -133,9 +153,10 @@ void CameraController::Update()
         MovingDistance();
     }
 
-    //////////////////////////////////////////////
-    ///               カメラ移動               ///
-    ////////////////////////////////////////////// 
+#pragma endregion
+
+#pragma region カメラ行列計算
+
     // カメラ初期値
     Vector3 cameraLocalPos = { 0.0f, 0.0f, -distance_ };
 
@@ -153,9 +174,8 @@ void CameraController::Update()
         cameraLocalPos.x * cameraRotateMatrix.m[0][2] + cameraLocalPos.y * cameraRotateMatrix.m[1][2] + cameraLocalPos.z * cameraRotateMatrix.m[2][2]
     };
 
-
     // 原点上で回転したrotatedCameraPosに　cameraCenterを足せば中心がcameraCenterに変わる
-    transform_.translate = (center_ + rotatedCameraPos);
+    transform_.translate = (center_ + rotatedCameraPos + GetShakeOffset());
 
     // カメラ行列を作成
     cameraMatrix_ = Matrix4x4::MakeAffineMatrix(
@@ -169,6 +189,9 @@ void CameraController::Update()
     viewProjectionMatrix = (viewMatrix_ * projectionMatrix_);
 
     CreateFrustumPlanes();
+
+#pragma endregion
+
 }
 
 void CameraController::Resize()
@@ -185,7 +208,8 @@ void CameraController::Draw(bool debugCamera)
     ImGui::DragFloat3("cameraCenter", &center_.x, 0.01f);
     ImGui::DragFloat3("cameraRotate", &transform_.rotate.x, 0.01f);
     ImGui::DragFloat("cameraDistance", &distance_, 0.1f);
-    ImGui::Checkbox("enableControl", &cameraMode_);
+    ImGui::Checkbox("enableControl", &enableControl_);
+	//if (debugCamera)ImGui::Checkbox("FixReleaseCamera", &enableControl_);
     ImGui::End();
 	Game::AddSphere(center_, Vector3{ 0.2f,0.2f,0.2f }, 0xFFFF00FF);
 }
@@ -359,4 +383,42 @@ void CameraController::SetDistanceTarget(float target, int spendFrame, EaseType 
     easeDistance_.flame = 0;
     easeDistance_.maxFrame = spendFrame;
     easeDistance_.easetype = easetype;
-};
+}
+
+// シェイク
+void CameraController::StartShake(float intensity, float duration, float frequency)
+{
+    shakeActive_ = true;
+    shakeIntensity_ = intensity;
+    shakeDuration_ = duration;
+    shakeFrequency_ = frequency;
+    shakeTime_ = 0.0f;
+}
+
+bool CameraController::IsShaking()
+{
+	return shakeActive_;
+}
+
+void CameraController::StopShake()
+{
+	shakeActive_ = false;
+}
+
+Vector3 CameraController::GetShakeOffset() const
+{
+    if (!shakeActive_) return Vector3(0.0f, 0.0f, 0.0f);
+
+    // 正規化された時間 (0.0 から 1.0)
+    float t = shakeTime_ / shakeDuration_;
+
+    // 指数減衰 (時間とともに揺れが小さくなる)
+    float decay = std::exp(-3.0f * t);
+
+    // 揺れ計算（sin, cos の組み合わせで自然な揺れを作る）
+    float offsetX = std::sin(shakeTime_ * shakeFrequency_) * shakeIntensity_ * decay;
+    float offsetY = std::cos(shakeTime_ * shakeFrequency_ * 0.7f) * shakeIntensity_ * decay;
+    float offsetZ = std::sin(shakeTime_ * shakeFrequency_ * 1.3f) * shakeIntensity_ * decay * 0.5f; // Z軸は控えめ
+
+    return Vector3(offsetX, offsetY, offsetZ);
+}

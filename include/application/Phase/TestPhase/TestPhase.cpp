@@ -71,6 +71,10 @@ void TestPhase::Draw()
 	particle_.DrawImGui();
 	particle_.DrawEmitter();
 
+	particle2_.Draw();
+	particle2_.DrawImGui();
+	particle2_.DrawEmitter();
+
 	line_.Draw();
 	line_.DrawImGui();
 	line2_.Draw();

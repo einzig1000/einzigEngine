@@ -18,6 +18,12 @@
 using namespace DirectX;
 
 
+Engine& Engine::Instance()
+{
+	static Engine instance; 
+	return instance;
+}
+
 // 初期化用
 void Engine::Initialize(int width, int height, const std::wstring& title)
 {
@@ -42,7 +48,7 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 	if (!cameraController)
 	{
 		cameraController = new CameraController();
-		cameraController->cameraMode_ = false; // メインカメラは常に操作不能
+		cameraController->enableControl_ = false; // メインカメラは常に操作不能
 	}
 	if (!debugCameraController)
 	{
@@ -450,7 +456,7 @@ void Engine::MoveCameraDistance(float target, int spendFrame, EaseType easetype)
 
 void Engine::SetControlModeCamera(bool mode)
 {
-	cameraController->cameraMode_ = mode;
+	cameraController->enableControl_ = mode;
 }
 
 CameraController* Engine::GetCamera()
@@ -461,6 +467,30 @@ CameraController* Engine::GetCamera()
 CameraController* Engine::GetDebugCamera()
 {
 	return debugCameraController;
+}
+
+// カメラシェイク開始
+void Engine::StartCameraShake(float intensity, float duration, float frequency)
+{
+	// メインカメラとデバッグカメラ両方にシェイクを適用
+	cameraController->StartShake(intensity, duration, frequency);
+	debugCameraController->StartShake(intensity, duration, frequency);
+}
+
+// カメラシェイク中かどうか
+bool Engine::IsCameraShaking()
+{
+	// 現在アクティブなカメラのシェイク状態を返す
+	if (!debugCamera)return cameraController->IsShaking();
+	else return debugCameraController->IsShaking();
+}
+
+// カメラシェイク停止
+void Engine::StopCameraShake()
+{
+	// メインカメラとデバッグカメラ両方のシェイクを停止
+	cameraController->StopShake();
+	debugCameraController->StopShake();
 }
 
 // ウィンドウ操作
@@ -478,29 +508,6 @@ void Engine::ToggleFullscreen()
 	cameraController->Resize();
 	debugCameraController->Resize();
 }
-
-//// カメラシェイク開始
-//void Engine::StartCameraShake(float intensity, float duration, float frequency)
-//{
-//	// メインカメラとデバッグカメラ両方にシェイクを適用
-//	cameraController->StartShake(intensity, duration, frequency);
-//	debugCameraController->StartShake(intensity, duration, frequency);
-//}
-//
-//// カメラシェイク中かどうか
-//bool Engine::IsCameraShaking()
-//{
-//	// 現在アクティブなカメラのシェイク状態を返す
-//	if (!debugCamera)
-//	{
-//		return cameraController->IsShaking();
-//	}
-//	else
-//	{
-//		return debugCameraController->IsShaking();
-//	}
-//}
-
 // CreateLocalAABBでつくったAABBに座標を適応させる（当たり判定の毎フレーム更新用）
 std::vector<AABB>  Engine::CreateAABB(const Transforms& transforms, uint32_t objectNumber)
 {

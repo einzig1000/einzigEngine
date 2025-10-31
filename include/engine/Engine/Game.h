@@ -14,6 +14,7 @@
 
 
 class CameraController;
+class Engine;
 
 class Game
 {
@@ -79,17 +80,9 @@ public:
 	static void SetControlModeCamera(bool mode);
 	static CameraController* GetCamera();
 	static CameraController* GetDebugCamera();
-
-	// カメラシェイク
-
-	/// <summary>
-	/// カメラシェイクを行う
-	/// </summary>
-	/// <param name="intensity">初期振幅</param>
-	/// <param name="duration">時間</param>
-	/// <param name="frequency">揺れる速さ</param>
-	//static void StartCameraShake(float intensity, float duration, float frequency = 25.0f);
-	//static bool IsCameraShaking();
+	static void StartCameraShake(float intensity, float duration, float frequency = 25.0f);
+	static bool IsCameraShaking();
+	static void StopCameraShake();
 
 	// AABBの作成
 	static std::vector<AABB> CreateAABB(const Transforms& transforms, uint32_t objectNumber);
@@ -101,4 +94,10 @@ public:
 	static bool InFrustum(const AABB& aabb);
 
 private:
+	Game() = delete;
+	~Game() = delete;
+	Game(const Game&) = delete;
+	Game& operator=(const Game&) = delete;
+	Game(Game&&) = delete;
+	Game& operator=(Game&&) = delete;
 };

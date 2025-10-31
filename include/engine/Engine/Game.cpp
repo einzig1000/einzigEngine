@@ -3,247 +3,240 @@
 #include "Camera/CameraController.h"
 using namespace DirectX;
 
-static Engine* engine = new Engine;
-
-
 void Game::Initialize(int width, int height, const std::wstring& title)
 {
-	engine->Initialize(width, height, title);
+	Engine::Instance().Initialize(width, height, title);
 }
 
 bool Game::ProcessMessage()
 {
-	return engine->ProcessMessage();
+	return Engine::Instance().ProcessMessage();
 }
 
 void Game::BeginFrame()
 {
-	engine->BeginFrame();
+	Engine::Instance().BeginFrame();
 }
 
 void Game::UpdateTransforms()
 {
-	engine->UpdateTransforms();
+	Engine::Instance().UpdateTransforms();
 }
 
 void Game::EndFrame()
 {
-	engine->EndFrame();
+	Engine::Instance().EndFrame();
 }
 
 void Game::Finalize()
 {
-	engine->Finalize();
-	delete engine;
-	engine = nullptr;
+	Engine::Instance().Finalize();
 }
 
 uint32_t Game::LoadModel(const std::string& directoryPath, const std::string& filename)
 {
-	return engine->LoadModel(directoryPath, filename);
+	return Engine::Instance().LoadModel(directoryPath, filename);
 }
 
 uint32_t Game::LoadTexture(const std::string& filePath)
 {
-	return engine->LoadTexture(filePath);
+	return Engine::Instance().LoadTexture(filePath);
 }
 
 uint32_t Game::LoadAudio(const std::string& filePath)
 {
-	return engine->LoadAudio(filePath);
+	return Engine::Instance().LoadAudio(filePath);
 }
 
 TextureData* Game::GetTexture(uint32_t textureNumber)
 {
-	return engine->GetTexture(textureNumber);
+	return Engine::Instance().GetTexture(textureNumber);
 }
 
 size_t Game::GetTextureCount()
 {
-	return engine->GetTextureCount();
+	return Engine::Instance().GetTextureCount();
 }
 
 size_t Game::GetModelCount()
 {
-	return engine->GetModelCount();
+	return Engine::Instance().GetModelCount();
 }
-
-//void Game::DrawModel(RenderData_Model& renderData)
-//{
-//	engine->DrawModel(renderData);
-//}
 
 void Game::DrawModel(RenderData_Model& renderData)
 {
-	engine->DrawModel(renderData);
+	Engine::Instance().DrawModel(renderData);
 }
 
 void Game::DrawSprite(RenderData_Sprite& renderData)
 {
-	engine->DrawSprite(renderData);
+	Engine::Instance().DrawSprite(renderData);
 }
 
 void Game::DrawTriangle(RenderData_Triangle& renderData)
 {
-	engine->DrawTriangle(renderData);
+	Engine::Instance().DrawTriangle(renderData);
 }
 
 void Game::DrawLine(RenderData_Line& renderData)
 {
-	engine->DrawLine(renderData);
+	Engine::Instance().DrawLine(renderData);
 }
 
 void Game::DrawParticle(RenderData_Particle& renderData)
 {
-	engine->DrawParticle(renderData);
+	Engine::Instance().DrawParticle(renderData);
 }
 
 void Game::AddSphere(Vector3 pos, Vector3 radius, uint32_t color)
 {
-	engine->AddSphere(pos, radius, color);
+	Engine::Instance().AddSphere(pos, radius, color);
 }
 
 void Game::AddAABB(AABB aabb, uint32_t color)
 {
-	engine->AddAABB(aabb, color);
+	Engine::Instance().AddAABB(aabb, color);
 }
 
 void Game::PlayAudio(const uint32_t& audioId, bool loop)
 {
-	engine->PlayAudio(audioId, loop);
+	Engine::Instance().PlayAudio(audioId, loop);
 }
 
 void Game::StopAudio(const uint32_t& audioId)
 {
-	engine->StopAudio(audioId);
+	Engine::Instance().StopAudio(audioId);
 }
 
 void Game::SetAudioVolume(const uint32_t& audioId, float volume)
 {
-	engine->SetAudioVolume(audioId, volume);
+	Engine::Instance().SetAudioVolume(audioId, volume);
 }
 
 void Game::SetMasterVolume(float volume)
 {
-	engine->SetMasterVolume(volume);
+	Engine::Instance().SetMasterVolume(volume);
 }
 
 float Game::GetVolume(const uint32_t& audioId)
 {
-	return engine->GetVolume(audioId);
+	return Engine::Instance().GetVolume(audioId);
 }
 
 float Game::GetMasterVolume()
 {
-	return engine->GetMasterVolume();
+	return Engine::Instance().GetMasterVolume();
 }
 
 bool Game::IsAudioPlaying(const uint32_t& audioId)
 {
-	return engine->IsAudioPlaying(audioId);
+	return Engine::Instance().IsAudioPlaying(audioId);
 }
 
 void Game::SetLightColor(const Vector4 color)
 {
-	engine->SetLightColor(color);
+	Engine::Instance().SetLightColor(color);
 }
 
 void Game::SetLightDirection(const Vector3 direction)
 {
-	engine->SetLightDirection(direction);
+	Engine::Instance().SetLightDirection(direction);
 }
 
 void Game::SetLightIntensity(float intensity)
 {
-	engine->SetLightIntensity(intensity);
+	Engine::Instance().SetLightIntensity(intensity);
 }
 
 void Game::ToggleLightMode(const uint32_t mode)
 {
-	engine->ToggleLightMode(mode);
+	Engine::Instance().ToggleLightMode(mode);
 }
 
 
 Vector2 Game::GetMousePosition()
 {
-	return engine->GetMousePosition();
+	return Engine::Instance().GetMousePosition();
 }
 
 Ray Game::GetMouseRay()
 {
-	return engine->GetMouseRay();
+	return Engine::Instance().GetMouseRay();
 }
 
 bool Game::GetMousePress(int i)
 {
-	return engine->GetMousePress(i);
+	return Engine::Instance().GetMousePress(i);
 }
 
 bool Game::GetMousePrePress(int i)
 {
-	return engine->GetMousePrePress(i);
+	return Engine::Instance().GetMousePrePress(i);
 }
 
 uint32_t Game::GetMouseWheel()
 {
-	return engine->GetMouseWheel();
+	return Engine::Instance().GetMouseWheel();
 }
 
 void Game::MoveCameraCenter(Vector3 target, int spendFrame, EaseType easetype)
 {
-	engine->MoveCameraCenter(target, spendFrame, easetype);
+	Engine::Instance().MoveCameraCenter(target, spendFrame, easetype);
 }
 
 void Game::MoveCameraRotate(Vector3 target, int spendFrame, EaseType easetype)
 {
-	engine->MoveCameraRotate(target, spendFrame, easetype);
+	Engine::Instance().MoveCameraRotate(target, spendFrame, easetype);
 }
 
 void Game::MoveCameraDistance(float target, int spendFrame, EaseType easetype)
 {
-	engine->MoveCameraDistance(target, spendFrame, easetype);
+	Engine::Instance().MoveCameraDistance(target, spendFrame, easetype);
 }
 
 void Game::SetControlModeCamera(bool mode)
 {
-	engine->SetControlModeCamera(mode);
+	Engine::Instance().SetControlModeCamera(mode);
 }
 
 CameraController* Game::GetCamera()
 {
-	return engine->GetCamera();
+	return Engine::Instance().GetCamera();
 }
 
 CameraController* Game::GetDebugCamera()
 {
-	return engine->GetDebugCamera();
+	return Engine::Instance().GetDebugCamera();
 }
 
-//// カメラシェイク開始
-//void Game::StartCameraShake(float intensity, float duration, float frequency)
-//{
-//	engine->StartCameraShake(intensity, duration, frequency);
-//}
-//
-//// カメラシェイク中かどうか
-//bool Game::IsCameraShaking()
-//{
-//	return engine->IsCameraShaking();
-//}
+void Game::StartCameraShake(float intensity, float duration, float frequency)
+{
+	Engine::Instance().StartCameraShake(intensity, duration, frequency);
+}
+
+bool Game::IsCameraShaking()
+{
+	return Engine::Instance().IsCameraShaking();
+}
+
+void Game::StopCameraShake()
+{
+	Engine::Instance().StopCameraShake();
+}
 
 std::vector<AABB> Game::CreateAABB(const Transforms& transforms, uint32_t objectNumber)
 {
-	return engine->CreateAABB(transforms, objectNumber);
+	return Engine::Instance().CreateAABB(transforms, objectNumber);
 }
 
 void Game::toggleWireframeMode()
 {
-	engine->toggleWireframeMode();
+	Engine::Instance().toggleWireframeMode();
 }
 
 bool Game::InFrustum(const AABB& aabb)
 {
-	return engine->InFrustum(aabb);
+	return Engine::Instance().InFrustum(aabb);
 }
 
 

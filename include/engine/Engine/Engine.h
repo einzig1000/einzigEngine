@@ -14,6 +14,15 @@
 class Engine
 {
 public:
+	// 唯一のインスタンス取得
+	static Engine& Instance();
+
+	// コピー・ムーブ禁止
+	Engine(const Engine&) = delete;
+	Engine& operator=(const Engine&) = delete;
+	Engine(Engine&&) = delete;
+	Engine& operator=(Engine&&) = delete;
+
 	// メインループ用
 	void Initialize(int width, int height, const std::wstring& title);
 	bool ProcessMessage();
@@ -79,10 +88,11 @@ public:
 	void SetControlModeCamera(bool mode);
 	CameraController* GetCamera();
 	CameraController* GetDebugCamera();
+	void StartCameraShake(float intensity, float duration, float frequency = 25.0f);
+	bool IsCameraShaking();
+	void StopCameraShake();
 
 	/// カメラシェイク
-	//void StartCameraShake(float intensity, float duration, float frequency = 25.0f);
-	//bool IsCameraShaking();
 
 	// フルスクリーン切り替え
 	void ToggleFullscreen();
@@ -96,6 +106,9 @@ public:
 	void toggleWireframeMode();
 
 private:
+	Engine() = default;
+	~Engine() = default;
+
 	// カメラ更新
 	void UpdateCamera();
 	void UpdateDebugInfo();
