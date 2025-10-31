@@ -51,7 +51,6 @@ void TestPhase::Initialize()
 
 void TestPhase::Update()
 {
-
 }
 
 

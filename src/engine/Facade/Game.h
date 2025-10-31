@@ -14,7 +14,6 @@
 
 
 class CameraController;
-class Engine;
 
 class Game
 {
@@ -103,13 +102,14 @@ public:
 		static bool InCamera(const AABB& aabb);
 	};
 
+	// EasingとかRandとかもいれるべきか？
 	class Utilitie
 	{
+		// プリミティブモードの設定
+		static void toggleWireframeMode();
 
 	};
 
-	// プリミティブモードの設定
-	static void toggleWireframeMode();
 
 
 private:

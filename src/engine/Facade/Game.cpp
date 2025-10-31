@@ -8,7 +8,6 @@ uint32_t Game::Resource::LoadModel(const std::string& directoryPath, const std::
 	return Engine::Instance().LoadModel(directoryPath, filename);
 }
 
-
 uint32_t Game::Resource::LoadTexture(const std::string& filePath)
 {
 	return Engine::Instance().LoadTexture(filePath);
@@ -33,6 +32,7 @@ size_t Game::Resource::GetModelCount()
 {
 	return Engine::Instance().GetModelCount();
 }
+
 
 void Game::DebugDraw::AddSphere(Vector3 pos, Vector3 radius, uint32_t color)
 {
@@ -180,7 +180,7 @@ bool Game::Camera::InCamera(const AABB& aabb)
 
 
 
-void Game::toggleWireframeMode()
+void Game::Utilitie::toggleWireframeMode()
 {
 	Engine::Instance().toggleWireframeMode();
 }
