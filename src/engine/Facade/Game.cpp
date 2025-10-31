@@ -3,36 +3,6 @@
 #include "Camera/CameraController.h"
 using namespace DirectX;
 
-void Game::Initialize(int width, int height, const std::wstring& title)
-{
-	Engine::Instance().Initialize(width, height, title);
-}
-
-bool Game::ProcessMessage()
-{
-	return Engine::Instance().ProcessMessage();
-}
-
-void Game::BeginFrame()
-{
-	Engine::Instance().BeginFrame();
-}
-
-void Game::UpdateTransforms()
-{
-	Engine::Instance().UpdateTransforms();
-}
-
-void Game::EndFrame()
-{
-	Engine::Instance().EndFrame();
-}
-
-void Game::Finalize()
-{
-	Engine::Instance().Finalize();
-}
-
 uint32_t Game::Resource::LoadModel(const std::string& directoryPath, const std::string& filename)
 {
 	return Engine::Instance().LoadModel(directoryPath, filename);
@@ -203,20 +173,15 @@ void Game::Camera::StopCameraShake()
 	Engine::Instance().StopCameraShake();
 }
 
-
-std::vector<AABB> Game::CreateAABB(const Transforms& transforms, uint32_t objectNumber)
+bool Game::Camera::InCamera(const AABB& aabb)
 {
-	return Engine::Instance().CreateAABB(transforms, objectNumber);
+	return Engine::Instance().InFrustum(aabb);
 }
+
+
 
 void Game::toggleWireframeMode()
 {
 	Engine::Instance().toggleWireframeMode();
 }
-
-bool Game::InFrustum(const AABB& aabb)
-{
-	return Engine::Instance().InFrustum(aabb);
-}
-
 

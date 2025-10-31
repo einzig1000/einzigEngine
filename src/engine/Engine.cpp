@@ -127,7 +127,7 @@ void Engine::BeginFrame()
 }
 void Engine::UpdateCamera()
 {
-	// カメラの更新（シェイクも自動的に処理される）
+	// カメラの更新
 	cameraController->Update();
 	debugCameraController->Update();
 
@@ -175,7 +175,7 @@ void Engine::UpdateDebugInfo()
 		ImGui::Begin("------debug info------");
 		ImGui::Text("F1  : Hide this");
 		ImGui::Text("F3  : Toggle Camera Mode");
-		ImGui::Text("F12 : Toggle Fullscreen");
+		//ImGui::Text("F12 : Toggle Fullscreen");
 		ImGui::Text("DeltaTime: %.3f ms", dxManager->GetDeltaTime() * 1000.0f);
 		ImGui::Text("FPS: %.1f ", 1.0f / dxManager->GetDeltaTime());
 		ImGui::End();

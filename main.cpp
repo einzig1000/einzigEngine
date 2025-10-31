@@ -1,4 +1,4 @@
-#include "Game.h"
+#include "Engine.h"
 #include <numbers>
 #include "GameManager/GameManager.h"
 
@@ -8,31 +8,33 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
 	D3DResourceLeakChecker checker;
 	// ウィンドウ、DrectX初期化
-	Game::Initialize(WIDTH, HEIGHT, L"LE2A_17_ヨコヤマ_タダノブ");
+	Engine::Instance().Initialize(WIDTH, HEIGHT, L"LE2A_17_ヨコヤマ_タダノブ");
 
+	Engine::Instance().BeginFrame();
 	GameManager* gm = new GameManager();
+	Engine::Instance().EndFrame();
 
-	while (Game::ProcessMessage())
+	while (Engine::Instance().ProcessMessage())
 	{
 		// フレームの開始
-		Game::BeginFrame();
+		Engine::Instance().BeginFrame();
 
 		// ↓更新処理ここから
 		gm->Update();
 
 		// モデル情報の更新
-		Game::UpdateTransforms();
+		Engine::Instance().UpdateTransforms();
 
 		// ↓描画処理ここから
 		gm->Draw();
 
 		// フレームの終了
-		Game::EndFrame();
+		Engine::Instance().EndFrame();
 	}
 
 	delete gm;
 
-	Game::Finalize();
+	Engine::Instance().Finalize();
 
 	return 0;
 }

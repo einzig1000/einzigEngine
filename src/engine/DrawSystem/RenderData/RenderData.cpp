@@ -152,7 +152,7 @@ void RenderData_Model::Update()
 		//}
 
 		// AABB更新
-		this->aabbs = Game::CreateAABB(this->transforms, this->model);
+		this->aabbs = Engine::Instance().CreateAABB(this->transforms, this->model);
 	}
 
 #pragma endregion
@@ -162,7 +162,7 @@ void RenderData_Model::Update()
 	bool inFrustum = false;
 	for (const auto& aabb : this->aabbs)
 	{
-		if (Game::InFrustum(aabb))
+		if (Game::Camera::InCamera(aabb))
 		{
 			inFrustum = true;
 			break;
@@ -215,7 +215,7 @@ void RenderData_Model::Update()
 				}
 			}
 
-			this->aabbs = Game::CreateAABB(this->transforms, this->model);
+			this->aabbs = Engine::Instance().CreateAABB(this->transforms, this->model);
 
 
 			{
@@ -241,7 +241,7 @@ void RenderData_Model::Update()
 					for (int j = 0; j < 4; ++j)
 						this->transforms.World.m[i][j] = tmp.m[i][j];
 
-				this->aabbs = Game::CreateAABB(this->transforms, this->model);
+				this->aabbs = Engine::Instance().CreateAABB(this->transforms, this->model);
 			}
 
 			//Vector3 offset = transforms.translate;

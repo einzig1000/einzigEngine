@@ -19,17 +19,6 @@ class Engine;
 class Game
 {
 public:
-	// 初期化
-	static void Initialize(int width, int height, const std::wstring& title);
-
-	// メインループ用
-	static bool ProcessMessage();
-	static void BeginFrame();
-	static void UpdateTransforms();
-	static void EndFrame();
-
-	// 終了処理
-	static void Finalize();
 
 	class Resource
 	{
@@ -87,7 +76,12 @@ public:
 			static uint32_t GetMouseWheel();
 		};
 
-		class KeyBoard
+		class Key
+		{
+
+		};
+
+		class Pad
 		{
 
 		};
@@ -105,18 +99,18 @@ public:
 		static void StartCameraShake(float intensity, float duration, float frequency = 25.0f);
 		static bool IsCameraShaking();
 		static void StopCameraShake();
+		// 描画オブジェクトは画面内か
+		static bool InCamera(const AABB& aabb);
 	};
 
+	class Utilitie
+	{
 
-
-	// AABBの作成
-	static std::vector<AABB> CreateAABB(const Transforms& transforms, uint32_t objectNumber);
+	};
 
 	// プリミティブモードの設定
 	static void toggleWireframeMode();
 
-	// 描画オブジェクトは画面内か
-	static bool InFrustum(const AABB& aabb);
 
 private:
 	Game() = delete;
