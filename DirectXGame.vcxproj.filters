@@ -165,106 +165,106 @@
     <ClCompile Include="externals\imgui\imgui_widgets.cpp">
       <Filter>engine\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="include\engine\DirectX\CommandContextManager.cpp">
+    <ClCompile Include="src\engine\DirectX\CommandContextManager.cpp">
       <Filter>engine\DirectXManager\CommandContextManager</Filter>
     </ClCompile>
-    <ClCompile Include="include\engine\DirectX\DepthStencilManager.cpp">
+    <ClCompile Include="src\engine\DirectX\DepthStencilManager.cpp">
       <Filter>engine\DirectXManager\DepthStencilManager</Filter>
     </ClCompile>
-    <ClCompile Include="include\engine\DirectX\DescriptorHeapManager.cpp">
+    <ClCompile Include="src\engine\DirectX\DescriptorHeapManager.cpp">
       <Filter>engine\DirectXManager\DescriptorHeapManager</Filter>
     </ClCompile>
-    <ClCompile Include="include\engine\DirectX\DeviceManager.cpp">
+    <ClCompile Include="src\engine\DirectX\DeviceManager.cpp">
       <Filter>engine\DirectXManager\DeviceManager</Filter>
     </ClCompile>
-    <ClCompile Include="include\engine\DirectX\DirectXManager.cpp">
+    <ClCompile Include="src\engine\DirectX\DirectXManager.cpp">
       <Filter>engine\DirectXManager</Filter>
     </ClCompile>
-    <ClCompile Include="include\engine\DirectX\PipelineStateManager.cpp">
+    <ClCompile Include="src\engine\DirectX\PipelineStateManager.cpp">
       <Filter>engine\DirectXManager\PipelineStateManager</Filter>
     </ClCompile>
-    <ClCompile Include="include\engine\DirectX\SwapChainManager.cpp">
+    <ClCompile Include="src\engine\DirectX\SwapChainManager.cpp">
       <Filter>engine\DirectXManager\SwapChainManager</Filter>
     </ClCompile>
-    <ClCompile Include="include\engine\DirectX\SynchronizationManager.cpp">
+    <ClCompile Include="src\engine\DirectX\SynchronizationManager.cpp">
       <Filter>engine\DirectXManager\SynchronizationManager</Filter>
     </ClCompile>
-    <ClCompile Include="include\engine\DirectX\ViewportScissorManager.cpp">
+    <ClCompile Include="src\engine\DirectX\ViewportScissorManager.cpp">
       <Filter>engine\DirectXManager\ViewportScissorManager</Filter>
     </ClCompile>
-    <ClCompile Include="include\application\GameManager\GameManager.cpp">
+    <ClCompile Include="src\application\GameManager\GameManager.cpp">
       <Filter>application\GameManeger</Filter>
     </ClCompile>
-    <ClCompile Include="include\engine\Resource\Audio\AudioManager.cpp">
+    <ClCompile Include="src\engine\Resource\Audio\AudioManager.cpp">
       <Filter>engine\ResourceManager\AudioManager</Filter>
     </ClCompile>
-    <ClCompile Include="include\engine\Resource\Model\ModelManager.cpp">
+    <ClCompile Include="src\engine\Resource\Model\ModelManager.cpp">
       <Filter>engine\ResourceManager\ModelManager</Filter>
     </ClCompile>
-    <ClCompile Include="include\engine\Resource\Texture\TextureManager.cpp">
+    <ClCompile Include="src\engine\Resource\Texture\TextureManager.cpp">
       <Filter>engine\ResourceManager\TextureManager</Filter>
     </ClCompile>
-    <ClCompile Include="include\engine\Resource\ResourceManager.cpp">
+    <ClCompile Include="src\engine\Resource\ResourceManager.cpp">
       <Filter>engine\ResourceManager</Filter>
     </ClCompile>
-    <ClCompile Include="include\engine\input\GetHitKey.cpp">
+    <ClCompile Include="src\engine\input\GetHitKey.cpp">
       <Filter>engine\input\GetHitKey</Filter>
     </ClCompile>
-    <ClCompile Include="include\engine\input\Input.cpp">
+    <ClCompile Include="src\engine\input\Input.cpp">
       <Filter>engine\input</Filter>
     </ClCompile>
-    <ClCompile Include="include\engine\input\MouseController.cpp">
+    <ClCompile Include="src\engine\input\MouseController.cpp">
       <Filter>engine\input\MouseController</Filter>
     </ClCompile>
-    <ClCompile Include="include\engine\input\GetPadState.cpp">
+    <ClCompile Include="src\engine\input\GetPadState.cpp">
       <Filter>engine\input\GetPadState</Filter>
     </ClCompile>
-    <ClCompile Include="include\engine\DrawSystem\DrawSystem.cpp">
+    <ClCompile Include="src\engine\DrawSystem\DrawSystem.cpp">
       <Filter>engine\DrawSystem</Filter>
     </ClCompile>
-    <ClCompile Include="include\engine\Utilities\functions.cpp">
+    <ClCompile Include="src\engine\Utilities\functions.cpp">
       <Filter>engine\Utilities\functions</Filter>
     </ClCompile>
-    <ClCompile Include="include\engine\Utilities\Easings.cpp">
+    <ClCompile Include="src\engine\Utilities\Easings.cpp">
       <Filter>engine\Utilities\Easings</Filter>
     </ClCompile>
-    <ClCompile Include="include\engine\Camera\CameraController.cpp">
+    <ClCompile Include="src\engine\Camera\CameraController.cpp">
       <Filter>engine\CameraController</Filter>
     </ClCompile>
-    <ClCompile Include="include\engine\definition\definition.cpp">
+    <ClCompile Include="src\engine\definition\definition.cpp">
       <Filter>engine\definition</Filter>
     </ClCompile>
-    <ClCompile Include="include\engine\Facade\Game.cpp">
+    <ClCompile Include="src\engine\Facade\Game.cpp">
       <Filter>engine\Application</Filter>
     </ClCompile>
-    <ClCompile Include="include\engine\Engine.cpp">
+    <ClCompile Include="src\engine\Engine.cpp">
       <Filter>engine\Application</Filter>
     </ClCompile>
-    <ClCompile Include="include\engine\Window\WindowManager.cpp">
+    <ClCompile Include="src\engine\Window\WindowManager.cpp">
       <Filter>engine\WindowManager</Filter>
     </ClCompile>
-    <ClCompile Include="include\application\Phase\BattlePhase\BattlePhase.cpp">
+    <ClCompile Include="src\application\Phase\BattlePhase\BattlePhase.cpp">
       <Filter>application\GameManeger\Phase\BattlePhase</Filter>
     </ClCompile>
-    <ClCompile Include="include\application\Phase\PhaseParent\PhaseParent.cpp">
+    <ClCompile Include="src\application\Phase\PhaseParent\PhaseParent.cpp">
       <Filter>application\GameManeger\Phase\PhaseParent</Filter>
     </ClCompile>
-    <ClCompile Include="include\application\Phase\TestPhase\TestPhase.cpp">
+    <ClCompile Include="src\application\Phase\TestPhase\TestPhase.cpp">
       <Filter>application\GameManeger\Phase\TestPhase</Filter>
     </ClCompile>
-    <ClCompile Include="include\application\Phase\TitlePhase\TitlePhase.cpp">
+    <ClCompile Include="src\application\Phase\TitlePhase\TitlePhase.cpp">
       <Filter>application\GameManeger\Phase\TitlePhase</Filter>
     </ClCompile>
-    <ClCompile Include="include\application\Phase\GameScenePhase\GameScenePhase.cpp">
+    <ClCompile Include="src\application\Phase\GameScenePhase\GameScenePhase.cpp">
       <Filter>application\GameManeger\Phase\GameScenePhase</Filter>
     </ClCompile>
-    <ClCompile Include="include\engine\DrawSystem\RenderData\RenderData.cpp">
+    <ClCompile Include="src\engine\DrawSystem\RenderData\RenderData.cpp">
       <Filter>engine\DrawSystem\RenderDataClass</Filter>
     </ClCompile>
-    <ClCompile Include="include\engine\FixFPS\FixFPS.cpp">
+    <ClCompile Include="src\engine\FixFPS\FixFPS.cpp">
       <Filter>engine\FixFPS</Filter>
     </ClCompile>
-    <ClCompile Include="include\engine\Utilities\JsonManager.cpp">
+    <ClCompile Include="src\engine\Utilities\JsonManager.cpp">
       <Filter>engine\Utilities\Json</Filter>
     </ClCompile>
   </ItemGroup>
@@ -293,106 +293,106 @@
     <ClInclude Include="externals\imgui\imstb_truetype.h">
       <Filter>engine\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\DirectX\CommandContextManager.h">
+    <ClInclude Include="src\engine\DirectX\CommandContextManager.h">
       <Filter>engine\DirectXManager\CommandContextManager</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\DirectX\DepthStencilManager.h">
+    <ClInclude Include="src\engine\DirectX\DepthStencilManager.h">
       <Filter>engine\DirectXManager\DepthStencilManager</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\DirectX\DescriptorHeapManager.h">
+    <ClInclude Include="src\engine\DirectX\DescriptorHeapManager.h">
       <Filter>engine\DirectXManager\DescriptorHeapManager</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\DirectX\DeviceManager.h">
+    <ClInclude Include="src\engine\DirectX\DeviceManager.h">
       <Filter>engine\DirectXManager\DeviceManager</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\DirectX\DirectXManager.h">
+    <ClInclude Include="src\engine\DirectX\DirectXManager.h">
       <Filter>engine\DirectXManager</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\DirectX\PipelineStateManager.h">
+    <ClInclude Include="src\engine\DirectX\PipelineStateManager.h">
       <Filter>engine\DirectXManager\PipelineStateManager</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\DirectX\SwapChainManager.h">
+    <ClInclude Include="src\engine\DirectX\SwapChainManager.h">
       <Filter>engine\DirectXManager\SwapChainManager</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\DirectX\SynchronizationManager.h">
+    <ClInclude Include="src\engine\DirectX\SynchronizationManager.h">
       <Filter>engine\DirectXManager\SynchronizationManager</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\DirectX\ViewportScissorManager.h">
+    <ClInclude Include="src\engine\DirectX\ViewportScissorManager.h">
       <Filter>engine\DirectXManager\ViewportScissorManager</Filter>
     </ClInclude>
-    <ClInclude Include="include\application\GameManager\GameManager.h">
+    <ClInclude Include="src\application\GameManager\GameManager.h">
       <Filter>application\GameManeger</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\Resource\Audio\AudioManager.h">
+    <ClInclude Include="src\engine\Resource\Audio\AudioManager.h">
       <Filter>engine\ResourceManager\AudioManager</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\Resource\Model\ModelManager.h">
+    <ClInclude Include="src\engine\Resource\Model\ModelManager.h">
       <Filter>engine\ResourceManager\ModelManager</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\Resource\ResourceManager.h">
+    <ClInclude Include="src\engine\Resource\ResourceManager.h">
       <Filter>engine\ResourceManager</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\Resource\Texture\TextureManager.h">
+    <ClInclude Include="src\engine\Resource\Texture\TextureManager.h">
       <Filter>engine\ResourceManager\TextureManager</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\input\Input.h">
+    <ClInclude Include="src\engine\input\Input.h">
       <Filter>engine\input</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\input\GetHitKey.h">
+    <ClInclude Include="src\engine\input\GetHitKey.h">
       <Filter>engine\input\GetHitKey</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\input\GetPadState.h">
+    <ClInclude Include="src\engine\input\GetPadState.h">
       <Filter>engine\input\GetPadState</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\input\MouseController.h">
+    <ClInclude Include="src\engine\input\MouseController.h">
       <Filter>engine\input\MouseController</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\DrawSystem\DrawSystem.h">
+    <ClInclude Include="src\engine\DrawSystem\DrawSystem.h">
       <Filter>engine\DrawSystem</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\Utilities\Easings.h">
+    <ClInclude Include="src\engine\Utilities\Easings.h">
       <Filter>engine\Utilities\Easings</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\Utilities\functions.h">
+    <ClInclude Include="src\engine\Utilities\functions.h">
       <Filter>engine\Utilities\functions</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\Camera\CameraController.h">
+    <ClInclude Include="src\engine\Camera\CameraController.h">
       <Filter>engine\CameraController</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\definition\definition.h">
+    <ClInclude Include="src\engine\definition\definition.h">
       <Filter>engine\definition</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\Facade\Game.h">
+    <ClInclude Include="src\engine\Facade\Game.h">
       <Filter>engine\Application</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\Engine.h">
+    <ClInclude Include="src\engine\Engine.h">
       <Filter>engine\Application</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\Window\WindowManager.h">
+    <ClInclude Include="src\engine\Window\WindowManager.h">
       <Filter>engine\WindowManager</Filter>
     </ClInclude>
-    <ClInclude Include="include\application\Phase\BattlePhase\BattlePhase.h">
+    <ClInclude Include="src\application\Phase\BattlePhase\BattlePhase.h">
       <Filter>application\GameManeger\Phase\BattlePhase</Filter>
     </ClInclude>
-    <ClInclude Include="include\application\Phase\PhaseParent\PhaseParent.h">
+    <ClInclude Include="src\application\Phase\PhaseParent\PhaseParent.h">
       <Filter>application\GameManeger\Phase\PhaseParent</Filter>
     </ClInclude>
-    <ClInclude Include="include\application\Phase\TestPhase\TestPhase.h">
+    <ClInclude Include="src\application\Phase\TestPhase\TestPhase.h">
       <Filter>application\GameManeger\Phase\TestPhase</Filter>
     </ClInclude>
-    <ClInclude Include="include\application\Phase\TitlePhase\TitlePhase.h">
+    <ClInclude Include="src\application\Phase\TitlePhase\TitlePhase.h">
       <Filter>application\GameManeger\Phase\TitlePhase</Filter>
     </ClInclude>
-    <ClInclude Include="include\application\Phase\GameScenePhase\GameScenePhase.h">
+    <ClInclude Include="src\application\Phase\GameScenePhase\GameScenePhase.h">
       <Filter>application\GameManeger\Phase\GameScenePhase</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\DrawSystem\RenderData\RenderData.h">
+    <ClInclude Include="src\engine\DrawSystem\RenderData\RenderData.h">
       <Filter>engine\DrawSystem\RenderDataClass</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\FixFPS\FixFPS.h">
+    <ClInclude Include="src\engine\FixFPS\FixFPS.h">
       <Filter>engine\FixFPS</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\Utilities\JsonManager.h">
+    <ClInclude Include="src\engine\Utilities\JsonManager.h">
       <Filter>engine\Utilities\Json</Filter>
     </ClInclude>
   </ItemGroup>
