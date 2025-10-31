@@ -95,6 +95,7 @@ DrawSystem::~DrawSystem()
 			it.second.mapped = nullptr;
 		}
 	}
+
 	s_particlePools.clear();
 
 	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>>().swap(materialResources_);
