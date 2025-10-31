@@ -24,7 +24,6 @@ CameraController::CameraController()
 
 void CameraController::Update()
 {
-
 #pragma region カメラシェイク
 
     if (shakeActive_)
@@ -76,49 +75,25 @@ void CameraController::Update()
 
 #pragma endregion
 
-#pragma region 回転中心
-        if (prePressMouse2_ == 0 && pressMouse2_ && GetHitKey::IsPressedNow(DIK_LSHIFT))
+#pragma region カメラ回転
+        // クリックした瞬間
+        if (pressMouse2_ && prePressMouse2_ == 0 && !GetHitKey::IsPressedNow(DIK_LSHIFT))
         {
             preMousePosition_ = Game::Input::Mouse::GetMousePosition();
         }
-        if (pressMouse2_ && GetHitKey::IsPressedNow(DIK_LSHIFT))
+        // クリックしている最中
+        if (pressMouse2_ && !GetHitKey::IsPressedNow(DIK_LSHIFT))
         {
             mousePosition_ = Game::Input::Mouse::GetMousePosition();
-            mousePositionGap_.x = float(mousePosition_.x - preMousePosition_.x);
-            mousePositionGap_.y = float(mousePosition_.y - preMousePosition_.y);
-
-            //	カメラの回転行列（cameraRotMat）を作ることで、カメラの「右」「上」方向ベクトルを取得できます。
-            //	右方向ベクトル = 回転行列の1列目（m[0][0], m[1][0], m[2][0]）
-            //	上方向ベクトル = 回転行列の2列目（m[0][1], m[1][1], m[2][1]）
-            //	前方向ベクトル = 回転行列の3列目（m[0][2], m[1][2], m[2][2]）
-            //
-            //      ↑ y（上）
-            //      |
-            //      |
-            //      o----→ x（右）
-            //     /
-            //    /
-            //    z（前）
-            // 
-            //　カメラの回転行列 は カメラの向いてる向き
-            // 
-
-
-            Matrix4x4 cameraRotMat = Matrix4x4::MakeAffineMatrix({ 1,1,1 }, transform_.rotate, { 0,0,0 });
-            // 右方向ベクトル（ローカルx軸）
-            Vector3 right = { cameraRotMat.m[0][0], cameraRotMat.m[1][0], cameraRotMat.m[2][0] };
-            // 上方向ベクトル（ローカルy軸）
-            Vector3 up = { cameraRotMat.m[0][1], cameraRotMat.m[1][1], cameraRotMat.m[2][1] };
-
-            // パン感度
-            float panSpeed = distance_ * 0.001f;
-
-            // Centerを移動
-            center_ = preCenter_ + -right * (mousePositionGap_.x * panSpeed) - up * (mousePositionGap_.y * panSpeed);
+            mousePositionGap_.x = mousePosition_.x - preMousePosition_.x;
+            mousePositionGap_.y = mousePosition_.y - preMousePosition_.y;
+            transform_.rotate.x = (mousePositionGap_.y / 100.0f) + (preRotate_.x);
+            transform_.rotate.y = (mousePositionGap_.x / 100.0f) + (preRotate_.y);
         }
-        if (prePressMouse2_ && pressMouse2_ == 0 && GetHitKey::IsPressedNow(DIK_LSHIFT))
+        // クリックやめた瞬間
+        if (prePressMouse2_ && pressMouse2_ == 0 && !GetHitKey::IsPressedNow(DIK_LSHIFT))
         {
-            preCenter_ = center_;
+            preRotate_ = transform_.rotate;
         }
 
 #pragma endregion
@@ -157,6 +132,7 @@ void CameraController::Update()
 
 #pragma region カメラ行列計算
 
+
     // カメラ初期値
     Vector3 cameraLocalPos = { 0.0f, 0.0f, -distance_ };
 
@@ -189,7 +165,6 @@ void CameraController::Update()
     viewProjectionMatrix = (viewMatrix_ * projectionMatrix_);
 
     CreateFrustumPlanes();
-
 #pragma endregion
 
 }

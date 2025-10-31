@@ -1079,6 +1079,7 @@ void DrawSystem::DrawSprite(RenderData_Sprite& renderData)
 
 	// マウス座標取得
 	Vector2 mousePos = Game::Input::Mouse::GetMousePosition();
+
 	// マウス座標は仮想座標へ変換してから衝突判定に使う。
 	float windowWidth = float(WindowManager::winWidth_);
 	float windowHeight = float(WindowManager::winHeight_);
@@ -1344,32 +1345,32 @@ void DrawSystem::AddSphere(Vector3 pos, Vector3 radius, uint32_t color)
 		// 現在の緯度と次の緯度
 		lat = float(-std::numbers::pi_v<float> / 2.0f + latIndex * kLatEvery);
 		nextLat = float(-std::numbers::pi_v<float> / 2.0f + (latIndex + 1) * kLatEvery);
-	
+
 		// 経度方向に分割 0 ～ 2π
 		for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex)
 		{
 			// 現在の経度と次の経度
 			lon = lonIndex * kLonEvery;
 			nextLon = (lonIndex + 1) * kLonEvery;
-	
+
 			Lon[latIndex].points.push_back({
 				pos.x + radius.x * std::cosf(lat) * std::cosf(lon),
 				pos.y + radius.y * std::sinf(lat),
 				pos.z + radius.z * std::cosf(lat) * std::sinf(lon),
 				});
-	
+
 			Lon[latIndex].points.push_back({
 				pos.x + radius.x * std::cosf(lat) * std::cosf(nextLon),
 				pos.y + radius.y * std::sinf(lat),
 				pos.z + radius.z * std::cosf(lat) * std::sinf(nextLon),
 				});
-	
+
 			Lat[lonIndex].points.push_back({
 				pos.x + radius.x * std::cosf(lat) * std::cosf(lon),
 				pos.y + radius.y * std::sinf(lat),
 				pos.z + radius.z * std::cosf(lat) * std::sinf(lon),
 				});
-	
+r
 			Lat[lonIndex].points.push_back({
 				pos.x + radius.x * std::cosf(nextLat) * std::cosf(lon),
 				pos.y + radius.y * std::sinf(nextLat),

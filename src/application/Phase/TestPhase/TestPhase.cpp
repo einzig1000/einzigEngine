@@ -51,11 +51,7 @@ void TestPhase::Initialize()
 
 void TestPhase::Update()
 {
-	Vector2 mousePos = Game::Input::Mouse::GetMousePosition();
-	ImGui::Begin("MousePos");
-	ImGui::Text("Mouse X: %.1f", mousePos.x);
-	ImGui::Text("Mouse Y: %.1f", mousePos.y);
-	ImGui::End();
+
 }
 
 
