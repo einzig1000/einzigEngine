@@ -21,21 +21,24 @@ public:
     void Draw(bool debugCamera);
     void Resize();
 
-
-	// カメラ演出
     void SetCenterTarget(Vector3 Center, int spendFrame, EaseType easetype);
     void SetRotateTarget(Vector3 Center, int spendFrame, EaseType easetype);
     void SetDistanceTarget(float Center, int spendFrame, EaseType easetype);
 
-	// カメラ情報取得
+    void StartShake(float intensity, float duration, float frequency = 25.0f);
+    bool IsShaking();
+    void StopShake();
+    Vector3 GetShakeOffset() const;
+
     Vector3 GetCenter() const { return center_; }
     float GetDistance() const { return distance_; }
     void SetDistance(float target) { distance_ = target; }
 
-	// 視錐台内にAABBがあるか
-	bool InFrustum(const AABB& aabb);
+    // 視錐台内にAABBがあるか
+    bool InFrustum(const AABB& aabb);
 
-    bool cameraMode_;
+    // 操作可能か
+    bool enableControl_;
 
 private:
 
@@ -77,9 +80,22 @@ private:
     // 演出によるカメラ距離の変更中
     easingSet easeDistance_;
 
-	//////////////////////////////////////////////
-	///             視錐台判定用              ///
-	//////////////////////////////////////////////
+    //////////////////////////////////////////////
+    ///             視錐台判定用              ///
+    //////////////////////////////////////////////
+    void CreateFrustumPlanes();
+    std::array<Plane, 6> frustumPlanes_;// 視錐台を構成する6つの平面
+    //////////////////////////////////////////////
+    ///              カメラシェイク            ///
+    //////////////////////////////////////////////
+    bool shakeActive_ = false;
+    float shakeDuration_ = 0.0f;		// 揺れが続く時間
+    float shakeTime_ = 0.0f;			// 経過時間
+    float shakeIntensity_ = 0.0f;		// 初期振幅（揺れの強さ）
+    float shakeFrequency_ = 25.0f;		// 揺れる速さ
+	  //////////////////////////////////////////////
+	  ///             視錐台判定用              ///
+	  //////////////////////////////////////////////
     void CreateFrustumPlanes();
     std::array<Plane, 6> frustumPlanes_;// 視錐台を構成する6つの平面
 

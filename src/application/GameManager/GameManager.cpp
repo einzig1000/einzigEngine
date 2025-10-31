@@ -2,6 +2,8 @@
 
 GameManager::GameManager()
 {
+	Game::BeginFrame(); // コマンドリストをResetしてopenにする
+
 	// フェーズクラス生成
 	testPhase_ = std::make_unique<TestPhase>();
 	battlePhase_ = std::make_unique<BattlePhase>();
@@ -11,6 +13,7 @@ GameManager::GameManager()
 	// 初期フェーズ設定
 	requestPhase_ = PHASE::Phase_Test;
 
+	Game::EndFrame(); // Close→Execute→Present→Wait で反映
 }
 
 GameManager::~GameManager()

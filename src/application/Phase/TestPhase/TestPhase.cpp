@@ -3,14 +3,14 @@
 
 TestPhase::TestPhase()
 {
-	uint32_t playerTex = Game::LoadTexture("resources/Prototypes/texture/uvChecker.png");
-	uint32_t playerModel = Game::LoadModel("resources/Prototypes/model/", "cube.obj");
+	uint32_t playerTex = Game::Resource::LoadTexture("resources/Prototypes/texture/uvChecker.png");
+	uint32_t playerModel = Game::Resource::LoadModel("resources/Prototypes/model/", "cube.obj");
 
-	uint32_t enemyTex = Game::LoadTexture("resources/Prototypes/texture/circle.png");
-	uint32_t enemyModel = Game::LoadModel("resources/Prototypes/model/", "plane.obj");
+	uint32_t enemyTex = Game::Resource::LoadTexture("resources/Prototypes/texture/circle.png");
+	uint32_t enemyModel = Game::Resource::LoadModel("resources/Prototypes/model/", "plane.obj");
 
-	uint32_t enemyTex2 = Game::LoadTexture("resources/Prototypes/texture/monsterBall.png");
-	uint32_t enemyTex3 = Game::LoadTexture("resources/Prototypes/texture/white1x1.png");
+	uint32_t enemyTex2 = Game::Resource::LoadTexture("resources/Prototypes/texture/monsterBall.png");
+	uint32_t enemyTex3 = Game::Resource::LoadTexture("resources/Prototypes/texture/white1x1.png");
 
 	model_.model = playerModel;
 	model_.texture = playerTex;
@@ -70,6 +70,10 @@ void TestPhase::Draw()
 	particle_.Draw();
 	particle_.DrawImGui();
 	particle_.DrawEmitter();
+
+	particle2_.Draw();
+	particle2_.DrawImGui();
+	particle2_.DrawEmitter();
 
 	line_.Draw();
 	line_.DrawImGui();

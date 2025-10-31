@@ -1,11 +1,11 @@
 #include "Camera/CameraController.h"
-#include "Engine/Game.h"
+#include "Facade/Game.h"
 #include "Window/WindowManager.h"
 
 CameraController::CameraController()
 {
     mousePositionGap_ = { 0,0 };
-    cameraMode_ = true;
+    enableControl_ = true;
 
     // カメラ
     transform_.translate = { 0.0f, 0.0f, 0.0f };
@@ -24,28 +24,44 @@ CameraController::CameraController()
 
 void CameraController::Update()
 {
-    // カメラ操作可能
-    if (cameraMode_)
+#pragma region カメラシェイク
+
+    if (shakeActive_)
+    {
+        shakeTime_++;
+     
+        if (shakeTime_ >= shakeDuration_)
+        {
+            shakeActive_ = false;
+            shakeTime_ = 0.0f;
+        }
+    }
+
+#pragma endregion
+
+#pragma region カメラ手動操作
+
+    if (enableControl_)
     {
         // 左クリック
         prePressMouse0_ = pressMouse0_;
-        pressMouse0_ = Game::GetMousePress(0);
+        pressMouse0_ = Game::Input::Mouse::GetMousePress(0);
         // ミドルボタン
         prePressMouse2_ = pressMouse2_;
-        pressMouse2_ = Game::GetMousePress(2);
+        pressMouse2_ = Game::Input::Mouse::GetMousePress(2);
 
-        mouseWheel_ = Game::GetMouseWheel();
+        mouseWheel_ = Game::Input::Mouse::GetMouseWheel();
 
 #pragma region カメラ回転
         // クリックした瞬間
         if (pressMouse2_ && prePressMouse2_ == 0 && !GetHitKey::IsPressedNow(DIK_LSHIFT))
         {
-            preMousePosition_ = Game::GetMousePosition();
+            preMousePosition_ = Game::Input::Mouse::GetMousePosition();
         }
         // クリックしている最中
         if (pressMouse2_ && !GetHitKey::IsPressedNow(DIK_LSHIFT))
         {
-            mousePosition_ = Game::GetMousePosition();
+            mousePosition_ = Game::Input::Mouse::GetMousePosition();
             mousePositionGap_.x = mousePosition_.x - preMousePosition_.x;
             mousePositionGap_.y = mousePosition_.y - preMousePosition_.y;
             transform_.rotate.x = (mousePositionGap_.y / 100.0f) + (preRotate_.x);
@@ -59,49 +75,25 @@ void CameraController::Update()
 
 #pragma endregion
 
-#pragma region 回転中心
-        if (prePressMouse2_ == 0 && pressMouse2_ && GetHitKey::IsPressedNow(DIK_LSHIFT))
+#pragma region カメラ回転
+        // クリックした瞬間
+        if (pressMouse2_ && prePressMouse2_ == 0 && !GetHitKey::IsPressedNow(DIK_LSHIFT))
         {
-            preMousePosition_ = Game::GetMousePosition();
+            preMousePosition_ = Game::Input::Mouse::GetMousePosition();
         }
-        if (pressMouse2_ && GetHitKey::IsPressedNow(DIK_LSHIFT))
+        // クリックしている最中
+        if (pressMouse2_ && !GetHitKey::IsPressedNow(DIK_LSHIFT))
         {
-            mousePosition_ = Game::GetMousePosition();
-            mousePositionGap_.x = float(mousePosition_.x - preMousePosition_.x);
-            mousePositionGap_.y = float(mousePosition_.y - preMousePosition_.y);
-
-            //	カメラの回転行列（cameraRotMat）を作ることで、カメラの「右」「上」方向ベクトルを取得できます。
-            //	右方向ベクトル = 回転行列の1列目（m[0][0], m[1][0], m[2][0]）
-            //	上方向ベクトル = 回転行列の2列目（m[0][1], m[1][1], m[2][1]）
-            //	前方向ベクトル = 回転行列の3列目（m[0][2], m[1][2], m[2][2]）
-            //
-            //      ↑ y（上）
-            //      |
-            //      |
-            //      o----→ x（右）
-            //     /
-            //    /
-            //    z（前）
-            // 
-            //　カメラの回転行列 は カメラの向いてる向き
-            // 
-
-
-            Matrix4x4 cameraRotMat = Matrix4x4::MakeAffineMatrix({ 1,1,1 }, transform_.rotate, { 0,0,0 });
-            // 右方向ベクトル（ローカルx軸）
-            Vector3 right = { cameraRotMat.m[0][0], cameraRotMat.m[1][0], cameraRotMat.m[2][0] };
-            // 上方向ベクトル（ローカルy軸）
-            Vector3 up = { cameraRotMat.m[0][1], cameraRotMat.m[1][1], cameraRotMat.m[2][1] };
-
-            // パン感度
-            float panSpeed = distance_ * 0.001f;
-
-            // Centerを移動
-            center_ = preCenter_ + -right * (mousePositionGap_.x * panSpeed) - up * (mousePositionGap_.y * panSpeed);
+            mousePosition_ = Game::Input::Mouse::GetMousePosition();
+            mousePositionGap_.x = mousePosition_.x - preMousePosition_.x;
+            mousePositionGap_.y = mousePosition_.y - preMousePosition_.y;
+            transform_.rotate.x = (mousePositionGap_.y / 100.0f) + (preRotate_.x);
+            transform_.rotate.y = (mousePositionGap_.x / 100.0f) + (preRotate_.y);
         }
-        if (prePressMouse2_ && pressMouse2_ == 0 && GetHitKey::IsPressedNow(DIK_LSHIFT))
+        // クリックやめた瞬間
+        if (prePressMouse2_ && pressMouse2_ == 0 && !GetHitKey::IsPressedNow(DIK_LSHIFT))
         {
-            preCenter_ = center_;
+            preRotate_ = transform_.rotate;
         }
 
 #pragma endregion
@@ -119,7 +111,10 @@ void CameraController::Update()
 #pragma endregion
     }
 
-	// カメラ演出
+#pragma endregion
+
+#pragma region カメラ演出処理
+
     if (easeRotate_.easingFlag)
     {
         MovingRotate();
@@ -133,9 +128,11 @@ void CameraController::Update()
         MovingDistance();
     }
 
-    //////////////////////////////////////////////
-    ///               カメラ移動               ///
-    ////////////////////////////////////////////// 
+#pragma endregion
+
+#pragma region カメラ行列計算
+
+
     // カメラ初期値
     Vector3 cameraLocalPos = { 0.0f, 0.0f, -distance_ };
 
@@ -153,9 +150,8 @@ void CameraController::Update()
         cameraLocalPos.x * cameraRotateMatrix.m[0][2] + cameraLocalPos.y * cameraRotateMatrix.m[1][2] + cameraLocalPos.z * cameraRotateMatrix.m[2][2]
     };
 
-
     // 原点上で回転したrotatedCameraPosに　cameraCenterを足せば中心がcameraCenterに変わる
-    transform_.translate = (center_ + rotatedCameraPos);
+    transform_.translate = (center_ + rotatedCameraPos + GetShakeOffset());
 
     // カメラ行列を作成
     cameraMatrix_ = Matrix4x4::MakeAffineMatrix(
@@ -169,6 +165,8 @@ void CameraController::Update()
     viewProjectionMatrix = (viewMatrix_ * projectionMatrix_);
 
     CreateFrustumPlanes();
+#pragma endregion
+
 }
 
 void CameraController::Resize()
@@ -185,9 +183,10 @@ void CameraController::Draw(bool debugCamera)
     ImGui::DragFloat3("cameraCenter", &center_.x, 0.01f);
     ImGui::DragFloat3("cameraRotate", &transform_.rotate.x, 0.01f);
     ImGui::DragFloat("cameraDistance", &distance_, 0.1f);
-    ImGui::Checkbox("enableControl", &cameraMode_);
+    ImGui::Checkbox("enableControl", &enableControl_);
+	//if (debugCamera)ImGui::Checkbox("FixReleaseCamera", &enableControl_);
     ImGui::End();
-	Game::AddSphere(center_, Vector3{ 0.2f,0.2f,0.2f }, 0xFFFF00FF);
+	Game::DebugDraw::AddSphere(center_, Vector3{ 0.2f,0.2f,0.2f }, 0xFFFF00FF);
 }
 
 void CameraController::CreateFrustumPlanes()
@@ -359,4 +358,42 @@ void CameraController::SetDistanceTarget(float target, int spendFrame, EaseType 
     easeDistance_.flame = 0;
     easeDistance_.maxFrame = spendFrame;
     easeDistance_.easetype = easetype;
-};
+}
+
+// シェイク
+void CameraController::StartShake(float intensity, float duration, float frequency)
+{
+    shakeActive_ = true;
+    shakeIntensity_ = intensity;
+    shakeDuration_ = duration;
+    shakeFrequency_ = frequency;
+    shakeTime_ = 0.0f;
+}
+
+bool CameraController::IsShaking()
+{
+	return shakeActive_;
+}
+
+void CameraController::StopShake()
+{
+	shakeActive_ = false;
+}
+
+Vector3 CameraController::GetShakeOffset() const
+{
+    if (!shakeActive_) return Vector3(0.0f, 0.0f, 0.0f);
+
+    // 正規化された時間 (0.0 から 1.0)
+    float t = shakeTime_ / shakeDuration_;
+
+    // 指数減衰 (時間とともに揺れが小さくなる)
+    float decay = std::exp(-3.0f * t);
+
+    // 揺れ計算（sin, cos の組み合わせで自然な揺れを作る）
+    float offsetX = std::sin(shakeTime_ * shakeFrequency_) * shakeIntensity_ * decay;
+    float offsetY = std::cos(shakeTime_ * shakeFrequency_ * 0.7f) * shakeIntensity_ * decay;
+    float offsetZ = std::sin(shakeTime_ * shakeFrequency_ * 1.3f) * shakeIntensity_ * decay * 0.5f; // Z軸は控えめ
+
+    return Vector3(offsetX, offsetY, offsetZ);
+}

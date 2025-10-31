@@ -1,4 +1,4 @@
-#include "Engine/Game.h"
+#include "Game.h"
 #include <numbers>
 #include "GameManager/GameManager.h"
 
@@ -10,9 +10,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	// ウィンドウ、DrectX初期化
 	Game::Initialize(WIDTH, HEIGHT, L"LE2A_17_ヨコヤマ_タダノブ");
 
-	Game::BeginFrame();                      // コマンドリストをResetしてopenにする
-	GameManager* gm = new GameManager();     // ここでテクスチャ読み込み（Uploadが記録される）
-	Game::EndFrame();                        // Close→Execute→Present→Wait で反映
+	GameManager* gm = new GameManager();
 
 	while (Game::ProcessMessage())
 	{
