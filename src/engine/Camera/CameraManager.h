@@ -10,6 +10,8 @@ public:
 	CameraManager();
 	~CameraManager();
 
+	void AddCamera(const std::string name, bool enableControl);
+
 	void Update();
 	void Draw();
     void Resize();
@@ -22,13 +24,20 @@ public:
     bool IsShaking();
     void StopShake();
 
-	Vector3 GetCenter() const;		// カメラ回転中心
-	Vector3 GetTranslate() const;	// カメラ位置
-	Matrix4x4 GetViewProjectionMatrix() const; // ビュープロジェクション行列
-	float GetDistance() const;		// カメラ距離
+	Vector3 GetCenter(const std::string name) const;			// カメラ回転中心
+	Vector3 GetTranslate(const std::string name) const;			// カメラ位置
+	Matrix4x4 GetViewProjectionMatrix(const std::string name) const; // ビュープロジェクション行列
+	float GetDistance(const std::string name) const;			// カメラ距離
+
+	Vector3 GetCurrentCenter() const;			// カメラ回転中心
+	Vector3 GetCurrentTranslate() const;		// カメラ位置
+	Matrix4x4 GetCurrentViewProjectionMatrix() const; // ビュープロジェクション行列
+	float GetCurrentDistance() const;			// カメラ距離
 
 	// 視錐台内にAABBがあるか
 	bool InCamera(const AABB& aabb);
+
+	void ToggleCameraMode();
 
 private:
 	int currentCameraID_ = 0;

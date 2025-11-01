@@ -191,7 +191,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </ClCompile>
     <ClCompile Include="src\application\Phase\GameScenePhase\GameScenePhase.cpp" />
     <ClCompile Include="src\application\GameManager\GameManager.cpp" />
-    <ClCompile Include="src\engine\Camera\CameraController.cpp" />
     <ClCompile Include="src\engine\definition\definition.cpp" />
     <ClCompile Include="src\engine\DirectX\CommandContextManager.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">MaxSpeed</Optimization>
@@ -265,7 +264,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="externals\imgui\imstb_truetype.h" />
     <ClInclude Include="src\application\Phase\GameScenePhase\GameScenePhase.h" />
     <ClInclude Include="src\application\GameManager\GameManager.h" />
-    <ClInclude Include="src\engine\Camera\CameraController.h" />
     <ClInclude Include="src\engine\definition\definition.h" />
     <ClInclude Include="src\engine\DirectX\CommandContextManager.h" />
     <ClInclude Include="src\engine\DirectX\DepthStencilManager.h" />

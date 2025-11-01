@@ -88,7 +88,9 @@ public:
 	void MoveCameraDistance(float target, int spendFrame, EaseType easetype);
 	void StartCameraShake(float intensity, float duration, float frequency = 25.0f);
 	bool IsCameraShaking();
+	void ToggleCameraMode();
 	void StopCameraShake();
+	CameraManager* GetCameraManager() { return cameraManager; }
 
 	/// カメラシェイク
 

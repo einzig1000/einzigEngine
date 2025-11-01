@@ -1,6 +1,5 @@
 #include "Facade/Game.h"
 #include "Engine/Engine.h"
-#include "Camera/CameraController.h"
 using namespace DirectX;
 
 uint32_t Game::Resource::LoadModel(const std::string& directoryPath, const std::string& filename)
@@ -128,11 +127,6 @@ uint32_t Game::Input::Mouse::GetMouseWheel()
 }
 
 
-Vector3 Game::Camera::GetCameraTranslate()
-{
-	return Engine::Instance().GetCameraTranslate();
-}
-
 void Game::Camera::MoveCameraCenter(Vector3 target, int spendFrame, EaseType easetype)
 {
 	Engine::Instance().MoveCameraCenter(target, spendFrame, easetype);
@@ -170,9 +164,49 @@ bool Game::Camera::InCamera(const AABB& aabb)
 }
 
 
+Vector3 Game::Camera::Getter::GetCenter(const std::string name)
+{
+	return Engine::Instance().GetCameraManager()->GetCenter(name);
+}
+
+Vector3 Game::Camera::Getter::GetTranslate(const std::string name)
+{
+	return Engine::Instance().GetCameraManager()->GetTranslate(name);
+}
+
+Matrix4x4 Game::Camera::Getter::GetViewProjectionMatrix(const std::string name)
+{
+	return Engine::Instance().GetCameraManager()->GetViewProjectionMatrix(name);
+}
+
+float Game::Camera::Getter::GetDistance(const std::string name)
+{
+	return Engine::Instance().GetCameraManager()->GetDistance(name);
+}
+
+
+Vector3 Game::Camera::Getter::GetCurrentCenter()
+{
+	return Engine::Instance().GetCameraManager()->GetCurrentCenter();
+}
+
+Vector3 Game::Camera::Getter::GetCurrentTranslate()
+{
+	return Engine::Instance().GetCameraManager()->GetCurrentTranslate();
+}
+
+Matrix4x4 Game::Camera::Getter::GetCurrentViewProjectionMatrix()
+{
+	return Engine::Instance().GetCameraManager()->GetCurrentViewProjectionMatrix();
+}
+
+float Game::Camera::Getter::GetCurrentDistance()
+{
+	return Engine::Instance().GetCameraManager()->GetCurrentDistance();
+}
+
 
 void Game::Utilitie::toggleWireframeMode()
 {
 	Engine::Instance().toggleWireframeMode();
 }
-

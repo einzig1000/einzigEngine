@@ -6,7 +6,6 @@
 #include <cstdint>
 
 #include "input/MouseController.h"
-#include "Camera/CameraController.h"
 #include "Window/WindowManager.h"
 #include "DirectX/DirectXManager.h"
 #include "Facade/Game.h"
@@ -111,7 +110,7 @@ void Engine::BeginFrame()
 	UpdateCamera();
 
 	// 描画関数初期化
-	drawSystem->BeginFrame(cameraManager->GetViewProjectionMatrix());
+	drawSystem->BeginFrame(cameraManager->GetCurrentViewProjectionMatrix());
 
 	// デバッグ情報更新
 	UpdateDebugInfo();
@@ -147,7 +146,7 @@ void Engine::UpdateDebugInfo()
 	}
 	if (GetHitKey::IsPressedDown(DIK_F3))
 	{
-		//ToggleCameraMode();
+		ToggleCameraMode();
 	}
 	if (GetHitKey::IsPressedDown(DIK_F12))
 	{
@@ -165,7 +164,7 @@ void Engine::UpdateDebugInfo()
 		fpsSmooth += (fps - fpsSmooth) * 0.1f;
 
 		ImGui::Begin("------debug info------");
-		ImGui::Text("F1  : Hide this");
+		ImGui::Text("F1  : Hide Debug Info");
 		ImGui::Text("F3  : Toggle Camera Mode");
 		//ImGui::Text("F12 : Toggle Fullscreen");
 		ImGui::Text("DeltaTime: %.3f ms", dxManager->GetDeltaTime() * 1000.0f);
@@ -352,12 +351,12 @@ void Engine::DrawParticle(RenderData_Particle& renderData)
 
 void Engine::AddSphere(Vector3 pos, Vector3 radius, uint32_t color)
 {
-	drawSystem->AddSphere(pos, radius, color);
+	if (isDebugInfo)drawSystem->AddSphere(pos, radius, color);
 }
 
 void Engine::AddAABB(AABB aabb, uint32_t color)
 {
-	drawSystem->AddAABB(aabb, color);
+	if (isDebugInfo)drawSystem->AddAABB(aabb, color);
 }
 
 bool Engine::InFrustum(const AABB& aabb)
@@ -428,10 +427,10 @@ bool Engine::GetMousePrePress(int i)
 	return inputManager_->GetMouseController()->GetMousePrePress(i);
 }
 
-// カメラ操作
+// カメラ
 Vector3 Engine::GetCameraTranslate() const
 {
-	return cameraManager->GetTranslate();
+	return cameraManager->GetCurrentTranslate();
 }
 
 void Engine::MoveCameraCenter(Vector3 target, int spendFrame, EaseType easetype)
@@ -449,19 +448,21 @@ void Engine::MoveCameraDistance(float target, int spendFrame, EaseType easetype)
 	cameraManager->SetDistanceTarget(target, spendFrame, easetype);
 }
 
-// カメラシェイク開始
 void Engine::StartCameraShake(float intensity, float duration, float frequency)
 {
 	cameraManager->StartShake(intensity, duration, frequency);
 }
 
-// カメラシェイク中かどうか
 bool Engine::IsCameraShaking()
 {
 	return cameraManager->IsShaking();
 }
 
-// カメラシェイク停止
+void Engine::ToggleCameraMode()
+{
+	cameraManager->ToggleCameraMode();
+}
+
 void Engine::StopCameraShake()
 {
 	cameraManager->StopShake();

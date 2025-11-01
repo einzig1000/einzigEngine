@@ -234,9 +234,6 @@
     <ClCompile Include="src\engine\Utilities\Easings.cpp">
       <Filter>engine\Utilities\Easings</Filter>
     </ClCompile>
-    <ClCompile Include="src\engine\Camera\CameraController.cpp">
-      <Filter>engine\Camera</Filter>
-    </ClCompile>
     <ClCompile Include="src\engine\definition\definition.cpp">
       <Filter>engine\definition</Filter>
     </ClCompile>
@@ -367,9 +364,6 @@
     </ClInclude>
     <ClInclude Include="src\engine\Utilities\functions.h">
       <Filter>engine\Utilities\functions</Filter>
-    </ClInclude>
-    <ClInclude Include="src\engine\Camera\CameraController.h">
-      <Filter>engine\Camera</Filter>
     </ClInclude>
     <ClInclude Include="src\engine\definition\definition.h">
       <Filter>engine\definition</Filter>

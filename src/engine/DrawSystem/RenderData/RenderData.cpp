@@ -2,7 +2,6 @@
 #include "Utilities/JsonManager.h"
 #include "Game.h"
 #include "Engine.h"
-#include "Camera/CameraController.h"
 using namespace DirectX;
 
 std::vector<RenderData_Model*> RenderData_Model::renderModels;
@@ -362,7 +361,7 @@ void RenderData_Model::LookAtOnce(const RenderData_Model& other, float roll)
 }
 void RenderData_Model::LookAtCamera(float roll)
 {
-	LookAtOnce(Game::Camera::GetCameraTranslate(), roll);
+	LookAtOnce(Game::Camera::Getter::GetTranslate("ReleaseCamera"), roll);
 }
 void RenderData_Model::LookAtFront(float roll)
 {
@@ -675,7 +674,7 @@ void RenderData_Triangle::DrawImGui()
 		ImGui::DragFloat3((num + "pos3").c_str(), &pos3.x, 0.1f);
 		ImGui::TreePop();
 	}
-	if (ImGui::TreeNode("----------position-------------"))
+	if (ImGui::TreeNode("----------texture--------------"))
 	{
 		for (size_t i = 0; i < Game::Resource::GetTextureCount(); ++i)
 		{

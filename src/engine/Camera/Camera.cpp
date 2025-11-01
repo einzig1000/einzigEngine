@@ -181,12 +181,6 @@ void Camera::Resize()
 
 void Camera::Draw()
 {
-    ImGui::Begin(this->name_.c_str());
-    ImGui::DragFloat3("cameraCenter", &center_.x, 0.01f);
-    ImGui::DragFloat3("cameraRotate", &transform_.rotate.x, 0.01f);
-    ImGui::DragFloat("cameraDistance", &distance_, 0.1f);
-    ImGui::Checkbox("enableControl", &enableControl_);
-    ImGui::End();
     Game::DebugDraw::AddSphere(center_, Vector3{ 0.2f,0.2f,0.2f }, 0xFFFF00FF);
 }
 

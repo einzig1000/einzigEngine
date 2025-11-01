@@ -90,7 +90,20 @@ public:
 	{
 	public:
 
-		static Vector3 GetCameraTranslate();
+		class Getter
+		{
+		public:
+
+			static Vector3 GetCenter(const std::string name);			// カメラ回転中心
+			static Vector3 GetTranslate(const std::string name);			// カメラ位置
+			static Matrix4x4 GetViewProjectionMatrix(const std::string name); // ビュープロジェクション行列
+			static float GetDistance(const std::string name);			// カメラ距離
+
+			static Vector3 GetCurrentCenter();			// カメラ回転中心
+			static Vector3 GetCurrentTranslate();		// カメラ位置
+			static Matrix4x4 GetCurrentViewProjectionMatrix(); // ビュープロジェクション行列
+			static float GetCurrentDistance();			// カメラ距離
+		};
 
 		/// <summary>
 		/// カメラの回転中心座標の移動

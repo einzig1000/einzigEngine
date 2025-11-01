@@ -95,7 +95,7 @@ void MouseController::SetMouseRay()
     Vector4 farPoint = { ndcX, ndcY, 1.0f, 1.0f };
 
     // 逆射影行列
-    Matrix4x4 inverseViewProj = cameraManager_->GetViewProjectionMatrix().Inverse();
+    Matrix4x4 inverseViewProj = cameraManager_->GetCurrentViewProjectionMatrix().Inverse();
 
     // ワールド空間に変換
     Vector4 nearWorld = Transform(nearPoint, inverseViewProj);

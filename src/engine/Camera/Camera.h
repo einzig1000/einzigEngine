@@ -34,10 +34,10 @@ public:
     Vector3 GetShakeOffset() const;
 
 	// 情報取得
-	Vector3 GetCenter() const { return center_; } // カメラ回転中心
-	Vector3 GetTranslate() const { return transform_.translate; } // カメラ位置
+    Vector3 center_;
+    Transforms transform_;
+    float distance_;
 	Matrix4x4 GetViewProjectionMatrix() const { return viewProjectionMatrix; } // ビュープロジェクション行列
-	float GetDistance() const { return distance_; } // カメラ距離
 
     // 視錐台内にAABBがあるか
     bool InFrustum(const AABB& aabb);
@@ -66,8 +66,6 @@ private:
     //////////////////////////////////////////////
     ///                回転中心                ///
     //////////////////////////////////////////////
-    // カメラがどこを中心に回転するか（現在は原点中心）
-    Vector3 center_;
     bool pressMouse2_ = 0;
     bool prePressMouse2_ = 0;
     Vector3 preCenter_;
@@ -79,8 +77,6 @@ private:
     //////////////////////////////////////////////
     ///               カメラ距離               ///
     //////////////////////////////////////////////
-    // カメラの距離（cameraCenterからの距離）
-    float distance_; // 6.49f
     bool pressMouse0_ = 0;
     bool prePressMouse0_ = 0;
     int mouseWheel_ = 0;
@@ -105,7 +101,6 @@ private:
     Matrix4x4 viewportMatrix;
     Matrix4x4 viewProjectionMatrix;
     Matrix4x4 cameraMatrix_;
-    Transforms transform_;
     Matrix4x4 projectionMatrix_;
     Matrix4x4 viewMatrix_;
 };

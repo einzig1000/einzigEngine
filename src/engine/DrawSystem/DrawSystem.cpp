@@ -2,7 +2,6 @@
 #include "DirectX/DirectXManager.h"
 #include "Window/WindowManager.h"
 #include "Utilities/functions.h"
-#include "Camera/CameraController.h"
 
 DrawSystem::DrawSystem(DirectXManager* dxManager)
 	:dxManager_(dxManager)
@@ -167,7 +166,7 @@ void DrawSystem::Update_ParticleInstanceData()
 			// ビルボード
 			if (pool.mapped[i].isBillboard)
 			{
-				Vector3 direction = (Game::Camera::GetCameraTranslate() - pool.mapped[i].translate.value).Normalized();
+				Vector3 direction = (Game::Camera::Getter::GetTranslate("ReleaseCamera") - pool.mapped[i].translate.value).Normalized();
 				float yaw = std::atan2(direction.x, direction.z); // Y軸
 				float pitch = std::asin(-direction.y);              // X軸
 				pool.mapped[i].rotate.value = { pitch, yaw, pool.mapped[i].rotate.value.z };
@@ -522,7 +521,7 @@ void DrawSystem::DrawParticle(RenderData_Particle& renderData)
 				// ビルボードは生まれた瞬間からビルボード
 				if (renderData.GetParticleInf().option.isBillboard)
 				{
-					Vector3 direction = (Game::Camera::GetCameraTranslate() - t.value).Normalized();
+					Vector3 direction = (Game::Camera::Getter::GetTranslate("ReleaseCamera") - t.value).Normalized();
 					float yaw = std::atan2(direction.x, direction.z); // Y軸
 					float pitch = std::asin(-direction.y);            // X軸
 					r.value = { pitch, yaw, 0.0f };
