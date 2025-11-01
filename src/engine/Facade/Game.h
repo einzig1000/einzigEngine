@@ -89,16 +89,59 @@ public:
 	class Camera
 	{
 	public:
+
+		static Vector3 GetCameraTranslate();
+
+		/// <summary>
+		/// カメラの回転中心座標の移動
+		/// </summary>
+		/// <param name="target">目標座標</param>
+		/// <param name="spendFrame">移動にかけるフレーム数</param>
+		/// <param name="easetype">移動補完イージングタイプ</param>
 		static void MoveCameraCenter(Vector3 target, int spendFrame, EaseType easetype);
+
+		/// <summary>
+		///	カメラの回転量変更
+		/// </summary>
+		/// <param name="target">目標回転量</param>
+		/// <param name="spendFrame">変更にかけるフレーム数</param>
+		/// <param name="easetype">変更補完イージングタイプ</param>
 		static void MoveCameraRotate(Vector3 target, int spendFrame, EaseType easetype);
+
+		/// <summary>
+		///  カメラの回転中心からの距離(ズーム量)変更
+		/// </summary>
+		/// <param name="target">目標ズーム量</param>
+		/// <param name="spendFrame">変更にかけるフレーム数</param>
+		/// <param name="easetype">変更補完イージングタイプ</param>
 		static void MoveCameraDistance(float target, int spendFrame, EaseType easetype);
-		static void SetControlModeCamera(bool mode);
-		static CameraController* GetCamera();
-		static CameraController* GetDebugCamera();
+
+
+		/// <summary>
+		/// カメラシェイク開始関数
+		/// </summary>
+		/// <param name="intensity">シェイクの最大振幅</param>
+		/// <param name="duration">シェイクの継続時間</param>
+		/// <param name="frequency">振動の速度 既定値は25.0f</param>
 		static void StartCameraShake(float intensity, float duration, float frequency = 25.0f);
+
+		/// <summary>
+		/// 今シェイクしているか
+		/// </summary>
+		/// <returns>今シェイクしているか</returns>
 		static bool IsCameraShaking();
+
+		/// <summary>
+		/// シェイク停止関数
+		/// </summary>
 		static void StopCameraShake();
-		// 描画オブジェクトは画面内か
+
+
+		/// <summary>
+		/// 描画範囲内にAABBがあるか
+		/// </summary>
+		/// <param name="aabb">検索対象のAABB</param>
+		/// <returns>結果</returns>
 		static bool InCamera(const AABB& aabb);
 	};
 

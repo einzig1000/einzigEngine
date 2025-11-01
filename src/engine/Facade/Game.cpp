@@ -128,6 +128,11 @@ uint32_t Game::Input::Mouse::GetMouseWheel()
 }
 
 
+Vector3 Game::Camera::GetCameraTranslate()
+{
+	return Engine::Instance().GetCameraTranslate();
+}
+
 void Game::Camera::MoveCameraCenter(Vector3 target, int spendFrame, EaseType easetype)
 {
 	Engine::Instance().MoveCameraCenter(target, spendFrame, easetype);
@@ -143,20 +148,6 @@ void Game::Camera::MoveCameraDistance(float target, int spendFrame, EaseType eas
 	Engine::Instance().MoveCameraDistance(target, spendFrame, easetype);
 }
 
-void Game::Camera::SetControlModeCamera(bool mode)
-{
-	Engine::Instance().SetControlModeCamera(mode);
-}
-
-CameraController* Game::Camera::GetCamera()
-{
-	return Engine::Instance().GetCamera();
-}
-
-CameraController* Game::Camera::GetDebugCamera()
-{
-	return Engine::Instance().GetDebugCamera();
-}
 
 void Game::Camera::StartCameraShake(float intensity, float duration, float frequency)
 {

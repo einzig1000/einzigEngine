@@ -25,7 +25,7 @@ public:
 	DrawSystem(DirectXManager* dxManager);
 	~DrawSystem();
 
-	void BeginFrame(Matrix4x4& viewProjectionMatrix);
+	void BeginFrame(const Matrix4x4& viewProjectionMatrix);
 	void EndFrame();
 	void Update_ParticleInstanceData();
 

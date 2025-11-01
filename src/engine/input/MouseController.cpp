@@ -1,10 +1,12 @@
 #include "input/MouseController.h"
 #include "Utilities/functions.h"
 #include "Window/WindowManager.h"
+#include "Camera/CameraManager.h"
 #include "Game.h"
 
-MouseController::MouseController(HWND hwnd, Matrix4x4* viewProjectionMatrix, Matrix4x4* debugViewProjectionMatrix, bool* debugCameraMode)
-    :viewProjectionMatrix_(viewProjectionMatrix), debugViewProjectionMatrix_(debugViewProjectionMatrix), debugCameraMode_(debugCameraMode)
+
+MouseController::MouseController(HWND hwnd, CameraManager* cameraManager)
+	:cameraManager_(cameraManager)
 {
     hwnd_ = hwnd;
     wheelDelta = 0;
@@ -27,7 +29,7 @@ void MouseController::EndFrame()
     wheelDelta = 0;
 }
 
-bool MouseController::GetMousePress(int i)
+bool MouseController::GetMousePress(int i) const
 {
     // 左クリック
     if (i == 0)
@@ -48,7 +50,7 @@ bool MouseController::GetMousePress(int i)
     return false;
 }
 
-bool MouseController::GetMousePrePress(int i)
+bool MouseController::GetMousePrePress(int i) const
 {
     // 左クリック
     if (i == 0)
@@ -93,15 +95,7 @@ void MouseController::SetMouseRay()
     Vector4 farPoint = { ndcX, ndcY, 1.0f, 1.0f };
 
     // 逆射影行列
-    Matrix4x4 inverseViewProj;
-    if (*debugCameraMode_ == false)
-    {
-        inverseViewProj = viewProjectionMatrix_->Inverse();
-    }
-    else
-    {
-        inverseViewProj = debugViewProjectionMatrix_->Inverse();
-    }
+    Matrix4x4 inverseViewProj = cameraManager_->GetViewProjectionMatrix().Inverse();
 
     // ワールド空間に変換
     Vector4 nearWorld = Transform(nearPoint, inverseViewProj);

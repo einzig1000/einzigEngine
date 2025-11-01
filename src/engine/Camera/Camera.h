@@ -12,33 +12,40 @@ struct easingSet
     EaseType easetype = EaseType::OUT_QUART;
 };
 
-class CameraController
+class Camera
 {
 public:
+    Camera();
+    ~Camera();
 
-    CameraController();
     void Update();
-    void Draw(bool debugCamera);
+    void Draw();
     void Resize();
 
+	// 動かす先の設定
     void SetCenterTarget(Vector3 Center, int spendFrame, EaseType easetype);
     void SetRotateTarget(Vector3 Center, int spendFrame, EaseType easetype);
     void SetDistanceTarget(float Center, int spendFrame, EaseType easetype);
 
+	// シェイク
     void StartShake(float intensity, float duration, float frequency = 25.0f);
     bool IsShaking() const;
     void StopShake();
     Vector3 GetShakeOffset() const;
 
-    Vector3 GetCenter() const { return center_; }
-    float GetDistance() const { return distance_; }
-    void SetDistance(float target) { distance_ = target; }
+	// 情報取得
+	Vector3 GetCenter() const { return center_; } // カメラ回転中心
+	Vector3 GetTranslate() const { return transform_.translate; } // カメラ位置
+	Matrix4x4 GetViewProjectionMatrix() const { return viewProjectionMatrix; } // ビュープロジェクション行列
+	float GetDistance() const { return distance_; } // カメラ距離
 
     // 視錐台内にAABBがあるか
     bool InFrustum(const AABB& aabb);
 
     // 操作可能か
     bool enableControl_;
+
+	std::string name_;
 
 private:
 
@@ -95,7 +102,6 @@ private:
     float shakeIntensity_ = 0.0f;		// 初期振幅（揺れの強さ）
     float shakeFrequency_ = 25.0f;		// 揺れる速さ
 
-public:
     Matrix4x4 viewportMatrix;
     Matrix4x4 viewProjectionMatrix;
     Matrix4x4 cameraMatrix_;
@@ -103,4 +109,3 @@ public:
     Matrix4x4 projectionMatrix_;
     Matrix4x4 viewMatrix_;
 };
-

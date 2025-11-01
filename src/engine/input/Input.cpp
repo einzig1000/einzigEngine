@@ -6,11 +6,11 @@ bool Input::hide;
 bool Input::Pause;
 bool Input::preHide;
 
-Input::Input(HWND hwnd, Matrix4x4* viewProjectionMatrix, Matrix4x4* debugViewProjectionMatrix, bool* debugCameraMode)
+Input::Input(HWND hwnd, CameraManager* cameraManager)
 {
     getHitKey_ = std::make_unique<GetHitKey>(hwnd);
     getPadState_ = std::make_unique<GetPadState>();
-    mouseController_ = std::make_unique<MouseController>(hwnd, viewProjectionMatrix, debugViewProjectionMatrix, debugCameraMode);
+    mouseController_ = std::make_unique<MouseController>(hwnd, cameraManager);
 }
 
 void Input::Update()

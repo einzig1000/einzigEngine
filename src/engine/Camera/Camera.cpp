@@ -1,8 +1,8 @@
-#include "Camera/CameraController.h"
+#include "Camera.h"
 #include "Facade/Game.h"
 #include "Window/WindowManager.h"
 
-CameraController::CameraController()
+Camera::Camera()
 {
     mousePositionGap_ = { 0,0 };
     enableControl_ = true;
@@ -22,14 +22,18 @@ CameraController::CameraController()
     Resize();
 }
 
-void CameraController::Update()
+Camera::~Camera()
+{
+}
+
+void Camera::Update()
 {
 #pragma region カメラシェイク
 
     if (shakeActive_)
     {
         shakeTime_++;
-     
+
         if (shakeTime_ >= shakeDuration_)
         {
             shakeActive_ = false;
@@ -169,27 +173,24 @@ void CameraController::Update()
 
 }
 
-void CameraController::Resize()
+void Camera::Resize()
 {
     projectionMatrix_ = Matrix4x4::MakePerspectiveFovMatrix(0.45f, float(WindowManager::winWidth_) / float(WindowManager::winHeight_), 0.1f, 100.0f);
     //viewportMatrix = Matrix4x4::MakeViewPortMatrix(0.0f, 0.0f, float(WindowManager::winWidth_), float(WindowManager::winHeight_), 0.0f, 1.0f);
 }
 
-void CameraController::Draw(bool debugCamera)
+void Camera::Draw()
 {
-    ImGui::Begin("camera");
-    if (debugCamera)ImGui::Text("Mode: Debug");
-    else ImGui::Text("Mode: Release");
+    ImGui::Begin(this->name_.c_str());
     ImGui::DragFloat3("cameraCenter", &center_.x, 0.01f);
     ImGui::DragFloat3("cameraRotate", &transform_.rotate.x, 0.01f);
     ImGui::DragFloat("cameraDistance", &distance_, 0.1f);
     ImGui::Checkbox("enableControl", &enableControl_);
-	//if (debugCamera)ImGui::Checkbox("FixReleaseCamera", &enableControl_);
     ImGui::End();
-	Game::DebugDraw::AddSphere(center_, Vector3{ 0.2f,0.2f,0.2f }, 0xFFFF00FF);
+    Game::DebugDraw::AddSphere(center_, Vector3{ 0.2f,0.2f,0.2f }, 0xFFFF00FF);
 }
 
-void CameraController::CreateFrustumPlanes()
+void Camera::CreateFrustumPlanes()
 {
     // Left Plane
     frustumPlanes_[0].normal.x = viewProjectionMatrix.m[0][3] + viewProjectionMatrix.m[0][0];
@@ -233,7 +234,7 @@ void CameraController::CreateFrustumPlanes()
     }
 }
 
-bool CameraController::InFrustum(const AABB& aabb)
+bool Camera::InFrustum(const AABB& aabb)
 {
     // AABBの8つの頂点をワールド空間に変換
     Vector3 points[8];
@@ -271,7 +272,7 @@ bool CameraController::InFrustum(const AABB& aabb)
 }
 
 // 実際に動かす
-void CameraController::MovingCenter()
+void Camera::MovingCenter()
 {
     if (easeCenter_.maxFrame == 0)
     {
@@ -290,7 +291,7 @@ void CameraController::MovingCenter()
     }
 }
 
-void CameraController::MovingRotate()
+void Camera::MovingRotate()
 {
     if (easeRotate_.maxFrame == 0)
     {
@@ -310,7 +311,7 @@ void CameraController::MovingRotate()
     }
 }
 
-void CameraController::MovingDistance()
+void Camera::MovingDistance()
 {
     if (easeDistance_.maxFrame == 0)
     {
@@ -330,7 +331,7 @@ void CameraController::MovingDistance()
 }
 
 // 動かす先の設定
-void CameraController::SetCenterTarget(Vector3 target, int spendFrame, EaseType easetype)
+void Camera::SetCenterTarget(Vector3 target, int spendFrame, EaseType easetype)
 {
     easeCenter_.start = center_;
     easeCenter_.end = target;
@@ -340,7 +341,7 @@ void CameraController::SetCenterTarget(Vector3 target, int spendFrame, EaseType 
     easeCenter_.easetype = easetype;
 };
 
-void CameraController::SetRotateTarget(Vector3 target, int spendFrame, EaseType easetype)
+void Camera::SetRotateTarget(Vector3 target, int spendFrame, EaseType easetype)
 {
     easeRotate_.start = transform_.rotate;
     easeRotate_.end = target;
@@ -350,7 +351,7 @@ void CameraController::SetRotateTarget(Vector3 target, int spendFrame, EaseType 
     easeRotate_.easetype = easetype;
 };
 
-void CameraController::SetDistanceTarget(float target, int spendFrame, EaseType easetype)
+void Camera::SetDistanceTarget(float target, int spendFrame, EaseType easetype)
 {
     easeDistance_.start.x = distance_;
     easeDistance_.end.x = target;
@@ -361,7 +362,7 @@ void CameraController::SetDistanceTarget(float target, int spendFrame, EaseType 
 }
 
 // シェイク
-void CameraController::StartShake(float intensity, float duration, float frequency)
+void Camera::StartShake(float intensity, float duration, float frequency)
 {
     shakeActive_ = true;
     shakeIntensity_ = intensity;
@@ -370,17 +371,17 @@ void CameraController::StartShake(float intensity, float duration, float frequen
     shakeTime_ = 0.0f;
 }
 
-bool CameraController::IsShaking() const
+bool Camera::IsShaking() const
 {
-	return shakeActive_;
+    return shakeActive_;
 }
 
-void CameraController::StopShake()
+void Camera::StopShake()
 {
-	shakeActive_ = false;
+    shakeActive_ = false;
 }
 
-Vector3 CameraController::GetShakeOffset() const
+Vector3 Camera::GetShakeOffset() const
 {
     if (!shakeActive_) return Vector3(0.0f, 0.0f, 0.0f);
 

@@ -4,10 +4,12 @@
 #include "input/MouseController.h"
 #include <memory>
 
+class CameraManager;
+
 class Input
 {
 public:
-    Input(HWND hwnd, Matrix4x4* viewProjectionMatrix, Matrix4x4* debugViewProjectionMatrix, bool* debugCameraMode);
+    Input(HWND hwnd, CameraManager* cameraManager);
     void Update();
     void EndFrame();
 

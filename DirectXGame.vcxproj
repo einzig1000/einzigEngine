@@ -150,6 +150,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\engine\Camera\Camera.cpp" />
+    <ClCompile Include="src\engine\Camera\CameraManager.cpp" />
     <ClCompile Include="src\engine\FixFPS\FixFPS.cpp" />
     <ClCompile Include="src\application\Phase\BattlePhase\BattlePhase.cpp" />
     <ClCompile Include="externals\imgui\imgui.cpp">
@@ -249,6 +251,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="src\engine\DrawSystem\RenderData\RenderData.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\engine\Camera\Camera.h" />
+    <ClInclude Include="src\engine\Camera\CameraManager.h" />
     <ClInclude Include="src\engine\FixFPS\FixFPS.h" />
     <ClInclude Include="src\application\Phase\BattlePhase\BattlePhase.h" />
     <ClInclude Include="externals\imgui\imconfig.h" />

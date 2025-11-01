@@ -8,7 +8,7 @@
 
 #include "Window/WindowManager.h"
 #include "DirectX/DirectXManager.h"
-#include "Camera/CameraController.h"
+#include "Camera/CameraManager.h"
 #include "DrawSystem/DrawSystem.h"
 
 class Engine
@@ -82,12 +82,10 @@ public:
 	//PadState GetPrePadState();
 
 	// カメラ
+	Vector3 GetCameraTranslate() const;
 	void MoveCameraCenter(Vector3 target, int spendFrame, EaseType easetype);
 	void MoveCameraRotate(Vector3 target, int spendFrame, EaseType easetype);
 	void MoveCameraDistance(float target, int spendFrame, EaseType easetype);
-	void SetControlModeCamera(bool mode);
-	CameraController* GetCamera();
-	CameraController* GetDebugCamera();
 	void StartCameraShake(float intensity, float duration, float frequency = 25.0f);
 	bool IsCameraShaking();
 	void StopCameraShake();
@@ -96,8 +94,6 @@ public:
 
 	// フルスクリーン切り替え
 	void ToggleFullscreen();
-	// カメラモード切り替え
-	void ToggleCameraMode();
 
 	// AABBの作成
 	std::vector<AABB>  CreateAABB(const Transforms& transforms, uint32_t objectNumber);
@@ -123,9 +119,10 @@ private:
 	// 入力関連
 	Input* inputManager_ = nullptr;
 	// カメラ
-	CameraController* cameraController = nullptr;
-	CameraController* debugCameraController = nullptr;
-	bool debugCamera = false;
+	CameraManager* cameraManager = nullptr;
+	//CameraController* cameraController = nullptr;
+	//CameraController* debugCameraController = nullptr;
+	//bool debugCamera = false;
 
 
 };
