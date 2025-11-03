@@ -106,24 +106,65 @@ Vector2 Game::Input::Mouse::GetMousePosition()
 	return Engine::Instance().GetMousePosition();
 }
 
+Vector3 Game::Input::Mouse::GetMouseWorldPosition()
+{
+	return Engine::Instance().GetMouseWorldPosition();
+}
+
 Ray Game::Input::Mouse::GetMouseRay()
 {
 	return Engine::Instance().GetMouseRay();
 }
 
-bool Game::Input::Mouse::GetMousePress(int i)
+bool Game::Input::Mouse::IsHeld(int i)
 {
-	return Engine::Instance().GetMousePress(i);
+	return Engine::Instance().IsMouseHeld(i);
 }
 
-bool Game::Input::Mouse::GetMousePrePress(int i)
+bool Game::Input::Mouse::IsJustPressed(int i)
 {
-	return Engine::Instance().GetMousePrePress(i);
+	return Engine::Instance().IsMouseJustPressed(i);
+}
+
+bool Game::Input::Mouse::IsJustReleased(int i)
+{
+	return Engine::Instance().IsMouseJustReleased(i);
+}
+
+uint32_t Game::Input::Mouse::HoldFrames(int i)
+{
+	return Engine::Instance().MouseHoldFrames(i);
 }
 
 uint32_t Game::Input::Mouse::GetMouseWheel()
 {
 	return Engine::Instance().GetMouseWheel();
+}
+
+
+bool Game::Input::Key::IsHeld(BYTE key)
+{
+	return Engine::Instance().IsKeyHeld(key);
+}
+
+bool Game::Input::Key::IsJustPressed(BYTE key)
+{
+	return Engine::Instance().IsKeyJustPressed(key);
+}
+
+bool Game::Input::Key::IsJustReleased(BYTE key)
+{
+	return Engine::Instance().IsKeyJustReleased(key);
+}
+
+uint32_t Game::Input::Key::HoldFrames(BYTE key)
+{
+	return Engine::Instance().KeyHoldFrames(key);
+}
+
+int Game::Input::Key::TestTapLong(int n, BYTE key)
+{
+	return Engine::Instance().TestTapLong(n, key);
 }
 
 

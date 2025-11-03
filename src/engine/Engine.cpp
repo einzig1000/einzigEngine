@@ -124,7 +124,7 @@ void Engine::UpdateCamera()
 	cameraManager->Update();
 
 	//// 左シフト＋左クリックでカメラターゲットをオブジェクトに合わせる
-	//if (GetHitKey::IsPressedNow(DIK_LSHIFT))
+	//if (Game::Input::Key::IsPressedNow(DIK_LSHIFT))
 	//{
 	//	if (Game::Input::Mouse::GetMousePress(0) && !GetMousePrePress(0))
 	//	{
@@ -140,15 +140,15 @@ void Engine::UpdateCamera()
 }
 void Engine::UpdateDebugInfo()
 {
-	if (GetHitKey::IsPressedDown(DIK_F1))
+	if (Game::Input::Key::IsJustPressed(DIK_F1))
 	{
 		isDebugInfo = !isDebugInfo;
 	}
-	if (GetHitKey::IsPressedDown(DIK_F3))
+	if (Game::Input::Key::IsJustPressed(DIK_F3))
 	{
 		ToggleCameraMode();
 	}
-	if (GetHitKey::IsPressedDown(DIK_F12))
+	if (Game::Input::Key::IsJustPressed(DIK_F12))
 	{
 		ToggleFullscreen();
 	}
@@ -407,6 +407,11 @@ Vector2 Engine::GetMousePosition()
 	return inputManager_->GetMouseController()->GetMousePosition();
 }
 
+Vector3 Engine::GetMouseWorldPosition()
+{
+	return inputManager_->GetMouseController()->GetMouseWorldPosition();
+}
+
 Ray Engine::GetMouseRay()
 {
 	return inputManager_->GetMouseController()->GetMouseRay();
@@ -417,14 +422,50 @@ uint32_t Engine::GetMouseWheel()
 	return inputManager_->GetMouseController()->wheelDelta;
 }
 
-bool Engine::GetMousePress(int i)
+bool Engine::IsMouseHeld(int i)
 {
-	return inputManager_->GetMouseController()->GetMousePress(i);
+	return inputManager_->GetMouseController()->IsHeld(i);
 }
 
-bool Engine::GetMousePrePress(int i)
+bool Engine::IsMouseJustPressed(int i)
 {
-	return inputManager_->GetMouseController()->GetMousePrePress(i);
+	return inputManager_->GetMouseController()->IsJustPressed(i);
+}
+
+bool Engine::IsMouseJustReleased(int i)
+{
+	return inputManager_->GetMouseController()->IsJustReleased(i);
+}
+
+uint32_t Engine::MouseHoldFrames(int i)
+{
+	return inputManager_->GetMouseController()->HoldFrames(i);
+}
+
+
+bool Engine::IsKeyHeld(BYTE key)
+{
+	return inputManager_->GetGetHitKey()->IsHeld(key);
+}
+
+bool Engine::IsKeyJustPressed(BYTE key)
+{
+	return inputManager_->GetGetHitKey()->IsJustPressed(key);
+}
+
+bool Engine::IsKeyJustReleased(BYTE key)
+{
+	return inputManager_->GetGetHitKey()->IsJustReleased(key);
+}
+
+uint32_t Engine::KeyHoldFrames(BYTE key)
+{
+	return inputManager_->GetGetHitKey()->HoldFrames(key);
+}
+
+int Engine::TestTapLong(int n, BYTE key)
+{
+	return inputManager_->GetGetHitKey()->TestTapLong(n, key);
 }
 
 // カメラ

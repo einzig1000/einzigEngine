@@ -68,14 +68,20 @@ public:
 
 	// マウス
 	Vector2 GetMousePosition();
+	Vector3 GetMouseWorldPosition();
 	uint32_t GetMouseWheel();
 	Ray GetMouseRay();
-	bool GetMousePress(int i);
-	bool GetMousePrePress(int i);
+	bool IsMouseHeld(int i);// 今押しているか
+	bool IsMouseJustPressed(int i);// 押した瞬間（今フレームで押された）
+	bool IsMouseJustReleased(int i);// 離した瞬間（今フレームで離れた）
+	uint32_t MouseHoldFrames(int i);// 押されてからの経過フレーム数
 
-	/// キーボード
-	//bool GetKeyboardPress(int key);
-	//bool GetKeyboardPrePress(int key);
+	// キーボード
+	bool IsKeyHeld(BYTE key);// 今押しているか
+	bool IsKeyJustPressed(BYTE key);// 押した瞬間（今フレームで押された）
+	bool IsKeyJustReleased(BYTE key);// 離した瞬間（今フレームで離れた）
+	uint32_t KeyHoldFrames(BYTE key);// 押されてからの経過フレーム数
+	int TestTapLong(int n, BYTE key);// 0: なし  1:単押し  2:長押し(n = 長押し判定)
 
 	/// ゲームパッド
 	//PadState GetPadState();

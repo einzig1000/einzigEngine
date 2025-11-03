@@ -438,10 +438,6 @@ void RenderData_Model::DrawImGui()
 			}
 		}
 
-		//ImGui::Text("model : %d", model);
-
-		//ImGui::InputFloat((num + "model").c_str(), reinterpret_cast<int*>(&model));
-		//ImGui::InputInt((num + "texture").c_str(), reinterpret_cast<int*>(&texture));
 		ImGui::TreePop();
 	}
 	if (ImGui::TreeNode("----------color----------------"))
@@ -466,6 +462,26 @@ void RenderData_Model::DrawImGui()
 		ImGui::Text("isCollisionMouse : %d", isCollisionMouseRay);
 		ImGui::TreePop();
 	}
+	//if (ImGui::TreeNode("----------load & save----------"))
+	//{
+	//	char buf[256];
+	//	if (this->filePath.size() < sizeof(buf)) memcpy(buf, this->filePath.c_str(), this->filePath.size() + 1);
+	//	else buf[sizeof(buf) - 1] = '\0';
+	//	if (ImGui::InputText(".json", buf, sizeof(buf)))
+	//	{
+	//		this->filePath = std::string(buf);
+	//	}
+	//	if (ImGui::Button("save"))
+	//	{
+	//		JsonManager::SaveToJson(*this, this->filePath);
+	//	}
+	//	ImGui::SameLine();
+	//	if (ImGui::Button("load"))
+	//	{
+	//		JsonManager::LoadFromJson(*this, this->filePath);
+	//	}
+	//	ImGui::TreePop();
+	//}
 
 	ImGui::End();
 }

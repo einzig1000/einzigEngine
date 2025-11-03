@@ -34,7 +34,7 @@
   "filePath": "resources/Prototypes/particle/aaa",
   "isBillboard": true,
   "liveMax": 300,
-  "model": 1,
+  "model": 0,
   "particlesPerEmission": 1,
   "rotate": {
     "acceleration": [

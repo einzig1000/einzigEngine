@@ -671,15 +671,15 @@ struct KeyState
 {
     bool curr = false;           // 今フレームの押下状態
     bool prev = false;           // 前フレームの押下状態
-    uint32_t holdFrames = 0;     // curr==true のときの連続押下フレーム数（1..）, curr==false のときは 0
-    uint32_t lastHoldOnRelease = 0; // 直近のリリース時に押されていたフレーム数（release イベント時に更新）
+    uint32_t holdFrames = 0;     // 長押しフレーム数
+    uint32_t lastHoldOnRelease = 0; // 直近のリリース時に押されていたフレーム数
 };
 
 struct mouseButtenState
 {
-    bool leftButton = false;
-    bool rightButton = false;
-    bool middleButton = false;
+    bool curr = false;           // 今フレームの押下状態
+    bool prev = false;           // 前フレームの押下状態
+    uint32_t holdFrames = 0;     // 長押しフレーム数
 };
 
 #pragma endregion

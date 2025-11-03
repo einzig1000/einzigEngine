@@ -47,23 +47,24 @@ void Camera::Update()
 
     if (enableControl_)
     {
-        // 左クリック
-        prePressMouse0_ = pressMouse0_;
-        pressMouse0_ = Game::Input::Mouse::GetMousePress(0);
-        // ミドルボタン
-        prePressMouse2_ = pressMouse2_;
-        pressMouse2_ = Game::Input::Mouse::GetMousePress(2);
+        //// 左クリック
+        //prePressMouse0_ = pressMouse0_;
+        //pressMouse0_ = Game::Input::Mouse::GetMousePress(0);
+        //// ミドルボタン
+        //prePressMouse2_ = pressMouse2_;
+        //pressMouse2_ = Game::Input::Mouse::GetMousePress(2);
 
         mouseWheel_ = Game::Input::Mouse::GetMouseWheel();
 
 #pragma region カメラ回転
+
         // クリックした瞬間
-        if (pressMouse2_ && prePressMouse2_ == 0 && !GetHitKey::IsPressedNow(DIK_LSHIFT))
+        if (Game::Input::Mouse::IsJustPressed(2) && !Game::Input::Key::IsHeld(DIK_LSHIFT))
         {
             preMousePosition_ = Game::Input::Mouse::GetMousePosition();
         }
         // クリックしている最中
-        if (pressMouse2_ && !GetHitKey::IsPressedNow(DIK_LSHIFT))
+        if (Game::Input::Mouse::IsHeld(2) && !Game::Input::Key::IsHeld(DIK_LSHIFT))
         {
             mousePosition_ = Game::Input::Mouse::GetMousePosition();
             mousePositionGap_.x = mousePosition_.x - preMousePosition_.x;
@@ -72,37 +73,51 @@ void Camera::Update()
             transform_.rotate.y = (mousePositionGap_.x / 100.0f) + (preRotate_.y);
         }
         // クリックやめた瞬間
-        if (prePressMouse2_ && pressMouse2_ == 0 && !GetHitKey::IsPressedNow(DIK_LSHIFT))
+        if (Game::Input::Mouse::IsJustReleased(2) && !Game::Input::Key::IsHeld(DIK_LSHIFT))
         {
             preRotate_ = transform_.rotate;
         }
 
 #pragma endregion
 
-#pragma region カメラ回転
+#pragma region 回転中心
+
         // クリックした瞬間
-        if (pressMouse2_ && prePressMouse2_ == 0 && !GetHitKey::IsPressedNow(DIK_LSHIFT))
+        if (Game::Input::Mouse::IsJustPressed(2) && Game::Input::Key::IsHeld(DIK_LSHIFT))
         {
             preMousePosition_ = Game::Input::Mouse::GetMousePosition();
+            preCenter_ = center_;
         }
         // クリックしている最中
-        if (pressMouse2_ && !GetHitKey::IsPressedNow(DIK_LSHIFT))
+        if (Game::Input::Mouse::IsHeld(2) && Game::Input::Key::IsHeld(DIK_LSHIFT))
         {
             mousePosition_ = Game::Input::Mouse::GetMousePosition();
             mousePositionGap_.x = mousePosition_.x - preMousePosition_.x;
             mousePositionGap_.y = mousePosition_.y - preMousePosition_.y;
-            transform_.rotate.x = (mousePositionGap_.y / 100.0f) + (preRotate_.x);
-            transform_.rotate.y = (mousePositionGap_.x / 100.0f) + (preRotate_.y);
-        }
-        // クリックやめた瞬間
-        if (prePressMouse2_ && pressMouse2_ == 0 && !GetHitKey::IsPressedNow(DIK_LSHIFT))
-        {
-            preRotate_ = transform_.rotate;
-        }
+            // カメラの右方向と上方向を取得
+            Matrix4x4 cameraRotateMatrix = Matrix4x4::MakeAffineMatrix(
+                { 1,1,1 },
+                transform_.rotate,
+                { 0,0,0 }
+            );
+            Vector3 cameraRight = {
+                cameraRotateMatrix.m[0][0],
+                cameraRotateMatrix.m[1][0],
+                cameraRotateMatrix.m[2][0]
+            };
+            Vector3 cameraUp = {
+                cameraRotateMatrix.m[0][1],
+                cameraRotateMatrix.m[1][1],
+                cameraRotateMatrix.m[2][1]
+            };
+            center_ = preCenter_ - (cameraRight * (mousePositionGap_.x / 100.0f)) + (cameraUp * (mousePositionGap_.y / 100.0f));
+		}
 
 #pragma endregion
+
 
 #pragma region カメラ距離
+
         if (mouseWheel_ > 0)
         {
             distance_ -= float(mouseWheel_) / 100;

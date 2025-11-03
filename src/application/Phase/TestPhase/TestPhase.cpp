@@ -16,16 +16,18 @@ TestPhase::TestPhase()
 	audio2 = Game::Resource::LoadAudio("resources/Prototypes/audio/SE/バトル用/氷魔法1.mp3");
 
 
-	model1_.model = tex1;
-	model1_.texture = model1;
+	model1_.model = model3;
+	model1_.texture = tex1;
 	model1_.name = "player";
 
-	model2_.model = tex2;
-	model2_.texture = model2;
+	model2_.model = model3;
+	model2_.texture = tex1;
 	model2_.name = "enemy";
 
 	sprite1_.texture = tex1;
+	sprite1_.transforms.scale = { 0.1f,0.1f };
 	sprite2_.texture = tex3;
+	sprite2_.transforms.scale = { 0.1f,0.1f };
 
 	triangle1_.texture = tex1;
 	triangle2_.texture = tex1;
@@ -63,32 +65,30 @@ void TestPhase::Update()
 {
 	ImGui::Begin("TestPhase");
 
-	if (ImGui::BeginTabBar("Facade Test", ImGuiTabBarFlags_::ImGuiTabBarFlags_Reorderable)) 
+	if (ImGui::BeginTabBar("Facade Test", ImGuiTabBarFlags_::ImGuiTabBarFlags_Reorderable))
 	{
 #pragma region audio test
 
-		if (GetHitKey::IsPressedDown(DIK_1))
+		if (ImGui::BeginTabItem("Audio Test"))
 		{
-			Game::Audio::PlayAudio(audio1, true);
-			if (GetHitKey::IsPressedNow(DIK_LSHIFT))
+			if (ImGui::Button("Play Audio1"))
+			{
+				Game::Audio::PlayAudio(audio1, true);
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Stop Audio1"))
 			{
 				Game::Audio::StopAudio(audio1);
 			}
-		}
-		if (GetHitKey::IsPressedDown(DIK_2))
-		{
-			Game::Audio::PlayAudio(audio2, false);
-			if (GetHitKey::IsPressedNow(DIK_LSHIFT))
+			if (ImGui::Button("Play Audio2"))
+			{
+				Game::Audio::PlayAudio(audio2, false);
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Stop Audio2"))
 			{
 				Game::Audio::StopAudio(audio2);
 			}
-		}
-
-
-		if (ImGui::BeginTabItem("Audio Test"))
-		{
-			ImGui::Text("Press 1 : play audio1 (hold LSHIFT to stop)");
-			ImGui::Text("Press 2 : play audio2 (hold LSHIFT to stop)");
 			float volume1 = Game::Audio::GetVolume(audio1);
 			ImGui::SliderFloat("audio1 volume", &volume1, 0.0f, 1.0f);
 			ImGui::Text("audio1 is playing : %d", Game::Audio::IsAudioPlaying(audio1));
@@ -137,7 +137,7 @@ void TestPhase::Update()
 		if (ImGui::BeginTabItem("Camera Test"))
 		{
 			static Vector3 cameraCenterTarget;
-			static int cameraCenterFrame = 0;
+			static int cameraCenterFrame = 120;
 			ImGui::DragFloat3("camera center", &cameraCenterTarget.x, 0.1f);
 			ImGui::DragInt("camera center frame", &cameraCenterFrame, 1, 0, 600);
 			if (ImGui::Button("Set Camera Center"))
@@ -146,7 +146,7 @@ void TestPhase::Update()
 			}
 
 			static Vector3 cameraRotateTarget;
-			static int cameraRotateFrame = 0;
+			static int cameraRotateFrame = 120;
 			ImGui::DragFloat3("camera rotate", &cameraRotateTarget.x, 0.1f);
 			ImGui::DragInt("camera rotate frame", &cameraRotateFrame, 1, 0, 600);
 			if (ImGui::Button("Set Camera Rotate"))
@@ -155,7 +155,7 @@ void TestPhase::Update()
 			}
 
 			static float cameraDistanceTarget = 0.0f;
-			static int cameraDistanceFrame = 0;
+			static int cameraDistanceFrame = 120;
 			ImGui::DragFloat("camera distance", &cameraDistanceTarget, 0.1f);
 			ImGui::DragInt("camera distance frame", &cameraDistanceFrame, 1, 0, 600);
 			if (ImGui::Button("Set Camera Distance"))
@@ -163,9 +163,9 @@ void TestPhase::Update()
 				Game::Camera::MoveCameraDistance(cameraDistanceTarget, cameraDistanceFrame, EaseType::IN_CUBIC);
 			}
 
-			static float intensity;
-			static float duration;
-			static float frequency;
+			static float intensity = 3.0f;
+			static float duration = 35.0f;
+			static float frequency = 25.0f;
 			ImGui::DragFloat("camera shake intensity", &intensity, 0.1f);
 			ImGui::DragFloat("camera shake duration", &duration, 0.1f);
 			ImGui::DragFloat("camera shake frequency", &frequency, 0.1f);
@@ -184,10 +184,97 @@ void TestPhase::Update()
 
 #pragma endregion
 
+#pragma region mouse test
+
+		if (ImGui::BeginTabItem("mouse Test"))
+		{
+			ImGui::Text("Mouse Position: (%.1f, %.1f)", Game::Input::Mouse::GetMousePosition().x, Game::Input::Mouse::GetMousePosition().y);
+			ImGui::Text("Mouse World Position: (%.1f, %.1f, %.1f)", Game::Input::Mouse::GetMouseWorldPosition().x, Game::Input::Mouse::GetMouseWorldPosition().y, Game::Input::Mouse::GetMouseWorldPosition().z);
+			ImGui::Text("Mouse Ray Origin: (%.1f, %.1f, %.1f)", Game::Input::Mouse::GetMouseRay().origin.x, Game::Input::Mouse::GetMouseRay().origin.y, Game::Input::Mouse::GetMouseRay().origin.z);
+			ImGui::Text("Mouse Ray Diff  : (%.1f, %.1f, %.1f)", Game::Input::Mouse::GetMouseRay().diff.x, Game::Input::Mouse::GetMouseRay().diff.y, Game::Input::Mouse::GetMouseRay().diff.z);
+			ImGui::Text("Mouse Wheel: %d", Game::Input::Mouse::GetMouseWheel());
+
+			ImGui::Text("Mouse Buttons:");
+			ImGui::Text("Left Button - %d-%d-%d : %d",
+				Game::Input::Mouse::IsJustPressed(0),
+				Game::Input::Mouse::IsHeld(0),
+				Game::Input::Mouse::IsJustReleased(0),
+				Game::Input::Mouse::HoldFrames(0));
+			ImGui::Text("Right Button - %d-%d-%d : %d",
+				Game::Input::Mouse::IsJustPressed(1),
+				Game::Input::Mouse::IsHeld(1),
+				Game::Input::Mouse::IsJustReleased(1),
+				Game::Input::Mouse::HoldFrames(1));
+			ImGui::Text("Middle Button - %d-%d-%d : %d",
+				Game::Input::Mouse::IsJustPressed(2),
+				Game::Input::Mouse::IsHeld(2),
+				Game::Input::Mouse::IsJustReleased(2),
+				Game::Input::Mouse::HoldFrames(2));
+
+			ImGui::EndTabItem();
+		}
+
+#pragma endregion
+
+#pragma region keyboard test
+
+		if (ImGui::BeginTabItem("keyboard Test"))
+		{
+			struct KeyInfo {
+				const char* name;
+				int dik;
+			};
+
+			static const KeyInfo kKeys[] = {
+				{"A", DIK_A}, {"B", DIK_B}, {"C", DIK_C}, {"D", DIK_D},
+				{"E", DIK_E}, {"F", DIK_F}, {"G", DIK_G}, {"H", DIK_H},
+				{"I", DIK_I}, {"J", DIK_J}, {"K", DIK_K}, {"L", DIK_L},
+				{"M", DIK_M}, {"N", DIK_N}, {"O", DIK_O}, {"P", DIK_P},
+				{"Q", DIK_Q}, {"R", DIK_R}, {"S", DIK_S}, {"T", DIK_T},
+				{"U", DIK_U}, {"V", DIK_V}, {"W", DIK_W}, {"X", DIK_X},
+				{"Y", DIK_Y}, {"Z", DIK_Z},
+
+				{"Space", DIK_SPACE},
+
+				{"F1", DIK_F1}, {"F2", DIK_F2}, {"F3", DIK_F3}, {"F4", DIK_F4},
+				{"F5", DIK_F5}, {"F6", DIK_F6}, {"F7", DIK_F7}, {"F8", DIK_F8},
+				{"F9", DIK_F9}, {"F10", DIK_F10}, {"F11", DIK_F11}, {"F12", DIK_F12},
+
+				{"Enter", DIK_RETURN}, {"Escape", DIK_ESCAPE},
+
+				{"Up", DIK_UP}, {"Down", DIK_DOWN}, {"Left", DIK_LEFT}, {"Right", DIK_RIGHT},
+
+				{"LShift", DIK_LSHIFT}, {"RShift", DIK_RSHIFT},
+
+				{"0", DIK_0}, {"1", DIK_1}, {"2", DIK_2}, {"3", DIK_3}, {"4", DIK_4},
+				{"5", DIK_5}, {"6", DIK_6}, {"7", DIK_7}, {"8", DIK_8}, {"9", DIK_9}
+			};
+
+			for (const auto& k : kKeys) {
+				if (Game::Input::Key::IsHeld(k.dik) ||
+					Game::Input::Key::IsJustPressed(k.dik) ||
+					Game::Input::Key::IsJustReleased(k.dik))
+				{
+					ImGui::Text("%s : %d:%d:%d _ %d",
+						k.name,
+						Game::Input::Key::IsJustPressed(k.dik),
+						Game::Input::Key::IsHeld(k.dik),
+						Game::Input::Key::IsJustReleased(k.dik),
+						Game::Input::Key::HoldFrames(k.dik)
+					);
+				}
+			}
+			ImGui::EndTabItem();
+		}
+
+#pragma endregion
+
 		ImGui::EndTabBar();
 	}
 
 	ImGui::End();
+
+	model1_.LookAtOnce(Game::Input::Mouse::GetMouseWorldPosition());
 }
 
 
@@ -200,10 +287,10 @@ void TestPhase::Draw()
 	model2_.DrawAABB();
 	model2_.DrawImGui();
 
-	//sprite1_.Draw();
-	//sprite1_.DrawImGui();
-	//sprite2_.Draw();
-	//sprite2_.DrawImGui();
+	sprite1_.Draw();
+	sprite1_.DrawImGui();
+	sprite2_.Draw();
+	sprite2_.DrawImGui();
 
 	triangle1_.Draw();
 	triangle1_.DrawImGui();

@@ -1,8 +1,6 @@
 #include "input/GetHitKey.h"
 #include <cassert>
 
-KeyState GetHitKey::keys_[256];
-
 GetHitKey::GetHitKey(HWND hwnd)
 {
     Microsoft::WRL::ComPtr<IDirectInput8> directInput;
@@ -32,8 +30,7 @@ GetHitKey::GetHitKey(HWND hwnd)
 }
 
 void GetHitKey::Update()
-{    // 前フレーム状態を prev に移すのは各 KeyState 内で処理する
-    // Acquire/GetDeviceState は可能な限り行う（失敗時は復帰を試みる）
+{
     if (keyboard_)
     {
         keyboard_->Acquire();
@@ -90,27 +87,20 @@ void GetHitKey::Update()
             }
         }
     }
-
-
-
-
-    //memcpy(preKeys, keys, 256);
-    //keyboard_->Acquire();
-    //keyboard_->GetDeviceState(sizeof(keys), keys);
 }
 
-bool GetHitKey::IsPressedNow(BYTE key)
+bool GetHitKey::IsHeld(BYTE key)
 {
     return keys_[key].curr;
 }
 
-bool GetHitKey::IsPressedDown(BYTE key)
+bool GetHitKey::IsJustPressed(BYTE key)
 {
     const KeyState& ks = keys_[key];
     return (!ks.prev && ks.curr);
 }
 
-bool GetHitKey::IsReleased(BYTE key)
+bool GetHitKey::IsJustReleased(BYTE key)
 {
     const KeyState& ks = keys_[key];
     return (ks.prev && !ks.curr);

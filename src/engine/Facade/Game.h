@@ -67,17 +67,24 @@ public:
 		public:
 			// マウス
 			static Vector2 GetMousePosition();
+			static Vector3 GetMouseWorldPosition();
 			static Ray GetMouseRay();
 			// 0 = 左クリック  1 = 右クリック  2 = ミドルボタン
-			static bool GetMousePress(int i);
-			// 0 = 左クリック  1 = 右クリック  2 = ミドルボタン
-			static bool GetMousePrePress(int i);
+			static bool IsHeld(int i);// 今押しているか
+			static bool IsJustPressed(int i);// 押した瞬間
+			static bool IsJustReleased(int i);// 離した瞬間
+			static uint32_t HoldFrames(int i);// 押されてからの経過フレーム数
 			static uint32_t GetMouseWheel();
 		};
 
 		class Key
 		{
-
+		public:
+			static bool IsHeld(BYTE key);// 今押しているか
+			static bool IsJustPressed(BYTE key);// 押した瞬間
+			static bool IsJustReleased(BYTE key);// 離した瞬間
+			static uint32_t HoldFrames(BYTE key);// 押されてからの経過フレーム数
+			static int TestTapLong(int n, BYTE key);// 0: なし  1:単押し  2:長押し(n = 長押し判定)
 		};
 
 		class Pad
