@@ -16,6 +16,7 @@ RenderData_Model::RenderData_Model()
 {
 	renderModels.push_back(this);
 	this->ID = int(renderModels.size());
+	parentMatrix = nullptr;
 }
 
 RenderData_Model::~RenderData_Model()
@@ -29,132 +30,36 @@ RenderData_Model::~RenderData_Model()
 
 void RenderData_Model::Update()
 {
-#pragma region 前フレーム情報保存
-
-	this->preScale = this->scale;
-	this->preRotate = this->rotate;
-	this->preTranslate = this->translate;
-	this->preAABB = this->aabbs;
-
-#pragma endregion
 
 #pragma region 座標更新
 
-	// 座標更新
-	this->velocity -= this->gravity;
-	this->velocity += this->acceleration;
-	this->transforms.translate += this->velocity;
+	// S/R/Tの更新
+	this->translate.velocity += this->translate.acceleration;
+	this->translate.value += this->translate.velocity;
+	this->rotate.velocity += this->rotate.acceleration;
+	this->rotate.value += this->rotate.velocity;
+	this->scale.velocity += this->scale.acceleration;
+	this->scale.value += this->scale.velocity;
+
+	this->movedThisFrame = false;
+	if (this->translate.value != this->preTranslate.value ||
+		this->rotate.value != this->preRotate.value ||
+		this->scale.value != this->preScale.value ||
+		!this->initialized)
+	{
+		this->movedThisFrame = true;
+	}
+
+	if (this->movedThisFrame)
+	{
+		UpdateWorldMatrix();
+	}
+
+	// ワールド座標取得
+	this->worldPos = Transform(Vector3{ 0.0f, 0.0f, 0.0f }, GetWorldMatrix());
 
 	// 今フレームの移動量
-	this->lastMove = this->transforms.translate - this->preTransforms.translate;
-
-	auto changed = [](float a, float b) { return ((a - b) > eps) || ((a - b) < eps); };
-	constexpr float epsT = 1e-6f;
-	constexpr float epsR = 1e-6f;
-	constexpr float epsS = 1e-6f;
-
-	// S/R/Tに変化があったか
-	this->movedThisFrame =
-		changed(this->lastMove.x, 0.0f) ||
-		changed(this->lastMove.y, 0.0f) ||
-		changed(this->lastMove.z, 0.0f) ||
-		changed(this->transforms.rotate.x, this->preTransforms.rotate.x) ||
-		changed(this->transforms.rotate.y, this->preTransforms.rotate.y) ||
-		changed(this->transforms.rotate.z, this->preTransforms.rotate.z) ||
-		changed(this->transforms.scale.x, this->preTransforms.scale.x) ||
-		changed(this->transforms.scale.y, this->preTransforms.scale.y) ||
-		changed(this->transforms.scale.z, this->preTransforms.scale.z);
-
-
-	//if (this->movedThisFrame)
-	{
-		// 移動マトリックス作成
-		XMVECTOR scaleVec = XMVectorSet(this->transforms.scale.x, this->transforms.scale.y, this->transforms.scale.z, 0.0f);
-		XMVECTOR pivotVec = XMVectorSet(this->pivot.x, this->pivot.y, this->pivot.z, 0.0f);
-		XMVECTOR translateVec = XMVectorSet(this->transforms.translate.x, this->transforms.translate.y, this->transforms.translate.z, 0.0f);
-		XMVECTOR rotEuler = XMVectorSet(this->transforms.rotate.x, this->transforms.rotate.y, this->transforms.rotate.z, 0.0f);
-
-
-		// 1) スケール
-		XMMATRIX S = XMMatrixScalingFromVector(scaleVec);
-
-
-		// 2) ピボットオフセット（負）
-		XMMATRIX Tneg = XMMatrixTranslationFromVector(XMVectorNegate(pivotVec));
-
-
-		// 3) 回転（オイラー→クォータニオン→行列）
-		XMVECTOR quatEuler = XMQuaternionRotationRollPitchYawFromVector(rotEuler);
-		XMMATRIX R = XMMatrixRotationQuaternion(quatEuler);
-
-
-		// 4) ピボットオフセット（正）
-		XMMATRIX Tpos = XMMatrixTranslationFromVector(pivotVec);
-
-
-		// 5) 平行移動
-		XMMATRIX T = XMMatrixTranslationFromVector(translateVec);
-
-
-		// 6) 合成: S → Tneg → R → Tpos → T
-		XMMATRIX world = S * Tneg * R * Tpos * T;
-
-
-		// 7) 親行列の適用
-		if (this->transforms.parentWorld)
-		{
-			// parentWorld が Matrix4x4 ならまず XMFLOAT4X4 にコピー
-			XMFLOAT4X4 parentF4;
-			// 4×4 のメモリ配列を直接コピー
-			std::memcpy(&parentF4, this->transforms.parentWorld, sizeof(parentF4));
-			XMMATRIX parentM = XMLoadFloat4x4(&parentF4);
-			world = parentM * world;
-		}
-
-
-		// 8) 結果を transforms.World に格納
-		XMFLOAT4X4 tmp;
-		XMStoreFloat4x4(&tmp, world);
-		for (int i = 0; i < 4; ++i)
-			for (int j = 0; j < 4; ++j)
-				this->transforms.World.m[i][j] = tmp.m[i][j];
-		//for (auto& rd : GetModelList())
-		//{
-		//	// 1) スケール
-		//	Matrix4x4 scale = Matrix4x4::MakeScaleMatrix(rd->transforms.scale);
-		//
-		//	// 2) ピボットオフセット
-		//	Matrix4x4 pivotOffsetNeg = Matrix4x4::MakeTranslateMatrix(-rd->pivot);
-		//
-		//	// 3) 回転（X, Y, Z軸すべてを合成）
-		//	Matrix4x4 rotateX = Matrix4x4::MakeRotateXMatrix(rd->transforms.rotate.x);
-		//	Matrix4x4 rotateY = Matrix4x4::MakeRotateYMatrix(rd->transforms.rotate.y);
-		//	Matrix4x4 rotateZ = Matrix4x4::MakeRotateZMatrix(rd->transforms.rotate.z);
-		//	Matrix4x4 rotate = rotateZ * rotateX * rotateY;
-		//
-		//	// 4) ピボットへ戻す
-		//	Matrix4x4 pivotOffset = Matrix4x4::MakeTranslateMatrix(rd->pivot);
-		//
-		//	// 5) 平行移動
-		//	Matrix4x4 translate = Matrix4x4::MakeTranslateMatrix(rd->transforms.translate);
-		//
-		//	// 合成
-		//	Matrix4x4 world = scale * pivotOffsetNeg * rotate * pivotOffset * translate;
-		//
-		//	// 6) 親行列があれば乗算
-		//	if (rd->transforms.parentWorld)
-		//	{
-		//		Matrix4x4 parentMatrix = *rd->transforms.parentWorld;
-		//		world = parentMatrix * world;
-		//	}
-		//
-		//	// 7) Transforms.World に格納
-		//	rd->transforms.World = world;
-		//}
-
-		// AABB更新
-		this->aabbs = Engine::Instance().CreateAABB(this->transforms, this->model);
-	}
+	this->lastMove = this->worldPos - this->preWorldPos;
 
 #pragma endregion
 
@@ -186,126 +91,54 @@ void RenderData_Model::Update()
 			{
 				if (this->lastMove.x > 0.0f)
 				{
-					this->transforms.translate.x -= Inf->depth.x;
-					velocity.x = 0.0f;
+					this->translate.value.x -= Inf->depth.x;
+					translate.velocity.x = 0.0f;
 				}
 				else if (this->lastMove.x < 0.0f)
 				{
-					this->transforms.translate.x += Inf->depth.x;
-					velocity.x = 0.0f;
+					this->translate.value.x += Inf->depth.x;
+					translate.velocity.x = 0.0f;
 				}
 				if (this->lastMove.y > 0.0f)
 				{
-					this->transforms.translate.y -= Inf->depth.y;
-					velocity.y = 0.0f;
+					this->translate.value.y -= Inf->depth.y;
+					translate.velocity.y = 0.0f;
 				}
 				else if (this->lastMove.y < 0.0f)
 				{
-					this->transforms.translate.y += Inf->depth.y;
-					velocity.y = 0.0f;
+					this->translate.value.y += Inf->depth.y;
+					translate.velocity.y = 0.0f;
 				}
 				if (this->lastMove.z > 0.0f)
 				{
-					this->transforms.translate.z -= Inf->depth.z;
-					velocity.z = 0.0f;
+					this->translate.value.z -= Inf->depth.z;
+					translate.velocity.z = 0.0f;
 				}
 				else if (this->lastMove.z < 0.0f)
 				{
-					this->transforms.translate.z += Inf->depth.z;
-					velocity.z = 0.0f;
+					this->translate.value.z += Inf->depth.z;
+					translate.velocity.z = 0.0f;
 				}
 			}
 
-			this->aabbs = Engine::Instance().CreateAABB(this->transforms, this->model);
-
-
-			{
-				XMVECTOR scaleVec = XMVectorSet(this->transforms.scale.x, this->transforms.scale.y, this->transforms.scale.z, 0.0f);
-				XMVECTOR pivotVec = XMVectorSet(this->pivot.x, this->pivot.y, this->pivot.z, 0.0f);
-				XMVECTOR translateVec = XMVectorSet(this->transforms.translate.x, this->transforms.translate.y, this->transforms.translate.z, 0.0f);
-				XMVECTOR rotEuler = XMVectorSet(this->transforms.rotate.x, this->transforms.rotate.y, this->transforms.rotate.z, 0.0f);
-				XMMATRIX S = XMMatrixScalingFromVector(scaleVec);
-				XMMATRIX Tneg = XMMatrixTranslationFromVector(XMVectorNegate(pivotVec));
-				XMVECTOR quatEuler = XMQuaternionRotationRollPitchYawFromVector(rotEuler);
-				XMMATRIX R = XMMatrixRotationQuaternion(quatEuler);
-				XMMATRIX Tpos = XMMatrixTranslationFromVector(pivotVec);
-				XMMATRIX T = XMMatrixTranslationFromVector(translateVec);
-				XMMATRIX world = S * Tneg * R * Tpos * T;
-				if (this->transforms.parentWorld)
-				{
-					XMFLOAT4X4 parentF4; std::memcpy(&parentF4, this->transforms.parentWorld, sizeof(parentF4));
-					XMMATRIX parentM = XMLoadFloat4x4(&parentF4);
-					world = parentM * world;
-				}
-				XMFLOAT4X4 tmp; XMStoreFloat4x4(&tmp, world);
-				for (int i = 0; i < 4; ++i)
-					for (int j = 0; j < 4; ++j)
-						this->transforms.World.m[i][j] = tmp.m[i][j];
-
-				this->aabbs = Engine::Instance().CreateAABB(this->transforms, this->model);
-			}
-
-			//Vector3 offset = transforms.translate;
-			//
-			//// 左方向に移動しているとき
-			//if (this->lastMove.x > 0.0f)
-			//{
-			//	offset.x += this->lastMove.x;
-			//	velocity.x = 0.0f;
-			//}
-			//// 右方向に移動しているとき
-			//else if (this->lastMove.x < 0.0f)
-			//{
-			//	offset.x -= this->lastMove.x;
-			//	velocity.x = 0.0f;
-			//}
-			//
-			//// 奥方向に移動しているとき
-			//if (this->lastMove.z > 0.0f)
-			//{
-			//	offset.z += this->lastMove.z;
-			//	velocity.z = 0.0f;
-			//}
-			//// 手前方向に移動しているとき
-			//else if (this->lastMove.z < 0.0f)
-			//{
-			//	offset.z -= this->lastMove.z;
-			//	velocity.z = 0.0f;
-			//}
-			//
-			//// 上方向に移動しているとき
-			//if (this->lastMove.y > 0.0f)
-			//{
-			//	offset.y += this->lastMove.y;
-			//	velocity.y = 0.0f;
-			//}
-			//// 下方向に移動しているとき
-			//else if (this->lastMove.y < 0.0f)
-			//{
-			//	offset.y -= this->lastMove.y;
-			//	velocity.y = 0.0f;
-			//}
-			//
-			//transforms.translate = { 0.0f,0.0f,0.0f };
-			//transforms.translate += offset;
-			//// 上方向に移動しているとき
-			//if (this->lastMove.y > 0.0f)
-			//{
-			//	float myHeight = myAABB.max.y - myAABB.min.y;
-			//	transforms.translate.y = targetAABB.min.y - myHeight / 2.0f;
-			//	velocity.y = 0.0f;
-			//}
-			//// 下方向に移動しているとき
-			//else if (this->lastMove.y < 0.0f)
-			//{
-			//	float myHeight = myAABB.max.y - myAABB.min.y;
-			//	transforms.translate.y = targetAABB.max.y + myHeight / 2.0f;
-			//	velocity.y = 0.0f;
-			//}
+			// 衝突修正後の移動マトリックス再計算
+			UpdateWorldMatrix();
 		}
 	}
 
 #pragma endregion
+
+#pragma region 前フレーム情報保存
+
+	this->preScale = this->scale;
+	this->preRotate = this->rotate;
+	this->preTranslate = this->translate;
+	this->preWorldPos = this->worldPos;
+	this->preAABB = this->aabbs;
+
+#pragma endregion
+
+	initialized = true;
 }
 
 // 他のオブジェクトとの衝突判定
@@ -337,15 +170,13 @@ void RenderData_Model::SetBlock(RenderData_Model& target)
 // ワールド行列とワールド座標の取得
 Matrix4x4 RenderData_Model::GetWorldMatrix() const
 {
-	if (transforms.parentWorld)
-	{
-		return (*transforms.parentWorld) * transforms.World;
-	}
-	return transforms.World;
+	Matrix4x4 effectiveWorld = this->transformationMatrix.World;
+	if (this->parentMatrix) effectiveWorld = (*this->parentMatrix) * effectiveWorld;
+	return effectiveWorld;
 }
 Vector3 RenderData_Model::GetWorldPosition() const
 {
-	return Transform(Vector3(0.0f, 0.0f, 0.0f), GetWorldMatrix());
+	return worldPos;
 }
 
 // 任意のポイントを向く
@@ -355,7 +186,7 @@ void RenderData_Model::LookAtOnce(const Vector3& targetWorldPos, float roll)
 	float yaw = std::atan2(direction.x, direction.z); // Y軸回り
 	float pitch = std::asin(-direction.y);            // X軸回り
 
-	transforms.rotate = { pitch, yaw, roll };
+	rotate.value = { pitch, yaw, roll };
 }
 void RenderData_Model::LookAtOnce(const RenderData_Model& other, float roll)
 {
@@ -386,9 +217,8 @@ void RenderData_Model::DrawAABB()
 
 void RenderData_Model::DrawImGui()
 {
-	std::optional<std::string> str;
+	std::optional<std::string> str = "model : " + std::to_string(this->ID);
 	if (this->name != std::nullopt) str = (this->name);
-	else str = "model : " + std::to_string(this->ID);
 
 	std::string num = std::to_string(this->ID) + ":";
 
@@ -400,29 +230,40 @@ void RenderData_Model::DrawImGui()
 
 		ImGui::Text("Scale");
 		dragId = std::string("##scale.value") + num;
+		ImGui::Text("Val"); ImGui::SameLine();
 		ImGui::DragFloat3(dragId.c_str(), &scale.value.x, 0.01f);
 		dragId = std::string("##scale.velocity") + num;
+		ImGui::Text("Vel"); ImGui::SameLine();
 		ImGui::DragFloat3(dragId.c_str(), &scale.velocity.x, 0.01f);
 		dragId = std::string("##scale.acceleration") + num;
+		ImGui::Text("Acc"); ImGui::SameLine();
 		ImGui::DragFloat3(dragId.c_str(), &scale.acceleration.x, 0.01f);
 
 		ImGui::Text("translate");
 		dragId = std::string("##translate.value") + num;
+		ImGui::Text("Val"); ImGui::SameLine();
 		ImGui::DragFloat3(dragId.c_str(), &translate.value.x, 0.01f);
 		dragId = std::string("##translate.velocity") + num;
+		ImGui::Text("Vel"); ImGui::SameLine();
 		ImGui::DragFloat3(dragId.c_str(), &translate.velocity.x, 0.01f);
 		dragId = std::string("##translate.acceleration") + num;
+		ImGui::Text("Acc"); ImGui::SameLine();
 		ImGui::DragFloat3(dragId.c_str(), &translate.acceleration.x, 0.01f);
 
 		ImGui::Text("rotate");
 		dragId = std::string("##rotate.value") + num;
+		ImGui::Text("Val"); ImGui::SameLine();
 		ImGui::DragFloat3(dragId.c_str(), &rotate.value.x, 0.01f);
 		dragId = std::string("##rotate.velocity") + num;
+		ImGui::Text("Vel"); ImGui::SameLine();
 		ImGui::DragFloat3(dragId.c_str(), &rotate.velocity.x, 0.01f);
 		dragId = std::string("##rotate.acceleration") + num;
+		ImGui::Text("Acc"); ImGui::SameLine();
 		ImGui::DragFloat3(dragId.c_str(), &rotate.acceleration.x, 0.01f);
 
-		ImGui::DragFloat3((num + "pivot").c_str(), &pivot.x, 0.01f);
+		dragId = std::string("##pivot") + num;
+		ImGui::Text("Pivot");
+		ImGui::DragFloat3(dragId.c_str(), &pivot.x, 0.01f);
 		ImGui::TreePop();
 	}
 	if (ImGui::TreeNode("----------uvTransforms---------"))
@@ -505,6 +346,64 @@ void RenderData_Model::DrawImGui()
 
 void RenderData_Model::CollisionAction(const Vector3& depth, RenderData_Model& target)
 {}
+
+void RenderData_Model::UpdateWorldMatrix()
+{
+	// 移動マトリックス作成
+	XMVECTOR scaleVec = XMVectorSet(this->scale.value.x, this->scale.value.y, this->scale.value.z, 0.0f);
+	XMVECTOR pivotVec = XMVectorSet(this->pivot.x, this->pivot.y, this->pivot.z, 0.0f);
+	XMVECTOR translateVec = XMVectorSet(this->translate.value.x, this->translate.value.y, this->translate.value.z, 0.0f);
+	XMVECTOR rotEuler = XMVectorSet(this->rotate.value.x, this->rotate.value.y, this->rotate.value.z, 0.0f);
+
+
+	// 1) スケール
+	XMMATRIX S = XMMatrixScalingFromVector(scaleVec);
+
+
+	// 2) ピボットオフセット（負）
+	XMMATRIX Tneg = XMMatrixTranslationFromVector(XMVectorNegate(pivotVec));
+
+
+	// 3) 回転（オイラー→クォータニオン→行列）
+	XMVECTOR quatEuler = XMQuaternionRotationRollPitchYawFromVector(rotEuler);
+	XMMATRIX R = XMMatrixRotationQuaternion(quatEuler);
+
+
+	// 4) ピボットオフセット（正）
+	XMMATRIX Tpos = XMMatrixTranslationFromVector(pivotVec);
+
+
+	// 5) 平行移動
+	XMMATRIX T = XMMatrixTranslationFromVector(translateVec);
+
+
+	// 6) 合成: S → Tneg → R → Tpos → T
+	XMMATRIX world = S * Tneg * R * Tpos * T;
+
+
+	// 7) 親行列の適用
+	if (this->parentMatrix)
+	{
+		// parentWorld が Matrix4x4 ならまず XMFLOAT4X4 にコピー
+		XMFLOAT4X4 parentF4;
+		// 4×4 のメモリ配列を直接コピー
+		std::memcpy(&parentF4, this->parentMatrix, sizeof(parentF4));
+		XMMATRIX parentM = XMLoadFloat4x4(&parentF4);
+		world = parentM * world;
+	}
+
+
+	// 8) 結果を transforms.World に格納
+	XMFLOAT4X4 tmp;
+	DirectX::XMStoreFloat4x4(&tmp, world);
+	for (int i = 0; i < 4; ++i)
+		for (int j = 0; j < 4; ++j)
+			this->transformationMatrix.World.m[i][j] = tmp.m[i][j];
+
+	// AABB更新
+	this->aabbs = Engine::Instance().CreateAABB(this);
+}
+
 
 std::optional<CollisionInf> RenderData_Model::isCollisionAABBInf(RenderData_Model& target) const
 {
@@ -678,9 +577,8 @@ void RenderData_Triangle::Draw()
 
 void RenderData_Triangle::DrawImGui()
 {
-	std::optional<std::string> str;
+	std::optional<std::string> str = "triangle : " + std::to_string(this->ID);
 	if (this->name != std::nullopt) str = (this->name);
-	else str = "triangle : " + std::to_string(this->ID);
 
 	std::string num = std::to_string(this->ID) + ":";
 
@@ -785,9 +683,8 @@ void RenderData_Line::DrawPoints()
 
 void RenderData_Line::DrawImGui()
 {
-	std::optional<std::string> str;
+	std::optional<std::string> str = "line : " + std::to_string(this->ID);
 	if (this->name != std::nullopt) str = (this->name);
-	else str = "line : " + std::to_string(this->ID);
 
 	std::string num = std::to_string(this->ID) + ":";
 
@@ -884,9 +781,8 @@ void RenderData_Particle::Draw()
 
 void RenderData_Particle::DrawImGui()
 {
-	std::optional<std::string> str;
+	std::optional<std::string> str = "particle : " + std::to_string(this->ID);
 	if (this->name != std::nullopt) str = (this->name);
-	else str = "particle : " + std::to_string(this->ID);
 
 	std::string num = ":" + std::to_string(this->ID);
 

@@ -104,7 +104,7 @@ public:
 	void ToggleFullscreen();
 
 	// AABBの作成
-	std::vector<AABB>  CreateAABB(const Transforms& transforms, uint32_t objectNumber);
+	std::vector<AABB>  CreateAABB(RenderData_Model* data);
 
 	// プリミティブモードの設定
 	void toggleWireframeMode();

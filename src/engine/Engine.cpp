@@ -123,20 +123,20 @@ void Engine::UpdateCamera()
 	// カメラの更新
 	cameraManager->Update();
 
-	//// 左シフト＋左クリックでカメラターゲットをオブジェクトに合わせる
-	//if (Game::Input::Key::IsPressedNow(DIK_LSHIFT))
-	//{
-	//	if (Game::Input::Mouse::GetMousePress(0) && !GetMousePrePress(0))
-	//	{
-	//		for (auto& rd : RenderData_Model::renderModels)
-	//		{
-	//			if (rd->isCollisionMouseRay == 0)
-	//			{
-	//				GetDebugCamera()->SetCenterTarget(rd->transforms.translate, 0, EaseType::IN_BACK);
-	//			}
-	//		}
-	//	}
-	//}
+	// 左シフト＋左クリックでカメラターゲットをオブジェクトに合わせる
+	if (Game::Input::Key::IsHeld(DIK_LSHIFT))
+	{
+		if (Game::Input::Mouse::IsJustPressed(0))
+		{
+			for (auto& rd : RenderData_Model::renderModels)
+			{
+				if (rd->isCollisionMouseRay == 0)
+				{
+					cameraManager->SetCenterTarget(rd->GetWorldPosition(), 0, EaseType::IN_BACK);
+				}
+			}
+		}
+	}
 }
 void Engine::UpdateDebugInfo()
 {
@@ -221,7 +221,7 @@ void Engine::UpdateTransforms()
 	hits.reserve(modelList.size());
 
 	// 描画範囲内のオブジェクトを全て調査
-	for (auto& rd : modelList)
+	/*for (auto& rd : modelList)
 	{
 		rd->isCollisionMouseRay = -1;
 		if (rd->inPicture)
@@ -231,10 +231,14 @@ void Engine::UpdateTransforms()
 
 			for (const auto& aabb : rd->aabbs)
 			{
+				Transforms tmpTransforms;
+				tmpTransforms.scale = rd->scale.value;
+				tmpTransforms.rotate = rd->rotate.value;
+				tmpTransforms.translate = rd->translate.value;
 				std::optional<Vector3> colPos = IntersectRayModel(
 					mouseRay,
 					objects[rd->model].modelData.vertices,
-					aabb, rd->transforms
+					aabb, tmpTransforms
 				);
 				if (colPos)
 				{
@@ -249,6 +253,25 @@ void Engine::UpdateTransforms()
 
 			if (nearestColPos)
 			{
+				hits.push_back({ rd, minDistance });
+			}
+		}
+	}*/
+	for (auto& rd : modelList)
+	{
+		rd->isCollisionMouseRay = -1;
+		// 描画範囲内なら判定
+		if (rd->inPicture)
+		{
+			// 最近接衝突点を取得
+			std::optional<Vector3> colPos = IntersectRayModel(
+				mouseRay,
+				objects[rd->model].modelData.vertices, rd
+			);
+			// 衝突していたらリストに登録
+			if (colPos)
+			{
+				float minDistance = (colPos.value() - mouseRay.origin).Length();
 				hits.push_back({ rd, minDistance });
 			}
 		}
@@ -523,11 +546,12 @@ void Engine::ToggleFullscreen()
 	// カメラのアスペクト比を更新
 	cameraManager->Resize();
 }
+
 // CreateLocalAABBでつくったAABBに座標を適応させる（当たり判定の毎フレーム更新用）
-std::vector<AABB>  Engine::CreateAABB(const Transforms& transforms, uint32_t objectNumber)
+std::vector<AABB>  Engine::CreateAABB(RenderData_Model* data)
 {
-	Matrix4x4 worldMatrix = transforms.World;
-	Object3D& obj = dxManager->GetResourceManager()->GetModelManager()->GetModelList()[objectNumber];
+	Matrix4x4 worldMatrix = data->GetWorldMatrix();
+	Object3D& obj = dxManager->GetResourceManager()->GetModelManager()->GetModelList()[data->model];
 	std::vector<AABB> result;
 
 	for (const auto& localAABB : obj.aabb)

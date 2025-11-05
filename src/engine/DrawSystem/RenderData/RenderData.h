@@ -9,13 +9,11 @@ public:
     ~RenderData_Model();
     void Update();
 
-    VectorDynamics scale;
-	VectorDynamics rotate;
-	VectorDynamics translate;
-    TransformationMatrix transformationMatrix;
-	Matrix4x4 parentMatrix;
-    // 今フレーム位置、回転、スケール
-    //Transforms transforms;
+    VectorDynamics scale = { Vector3( 1.0f,1.0f,1.0f ), Vector3( 0.0f,0.0f,0.0f ), Vector3( 0.0f,0.0f,0.0f ) };
+	VectorDynamics rotate = { Vector3(0.0f,0.0f,0.0f), Vector3(0.0f,0.0f,0.0f), Vector3(0.0f,0.0f,0.0f) };
+	VectorDynamics translate = { Vector3(0.0f,0.0f,0.0f), Vector3(0.0f,0.0f,0.0f), Vector3(0.0f,0.0f,0.0f) };
+	// 親のワールドマトリックス
+	Matrix4x4* parentMatrix = nullptr;
     // 今フレームの移動量
     Vector3 lastMove;
     // 今フレームでS/R/Tに変化があったか
@@ -24,12 +22,6 @@ public:
     Vector3 pivot;
     // UV座標
     Transforms uvTransform;
-    // 速度
-    //Vector3 velocity;
-    // 加速度
-    //Vector3 acceleration;
-    // 重力加速度
-    //Vector3 gravity;
     // 色
     uint32_t color = 0xFFFFFFFF;
     // 3Dモデル
@@ -75,21 +67,28 @@ public:
     static std::vector<RenderData_Model*> renderModels;
 
 private:
+    TransformationMatrix transformationMatrix;
+    bool initialized = false;
 
     // 衝突フラグ
     unsigned int CollisionFlags = 0x00000000;
     // 前フレームの衝突フラグ
     unsigned int preCollisionFlags = 0x00000000;
     // 衝突したときの反発係数
-    //const float restitution = 0.0f;
+    const float restitution = 0.0f;
+
     // 衝突方向に応じた行動
     void CollisionAction(const Vector3& depth, RenderData_Model& target);
 
+    // ワールドマトリックスの更新
+	void UpdateWorldMatrix();
 
-    // 前フレーム位置、回転、スケール
+    Vector3 worldPos;
+    // 前フレーム位置、回転、スケール、ワールド座標
     VectorDynamics preScale;
     VectorDynamics preRotate;
     VectorDynamics preTranslate;
+	Vector3 preWorldPos;
     // 前フレームAABB
     std::vector<AABB> preAABB;
 

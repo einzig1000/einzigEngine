@@ -19,6 +19,7 @@ TestPhase::TestPhase()
 	model1_.model = model3;
 	model1_.texture = tex1;
 	model1_.name = "player";
+	model1_.translate.value = { -5.0f,0.0f,0.0f };
 
 	model2_.model = model3;
 	model2_.texture = tex1;
@@ -274,7 +275,7 @@ void TestPhase::Update()
 
 	ImGui::End();
 
-	model1_.LookAtOnce(Game::Input::Mouse::GetMouseWorldPosition());
+	model1_.LookAtOnce(model2_.GetWorldPosition());
 }
 
 
