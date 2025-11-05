@@ -8,83 +8,83 @@
 
 
 
-bool JsonManager::SaveToJson(RenderData_Particle& p, const std::string& path)
+bool JsonManager::SaveToJson(RenderData_Particle& data, const std::string& path)
 {
     try
     {
         json j;
-        if (p.name.has_value()) j["name"] = *p.name;
-        j["filePath"] = p.filePath;
-        j["texture"] = p.GetParticleInf().resource.texture;
-        j["model"] = p.GetParticleInf().resource.model;
+        if (data.name.has_value()) j["name"] = *data.name;
+        j["filePath"] = data.filePath;
+        j["texture"] = data.GetParticleInf().resource.texture;
+        j["model"] = data.GetParticleInf().resource.model;
 
 
         // emitter
-        j["useSphereEmitter"] = p.GetParticleInf().emitter.useSphereEmitter;
-        j["emitFromInside"] = p.GetParticleInf().emitter.emitFromInside;
-        j["emitterAABB"]["min"] = Vec3ToJson(p.GetParticleInf().emitter.emitterAABB.min);
-        j["emitterAABB"]["max"] = Vec3ToJson(p.GetParticleInf().emitter.emitterAABB.max);
-        j["emitterSphere"]["center"] = Vec3ToJson(p.GetParticleInf().emitter.emitterSphere.center);
-        j["emitterSphere"]["radius"] = Vec3ToJson(p.GetParticleInf().emitter.emitterSphere.radius);
+        j["useSphereEmitter"] = data.GetParticleInf().emitter.useSphereEmitter;
+        j["emitFromInside"] = data.GetParticleInf().emitter.emitFromInside;
+        j["emitterAABB"]["min"] = Vec3ToJson(data.GetParticleInf().emitter.emitterAABB.min);
+        j["emitterAABB"]["max"] = Vec3ToJson(data.GetParticleInf().emitter.emitterAABB.max);
+        j["emitterSphere"]["center"] = Vec3ToJson(data.GetParticleInf().emitter.emitterSphere.center);
+        j["emitterSphere"]["radius"] = Vec3ToJson(data.GetParticleInf().emitter.emitterSphere.radius);
 
         // scale
-        j["scale"]["isRandom_value"] = p.GetParticleInf().scale.isRandom_value;
-        j["scale"]["value"] = Vec3ToJson(p.GetParticleInf().scale.value);
-        j["scale"]["randomRange_value"]["min"] = Vec3ToJson(p.GetParticleInf().scale.randomRange_value.min);
-        j["scale"]["randomRange_value"]["max"] = Vec3ToJson(p.GetParticleInf().scale.randomRange_value.max);
-        j["scale"]["isRandom_velocity"] = p.GetParticleInf().scale.isRandom_velocity;
-        j["scale"]["velocity"] = Vec3ToJson(p.GetParticleInf().scale.velocity);
-        j["scale"]["randomRange_velocity"]["min"] = Vec3ToJson(p.GetParticleInf().scale.randomRange_velocity.min);
-        j["scale"]["randomRange_velocity"]["max"] = Vec3ToJson(p.GetParticleInf().scale.randomRange_velocity.max);
-        j["scale"]["isRandom_acceleration"] = p.GetParticleInf().scale.isRandom_acceleration;
-        j["scale"]["acceleration"] = Vec3ToJson(p.GetParticleInf().scale.acceleration);
-        j["scale"]["randomRange_acceleration"]["min"] = Vec3ToJson(p.GetParticleInf().scale.randomRange_acceleration.min);
-        j["scale"]["randomRange_acceleration"]["max"] = Vec3ToJson(p.GetParticleInf().scale.randomRange_acceleration.max);
+        j["scale"]["isRandom_value"] = data.GetParticleInf().scale.isRandom_value;
+        j["scale"]["value"] = Vec3ToJson(data.GetParticleInf().scale.value);
+        j["scale"]["randomRange_value"]["min"] = Vec3ToJson(data.GetParticleInf().scale.randomRange_value.min);
+        j["scale"]["randomRange_value"]["max"] = Vec3ToJson(data.GetParticleInf().scale.randomRange_value.max);
+        j["scale"]["isRandom_velocity"] = data.GetParticleInf().scale.isRandom_velocity;
+        j["scale"]["velocity"] = Vec3ToJson(data.GetParticleInf().scale.velocity);
+        j["scale"]["randomRange_velocity"]["min"] = Vec3ToJson(data.GetParticleInf().scale.randomRange_velocity.min);
+        j["scale"]["randomRange_velocity"]["max"] = Vec3ToJson(data.GetParticleInf().scale.randomRange_velocity.max);
+        j["scale"]["isRandom_acceleration"] = data.GetParticleInf().scale.isRandom_acceleration;
+        j["scale"]["acceleration"] = Vec3ToJson(data.GetParticleInf().scale.acceleration);
+        j["scale"]["randomRange_acceleration"]["min"] = Vec3ToJson(data.GetParticleInf().scale.randomRange_acceleration.min);
+        j["scale"]["randomRange_acceleration"]["max"] = Vec3ToJson(data.GetParticleInf().scale.randomRange_acceleration.max);
         // rotate
-        j["rotate"]["isRandom_value"] = p.GetParticleInf().rotate.isRandom_value;
-        j["rotate"]["value"] = Vec3ToJson(p.GetParticleInf().rotate.value);
-        j["rotate"]["randomRange_value"]["min"] = Vec3ToJson(p.GetParticleInf().rotate.randomRange_value.min);
-        j["rotate"]["randomRange_value"]["max"] = Vec3ToJson(p.GetParticleInf().rotate.randomRange_value.max);
-        j["rotate"]["isRandom_velocity"] = p.GetParticleInf().rotate.isRandom_velocity;
-        j["rotate"]["velocity"] = Vec3ToJson(p.GetParticleInf().rotate.velocity);
-        j["rotate"]["randomRange_velocity"]["min"] = Vec3ToJson(p.GetParticleInf().rotate.randomRange_velocity.min);
-        j["rotate"]["randomRange_velocity"]["max"] = Vec3ToJson(p.GetParticleInf().rotate.randomRange_velocity.max);
-        j["rotate"]["isRandom_acceleration"] = p.GetParticleInf().rotate.isRandom_acceleration;
-        j["rotate"]["acceleration"] = Vec3ToJson(p.GetParticleInf().rotate.acceleration);
-        j["rotate"]["randomRange_acceleration"]["min"] = Vec3ToJson(p.GetParticleInf().rotate.randomRange_acceleration.min);
-        j["rotate"]["randomRange_acceleration"]["max"] = Vec3ToJson(p.GetParticleInf().rotate.randomRange_acceleration.max);
+        j["rotate"]["isRandom_value"] = data.GetParticleInf().rotate.isRandom_value;
+        j["rotate"]["value"] = Vec3ToJson(data.GetParticleInf().rotate.value);
+        j["rotate"]["randomRange_value"]["min"] = Vec3ToJson(data.GetParticleInf().rotate.randomRange_value.min);
+        j["rotate"]["randomRange_value"]["max"] = Vec3ToJson(data.GetParticleInf().rotate.randomRange_value.max);
+        j["rotate"]["isRandom_velocity"] = data.GetParticleInf().rotate.isRandom_velocity;
+        j["rotate"]["velocity"] = Vec3ToJson(data.GetParticleInf().rotate.velocity);
+        j["rotate"]["randomRange_velocity"]["min"] = Vec3ToJson(data.GetParticleInf().rotate.randomRange_velocity.min);
+        j["rotate"]["randomRange_velocity"]["max"] = Vec3ToJson(data.GetParticleInf().rotate.randomRange_velocity.max);
+        j["rotate"]["isRandom_acceleration"] = data.GetParticleInf().rotate.isRandom_acceleration;
+        j["rotate"]["acceleration"] = Vec3ToJson(data.GetParticleInf().rotate.acceleration);
+        j["rotate"]["randomRange_acceleration"]["min"] = Vec3ToJson(data.GetParticleInf().rotate.randomRange_acceleration.min);
+        j["rotate"]["randomRange_acceleration"]["max"] = Vec3ToJson(data.GetParticleInf().rotate.randomRange_acceleration.max);
         // translate
-        j["translate"]["isRandom_value"] = p.GetParticleInf().translate.isRandom_value;
-        j["translate"]["value"] = Vec3ToJson(p.GetParticleInf().translate.value);
-        j["translate"]["randomRange_value"]["min"] = Vec3ToJson(p.GetParticleInf().translate.randomRange_value.min);
-        j["translate"]["randomRange_value"]["max"] = Vec3ToJson(p.GetParticleInf().translate.randomRange_value.max);
-        j["translate"]["isRandom_velocity"] = p.GetParticleInf().translate.isRandom_velocity;
-        j["translate"]["velocity"] = Vec3ToJson(p.GetParticleInf().translate.velocity);
-        j["translate"]["randomRange_velocity"]["min"] = Vec3ToJson(p.GetParticleInf().translate.randomRange_velocity.min);
-        j["translate"]["randomRange_velocity"]["max"] = Vec3ToJson(p.GetParticleInf().translate.randomRange_velocity.max);
-        j["translate"]["isRandom_acceleration"] = p.GetParticleInf().translate.isRandom_acceleration;
-        j["translate"]["acceleration"] = Vec3ToJson(p.GetParticleInf().translate.acceleration);
-        j["translate"]["randomRange_acceleration"]["min"] = Vec3ToJson(p.GetParticleInf().translate.randomRange_acceleration.min);
-        j["translate"]["randomRange_acceleration"]["max"] = Vec3ToJson(p.GetParticleInf().translate.randomRange_acceleration.max);
+        j["translate"]["isRandom_value"] = data.GetParticleInf().translate.isRandom_value;
+        j["translate"]["value"] = Vec3ToJson(data.GetParticleInf().translate.value);
+        j["translate"]["randomRange_value"]["min"] = Vec3ToJson(data.GetParticleInf().translate.randomRange_value.min);
+        j["translate"]["randomRange_value"]["max"] = Vec3ToJson(data.GetParticleInf().translate.randomRange_value.max);
+        j["translate"]["isRandom_velocity"] = data.GetParticleInf().translate.isRandom_velocity;
+        j["translate"]["velocity"] = Vec3ToJson(data.GetParticleInf().translate.velocity);
+        j["translate"]["randomRange_velocity"]["min"] = Vec3ToJson(data.GetParticleInf().translate.randomRange_velocity.min);
+        j["translate"]["randomRange_velocity"]["max"] = Vec3ToJson(data.GetParticleInf().translate.randomRange_velocity.max);
+        j["translate"]["isRandom_acceleration"] = data.GetParticleInf().translate.isRandom_acceleration;
+        j["translate"]["acceleration"] = Vec3ToJson(data.GetParticleInf().translate.acceleration);
+        j["translate"]["randomRange_acceleration"]["min"] = Vec3ToJson(data.GetParticleInf().translate.randomRange_acceleration.min);
+        j["translate"]["randomRange_acceleration"]["max"] = Vec3ToJson(data.GetParticleInf().translate.randomRange_acceleration.max);
 
         // target
-        j["target"] = Vec3ToJson(p.GetParticleInf().target.target);
-        j["spreadAngle"] = p.GetParticleInf().target.spreadAngle;
-        j["useTarget"] = p.GetParticleInf().target.useTarget;
-        j["spawnDependent"] = p.GetParticleInf().target.spawnDependent;
-        j["speed"] = p.GetParticleInf().target.speed;
+        j["target"] = Vec3ToJson(data.GetParticleInf().target.target);
+        j["spreadAngle"] = data.GetParticleInf().target.spreadAngle;
+        j["useTarget"] = data.GetParticleInf().target.useTarget;
+        j["spawnDependent"] = data.GetParticleInf().target.spawnDependent;
+        j["speed"] = data.GetParticleInf().target.speed;
 
         // color
-        Vector4 vc = ConvertUintToVector4(p.GetParticleInf().material.color);
+        Vector4 vc = ConvertUintToVector4(data.GetParticleInf().material.color);
         j["color"] = Vec4ToJson(vc);
 
         // density
-        j["particlesPerEmission"] = p.GetParticleInf().density.particlesPerEmission;
-        j["emissionDelay"] = p.GetParticleInf().density.emissionDelay;
-        j["liveMax"] = p.GetParticleInf().density.liveMax;
+        j["particlesPerEmission"] = data.GetParticleInf().density.particlesPerEmission;
+        j["emissionDelay"] = data.GetParticleInf().density.emissionDelay;
+        j["liveMax"] = data.GetParticleInf().density.liveMax;
 
         // billboard
-        j["isBillboard"] = p.GetParticleInf().option.isBillboard;
+        j["isBillboard"] = data.GetParticleInf().option.isBillboard;
 
 
         // 最終出力パスは読み込みと同じく .json を付与
@@ -379,6 +379,98 @@ bool JsonManager::LoadFromJson(RenderData_Particle& data, const std::string& pat
         std::cerr << "LoadFromJson: unknown exception path=" << filePathStr << "\n";
         return false;
     }
+}
+
+bool JsonManager::SaveToJson(RenderData_Model& data, const std::string& path)
+{
+    try
+    {
+        json j;
+        if (data.name.has_value()) j["name"] = *data.name;
+        j["filePath"] = data.filePath;
+        j["texture"] = data.texture;
+        j["model"] = data.model;
+
+
+        // scale
+        j["scale"]["value"] = Vec3ToJson(data.scale.value);
+        j["scale"]["velocity"] = Vec3ToJson(data.scale.velocity);
+        j["scale"]["acceleration"] = Vec3ToJson(data.scale.acceleration);
+        // rotate
+        j["rotate"]["value"] = Vec3ToJson(data.rotate.value);
+        j["rotate"]["velocity"] = Vec3ToJson(data.rotate.velocity);
+        j["rotate"]["acceleration"] = Vec3ToJson(data.rotate.acceleration);
+        // translate
+        j["translate"]["value"] = Vec3ToJson(data.translate.value);
+        j["translate"]["velocity"] = Vec3ToJson(data.translate.velocity);
+        j["translate"]["acceleration"] = Vec3ToJson(data.translate.acceleration);
+
+        // color
+        j["color"] = Vec4ToJson(data.color);
+
+        // 出力パスに.json を付与
+        const std::string finalPath = path.ends_with(".json") ? path : (path + ".json");
+
+        // 親ディレクトリ作成
+        std::filesystem::path dst(finalPath);
+        if (!dst.parent_path().empty())
+        {
+            std::error_code ec;
+            std::filesystem::create_directories(dst.parent_path(), ec);
+            if (ec)
+            {
+                std::cerr << "Create directories failed: " << ec.message() << "\n";
+                return false;
+            }
+        }
+
+        // 一意な一時ファイル名を作る
+        const std::string tmp = finalPath + ".tmp." + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count());
+        {
+            std::ofstream ofs(tmp); // テキストなので binary は不要
+            if (!ofs)
+            {
+                std::cerr << "Failed to open tmp file for write: " << tmp << "\n";
+                return false;
+            }
+            ofs << j.dump(2);
+            if (!ofs.good())
+            {
+                std::cerr << "Failed to write JSON to tmp file\n";
+                std::filesystem::remove(tmp);
+                return false;
+            }
+        }
+
+        std::error_code ec;
+        std::filesystem::rename(tmp, finalPath, ec);
+        if (ec)
+        {
+            // 別ファイルシステム（EXDEV）ならコピー→削除で代替
+            if (std::filesystem::exists(finalPath))
+            {
+                std::filesystem::remove(finalPath, ec);
+                if (ec) { std::cerr << "remove existing failed: " << ec.message() << "\n"; std::filesystem::remove(tmp); return false; }
+            }
+
+            std::filesystem::rename(tmp, finalPath, ec);
+            if (ec) { std::cerr << "rename failed: " << ec.message() << "\n"; std::filesystem::remove(tmp); return false; }
+        }
+
+        return true;
+
+    }
+    catch (const std::exception& ex)
+    {
+        std::cerr << "SaveToJson exception: " << ex.what() << "\n";
+        return false;
+    }
+
+}
+
+bool JsonManager::LoadFromJson(RenderData_Model& m, const std::string& path)
+{
+    return false;
 }
 
 

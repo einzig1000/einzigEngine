@@ -22,9 +22,20 @@ public:
 	class Resource
 	{
 	public:
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="directoryPath"></param>
+		/// <param name="filename"></param>
+		/// <returns></returns>
 		static uint32_t LoadModel(const std::string& directoryPath, const std::string& filename);
 		static uint32_t LoadTexture(const std::string& filePath);
 		static uint32_t LoadAudio(const std::string& filePath);
+
+		/// <summary>
+		/// テクスチャデータ取得
+		/// 
 		static TextureData* GetTexture(uint32_t textureNumber);
 		static size_t GetTextureCount();
 		static size_t GetModelCount();
@@ -65,26 +76,89 @@ public:
 		class Mouse
 		{
 		public:
-			// マウス
+			/// <summary>
+			/// マウスのスクリーン座標位置取得
+			/// </summary>
+			/// <returns></returns>
 			static Vector2 GetMousePosition();
+
+			/// <summary>
+			/// マウスのワールド座標位置取得
+			/// </summary>
+			/// <returns></returns>
 			static Vector3 GetMouseWorldPosition();
+
+			/// <summary>
+			/// マウスのワールド座標レイ取得
+			/// </summary>
+			/// <returns></returns>
 			static Ray GetMouseRay();
-			// 0 = 左クリック  1 = 右クリック  2 = ミドルボタン
-			static bool IsHeld(int i);// 今押しているか
-			static bool IsJustPressed(int i);// 押した瞬間
-			static bool IsJustReleased(int i);// 離した瞬間
-			static uint32_t HoldFrames(int i);// 押されてからの経過フレーム数
+
+			/// <summary>
+			/// マウスボタンの入力取得(現在押されているか)
+			/// </summary>
+			/// <param name="i">0 = 左クリック  1 = 右クリック  2 = ミドルボタン</param>
+			/// <returns></returns>
+			static bool IsHeld(int i);
+
+			/// <summary>
+			/// マウスボタンの入力取得(押した瞬間)
+			/// </summary>
+			/// <param name="i">0 = 左クリック  1 = 右クリック  2 = ミドルボタン</param>
+			/// <returns></returns>
+			static bool IsJustPressed(int i);
+
+			/// <summary>
+			/// マウスボタンの入力取得(離した瞬間)
+			/// </summary>
+			/// <param name="i">0 = 左クリック  1 = 右クリック  2 = ミドルボタン</param>
+			/// <returns></returns>
+			static bool IsJustReleased(int i);
+
+			/// <summary>
+			/// マウスボタンの入力取得(押されてからの経過フレーム数)
+			/// </summary>
+			/// <param name="i">0 = 左クリック  1 = 右クリック  2 = ミドルボタン</param>
+			/// <returns></returns>
+			static uint32_t HoldFrames(int i);
+
+			/// <summary>
+			/// マウスホイールの回転量取得
+			/// </summary>
 			static uint32_t GetMouseWheel();
 		};
 
 		class Key
 		{
 		public:
-			static bool IsHeld(BYTE key);// 今押しているか
-			static bool IsJustPressed(BYTE key);// 押した瞬間
-			static bool IsJustReleased(BYTE key);// 離した瞬間
-			static uint32_t HoldFrames(BYTE key);// 押されてからの経過フレーム数
-			static int TestTapLong(int n, BYTE key);// 0: なし  1:単押し  2:長押し(n = 長押し判定)
+
+			/// <summary>
+			/// キーボードの入力取得(現在押されているか)
+			/// </summary>
+			static bool IsHeld(BYTE key);
+
+			/// <summary>
+			/// キーボードの入力取得(押した瞬間)
+			/// </summary>
+			static bool IsJustPressed(BYTE key);
+
+			/// <summary>
+			/// キーボードの入力取得(離した瞬間)
+			/// </summary>
+			static bool IsJustReleased(BYTE key);
+
+			/// <summary>
+			/// キーボードの入力取得(押されてからの経過フレーム数)
+			/// </summary>
+			static uint32_t HoldFrames(BYTE key);
+
+			/// <summary>
+			/// キーの単押し・長押し判定
+			/// </summary>
+			/// <param name="n">nフレーム以上で長押しと判定</param>
+			/// <param name="key">キー</param>
+			/// <returns>0: なし  1:単押し  2:長押し</returns>
+			static int TestTapLong(int n, BYTE key);
 		};
 
 		class Pad

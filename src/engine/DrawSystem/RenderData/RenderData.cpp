@@ -300,11 +300,9 @@ void RenderData_Model::DrawImGui()
 	}
 	if (ImGui::TreeNode("----------color----------------"))
 	{
-		Vector4 preColor = ConvertUintToVector4(color);
-		float floatColor[4] = { preColor.x, preColor.y, preColor.z, preColor.w };
+		float floatColor[4] = { this->color.x / 255.0f,  this->color.y / 255.0f,  this->color.z / 255.0f,  this->color.w / 255.0f };
 		ImGui::ColorEdit4((num + "color").c_str(), floatColor, 1);
-		Vector4 vector4Color = { floatColor[0], floatColor[1], floatColor[2], floatColor[3] };
-		color = ConvertVector4ToUint(vector4Color);
+		color = { floatColor[0] * 255.0f, floatColor[1] * 255.0f, floatColor[2] * 255.0f, floatColor[3] * 255.0f };
 		ImGui::TreePop();
 	}
 	if (ImGui::TreeNode("----------option---------------"))
@@ -320,26 +318,26 @@ void RenderData_Model::DrawImGui()
 		ImGui::Text("isCollisionMouse : %d", isCollisionMouseRay);
 		ImGui::TreePop();
 	}
-	//if (ImGui::TreeNode("----------load & save----------"))
-	//{
-	//	char buf[256];
-	//	if (this->filePath.size() < sizeof(buf)) memcpy(buf, this->filePath.c_str(), this->filePath.size() + 1);
-	//	else buf[sizeof(buf) - 1] = '\0';
-	//	if (ImGui::InputText(".json", buf, sizeof(buf)))
-	//	{
-	//		this->filePath = std::string(buf);
-	//	}
-	//	if (ImGui::Button("save"))
-	//	{
-	//		JsonManager::SaveToJson(*this, this->filePath);
-	//	}
-	//	ImGui::SameLine();
-	//	if (ImGui::Button("load"))
-	//	{
-	//		JsonManager::LoadFromJson(*this, this->filePath);
-	//	}
-	//	ImGui::TreePop();
-	//}
+	if (ImGui::TreeNode("----------load & save----------"))
+	{
+		char buf[256];
+		if (this->filePath.size() < sizeof(buf)) memcpy(buf, this->filePath.c_str(), this->filePath.size() + 1);
+		else buf[sizeof(buf) - 1] = '\0';
+		if (ImGui::InputText(".json", buf, sizeof(buf)))
+		{
+			this->filePath = std::string(buf);
+		}
+		if (ImGui::Button("save"))
+		{
+			JsonManager::SaveToJson(*this, this->filePath);
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("load"))
+		{
+			JsonManager::LoadFromJson(*this, this->filePath);
+		}
+		ImGui::TreePop();
+	}
 
 	ImGui::End();
 }

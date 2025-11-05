@@ -620,7 +620,7 @@ void DrawSystem::DrawModel(RenderData_Model& renderData)
 	wvpData_[drawCallIndex_]->WVP = renderData.GetWorldMatrix() * viewProjectionMatrix_;
 
 	// マテリアル
-	Vector4 color = ConvertUintToVector4(renderData.color);
+	Vector4 color = { renderData.color.x / 255.0f, renderData.color.y / 255.0f, renderData.color.z / 255.0f, renderData.color.w / 255.0f };
 	materialData_[drawCallIndex_]->color = color;
 	materialData_[drawCallIndex_]->enableLighting = renderData.options.enableLighting;
 	Matrix4x4 uvTransformMatrix = Matrix4x4::MakeIdentity4x4();

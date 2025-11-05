@@ -12,8 +12,20 @@ class RenderData_Particle;
 class JsonManager
 {
 public:
-	static bool SaveToJson(RenderData_Particle& p, const std::string& path);
-	static bool LoadFromJson(RenderData_Particle& p, const std::string& path);
+	static bool SaveToJson(RenderData_Particle& data, const std::string& path);
+	static bool LoadFromJson(RenderData_Particle& data, const std::string& path);
+
+	static bool SaveToJson(RenderData_Model& data, const std::string& path);
+	static bool LoadFromJson(RenderData_Model& data, const std::string& path);
+
+	static bool SaveToJson(RenderData_Line& data, const std::string& path);
+	static bool LoadFromJson(RenderData_Line& data, const std::string& path);
+
+	static bool SaveToJson(RenderData_Triangle& data, const std::string& path);
+	static bool LoadFromJson(RenderData_Triangle& data, const std::string& path);
+
+	static bool SaveToJson(RenderData_Sprite& data, const std::string& path);
+	static bool LoadFromJson(RenderData_Sprite& data, const std::string& path);
 
 private:
 	static json Vec3ToJson(const Vector3& v);

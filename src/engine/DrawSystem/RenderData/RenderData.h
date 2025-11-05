@@ -23,7 +23,7 @@ public:
     // UV座標
     Transforms uvTransform;
     // 色
-    uint32_t color = 0xFFFFFFFF;
+    Vector4 color = { 0xFF, 0xFF, 0xFF, 0xFF };
     // 3Dモデル
     uint32_t model = 0;
     // テクスチャ
@@ -37,6 +37,8 @@ public:
     // ID
     int ID = 0;
     std::optional<std::string> name;
+    // ファイルパス
+    std::string filePath = "resources/Prototypes/model_json/aaa";
     // 画面内に存在するか
     bool inPicture = false;
     // マウスとの衝突判定
