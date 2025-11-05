@@ -31,7 +31,9 @@ void RenderData_Model::Update()
 {
 #pragma region 前フレーム情報保存
 
-	this->preTransforms = this->transforms;
+	this->preScale = this->scale;
+	this->preRotate = this->rotate;
+	this->preTranslate = this->translate;
 	this->preAABB = this->aabbs;
 
 #pragma endregion
@@ -394,9 +396,32 @@ void RenderData_Model::DrawImGui()
 
 	if (ImGui::TreeNode("----------transforms-----------"))
 	{
-		ImGui::DragFloat3((num + "scale").c_str(), &transforms.scale.x, 0.01f);
-		ImGui::DragFloat3((num + "translate").c_str(), &transforms.translate.x, 0.01f);
-		ImGui::DragFloat3((num + "rotate").c_str(), &transforms.rotate.x, 0.01f);
+		std::string dragId;
+
+		ImGui::Text("Scale");
+		dragId = std::string("##scale.value") + num;
+		ImGui::DragFloat3(dragId.c_str(), &scale.value.x, 0.01f);
+		dragId = std::string("##scale.velocity") + num;
+		ImGui::DragFloat3(dragId.c_str(), &scale.velocity.x, 0.01f);
+		dragId = std::string("##scale.acceleration") + num;
+		ImGui::DragFloat3(dragId.c_str(), &scale.acceleration.x, 0.01f);
+
+		ImGui::Text("translate");
+		dragId = std::string("##translate.value") + num;
+		ImGui::DragFloat3(dragId.c_str(), &translate.value.x, 0.01f);
+		dragId = std::string("##translate.velocity") + num;
+		ImGui::DragFloat3(dragId.c_str(), &translate.velocity.x, 0.01f);
+		dragId = std::string("##translate.acceleration") + num;
+		ImGui::DragFloat3(dragId.c_str(), &translate.acceleration.x, 0.01f);
+
+		ImGui::Text("rotate");
+		dragId = std::string("##rotate.value") + num;
+		ImGui::DragFloat3(dragId.c_str(), &rotate.value.x, 0.01f);
+		dragId = std::string("##rotate.velocity") + num;
+		ImGui::DragFloat3(dragId.c_str(), &rotate.velocity.x, 0.01f);
+		dragId = std::string("##rotate.acceleration") + num;
+		ImGui::DragFloat3(dragId.c_str(), &rotate.acceleration.x, 0.01f);
+
 		ImGui::DragFloat3((num + "pivot").c_str(), &pivot.x, 0.01f);
 		ImGui::TreePop();
 	}
@@ -405,14 +430,6 @@ void RenderData_Model::DrawImGui()
 		ImGui::DragFloat3((num + "UVscale").c_str(), &uvTransform.scale.x, 0.01f);
 		ImGui::DragFloat3((num + "UVtranslate").c_str(), &uvTransform.translate.x, 0.01f);
 		ImGui::DragFloat3((num + "UVrotate").c_str(), &uvTransform.rotate.x, 0.01f);
-		ImGui::TreePop();
-	}
-	if (ImGui::TreeNode("----------velocity-------------"))
-	{
-		ImGui::DragFloat3((num + "lastMove").c_str(), &lastMove.x, 0.01f);
-		ImGui::DragFloat3((num + "velocity").c_str(), &velocity.x, 0.01f);
-		ImGui::DragFloat3((num + "acceleration").c_str(), &acceleration.x, 0.01f);
-		ImGui::DragFloat3((num + "gravity").c_str(), &gravity.x, 0.01f);
 		ImGui::TreePop();
 	}
 	if (ImGui::TreeNode("----------model & texture------"))
@@ -457,7 +474,7 @@ void RenderData_Model::DrawImGui()
 		ImGui::Checkbox("lookAt", &lookAt);
 		if (lookAt)
 		{
-			Game::Camera::MoveCameraCenter(transforms.translate, 0, EaseType::IN_BACK);
+			Game::Camera::MoveCameraCenter(GetWorldPosition(), 0, EaseType::IN_BACK);
 		}
 		ImGui::Text("isCollisionMouse : %d", isCollisionMouseRay);
 		ImGui::TreePop();

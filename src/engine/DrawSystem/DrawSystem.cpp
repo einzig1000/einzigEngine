@@ -616,8 +616,8 @@ void DrawSystem::DrawModel(RenderData_Model& renderData)
 	const uint32_t kSumVertex = static_cast<uint32_t>(obj->modelData.vertices.size());
 
 	// WVP行列
-	wvpData_[drawCallIndex_]->World = renderData.transforms.World;
-	wvpData_[drawCallIndex_]->WVP = renderData.transforms.World * viewProjectionMatrix_;
+	wvpData_[drawCallIndex_]->World = renderData.transformationMatrix.World;
+	wvpData_[drawCallIndex_]->WVP = renderData.transformationMatrix.World * viewProjectionMatrix_;
 
 	// マテリアル
 	Vector4 color = ConvertUintToVector4(renderData.color);

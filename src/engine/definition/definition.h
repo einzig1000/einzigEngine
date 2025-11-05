@@ -619,6 +619,13 @@ struct Transforms
     Matrix4x4* parentWorld = nullptr;
 };
 
+struct VectorDynamics
+{
+    Vector3 value = { 1.0f,1.0f,1.0f };
+    Vector3 velocity;
+    Vector3 acceleration;
+};
+
 struct TransformationMatrix
 {
     Matrix4x4 WVP;
@@ -857,6 +864,7 @@ struct ParticleMonoInfGPU
 };
 
 #pragma endregion
+
 
 enum class Direction
 {

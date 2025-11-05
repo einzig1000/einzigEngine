@@ -9,8 +9,13 @@ public:
     ~RenderData_Model();
     void Update();
 
+    VectorDynamics scale;
+	VectorDynamics rotate;
+	VectorDynamics translate;
+    TransformationMatrix transformationMatrix;
+	Matrix4x4 parentMatrix;
     // 今フレーム位置、回転、スケール
-    Transforms transforms;
+    //Transforms transforms;
     // 今フレームの移動量
     Vector3 lastMove;
     // 今フレームでS/R/Tに変化があったか
@@ -20,11 +25,11 @@ public:
     // UV座標
     Transforms uvTransform;
     // 速度
-    Vector3 velocity;
+    //Vector3 velocity;
     // 加速度
-    Vector3 acceleration;
+    //Vector3 acceleration;
     // 重力加速度
-    Vector3 gravity;
+    //Vector3 gravity;
     // 色
     uint32_t color = 0xFFFFFFFF;
     // 3Dモデル
@@ -82,7 +87,9 @@ private:
 
 
     // 前フレーム位置、回転、スケール
-    Transforms preTransforms;
+    VectorDynamics preScale;
+    VectorDynamics preRotate;
+    VectorDynamics preTranslate;
     // 前フレームAABB
     std::vector<AABB> preAABB;
 
