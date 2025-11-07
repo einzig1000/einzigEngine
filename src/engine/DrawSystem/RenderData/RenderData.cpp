@@ -5,6 +5,7 @@
 using namespace DirectX;
 
 std::vector<RenderData_Model*> RenderData_Model::renderModels;
+std::vector<CollisionInf*> RenderData_Model::collisionInfos;
 std::vector<RenderData_Sprite*> RenderData_Sprite::renderSprites;
 std::vector<RenderData_Triangle*> RenderData_Triangle::renderTriangles;
 std::vector<RenderData_Line*> RenderData_Line::renderLines;
@@ -227,7 +228,7 @@ void RenderData_Model::DrawImGui()
 	ImGui::End();
 }
 
-// 親を考慮しない場合のワールド行列更新
+// 全オブジェクトのSRT更新,それに伴うワールド行列更新
 void RenderData_Model::Update1()
 {
 	// S/R/Tの更新
@@ -278,7 +279,7 @@ void RenderData_Model::Update1()
 	initialized = true;
 }
 
-// 親を考慮した場合のワールド行列更新
+// 全オブジェクトの親を考慮したワールド行列更新,AABB更新
 void RenderData_Model::Update2()
 {
 	// 階層を含めた最終ワールド行列を取得
@@ -311,9 +312,79 @@ Matrix4x4 RenderData_Model::SetWorldMatrix()
 	return result;
 }
 
-// 描画範囲内判定と前フレーム情報保存
+// 衝突判定,衝突ペア・深度の保存
 void RenderData_Model::Update3()
 {
+	for (auto& blockTarget : blockList)
+	{
+		std::optional<CollisionInf> collisionInf = this->isCollisionAABBInf(*blockTarget);
+		if (collisionInf)
+		{
+			collisionInfos.push_back(new CollisionInf(*collisionInf));
+		}
+	}
+}
+
+// 衝突時の更新,それに伴うワールド行列更新
+void RenderData_Model::Update4()
+{
+	// collisionInfosを探査して、自分が軽い方のオブジェクトとして衝突しているものを処理
+	for (const auto& collisionInfPtr : collisionInfos)
+	{
+		const CollisionInf& collisionInf = *collisionInfPtr;
+		if (collisionInf.IDpair.light == this->ID)
+		{
+
+			// 衝突したAABB面のペア・深度がわかっているので、それに基づいて移動
+			if (collisionInf.face.light == AABBFace::LEFT || collisionInf.face.light == AABBFace::RIGHT)
+			{
+				this->translate.value.x += collisionInf.depth.x;
+			}
+			else if (collisionInf.face.light == AABBFace::BOTTOM || collisionInf.face.light == AABBFace::TOP)
+			{
+				this->translate.value.y += collisionInf.depth.y;
+			}
+			else if (collisionInf.face.light == AABBFace::BACK || collisionInf.face.light == AABBFace::FRONT)
+			{
+				this->translate.value.z += collisionInf.depth.z;
+			}
+
+
+			// ワールド行列更新
+			XMVECTOR scaleVec = XMVectorSet(this->scale.value.x, this->scale.value.y, this->scale.value.z, 0.0f);
+			XMVECTOR pivotVec = XMVectorSet(this->pivot.x, this->pivot.y, this->pivot.z, 0.0f);
+			XMVECTOR translateVec = XMVectorSet(this->translate.value.x, this->translate.value.y, this->translate.value.z, 0.0f);
+			XMVECTOR rotEuler = XMVectorSet(this->rotate.value.x, this->rotate.value.y, this->rotate.value.z, 0.0f);
+			// 1) スケール
+			XMMATRIX S = XMMatrixScalingFromVector(scaleVec);
+			// 2) ピボットオフセット（原点に戻す方）
+			XMMATRIX Tneg = XMMatrixTranslationFromVector(XMVectorNegate(pivotVec));
+			// 3) 回転（オイラー→クォータニオン→行列）
+			XMVECTOR quatEuler = XMQuaternionRotationRollPitchYawFromVector(rotEuler);
+			XMMATRIX R = XMMatrixRotationQuaternion(quatEuler);
+			// 4) ピボットオフセット（もとの位置に戻す方）
+			XMMATRIX Tpos = XMMatrixTranslationFromVector(pivotVec);
+			// 5) 平行移動
+			XMMATRIX T = XMMatrixTranslationFromVector(translateVec);
+			// 6) 合成: S → Tneg → R → Tpos → T
+			XMMATRIX world = S * Tneg * R * Tpos * T;
+			// 8) 結果を transforms.World に格納
+			XMFLOAT4X4 tmp;
+			DirectX::XMStoreFloat4x4(&tmp, world);
+			for (int i = 0; i < 4; ++i)
+				for (int j = 0; j < 4;
+					++j)
+					this->localWorldMatrix.m[i][j] = tmp.m[i][j];
+		}
+	}
+}
+
+// 全オブジェクトの描画範囲内判定,前フレーム情報保存
+void RenderData_Model::Update5()
+{
+
+	collisionInfos.clear();
+
 #pragma region 描画範囲内判定
 
 	bool inFrustum = false;
@@ -337,33 +408,123 @@ void RenderData_Model::Update3()
 	this->preAABB = this->aabbs;
 
 #pragma endregion
+
 }
 
 void RenderData_Model::CollisionAction(const Vector3& depth, RenderData_Model& target)
 {}
 
 
-std::optional<CollisionInf> RenderData_Model::isCollisionAABBInf(RenderData_Model& target) const
-{
-	CollisionInf result;
-	result.pair = { -1, -1 };
+//std::optional<CollisionInf> RenderData_Model::isCollisionAABBInf(RenderData_Model& target) const
+//{
+//	CollisionInf result;
+//	// 衝突しているオブジェクトIDの保存（軽い方・重い方）
+//	result.IDpair.light = target.ID;
+//	result.IDpair.heavy = this->ID;
+//	if (this->mass < target.mass)
+//	{
+//		std::swap(result.IDpair.light, result.IDpair.heavy);
+//	}
+//	result.AABBpair = CollisionPair{ -1, -1 };
+//
+//	// AABB同士の衝突判定
+//	for (size_t i = 0; i < target.aabbs.size(); ++i)
+//	{
+//		for (size_t j = 0; j < this->aabbs.size(); ++j)
+//		{
+//			// 緩めの衝突判定
+//			if (IsLooseCollision(target.aabbs[i], this->aabbs[j], 0.001f))
+//			{
+//				// 衝突深度取得
+//				Vector3 depth = this->aabbs[j].GetCollisionDepth(target.aabbs[i]);
+//
+//				// 衝突ペア・深度の保存
+//				result.AABBpair = CollisionPair{ static_cast<int>(i), static_cast<int>(j) };
+//				result.depth = -depth;
+//				if (this->mass < target.mass)
+//				{
+//					std::swap(result.AABBpair.light, result.AABBpair.heavy);
+//					result.depth = depth;
+//				}
+//				break;
+//			}
+//		}
+//	}
+//	if (result.AABBpair == CollisionPair{ -1, -1 }) return std::nullopt;
+//	return result;
+//}
 
-	// どのAABB同士が衝突しているか
+std::optional<CollisionInf> RenderData_Model::isCollisionAABBInf(RenderData_Model& target) const {
+	CollisionInf best;
+	bool found = false;
+	float bestPen = std::numeric_limits<float>::infinity();
+
 	for (size_t i = 0; i < target.aabbs.size(); ++i)
 	{
-		for (size_t j = 0; j < this->aabbs.size(); ++j)
+		Vector3 centerT = target.aabbs[i].center();
+		for (size_t j = 0; j < this->aabbs.size(); ++j) 
 		{
-			if (IsLooseCollision(target.aabbs[i], this->aabbs[j], 0.001f))
-			{
-				Vector3 depth = this->aabbs[j].GetCollisionDepth(target.aabbs[i]);
-				result.pair = { static_cast<int>(i), static_cast<int>(j) };
-				result.depth = depth;
-				break;
+
+			if (!IsLooseCollision(target.aabbs[i], this->aabbs[j], 0.001f)) continue;
+
+			Vector3 overlap = this->aabbs[j].GetCollisionDepth(target.aabbs[i]); // 各軸の重なり量（非負）を返す契約
+			// any axis non-positive => no collision
+			if (overlap.x <= 0.0f || overlap.y <= 0.0f || overlap.z <= 0.0f) continue;
+
+			// pick minimum overlap axis robustly
+			float ox = overlap.x;
+			float oy = overlap.y;
+			float oz = overlap.z;
+
+			float pen = ox;
+			int axis = 0; // 0:x, 1:y, 2:z
+			if (oy < pen) { pen = oy; axis = 1; }
+			if (oz < pen) { pen = oz; axis = 2; }
+
+			// determine faces for target (A) and self (S) based on centers
+			Vector3 centerS = this->aabbs[j].center();
+			CollisionAABBFace faces{ AABBFace::NONE, AABBFace::NONE };
+
+			if (axis == 0) { // x
+				if (centerT.x < centerS.x) { faces.light = AABBFace::RIGHT; faces.heavy = AABBFace::LEFT; }
+				else { faces.light = AABBFace::LEFT; faces.heavy = AABBFace::RIGHT; }
+			}
+			else if (axis == 1) { // y
+				if (centerT.y < centerS.y) { faces.light = AABBFace::TOP; faces.heavy = AABBFace::BOTTOM; }
+				else { faces.light = AABBFace::BOTTOM; faces.heavy = AABBFace::TOP; }
+			}
+			else { // z
+				if (centerT.z < centerS.z) { faces.light = AABBFace::FRONT; faces.heavy = AABBFace::BACK; }
+				else { faces.light = AABBFace::BACK; faces.heavy = AABBFace::FRONT; }
+			}
+
+			// choose smallest penetration candidate
+			if (pen < bestPen) {
+				bestPen = pen;
+				found = true;
+				best.AABBpair = CollisionPair{ static_cast<int>(i), static_cast<int>(j) };
+				best.depth = overlap; // non-negative per-axis
+				best.face = faces;
 			}
 		}
 	}
-	if (result.pair == Vector2int{ -1, -1 }) return std::nullopt;
-	return result;
+
+	if (!found) return std::nullopt;
+
+	// set ID order: light = lighter object, heavy = heavier object
+	best.IDpair.light = target.ID;
+	best.IDpair.heavy = this->ID;
+
+	// if this is lighter than target, swap to keep invariant (light/heavy)
+	if (this->mass < target.mass) {
+		std::swap(best.IDpair.light, best.IDpair.heavy);
+		std::swap(best.AABBpair.light, best.AABBpair.heavy);
+		// swap face entries so that best.face.light/heavy still correspond to IDpair.light/heavy
+		std::swap(best.face.light, best.face.heavy);
+		// depth remains per-axis non-negative; caller interprets direction using face info
+	}
+
+	return best;
 }
 
 #pragma endregion

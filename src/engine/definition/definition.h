@@ -757,9 +757,45 @@ struct CollisionFlags
     };
 };
 
+enum class AABBFace
+{
+    NONE = -1,
+    LEFT = 0,
+    RIGHT = 1,
+    BOTTOM = 2,
+    TOP = 3,
+    BACK = 4,
+    FRONT = 5,
+};
+
+struct CollisionPair
+{
+    // 軽い方
+    int light;
+	// 重い方
+	int heavy;
+
+    bool operator==(const CollisionPair& rhs) const
+    {
+        return light == rhs.light && heavy == rhs.heavy;
+    }
+    bool operator!=(const CollisionPair& rhs) const
+    {
+        return !(*this == rhs);
+    }
+};
+
+struct CollisionAABBFace
+{
+    AABBFace light;
+    AABBFace heavy;
+};
+
 struct CollisionInf
 {
-    Vector2int pair;  // 衝突したオブジェクトのAABBの番号ペア
+    CollisionPair IDpair;    // 衝突したオブジェクトの識別番号ペア
+    CollisionPair AABBpair;  // 衝突したオブジェクトのAABBの番号ペア
+    CollisionAABBFace face;  // 衝突したオブジェクトのAABBの衝突面ペア
     Vector3 depth;    // 浸入深度
 };
 

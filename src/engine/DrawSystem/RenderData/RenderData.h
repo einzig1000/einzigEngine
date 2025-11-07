@@ -7,9 +7,16 @@ class RenderData_Model
 public:
     RenderData_Model();
     ~RenderData_Model();
+    // 全オブジェクトのSRT更新,それに伴うワールド行列更新
     void Update1();
+	// 全オブジェクトの親を考慮したワールド行列更新,AABB更新
     void Update2();
+	// 衝突判定,衝突ペア・深度の保存
     void Update3();
+    // 衝突時の更新,それに伴うワールド行列更新
+	void Update4();
+	// 全オブジェクトの描画範囲内判定,前フレーム情報保存
+    void Update5();
 
     VectorDynamics scale = { Vector3( 1.0f,1.0f,1.0f ), Vector3( 0.0f,0.0f,0.0f ), Vector3( 0.0f,0.0f,0.0f ) };
 	VectorDynamics rotate = { Vector3(0.0f,0.0f,0.0f), Vector3(0.0f,0.0f,0.0f), Vector3(0.0f,0.0f,0.0f) };
@@ -36,8 +43,6 @@ public:
     std::vector<AABB> aabbs;
     // 重さ
     float mass = 1.0f;
-    // ID
-    int ID = 0;
     std::optional<std::string> name;
     // ファイルパス
     std::string filePath = "resources/Prototypes/model_json/aaa";
@@ -72,6 +77,9 @@ public:
     static std::vector<RenderData_Model*> renderModels;
 
 private:
+	// 衝突ペアを全部保存
+	static std::vector<CollisionInf*> collisionInfos;
+
 	// 親を考慮しないワールドマトリックス
 	Matrix4x4 localWorldMatrix;
 	// 親を考慮したワールドマトリックス
@@ -81,6 +89,8 @@ private:
 	// 親を考慮したワールドマトリックスを設定する
     Matrix4x4 SetWorldMatrix();
 
+    // ID
+    int ID = 0;
 
 
     bool initialized = false;

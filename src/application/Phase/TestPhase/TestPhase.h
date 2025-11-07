@@ -13,10 +13,9 @@ public:
 	void Draw();
 
 private:
-	RenderData_Model model1_;
-	RenderData_Model model2_;
-	RenderData_Model model3_;
-	RenderData_Model model4_;
+	RenderData_Model ground_;
+
+	RenderData_Model player_;
 
 	RenderData_Sprite sprite1_;
 	RenderData_Sprite sprite2_;

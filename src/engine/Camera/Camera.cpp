@@ -9,7 +9,7 @@ Camera::Camera()
 
     // カメラ
     transform_.translate = { 0.0f, 0.0f, 0.0f };
-    transform_.rotate = { 1.13f, 0.0f, 0.0f };
+    transform_.rotate = { 0.2f, 0.0f, 0.0f };
     center_ = { 0.0f, 0.0f, 0.0f };
     distance_ = 35.60f;
 
@@ -47,13 +47,6 @@ void Camera::Update()
 
     if (enableControl_)
     {
-        //// 左クリック
-        //prePressMouse0_ = pressMouse0_;
-        //pressMouse0_ = Game::Input::Mouse::GetMousePress(0);
-        //// ミドルボタン
-        //prePressMouse2_ = pressMouse2_;
-        //pressMouse2_ = Game::Input::Mouse::GetMousePress(2);
-
         mouseWheel_ = Game::Input::Mouse::GetMouseWheel();
 
 #pragma region カメラ回転

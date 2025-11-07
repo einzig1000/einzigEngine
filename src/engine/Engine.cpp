@@ -118,6 +118,87 @@ void Engine::BeginFrame()
 	// インプット系を更新
 	inputManager_->Update();
 }
+void Engine::UpdateTransforms()
+{
+
+#pragma region モデルリスト取得
+
+	const auto& modelList = RenderData_Model::renderModels;
+
+#pragma endregion
+
+#pragma region 座標更新 & 描画範囲内判定
+
+	// オブジェクト更新
+	std::vector<Object3D> objects = dxManager->GetResourceManager()->GetModelManager()->GetModelList();
+
+	for (auto& rd : modelList)
+	{
+		rd->Update1();
+	}
+	for (auto& rd : modelList)
+	{
+		rd->Update2();
+	}
+	for (auto& rd : modelList)
+	{
+		rd->Update3();
+	}
+	for (auto& rd : modelList)
+	{
+		rd->Update4();
+	}
+	for (auto& rd : modelList)
+	{
+		rd->Update5();
+	}
+
+#pragma endregion
+
+#pragma region マウスレイ衝突判定
+
+	// マウスレイ取得
+	const Ray mouseRay = inputManager_->GetMouseController()->GetMouseRay();
+	// モデルと衝突までの距離セット構造体
+	struct HitInfo { RenderData_Model* rdm; float distance; };
+	// のリスト
+	std::vector<HitInfo> hits;
+	// のリサイズ(リサイズではない)
+	hits.reserve(modelList.size());
+
+	for (auto& rd : modelList)
+	{
+		rd->isCollisionMouseRay = -1;
+		// 描画範囲内なら判定
+		if (rd->inPicture)
+		{
+			// 最近接衝突点を取得
+			std::optional<Vector3> colPos = IntersectRayModel(
+				mouseRay,
+				objects[rd->model].modelData.vertices, rd
+			);
+			// 衝突していたらリストに登録
+			if (colPos)
+			{
+				float minDistance = (colPos.value() - mouseRay.origin).Length();
+				hits.push_back({ rd, minDistance });
+			}
+		}
+	}
+
+	// 距離の昇順でソート
+	std::sort(hits.begin(), hits.end(),
+		[](auto& a, auto& b) { return a.distance < b.distance; });
+
+	// ソート後に順序を割り当て
+	for (int order = 0; order < (int)hits.size(); ++order)
+	{
+		hits[order].rdm->isCollisionMouseRay = order;
+	}
+
+#pragma endregion
+
+}
 void Engine::UpdateCamera()
 {
 	// カメラの更新
@@ -188,116 +269,6 @@ void Engine::EndFrame()
 }
 
 
-void Engine::UpdateTransforms()
-{
-
-#pragma region モデルリスト取得
-
-	const auto& modelList = RenderData_Model::renderModels;
-
-#pragma endregion
-
-#pragma region 座標更新 & 描画範囲内判定
-
-	// オブジェクト更新
-	std::vector<Object3D> objects = dxManager->GetResourceManager()->GetModelManager()->GetModelList();
-
-	for (auto& rd : modelList)
-	{
-		rd->Update1();
-	}
-	for (auto& rd : modelList)
-	{
-		rd->Update2();
-	}
-	for (auto& rd : modelList)
-	{
-		rd->Update3();
-	}
-
-#pragma endregion
-
-#pragma region マウスレイ衝突判定
-
-	// マウスレイ取得
-	const Ray mouseRay = inputManager_->GetMouseController()->GetMouseRay();
-	// モデルと衝突までの距離セット構造体
-	struct HitInfo { RenderData_Model* rdm; float distance; };
-	// のリスト
-	std::vector<HitInfo> hits;
-	// のリサイズ(リサイズではない)
-	hits.reserve(modelList.size());
-
-	// 描画範囲内のオブジェクトを全て調査
-	/*for (auto& rd : modelList)
-	{
-		rd->isCollisionMouseRay = -1;
-		if (rd->inPicture)
-		{
-			float minDistance = (std::numeric_limits<float>::max)();
-			std::optional<Vector3> nearestColPos;
-
-			for (const auto& aabb : rd->aabbs)
-			{
-				Transforms tmpTransforms;
-				tmpTransforms.scale = rd->scale.value;
-				tmpTransforms.rotate = rd->rotate.value;
-				tmpTransforms.translate = rd->translate.value;
-				std::optional<Vector3> colPos = IntersectRayModel(
-					mouseRay,
-					objects[rd->model].modelData.vertices,
-					aabb, tmpTransforms
-				);
-				if (colPos)
-				{
-					float d = (colPos.value() - mouseRay.origin).Length();
-					if (d < minDistance)
-					{
-						minDistance = d;
-						nearestColPos = colPos;
-					}
-				}
-			}
-
-			if (nearestColPos)
-			{
-				hits.push_back({ rd, minDistance });
-			}
-		}
-	}*/
-	for (auto& rd : modelList)
-	{
-		rd->isCollisionMouseRay = -1;
-		// 描画範囲内なら判定
-		if (rd->inPicture)
-		{
-			// 最近接衝突点を取得
-			std::optional<Vector3> colPos = IntersectRayModel(
-				mouseRay,
-				objects[rd->model].modelData.vertices, rd
-			);
-			// 衝突していたらリストに登録
-			if (colPos)
-			{
-				float minDistance = (colPos.value() - mouseRay.origin).Length();
-				hits.push_back({ rd, minDistance });
-			}
-		}
-	}
-
-	// 距離の昇順でソート
-	std::sort(hits.begin(), hits.end(),
-		[](auto& a, auto& b) { return a.distance < b.distance; });
-
-	// ソート後に順序を割り当て
-	for (int order = 0; order < (int)hits.size(); ++order)
-	{
-		hits[order].rdm->isCollisionMouseRay = order;
-	}
-
-#pragma endregion
-
-}
 
 // 終了処理
 void Engine::Finalize()
