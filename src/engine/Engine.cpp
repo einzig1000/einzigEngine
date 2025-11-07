@@ -558,6 +558,10 @@ void Engine::ToggleFullscreen()
 // CreateLocalAABBでつくったAABBに座標を適応させる（当たり判定の毎フレーム更新用）
 std::vector<AABB>  Engine::CreateAABB(RenderData_Model* data)
 {
+	if (data->model < 0 || data->model >= (int)dxManager->GetResourceManager()->GetModelManager()->GetModelCount())
+	{
+		return {};
+	}
 	Matrix4x4 worldMatrix = data->GetWorldMatrix();
 	Object3D& obj = dxManager->GetResourceManager()->GetModelManager()->GetModelList()[data->model];
 	std::vector<AABB> result;

@@ -16,25 +16,32 @@ TestPhase::TestPhase()
 	audio2 = Game::Resource::LoadAudio("resources/Prototypes/audio/SE/バトル用/氷魔法1.mp3");
 
 
-	model1_.model = model2;
+	model1_.model = model3;
 	model1_.texture = tex1;
 	model1_.name = "1";
 	model1_.scale.value = { 1.0f,1.0f,1.0f };
 	model1_.translate.value = { -2.0f,2.0f,0.0f };
 
-	model2_.model = model2;
+	model2_.model = model3;
 	model2_.texture = tex1;
 	model2_.name = "2";
 	model2_.scale.value = { 0.7f,0.7f,0.7f };
 	model2_.translate.value = { -3.0f,3.0f,0.0f };
 	//model2_.parentModel = &model1_;
 
-	model3_.model = model2;
+	model3_.model = model3;
 	model3_.texture = tex1;
 	model3_.name = "3";
 	model3_.scale.value = { 0.4f,0.4f,0.4f };
 	model3_.translate.value = { -4.0f,4.0f,0.0f };
 	//model3_.parentModel = &model2_;
+
+	model4_.model = -1;
+	model4_.texture = tex1;
+	model4_.name = "4";
+	model4_.scale.value = { 0.2f,0.2f,0.2f };
+	model4_.translate.value = { -5.0f,5.0f,0.0f };
+	//model4_.parentModel = &model3_;
 
 	sprite1_.texture = tex1;
 	sprite1_.transforms.scale = { 0.1f,0.1f };
@@ -286,7 +293,9 @@ void TestPhase::Update()
 
 	ImGui::End();
 
-	//model1_.LookAtOnce(model2_.GetWorldPosition());
+	model1_.LookAtOnce(model2_);
+	model2_.LookAtOnce(model3_);
+	model3_.LookAtOnce(model4_);
 }
 
 
@@ -298,6 +307,8 @@ void TestPhase::Draw()
 	model2_.DrawImGui();
 	model3_.Draw();
 	model3_.DrawImGui();
+	model4_.Draw();
+	model4_.DrawImGui();
 
 	sprite1_.Draw();
 	sprite1_.DrawImGui();
