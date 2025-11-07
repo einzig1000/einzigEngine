@@ -201,10 +201,18 @@ void Engine::UpdateTransforms()
 
 	// オブジェクト更新
 	std::vector<Object3D> objects = dxManager->GetResourceManager()->GetModelManager()->GetModelList();
+
 	for (auto& rd : modelList)
 	{
-		//rd->Update(objects);
-		rd->Update();
+		rd->Update1();
+	}
+	for (auto& rd : modelList)
+	{
+		rd->Update2();
+	}
+	for (auto& rd : modelList)
+	{
+		rd->Update3();
 	}
 
 #pragma endregion

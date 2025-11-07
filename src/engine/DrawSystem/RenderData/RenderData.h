@@ -13,7 +13,7 @@ public:
 	VectorDynamics rotate = { Vector3(0.0f,0.0f,0.0f), Vector3(0.0f,0.0f,0.0f), Vector3(0.0f,0.0f,0.0f) };
 	VectorDynamics translate = { Vector3(0.0f,0.0f,0.0f), Vector3(0.0f,0.0f,0.0f), Vector3(0.0f,0.0f,0.0f) };
 	// 親のワールドマトリックス
-	Matrix4x4* parentMatrix = nullptr;
+    RenderData_Model* parentModel = nullptr;
     // 今フレームの移動量
     Vector3 lastMove;
     // 今フレームでS/R/Tに変化があったか
@@ -65,11 +65,24 @@ public:
     void DrawAABB();
     void DrawImGui();
 
+    void Update1();
+	void Update2();
+    Matrix4x4 SetWorldMatrix();
+	void Update3();
+
+	// 親を考慮しないワールドマトリックス
+	Matrix4x4 localWorldMatrix;
+	// 親を考慮したワールドマトリックス
+	Matrix4x4 worldMatrix;
 
     static std::vector<RenderData_Model*> renderModels;
 
 private:
-    TransformationMatrix transformationMatrix;
+
+    //TransformationMatrix transformationMatrix;
+
+
+
     bool initialized = false;
 
     // 衝突フラグ
@@ -81,9 +94,6 @@ private:
 
     // 衝突方向に応じた行動
     void CollisionAction(const Vector3& depth, RenderData_Model& target);
-
-    // ワールドマトリックスの更新
-	void UpdateWorldMatrix();
 
     Vector3 worldPos;
     // 前フレーム位置、回転、スケール、ワールド座標

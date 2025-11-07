@@ -16,7 +16,7 @@ RenderData_Model::RenderData_Model()
 {
 	renderModels.push_back(this);
 	this->ID = int(renderModels.size());
-	parentMatrix = nullptr;
+	this->parentModel = nullptr;
 }
 
 RenderData_Model::~RenderData_Model()
@@ -26,119 +26,6 @@ RenderData_Model::~RenderData_Model()
 	{
 		renderModels.erase(it);
 	}
-}
-
-void RenderData_Model::Update()
-{
-
-#pragma region 座標更新
-
-	// S/R/Tの更新
-	this->translate.velocity += this->translate.acceleration;
-	this->translate.value += this->translate.velocity;
-	this->rotate.velocity += this->rotate.acceleration;
-	this->rotate.value += this->rotate.velocity;
-	this->scale.velocity += this->scale.acceleration;
-	this->scale.value += this->scale.velocity;
-
-	this->movedThisFrame = false;
-	if (this->translate.value != this->preTranslate.value ||
-		this->rotate.value != this->preRotate.value ||
-		this->scale.value != this->preScale.value ||
-		!this->initialized)
-	{
-		this->movedThisFrame = true;
-	}
-
-	if (this->movedThisFrame)
-	{
-		UpdateWorldMatrix();
-	}
-
-	// ワールド座標取得
-	this->worldPos = Transform(Vector3{ 0.0f, 0.0f, 0.0f }, GetWorldMatrix());
-
-	// 今フレームの移動量
-	this->lastMove = this->worldPos - this->preWorldPos;
-
-#pragma endregion
-
-#pragma region 描画範囲内判定
-
-	bool inFrustum = false;
-	for (const auto& aabb : this->aabbs)
-	{
-		if (Game::Camera::InCamera(aabb))
-		{
-			inFrustum = true;
-			break;
-		}
-	}
-	this->inPicture = inFrustum;
-
-#pragma endregion
-
-#pragma region 衝突判定
-
-	for (auto* target : blockList)
-	{
-		std::optional<CollisionInf> Inf = isCollisionAABBInf(*target);
-		// 衝突していたら
-		if (Inf != std::nullopt)
-		{
-			// 自分の方が軽かったら自分を動かす
-			if (this->mass <= target->mass)
-			{
-				if (this->lastMove.x > 0.0f)
-				{
-					this->translate.value.x -= Inf->depth.x;
-					translate.velocity.x = 0.0f;
-				}
-				else if (this->lastMove.x < 0.0f)
-				{
-					this->translate.value.x += Inf->depth.x;
-					translate.velocity.x = 0.0f;
-				}
-				if (this->lastMove.y > 0.0f)
-				{
-					this->translate.value.y -= Inf->depth.y;
-					translate.velocity.y = 0.0f;
-				}
-				else if (this->lastMove.y < 0.0f)
-				{
-					this->translate.value.y += Inf->depth.y;
-					translate.velocity.y = 0.0f;
-				}
-				if (this->lastMove.z > 0.0f)
-				{
-					this->translate.value.z -= Inf->depth.z;
-					translate.velocity.z = 0.0f;
-				}
-				else if (this->lastMove.z < 0.0f)
-				{
-					this->translate.value.z += Inf->depth.z;
-					translate.velocity.z = 0.0f;
-				}
-			}
-
-			// 衝突修正後の移動マトリックス再計算
-			UpdateWorldMatrix();
-		}
-	}
-
-#pragma endregion
-
-#pragma region 前フレーム情報保存
-
-	this->preScale = this->scale;
-	this->preRotate = this->rotate;
-	this->preTranslate = this->translate;
-	this->preWorldPos = this->worldPos;
-	this->preAABB = this->aabbs;
-
-#pragma endregion
-
-	initialized = true;
 }
 
 // 他のオブジェクトとの衝突判定
@@ -170,9 +57,7 @@ void RenderData_Model::SetBlock(RenderData_Model& target)
 // ワールド行列とワールド座標の取得
 Matrix4x4 RenderData_Model::GetWorldMatrix() const
 {
-	Matrix4x4 effectiveWorld = this->transformationMatrix.World;
-	if (this->parentMatrix) effectiveWorld = (*this->parentMatrix) * effectiveWorld;
-	return effectiveWorld;
+	return this->worldMatrix;
 }
 Vector3 RenderData_Model::GetWorldPosition() const
 {
@@ -342,65 +227,120 @@ void RenderData_Model::DrawImGui()
 	ImGui::End();
 }
 
-void RenderData_Model::CollisionAction(const Vector3& depth, RenderData_Model& target)
-{}
-
-void RenderData_Model::UpdateWorldMatrix()
+// 親を考慮しない場合のワールド行列更新
+void RenderData_Model::Update1()
 {
-	// 移動マトリックス作成
-	XMVECTOR scaleVec = XMVectorSet(this->scale.value.x, this->scale.value.y, this->scale.value.z, 0.0f);
-	XMVECTOR pivotVec = XMVectorSet(this->pivot.x, this->pivot.y, this->pivot.z, 0.0f);
-	XMVECTOR translateVec = XMVectorSet(this->translate.value.x, this->translate.value.y, this->translate.value.z, 0.0f);
-	XMVECTOR rotEuler = XMVectorSet(this->rotate.value.x, this->rotate.value.y, this->rotate.value.z, 0.0f);
+	// S/R/Tの更新
+	this->translate.velocity += this->translate.acceleration;
+	this->translate.value += this->translate.velocity;
+	this->rotate.velocity += this->rotate.acceleration;
+	this->rotate.value += this->rotate.velocity;
+	this->scale.velocity += this->scale.acceleration;
+	this->scale.value += this->scale.velocity;
 
+	// 今フレームでS/R/Tに変化があったか
+	this->movedThisFrame =
+		(this->translate.value != this->preTranslate.value) ||
+		(this->rotate.value != this->preRotate.value) ||
+		(this->scale.value != this->preScale.value) ||
+		!this->initialized;
 
-	// 1) スケール
-	XMMATRIX S = XMMatrixScalingFromVector(scaleVec);
-
-
-	// 2) ピボットオフセット（負）
-	XMMATRIX Tneg = XMMatrixTranslationFromVector(XMVectorNegate(pivotVec));
-
-
-	// 3) 回転（オイラー→クォータニオン→行列）
-	XMVECTOR quatEuler = XMQuaternionRotationRollPitchYawFromVector(rotEuler);
-	XMMATRIX R = XMMatrixRotationQuaternion(quatEuler);
-
-
-	// 4) ピボットオフセット（正）
-	XMMATRIX Tpos = XMMatrixTranslationFromVector(pivotVec);
-
-
-	// 5) 平行移動
-	XMMATRIX T = XMMatrixTranslationFromVector(translateVec);
-
-
-	// 6) 合成: S → Tneg → R → Tpos → T
-	XMMATRIX world = S * Tneg * R * Tpos * T;
-
-
-	// 7) 親行列の適用
-	if (this->parentMatrix)
+	// ワールド座標取得
+	if (this->movedThisFrame)
 	{
-		// parentWorld が Matrix4x4 ならまず XMFLOAT4X4 にコピー
-		XMFLOAT4X4 parentF4;
-		// 4×4 のメモリ配列を直接コピー
-		std::memcpy(&parentF4, this->parentMatrix, sizeof(parentF4));
-		XMMATRIX parentM = XMLoadFloat4x4(&parentF4);
-		world = parentM * world;
+		// 移動マトリックス作成
+		XMVECTOR scaleVec = XMVectorSet(this->scale.value.x, this->scale.value.y, this->scale.value.z, 0.0f);
+		XMVECTOR pivotVec = XMVectorSet(this->pivot.x, this->pivot.y, this->pivot.z, 0.0f);
+		XMVECTOR translateVec = XMVectorSet(this->translate.value.x, this->translate.value.y, this->translate.value.z, 0.0f);
+		XMVECTOR rotEuler = XMVectorSet(this->rotate.value.x, this->rotate.value.y, this->rotate.value.z, 0.0f);
+		// 1) スケール
+		XMMATRIX S = XMMatrixScalingFromVector(scaleVec);
+		// 2) ピボットオフセット（原点に戻す方）
+		XMMATRIX Tneg = XMMatrixTranslationFromVector(XMVectorNegate(pivotVec));
+		// 3) 回転（オイラー→クォータニオン→行列）
+		XMVECTOR quatEuler = XMQuaternionRotationRollPitchYawFromVector(rotEuler);
+		XMMATRIX R = XMMatrixRotationQuaternion(quatEuler);
+		// 4) ピボットオフセット（もとの位置に戻す方）
+		XMMATRIX Tpos = XMMatrixTranslationFromVector(pivotVec);
+		// 5) 平行移動
+		XMMATRIX T = XMMatrixTranslationFromVector(translateVec);
+		// 6) 合成: S → Tneg → R → Tpos → T
+		XMMATRIX world = S * Tneg * R * Tpos * T;
+		// 8) 結果を transforms.World に格納
+		XMFLOAT4X4 tmp;
+		DirectX::XMStoreFloat4x4(&tmp, world);
+		for (int i = 0; i < 4; ++i)
+			for (int j = 0; j < 4; ++j)
+				this->localWorldMatrix.m[i][j] = tmp.m[i][j];
+
 	}
 
+	initialized = true;
+}
 
-	// 8) 結果を transforms.World に格納
-	XMFLOAT4X4 tmp;
-	DirectX::XMStoreFloat4x4(&tmp, world);
-	for (int i = 0; i < 4; ++i)
-		for (int j = 0; j < 4; ++j)
-			this->transformationMatrix.World.m[i][j] = tmp.m[i][j];
+// 親を考慮した場合のワールド行列更新
+void RenderData_Model::Update2()
+{
+	// 階層を含めた最終ワールド行列を取得
+	this->worldMatrix = this->SetWorldMatrix();
 
-	// AABB更新
+	// ワールド座標取得
+	this->worldPos = Vector3(
+		this->worldMatrix.m[3][0],
+		this->worldMatrix.m[3][1],
+		this->worldMatrix.m[3][2]
+	);
+
+	// AABB更新（最終ワールド行列に基づいて）
 	this->aabbs = Engine::Instance().CreateAABB(this);
 }
+
+Matrix4x4 RenderData_Model::SetWorldMatrix()
+{
+	// 自身のローカル行列がベース
+	Matrix4x4 result = this->localWorldMatrix;
+
+	// 親が存在する場合は親の親の親...をウルトラ再帰する
+	if (this->parentModel)
+	{
+		Matrix4x4 parentWorld = this->parentModel->SetWorldMatrix();
+		result = parentWorld * result;
+	}
+
+	// 親がいなかったらそのまま、いたら親の行列を掛けたものを返す
+	return result;
+}
+
+// 描画範囲内判定と前フレーム情報保存
+void RenderData_Model::Update3()
+{
+#pragma region 描画範囲内判定
+
+	bool inFrustum = false;
+	for (const auto& aabb : this->aabbs)
+	{
+		if (Game::Camera::InCamera(aabb))
+		{
+			inFrustum = true;
+			break;
+		}
+	}
+	this->inPicture = inFrustum;
+
+#pragma endregion
+
+#pragma region 前フレーム情報保存
+
+	this->preScale = this->scale;
+	this->preTranslate = this->translate;
+	this->preRotate = this->rotate;
+	this->preAABB = this->aabbs;
+
+#pragma endregion
+}
+
+void RenderData_Model::CollisionAction(const Vector3& depth, RenderData_Model& target)
+{}
 
 
 std::optional<CollisionInf> RenderData_Model::isCollisionAABBInf(RenderData_Model& target) const
