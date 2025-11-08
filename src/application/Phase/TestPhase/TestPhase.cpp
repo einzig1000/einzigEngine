@@ -337,12 +337,14 @@ void TestPhase::Draw()
 
 	ground_.Draw();
 	ground_.DrawImGui();
+	ground_.DrawAABB();
 	wall1_.Draw();
 	wall2_.Draw();
 	wall3_.Draw();
 	wall4_.Draw();
 
 	player_.Draw();
+	player_.DrawAABB();
 	player_.DrawImGui();
 
 	sprite1_.Draw();

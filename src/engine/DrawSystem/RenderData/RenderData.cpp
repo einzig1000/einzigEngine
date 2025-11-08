@@ -184,6 +184,26 @@ void RenderData_Model::DrawImGui()
 
 		ImGui::TreePop();
 	}
+	if (ImGui::TreeNode("----------model----------------"))
+	{
+		if (ImGui::Button("-"))this->model -= 1;
+
+		ImGui::SameLine();
+
+		// ラベルを非表示にするために "##" プレフィックスで ID を与える
+		std::string dragId = std::string("##model") + num;
+		ImGui::DragInt(dragId.c_str(), reinterpret_cast<int*>(&this->model));
+
+		ImGui::SameLine();
+
+		if (ImGui::Button("+"))this->model += 1;
+
+		// クランプ
+		if (this->model < 0) this->model = 0;
+		if (this->model > int(Game::Resource::GetModelCount() - 1)) this->model = int(Game::Resource::GetModelCount() - 1);
+
+		ImGui::TreePop();
+	}
 	if (ImGui::TreeNode("----------color----------------"))
 	{
 		float floatColor[4] = { this->color.x / 255.0f,  this->color.y / 255.0f,  this->color.z / 255.0f,  this->color.w / 255.0f };
