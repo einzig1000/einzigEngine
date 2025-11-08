@@ -4,27 +4,21 @@
 #include "input/MouseController.h"
 #include <memory>
 
+class CameraManager;
+
 class Input
 {
 public:
-    Input(HWND hwnd, Matrix4x4* viewProjectionMatrix, Matrix4x4* debugViewProjectionMatrix, bool* debugCameraMode);
+    Input(HWND hwnd, CameraManager* cameraManager);
     void Update();
     void EndFrame();
 
     MouseController* GetMouseController() const { return mouseController_.get(); }
+    GetHitKey* GetGetHitKey() const { return getHitKey_.get(); }
 
-
-    static bool left;
-    static bool right;
-    static bool jump;
-    static bool hide;
-    static bool Pause;
-
-    static bool preHide;
 
 private:
     GetPadState* GetGetPadState() const { return getPadState_.get(); }
-    GetHitKey* GetGetHitKey() const { return getHitKey_.get(); }
 
     std::unique_ptr<GetHitKey> getHitKey_;
     std::unique_ptr<GetPadState> getPadState_;

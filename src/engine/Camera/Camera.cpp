@@ -1,15 +1,15 @@
-#include "Camera/CameraController.h"
+#include "Camera.h"
 #include "Facade/Game.h"
 #include "Window/WindowManager.h"
 
-CameraController::CameraController()
+Camera::Camera()
 {
     mousePositionGap_ = { 0,0 };
     enableControl_ = true;
 
     // カメラ
     transform_.translate = { 0.0f, 0.0f, 0.0f };
-    transform_.rotate = { 1.13f, 0.0f, 0.0f };
+    transform_.rotate = { 0.2f, 0.0f, 0.0f };
     center_ = { 0.0f, 0.0f, 0.0f };
     distance_ = 35.60f;
 
@@ -22,14 +22,18 @@ CameraController::CameraController()
     Resize();
 }
 
-void CameraController::Update()
+Camera::~Camera()
+{
+}
+
+void Camera::Update()
 {
 #pragma region カメラシェイク
 
     if (shakeActive_)
     {
         shakeTime_++;
-     
+
         if (shakeTime_ >= shakeDuration_)
         {
             shakeActive_ = false;
@@ -43,23 +47,17 @@ void CameraController::Update()
 
     if (enableControl_)
     {
-        // 左クリック
-        prePressMouse0_ = pressMouse0_;
-        pressMouse0_ = Game::Input::Mouse::GetMousePress(0);
-        // ミドルボタン
-        prePressMouse2_ = pressMouse2_;
-        pressMouse2_ = Game::Input::Mouse::GetMousePress(2);
-
         mouseWheel_ = Game::Input::Mouse::GetMouseWheel();
 
 #pragma region カメラ回転
+
         // クリックした瞬間
-        if (pressMouse2_ && prePressMouse2_ == 0 && !GetHitKey::IsPressedNow(DIK_LSHIFT))
+        if (Game::Input::Mouse::IsJustPressed(2) && !Game::Input::Key::IsHeld(DIK_LSHIFT))
         {
             preMousePosition_ = Game::Input::Mouse::GetMousePosition();
         }
         // クリックしている最中
-        if (pressMouse2_ && !GetHitKey::IsPressedNow(DIK_LSHIFT))
+        if (Game::Input::Mouse::IsHeld(2) && !Game::Input::Key::IsHeld(DIK_LSHIFT))
         {
             mousePosition_ = Game::Input::Mouse::GetMousePosition();
             mousePositionGap_.x = mousePosition_.x - preMousePosition_.x;
@@ -68,37 +66,51 @@ void CameraController::Update()
             transform_.rotate.y = (mousePositionGap_.x / 100.0f) + (preRotate_.y);
         }
         // クリックやめた瞬間
-        if (prePressMouse2_ && pressMouse2_ == 0 && !GetHitKey::IsPressedNow(DIK_LSHIFT))
+        if (Game::Input::Mouse::IsJustReleased(2) && !Game::Input::Key::IsHeld(DIK_LSHIFT))
         {
             preRotate_ = transform_.rotate;
         }
 
 #pragma endregion
 
-#pragma region カメラ回転
+#pragma region 回転中心
+
         // クリックした瞬間
-        if (pressMouse2_ && prePressMouse2_ == 0 && !GetHitKey::IsPressedNow(DIK_LSHIFT))
+        if (Game::Input::Mouse::IsJustPressed(2) && Game::Input::Key::IsHeld(DIK_LSHIFT))
         {
             preMousePosition_ = Game::Input::Mouse::GetMousePosition();
+            preCenter_ = center_;
         }
         // クリックしている最中
-        if (pressMouse2_ && !GetHitKey::IsPressedNow(DIK_LSHIFT))
+        if (Game::Input::Mouse::IsHeld(2) && Game::Input::Key::IsHeld(DIK_LSHIFT))
         {
             mousePosition_ = Game::Input::Mouse::GetMousePosition();
             mousePositionGap_.x = mousePosition_.x - preMousePosition_.x;
             mousePositionGap_.y = mousePosition_.y - preMousePosition_.y;
-            transform_.rotate.x = (mousePositionGap_.y / 100.0f) + (preRotate_.x);
-            transform_.rotate.y = (mousePositionGap_.x / 100.0f) + (preRotate_.y);
-        }
-        // クリックやめた瞬間
-        if (prePressMouse2_ && pressMouse2_ == 0 && !GetHitKey::IsPressedNow(DIK_LSHIFT))
-        {
-            preRotate_ = transform_.rotate;
-        }
+            // カメラの右方向と上方向を取得
+            Matrix4x4 cameraRotateMatrix = Matrix4x4::MakeAffineMatrix(
+                { 1,1,1 },
+                transform_.rotate,
+                { 0,0,0 }
+            );
+            Vector3 cameraRight = {
+                cameraRotateMatrix.m[0][0],
+                cameraRotateMatrix.m[1][0],
+                cameraRotateMatrix.m[2][0]
+            };
+            Vector3 cameraUp = {
+                cameraRotateMatrix.m[0][1],
+                cameraRotateMatrix.m[1][1],
+                cameraRotateMatrix.m[2][1]
+            };
+            center_ = preCenter_ - (cameraRight * (mousePositionGap_.x / 100.0f)) + (cameraUp * (mousePositionGap_.y / 100.0f));
+		}
 
 #pragma endregion
+
 
 #pragma region カメラ距離
+
         if (mouseWheel_ > 0)
         {
             distance_ -= float(mouseWheel_) / 100;
@@ -169,27 +181,18 @@ void CameraController::Update()
 
 }
 
-void CameraController::Resize()
+void Camera::Resize()
 {
     projectionMatrix_ = Matrix4x4::MakePerspectiveFovMatrix(0.45f, float(WindowManager::winWidth_) / float(WindowManager::winHeight_), 0.1f, 100.0f);
     //viewportMatrix = Matrix4x4::MakeViewPortMatrix(0.0f, 0.0f, float(WindowManager::winWidth_), float(WindowManager::winHeight_), 0.0f, 1.0f);
 }
 
-void CameraController::Draw(bool debugCamera)
+void Camera::Draw()
 {
-    ImGui::Begin("camera");
-    if (debugCamera)ImGui::Text("Mode: Debug");
-    else ImGui::Text("Mode: Release");
-    ImGui::DragFloat3("cameraCenter", &center_.x, 0.01f);
-    ImGui::DragFloat3("cameraRotate", &transform_.rotate.x, 0.01f);
-    ImGui::DragFloat("cameraDistance", &distance_, 0.1f);
-    ImGui::Checkbox("enableControl", &enableControl_);
-	//if (debugCamera)ImGui::Checkbox("FixReleaseCamera", &enableControl_);
-    ImGui::End();
-	Game::DebugDraw::AddSphere(center_, Vector3{ 0.2f,0.2f,0.2f }, 0xFFFF00FF);
+    Game::DebugDraw::AddSphere(center_, Vector3{ 0.2f,0.2f,0.2f }, 0xFFFF00FF);
 }
 
-void CameraController::CreateFrustumPlanes()
+void Camera::CreateFrustumPlanes()
 {
     // Left Plane
     frustumPlanes_[0].normal.x = viewProjectionMatrix.m[0][3] + viewProjectionMatrix.m[0][0];
@@ -233,7 +236,7 @@ void CameraController::CreateFrustumPlanes()
     }
 }
 
-bool CameraController::InFrustum(const AABB& aabb)
+bool Camera::InFrustum(const AABB& aabb)
 {
     // AABBの8つの頂点をワールド空間に変換
     Vector3 points[8];
@@ -271,7 +274,7 @@ bool CameraController::InFrustum(const AABB& aabb)
 }
 
 // 実際に動かす
-void CameraController::MovingCenter()
+void Camera::MovingCenter()
 {
     if (easeCenter_.maxFrame == 0)
     {
@@ -290,7 +293,7 @@ void CameraController::MovingCenter()
     }
 }
 
-void CameraController::MovingRotate()
+void Camera::MovingRotate()
 {
     if (easeRotate_.maxFrame == 0)
     {
@@ -310,7 +313,7 @@ void CameraController::MovingRotate()
     }
 }
 
-void CameraController::MovingDistance()
+void Camera::MovingDistance()
 {
     if (easeDistance_.maxFrame == 0)
     {
@@ -330,7 +333,7 @@ void CameraController::MovingDistance()
 }
 
 // 動かす先の設定
-void CameraController::SetCenterTarget(Vector3 target, int spendFrame, EaseType easetype)
+void Camera::SetCenterTarget(Vector3 target, int spendFrame, EaseType easetype)
 {
     easeCenter_.start = center_;
     easeCenter_.end = target;
@@ -340,7 +343,7 @@ void CameraController::SetCenterTarget(Vector3 target, int spendFrame, EaseType 
     easeCenter_.easetype = easetype;
 };
 
-void CameraController::SetRotateTarget(Vector3 target, int spendFrame, EaseType easetype)
+void Camera::SetRotateTarget(Vector3 target, int spendFrame, EaseType easetype)
 {
     easeRotate_.start = transform_.rotate;
     easeRotate_.end = target;
@@ -350,7 +353,7 @@ void CameraController::SetRotateTarget(Vector3 target, int spendFrame, EaseType 
     easeRotate_.easetype = easetype;
 };
 
-void CameraController::SetDistanceTarget(float target, int spendFrame, EaseType easetype)
+void Camera::SetDistanceTarget(float target, int spendFrame, EaseType easetype)
 {
     easeDistance_.start.x = distance_;
     easeDistance_.end.x = target;
@@ -361,7 +364,7 @@ void CameraController::SetDistanceTarget(float target, int spendFrame, EaseType 
 }
 
 // シェイク
-void CameraController::StartShake(float intensity, float duration, float frequency)
+void Camera::StartShake(float intensity, float duration, float frequency)
 {
     shakeActive_ = true;
     shakeIntensity_ = intensity;
@@ -370,17 +373,17 @@ void CameraController::StartShake(float intensity, float duration, float frequen
     shakeTime_ = 0.0f;
 }
 
-bool CameraController::IsShaking()
+bool Camera::IsShaking() const
 {
-	return shakeActive_;
+    return shakeActive_;
 }
 
-void CameraController::StopShake()
+void Camera::StopShake()
 {
-	shakeActive_ = false;
+    shakeActive_ = false;
 }
 
-Vector3 CameraController::GetShakeOffset() const
+Vector3 Camera::GetShakeOffset() const
 {
     if (!shakeActive_) return Vector3(0.0f, 0.0f, 0.0f);
 

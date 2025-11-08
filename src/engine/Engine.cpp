@@ -6,7 +6,6 @@
 #include <cstdint>
 
 #include "input/MouseController.h"
-#include "Camera/CameraController.h"
 #include "Window/WindowManager.h"
 #include "DirectX/DirectXManager.h"
 #include "Facade/Game.h"
@@ -45,22 +44,14 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 	{
 		drawSystem = new DrawSystem(dxManager);
 	}
-	if (!cameraController)
+	if (!cameraManager)
 	{
-		cameraController = new CameraController();
-		cameraController->enableControl_ = false; // メインカメラは常に操作不能
-	}
-	if (!debugCameraController)
-	{
-		debugCameraController = new CameraController();
+		cameraManager = new CameraManager();
 	}
 	if (!inputManager_)
 	{
-		inputManager_ = new Input(windowManager->GetHwnd(), &cameraController->viewProjectionMatrix, &debugCameraController->viewProjectionMatrix, &debugCamera);
+		inputManager_ = new Input(windowManager->GetHwnd(), cameraManager);
 	}
-
-	// カメラ
-	debugCamera = false;	// 最初はデバッグカメラ
 
 	// imguiの初期化
 	IMGUI_CHECKVERSION();
@@ -104,10 +95,13 @@ bool Engine::ProcessMessage()
 void Engine::BeginFrame()
 {
 	// ImGuiを更新
-	ImGui_ImplDX12_NewFrame();
-	ImGui_ImplWin32_NewFrame();
-	ImGui::NewFrame();
-	//ImGui::DockSpaceOverViewport
+	if (isDebugInfo)
+	{
+		ImGui_ImplDX12_NewFrame();
+		ImGui_ImplWin32_NewFrame();
+		ImGui::NewFrame();
+		//ImGui::DockSpaceOverViewport
+	}
 
 	// DirectXを更新
 	dxManager->BeginFrame();(ImGui::GetMainViewport());
@@ -116,8 +110,7 @@ void Engine::BeginFrame()
 	UpdateCamera();
 
 	// 描画関数初期化
-	if (!debugCamera)drawSystem->BeginFrame(cameraController->viewProjectionMatrix);
-	else drawSystem->BeginFrame(debugCameraController->viewProjectionMatrix);
+	drawSystem->BeginFrame(cameraManager->GetCurrentViewProjectionMatrix());
 
 	// デバッグ情報更新
 	UpdateDebugInfo();
@@ -125,79 +118,17 @@ void Engine::BeginFrame()
 	// インプット系を更新
 	inputManager_->Update();
 }
-void Engine::UpdateCamera()
-{
-	// カメラの更新
-	cameraController->Update();
-	debugCameraController->Update();
-
-	// 左シフト＋左クリックでカメラターゲットをオブジェクトに合わせる
-	if (GetHitKey::IsPressedNow(DIK_LSHIFT))
-	{
-		if (Game::Input::Mouse::GetMousePress(0) && !GetMousePrePress(0))
-		{
-			for (auto& rd : RenderData_Model::renderModels)
-			{
-				if (rd->isCollisionMouseRay == 0)
-				{
-					GetDebugCamera()->SetCenterTarget(rd->transforms.translate, 0, EaseType::IN_BACK);
-				}
-			}
-		}
-	}
-}
-void Engine::UpdateDebugInfo()
-{
-	if (GetHitKey::IsPressedDown(DIK_F1))
-	{
-		isDebugInfo = !isDebugInfo;
-	}
-	if (GetHitKey::IsPressedDown(DIK_F3))
-	{
-		ToggleCameraMode();
-	}
-	if (GetHitKey::IsPressedDown(DIK_F12))
-	{
-		ToggleFullscreen();
-	}
-
-	if (isDebugInfo)
-	{
-		if (!debugCamera) cameraController->Draw(debugCamera);
-		else debugCameraController->Draw(debugCamera);
-
-		static float fpsSmooth = 60.0f;
-		float dt = dxManager->GetDeltaTime();
-		float fps = (dt > 0.0f) ? 1.0f / dt : 0.0f;
-		// 指数移動平均で平滑化（α=0.1）
-		fpsSmooth += (fps - fpsSmooth) * 0.1f;
-
-		ImGui::Begin("------debug info------");
-		ImGui::Text("F1  : Hide this");
-		ImGui::Text("F3  : Toggle Camera Mode");
-		//ImGui::Text("F12 : Toggle Fullscreen");
-		ImGui::Text("DeltaTime: %.3f ms", dxManager->GetDeltaTime() * 1000.0f);
-		ImGui::Text("FPS: %.1f ", 1.0f / dxManager->GetDeltaTime());
-		ImGui::End();
-	}
-}
-void Engine::EndFrame()
-{
-	ImGui::Render();
-
-	// パーティクル更新
-	drawSystem->EndFrame();
-
-	// インプット系終了処理
-	inputManager_->EndFrame();
-
-	// DirectX終了処理
-	dxManager->EndFrame();
-}
-
-
 void Engine::UpdateTransforms()
 {
+	if (RenderData_Model::renderModels.size() == 0)return;
+
+	if (Game::Input::Key::IsHeld(DIK_LSHIFT))
+	{
+		if (!Game::Input::Key::IsJustPressed(DIK_RIGHTARROW))
+		{
+			return;
+		}
+	}
 
 #pragma region モデルリスト取得
 
@@ -209,10 +140,26 @@ void Engine::UpdateTransforms()
 
 	// オブジェクト更新
 	std::vector<Object3D> objects = dxManager->GetResourceManager()->GetModelManager()->GetModelList();
+
 	for (auto& rd : modelList)
 	{
-		//rd->Update(objects);
-		rd->Update();
+		rd->Update1();
+	}
+	for (auto& rd : modelList)
+	{
+		rd->Update2();
+	}
+	for (auto& rd : modelList)
+	{
+		rd->Update3();
+	}
+	for (auto& rd : modelList)
+	{
+		rd->Update4();
+	}
+	for (auto& rd : modelList)
+	{
+		rd->Update5();
 	}
 
 #pragma endregion
@@ -228,35 +175,21 @@ void Engine::UpdateTransforms()
 	// のリサイズ(リサイズではない)
 	hits.reserve(modelList.size());
 
-	// 描画範囲内のオブジェクトを全て調査
 	for (auto& rd : modelList)
 	{
 		rd->isCollisionMouseRay = -1;
+		// 描画範囲内なら判定
 		if (rd->inPicture)
 		{
-			float minDistance = (std::numeric_limits<float>::max)();
-			std::optional<Vector3> nearestColPos;
-
-			for (const auto& aabb : rd->aabbs)
+			// 最近接衝突点を取得
+			std::optional<Vector3> colPos = IntersectRayModel(
+				mouseRay,
+				objects[rd->model].modelData.vertices, rd
+			);
+			// 衝突していたらリストに登録
+			if (colPos)
 			{
-				std::optional<Vector3> colPos = IntersectRayModel(
-					mouseRay,
-					objects[rd->model].modelData.vertices,
-					aabb, rd->transforms
-				);
-				if (colPos)
-				{
-					float d = (colPos.value() - mouseRay.origin).Length();
-					if (d < minDistance)
-					{
-						minDistance = d;
-						nearestColPos = colPos;
-					}
-				}
-			}
-
-			if (nearestColPos)
-			{
+				float minDistance = (colPos.value() - mouseRay.origin).Length();
 				hits.push_back({ rd, minDistance });
 			}
 		}
@@ -275,6 +208,76 @@ void Engine::UpdateTransforms()
 #pragma endregion
 
 }
+void Engine::UpdateCamera()
+{
+	// カメラの更新
+	cameraManager->Update();
+
+	// 左シフト＋左クリックでカメラターゲットをオブジェクトに合わせる
+	if (Game::Input::Key::IsHeld(DIK_LSHIFT))
+	{
+		if (Game::Input::Mouse::IsJustPressed(0))
+		{
+			for (auto& rd : RenderData_Model::renderModels)
+			{
+				if (rd->isCollisionMouseRay == 0)
+				{
+					cameraManager->SetCenterTarget(rd->GetWorldPosition(), 0, EaseType::IN_BACK);
+				}
+			}
+		}
+	}
+}
+void Engine::UpdateDebugInfo()
+{
+	if (Game::Input::Key::IsJustPressed(DIK_F1))
+	{
+		isDebugInfo = !isDebugInfo;
+	}
+	if (Game::Input::Key::IsJustPressed(DIK_F3))
+	{
+		ToggleCameraMode();
+	}
+	if (Game::Input::Key::IsJustPressed(DIK_F12))
+	{
+		ToggleFullscreen();
+	}
+
+	if (isDebugInfo)
+	{
+		cameraManager->Draw();
+
+		static float fpsSmooth = 60.0f;
+		float dt = dxManager->GetDeltaTime();
+		float fps = (dt > 0.0f) ? 1.0f / dt : 0.0f;
+		// 指数移動平均で平滑化（α=0.1）
+		fpsSmooth += (fps - fpsSmooth) * 0.1f;
+
+		ImGui::Begin("------debug info------");
+		ImGui::Text("F1  : Hide Debug Info");
+		ImGui::Text("F3  : Toggle Camera Mode");
+		//ImGui::Text("F12 : Toggle Fullscreen");
+		ImGui::Text("DeltaTime: %.3f ms", dxManager->GetDeltaTime() * 1000.0f);
+		ImGui::Text("FPS: %.1f ", 1.0f / dxManager->GetDeltaTime());
+		ImGui::End();
+	}
+}
+void Engine::EndFrame()
+{
+	// 
+	if (isDebugInfo)ImGui::Render();
+
+	// パーティクル更新
+	drawSystem->EndFrame();
+
+	// インプット系終了処理
+	inputManager_->EndFrame();
+
+	// DirectX終了処理
+	dxManager->EndFrame();
+}
+
+
 
 // 終了処理
 void Engine::Finalize()
@@ -294,10 +297,8 @@ void Engine::Finalize()
 	dxManager = nullptr;
 	delete drawSystem;
 	drawSystem = nullptr;
-	delete cameraController;
-	cameraController = nullptr;
-	delete debugCameraController;
-	debugCameraController = nullptr;
+	delete cameraManager;
+	cameraManager = nullptr;
 	delete inputManager_;
 	inputManager_ = nullptr;
 }
@@ -361,18 +362,17 @@ void Engine::DrawParticle(RenderData_Particle& renderData)
 
 void Engine::AddSphere(Vector3 pos, Vector3 radius, uint32_t color)
 {
-	drawSystem->AddSphere(pos, radius, color);
+	if (isDebugInfo)drawSystem->AddSphere(pos, radius, color);
 }
 
 void Engine::AddAABB(AABB aabb, uint32_t color)
 {
-	drawSystem->AddAABB(aabb, color);
+	if (isDebugInfo)drawSystem->AddAABB(aabb, color);
 }
 
 bool Engine::InFrustum(const AABB& aabb)
 {
-	if (!debugCamera) return cameraController->InFrustum(aabb);
-	else return debugCameraController->InFrustum(aabb);
+	return cameraManager->InCamera(aabb);
 }
 
 // 音
@@ -418,6 +418,11 @@ Vector2 Engine::GetMousePosition()
 	return inputManager_->GetMouseController()->GetMousePosition();
 }
 
+Vector3 Engine::GetMouseWorldPosition()
+{
+	return inputManager_->GetMouseController()->GetMouseWorldPosition();
+}
+
 Ray Engine::GetMouseRay()
 {
 	return inputManager_->GetMouseController()->GetMouseRay();
@@ -428,69 +433,91 @@ uint32_t Engine::GetMouseWheel()
 	return inputManager_->GetMouseController()->wheelDelta;
 }
 
-bool Engine::GetMousePress(int i)
+bool Engine::IsMouseHeld(int i)
 {
-	return inputManager_->GetMouseController()->GetMousePress(i);
+	return inputManager_->GetMouseController()->IsHeld(i);
 }
 
-bool Engine::GetMousePrePress(int i)
+bool Engine::IsMouseJustPressed(int i)
 {
-	return inputManager_->GetMouseController()->GetMousePrePress(i);
+	return inputManager_->GetMouseController()->IsJustPressed(i);
 }
 
-// カメラ操作
+bool Engine::IsMouseJustReleased(int i)
+{
+	return inputManager_->GetMouseController()->IsJustReleased(i);
+}
+
+uint32_t Engine::MouseHoldFrames(int i)
+{
+	return inputManager_->GetMouseController()->HoldFrames(i);
+}
+
+
+bool Engine::IsKeyHeld(BYTE key)
+{
+	return inputManager_->GetGetHitKey()->IsHeld(key);
+}
+
+bool Engine::IsKeyJustPressed(BYTE key)
+{
+	return inputManager_->GetGetHitKey()->IsJustPressed(key);
+}
+
+bool Engine::IsKeyJustReleased(BYTE key)
+{
+	return inputManager_->GetGetHitKey()->IsJustReleased(key);
+}
+
+uint32_t Engine::KeyHoldFrames(BYTE key)
+{
+	return inputManager_->GetGetHitKey()->HoldFrames(key);
+}
+
+int Engine::TestTapLong(int n, BYTE key)
+{
+	return inputManager_->GetGetHitKey()->TestTapLong(n, key);
+}
+
+// カメラ
+Vector3 Engine::GetCameraTranslate() const
+{
+	return cameraManager->GetCurrentTranslate();
+}
+
 void Engine::MoveCameraCenter(Vector3 target, int spendFrame, EaseType easetype)
 {
-	cameraController->SetCenterTarget(target, spendFrame, easetype);
+	cameraManager->SetCenterTarget(target, spendFrame, easetype);
 }
 
 void Engine::MoveCameraRotate(Vector3 target, int spendFrame, EaseType easetype)
 {
-	cameraController->SetRotateTarget(target, spendFrame, easetype);
+	cameraManager->SetRotateTarget(target, spendFrame, easetype);
 }
 
 void Engine::MoveCameraDistance(float target, int spendFrame, EaseType easetype)
 {
-	cameraController->SetDistanceTarget(target, spendFrame, easetype);
+	cameraManager->SetDistanceTarget(target, spendFrame, easetype);
 }
 
-void Engine::SetControlModeCamera(bool mode)
-{
-	cameraController->enableControl_ = mode;
-}
-
-CameraController* Engine::GetCamera()
-{
-	return cameraController;
-}
-
-CameraController* Engine::GetDebugCamera()
-{
-	return debugCameraController;
-}
-
-// カメラシェイク開始
 void Engine::StartCameraShake(float intensity, float duration, float frequency)
 {
-	// メインカメラとデバッグカメラ両方にシェイクを適用
-	cameraController->StartShake(intensity, duration, frequency);
-	debugCameraController->StartShake(intensity, duration, frequency);
+	cameraManager->StartShake(intensity, duration, frequency);
 }
 
-// カメラシェイク中かどうか
 bool Engine::IsCameraShaking()
 {
-	// 現在アクティブなカメラのシェイク状態を返す
-	if (!debugCamera)return cameraController->IsShaking();
-	else return debugCameraController->IsShaking();
+	return cameraManager->IsShaking();
 }
 
-// カメラシェイク停止
+void Engine::ToggleCameraMode()
+{
+	cameraManager->ToggleCameraMode();
+}
+
 void Engine::StopCameraShake()
 {
-	// メインカメラとデバッグカメラ両方のシェイクを停止
-	cameraController->StopShake();
-	debugCameraController->StopShake();
+	cameraManager->StopShake();
 }
 
 // ウィンドウ操作
@@ -505,14 +532,18 @@ void Engine::ToggleFullscreen()
 	//drawSystem->Resize();
 
 	// カメラのアスペクト比を更新
-	cameraController->Resize();
-	debugCameraController->Resize();
+	cameraManager->Resize();
 }
+
 // CreateLocalAABBでつくったAABBに座標を適応させる（当たり判定の毎フレーム更新用）
-std::vector<AABB>  Engine::CreateAABB(const Transforms& transforms, uint32_t objectNumber)
+std::vector<AABB>  Engine::CreateAABB(RenderData_Model* data)
 {
-	Matrix4x4 worldMatrix = transforms.World;
-	Object3D& obj = dxManager->GetResourceManager()->GetModelManager()->GetModelList()[objectNumber];
+	if (data->model < 0 || data->model >= (int)dxManager->GetResourceManager()->GetModelManager()->GetModelCount())
+	{
+		return {};
+	}
+	Matrix4x4 worldMatrix = data->GetWorldMatrix();
+	Object3D& obj = dxManager->GetResourceManager()->GetModelManager()->GetModelList()[data->model];
 	std::vector<AABB> result;
 
 	for (const auto& localAABB : obj.aabb)
@@ -550,9 +581,4 @@ std::vector<AABB>  Engine::CreateAABB(const Transforms& transforms, uint32_t obj
 void Engine::toggleWireframeMode()
 {
 	drawSystem->toggleWireframeMode();
-}
-
-void Engine::ToggleCameraMode()
-{
-	debugCamera = !debugCamera;
 }

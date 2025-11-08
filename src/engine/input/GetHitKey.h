@@ -15,21 +15,21 @@ public:
 	void Update();
 
 	// 今押しているか
-	static bool IsPressedNow(BYTE key);
+	bool IsHeld(BYTE key);
 	// 押した瞬間（今フレームで押された）
-	static bool IsPressedDown(BYTE key);
+	bool IsJustPressed(BYTE key);
 	// 離した瞬間（今フレームで離れた）
-	static bool IsReleased(BYTE key);
+	bool IsJustReleased(BYTE key);
 
 	// 押されてからの経過フレーム数
-	static uint32_t HoldFrames(BYTE key);
+	uint32_t HoldFrames(BYTE key);
 
 	// 0: なし  1:単押し  2:長押し(n = 長押し判定)
-	static int TestTapLong(int n, BYTE key);
+	int TestTapLong(int n, BYTE key);
 
 private:
 
-	static KeyState keys_[256];
+	KeyState keys_[256];
 
 
 	Microsoft::WRL::ComPtr<IDirectInputDevice8> keyboard_;

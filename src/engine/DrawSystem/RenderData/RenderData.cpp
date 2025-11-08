@@ -2,10 +2,10 @@
 #include "Utilities/JsonManager.h"
 #include "Game.h"
 #include "Engine.h"
-#include "Camera/CameraController.h"
 using namespace DirectX;
 
 std::vector<RenderData_Model*> RenderData_Model::renderModels;
+std::vector<CollisionInf*> RenderData_Model::collisionInfos;
 std::vector<RenderData_Sprite*> RenderData_Sprite::renderSprites;
 std::vector<RenderData_Triangle*> RenderData_Triangle::renderTriangles;
 std::vector<RenderData_Line*> RenderData_Line::renderLines;
@@ -17,6 +17,7 @@ RenderData_Model::RenderData_Model()
 {
 	renderModels.push_back(this);
 	this->ID = int(renderModels.size());
+	this->parentModel = nullptr;
 }
 
 RenderData_Model::~RenderData_Model()
@@ -26,285 +27,6 @@ RenderData_Model::~RenderData_Model()
 	{
 		renderModels.erase(it);
 	}
-}
-
-void RenderData_Model::Update()
-{
-#pragma region 前フレーム情報保存
-
-	this->preTransforms = this->transforms;
-	this->preAABB = this->aabbs;
-
-#pragma endregion
-
-#pragma region 座標更新
-
-	// 座標更新
-	this->velocity -= this->gravity;
-	this->velocity += this->acceleration;
-	this->transforms.translate += this->velocity;
-
-	// 今フレームの移動量
-	this->lastMove = this->transforms.translate - this->preTransforms.translate;
-
-	auto changed = [](float a, float b) { return ((a - b) > eps) || ((a - b) < eps); };
-	constexpr float epsT = 1e-6f;
-	constexpr float epsR = 1e-6f;
-	constexpr float epsS = 1e-6f;
-
-	// S/R/Tに変化があったか
-	this->movedThisFrame =
-		changed(this->lastMove.x, 0.0f) ||
-		changed(this->lastMove.y, 0.0f) ||
-		changed(this->lastMove.z, 0.0f) ||
-		changed(this->transforms.rotate.x, this->preTransforms.rotate.x) ||
-		changed(this->transforms.rotate.y, this->preTransforms.rotate.y) ||
-		changed(this->transforms.rotate.z, this->preTransforms.rotate.z) ||
-		changed(this->transforms.scale.x, this->preTransforms.scale.x) ||
-		changed(this->transforms.scale.y, this->preTransforms.scale.y) ||
-		changed(this->transforms.scale.z, this->preTransforms.scale.z);
-
-
-	//if (this->movedThisFrame)
-	{
-		// 移動マトリックス作成
-		XMVECTOR scaleVec = XMVectorSet(this->transforms.scale.x, this->transforms.scale.y, this->transforms.scale.z, 0.0f);
-		XMVECTOR pivotVec = XMVectorSet(this->pivot.x, this->pivot.y, this->pivot.z, 0.0f);
-		XMVECTOR translateVec = XMVectorSet(this->transforms.translate.x, this->transforms.translate.y, this->transforms.translate.z, 0.0f);
-		XMVECTOR rotEuler = XMVectorSet(this->transforms.rotate.x, this->transforms.rotate.y, this->transforms.rotate.z, 0.0f);
-
-
-		// 1) スケール
-		XMMATRIX S = XMMatrixScalingFromVector(scaleVec);
-
-
-		// 2) ピボットオフセット（負）
-		XMMATRIX Tneg = XMMatrixTranslationFromVector(XMVectorNegate(pivotVec));
-
-
-		// 3) 回転（オイラー→クォータニオン→行列）
-		XMVECTOR quatEuler = XMQuaternionRotationRollPitchYawFromVector(rotEuler);
-		XMMATRIX R = XMMatrixRotationQuaternion(quatEuler);
-
-
-		// 4) ピボットオフセット（正）
-		XMMATRIX Tpos = XMMatrixTranslationFromVector(pivotVec);
-
-
-		// 5) 平行移動
-		XMMATRIX T = XMMatrixTranslationFromVector(translateVec);
-
-
-		// 6) 合成: S → Tneg → R → Tpos → T
-		XMMATRIX world = S * Tneg * R * Tpos * T;
-
-
-		// 7) 親行列の適用
-		if (this->transforms.parentWorld)
-		{
-			// parentWorld が Matrix4x4 ならまず XMFLOAT4X4 にコピー
-			XMFLOAT4X4 parentF4;
-			// 4×4 のメモリ配列を直接コピー
-			std::memcpy(&parentF4, this->transforms.parentWorld, sizeof(parentF4));
-			XMMATRIX parentM = XMLoadFloat4x4(&parentF4);
-			world = parentM * world;
-		}
-
-
-		// 8) 結果を transforms.World に格納
-		XMFLOAT4X4 tmp;
-		XMStoreFloat4x4(&tmp, world);
-		for (int i = 0; i < 4; ++i)
-			for (int j = 0; j < 4; ++j)
-				this->transforms.World.m[i][j] = tmp.m[i][j];
-		//for (auto& rd : GetModelList())
-		//{
-		//	// 1) スケール
-		//	Matrix4x4 scale = Matrix4x4::MakeScaleMatrix(rd->transforms.scale);
-		//
-		//	// 2) ピボットオフセット
-		//	Matrix4x4 pivotOffsetNeg = Matrix4x4::MakeTranslateMatrix(-rd->pivot);
-		//
-		//	// 3) 回転（X, Y, Z軸すべてを合成）
-		//	Matrix4x4 rotateX = Matrix4x4::MakeRotateXMatrix(rd->transforms.rotate.x);
-		//	Matrix4x4 rotateY = Matrix4x4::MakeRotateYMatrix(rd->transforms.rotate.y);
-		//	Matrix4x4 rotateZ = Matrix4x4::MakeRotateZMatrix(rd->transforms.rotate.z);
-		//	Matrix4x4 rotate = rotateZ * rotateX * rotateY;
-		//
-		//	// 4) ピボットへ戻す
-		//	Matrix4x4 pivotOffset = Matrix4x4::MakeTranslateMatrix(rd->pivot);
-		//
-		//	// 5) 平行移動
-		//	Matrix4x4 translate = Matrix4x4::MakeTranslateMatrix(rd->transforms.translate);
-		//
-		//	// 合成
-		//	Matrix4x4 world = scale * pivotOffsetNeg * rotate * pivotOffset * translate;
-		//
-		//	// 6) 親行列があれば乗算
-		//	if (rd->transforms.parentWorld)
-		//	{
-		//		Matrix4x4 parentMatrix = *rd->transforms.parentWorld;
-		//		world = parentMatrix * world;
-		//	}
-		//
-		//	// 7) Transforms.World に格納
-		//	rd->transforms.World = world;
-		//}
-
-		// AABB更新
-		this->aabbs = Engine::Instance().CreateAABB(this->transforms, this->model);
-	}
-
-#pragma endregion
-
-#pragma region 描画範囲内判定
-
-	bool inFrustum = false;
-	for (const auto& aabb : this->aabbs)
-	{
-		if (Game::Camera::InCamera(aabb))
-		{
-			inFrustum = true;
-			break;
-		}
-	}
-	this->inPicture = inFrustum;
-
-#pragma endregion
-
-#pragma region 衝突判定
-
-	for (auto* target : blockList)
-	{
-		std::optional<CollisionInf> Inf = isCollisionAABBInf(*target);
-		// 衝突していたら
-		if (Inf != std::nullopt)
-		{
-			// 自分の方が軽かったら自分を動かす
-			if (this->mass <= target->mass)
-			{
-				if (this->lastMove.x > 0.0f)
-				{
-					this->transforms.translate.x -= Inf->depth.x;
-					velocity.x = 0.0f;
-				}
-				else if (this->lastMove.x < 0.0f)
-				{
-					this->transforms.translate.x += Inf->depth.x;
-					velocity.x = 0.0f;
-				}
-				if (this->lastMove.y > 0.0f)
-				{
-					this->transforms.translate.y -= Inf->depth.y;
-					velocity.y = 0.0f;
-				}
-				else if (this->lastMove.y < 0.0f)
-				{
-					this->transforms.translate.y += Inf->depth.y;
-					velocity.y = 0.0f;
-				}
-				if (this->lastMove.z > 0.0f)
-				{
-					this->transforms.translate.z -= Inf->depth.z;
-					velocity.z = 0.0f;
-				}
-				else if (this->lastMove.z < 0.0f)
-				{
-					this->transforms.translate.z += Inf->depth.z;
-					velocity.z = 0.0f;
-				}
-			}
-
-			this->aabbs = Engine::Instance().CreateAABB(this->transforms, this->model);
-
-
-			{
-				XMVECTOR scaleVec = XMVectorSet(this->transforms.scale.x, this->transforms.scale.y, this->transforms.scale.z, 0.0f);
-				XMVECTOR pivotVec = XMVectorSet(this->pivot.x, this->pivot.y, this->pivot.z, 0.0f);
-				XMVECTOR translateVec = XMVectorSet(this->transforms.translate.x, this->transforms.translate.y, this->transforms.translate.z, 0.0f);
-				XMVECTOR rotEuler = XMVectorSet(this->transforms.rotate.x, this->transforms.rotate.y, this->transforms.rotate.z, 0.0f);
-				XMMATRIX S = XMMatrixScalingFromVector(scaleVec);
-				XMMATRIX Tneg = XMMatrixTranslationFromVector(XMVectorNegate(pivotVec));
-				XMVECTOR quatEuler = XMQuaternionRotationRollPitchYawFromVector(rotEuler);
-				XMMATRIX R = XMMatrixRotationQuaternion(quatEuler);
-				XMMATRIX Tpos = XMMatrixTranslationFromVector(pivotVec);
-				XMMATRIX T = XMMatrixTranslationFromVector(translateVec);
-				XMMATRIX world = S * Tneg * R * Tpos * T;
-				if (this->transforms.parentWorld)
-				{
-					XMFLOAT4X4 parentF4; std::memcpy(&parentF4, this->transforms.parentWorld, sizeof(parentF4));
-					XMMATRIX parentM = XMLoadFloat4x4(&parentF4);
-					world = parentM * world;
-				}
-				XMFLOAT4X4 tmp; XMStoreFloat4x4(&tmp, world);
-				for (int i = 0; i < 4; ++i)
-					for (int j = 0; j < 4; ++j)
-						this->transforms.World.m[i][j] = tmp.m[i][j];
-
-				this->aabbs = Engine::Instance().CreateAABB(this->transforms, this->model);
-			}
-
-			//Vector3 offset = transforms.translate;
-			//
-			//// 左方向に移動しているとき
-			//if (this->lastMove.x > 0.0f)
-			//{
-			//	offset.x += this->lastMove.x;
-			//	velocity.x = 0.0f;
-			//}
-			//// 右方向に移動しているとき
-			//else if (this->lastMove.x < 0.0f)
-			//{
-			//	offset.x -= this->lastMove.x;
-			//	velocity.x = 0.0f;
-			//}
-			//
-			//// 奥方向に移動しているとき
-			//if (this->lastMove.z > 0.0f)
-			//{
-			//	offset.z += this->lastMove.z;
-			//	velocity.z = 0.0f;
-			//}
-			//// 手前方向に移動しているとき
-			//else if (this->lastMove.z < 0.0f)
-			//{
-			//	offset.z -= this->lastMove.z;
-			//	velocity.z = 0.0f;
-			//}
-			//
-			//// 上方向に移動しているとき
-			//if (this->lastMove.y > 0.0f)
-			//{
-			//	offset.y += this->lastMove.y;
-			//	velocity.y = 0.0f;
-			//}
-			//// 下方向に移動しているとき
-			//else if (this->lastMove.y < 0.0f)
-			//{
-			//	offset.y -= this->lastMove.y;
-			//	velocity.y = 0.0f;
-			//}
-			//
-			//transforms.translate = { 0.0f,0.0f,0.0f };
-			//transforms.translate += offset;
-			//// 上方向に移動しているとき
-			//if (this->lastMove.y > 0.0f)
-			//{
-			//	float myHeight = myAABB.max.y - myAABB.min.y;
-			//	transforms.translate.y = targetAABB.min.y - myHeight / 2.0f;
-			//	velocity.y = 0.0f;
-			//}
-			//// 下方向に移動しているとき
-			//else if (this->lastMove.y < 0.0f)
-			//{
-			//	float myHeight = myAABB.max.y - myAABB.min.y;
-			//	transforms.translate.y = targetAABB.max.y + myHeight / 2.0f;
-			//	velocity.y = 0.0f;
-			//}
-		}
-	}
-
-#pragma endregion
 }
 
 // 他のオブジェクトとの衝突判定
@@ -336,15 +58,11 @@ void RenderData_Model::SetBlock(RenderData_Model& target)
 // ワールド行列とワールド座標の取得
 Matrix4x4 RenderData_Model::GetWorldMatrix() const
 {
-	if (transforms.parentWorld)
-	{
-		return (*transforms.parentWorld) * transforms.World;
-	}
-	return transforms.World;
+	return this->worldMatrix;
 }
 Vector3 RenderData_Model::GetWorldPosition() const
 {
-	return Transform(Vector3(0.0f, 0.0f, 0.0f), GetWorldMatrix());
+	return worldPos;
 }
 
 // 任意のポイントを向く
@@ -354,7 +72,7 @@ void RenderData_Model::LookAtOnce(const Vector3& targetWorldPos, float roll)
 	float yaw = std::atan2(direction.x, direction.z); // Y軸回り
 	float pitch = std::asin(-direction.y);            // X軸回り
 
-	transforms.rotate = { pitch, yaw, roll };
+	rotate.value = { pitch, yaw, roll };
 }
 void RenderData_Model::LookAtOnce(const RenderData_Model& other, float roll)
 {
@@ -362,7 +80,7 @@ void RenderData_Model::LookAtOnce(const RenderData_Model& other, float roll)
 }
 void RenderData_Model::LookAtCamera(float roll)
 {
-	LookAtOnce(Game::Camera::GetCamera()->transform_.translate, roll);
+	LookAtOnce(Game::Camera::Getter::GetTranslate("ReleaseCamera"), roll);
 }
 void RenderData_Model::LookAtFront(float roll)
 {
@@ -385,9 +103,8 @@ void RenderData_Model::DrawAABB()
 
 void RenderData_Model::DrawImGui()
 {
-	std::optional<std::string> str;
+	std::optional<std::string> str = "model : " + std::to_string(this->ID);
 	if (this->name != std::nullopt) str = (this->name);
-	else str = "model : " + std::to_string(this->ID);
 
 	std::string num = std::to_string(this->ID) + ":";
 
@@ -395,10 +112,44 @@ void RenderData_Model::DrawImGui()
 
 	if (ImGui::TreeNode("----------transforms-----------"))
 	{
-		ImGui::DragFloat3((num + "scale").c_str(), &transforms.scale.x, 0.01f);
-		ImGui::DragFloat3((num + "translate").c_str(), &transforms.translate.x, 0.01f);
-		ImGui::DragFloat3((num + "rotate").c_str(), &transforms.rotate.x, 0.01f);
-		ImGui::DragFloat3((num + "pivot").c_str(), &pivot.x, 0.01f);
+		std::string dragId;
+
+		ImGui::Text("Scale");
+		dragId = std::string("##scale.value") + num;
+		ImGui::Text("Val"); ImGui::SameLine();
+		ImGui::DragFloat3(dragId.c_str(), &scale.value.x, 0.01f);
+		dragId = std::string("##scale.velocity") + num;
+		ImGui::Text("Vel"); ImGui::SameLine();
+		ImGui::DragFloat3(dragId.c_str(), &scale.velocity.x, 0.01f);
+		dragId = std::string("##scale.acceleration") + num;
+		ImGui::Text("Acc"); ImGui::SameLine();
+		ImGui::DragFloat3(dragId.c_str(), &scale.acceleration.x, 0.01f);
+
+		ImGui::Text("translate");
+		dragId = std::string("##translate.value") + num;
+		ImGui::Text("Val"); ImGui::SameLine();
+		ImGui::DragFloat3(dragId.c_str(), &translate.value.x, 0.01f);
+		dragId = std::string("##translate.velocity") + num;
+		ImGui::Text("Vel"); ImGui::SameLine();
+		ImGui::DragFloat3(dragId.c_str(), &translate.velocity.x, 0.01f);
+		dragId = std::string("##translate.acceleration") + num;
+		ImGui::Text("Acc"); ImGui::SameLine();
+		ImGui::DragFloat3(dragId.c_str(), &translate.acceleration.x, 0.01f);
+
+		ImGui::Text("rotate");
+		dragId = std::string("##rotate.value") + num;
+		ImGui::Text("Val"); ImGui::SameLine();
+		ImGui::DragFloat3(dragId.c_str(), &rotate.value.x, 0.01f);
+		dragId = std::string("##rotate.velocity") + num;
+		ImGui::Text("Vel"); ImGui::SameLine();
+		ImGui::DragFloat3(dragId.c_str(), &rotate.velocity.x, 0.01f);
+		dragId = std::string("##rotate.acceleration") + num;
+		ImGui::Text("Acc"); ImGui::SameLine();
+		ImGui::DragFloat3(dragId.c_str(), &rotate.acceleration.x, 0.01f);
+
+		dragId = std::string("##pivot") + num;
+		ImGui::Text("Pivot");
+		ImGui::DragFloat3(dragId.c_str(), &pivot.x, 0.01f);
 		ImGui::TreePop();
 	}
 	if (ImGui::TreeNode("----------uvTransforms---------"))
@@ -406,14 +157,6 @@ void RenderData_Model::DrawImGui()
 		ImGui::DragFloat3((num + "UVscale").c_str(), &uvTransform.scale.x, 0.01f);
 		ImGui::DragFloat3((num + "UVtranslate").c_str(), &uvTransform.translate.x, 0.01f);
 		ImGui::DragFloat3((num + "UVrotate").c_str(), &uvTransform.rotate.x, 0.01f);
-		ImGui::TreePop();
-	}
-	if (ImGui::TreeNode("----------velocity-------------"))
-	{
-		ImGui::DragFloat3((num + "lastMove").c_str(), &lastMove.x, 0.01f);
-		ImGui::DragFloat3((num + "velocity").c_str(), &velocity.x, 0.01f);
-		ImGui::DragFloat3((num + "acceleration").c_str(), &acceleration.x, 0.01f);
-		ImGui::DragFloat3((num + "gravity").c_str(), &gravity.x, 0.01f);
 		ImGui::TreePop();
 	}
 	if (ImGui::TreeNode("----------model & texture------"))
@@ -439,19 +182,13 @@ void RenderData_Model::DrawImGui()
 			}
 		}
 
-		//ImGui::Text("model : %d", model);
-
-		//ImGui::InputFloat((num + "model").c_str(), reinterpret_cast<int*>(&model));
-		//ImGui::InputInt((num + "texture").c_str(), reinterpret_cast<int*>(&texture));
 		ImGui::TreePop();
 	}
 	if (ImGui::TreeNode("----------color----------------"))
 	{
-		Vector4 preColor = ConvertUintToVector4(color);
-		float floatColor[4] = { preColor.x, preColor.y, preColor.z, preColor.w };
+		float floatColor[4] = { this->color.x / 255.0f,  this->color.y / 255.0f,  this->color.z / 255.0f,  this->color.w / 255.0f };
 		ImGui::ColorEdit4((num + "color").c_str(), floatColor, 1);
-		Vector4 vector4Color = { floatColor[0], floatColor[1], floatColor[2], floatColor[3] };
-		color = ConvertVector4ToUint(vector4Color);
+		color = { floatColor[0] * 255.0f, floatColor[1] * 255.0f, floatColor[2] * 255.0f, floatColor[3] * 255.0f };
 		ImGui::TreePop();
 	}
 	if (ImGui::TreeNode("----------option---------------"))
@@ -462,39 +199,370 @@ void RenderData_Model::DrawImGui()
 		ImGui::Checkbox("lookAt", &lookAt);
 		if (lookAt)
 		{
-			Game::Camera::GetDebugCamera()->SetCenterTarget(transforms.translate, 0, EaseType::IN_BACK);
+			Game::Camera::MoveCameraCenter(GetWorldPosition(), 0, EaseType::IN_BACK);
 		}
 		ImGui::Text("isCollisionMouse : %d", isCollisionMouseRay);
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------load & save----------"))
+	{
+		char buf[256];
+		if (this->filePath.size() < sizeof(buf)) memcpy(buf, this->filePath.c_str(), this->filePath.size() + 1);
+		else buf[sizeof(buf) - 1] = '\0';
+		if (ImGui::InputText(".json", buf, sizeof(buf)))
+		{
+			this->filePath = std::string(buf);
+		}
+		if (ImGui::Button("save"))
+		{
+			JsonManager::SaveToJson(*this, this->filePath);
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("load"))
+		{
+			JsonManager::LoadFromJson(*this, this->filePath);
+		}
 		ImGui::TreePop();
 	}
 
 	ImGui::End();
 }
 
-void RenderData_Model::CollisionAction(const Vector3& depth, RenderData_Model& target)
-{}
-
-std::optional<CollisionInf> RenderData_Model::isCollisionAABBInf(RenderData_Model& target) const
+// 全オブジェクトのSRT更新,それに伴うワールド行列更新
+void RenderData_Model::Update1()
 {
-	CollisionInf result;
-	result.pair = { -1, -1 };
+	// S/R/Tの更新
+	this->translate.velocity += this->translate.acceleration;
+	this->translate.value += this->translate.velocity;
+	this->rotate.velocity += this->rotate.acceleration;
+	this->rotate.value += this->rotate.velocity;
+	this->scale.velocity += this->scale.acceleration;
+	this->scale.value += this->scale.velocity;
 
-	// どのAABB同士が衝突しているか
-	for (size_t i = 0; i < target.aabbs.size(); ++i)
+	// 今フレームでS/R/Tに変化があったか
+	this->movedThisFrame =
+		(this->translate.value != this->preTranslate.value) ||
+		(this->rotate.value != this->preRotate.value) ||
+		(this->scale.value != this->preScale.value) ||
+		!this->initialized;
+
+	// ワールド座標取得
+	if (this->movedThisFrame)
 	{
-		for (size_t j = 0; j < this->aabbs.size(); ++j)
+		// 移動マトリックス作成
+		XMVECTOR scaleVec = XMVectorSet(this->scale.value.x, this->scale.value.y, this->scale.value.z, 0.0f);
+		XMVECTOR pivotVec = XMVectorSet(this->pivot.x, this->pivot.y, this->pivot.z, 0.0f);
+		XMVECTOR translateVec = XMVectorSet(this->translate.value.x, this->translate.value.y, this->translate.value.z, 0.0f);
+		XMVECTOR rotEuler = XMVectorSet(this->rotate.value.x, this->rotate.value.y, this->rotate.value.z, 0.0f);
+		// 1) スケール
+		XMMATRIX S = XMMatrixScalingFromVector(scaleVec);
+		// 2) ピボットオフセット（原点に戻す方）
+		XMMATRIX Tneg = XMMatrixTranslationFromVector(XMVectorNegate(pivotVec));
+		// 3) 回転（オイラー→クォータニオン→行列）
+		XMVECTOR quatEuler = XMQuaternionRotationRollPitchYawFromVector(rotEuler);
+		XMMATRIX R = XMMatrixRotationQuaternion(quatEuler);
+		// 4) ピボットオフセット（もとの位置に戻す方）
+		XMMATRIX Tpos = XMMatrixTranslationFromVector(pivotVec);
+		// 5) 平行移動
+		XMMATRIX T = XMMatrixTranslationFromVector(translateVec);
+		// 6) 合成: S → Tneg → R → Tpos → T
+		XMMATRIX world = S * Tneg * R * Tpos * T;
+		// 8) 結果を transforms.World に格納
+		XMFLOAT4X4 tmp;
+		DirectX::XMStoreFloat4x4(&tmp, world);
+		for (int i = 0; i < 4; ++i)
+			for (int j = 0; j < 4; ++j)
+				this->localWorldMatrix.m[i][j] = tmp.m[i][j];
+
+	}
+
+	initialized = true;
+}
+
+// 全オブジェクトの親を考慮したワールド行列更新,AABB更新
+void RenderData_Model::Update2()
+{
+	// 階層を含めた最終ワールド行列を取得
+	this->worldMatrix = this->SetWorldMatrix();
+
+	// ワールド座標取得
+	this->worldPos = Vector3(
+		this->worldMatrix.m[3][0],
+		this->worldMatrix.m[3][1],
+		this->worldMatrix.m[3][2]
+	);
+
+	// AABB更新（最終ワールド行列に基づいて）
+	this->aabbs = Engine::Instance().CreateAABB(this);
+}
+
+Matrix4x4 RenderData_Model::SetWorldMatrix()
+{
+	// 自身のローカル行列がベース
+	Matrix4x4 result = this->localWorldMatrix;
+
+	// 親が存在する場合は親の親の親...をウルトラ再帰する
+	if (this->parentModel)
+	{
+		Matrix4x4 parentWorld = this->parentModel->SetWorldMatrix();
+		result = parentWorld * result;
+	}
+
+	// 親がいなかったらそのまま、いたら親の行列を掛けたものを返す
+	return result;
+}
+
+// 衝突判定,衝突ペア・深度の保存
+void RenderData_Model::Update3()
+{
+	for (auto& blockTarget : blockList)
+	{
+		std::optional<CollisionInf> collisionInf = this->isCollisionAABBInf(*blockTarget);
+		if (collisionInf)
 		{
-			if (IsLooseCollision(target.aabbs[i], this->aabbs[j], 0.001f))
+			collisionInfos.push_back(new CollisionInf(*collisionInf));
+		}
+	}
+}
+
+// 衝突時の更新,それに伴うワールド行列更新
+void RenderData_Model::Update4()
+{
+	// collisionInfosを探査して、自分が軽い方のオブジェクトとして衝突しているものを処理
+	for (const auto& collisionInfPtr : collisionInfos)
+	{
+		const CollisionInf& collisionInf = *collisionInfPtr;
+		if (collisionInf.IDpair.light == this->ID)
+		{
+			/// 衝突したAABB面のペア・深度がわかっているので、それに基づいて移動
+			if (collisionInf.face.light == AABBFace::LEFT)
 			{
-				Vector3 depth = this->aabbs[j].GetCollisionDepth(target.aabbs[i]);
-				result.pair = { static_cast<int>(i), static_cast<int>(j) };
-				result.depth = depth;
-				break;
+				this->translate.value.x += collisionInf.depth.x;
+			}
+			else if (collisionInf.face.light == AABBFace::RIGHT)
+			{
+				this->translate.value.x -= collisionInf.depth.x;
+			}
+			else if (collisionInf.face.light == AABBFace::BOTTOM)
+			{
+				this->translate.value.y += collisionInf.depth.y;
+			}
+			else if (collisionInf.face.light == AABBFace::TOP)
+			{
+				this->translate.value.y -= collisionInf.depth.y;
+			}
+			else if (collisionInf.face.light == AABBFace::BACK)
+			{
+				this->translate.value.z += collisionInf.depth.z;
+			}
+			else if (collisionInf.face.light == AABBFace::FRONT)
+			{
+				this->translate.value.z -= collisionInf.depth.z;
+			}
+
+			// 衝突しているのにその方向に加速度がかかっている場合はこのフレームで加速した分を打ち消す
+			if (collisionInf.face.light == AABBFace::LEFT && this->translate.acceleration.x < 0.0f)
+			{
+				this->translate.velocity.x -= this->translate.acceleration.x;
+				//this->translate.acceleration.x = 0.0f;
+			}
+			else if (collisionInf.face.light == AABBFace::RIGHT && this->translate.acceleration.x > 0.0f)
+			{
+				this->translate.velocity.x -= this->translate.acceleration.x;
+				//this->translate.acceleration.x = 0.0f;
+			}
+			else if (collisionInf.face.light == AABBFace::BOTTOM && this->translate.acceleration.y < 0.0f)
+			{
+				this->translate.velocity.y -= this->translate.acceleration.y;
+				//this->translate.acceleration.y = 0.0f;
+			}
+			else if (collisionInf.face.light == AABBFace::TOP && this->translate.acceleration.y > 0.0f)
+			{
+				this->translate.velocity.y -= this->translate.acceleration.y;
+				//this->translate.acceleration.y = 0.0f;
+			}
+			else if (collisionInf.face.light == AABBFace::BACK && this->translate.acceleration.z < 0.0f)
+			{
+				this->translate.velocity.z -= this->translate.acceleration.z;
+				//this->translate.acceleration.z = 0.0f;
+			}
+			else if (collisionInf.face.light == AABBFace::FRONT && this->translate.acceleration.z > 0.0f)
+			{
+				this->translate.velocity.z -= this->translate.acceleration.z;
+				//this->translate.acceleration.z = 0.0f;
+			}
+
+			// translate.velocityの分めり込んだ状態で固定されてしまうので、velocity分座標を戻す。velocityは変えない。
+			//this->translate.value -= this->translate.velocity;
+
+			// ワールド行列更新
+			XMVECTOR scaleVec = XMVectorSet(this->scale.value.x, this->scale.value.y, this->scale.value.z, 0.0f);
+			XMVECTOR pivotVec = XMVectorSet(this->pivot.x, this->pivot.y, this->pivot.z, 0.0f);
+			XMVECTOR translateVec = XMVectorSet(this->translate.value.x, this->translate.value.y, this->translate.value.z, 0.0f);
+			XMVECTOR rotEuler = XMVectorSet(this->rotate.value.x, this->rotate.value.y, this->rotate.value.z, 0.0f);
+			// 1) スケール
+			XMMATRIX S = XMMatrixScalingFromVector(scaleVec);
+			// 2) ピボットオフセット（原点に戻す方）
+			XMMATRIX Tneg = XMMatrixTranslationFromVector(XMVectorNegate(pivotVec));
+			// 3) 回転（オイラー→クォータニオン→行列）
+			XMVECTOR quatEuler = XMQuaternionRotationRollPitchYawFromVector(rotEuler);
+			XMMATRIX R = XMMatrixRotationQuaternion(quatEuler);
+			// 4) ピボットオフセット（もとの位置に戻す方）
+			XMMATRIX Tpos = XMMatrixTranslationFromVector(pivotVec);
+			// 5) 平行移動
+			XMMATRIX T = XMMatrixTranslationFromVector(translateVec);
+			// 6) 合成: S → Tneg → R → Tpos → T
+			XMMATRIX world = S * Tneg * R * Tpos * T;
+			// 8) 結果を transforms.World に格納
+			XMFLOAT4X4 tmp;
+			DirectX::XMStoreFloat4x4(&tmp, world);
+			for (int i = 0; i < 4; ++i)
+				for (int j = 0; j < 4;
+					++j)
+					this->localWorldMatrix.m[i][j] = tmp.m[i][j];
+		}
+	}
+}
+
+// 全オブジェクトの描画範囲内判定,前フレーム情報保存
+void RenderData_Model::Update5()
+{
+	collisionInfos.clear();
+
+#pragma region 描画範囲内判定
+
+	bool inFrustum = false;
+	for (const auto& aabb : this->aabbs)
+	{
+		if (Game::Camera::InCamera(aabb))
+		{
+			inFrustum = true;
+			break;
+		}
+	}
+	this->inPicture = inFrustum;
+
+#pragma endregion
+
+#pragma region 前フレーム情報保存
+
+	this->preScale = this->scale;
+	this->preTranslate = this->translate;
+	this->preRotate = this->rotate;
+	this->preAABB = this->aabbs;
+
+#pragma endregion
+
+}
+
+//std::optional<CollisionInf> RenderData_Model::isCollisionAABBInf(RenderData_Model& target) const
+//{
+//	CollisionInf result;
+//	// 衝突しているオブジェクトIDの保存（軽い方・重い方）
+//	result.IDpair.light = target.ID;
+//	result.IDpair.heavy = this->ID;
+//	if (this->mass < target.mass)
+//	{
+//		std::swap(result.IDpair.light, result.IDpair.heavy);
+//	}
+//	result.AABBpair = CollisionPair{ -1, -1 };
+//
+//	// AABB同士の衝突判定
+//	for (size_t i = 0; i < target.aabbs.size(); ++i)
+//	{
+//		for (size_t j = 0; j < this->aabbs.size(); ++j)
+//		{
+//			// 緩めの衝突判定
+//			if (IsLooseCollision(target.aabbs[i], this->aabbs[j], 0.001f))
+//			{
+//				// 衝突深度取得
+//				Vector3 depth = this->aabbs[j].GetCollisionDepth(target.aabbs[i]);
+//
+//				// 衝突ペア・深度の保存
+//				result.AABBpair = CollisionPair{ static_cast<int>(i), static_cast<int>(j) };
+//				result.depth = -depth;
+//				if (this->mass < target.mass)
+//				{
+//					std::swap(result.AABBpair.light, result.AABBpair.heavy);
+//					result.depth = depth;
+//				}
+//				break;
+//			}
+//		}
+//	}
+//	if (result.AABBpair == CollisionPair{ -1, -1 }) return std::nullopt;
+//	return result;
+//}
+
+std::optional<CollisionInf> RenderData_Model::isCollisionAABBInf(RenderData_Model& target) const {
+	CollisionInf best;
+	bool found = false;
+	float bestPen = std::numeric_limits<float>::infinity();
+
+	for (size_t i = 0; i < target.aabbs.size(); ++i)
+	{ 
+		// AABB中心点取得
+		Vector3 centerT = target.aabbs[i].center();
+		for (size_t j = 0; j < this->aabbs.size(); ++j) 
+		{
+			// AABB中心点取得
+			Vector3 centerS = this->aabbs[j].center();
+
+			// 衝突判定　衝突していなければスキップ
+			if (!IsLooseCollision(target.aabbs[i], this->aabbs[j], 0.001f)) continue;
+
+			// 深度取得
+			Vector3 overlap = this->aabbs[j].GetCollisionDepth(target.aabbs[i]);
+
+
+			// 一番浅い軸を探す
+			float pen = overlap.x;
+			int axis = 0; // 0:x, 1:y, 2:z
+			if (overlap.y < pen) { pen = overlap.y; axis = 1; }
+			if (overlap.z < pen) { pen = overlap.z; axis = 2; }
+
+			// 衝突面の特定
+			CollisionAABBFace faces{ AABBFace::NONE, AABBFace::NONE };
+
+			if (axis == 0) { // x
+				if (centerT.x < centerS.x) { faces.light = AABBFace::RIGHT; faces.heavy = AABBFace::LEFT; }
+				else { faces.light = AABBFace::LEFT; faces.heavy = AABBFace::RIGHT; }
+			}
+			else if (axis == 1) { // y
+				if (centerT.y < centerS.y) { faces.light = AABBFace::TOP; faces.heavy = AABBFace::BOTTOM; }
+				else { faces.light = AABBFace::BOTTOM; faces.heavy = AABBFace::TOP; }
+			}
+			else { // z
+				if (centerT.z < centerS.z) { faces.light = AABBFace::FRONT; faces.heavy = AABBFace::BACK; }
+				else { faces.light = AABBFace::BACK; faces.heavy = AABBFace::FRONT; }
+			}
+
+			// 最小貫通深度の更新
+			if (pen < bestPen) {
+				bestPen = pen;
+				found = true;
+				best.AABBpair = CollisionPair{ static_cast<int>(i), static_cast<int>(j) };
+				best.depth = overlap;
+				best.face = faces;
 			}
 		}
 	}
-	if (result.pair == Vector2int{ -1, -1 }) return std::nullopt;
-	return result;
+
+	// 衝突ペアが見つからなかった場合
+	if (!found) return std::nullopt;
+
+	// 衝突しているオブジェクトIDの保存
+	best.IDpair.light = target.ID;
+	best.IDpair.heavy = this->ID;
+
+	// 軽い方・重い方の入れ替え
+	if (this->mass < target.mass) {
+		std::swap(best.IDpair.light, best.IDpair.heavy);
+		std::swap(best.AABBpair.light, best.AABBpair.heavy);
+		std::swap(best.face.light, best.face.heavy);
+	}
+
+	return best;
 }
 
 #pragma endregion
@@ -646,9 +714,8 @@ void RenderData_Triangle::Draw()
 
 void RenderData_Triangle::DrawImGui()
 {
-	std::optional<std::string> str;
+	std::optional<std::string> str = "triangle : " + std::to_string(this->ID);
 	if (this->name != std::nullopt) str = (this->name);
-	else str = "triangle : " + std::to_string(this->ID);
 
 	std::string num = std::to_string(this->ID) + ":";
 
@@ -675,7 +742,7 @@ void RenderData_Triangle::DrawImGui()
 		ImGui::DragFloat3((num + "pos3").c_str(), &pos3.x, 0.1f);
 		ImGui::TreePop();
 	}
-	if (ImGui::TreeNode("----------position-------------"))
+	if (ImGui::TreeNode("----------texture--------------"))
 	{
 		for (size_t i = 0; i < Game::Resource::GetTextureCount(); ++i)
 		{
@@ -753,9 +820,8 @@ void RenderData_Line::DrawPoints()
 
 void RenderData_Line::DrawImGui()
 {
-	std::optional<std::string> str;
+	std::optional<std::string> str = "line : " + std::to_string(this->ID);
 	if (this->name != std::nullopt) str = (this->name);
-	else str = "line : " + std::to_string(this->ID);
 
 	std::string num = std::to_string(this->ID) + ":";
 
@@ -852,9 +918,8 @@ void RenderData_Particle::Draw()
 
 void RenderData_Particle::DrawImGui()
 {
-	std::optional<std::string> str;
+	std::optional<std::string> str = "particle : " + std::to_string(this->ID);
 	if (this->name != std::nullopt) str = (this->name);
-	else str = "particle : " + std::to_string(this->ID);
 
 	std::string num = ":" + std::to_string(this->ID);
 

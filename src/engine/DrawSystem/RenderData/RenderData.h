@@ -7,26 +7,30 @@ class RenderData_Model
 public:
     RenderData_Model();
     ~RenderData_Model();
-    void Update();
+    // 全オブジェクトのSRT更新,それに伴うワールド行列更新
+    void Update1();
+	// 全オブジェクトの親を考慮したワールド行列更新,AABB更新
+    void Update2();
+	// 衝突判定,衝突ペア・深度の保存
+    void Update3();
+    // 衝突時の更新,それに伴うワールド行列更新
+	void Update4();
+	// 全オブジェクトの描画範囲内判定,前フレーム情報保存
+    void Update5();
 
-    // 今フレーム位置、回転、スケール
-    Transforms transforms;
+    VectorDynamics scale = { Vector3(1.0f,1.0f,1.0f ), Vector3(0.0f,0.0f,0.0f ), Vector3(0.0f,0.0f,0.0f ) };
+	VectorDynamics rotate = { Vector3(0.0f,0.0f,0.0f), Vector3(0.0f,0.0f,0.0f), Vector3(0.0f,0.0f,0.0f) };
+	VectorDynamics translate = { Vector3(0.0f,0.0f,0.0f), Vector3(0.0f,0.0f,0.0f), Vector3(0.0f,0.0f,0.0f) };
+	// 親のワールドマトリックス
+    RenderData_Model* parentModel = nullptr;
     // 今フレームの移動量
     Vector3 lastMove;
-    // 今フレームでS/R/Tに変化があったか
-    bool movedThisFrame = true;
     // 回転の中心点
     Vector3 pivot;
     // UV座標
     Transforms uvTransform;
-    // 速度
-    Vector3 velocity;
-    // 加速度
-    Vector3 acceleration;
-    // 重力加速度
-    Vector3 gravity;
     // 色
-    uint32_t color = 0xFFFFFFFF;
+    Vector4 color = { 0xFF, 0xFF, 0xFF, 0xFF };
     // 3Dモデル
     uint32_t model = 0;
     // テクスチャ
@@ -37,9 +41,9 @@ public:
     std::vector<AABB> aabbs;
     // 重さ
     float mass = 1.0f;
-    // ID
-    int ID = 0;
     std::optional<std::string> name;
+    // ファイルパス
+    std::string filePath = "resources/Prototypes/model_json/aaa";
     // 画面内に存在するか
     bool inPicture = false;
     // マウスとの衝突判定
@@ -67,22 +71,43 @@ public:
     void DrawImGui();
 
 
+
     static std::vector<RenderData_Model*> renderModels;
 
 private:
+    // 今フレームでS/R/Tに変化があったか
+    bool movedThisFrame = true;
+
+	// 衝突ペアを全部保存
+	static std::vector<CollisionInf*> collisionInfos;
+
+	// 親を考慮しないワールドマトリックス
+	Matrix4x4 localWorldMatrix;
+	// 親を考慮したワールドマトリックス
+	Matrix4x4 worldMatrix;
+    Vector3 worldPos;
+
+	// 親を考慮したワールドマトリックスを設定する
+    Matrix4x4 SetWorldMatrix();
+
+    // ID
+    int ID = 0;
+
+
+    bool initialized = false;
 
     // 衝突フラグ
     unsigned int CollisionFlags = 0x00000000;
     // 前フレームの衝突フラグ
     unsigned int preCollisionFlags = 0x00000000;
     // 衝突したときの反発係数
-    //const float restitution = 0.0f;
-    // 衝突方向に応じた行動
-    void CollisionAction(const Vector3& depth, RenderData_Model& target);
+    const float restitution = 0.0f;
 
-
-    // 前フレーム位置、回転、スケール
-    Transforms preTransforms;
+    // 前フレーム位置、回転、スケール、ワールド座標
+    VectorDynamics preScale;
+    VectorDynamics preRotate;
+    VectorDynamics preTranslate;
+	Vector3 preWorldPos;
     // 前フレームAABB
     std::vector<AABB> preAABB;
 

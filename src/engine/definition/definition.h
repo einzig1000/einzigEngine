@@ -615,8 +615,15 @@ struct Transforms
     Vector3 scale = { 1,1,1 };
     Vector3 rotate = { 0,0,0 };
     Vector3 translate = { 0,0,0 };
-    Matrix4x4 World;
-    Matrix4x4* parentWorld = nullptr;
+    //Matrix4x4 World;
+    //Matrix4x4* parentWorld = nullptr;
+};
+
+struct VectorDynamics
+{
+    Vector3 value = { 1.0f,1.0f,1.0f };
+    Vector3 velocity;
+    Vector3 acceleration;
 };
 
 struct TransformationMatrix
@@ -671,15 +678,15 @@ struct KeyState
 {
     bool curr = false;           // 今フレームの押下状態
     bool prev = false;           // 前フレームの押下状態
-    uint32_t holdFrames = 0;     // curr==true のときの連続押下フレーム数（1..）, curr==false のときは 0
-    uint32_t lastHoldOnRelease = 0; // 直近のリリース時に押されていたフレーム数（release イベント時に更新）
+    uint32_t holdFrames = 0;     // 長押しフレーム数
+    uint32_t lastHoldOnRelease = 0; // 直近のリリース時に押されていたフレーム数
 };
 
 struct mouseButtenState
 {
-    bool leftButton = false;
-    bool rightButton = false;
-    bool middleButton = false;
+    bool curr = false;           // 今フレームの押下状態
+    bool prev = false;           // 前フレームの押下状態
+    uint32_t holdFrames = 0;     // 長押しフレーム数
 };
 
 #pragma endregion
@@ -750,9 +757,45 @@ struct CollisionFlags
     };
 };
 
+enum class AABBFace
+{
+    NONE = -1,
+    LEFT = 0,
+    RIGHT = 1,
+    BOTTOM = 2,
+    TOP = 3,
+    BACK = 4,
+    FRONT = 5,
+};
+
+struct CollisionPair
+{
+    // 軽い方
+    int light = 0;
+	// 重い方
+	int heavy = 0;
+
+    bool operator==(const CollisionPair& rhs) const
+    {
+        return light == rhs.light && heavy == rhs.heavy;
+    }
+    bool operator!=(const CollisionPair& rhs) const
+    {
+        return !(*this == rhs);
+    }
+};
+
+struct CollisionAABBFace
+{
+    AABBFace light;
+    AABBFace heavy;
+};
+
 struct CollisionInf
 {
-    Vector2int pair;  // 衝突したオブジェクトのAABBの番号ペア
+    CollisionPair IDpair;    // 衝突したオブジェクトの識別番号ペア
+    CollisionPair AABBpair;  // 衝突したオブジェクトのAABBの番号ペア
+    CollisionAABBFace face;  // 衝突したオブジェクトのAABBの衝突面ペア
     Vector3 depth;    // 浸入深度
 };
 
@@ -857,6 +900,7 @@ struct ParticleMonoInfGPU
 };
 
 #pragma endregion
+
 
 enum class Direction
 {

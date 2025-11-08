@@ -1,6 +1,5 @@
 #include "Facade/Game.h"
 #include "Engine/Engine.h"
-#include "Camera/CameraController.h"
 using namespace DirectX;
 
 uint32_t Game::Resource::LoadModel(const std::string& directoryPath, const std::string& filename)
@@ -107,24 +106,65 @@ Vector2 Game::Input::Mouse::GetMousePosition()
 	return Engine::Instance().GetMousePosition();
 }
 
+Vector3 Game::Input::Mouse::GetMouseWorldPosition()
+{
+	return Engine::Instance().GetMouseWorldPosition();
+}
+
 Ray Game::Input::Mouse::GetMouseRay()
 {
 	return Engine::Instance().GetMouseRay();
 }
 
-bool Game::Input::Mouse::GetMousePress(int i)
+bool Game::Input::Mouse::IsHeld(int i)
 {
-	return Engine::Instance().GetMousePress(i);
+	return Engine::Instance().IsMouseHeld(i);
 }
 
-bool Game::Input::Mouse::GetMousePrePress(int i)
+bool Game::Input::Mouse::IsJustPressed(int i)
 {
-	return Engine::Instance().GetMousePrePress(i);
+	return Engine::Instance().IsMouseJustPressed(i);
+}
+
+bool Game::Input::Mouse::IsJustReleased(int i)
+{
+	return Engine::Instance().IsMouseJustReleased(i);
+}
+
+uint32_t Game::Input::Mouse::HoldFrames(int i)
+{
+	return Engine::Instance().MouseHoldFrames(i);
 }
 
 uint32_t Game::Input::Mouse::GetMouseWheel()
 {
 	return Engine::Instance().GetMouseWheel();
+}
+
+
+bool Game::Input::Key::IsHeld(BYTE key)
+{
+	return Engine::Instance().IsKeyHeld(key);
+}
+
+bool Game::Input::Key::IsJustPressed(BYTE key)
+{
+	return Engine::Instance().IsKeyJustPressed(key);
+}
+
+bool Game::Input::Key::IsJustReleased(BYTE key)
+{
+	return Engine::Instance().IsKeyJustReleased(key);
+}
+
+uint32_t Game::Input::Key::HoldFrames(BYTE key)
+{
+	return Engine::Instance().KeyHoldFrames(key);
+}
+
+int Game::Input::Key::TestTapLong(int n, BYTE key)
+{
+	return Engine::Instance().TestTapLong(n, key);
 }
 
 
@@ -143,20 +183,6 @@ void Game::Camera::MoveCameraDistance(float target, int spendFrame, EaseType eas
 	Engine::Instance().MoveCameraDistance(target, spendFrame, easetype);
 }
 
-void Game::Camera::SetControlModeCamera(bool mode)
-{
-	Engine::Instance().SetControlModeCamera(mode);
-}
-
-CameraController* Game::Camera::GetCamera()
-{
-	return Engine::Instance().GetCamera();
-}
-
-CameraController* Game::Camera::GetDebugCamera()
-{
-	return Engine::Instance().GetDebugCamera();
-}
 
 void Game::Camera::StartCameraShake(float intensity, float duration, float frequency)
 {
@@ -179,9 +205,49 @@ bool Game::Camera::InCamera(const AABB& aabb)
 }
 
 
+Vector3 Game::Camera::Getter::GetCenter(const std::string name)
+{
+	return Engine::Instance().GetCameraManager()->GetCenter(name);
+}
+
+Vector3 Game::Camera::Getter::GetTranslate(const std::string name)
+{
+	return Engine::Instance().GetCameraManager()->GetTranslate(name);
+}
+
+Matrix4x4 Game::Camera::Getter::GetViewProjectionMatrix(const std::string name)
+{
+	return Engine::Instance().GetCameraManager()->GetViewProjectionMatrix(name);
+}
+
+float Game::Camera::Getter::GetDistance(const std::string name)
+{
+	return Engine::Instance().GetCameraManager()->GetDistance(name);
+}
+
+
+Vector3 Game::Camera::Getter::GetCurrentCenter()
+{
+	return Engine::Instance().GetCameraManager()->GetCurrentCenter();
+}
+
+Vector3 Game::Camera::Getter::GetCurrentTranslate()
+{
+	return Engine::Instance().GetCameraManager()->GetCurrentTranslate();
+}
+
+Matrix4x4 Game::Camera::Getter::GetCurrentViewProjectionMatrix()
+{
+	return Engine::Instance().GetCameraManager()->GetCurrentViewProjectionMatrix();
+}
+
+float Game::Camera::Getter::GetCurrentDistance()
+{
+	return Engine::Instance().GetCameraManager()->GetCurrentDistance();
+}
+
 
 void Game::Utilitie::toggleWireframeMode()
 {
 	Engine::Instance().toggleWireframeMode();
 }
-

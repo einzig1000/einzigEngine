@@ -76,9 +76,6 @@
     <Filter Include="engine\Application">
       <UniqueIdentifier>{24c1e14d-3c15-48b9-9b53-6d5405a3ce02}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\CameraController">
-      <UniqueIdentifier>{8119ccfa-d6ad-4af0-83e5-034de74534f5}</UniqueIdentifier>
-    </Filter>
     <Filter Include="application">
       <UniqueIdentifier>{32561114-f9f1-4f0a-8e1e-73b39cad400b}</UniqueIdentifier>
     </Filter>
@@ -138,6 +135,15 @@
     </Filter>
     <Filter Include="engine\Utilities\Json">
       <UniqueIdentifier>{2c7c8756-3efa-42f1-99a8-61e1c4ba9f9f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\Camera">
+      <UniqueIdentifier>{8119ccfa-d6ad-4af0-83e5-034de74534f5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\Camera\CameraManager">
+      <UniqueIdentifier>{70066dff-cc45-4252-961b-65ce53332d25}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\Camera\Camera">
+      <UniqueIdentifier>{ad6f796a-aea3-44b4-a3d3-e541536d2168}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -228,9 +234,6 @@
     <ClCompile Include="src\engine\Utilities\Easings.cpp">
       <Filter>engine\Utilities\Easings</Filter>
     </ClCompile>
-    <ClCompile Include="src\engine\Camera\CameraController.cpp">
-      <Filter>engine\CameraController</Filter>
-    </ClCompile>
     <ClCompile Include="src\engine\definition\definition.cpp">
       <Filter>engine\definition</Filter>
     </ClCompile>
@@ -266,6 +269,12 @@
     </ClCompile>
     <ClCompile Include="src\engine\Utilities\JsonManager.cpp">
       <Filter>engine\Utilities\Json</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\Camera\CameraManager.cpp">
+      <Filter>engine\Camera\CameraManager</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\Camera\Camera.cpp">
+      <Filter>engine\Camera\Camera</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -356,9 +365,6 @@
     <ClInclude Include="src\engine\Utilities\functions.h">
       <Filter>engine\Utilities\functions</Filter>
     </ClInclude>
-    <ClInclude Include="src\engine\Camera\CameraController.h">
-      <Filter>engine\CameraController</Filter>
-    </ClInclude>
     <ClInclude Include="src\engine\definition\definition.h">
       <Filter>engine\definition</Filter>
     </ClInclude>
@@ -394,6 +400,12 @@
     </ClInclude>
     <ClInclude Include="src\engine\Utilities\JsonManager.h">
       <Filter>engine\Utilities\Json</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\Camera\CameraManager.h">
+      <Filter>engine\Camera\CameraManager</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\Camera\Camera.h">
+      <Filter>engine\Camera\Camera</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

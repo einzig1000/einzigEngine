@@ -2,7 +2,6 @@
 #include "DirectX/DirectXManager.h"
 #include "Window/WindowManager.h"
 #include "Utilities/functions.h"
-#include "Camera/CameraController.h"
 
 DrawSystem::DrawSystem(DirectXManager* dxManager)
 	:dxManager_(dxManager)
@@ -104,7 +103,7 @@ DrawSystem::~DrawSystem()
 	directionalLightResource_.Reset();
 }
 
-void DrawSystem::BeginFrame(Matrix4x4& viewProjectionMatrix)
+void DrawSystem::BeginFrame(const Matrix4x4& viewProjectionMatrix)
 {
 	// 前フレームの不要VBを解放（EndFrame→Present→WaitForGPU 後）
 	vbHoldUntilSubmit_.clear();
@@ -167,7 +166,7 @@ void DrawSystem::Update_ParticleInstanceData()
 			// ビルボード
 			if (pool.mapped[i].isBillboard)
 			{
-				Vector3 direction = (Game::Camera::GetCamera()->transform_.translate - pool.mapped[i].translate.value).Normalized();
+				Vector3 direction = (Game::Camera::Getter::GetTranslate("ReleaseCamera") - pool.mapped[i].translate.value).Normalized();
 				float yaw = std::atan2(direction.x, direction.z); // Y軸
 				float pitch = std::asin(-direction.y);              // X軸
 				pool.mapped[i].rotate.value = { pitch, yaw, pool.mapped[i].rotate.value.z };
@@ -493,39 +492,21 @@ void DrawSystem::DrawParticle(RenderData_Particle& renderData)
 				ParticleSRT s = renderData.GetParticleInf().scale;
 				if (renderData.GetParticleInf().scale.isRandom_value)
 				{
-					AABB aabbbbb = renderData.GetParticleInf().scale.randomRange_value;
-					renderData.GetParticleInf().scale.randomRange_value.min.x = my_min(aabbbbb.min.x, aabbbbb.max.x);
-					renderData.GetParticleInf().scale.randomRange_value.max.x = my_max(aabbbbb.min.x, aabbbbb.max.x);
-					renderData.GetParticleInf().scale.randomRange_value.min.y = my_min(aabbbbb.min.y, aabbbbb.max.y);
-					renderData.GetParticleInf().scale.randomRange_value.max.y = my_max(aabbbbb.min.y, aabbbbb.max.y);
-					renderData.GetParticleInf().scale.randomRange_value.min.z = my_min(aabbbbb.min.z, aabbbbb.max.z);
-					renderData.GetParticleInf().scale.randomRange_value.max.z = my_max(aabbbbb.min.z, aabbbbb.max.z);
+					renderData.GetParticleInf().scale.randomRange_value.Fix();
 					s.value.x = RandomFloat(renderData.GetParticleInf().scale.randomRange_value.min.x, renderData.GetParticleInf().scale.randomRange_value.max.x, 3);
 					s.value.y = RandomFloat(renderData.GetParticleInf().scale.randomRange_value.min.y, renderData.GetParticleInf().scale.randomRange_value.max.y, 3);
 					s.value.z = RandomFloat(renderData.GetParticleInf().scale.randomRange_value.min.z, renderData.GetParticleInf().scale.randomRange_value.max.z, 3);
 				}
 				if (renderData.GetParticleInf().scale.isRandom_velocity)
 				{
-					AABB aabbbbb = renderData.GetParticleInf().scale.randomRange_velocity;
-					renderData.GetParticleInf().scale.randomRange_velocity.min.x = my_min(aabbbbb.min.x, aabbbbb.max.x);
-					renderData.GetParticleInf().scale.randomRange_velocity.max.x = my_max(aabbbbb.min.x, aabbbbb.max.x);
-					renderData.GetParticleInf().scale.randomRange_velocity.min.y = my_min(aabbbbb.min.y, aabbbbb.max.y);
-					renderData.GetParticleInf().scale.randomRange_velocity.max.y = my_max(aabbbbb.min.y, aabbbbb.max.y);
-					renderData.GetParticleInf().scale.randomRange_velocity.min.z = my_min(aabbbbb.min.z, aabbbbb.max.z);
-					renderData.GetParticleInf().scale.randomRange_velocity.max.z = my_max(aabbbbb.min.z, aabbbbb.max.z);
+					renderData.GetParticleInf().scale.randomRange_velocity.Fix();
 					s.velocity.x = RandomFloat(renderData.GetParticleInf().scale.randomRange_velocity.min.x, renderData.GetParticleInf().scale.randomRange_velocity.max.x, 3);
 					s.velocity.y = RandomFloat(renderData.GetParticleInf().scale.randomRange_velocity.min.y, renderData.GetParticleInf().scale.randomRange_velocity.max.y, 3);
 					s.velocity.z = RandomFloat(renderData.GetParticleInf().scale.randomRange_velocity.min.z, renderData.GetParticleInf().scale.randomRange_velocity.max.z, 3);
 				}
 				if (renderData.GetParticleInf().scale.isRandom_acceleration)
 				{
-					AABB aabbbbb = renderData.GetParticleInf().scale.randomRange_acceleration;
-					renderData.GetParticleInf().scale.randomRange_acceleration.min.x = my_min(aabbbbb.min.x, aabbbbb.max.x);
-					renderData.GetParticleInf().scale.randomRange_acceleration.max.x = my_max(aabbbbb.min.x, aabbbbb.max.x);
-					renderData.GetParticleInf().scale.randomRange_acceleration.min.y = my_min(aabbbbb.min.y, aabbbbb.max.y);
-					renderData.GetParticleInf().scale.randomRange_acceleration.max.y = my_max(aabbbbb.min.y, aabbbbb.max.y);
-					renderData.GetParticleInf().scale.randomRange_acceleration.min.z = my_min(aabbbbb.min.z, aabbbbb.max.z);
-					renderData.GetParticleInf().scale.randomRange_acceleration.max.z = my_max(aabbbbb.min.z, aabbbbb.max.z);
+					renderData.GetParticleInf().scale.randomRange_acceleration.Fix();
 					s.acceleration.x = RandomFloat(renderData.GetParticleInf().scale.randomRange_acceleration.min.x, renderData.GetParticleInf().scale.randomRange_acceleration.max.x, 3);
 					s.acceleration.y = RandomFloat(renderData.GetParticleInf().scale.randomRange_acceleration.min.y, renderData.GetParticleInf().scale.randomRange_acceleration.max.y, 3);
 					s.acceleration.z = RandomFloat(renderData.GetParticleInf().scale.randomRange_acceleration.min.z, renderData.GetParticleInf().scale.randomRange_acceleration.max.z, 3);
@@ -540,7 +521,7 @@ void DrawSystem::DrawParticle(RenderData_Particle& renderData)
 				// ビルボードは生まれた瞬間からビルボード
 				if (renderData.GetParticleInf().option.isBillboard)
 				{
-					Vector3 direction = (Game::Camera::GetCamera()->transform_.translate - t.value).Normalized();
+					Vector3 direction = (Game::Camera::Getter::GetTranslate("ReleaseCamera") - t.value).Normalized();
 					float yaw = std::atan2(direction.x, direction.z); // Y軸
 					float pitch = std::asin(-direction.y);            // X軸
 					r.value = { pitch, yaw, 0.0f };
@@ -548,39 +529,21 @@ void DrawSystem::DrawParticle(RenderData_Particle& renderData)
 				// ビルボードではないかつランダム回転指定がある場合
 				else if (renderData.GetParticleInf().rotate.isRandom_value)
 				{
-					AABB aabbbbb = renderData.GetParticleInf().rotate.randomRange_value;
-					renderData.GetParticleInf().rotate.randomRange_value.min.x = my_min(aabbbbb.min.x, aabbbbb.max.x);
-					renderData.GetParticleInf().rotate.randomRange_value.max.x = my_max(aabbbbb.min.x, aabbbbb.max.x);
-					renderData.GetParticleInf().rotate.randomRange_value.min.y = my_min(aabbbbb.min.y, aabbbbb.max.y);
-					renderData.GetParticleInf().rotate.randomRange_value.max.y = my_max(aabbbbb.min.y, aabbbbb.max.y);
-					renderData.GetParticleInf().rotate.randomRange_value.min.z = my_min(aabbbbb.min.z, aabbbbb.max.z);
-					renderData.GetParticleInf().rotate.randomRange_value.max.z = my_max(aabbbbb.min.z, aabbbbb.max.z);
+					renderData.GetParticleInf().rotate.randomRange_value.Fix();
 					r.value.x = RandomFloat(renderData.GetParticleInf().rotate.randomRange_value.min.x, renderData.GetParticleInf().rotate.randomRange_value.max.x, 3);
 					r.value.y = RandomFloat(renderData.GetParticleInf().rotate.randomRange_value.min.y, renderData.GetParticleInf().rotate.randomRange_value.max.y, 3);
 					r.value.z = RandomFloat(renderData.GetParticleInf().rotate.randomRange_value.min.z, renderData.GetParticleInf().rotate.randomRange_value.max.z, 3);
 				}
 				if (renderData.GetParticleInf().rotate.isRandom_velocity)
 				{
-					AABB aabbbbb = renderData.GetParticleInf().rotate.randomRange_velocity;
-					renderData.GetParticleInf().rotate.randomRange_velocity.min.x = my_min(aabbbbb.min.x, aabbbbb.max.x);
-					renderData.GetParticleInf().rotate.randomRange_velocity.max.x = my_max(aabbbbb.min.x, aabbbbb.max.x);
-					renderData.GetParticleInf().rotate.randomRange_velocity.min.y = my_min(aabbbbb.min.y, aabbbbb.max.y);
-					renderData.GetParticleInf().rotate.randomRange_velocity.max.y = my_max(aabbbbb.min.y, aabbbbb.max.y);
-					renderData.GetParticleInf().rotate.randomRange_velocity.min.z = my_min(aabbbbb.min.z, aabbbbb.max.z);
-					renderData.GetParticleInf().rotate.randomRange_velocity.max.z = my_max(aabbbbb.min.z, aabbbbb.max.z);
+					renderData.GetParticleInf().rotate.randomRange_velocity.Fix();
 					r.velocity.x = RandomFloat(renderData.GetParticleInf().rotate.randomRange_velocity.min.x, renderData.GetParticleInf().rotate.randomRange_velocity.max.x, 3);
 					r.velocity.y = RandomFloat(renderData.GetParticleInf().rotate.randomRange_velocity.min.y, renderData.GetParticleInf().rotate.randomRange_velocity.max.y, 3);
 					r.velocity.z = RandomFloat(renderData.GetParticleInf().rotate.randomRange_velocity.min.z, renderData.GetParticleInf().rotate.randomRange_velocity.max.z, 3);
 				}
 				if (renderData.GetParticleInf().rotate.isRandom_acceleration)
 				{
-					AABB aabbbbb = renderData.GetParticleInf().rotate.randomRange_acceleration;
-					renderData.GetParticleInf().rotate.randomRange_acceleration.min.x = my_min(aabbbbb.min.x, aabbbbb.max.x);
-					renderData.GetParticleInf().rotate.randomRange_acceleration.max.x = my_max(aabbbbb.min.x, aabbbbb.max.x);
-					renderData.GetParticleInf().rotate.randomRange_acceleration.min.y = my_min(aabbbbb.min.y, aabbbbb.max.y);
-					renderData.GetParticleInf().rotate.randomRange_acceleration.max.y = my_max(aabbbbb.min.y, aabbbbb.max.y);
-					renderData.GetParticleInf().rotate.randomRange_acceleration.min.z = my_min(aabbbbb.min.z, aabbbbb.max.z);
-					renderData.GetParticleInf().rotate.randomRange_acceleration.max.z = my_max(aabbbbb.min.z, aabbbbb.max.z);
+					renderData.GetParticleInf().rotate.randomRange_acceleration.center();
 					r.acceleration.x = RandomFloat(renderData.GetParticleInf().rotate.randomRange_acceleration.min.x, renderData.GetParticleInf().rotate.randomRange_acceleration.max.x, 3);
 					r.acceleration.y = RandomFloat(renderData.GetParticleInf().rotate.randomRange_acceleration.min.y, renderData.GetParticleInf().rotate.randomRange_acceleration.max.y, 3);
 					r.acceleration.z = RandomFloat(renderData.GetParticleInf().rotate.randomRange_acceleration.min.z, renderData.GetParticleInf().rotate.randomRange_acceleration.max.z, 3);
@@ -614,8 +577,9 @@ void DrawSystem::DrawParticle(RenderData_Particle& renderData)
 	dxManager_->GetCommandContextManager()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources_[drawCallIndex_]->GetGPUVirtualAddress());
 	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress());
-	dxManager_->GetCommandContextManager()->GetCommandList()->DrawInstanced(kSumVertex, pool.activeCount, 0, 0);
-
+	if (pool.activeCount > 0) {
+		dxManager_->GetCommandContextManager()->GetCommandList()->DrawInstanced(kSumVertex, pool.activeCount, 0, 0);
+	}
 	renderData.currentSum = pool.activeCount;
 	renderData.GetParticleInf().density.frame++;
 	drawCallIndex_++;
@@ -652,11 +616,11 @@ void DrawSystem::DrawModel(RenderData_Model& renderData)
 	const uint32_t kSumVertex = static_cast<uint32_t>(obj->modelData.vertices.size());
 
 	// WVP行列
-	wvpData_[drawCallIndex_]->World = renderData.transforms.World;
-	wvpData_[drawCallIndex_]->WVP = renderData.transforms.World * viewProjectionMatrix_;
+	wvpData_[drawCallIndex_]->World = renderData.GetWorldMatrix();
+	wvpData_[drawCallIndex_]->WVP = renderData.GetWorldMatrix() * viewProjectionMatrix_;
 
 	// マテリアル
-	Vector4 color = ConvertUintToVector4(renderData.color);
+	Vector4 color = { renderData.color.x / 255.0f, renderData.color.y / 255.0f, renderData.color.z / 255.0f, renderData.color.w / 255.0f };
 	materialData_[drawCallIndex_]->color = color;
 	materialData_[drawCallIndex_]->enableLighting = renderData.options.enableLighting;
 	Matrix4x4 uvTransformMatrix = Matrix4x4::MakeIdentity4x4();

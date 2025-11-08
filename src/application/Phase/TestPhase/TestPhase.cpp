@@ -1,24 +1,41 @@
 #include "TestPhase.h"
-#include "engine/Camera/CameraController.h"
 
 TestPhase::TestPhase()
 {
-	uint32_t playerTex = Game::Resource::LoadTexture("resources/Prototypes/texture/uvChecker.png");
-	uint32_t playerModel = Game::Resource::LoadModel("resources/Prototypes/model/", "cube.obj");
+	uint32_t tex1 = Game::Resource::LoadTexture("resources/Prototypes/texture/uvChecker.png");
+	uint32_t tex2 = Game::Resource::LoadTexture("resources/Prototypes/texture/circle.png");
+	uint32_t tex3 = Game::Resource::LoadTexture("resources/Prototypes/texture/monsterBall.png");
+	uint32_t tex4 = Game::Resource::LoadTexture("resources/Prototypes/texture/white1x1.png");
 
-	uint32_t enemyTex = Game::Resource::LoadTexture("resources/Prototypes/texture/circle.png");
-	uint32_t enemyModel = Game::Resource::LoadModel("resources/Prototypes/model/", "plane.obj");
+	uint32_t model1 = Game::Resource::LoadModel("resources/Prototypes/model/", "plane.obj");
+	uint32_t model2 = Game::Resource::LoadModel("resources/Prototypes/model/", "cube.obj");
+	uint32_t model3 = Game::Resource::LoadModel("resources/Prototypes/model/", "corn.obj");
+	uint32_t model4 = Game::Resource::LoadModel("resources/Prototypes/model/", "sphere.obj");
 
-	uint32_t enemyTex2 = Game::Resource::LoadTexture("resources/Prototypes/texture/monsterBall.png");
-	uint32_t enemyTex3 = Game::Resource::LoadTexture("resources/Prototypes/texture/white1x1.png");
+	audio1 = Game::Resource::LoadAudio("resources/Prototypes/audio/BGM/InGame.mp3");
+	audio2 = Game::Resource::LoadAudio("resources/Prototypes/audio/SE/バトル用/氷魔法1.mp3");
 
-	model_.model = playerModel;
-	model_.texture = playerTex;
-	model_.name = "player";
 
-	sprite_.texture = playerTex;
+	ground_.model = model2;
+	ground_.texture = tex1;
+	ground_.name = "ground";
+	ground_.mass = 1001.0f;
+	ground_.scale.value = { 10.0f,1.0f,10.0f };
 
-	triangle_.texture = playerTex;
+	player_.model = model2;
+	player_.texture = tex3;
+	player_.name = "player";
+	player_.translate.value = { 0.0f,5.0f,0.0f };
+	player_.translate.acceleration = { 0.0f,-0.02f,0.0f };
+	player_.SetBlock(ground_);
+
+	sprite1_.texture = tex1;
+	sprite1_.transforms.scale = { 0.1f,0.1f };
+	sprite2_.texture = tex3;
+	sprite2_.transforms.scale = { 0.1f,0.1f };
+
+	triangle1_.texture = tex1;
+	triangle2_.texture = tex1;
 
 	line_.points.push_back(Vector3{ 10.0f,0.0f,0.0f });
 	line_.points.push_back(Vector3{ 0.0f,10.0f,0.0f });
@@ -36,8 +53,8 @@ TestPhase::TestPhase()
 
 	//particle_.model = playerModel;
 	//particle_.texture = playerTex;
-	particle_.filePath = "resources/Prototypes/particle/aaa";
-	particle_.LoadJson();
+	particle1_.filePath = "resources/Prototypes/particle/aaa";
+	particle1_.LoadJson();
 
 }
 
@@ -51,28 +68,265 @@ void TestPhase::Initialize()
 
 void TestPhase::Update()
 {
+	ImGui::Begin("TestPhase");
+
+	if (ImGui::BeginTabBar("Facade Test", ImGuiTabBarFlags_::ImGuiTabBarFlags_Reorderable))
+	{
+#pragma region audio test
+
+		if (ImGui::BeginTabItem("Audio Test"))
+		{
+			if (ImGui::Button("Play Audio1"))
+			{
+				Game::Audio::PlayAudio(audio1, true);
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Stop Audio1"))
+			{
+				Game::Audio::StopAudio(audio1);
+			}
+			if (ImGui::Button("Play Audio2"))
+			{
+				Game::Audio::PlayAudio(audio2, false);
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Stop Audio2"))
+			{
+				Game::Audio::StopAudio(audio2);
+			}
+			float volume1 = Game::Audio::GetVolume(audio1);
+			ImGui::SliderFloat("audio1 volume", &volume1, 0.0f, 1.0f);
+			ImGui::Text("audio1 is playing : %d", Game::Audio::IsAudioPlaying(audio1));
+			Game::Audio::SetAudioVolume(audio1, volume1);
+			float volume2 = Game::Audio::GetVolume(audio2);
+			ImGui::SliderFloat("audio2 volume", &volume2, 0.0f, 1.0f);
+			ImGui::Text("audio2 is playing : %d", Game::Audio::IsAudioPlaying(audio2));
+			Game::Audio::SetAudioVolume(audio2, volume2);
+			float masterVolume = Game::Audio::GetMasterVolume();
+			ImGui::SliderFloat("master volume", &masterVolume, 0.0f, 1.0f);
+			Game::Audio::SetMasterVolume(masterVolume);
+			ImGui::EndTabItem();
+		}
+
+#pragma endregion
+
+#pragma region light test
+
+		if (ImGui::BeginTabItem("Light Test"))
+		{
+			static Vector4 lightColor = { 1.0f,1.0f,1.0f,1.0f };
+			ImGui::ColorEdit4("light color", &lightColor.x, 1);
+			Game::Light::SetLightColor(lightColor);
+
+			static Vector3 lightDirection = { -1.0f,-1.0f,-1.0f };
+			ImGui::DragFloat3("light direction", &lightDirection.x, 0.1f);
+			Game::Light::SetLightDirection(lightDirection);
+
+			static float lightIntensity = 1.0f;
+			ImGui::SliderFloat("light intensity", &lightIntensity, 0.0f, 10.0f);
+			Game::Light::SetLightIntensity(lightIntensity);
+
+			static int lightMode = 0;
+			const char* items[] =
+			{ "1","3", "4" };
+			ImGui::Combo("light mode", &lightMode, items, IM_ARRAYSIZE(items));
+			Game::Light::ToggleLightMode(static_cast<uint32_t>(lightMode));
+
+			ImGui::EndTabItem();
+		}
+
+#pragma endregion
+
+#pragma region camera test
+
+		if (ImGui::BeginTabItem("Camera Test"))
+		{
+			static Vector3 cameraCenterTarget;
+			static int cameraCenterFrame = 120;
+			ImGui::DragFloat3("camera center", &cameraCenterTarget.x, 0.1f);
+			ImGui::DragInt("camera center frame", &cameraCenterFrame, 1, 0, 600);
+			if (ImGui::Button("Set Camera Center"))
+			{
+				Game::Camera::MoveCameraCenter(cameraCenterTarget, cameraCenterFrame, EaseType::IN_CUBIC);
+			}
+
+			static Vector3 cameraRotateTarget;
+			static int cameraRotateFrame = 120;
+			ImGui::DragFloat3("camera rotate", &cameraRotateTarget.x, 0.1f);
+			ImGui::DragInt("camera rotate frame", &cameraRotateFrame, 1, 0, 600);
+			if (ImGui::Button("Set Camera Rotate"))
+			{
+				Game::Camera::MoveCameraRotate(cameraRotateTarget, cameraRotateFrame, EaseType::IN_CUBIC);
+			}
+
+			static float cameraDistanceTarget = 0.0f;
+			static int cameraDistanceFrame = 120;
+			ImGui::DragFloat("camera distance", &cameraDistanceTarget, 0.1f);
+			ImGui::DragInt("camera distance frame", &cameraDistanceFrame, 1, 0, 600);
+			if (ImGui::Button("Set Camera Distance"))
+			{
+				Game::Camera::MoveCameraDistance(cameraDistanceTarget, cameraDistanceFrame, EaseType::IN_CUBIC);
+			}
+
+			static float intensity = 3.0f;
+			static float duration = 35.0f;
+			static float frequency = 25.0f;
+			ImGui::DragFloat("camera shake intensity", &intensity, 0.1f);
+			ImGui::DragFloat("camera shake duration", &duration, 0.1f);
+			ImGui::DragFloat("camera shake frequency", &frequency, 0.1f);
+			if (ImGui::Button("Start Camera Shake"))
+			{
+				Game::Camera::StartCameraShake(intensity, duration, frequency);
+			}
+			ImGui::Text("is camera shaking : %d", Game::Camera::IsCameraShaking());
+			if (ImGui::Button("Stop Camera Shake"))
+			{
+				Game::Camera::StopCameraShake();
+			}
+
+			ImGui::EndTabItem();
+		}
+
+#pragma endregion
+
+#pragma region mouse test
+
+		if (ImGui::BeginTabItem("mouse Test"))
+		{
+			ImGui::Text("Mouse Position: (%.1f, %.1f)", Game::Input::Mouse::GetMousePosition().x, Game::Input::Mouse::GetMousePosition().y);
+			ImGui::Text("Mouse World Position: (%.1f, %.1f, %.1f)", Game::Input::Mouse::GetMouseWorldPosition().x, Game::Input::Mouse::GetMouseWorldPosition().y, Game::Input::Mouse::GetMouseWorldPosition().z);
+			ImGui::Text("Mouse Ray Origin: (%.1f, %.1f, %.1f)", Game::Input::Mouse::GetMouseRay().origin.x, Game::Input::Mouse::GetMouseRay().origin.y, Game::Input::Mouse::GetMouseRay().origin.z);
+			ImGui::Text("Mouse Ray Diff  : (%.1f, %.1f, %.1f)", Game::Input::Mouse::GetMouseRay().diff.x, Game::Input::Mouse::GetMouseRay().diff.y, Game::Input::Mouse::GetMouseRay().diff.z);
+			ImGui::Text("Mouse Wheel: %d", Game::Input::Mouse::GetMouseWheel());
+
+			ImGui::Text("Mouse Buttons:");
+			ImGui::Text("Left Button - %d-%d-%d : %d",
+				Game::Input::Mouse::IsJustPressed(0),
+				Game::Input::Mouse::IsHeld(0),
+				Game::Input::Mouse::IsJustReleased(0),
+				Game::Input::Mouse::HoldFrames(0));
+			ImGui::Text("Right Button - %d-%d-%d : %d",
+				Game::Input::Mouse::IsJustPressed(1),
+				Game::Input::Mouse::IsHeld(1),
+				Game::Input::Mouse::IsJustReleased(1),
+				Game::Input::Mouse::HoldFrames(1));
+			ImGui::Text("Middle Button - %d-%d-%d : %d",
+				Game::Input::Mouse::IsJustPressed(2),
+				Game::Input::Mouse::IsHeld(2),
+				Game::Input::Mouse::IsJustReleased(2),
+				Game::Input::Mouse::HoldFrames(2));
+
+			ImGui::EndTabItem();
+		}
+
+#pragma endregion
+
+#pragma region keyboard test
+
+		if (ImGui::BeginTabItem("keyboard Test"))
+		{
+			struct KeyInfo {
+				const char* name;
+				int dik;
+			};
+
+			static const KeyInfo kKeys[] = {
+				{"A", DIK_A}, {"B", DIK_B}, {"C", DIK_C}, {"D", DIK_D},
+				{"E", DIK_E}, {"F", DIK_F}, {"G", DIK_G}, {"H", DIK_H},
+				{"I", DIK_I}, {"J", DIK_J}, {"K", DIK_K}, {"L", DIK_L},
+				{"M", DIK_M}, {"N", DIK_N}, {"O", DIK_O}, {"P", DIK_P},
+				{"Q", DIK_Q}, {"R", DIK_R}, {"S", DIK_S}, {"T", DIK_T},
+				{"U", DIK_U}, {"V", DIK_V}, {"W", DIK_W}, {"X", DIK_X},
+				{"Y", DIK_Y}, {"Z", DIK_Z},
+
+				{"Space", DIK_SPACE},
+
+				{"F1", DIK_F1}, {"F2", DIK_F2}, {"F3", DIK_F3}, {"F4", DIK_F4},
+				{"F5", DIK_F5}, {"F6", DIK_F6}, {"F7", DIK_F7}, {"F8", DIK_F8},
+				{"F9", DIK_F9}, {"F10", DIK_F10}, {"F11", DIK_F11}, {"F12", DIK_F12},
+
+				{"Enter", DIK_RETURN}, {"Escape", DIK_ESCAPE},
+
+				{"Up", DIK_UP}, {"Down", DIK_DOWN}, {"Left", DIK_LEFT}, {"Right", DIK_RIGHT},
+
+				{"LShift", DIK_LSHIFT}, {"RShift", DIK_RSHIFT},
+
+				{"0", DIK_0}, {"1", DIK_1}, {"2", DIK_2}, {"3", DIK_3}, {"4", DIK_4},
+				{"5", DIK_5}, {"6", DIK_6}, {"7", DIK_7}, {"8", DIK_8}, {"9", DIK_9}
+			};
+
+			for (const auto& k : kKeys) {
+				if (Game::Input::Key::IsHeld(k.dik) ||
+					Game::Input::Key::IsJustPressed(k.dik) ||
+					Game::Input::Key::IsJustReleased(k.dik))
+				{
+					ImGui::Text("%s : %d:%d:%d _ %d",
+						k.name,
+						Game::Input::Key::IsJustPressed(k.dik),
+						Game::Input::Key::IsHeld(k.dik),
+						Game::Input::Key::IsJustReleased(k.dik),
+						Game::Input::Key::HoldFrames(k.dik)
+					);
+				}
+			}
+			ImGui::EndTabItem();
+		}
+
+#pragma endregion
+
+		ImGui::EndTabBar();
+	}
+
+	ImGui::End();
+
+	if (Game::Input::Key::IsHeld(DIK_A))
+	{
+		player_.translate.value.x -= 0.1f;
+	}
+	if (Game::Input::Key::IsHeld(DIK_D))
+	{
+		player_.translate.value.x += 0.1f;
+	}
+	if (Game::Input::Key::IsHeld(DIK_W))
+	{
+		player_.translate.value.z -= 0.1f;
+	}
+	if (Game::Input::Key::IsHeld(DIK_S))
+	{
+		player_.translate.value.z += 0.1f;
+	}
+	if (Game::Input::Key::IsJustPressed(DIK_SPACE))
+	{
+		player_.translate.velocity.y += 0.5f;
+	}
 }
 
 
 void TestPhase::Draw()
 {
-	model_.Draw();
-	model_.DrawAABB();
-	model_.DrawImGui();
 
-	sprite_.Draw();
-	sprite_.DrawImGui();
+	ground_.Draw();
+	ground_.DrawImGui();
 
-	triangle_.Draw();
-	triangle_.DrawImGui();
+	player_.Draw();
+	player_.DrawImGui();
 
-	particle_.Draw();
-	particle_.DrawImGui();
-	particle_.DrawEmitter();
+	sprite1_.Draw();
+	sprite1_.DrawImGui();
+	sprite2_.Draw();
+	sprite2_.DrawImGui();
 
-	particle2_.Draw();
-	particle2_.DrawImGui();
-	particle2_.DrawEmitter();
+	triangle1_.Draw();
+	triangle1_.DrawImGui();
+	triangle2_.Draw();
+	triangle2_.DrawImGui();
+
+	//particle1_.Draw();
+	//particle1_.DrawImGui();
+	particle1_.DrawEmitter();
+	//particle2_.Draw();
+	//particle2_.DrawImGui();
+	//particle2_.DrawEmitter();
 
 	line_.Draw();
 	line_.DrawImGui();

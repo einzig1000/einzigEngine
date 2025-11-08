@@ -1,10 +1,12 @@
 #include "input/MouseController.h"
 #include "Utilities/functions.h"
 #include "Window/WindowManager.h"
+#include "Camera/CameraManager.h"
 #include "Game.h"
 
-MouseController::MouseController(HWND hwnd, Matrix4x4* viewProjectionMatrix, Matrix4x4* debugViewProjectionMatrix, bool* debugCameraMode)
-    :viewProjectionMatrix_(viewProjectionMatrix), debugViewProjectionMatrix_(debugViewProjectionMatrix), debugCameraMode_(debugCameraMode)
+
+MouseController::MouseController(HWND hwnd, CameraManager* cameraManager)
+	:cameraManager_(cameraManager)
 {
     hwnd_ = hwnd;
     wheelDelta = 0;
@@ -27,47 +29,66 @@ void MouseController::EndFrame()
     wheelDelta = 0;
 }
 
-bool MouseController::GetMousePress(int i)
+bool MouseController::IsHeld(int i)
 {
-    // 左クリック
-    if (i == 0)
+    switch (i)
     {
-        return Buttens.leftButton;
+    case 0:
+        return leftButton.curr;
+    case 1:
+        return rightButton.curr;
+    case 2:
+        return middleButton.curr;
+    default:
+        return false;
     }
-    // 右クリック
-    else if (i == 1)
-    {
-        return Buttens.rightButton;
-    }
-    // ミドルボタン（マウスホイールクリック）
-    else if (i == 2)
-    {
-        return Buttens.middleButton;
-    }
-
-    return false;
 }
 
-bool MouseController::GetMousePrePress(int i)
+bool MouseController::IsJustPressed(int i)
 {
-    // 左クリック
-    if (i == 0)
+    switch (i)
     {
-        return preButtens.leftButton;
+    case 0:
+        return (!leftButton.prev && leftButton.curr);
+    case 1:
+        return (!rightButton.prev && rightButton.curr);
+    case 2:
+        return (!middleButton.prev && middleButton.curr);
+    default:
+        return false;
     }
-    // 右クリック
-    else if (i == 1)
-    {
-        return preButtens.rightButton;
-    }
-    // ミドルボタン（マウスホイールクリック）
-    else if (i == 2)
-    {
-        return preButtens.middleButton;
-    }
-
-    return false;
 }
+
+bool MouseController::IsJustReleased(int i)
+{
+    switch (i)
+    {
+    case 0:
+        return (leftButton.prev && !leftButton.curr);
+    case 1:
+        return (rightButton.prev && !rightButton.curr);
+    case 2:
+        return (middleButton.prev && !middleButton.curr);
+    default:
+        return false;
+    }
+}
+
+uint32_t MouseController::HoldFrames(int i)
+{
+    switch (i)
+    {
+    case 0:
+        return leftButton.holdFrames;
+    case 1:
+        return rightButton.holdFrames;
+    case 2:
+        return middleButton.holdFrames;
+    default:
+        return 0;
+    }
+}
+
 
 void MouseController::SetMousePosition()
 {
@@ -93,15 +114,7 @@ void MouseController::SetMouseRay()
     Vector4 farPoint = { ndcX, ndcY, 1.0f, 1.0f };
 
     // 逆射影行列
-    Matrix4x4 inverseViewProj;
-    if (*debugCameraMode_ == false)
-    {
-        inverseViewProj = viewProjectionMatrix_->Inverse();
-    }
-    else
-    {
-        inverseViewProj = debugViewProjectionMatrix_->Inverse();
-    }
+    Matrix4x4 inverseViewProj = cameraManager_->GetCurrentViewProjectionMatrix().Inverse();
 
     // ワールド空間に変換
     Vector4 nearWorld = Transform(nearPoint, inverseViewProj);
@@ -118,9 +131,18 @@ void MouseController::SetMouseRay()
 
 void MouseController::SetMouseButtenState()
 {
-	preButtens = Buttens;
+    leftButton.prev = leftButton.curr;
+	rightButton.prev = rightButton.curr;
+	middleButton.prev = middleButton.curr;
 
-    Buttens.leftButton = (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
-    Buttens.rightButton = (GetAsyncKeyState(VK_RBUTTON) & 0x8000) != 0;
-    Buttens.middleButton = (GetAsyncKeyState(VK_MBUTTON) & 0x8000) != 0;
+    leftButton.curr = (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
+    rightButton.curr = (GetAsyncKeyState(VK_RBUTTON) & 0x8000) != 0;
+    middleButton.curr = (GetAsyncKeyState(VK_MBUTTON) & 0x8000) != 0;
+
+    if (leftButton.curr)leftButton.holdFrames++;
+    else leftButton.holdFrames = 0;
+    if (rightButton.curr) rightButton.holdFrames++;
+    else rightButton.holdFrames = 0;
+    if (middleButton.curr) middleButton.holdFrames++;
+    else middleButton.holdFrames = 0;
 }

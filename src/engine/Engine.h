@@ -8,7 +8,7 @@
 
 #include "Window/WindowManager.h"
 #include "DirectX/DirectXManager.h"
-#include "Camera/CameraController.h"
+#include "Camera/CameraManager.h"
 #include "DrawSystem/DrawSystem.h"
 
 class Engine
@@ -68,39 +68,43 @@ public:
 
 	// マウス
 	Vector2 GetMousePosition();
+	Vector3 GetMouseWorldPosition();
 	uint32_t GetMouseWheel();
 	Ray GetMouseRay();
-	bool GetMousePress(int i);
-	bool GetMousePrePress(int i);
+	bool IsMouseHeld(int i);// 今押しているか
+	bool IsMouseJustPressed(int i);// 押した瞬間（今フレームで押された）
+	bool IsMouseJustReleased(int i);// 離した瞬間（今フレームで離れた）
+	uint32_t MouseHoldFrames(int i);// 押されてからの経過フレーム数
 
-	/// キーボード
-	//bool GetKeyboardPress(int key);
-	//bool GetKeyboardPrePress(int key);
+	// キーボード
+	bool IsKeyHeld(BYTE key);// 今押しているか
+	bool IsKeyJustPressed(BYTE key);// 押した瞬間（今フレームで押された）
+	bool IsKeyJustReleased(BYTE key);// 離した瞬間（今フレームで離れた）
+	uint32_t KeyHoldFrames(BYTE key);// 押されてからの経過フレーム数
+	int TestTapLong(int n, BYTE key);// 0: なし  1:単押し  2:長押し(n = 長押し判定)
 
 	/// ゲームパッド
 	//PadState GetPadState();
 	//PadState GetPrePadState();
 
 	// カメラ
+	Vector3 GetCameraTranslate() const;
 	void MoveCameraCenter(Vector3 target, int spendFrame, EaseType easetype);
 	void MoveCameraRotate(Vector3 target, int spendFrame, EaseType easetype);
 	void MoveCameraDistance(float target, int spendFrame, EaseType easetype);
-	void SetControlModeCamera(bool mode);
-	CameraController* GetCamera();
-	CameraController* GetDebugCamera();
 	void StartCameraShake(float intensity, float duration, float frequency = 25.0f);
 	bool IsCameraShaking();
+	void ToggleCameraMode();
 	void StopCameraShake();
+	CameraManager* GetCameraManager() { return cameraManager; }
 
 	/// カメラシェイク
 
 	// フルスクリーン切り替え
 	void ToggleFullscreen();
-	// カメラモード切り替え
-	void ToggleCameraMode();
 
 	// AABBの作成
-	std::vector<AABB>  CreateAABB(const Transforms& transforms, uint32_t objectNumber);
+	std::vector<AABB>  CreateAABB(RenderData_Model* data);
 
 	// プリミティブモードの設定
 	void toggleWireframeMode();
@@ -123,9 +127,10 @@ private:
 	// 入力関連
 	Input* inputManager_ = nullptr;
 	// カメラ
-	CameraController* cameraController = nullptr;
-	CameraController* debugCameraController = nullptr;
-	bool debugCamera = false;
+	CameraManager* cameraManager = nullptr;
+	//CameraController* cameraController = nullptr;
+	//CameraController* debugCameraController = nullptr;
+	//bool debugCamera = false;
 
 
 };
