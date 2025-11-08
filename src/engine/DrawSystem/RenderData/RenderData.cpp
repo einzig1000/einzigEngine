@@ -159,7 +159,7 @@ void RenderData_Model::DrawImGui()
 		ImGui::DragFloat3((num + "UVrotate").c_str(), &uvTransform.rotate.x, 0.01f);
 		ImGui::TreePop();
 	}
-	if (ImGui::TreeNode("----------model & texture------"))
+	if (ImGui::TreeNode("----------texture--------------"))
 	{
 		size_t textureCount = Game::Resource::GetTextureCount();
 
