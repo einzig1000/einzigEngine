@@ -334,21 +334,66 @@ void RenderData_Model::Update4()
 		const CollisionInf& collisionInf = *collisionInfPtr;
 		if (collisionInf.IDpair.light == this->ID)
 		{
-
-			// 衝突したAABB面のペア・深度がわかっているので、それに基づいて移動
-			if (collisionInf.face.light == AABBFace::LEFT || collisionInf.face.light == AABBFace::RIGHT)
+			/// 衝突したAABB面のペア・深度がわかっているので、それに基づいて移動
+			if (collisionInf.face.light == AABBFace::LEFT)
 			{
 				this->translate.value.x += collisionInf.depth.x;
 			}
-			else if (collisionInf.face.light == AABBFace::BOTTOM || collisionInf.face.light == AABBFace::TOP)
+			else if (collisionInf.face.light == AABBFace::RIGHT)
+			{
+				this->translate.value.x -= collisionInf.depth.x;
+			}
+			else if (collisionInf.face.light == AABBFace::BOTTOM)
 			{
 				this->translate.value.y += collisionInf.depth.y;
 			}
-			else if (collisionInf.face.light == AABBFace::BACK || collisionInf.face.light == AABBFace::FRONT)
+			else if (collisionInf.face.light == AABBFace::TOP)
+			{
+				this->translate.value.y -= collisionInf.depth.y;
+			}
+			else if (collisionInf.face.light == AABBFace::BACK)
 			{
 				this->translate.value.z += collisionInf.depth.z;
 			}
+			else if (collisionInf.face.light == AABBFace::FRONT)
+			{
+				this->translate.value.z -= collisionInf.depth.z;
+			}
 
+			// 衝突しているのにその方向に加速度がかかっている場合はこのフレームで加速した分を打ち消す
+			if (collisionInf.face.light == AABBFace::LEFT && this->translate.acceleration.x < 0.0f)
+			{
+				this->translate.velocity.x -= this->translate.acceleration.x;
+				//this->translate.acceleration.x = 0.0f;
+			}
+			else if (collisionInf.face.light == AABBFace::RIGHT && this->translate.acceleration.x > 0.0f)
+			{
+				this->translate.velocity.x -= this->translate.acceleration.x;
+				//this->translate.acceleration.x = 0.0f;
+			}
+			else if (collisionInf.face.light == AABBFace::BOTTOM && this->translate.acceleration.y < 0.0f)
+			{
+				this->translate.velocity.y -= this->translate.acceleration.y;
+				//this->translate.acceleration.y = 0.0f;
+			}
+			else if (collisionInf.face.light == AABBFace::TOP && this->translate.acceleration.y > 0.0f)
+			{
+				this->translate.velocity.y -= this->translate.acceleration.y;
+				//this->translate.acceleration.y = 0.0f;
+			}
+			else if (collisionInf.face.light == AABBFace::BACK && this->translate.acceleration.z < 0.0f)
+			{
+				this->translate.velocity.z -= this->translate.acceleration.z;
+				//this->translate.acceleration.z = 0.0f;
+			}
+			else if (collisionInf.face.light == AABBFace::FRONT && this->translate.acceleration.z > 0.0f)
+			{
+				this->translate.velocity.z -= this->translate.acceleration.z;
+				//this->translate.acceleration.z = 0.0f;
+			}
+
+			// translate.velocityの分めり込んだ状態で固定されてしまうので、velocity分座標を戻す。velocityは変えない。
+			//this->translate.value -= this->translate.velocity;
 
 			// ワールド行列更新
 			XMVECTOR scaleVec = XMVectorSet(this->scale.value.x, this->scale.value.y, this->scale.value.z, 0.0f);
@@ -382,7 +427,6 @@ void RenderData_Model::Update4()
 // 全オブジェクトの描画範囲内判定,前フレーム情報保存
 void RenderData_Model::Update5()
 {
-
 	collisionInfos.clear();
 
 #pragma region 描画範囲内判定
@@ -410,10 +454,6 @@ void RenderData_Model::Update5()
 #pragma endregion
 
 }
-
-void RenderData_Model::CollisionAction(const Vector3& depth, RenderData_Model& target)
-{}
-
 
 //std::optional<CollisionInf> RenderData_Model::isCollisionAABBInf(RenderData_Model& target) const
 //{
@@ -460,29 +500,28 @@ std::optional<CollisionInf> RenderData_Model::isCollisionAABBInf(RenderData_Mode
 	float bestPen = std::numeric_limits<float>::infinity();
 
 	for (size_t i = 0; i < target.aabbs.size(); ++i)
-	{
+	{ 
+		// AABB中心点取得
 		Vector3 centerT = target.aabbs[i].center();
 		for (size_t j = 0; j < this->aabbs.size(); ++j) 
 		{
+			// AABB中心点取得
+			Vector3 centerS = this->aabbs[j].center();
 
+			// 衝突判定　衝突していなければスキップ
 			if (!IsLooseCollision(target.aabbs[i], this->aabbs[j], 0.001f)) continue;
 
-			Vector3 overlap = this->aabbs[j].GetCollisionDepth(target.aabbs[i]); // 各軸の重なり量（非負）を返す契約
-			// any axis non-positive => no collision
-			if (overlap.x <= 0.0f || overlap.y <= 0.0f || overlap.z <= 0.0f) continue;
+			// 深度取得
+			Vector3 overlap = this->aabbs[j].GetCollisionDepth(target.aabbs[i]);
 
-			// pick minimum overlap axis robustly
-			float ox = overlap.x;
-			float oy = overlap.y;
-			float oz = overlap.z;
 
-			float pen = ox;
+			// 一番浅い軸を探す
+			float pen = overlap.x;
 			int axis = 0; // 0:x, 1:y, 2:z
-			if (oy < pen) { pen = oy; axis = 1; }
-			if (oz < pen) { pen = oz; axis = 2; }
+			if (overlap.y < pen) { pen = overlap.y; axis = 1; }
+			if (overlap.z < pen) { pen = overlap.z; axis = 2; }
 
-			// determine faces for target (A) and self (S) based on centers
-			Vector3 centerS = this->aabbs[j].center();
+			// 衝突面の特定
 			CollisionAABBFace faces{ AABBFace::NONE, AABBFace::NONE };
 
 			if (axis == 0) { // x
@@ -498,30 +537,29 @@ std::optional<CollisionInf> RenderData_Model::isCollisionAABBInf(RenderData_Mode
 				else { faces.light = AABBFace::BACK; faces.heavy = AABBFace::FRONT; }
 			}
 
-			// choose smallest penetration candidate
+			// 最小貫通深度の更新
 			if (pen < bestPen) {
 				bestPen = pen;
 				found = true;
 				best.AABBpair = CollisionPair{ static_cast<int>(i), static_cast<int>(j) };
-				best.depth = overlap; // non-negative per-axis
+				best.depth = overlap;
 				best.face = faces;
 			}
 		}
 	}
 
+	// 衝突ペアが見つからなかった場合
 	if (!found) return std::nullopt;
 
-	// set ID order: light = lighter object, heavy = heavier object
+	// 衝突しているオブジェクトIDの保存
 	best.IDpair.light = target.ID;
 	best.IDpair.heavy = this->ID;
 
-	// if this is lighter than target, swap to keep invariant (light/heavy)
+	// 軽い方・重い方の入れ替え
 	if (this->mass < target.mass) {
 		std::swap(best.IDpair.light, best.IDpair.heavy);
 		std::swap(best.AABBpair.light, best.AABBpair.heavy);
-		// swap face entries so that best.face.light/heavy still correspond to IDpair.light/heavy
 		std::swap(best.face.light, best.face.heavy);
-		// depth remains per-axis non-negative; caller interprets direction using face info
 	}
 
 	return best;

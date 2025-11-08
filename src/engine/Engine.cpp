@@ -120,6 +120,15 @@ void Engine::BeginFrame()
 }
 void Engine::UpdateTransforms()
 {
+	if (RenderData_Model::renderModels.size() == 0)return;
+
+	if (Game::Input::Key::IsHeld(DIK_LSHIFT))
+	{
+		if (!Game::Input::Key::IsJustPressed(DIK_RIGHTARROW))
+		{
+			return;
+		}
+	}
 
 #pragma region モデルリスト取得
 

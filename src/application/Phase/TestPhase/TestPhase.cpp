@@ -26,6 +26,7 @@ TestPhase::TestPhase()
 	player_.texture = tex3;
 	player_.name = "player";
 	player_.translate.value = { 0.0f,5.0f,0.0f };
+	player_.translate.acceleration = { 0.0f,-0.02f,0.0f };
 	player_.SetBlock(ground_);
 
 	sprite1_.texture = tex1;
@@ -278,6 +279,26 @@ void TestPhase::Update()
 
 	ImGui::End();
 
+	if (Game::Input::Key::IsHeld(DIK_A))
+	{
+		player_.translate.value.x -= 0.1f;
+	}
+	if (Game::Input::Key::IsHeld(DIK_D))
+	{
+		player_.translate.value.x += 0.1f;
+	}
+	if (Game::Input::Key::IsHeld(DIK_W))
+	{
+		player_.translate.value.z -= 0.1f;
+	}
+	if (Game::Input::Key::IsHeld(DIK_S))
+	{
+		player_.translate.value.z += 0.1f;
+	}
+	if (Game::Input::Key::IsJustPressed(DIK_SPACE))
+	{
+		player_.translate.velocity.y += 0.5f;
+	}
 }
 
 

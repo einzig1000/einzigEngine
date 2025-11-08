@@ -771,9 +771,9 @@ enum class AABBFace
 struct CollisionPair
 {
     // 軽い方
-    int light;
+    int light = 0;
 	// 重い方
-	int heavy;
+	int heavy = 0;
 
     bool operator==(const CollisionPair& rhs) const
     {

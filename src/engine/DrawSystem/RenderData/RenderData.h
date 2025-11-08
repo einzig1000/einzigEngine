@@ -18,15 +18,13 @@ public:
 	// 全オブジェクトの描画範囲内判定,前フレーム情報保存
     void Update5();
 
-    VectorDynamics scale = { Vector3( 1.0f,1.0f,1.0f ), Vector3( 0.0f,0.0f,0.0f ), Vector3( 0.0f,0.0f,0.0f ) };
+    VectorDynamics scale = { Vector3(1.0f,1.0f,1.0f ), Vector3(0.0f,0.0f,0.0f ), Vector3(0.0f,0.0f,0.0f ) };
 	VectorDynamics rotate = { Vector3(0.0f,0.0f,0.0f), Vector3(0.0f,0.0f,0.0f), Vector3(0.0f,0.0f,0.0f) };
 	VectorDynamics translate = { Vector3(0.0f,0.0f,0.0f), Vector3(0.0f,0.0f,0.0f), Vector3(0.0f,0.0f,0.0f) };
 	// 親のワールドマトリックス
     RenderData_Model* parentModel = nullptr;
     // 今フレームの移動量
     Vector3 lastMove;
-    // 今フレームでS/R/Tに変化があったか
-    bool movedThisFrame = true;
     // 回転の中心点
     Vector3 pivot;
     // UV座標
@@ -77,6 +75,9 @@ public:
     static std::vector<RenderData_Model*> renderModels;
 
 private:
+    // 今フレームでS/R/Tに変化があったか
+    bool movedThisFrame = true;
+
 	// 衝突ペアを全部保存
 	static std::vector<CollisionInf*> collisionInfos;
 
@@ -101,9 +102,6 @@ private:
     unsigned int preCollisionFlags = 0x00000000;
     // 衝突したときの反発係数
     const float restitution = 0.0f;
-
-    // 衝突方向に応じた行動
-    void CollisionAction(const Vector3& depth, RenderData_Model& target);
 
     // 前フレーム位置、回転、スケール、ワールド座標
     VectorDynamics preScale;
