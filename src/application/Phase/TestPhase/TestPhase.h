@@ -14,7 +14,10 @@ public:
 
 private:
 	RenderData_Model ground_;
-
+	RenderData_Model wall1_;
+	RenderData_Model wall2_;
+	RenderData_Model wall3_;
+	RenderData_Model wall4_;
 	RenderData_Model player_;
 
 	RenderData_Sprite sprite1_;

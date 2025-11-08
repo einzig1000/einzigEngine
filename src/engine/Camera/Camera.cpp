@@ -9,7 +9,7 @@ Camera::Camera()
 
     // カメラ
     transform_.translate = { 0.0f, 0.0f, 0.0f };
-    transform_.rotate = { 0.2f, 0.0f, 0.0f };
+    transform_.rotate = { 1.0f, 0.0f, 0.0f };
     center_ = { 0.0f, 0.0f, 0.0f };
     distance_ = 35.60f;
 

@@ -22,12 +22,42 @@ TestPhase::TestPhase()
 	ground_.mass = 1001.0f;
 	ground_.scale.value = { 10.0f,1.0f,10.0f };
 
+	wall1_.model = model2;
+	wall1_.texture = tex1;
+	wall1_.name = "wall1";
+	wall1_.scale.value = { 0.5f,2.0f,10.0f };
+	wall1_.translate.value = { -5.0f,0.5f,0.0f };
+	wall1_.mass = 1000.0f;
+	wall2_.model = model2;
+	wall2_.texture = tex1;
+	wall2_.name = "wall2";
+	wall2_.scale.value = { 0.5f,2.0f,10.0f };
+	wall2_.translate.value = { 5.0f,0.5f,0.0f };
+	wall2_.mass = 1000.0f;
+	wall3_.model = model2;
+	wall3_.texture = tex1;
+	wall3_.name = "wall3";
+	wall3_.scale.value = { 10.0f,2.0f,0.5f };
+	wall3_.translate.value = { 0.0f,0.5f,-5.0f };
+	wall3_.mass = 1000.0f;
+	wall4_.model = model2;
+	wall4_.texture = tex1;
+	wall4_.name = "wall4";
+	wall4_.scale.value = { 10.0f,2.0f,0.5f };
+	wall4_.translate.value = { 0.0f,0.5f,5.0f };
+	wall4_.mass = 1000.0f;
+
 	player_.model = model2;
 	player_.texture = tex3;
 	player_.name = "player";
-	player_.translate.value = { 0.0f,5.0f,0.0f };
-	player_.translate.acceleration = { 0.0f,-0.02f,0.0f };
+	player_.translate.value = { 0.0f,2.0f,0.0f };
+	player_.translate.acceleration = { 0.0f,-0.002f,0.0f };
+	player_.mass = 1.0f;
 	player_.SetBlock(ground_);
+	player_.SetBlock(wall1_);
+	player_.SetBlock(wall2_);
+	player_.SetBlock(wall3_);
+	player_.SetBlock(wall4_);
 
 	sprite1_.texture = tex1;
 	sprite1_.transforms.scale = { 0.1f,0.1f };
@@ -297,7 +327,7 @@ void TestPhase::Update()
 	}
 	if (Game::Input::Key::IsJustPressed(DIK_SPACE))
 	{
-		player_.translate.velocity.y += 0.5f;
+		player_.translate.velocity.y += 0.05f;
 	}
 }
 
@@ -307,6 +337,10 @@ void TestPhase::Draw()
 
 	ground_.Draw();
 	ground_.DrawImGui();
+	wall1_.Draw();
+	wall2_.Draw();
+	wall3_.Draw();
+	wall4_.Draw();
 
 	player_.Draw();
 	player_.DrawImGui();
