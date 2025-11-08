@@ -287,11 +287,11 @@ void TestPhase::Update()
 	{
 		player_.translate.value.x += 0.1f;
 	}
-	if (Game::Input::Key::IsHeld(DIK_W))
+	if (Game::Input::Key::IsHeld(DIK_S))
 	{
 		player_.translate.value.z -= 0.1f;
 	}
-	if (Game::Input::Key::IsHeld(DIK_S))
+	if (Game::Input::Key::IsHeld(DIK_W))
 	{
 		player_.translate.value.z += 0.1f;
 	}
