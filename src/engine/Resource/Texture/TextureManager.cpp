@@ -55,17 +55,8 @@ uint32_t TextureManager::LoadTexture(const std::string& filePath, ID3D12Graphics
     Microsoft::WRL::ComPtr<ID3D12Resource> tempIntermediateResource = UploadTextureData(text.textureResource.Get(), text.mipImage, device, commandList);
     intermediateUploadResources_.push_back(tempIntermediateResource);
 
-    uint32_t slot = descriptorHeap->AllocateSRVSlot();
-    D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = descriptorHeap->GetCPUHandleAt(slot);
-    text.textureSrvHandleGPU = descriptorHeap->GetGPUHandleAt(slot);
-
-    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-    srvDesc.Format = text.metadata.format;
-    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-    srvDesc.Texture2D.MipLevels = UINT(text.metadata.mipLevels);
-
-    device->CreateShaderResourceView(text.textureResource.Get(), &srvDesc, textureSrvHandleCPU);
+	SRVAllocation srvAllocation = descriptorHeap->GetSrvManager()->CreateSRVforTexture(text.textureResource.Get(), text.metadata.format, UINT(text.metadata.mipLevels));
+	text.textureSrvHandleGPU = srvAllocation.gpu;
 
     textures_.push_back(std::move(text));
 

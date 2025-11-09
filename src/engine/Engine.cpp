@@ -58,14 +58,14 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 	ImGui::CreateContext();
 	ImGui::StyleColorsDark();
 	ImGui_ImplWin32_Init(windowManager->GetHwnd());
-	uint32_t slot = dxManager->GetDescriptorHeapManager()->AllocateSRVSlot();
+	uint32_t slot = dxManager->GetDescriptorHeapManager()->GetSrvManager()->Allocate();
 	ImGui_ImplDX12_Init(
 		dxManager->GetDevice(),
 		dxManager->GetSwapChain()->GetSwapChainDesc().BufferCount,
 		dxManager->GetSwapChain()->GetRtvDesc().Format,
-		dxManager->GetDescriptorHeapManager()->GetSRVDescriptorHeap(),
-		dxManager->GetDescriptorHeapManager()->GetCPUHandleAt(slot),                    // ImGuiフォントSRV用のCPUハンドル
-		dxManager->GetDescriptorHeapManager()->GetGPUHandleAt(slot)                     // ImGuiフォントSRV用のGPUハンドル
+		dxManager->GetDescriptorHeapManager()->GetSrvManager()->GetSRVDescriptorHeap(),
+		dxManager->GetDescriptorHeapManager()->GetSrvManager()->GetCPUHandleAt(slot),                    // ImGuiフォントSRV用のCPUハンドル
+		dxManager->GetDescriptorHeapManager()->GetSrvManager()->GetGPUHandleAt(slot)                     // ImGuiフォントSRV用のGPUハンドル
 	);
 
 	inputManager_->GetMouseController()->wheelDelta = 0;

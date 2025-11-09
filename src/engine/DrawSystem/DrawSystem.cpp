@@ -252,10 +252,10 @@ void DrawSystem::DrawParticle(RenderData_Particle& renderData)
 		srv.Buffer.NumElements = pool.capacity;
 		srv.Buffer.StructureByteStride = sizeof(ParticleMonoInf);
 
-		pool.srvIndex = dxManager_->GetDescriptorHeapManager()->AllocateSRVSlot();
+		pool.srvIndex = dxManager_->GetDescriptorHeapManager()->GetSrvManager()->Allocate();
 		assert(pool.srvIndex != UINT32_MAX);
-		pool.srvCPU = dxManager_->GetDescriptorHeapManager()->GetCPUHandleAt(pool.srvIndex);
-		pool.srvGPU = dxManager_->GetDescriptorHeapManager()->GetGPUHandleAt(pool.srvIndex);
+		pool.srvCPU = dxManager_->GetDescriptorHeapManager()->GetSrvManager()->GetCPUHandleAt(pool.srvIndex);
+		pool.srvGPU = dxManager_->GetDescriptorHeapManager()->GetSrvManager()->GetGPUHandleAt(pool.srvIndex);
 		dxManager_->GetDevice()->CreateShaderResourceView(pool.buffer.Get(), &srv, pool.srvCPU);
 	}
 
