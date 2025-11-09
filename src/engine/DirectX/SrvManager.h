@@ -30,6 +30,7 @@ public:
     SRVAllocation CreateSRV(ID3D12Resource* resource, const D3D12_SHADER_RESOURCE_VIEW_DESC* desc);
 
     SRVAllocation CreateSRVforTexture(ID3D12Resource* resource, DXGI_FORMAT format, UINT mipLevels);
+	SRVAllocation CreateSRVforStructuredBuffer(ID3D12Resource* resource, UINT numElements, UINT structureByteStride);
 
 private:
     ID3D12Device* device_ = nullptr;
