@@ -37,11 +37,7 @@ void CameraManager::Update()
 void CameraManager::Draw()
 {
 	ImGui::Begin("Camera");
-	ImGui::Text(camera_[currentCameraID_].name_.c_str());
-	ImGui::DragFloat3("cameraCenter", &camera_[currentCameraID_].center_.x, 0.01f);
-	ImGui::DragFloat3("cameraRotate", &camera_[currentCameraID_].transform_.rotate.x, 0.01f);
-	ImGui::DragFloat("cameraDistance", &camera_[currentCameraID_].distance_, 0.1f);
-	ImGui::Checkbox("enableControl", &camera_[currentCameraID_].enableControl_);
+	camera_[currentCameraID_].DrawImGui();
 	ImGui::End();
 
 	camera_[currentCameraID_].Draw();
@@ -107,7 +103,7 @@ Vector3 CameraManager::GetTranslate(const std::string name) const
 	{
 		if (cam.name_ == name)
 		{
-			return cam.transform_.translate;
+			return cam.GetTransform().translate;
 		}
 	}
 
@@ -148,7 +144,7 @@ Vector3 CameraManager::GetCurrentCenter() const
 
 Vector3 CameraManager::GetCurrentTranslate() const
 {
-	return camera_[currentCameraID_].transform_.translate;
+	return camera_[currentCameraID_].GetTransform().translate;
 }
 
 Matrix4x4 CameraManager::GetCurrentViewProjectionMatrix() const

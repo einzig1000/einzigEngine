@@ -20,6 +20,7 @@ public:
 
     void Update();
     void Draw();
+	void DrawImGui();
     void Resize();
 
 	// 動かす先の設定
@@ -35,9 +36,9 @@ public:
 
 	// 情報取得
     Vector3 center_;
-    Transforms transform_;
     float distance_;
-	Matrix4x4 GetViewProjectionMatrix() const { return viewProjectionMatrix; } // ビュープロジェクション行列
+    Transforms GetTransform() const { return transform_; }
+	Matrix4x4 GetViewProjectionMatrix() const { return viewProjectionMatrix; }
 
     // 視錐台内にAABBがあるか
     bool InFrustum(const AABB& aabb);
@@ -99,8 +100,19 @@ private:
     float shakeFrequency_ = 25.0f;		// 揺れる速さ
 
     Matrix4x4 viewportMatrix;
-    Matrix4x4 viewProjectionMatrix;
-    Matrix4x4 cameraMatrix_;
-    Matrix4x4 projectionMatrix_;
+
+	// ビュー行列関連データ
     Matrix4x4 viewMatrix_;
+    Transforms transform_;
+    Matrix4x4 worldMatrix_;
+
+    /// プロジェクション行列関連データ
+    Matrix4x4 projectionMatrix_;
+	float fovY_ = 0.45f;
+    float aspect_;
+    float nearZ_ = 0.1f;
+	float farZ_ = 100.0f;
+
+	// ビュープロジェクション行列
+    Matrix4x4 viewProjectionMatrix;
 };

@@ -14,8 +14,7 @@ Camera::Camera()
     distance_ = 35.60f;
 
     preCenter_ = center_;
-    preRotate_.x = transform_.rotate.x;
-    preRotate_.y = transform_.rotate.y;
+    preRotate_ = transform_.rotate;
 
     sphereOptions.enableLighting = false;
 
@@ -166,14 +165,16 @@ void Camera::Update()
     transform_.translate = (center_ + rotatedCameraPos + GetShakeOffset());
 
     // カメラ行列を作成
-    cameraMatrix_ = Matrix4x4::MakeAffineMatrix(
+    worldMatrix_ = Matrix4x4::MakeAffineMatrix(
         { 1,1,1 },
         transform_.rotate,
         transform_.translate
     );
 
-    // ビュー・射影・ビューポート行列
-    viewMatrix_ = (cameraMatrix_.Inverse());
+	// ビュー行列を作成
+    viewMatrix_ = (worldMatrix_.Inverse());
+
+	// ビュー行列とプロジェクション行列を掛け合わせた行列を作成
     viewProjectionMatrix = (viewMatrix_ * projectionMatrix_);
 
     CreateFrustumPlanes();
@@ -183,13 +184,23 @@ void Camera::Update()
 
 void Camera::Resize()
 {
-    projectionMatrix_ = Matrix4x4::MakePerspectiveFovMatrix(0.45f, float(WindowManager::winWidth_) / float(WindowManager::winHeight_), 0.1f, 100.0f);
+	aspect_ = float(WindowManager::winWidth_) / float(WindowManager::winHeight_);
+    projectionMatrix_ = Matrix4x4::MakePerspectiveFovMatrix(fovY_, aspect_, nearZ_, farZ_);
     //viewportMatrix = Matrix4x4::MakeViewPortMatrix(0.0f, 0.0f, float(WindowManager::winWidth_), float(WindowManager::winHeight_), 0.0f, 1.0f);
 }
 
 void Camera::Draw()
 {
     Game::DebugDraw::AddSphere(center_, Vector3{ 0.2f,0.2f,0.2f }, 0xFFFF00FF);
+}
+
+void Camera::DrawImGui()
+{
+    ImGui::Text(name_.c_str());
+    ImGui::DragFloat3("Center", &center_.x, 0.01f);
+    ImGui::DragFloat3("Rotate", &transform_.rotate.x, 0.01f);
+    ImGui::DragFloat("Distance", &distance_, 0.1f);
+    ImGui::Checkbox("enableControl", &enableControl_);
 }
 
 void Camera::CreateFrustumPlanes()
