@@ -11,5 +11,7 @@ DescriptorHeapManager::DescriptorHeapManager(ID3D12Device* device)
 
 DescriptorHeapManager::~DescriptorHeapManager()
 {
+	delete srvManager_;
+
     Log("デストラクタ実行成功 : DescriptorHeapManager");
 }
