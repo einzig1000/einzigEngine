@@ -572,9 +572,11 @@ void DrawSystem::DrawParticle(RenderData_Particle& renderData)
 	// テクスチャ（t0 PS）
 	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
 
-	// ジオメトリ・ドロー
+	// VertexBufferViewを設定
 	dxManager_->GetCommandContextManager()->GetCommandList()->IASetVertexBuffers(0, 1, &obj->vertexBufferView);
+	// 描画形状を設定
 	dxManager_->GetCommandContextManager()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	// 
 	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources_[drawCallIndex_]->GetGPUVirtualAddress());
 	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress());
 	if (pool.activeCount > 0) {
