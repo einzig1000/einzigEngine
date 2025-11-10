@@ -243,20 +243,12 @@ void DrawSystem::DrawParticle(RenderData_Particle& renderData)
 		HRESULT hr = pool.buffer->Map(0, nullptr, reinterpret_cast<void**>(&pool.mapped));
 		assert(SUCCEEDED(hr) && pool.mapped);
 
-		// SRV作成
-		D3D12_SHADER_RESOURCE_VIEW_DESC srv{};
-		srv.Format = DXGI_FORMAT_UNKNOWN;
-		srv.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		srv.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
-		srv.Buffer.FirstElement = 0;
-		srv.Buffer.NumElements = pool.capacity;
-		srv.Buffer.StructureByteStride = sizeof(ParticleMonoInf);
-
-		pool.srvIndex = dxManager_->GetDescriptorHeapManager()->GetSrvManager()->Allocate();
-		assert(pool.srvIndex != UINT32_MAX);
-		pool.srvCPU = dxManager_->GetDescriptorHeapManager()->GetSrvManager()->GetCPUHandleAt(pool.srvIndex);
-		pool.srvGPU = dxManager_->GetDescriptorHeapManager()->GetSrvManager()->GetGPUHandleAt(pool.srvIndex);
-		dxManager_->GetDevice()->CreateShaderResourceView(pool.buffer.Get(), &srv, pool.srvCPU);
+		SRVAllocation srvAlloc = dxManager_->GetDescriptorHeapManager()->GetSrvManager()->CreateSRVforStructuredBuffer(
+			pool.buffer.Get(),
+			pool.capacity,
+			sizeof(ParticleMonoInf));
+		pool.srvCPU = srvAlloc.cpu;
+		pool.srvGPU = srvAlloc.gpu;
 	}
 
 	// 発生

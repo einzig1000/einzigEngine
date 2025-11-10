@@ -90,3 +90,16 @@ SRVAllocation SrvManager::CreateSRVforStructuredBuffer(ID3D12Resource* resource,
     srvDesc.Buffer.StructureByteStride = structureByteStride;
 	return CreateSRV(resource, &srvDesc);
 }
+
+void SrvManager::CreateSRVforImGui(UINT bufferCount, D3D12_RENDER_TARGET_VIEW_DESC format)
+{
+    //uint32_t index = Allocate();
+    //ImGui_ImplDX12_Init(
+    //    device_,
+    //    bufferCount,
+    //    format,
+    //    descriptorHeap,
+    //    GetCPUHandleAt(index),                    // ImGuiフォントSRV用のCPUハンドル
+    //    GetGPUHandleAt(index)                     // ImGuiフォントSRV用のGPUハンドル
+    //);
+}
