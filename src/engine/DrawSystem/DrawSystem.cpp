@@ -252,10 +252,10 @@ void DrawSystem::DrawParticle(RenderData_Particle& renderData)
 		srv.Buffer.NumElements = pool.capacity;
 		srv.Buffer.StructureByteStride = sizeof(ParticleMonoInf);
 
-		pool.srvIndex = dxManager_->GetDescriptorHeapManager()->AllocateSRVSlot();
+		pool.srvIndex = dxManager_->GetDescriptorHeapManager()->GetSrvManager()->Allocate();
 		assert(pool.srvIndex != UINT32_MAX);
-		pool.srvCPU = dxManager_->GetDescriptorHeapManager()->GetCPUHandleAt(pool.srvIndex);
-		pool.srvGPU = dxManager_->GetDescriptorHeapManager()->GetGPUHandleAt(pool.srvIndex);
+		pool.srvCPU = dxManager_->GetDescriptorHeapManager()->GetSrvManager()->GetCPUHandleAt(pool.srvIndex);
+		pool.srvGPU = dxManager_->GetDescriptorHeapManager()->GetSrvManager()->GetGPUHandleAt(pool.srvIndex);
 		dxManager_->GetDevice()->CreateShaderResourceView(pool.buffer.Get(), &srv, pool.srvCPU);
 	}
 
@@ -572,9 +572,11 @@ void DrawSystem::DrawParticle(RenderData_Particle& renderData)
 	// テクスチャ（t0 PS）
 	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
 
-	// ジオメトリ・ドロー
+	// VertexBufferViewを設定
 	dxManager_->GetCommandContextManager()->GetCommandList()->IASetVertexBuffers(0, 1, &obj->vertexBufferView);
+	// 描画形状を設定
 	dxManager_->GetCommandContextManager()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	// 
 	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources_[drawCallIndex_]->GetGPUVirtualAddress());
 	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress());
 	if (pool.activeCount > 0) {

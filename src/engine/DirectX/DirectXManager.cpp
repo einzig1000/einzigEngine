@@ -54,7 +54,7 @@ void DirectXManager::BeginFrame()
     commandContextManager->GetCommandList()->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
     // SRV用のディスクリプタヒープを指定
-    ID3D12DescriptorHeap* descriptorHeaps[] = { descriptorHeapManager->GetSRVDescriptorHeap() };
+    ID3D12DescriptorHeap* descriptorHeaps[] = { descriptorHeapManager->GetSrvManager()->GetSRVDescriptorHeap()};
     commandContextManager->GetCommandList()->SetDescriptorHeaps(1, descriptorHeaps);
 
     // ViewportとScissorを設定

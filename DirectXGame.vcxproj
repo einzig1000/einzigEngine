@@ -248,6 +248,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="src\application\Phase\TestPhase\TestPhase.cpp" />
     <ClCompile Include="src\application\Phase\TitlePhase\TitlePhase.cpp" />
     <ClCompile Include="src\engine\DrawSystem\RenderData\RenderData.cpp" />
+    <ClCompile Include="src\engine\DirectX\SrvManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\engine\Camera\Camera.h" />
@@ -293,6 +294,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="src\application\Phase\TitlePhase\TitlePhase.h" />
     <ClInclude Include="src\engine\DrawSystem\RenderData\RenderData.h" />
     <ClInclude Include="src\engine\Utilities\JsonManager.h" />
+    <ClInclude Include="src\engine\DirectX\SrvManager.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
