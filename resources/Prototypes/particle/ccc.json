@@ -1,8 +1,8 @@
 {
   "color": [
     1.0,
-    0.003921568859368563,
-    0.003921568859368563,
+    1.0,
+    1.0,
     1.0
   ],
   "emissionDelay": 40,
@@ -34,7 +34,7 @@
   "filePath": "resources/Prototypes/particle/ccc",
   "isBillboard": false,
   "liveMax": 300,
-  "model": 0,
+  "model": 1,
   "particlesPerEmission": 10,
   "rotate": {
     "acceleration": [
@@ -156,7 +156,7 @@
     0.0,
     0.0
   ],
-  "texture": 3,
+  "texture": 0,
   "translate": {
     "acceleration": [
       0.0,

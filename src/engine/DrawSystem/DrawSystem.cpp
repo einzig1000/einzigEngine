@@ -23,6 +23,12 @@ DrawSystem::DrawSystem(DirectXManager* dxManager)
 	directionalLightData_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
 	directionalLightData_->direction = { 0.0f, -1.0f, 0.0f };
 	directionalLightData_->intensity = 1.0f;
+	directionalLightData_->mode = LightMode::HalfLambert;
+	directionalLightData_->phong = false;
+
+	cameraResource_ = CreateConstantBufferResource(dxManager->GetDevice(), sizeof(CameraForGPU));
+	cameraData_ = nullptr;
+	cameraResource_->Map(0, nullptr, reinterpret_cast<void**>(&cameraData_));
 
 	// 描画コールカウント初期化
 	drawCallIndex_ = 0;
@@ -38,12 +44,21 @@ DrawSystem::DrawSystem(DirectXManager* dxManager)
 	materialData_.resize(kMaxDrawCallPerFrame_);
 	wvpResources_.resize(kMaxDrawCallPerFrame_);
 	wvpData_.resize(kMaxDrawCallPerFrame_);
+	lightResources_.resize(kMaxDrawCallPerFrame_);
+	lightData_.resize(kMaxDrawCallPerFrame_);
 	for (size_t i = 0; i < kMaxDrawCallPerFrame_; ++i)
 	{
-		materialResources_[i] = CreateBufferResource(dxManager->GetDevice(), sizeof(Material));
+		materialResources_[i] = CreateConstantBufferResource(dxManager->GetDevice(), sizeof(Material));
 		materialResources_[i]->Map(0, nullptr, reinterpret_cast<void**>(&materialData_[i]));
-		wvpResources_[i] = CreateBufferResource(dxManager->GetDevice(), sizeof(TransformationMatrix));
+		wvpResources_[i] = CreateConstantBufferResource(dxManager->GetDevice(), sizeof(TransformationMatrix));
 		wvpResources_[i]->Map(0, nullptr, reinterpret_cast<void**>(&wvpData_[i]));
+		lightResources_[i] = CreateConstantBufferResource(dxManager->GetDevice(), sizeof(DirectionalLight));
+		lightResources_[i]->Map(0, nullptr, reinterpret_cast<void**>(&lightData_[i]));
+		lightData_[i]->color = { 1.0f, 1.0f, 1.0f, 1.0f };
+		lightData_[i]->direction = { 0.0f, -1.0f, 0.0f };
+		lightData_[i]->intensity = 1.0f;
+		lightData_[i]->mode = LightMode::HalfLambert;
+		lightData_[i]->phong = true;
 	}
 	vertexDataUsed_ = 0;
 
@@ -83,6 +98,12 @@ DrawSystem::~DrawSystem()
 			wvpResources_[i].Reset();
 			wvpData_[i] = nullptr;
 		}
+		if (lightResources_[i])
+		{
+			lightResources_[i]->Unmap(0, nullptr);
+			lightResources_[i].Reset();
+			lightData_[i] = nullptr;
+		}
 	}
 
 	for (auto& it : s_particlePools)
@@ -98,6 +119,7 @@ DrawSystem::~DrawSystem()
 
 	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>>().swap(materialResources_);
 	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>>().swap(wvpResources_);
+	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>>().swap(lightResources_);
 
 	vertexResource_.Reset();
 	directionalLightResource_.Reset();
@@ -119,6 +141,9 @@ void DrawSystem::BeginFrame(const Matrix4x4& viewProjectionMatrix)
 
 	// ライトの向きを正規化
 	directionalLightData_->direction = (directionalLightData_->direction.Normalized());
+
+	// カメラデータの更新
+	cameraData_->worldPosition = Game::Camera::Getter::GetCurrentTranslate();
 }
 
 void DrawSystem::EndFrame()
@@ -222,14 +247,19 @@ void DrawSystem::DrawParticle(RenderData_Particle& renderData)
 	{	// Triangle用PSOを設定
 		dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetParticlePipelineState(BlendMode::kBlendModeAdd));
 	}
-	
+
+	// ライトの設定
+	lightData_[drawCallIndex_]->color = { 0xFF, 0xFF, 0xFF, 0xFF };
+	lightData_[drawCallIndex_]->mode = LightMode::None;
+	lightData_[drawCallIndex_]->phong = false;
+
 	// 頂点数の取得
 	const uint32_t kSumVertex = static_cast<uint32_t>(obj->modelData.vertices.size());
 	
 	// マテリアルデータ
 	Vector4 color = ConvertUintToVector4(renderData.GetParticleInf().material.color);
 	materialData_[drawCallIndex_]->color = color;
-	materialData_[drawCallIndex_]->enableLighting = true;
+	materialData_[drawCallIndex_]->shininess = 1.0f;
 	materialData_[drawCallIndex_]->uvTransform = Matrix4x4::MakeIdentity4x4();
 
 	// エミッター用プールを取得/初期化
@@ -570,7 +600,7 @@ void DrawSystem::DrawParticle(RenderData_Particle& renderData)
 	dxManager_->GetCommandContextManager()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	// 
 	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources_[drawCallIndex_]->GetGPUVirtualAddress());
-	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress());
+	//dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(3, lightResources_[drawCallIndex_]->GetGPUVirtualAddress());
 	if (pool.activeCount > 0) {
 		dxManager_->GetCommandContextManager()->GetCommandList()->DrawInstanced(kSumVertex, pool.activeCount, 0, 0);
 	}
@@ -588,23 +618,21 @@ void DrawSystem::DrawModel(RenderData_Model& renderData)
 	if (drawCallIndex_ >= kMaxDrawCallPerFrame_) return;
 
 	// モデルの検索
-	Object3D* obj = dxManager_->GetResourceManager()->GetModelManager()->GetModel(renderData.model);
+	const Object3D* obj = dxManager_->GetResourceManager()->GetModelManager()->GetModel(renderData.model);
 	if (!obj) return;
 
 	// テクスチャの検索
 	const TextureData* tex = dxManager_->GetResourceManager()->GetTextureManager()->GetTexture(renderData.texture);
 	if (!tex) return;
 
-	// RootSignatureとPSOを設定
-	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootSignature(dxManager_->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
+	// ルートシグネチャを設定
+	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootSignature(dxManager_->GetPipelineStateManager()->GetRootSignature());
 	if (renderData.options.wireframe || wireframeMode_)
-	{	// ワイヤーフレーム用PSOを設定
+		// ワイヤーフレーム用PSOを設定
 		dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetPipelineState(BlendMode::Wireframe, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
-	}
 	else
-	{	// Triangle用PSOを設定
+		// Triangle用PSOを設定
 		dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetPipelineState(renderData.options.blendMode, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
-	}
 
 	// 頂点数の取得
 	const uint32_t kSumVertex = static_cast<uint32_t>(obj->modelData.vertices.size());
@@ -616,25 +644,43 @@ void DrawSystem::DrawModel(RenderData_Model& renderData)
 	// マテリアル
 	Vector4 color = { renderData.color.x / 255.0f, renderData.color.y / 255.0f, renderData.color.z / 255.0f, renderData.color.w / 255.0f };
 	materialData_[drawCallIndex_]->color = color;
-	materialData_[drawCallIndex_]->enableLighting = renderData.options.enableLighting;
+	materialData_[drawCallIndex_]->shininess = 1.0f;
 	Matrix4x4 uvTransformMatrix = Matrix4x4::MakeIdentity4x4();
 	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeScaleMatrix(renderData.uvTransform.scale));
 	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(renderData.uvTransform.rotate.z));
 	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(renderData.uvTransform.translate));
 	materialData_[drawCallIndex_]->uvTransform = uvTransformMatrix;
 
+	// ライト
+	if (!renderData.options.useOwnLight)
+	{
+		*lightData_[drawCallIndex_] = *directionalLightData_;
+	}
+	else
+	{
+		lightData_[drawCallIndex_]->color = renderData.options.dirLight.color;
+		lightData_[drawCallIndex_]->direction = renderData.options.dirLight.direction.Normalized();
+		lightData_[drawCallIndex_]->intensity = renderData.options.dirLight.intensity;
+		lightData_[drawCallIndex_]->mode = renderData.options.dirLight.mode;
+		lightData_[drawCallIndex_]->phong = renderData.options.dirLight.phong;
+	}
+
+	// カメラデータ
+	cameraData_->worldPosition = Game::Camera::Getter::GetCurrentTranslate();
+
 	// 頂点バッファをバインド（描画に使う頂点データを指定）
 	dxManager_->GetCommandContextManager()->GetCommandList()->IASetVertexBuffers(0, 1, &obj->vertexBufferView);
-	// プリミティブトポロジ（描画する形状の種類：三角形リスト）を設定
-	dxManager_->GetCommandContextManager()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	// ルートパラメータ0にマテリアル用定数バッファ（色・ライティング情報など）をバインド
 	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources_[drawCallIndex_]->GetGPUVirtualAddress());
-	// ルートパラメータ1にWVP（ワールド・ビュー・プロジェクション）用定数バッファをバインド
-	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources_[drawCallIndex_]->GetGPUVirtualAddress());
 	// ルートパラメータ2にテクスチャのSRV（シェーダリソースビュー）をバインド
 	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
-	// ルートパラメータ3にディレクショナルライト用定数バッファをバインド
-	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress());
+	// プリミティブトポロジ（描画する形状の種類：三角形リスト）を設定
+	dxManager_->GetCommandContextManager()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	// ルートパラメータ1にWVP（ワールド・ビュー・プロジェクション）用定数バッファをバインド
+	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources_[drawCallIndex_]->GetGPUVirtualAddress());
+	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(3, lightResources_[drawCallIndex_]->GetGPUVirtualAddress());
+	// ルートパラメータ4にスペキュラライト用定数バッファをバインド
+	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(4, cameraResource_->GetGPUVirtualAddress());
 	// 頂点数分のインスタンス描画を実行（実際に描画コマンドを発行）
 	dxManager_->GetCommandContextManager()->GetCommandList()->DrawInstanced(kSumVertex, 1, 0, 0);
 
@@ -691,10 +737,13 @@ void DrawSystem::DrawTriangle(RenderData_Triangle& renderData)
 	wvpData_[drawCallIndex_]->World = world;
 	wvpData_[drawCallIndex_]->WVP = wvpMatrix;
 
+	// ライトの設定
+	*lightData_[drawCallIndex_] = *directionalLightData_;
+
 	// マテリアル
 	Vector4 color = ConvertUintToVector4(renderData.color);
 	materialData_[drawCallIndex_]->color = color;
-	materialData_[drawCallIndex_]->enableLighting = renderData.options.enableLighting;
+	materialData_[drawCallIndex_]->shininess = 1.0f;
 	Matrix4x4 uvTransformMatrix = Matrix4x4::MakeIdentity4x4();
 	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeScaleMatrix(renderData.uvTransform.scale));
 	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(renderData.uvTransform.rotate.z));
@@ -730,7 +779,7 @@ void DrawSystem::DrawTriangle(RenderData_Triangle& renderData)
 	// SRVのDescriptorTableの先頭を設定。２はrootParameters[2]。
 	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
 	// CBVを設定する ディレクショナルライト用のCBufferの場所を設定
-	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress());
+	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(3, lightResources_[drawCallIndex_]->GetGPUVirtualAddress());
 
 	// 描画
 	dxManager_->GetCommandContextManager()->GetCommandList()->DrawInstanced(3, 1, 0, 0);
@@ -960,6 +1009,9 @@ void DrawSystem::DrawSprite(RenderData_Sprite& renderData)
 	wvpData_[drawCallIndex_]->World = world;
 	wvpData_[drawCallIndex_]->WVP = wvpMatrix;
 
+	// ライトの設定
+	*lightData_[drawCallIndex_] = *directionalLightData_;
+
 	// マテリアル
 	float uvCenterX = (renderData.pivot.x) - (halfWidth);
 	float uvCenterY = (renderData.pivot.y) - (halfHeight);
@@ -979,7 +1031,7 @@ void DrawSystem::DrawSprite(RenderData_Sprite& renderData)
 	// ===== UV マテリアルへ反映 =====
 	Vector4 color = ConvertUintToVector4(renderData.color);
 	materialData_[drawCallIndex_]->color = color;
-	materialData_[drawCallIndex_]->enableLighting = false;
+	materialData_[drawCallIndex_]->shininess = 1.0f;
 	materialData_[drawCallIndex_]->uvTransform = uvTransformMatrix;
 
 	// スプライトの中心座標
@@ -1069,7 +1121,7 @@ void DrawSystem::DrawSprite(RenderData_Sprite& renderData)
 	// SRVのDescriptorTableの先頭を設定。２はrootParameters[2]。
 	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
 	// CBVを設定する ディレクショナルライト用のCBufferの場所を設定
-	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress());
+	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(3, lightResources_[drawCallIndex_]->GetGPUVirtualAddress());
 
 	// 描画
 	dxManager_->GetCommandContextManager()->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
@@ -1232,7 +1284,7 @@ void DrawSystem::DrawLine(RenderData_Line& renderData)
 	// マテリアル定数バッファの更新
 	Vector4 color = ConvertUintToVector4(renderData.color);
 	materialData_[drawCallIndex_]->color = color;
-	materialData_[drawCallIndex_]->enableLighting = 0;
+	materialData_[drawCallIndex_]->shininess = 1.0f;
 	materialData_[drawCallIndex_]->uvTransform = Matrix4x4::MakeIdentity4x4(); // 線にUV変換いらない
 	
 	// 頂点リソース
@@ -1417,9 +1469,12 @@ void DrawSystem::AddAABB(AABB aabb, uint32_t color)
 	wvpData_[drawCallIndex_]->World = Matrix4x4::MakeIdentity4x4();
 	wvpData_[drawCallIndex_]->WVP = viewProjectionMatrix_;
 
+	// ライトの設定
+	*lightData_[drawCallIndex_] = *directionalLightData_;
+
 	// マテリアル（ラインはテクスチャ不要）
 	materialData_[drawCallIndex_]->color = ConvertUintToVector4(color);
-	materialData_[drawCallIndex_]->enableLighting = false;
+	materialData_[drawCallIndex_]->shininess = 1.0f;
 	materialData_[drawCallIndex_]->uvTransform = Matrix4x4::MakeIdentity4x4();
 
 	// Upload（動的VB）
@@ -1438,7 +1493,7 @@ void DrawSystem::AddAABB(AABB aabb, uint32_t color)
 	cmd->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
 	cmd->SetGraphicsRootConstantBufferView(0, materialResources_[drawCallIndex_]->GetGPUVirtualAddress());
 	cmd->SetGraphicsRootConstantBufferView(1, wvpResources_[drawCallIndex_]->GetGPUVirtualAddress());
-	cmd->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress());
+	cmd->SetGraphicsRootConstantBufferView(3, lightResources_[drawCallIndex_]->GetGPUVirtualAddress());
 	cmd->DrawInstanced(kSumVertex, 1, 0, 0);
 
 	// カウンタ更新

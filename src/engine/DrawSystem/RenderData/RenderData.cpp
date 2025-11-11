@@ -211,10 +211,41 @@ void RenderData_Model::DrawImGui()
 		color = { floatColor[0] * 255.0f, floatColor[1] * 255.0f, floatColor[2] * 255.0f, floatColor[3] * 255.0f };
 		ImGui::TreePop();
 	}
+	if (ImGui::TreeNode("----------blendMode------------"))
+	{
+		// 表示名を実際のモードに合わせる
+		static const char* items[] = { "None", "Normal", "Add", "Sub", "Mul", "Screen", "Wireframe" };
+		int current_item = static_cast<int>(options.blendMode);
+		if (ImGui::Combo((num + "blendMode").c_str(), &current_item, items, IM_ARRAYSIZE(items)))
+		{
+			options.blendMode = static_cast<BlendMode>(current_item);
+		}
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------Light----------------"))
+	{
+		ImGui::Checkbox("useOwnLight", &options.useOwnLight);
+		if (options.useOwnLight)
+		{
+			ImGui::ColorEdit4((num + "dirLight.color").c_str(), &options.dirLight.color.x, 1);
+			ImGui::DragFloat3((num + "dirLight.direction").c_str(), &options.dirLight.direction.x, 0.01f, -1.0f, 1.0f);
+			ImGui::DragFloat((num + "dirLight.intensity").c_str(), &options.dirLight.intensity, 0.01f, 0.0f, 1.0f);
+
+			// 表示名を実際のモードに合わせる
+			static const char* items[] = { "None", "Lambert", "HalfLambert" };
+			int current_item = static_cast<int>(options.dirLight.mode);
+			if (ImGui::Combo((num + "dirLight.mode").c_str(), &current_item, items, IM_ARRAYSIZE(items)))
+			{
+				options.dirLight.mode = static_cast<LightMode>(current_item);
+			}
+
+			ImGui::Checkbox((num + "dirLight.phong").c_str(), &options.dirLight.phong);
+		}
+		ImGui::TreePop();
+	}
 	if (ImGui::TreeNode("----------option---------------"))
 	{
 		ImGui::Checkbox("wireFrame", &options.wireframe);
-		ImGui::Checkbox("lighting", &options.enableLighting);
 		bool lookAt = false;
 		ImGui::Checkbox("lookAt", &lookAt);
 		if (lookAt)
@@ -413,7 +444,7 @@ void RenderData_Model::Update4()
 			}
 
 			// translate.velocityの分めり込んだ状態で固定されてしまうので、velocity分座標を戻す。velocityは変えない。
-			//this->translate.value -= this->translate.velocity;
+			this->translate.value -= this->translate.velocity;
 
 			// ワールド行列更新
 			XMVECTOR scaleVec = XMVectorSet(this->scale.value.x, this->scale.value.y, this->scale.value.z, 0.0f);

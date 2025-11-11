@@ -66,7 +66,7 @@ public:
 		// ライト
 		static void SetLightColor(const Vector4 color);
 		static void SetLightDirection(const Vector3 direction);
-		static void ToggleLightMode(const uint32_t mode);
+		static void ToggleLightMode(const LightMode mode);
 		static void SetLightIntensity(float intensity);
 	};
 

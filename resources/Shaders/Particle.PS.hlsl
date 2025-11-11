@@ -13,12 +13,9 @@ PixelShaderOutput main(VertexShaderOutput input)
 {
     // UV同次座標
     PixelShaderOutput output;
-    float32_t4 transformedUV = mul(float32_t4(input.texcoord, 0.0f, 1.0f), gMaterial0.uvTransform);
+    float32_t4 transformedUV = mul(gMaterial0.uvTransform, float32_t4(input.texcoord, 0.0f, 1.0f));
     float32_t4 textureColor = gTexture0.Sample(gSampler, transformedUV.xy);
 	output.color = gMaterial0.color * textureColor;
-    if (output.color.a == 0)
-    {
-        discard;
-    }
+    if (output.color.a <= 1e-5) discard;
     return output;
 }

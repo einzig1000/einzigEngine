@@ -47,11 +47,11 @@ TestPhase::TestPhase()
 	wall4_.translate.value = { 0.0f,0.5f,5.0f };
 	wall4_.mass = 1000.0f;
 
-	player_.model = model2;
+	player_.model = model4;
 	player_.texture = tex3;
 	player_.name = "player";
 	player_.translate.value = { 0.0f,2.0f,0.0f };
-	player_.translate.acceleration = { 0.0f,-0.002f,0.0f };
+	player_.translate.acceleration = { 0.0f,-0.2f,0.0f };
 	player_.mass = 1.0f;
 	player_.SetBlock(ground_);
 	player_.SetBlock(wall1_);
@@ -148,19 +148,36 @@ void TestPhase::Update()
 			ImGui::ColorEdit4("light color", &lightColor.x, 1);
 			Game::Light::SetLightColor(lightColor);
 
-			static Vector3 lightDirection = { -1.0f,-1.0f,-1.0f };
+			static Vector3 lightDirection = { 0.0f,-1.0f,0.0f };
+			lightDirection.Normalize();
 			ImGui::DragFloat3("light direction", &lightDirection.x, 0.1f);
 			Game::Light::SetLightDirection(lightDirection);
 
 			static float lightIntensity = 1.0f;
 			ImGui::SliderFloat("light intensity", &lightIntensity, 0.0f, 10.0f);
 			Game::Light::SetLightIntensity(lightIntensity);
+	
+			static int current_item = 0;
+			static const char* items[] = { "None", "Lambert", "HalfLambert" };
+			if (ImGui::Combo("dirLight.shadingType", &current_item, items, IM_ARRAYSIZE(items)))
+			{
+				LightMode mode = LightMode::None;
+				if (current_item == 0)
+				{
+					mode = LightMode::None;
+				}
+				else if (current_item == 1)
+				{
+					mode = LightMode::Lambert;
+				}
+				else if (current_item == 2)
+				{
+					mode = LightMode::HalfLambert;
+				}
+				Game::Light::ToggleLightMode(mode);
+			}
 
-			static int lightMode = 0;
-			const char* items[] =
-			{ "1","3", "4" };
-			ImGui::Combo("light mode", &lightMode, items, IM_ARRAYSIZE(items));
-			Game::Light::ToggleLightMode(static_cast<uint32_t>(lightMode));
+
 
 			ImGui::EndTabItem();
 		}
@@ -327,7 +344,7 @@ void TestPhase::Update()
 	}
 	if (Game::Input::Key::IsJustPressed(DIK_SPACE))
 	{
-		player_.translate.velocity.y += 0.05f;
+		player_.translate.velocity.y += 2.5f;
 	}
 }
 
@@ -335,27 +352,27 @@ void TestPhase::Update()
 void TestPhase::Draw()
 {
 
-	ground_.Draw();
-	ground_.DrawImGui();
-	ground_.DrawAABB();
-	wall1_.Draw();
-	wall2_.Draw();
-	wall3_.Draw();
-	wall4_.Draw();
+	//ground_.Draw();
+	//ground_.DrawImGui();
+	//ground_.DrawAABB();
+	//wall1_.Draw();
+	//wall2_.Draw();
+	//wall3_.Draw();
+	//wall4_.Draw();
 
-	player_.Draw();
-	player_.DrawAABB();
-	player_.DrawImGui();
+	//player_.Draw();
+	//player_.DrawAABB();
+	//player_.DrawImGui();
 
-	sprite1_.Draw();
-	sprite1_.DrawImGui();
-	sprite2_.Draw();
-	sprite2_.DrawImGui();
+	//sprite1_.Draw();
+	//sprite1_.DrawImGui();
+	//sprite2_.Draw();
+	//sprite2_.DrawImGui();
 
-	triangle1_.Draw();
-	triangle1_.DrawImGui();
-	triangle2_.Draw();
-	triangle2_.DrawImGui();
+	//triangle1_.Draw();
+	//triangle1_.DrawImGui();
+	//triangle2_.Draw();
+	//triangle2_.DrawImGui();
 
 	particle1_.Draw();
 	particle1_.DrawImGui();
@@ -364,10 +381,10 @@ void TestPhase::Draw()
 	particle2_.DrawImGui();
 	particle2_.DrawEmitter();
 
-	line_.Draw();
-	line_.DrawImGui();
-	line2_.Draw();
-	line2_.DrawImGui();
-	line3_.Draw();
-	line3_.DrawImGui();
+	//line_.Draw();
+	//line_.DrawImGui();
+	//line2_.Draw();
+	//line2_.DrawImGui();
+	//line3_.Draw();
+	//line3_.DrawImGui();
 }

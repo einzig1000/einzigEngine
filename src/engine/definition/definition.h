@@ -712,12 +712,30 @@ enum class BlendMode
     Wireframe
 };
 
+enum class LightMode
+{
+    None = 0,
+    Lambert,
+    HalfLambert,
+};
+
+struct DirectionalLight
+{
+    Vector4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
+    Vector3 direction = { 0.0f, -1.0f, 0.0f };
+    float intensity = 1.0f;//輝度
+    LightMode mode = LightMode::HalfLambert;
+	bool phong = false;
+};
+
 struct DrawOptions
 {
     // ワイヤーフレーム
     bool wireframe = false;
-    // ライティングするか
-    bool enableLighting = true;
+    // 固有ライトを使うか共有ライトを使うか
+    bool useOwnLight = false;
+    // ライト
+	DirectionalLight dirLight;
     // ブレンドモード
     BlendMode blendMode = BlendMode::kBlendModeNormal;
 };
@@ -725,9 +743,8 @@ struct DrawOptions
 struct Material
 {
     Vector4 color;
-    int32_t enableLighting;
-    float padding[3];
     Matrix4x4 uvTransform;
+    float shininess;
 };
 
 #pragma endregion
@@ -787,8 +804,8 @@ struct CollisionPair
 
 struct CollisionAABBFace
 {
-    AABBFace light;
-    AABBFace heavy;
+    AABBFace light = AABBFace::NONE;
+    AABBFace heavy = AABBFace::NONE;
 };
 
 struct CollisionInf
@@ -857,7 +874,7 @@ struct ParticleSRT
 
 struct ParticleMaterial
 {
-    uint32_t color;
+    uint32_t color = 0xFFFFFFFF;
     Matrix4x4 uvTransform;
 };
 
@@ -902,6 +919,11 @@ struct ParticleMonoInfGPU
 #pragma endregion
 
 
+struct CameraForGPU
+{
+	Vector3 worldPosition;
+};
+
 enum class Direction
 {
     None = -1,
@@ -909,14 +931,6 @@ enum class Direction
     Right = 1,
     Down = 2,
     Up = 3,
-};
-
-struct DirectionalLight
-{
-    Vector4 color;
-    Vector3 direction;
-    float intensity;//輝度
-    int mode;
 };
 
 struct D3DResourceLeakChecker

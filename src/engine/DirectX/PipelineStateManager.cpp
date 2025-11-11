@@ -75,7 +75,7 @@ void PipelineStateManager::InitializeRootSignature_object(ID3D12Device* device)
     descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
 
-    D3D12_ROOT_PARAMETER rootParameters[4] = {};
+    D3D12_ROOT_PARAMETER rootParameters[5]{};
 
     // ルートパラメータ0: Material (register b0)
     rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
@@ -98,6 +98,10 @@ void PipelineStateManager::InitializeRootSignature_object(ID3D12Device* device)
     rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL; // VS, PS 両方からアクセス可能
     rootParameters[3].Descriptor.ShaderRegister = 2; // b2
 
+	// ルートパラメータ4 : Camera (register b3)
+	rootParameters[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rootParameters[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL; // VS, PS 両方からアクセス可能
+	rootParameters[4].Descriptor.ShaderRegister = 3; // b3
 
     D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};
     staticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;

@@ -94,6 +94,7 @@ private:
     int ID = 0;
 
 
+	// 初期化済みフラグ
     bool initialized = false;
 
     // 衝突フラグ
