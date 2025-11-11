@@ -16,8 +16,6 @@ Camera::Camera()
     preCenter_ = center_;
     preRotate_ = transform_.rotate;
 
-    sphereOptions.enableLighting = false;
-
     Resize();
 }
 
@@ -106,7 +104,6 @@ void Camera::Update()
 		}
 
 #pragma endregion
-
 
 #pragma region カメラ距離
 

@@ -64,7 +64,7 @@ public:
 	void SetLightColor(const Vector4 color) { drawSystem->SetLightColor(color); }
 	void SetLightDirection(const Vector3 direction) { drawSystem->SetLightDirection(direction); }
 	void SetLightIntensity(float intensity) { drawSystem->SetLightIntensity(intensity); }
-	void ToggleLightMode(const uint32_t mode) { drawSystem->ToggleLightMode(mode); }
+	void ToggleLightMode(const LightMode mode) { drawSystem->ToggleLightMode(mode); }
 
 	// マウス
 	Vector2 GetMousePosition();

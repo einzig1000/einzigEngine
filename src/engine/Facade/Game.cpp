@@ -95,7 +95,7 @@ void Game::Light::SetLightIntensity(float intensity)
 	Engine::Instance().SetLightIntensity(intensity);
 }
 
-void Game::Light::ToggleLightMode(const uint32_t mode)
+void Game::Light::ToggleLightMode(const LightMode mode)
 {
 	Engine::Instance().ToggleLightMode(mode);
 }

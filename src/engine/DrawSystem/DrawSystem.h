@@ -41,7 +41,7 @@ public:
 	void SetLightColor(const Vector4 color) { directionalLightData_->color = color; }
 	void SetLightDirection(const Vector3 direction) { directionalLightData_->direction = direction; }
 	void SetLightIntensity(float intensity) { directionalLightData_->intensity = intensity; }
-	void ToggleLightMode(const uint32_t mode) { directionalLightData_->mode = mode; }
+	void ToggleLightMode(const LightMode mode) { directionalLightData_->mode = mode; }
 
 	void toggleWireframeMode() { wireframeMode_ = !wireframeMode_; }
 
@@ -65,8 +65,6 @@ private:
 	bool wireframeMode_ = false;
 
 	// ライト
-	Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource_ = nullptr;
-	DirectionalLight* directionalLightData_ = nullptr;
 
 
 	// 描画コールカウント
@@ -75,7 +73,7 @@ private:
 	size_t kMaxDrawCallPerFrame_ = 1024;
 
 
-	// 描画コールごとのデータ
+	// マテリアル
 	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> materialResources_{};
 	// マテリアルデータの永続Mapポインタ
 	std::vector<Material*> materialData_{};
@@ -83,6 +81,14 @@ private:
 	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> wvpResources_{};
 	// ワールドビュー射影行列の永続Mapポインタ
 	std::vector<TransformationMatrix*> wvpData_{};
+	// オブジェクト固有ライト
+	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> lightResources_{};
+	// オブジェクト固有ライトデータの永続Mapポインタ
+	std::vector<DirectionalLight*> lightData_{};
+	// 共有ライト
+	Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource_ = nullptr;
+	// 共有ライトデータの永続Mapポインタ
+	DirectionalLight* directionalLightData_ = nullptr;
 	// 現フレームで描画されている頂点数(モデルは除く)
 	size_t vertexDataUsed_ = 0;
 
@@ -90,11 +96,17 @@ private:
 	uint32_t kMaxInstanceCount_ = 4096;          // 最大インスタンス数
 
 
+	// カメラ
+	Microsoft::WRL::ComPtr<ID3D12Resource> cameraResource_ = nullptr;
+	// カメラデータの永続Mapポインタ
+	CameraForGPU* cameraData_ = nullptr;
+
+
 	// 三角形
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource_ = nullptr;
+	VertexData* vertexMappedPtr_ = nullptr; // 永続Mapポインタ
 	UINT vertexResourceSize_ = 0;
 	std::vector<VertexData> vertexData_{};
-	VertexData* vertexMappedPtr_ = nullptr; // 永続Mapポインタ
 
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> indexResource;

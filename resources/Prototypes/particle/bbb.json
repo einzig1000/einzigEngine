@@ -34,7 +34,7 @@
   "filePath": "resources/Prototypes/particle/bbb",
   "isBillboard": false,
   "liveMax": 300,
-  "model": 0,
+  "model": 1,
   "particlesPerEmission": 1,
   "rotate": {
     "acceleration": [
