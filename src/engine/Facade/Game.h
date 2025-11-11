@@ -12,9 +12,6 @@
 #include "externals/imgui/imgui_impl_win32.h"
 #include <algorithm>
 
-
-class CameraController;
-
 class Game
 {
 public:
@@ -126,6 +123,9 @@ public:
 			/// マウスホイールの回転量取得
 			/// </summary>
 			static uint32_t GetMouseWheel();
+
+			// カーソルの表示・非表示切り替え
+			static void ToggleMouseCursorVisible();
 		};
 
 		class Key
@@ -247,6 +247,66 @@ public:
 
 	};
 
+	class Math
+	{
+	public:
+		/// <summary>
+		/// イージングfloat版
+		/// </summary>
+		static float Easing(float start, float end, float t, EaseType type)
+		{
+			return Easings::EasingFloat(start, end, type, t);
+		}
+
+		/// <summary>
+		/// イージングVector3版
+		/// </summary>
+		static Vector3 Easing(Vector3 start, Vector3 end, float t, EaseType type)
+		{
+			return Easings::EasingVector3(start, end, type, t);
+		}
+
+		static float Lerp(float start, float end, float t)
+		{
+			return start + (end - start) * t;
+		}
+	
+		static float RandFloat(float min, float max, int decimalPlaces)
+		{
+			return RandomFloat(min, max, decimalPlaces);
+		}
+
+		static int RandInt(int min, int max)
+		{
+			return RandomInt(min, max);
+		}
+
+		/// <summary>
+		/// 度数法を弧度法に変換
+		/// </summary>
+		static float DegreeToRadian(float degree)
+		{
+			return degree * (std::numbers::pi_v<float> / 180.0f);
+		}
+
+		/// <summary>
+		/// 弧度法を度数法に変換
+		/// </summary>
+		static float RadianToDegree(float radian)
+		{
+			return radian * (180.0f / std::numbers::pi_v<float>);
+		}
+
+		static Vector4 UintToVector4(uint32_t color)
+		{
+			return ConvertUintToVector4(color);
+		}
+
+		static uint32_t Vector4ToUint(Vector4 color)
+		{
+			return ConvertVector4ToUint(color);
+		}
+	};
 
 
 private:

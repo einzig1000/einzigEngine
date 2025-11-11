@@ -122,7 +122,7 @@ void Engine::UpdateTransforms()
 {
 	if (RenderData_Model::renderModels.size() == 0)return;
 
-	if (Game::Input::Key::IsHeld(DIK_LSHIFT))
+	if (Game::Input::Key::IsHeld(DIK_RSHIFT))
 	{
 		if (!Game::Input::Key::IsJustPressed(DIK_RIGHTARROW))
 		{
@@ -264,7 +264,7 @@ void Engine::UpdateDebugInfo()
 }
 void Engine::EndFrame()
 {
-	// 
+	// ImGui描画
 	if (isDebugInfo)ImGui::Render();
 
 	// パーティクル更新
@@ -275,6 +275,13 @@ void Engine::EndFrame()
 
 	// DirectX終了処理
 	dxManager->EndFrame();
+
+	// アプリケーション終了
+	if (Game::Input::Key::IsJustPressed(DIK_ESCAPE))
+	{
+		Finalize();
+		windowManager->Quit();
+	}
 }
 
 
@@ -282,13 +289,22 @@ void Engine::EndFrame()
 // 終了処理
 void Engine::Finalize()
 {
+	// GPU 最終同期（保険）
+	if (dxManager)
+	{
+		dxManager->GetSynchronizationManager()->WaitForGPU();
+		// フルスクリーン解除
+		//if (dxManager->GetSwapChain()->GetSwapChainDesc().Flags & DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH)
+		//{
+		//	auto sc = dxManager->GetSwapChain()->GetNative(); // 取得メソッドがあるなら
+		//	if (sc) { sc->SetFullscreenState(FALSE, nullptr); }
+		//}
+	}
+
 	// ImGuiの終了処理
 	ImGui_ImplDX12_Shutdown();
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
-
-	// COMの終了処理
-	CoUninitialize();
 
 	// 解放
 	delete windowManager;
@@ -301,6 +317,9 @@ void Engine::Finalize()
 	cameraManager = nullptr;
 	delete inputManager_;
 	inputManager_ = nullptr;
+
+	// COMの終了処理
+	CoUninitialize();
 }
 
 // リソース読み込み
@@ -451,6 +470,11 @@ bool Engine::IsMouseJustReleased(int i)
 uint32_t Engine::MouseHoldFrames(int i)
 {
 	return inputManager_->GetMouseController()->HoldFrames(i);
+}
+
+void Engine::ToggleMouseCursorVisible()
+{
+	inputManager_->GetMouseController()->ToggleMouseCursorVisible();
 }
 
 

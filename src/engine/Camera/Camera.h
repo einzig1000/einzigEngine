@@ -50,6 +50,10 @@ public:
 
 private:
 
+	bool orbitMode_ = false;
+	void Updata_Orbit();
+	void Update_FPS();
+
     void MovingCenter();
     void MovingRotate();
     void MovingDistance();

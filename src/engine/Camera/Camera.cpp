@@ -25,158 +25,15 @@ Camera::~Camera()
 
 void Camera::Update()
 {
-#pragma region カメラシェイク
-
-    if (shakeActive_)
+    // カメラ操作
+    if (orbitMode_)
     {
-        shakeTime_++;
-
-        if (shakeTime_ >= shakeDuration_)
-        {
-            shakeActive_ = false;
-            shakeTime_ = 0.0f;
-        }
+        Updata_Orbit();
     }
-
-#pragma endregion
-
-#pragma region カメラ手動操作
-
-    if (enableControl_)
+    else
     {
-        mouseWheel_ = Game::Input::Mouse::GetMouseWheel();
-
-#pragma region カメラ回転
-
-        // クリックした瞬間
-        if (Game::Input::Mouse::IsJustPressed(2) && !Game::Input::Key::IsHeld(DIK_LSHIFT))
-        {
-            preMousePosition_ = Game::Input::Mouse::GetMousePosition();
-        }
-        // クリックしている最中
-        if (Game::Input::Mouse::IsHeld(2) && !Game::Input::Key::IsHeld(DIK_LSHIFT))
-        {
-            mousePosition_ = Game::Input::Mouse::GetMousePosition();
-            mousePositionGap_.x = mousePosition_.x - preMousePosition_.x;
-            mousePositionGap_.y = mousePosition_.y - preMousePosition_.y;
-            transform_.rotate.x = (mousePositionGap_.y / 100.0f) + (preRotate_.x);
-            transform_.rotate.y = (mousePositionGap_.x / 100.0f) + (preRotate_.y);
-        }
-        // クリックやめた瞬間
-        if (Game::Input::Mouse::IsJustReleased(2) && !Game::Input::Key::IsHeld(DIK_LSHIFT))
-        {
-            preRotate_ = transform_.rotate;
-        }
-
-#pragma endregion
-
-#pragma region 回転中心
-
-        // クリックした瞬間
-        if (Game::Input::Mouse::IsJustPressed(2) && Game::Input::Key::IsHeld(DIK_LSHIFT))
-        {
-            preMousePosition_ = Game::Input::Mouse::GetMousePosition();
-            preCenter_ = center_;
-        }
-        // クリックしている最中
-        if (Game::Input::Mouse::IsHeld(2) && Game::Input::Key::IsHeld(DIK_LSHIFT))
-        {
-            mousePosition_ = Game::Input::Mouse::GetMousePosition();
-            mousePositionGap_.x = mousePosition_.x - preMousePosition_.x;
-            mousePositionGap_.y = mousePosition_.y - preMousePosition_.y;
-            // カメラの右方向と上方向を取得
-            Matrix4x4 cameraRotateMatrix = Matrix4x4::MakeAffineMatrix(
-                { 1,1,1 },
-                transform_.rotate,
-                { 0,0,0 }
-            );
-            Vector3 cameraRight = {
-                cameraRotateMatrix.m[0][0],
-                cameraRotateMatrix.m[1][0],
-                cameraRotateMatrix.m[2][0]
-            };
-            Vector3 cameraUp = {
-                cameraRotateMatrix.m[0][1],
-                cameraRotateMatrix.m[1][1],
-                cameraRotateMatrix.m[2][1]
-            };
-            center_ = preCenter_ - (cameraRight * (mousePositionGap_.x / 100.0f)) + (cameraUp * (mousePositionGap_.y / 100.0f));
-		}
-
-#pragma endregion
-
-#pragma region カメラ距離
-
-        if (mouseWheel_ > 0)
-        {
-            distance_ -= float(mouseWheel_) / 100;
-        }
-        if (mouseWheel_ < 0)
-        {
-            distance_ -= float(mouseWheel_) / 100;
-        }
-
-#pragma endregion
+        Update_FPS();
     }
-
-#pragma endregion
-
-#pragma region カメラ演出処理
-
-    if (easeRotate_.easingFlag)
-    {
-        MovingRotate();
-    }
-    if (easeCenter_.easingFlag)
-    {
-        MovingCenter();
-    }
-    if (easeDistance_.easingFlag)
-    {
-        MovingDistance();
-    }
-
-#pragma endregion
-
-#pragma region カメラ行列計算
-
-
-    // カメラ初期値
-    Vector3 cameraLocalPos = { 0.0f, 0.0f, -distance_ };
-
-    // カメラに回転適用
-    Matrix4x4 cameraRotateMatrix = Matrix4x4::MakeAffineMatrix(
-        { 1,1,1 },
-        transform_.rotate,
-        { 0,0,0 }
-    );
-
-    // cameraLocalPos　に　回転適用したマトリックスを適用させる　＝　原点上で回転
-    Vector3 rotatedCameraPos = {
-        cameraLocalPos.x * cameraRotateMatrix.m[0][0] + cameraLocalPos.y * cameraRotateMatrix.m[1][0] + cameraLocalPos.z * cameraRotateMatrix.m[2][0],
-        cameraLocalPos.x * cameraRotateMatrix.m[0][1] + cameraLocalPos.y * cameraRotateMatrix.m[1][1] + cameraLocalPos.z * cameraRotateMatrix.m[2][1],
-        cameraLocalPos.x * cameraRotateMatrix.m[0][2] + cameraLocalPos.y * cameraRotateMatrix.m[1][2] + cameraLocalPos.z * cameraRotateMatrix.m[2][2]
-    };
-
-    // 原点上で回転したrotatedCameraPosに　cameraCenterを足せば中心がcameraCenterに変わる
-    transform_.translate = (center_ + rotatedCameraPos + GetShakeOffset());
-
-    // カメラ行列を作成
-    worldMatrix_ = Matrix4x4::MakeAffineMatrix(
-        { 1,1,1 },
-        transform_.rotate,
-        transform_.translate
-    );
-
-	// ビュー行列を作成
-    viewMatrix_ = (worldMatrix_.Inverse());
-
-	// ビュー行列とプロジェクション行列を掛け合わせた行列を作成
-    viewProjectionMatrix = (viewMatrix_ * projectionMatrix_);
-
-    CreateFrustumPlanes();
-#pragma endregion
-
 }
 
 void Camera::Resize()
@@ -279,6 +136,251 @@ bool Camera::InFrustum(const AABB& aabb)
     }
 
     return true; // どの平面の外側にもない場合は、視錐台内にあると判定
+}
+
+void Camera::Updata_Orbit()
+{
+#pragma region カメラシェイク
+
+    if (shakeActive_)
+    {
+        shakeTime_++;
+
+        if (shakeTime_ >= shakeDuration_)
+        {
+            shakeActive_ = false;
+            shakeTime_ = 0.0f;
+        }
+    }
+
+#pragma endregion
+
+#pragma region カメラ手動操作
+
+    if (enableControl_)
+    {
+        mouseWheel_ = Game::Input::Mouse::GetMouseWheel();
+
+#pragma region カメラ回転
+
+        // クリックした瞬間
+        if (Game::Input::Mouse::IsJustPressed(2) && !Game::Input::Key::IsHeld(DIK_LSHIFT))
+        {
+            preMousePosition_ = Game::Input::Mouse::GetMousePosition();
+        }
+        // クリックしている最中
+        if (Game::Input::Mouse::IsHeld(2) && !Game::Input::Key::IsHeld(DIK_LSHIFT))
+        {
+            mousePosition_ = Game::Input::Mouse::GetMousePosition();
+            mousePositionGap_.x = mousePosition_.x - preMousePosition_.x;
+            mousePositionGap_.y = mousePosition_.y - preMousePosition_.y;
+            transform_.rotate.x = (mousePositionGap_.y / 100.0f) + (preRotate_.x);
+            transform_.rotate.y = (mousePositionGap_.x / 100.0f) + (preRotate_.y);
+        }
+        // クリックやめた瞬間
+        if (Game::Input::Mouse::IsJustReleased(2) && !Game::Input::Key::IsHeld(DIK_LSHIFT))
+        {
+            preRotate_ = transform_.rotate;
+        }
+
+#pragma endregion
+
+#pragma region 回転中心
+
+        // クリックした瞬間
+        if (Game::Input::Mouse::IsJustPressed(2) && Game::Input::Key::IsHeld(DIK_LSHIFT))
+        {
+            preMousePosition_ = Game::Input::Mouse::GetMousePosition();
+            preCenter_ = center_;
+        }
+        // クリックしている最中
+        if (Game::Input::Mouse::IsHeld(2) && Game::Input::Key::IsHeld(DIK_LSHIFT))
+        {
+            mousePosition_ = Game::Input::Mouse::GetMousePosition();
+            mousePositionGap_.x = mousePosition_.x - preMousePosition_.x;
+            mousePositionGap_.y = mousePosition_.y - preMousePosition_.y;
+            // カメラの右方向と上方向を取得
+            Matrix4x4 cameraRotateMatrix = Matrix4x4::MakeAffineMatrix(
+                { 1,1,1 },
+                transform_.rotate,
+                { 0,0,0 }
+            );
+            Vector3 cameraRight = {
+                cameraRotateMatrix.m[0][0],
+                cameraRotateMatrix.m[1][0],
+                cameraRotateMatrix.m[2][0]
+            };
+            Vector3 cameraUp = {
+                cameraRotateMatrix.m[0][1],
+                cameraRotateMatrix.m[1][1],
+                cameraRotateMatrix.m[2][1]
+            };
+            center_ = preCenter_ - (cameraRight * (mousePositionGap_.x / 100.0f)) + (cameraUp * (mousePositionGap_.y / 100.0f));
+        }
+
+#pragma endregion
+
+#pragma region カメラ距離
+
+        if (mouseWheel_ > 0)
+        {
+            distance_ -= float(mouseWheel_) / 100;
+        }
+        if (mouseWheel_ < 0)
+        {
+            distance_ -= float(mouseWheel_) / 100;
+        }
+
+#pragma endregion
+    }
+
+#pragma endregion
+
+#pragma region カメラ演出処理
+
+    if (easeRotate_.easingFlag)
+    {
+        MovingRotate();
+    }
+    if (easeCenter_.easingFlag)
+    {
+        MovingCenter();
+    }
+    if (easeDistance_.easingFlag)
+    {
+        MovingDistance();
+    }
+
+#pragma endregion
+
+#pragma region カメラ行列計算
+
+
+    // カメラ初期値
+    Vector3 cameraLocalPos = { 0.0f, 0.0f, -distance_ };
+
+    // カメラに回転適用
+    Matrix4x4 cameraRotateMatrix = Matrix4x4::MakeAffineMatrix(
+        { 1,1,1 },
+        transform_.rotate,
+        { 0,0,0 }
+    );
+
+    // cameraLocalPos　に　回転適用したマトリックスを適用させる　＝　原点上で回転
+    Vector3 rotatedCameraPos = {
+        cameraLocalPos.x * cameraRotateMatrix.m[0][0] + cameraLocalPos.y * cameraRotateMatrix.m[1][0] + cameraLocalPos.z * cameraRotateMatrix.m[2][0],
+        cameraLocalPos.x * cameraRotateMatrix.m[0][1] + cameraLocalPos.y * cameraRotateMatrix.m[1][1] + cameraLocalPos.z * cameraRotateMatrix.m[2][1],
+        cameraLocalPos.x * cameraRotateMatrix.m[0][2] + cameraLocalPos.y * cameraRotateMatrix.m[1][2] + cameraLocalPos.z * cameraRotateMatrix.m[2][2]
+    };
+
+    // 原点上で回転したrotatedCameraPosに　cameraCenterを足せば中心がcameraCenterに変わる
+    transform_.translate = (center_ + rotatedCameraPos + GetShakeOffset());
+
+    // カメラ行列を作成
+    worldMatrix_ = Matrix4x4::MakeAffineMatrix(
+        { 1,1,1 },
+        transform_.rotate,
+        transform_.translate
+    );
+
+    // ビュー行列を作成
+    viewMatrix_ = (worldMatrix_.Inverse());
+
+    // ビュー行列とプロジェクション行列を掛け合わせた行列を作成
+    viewProjectionMatrix = (viewMatrix_ * projectionMatrix_);
+
+    CreateFrustumPlanes();
+#pragma endregion
+
+}
+
+void Camera::Update_FPS()
+{
+#pragma region カメラシェイク
+
+    if (shakeActive_)
+    {
+        shakeTime_++;
+        if (shakeTime_ >= shakeDuration_)
+        {
+            shakeActive_ = false;
+            shakeTime_ = 0.0f;
+        }
+	}
+
+#pragma endregion
+
+#pragma region カメラ手動操作
+
+    if (enableControl_)
+    {
+        mouseWheel_ = Game::Input::Mouse::GetMouseWheel();
+        // カメラ回転
+        if (Game::Input::Mouse::IsJustPressed(2))
+        {
+            preMousePosition_ = Game::Input::Mouse::GetMousePosition();
+        }
+        if (Game::Input::Mouse::IsHeld(2))
+        {
+            mousePosition_ = Game::Input::Mouse::GetMousePosition();
+            mousePositionGap_.x = mousePosition_.x - preMousePosition_.x;
+            mousePositionGap_.y = mousePosition_.y - preMousePosition_.y;
+            transform_.rotate.x = (mousePositionGap_.y / 100.0f) + (preRotate_.x);
+            transform_.rotate.y = (mousePositionGap_.x / 100.0f) + (preRotate_.y);
+        }
+        if (Game::Input::Mouse::IsJustReleased(2))
+        {
+            preRotate_ = transform_.rotate;
+        }
+        // カメラ距離
+        if (mouseWheel_ > 0)
+        {
+            distance_ -= float(mouseWheel_) / 100;
+        }
+        if (mouseWheel_ < 0)
+        {
+            distance_ -= float(mouseWheel_) / 100;
+        }
+	}
+
+#pragma endregion
+
+#pragma region カメラ演出処理
+
+#pragma endregion
+
+#pragma region カメラ行列計算
+
+    // カメラ初期値
+    Vector3 cameraLocalPos = { 0.0f, 0.0f, -distance_ };
+    // カメラに回転適用
+    Matrix4x4 cameraRotateMatrix = Matrix4x4::MakeAffineMatrix(
+        { 1,1,1 },
+        transform_.rotate,
+        { 0,0,0 }
+    );
+    // cameraLocalPos　に　回転適用したマトリックスを適用させる　＝　原点上で回転
+    Vector3 rotatedCameraPos = {
+        cameraLocalPos.x * cameraRotateMatrix.m[0][0] + cameraLocalPos.y * cameraRotateMatrix.m[1][0] + cameraLocalPos.z * cameraRotateMatrix.m[2][0],
+        cameraLocalPos.x * cameraRotateMatrix.m[0][1] + cameraLocalPos.y * cameraRotateMatrix.m[1][1] + cameraLocalPos.z * cameraRotateMatrix.m[2][1],
+        cameraLocalPos.x * cameraRotateMatrix.m[0][2] + cameraLocalPos.y * cameraRotateMatrix.m[1][2] + cameraLocalPos.z * cameraRotateMatrix.m[2][2]
+    };
+    // 原点上で回転したrotatedCameraPosに　cameraCenterを足せば中心がcameraCenterに変わる
+    transform_.translate = (center_ + rotatedCameraPos + GetShakeOffset());
+    // カメラ行列を作成
+    worldMatrix_ = Matrix4x4::MakeAffineMatrix(
+        { 1,1,1 },
+        transform_.rotate,
+        transform_.translate
+    );
+    // ビュー行列を作成
+    viewMatrix_ = (worldMatrix_.Inverse());
+    // ビュー行列とプロジェクション行列を掛け合わせた行列を作成
+    viewProjectionMatrix = (viewMatrix_ * projectionMatrix_);
+	CreateFrustumPlanes();
+
+#pragma endregion
+
 }
 
 // 実際に動かす

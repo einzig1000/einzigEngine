@@ -75,6 +75,7 @@ public:
 	bool IsMouseJustPressed(int i);// 押した瞬間（今フレームで押された）
 	bool IsMouseJustReleased(int i);// 離した瞬間（今フレームで離れた）
 	uint32_t MouseHoldFrames(int i);// 押されてからの経過フレーム数
+	void ToggleMouseCursorVisible();
 
 	// キーボード
 	bool IsKeyHeld(BYTE key);// 今押しているか

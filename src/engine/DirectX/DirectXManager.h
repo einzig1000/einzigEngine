@@ -27,6 +27,7 @@ public:
     DescriptorHeapManager* GetDescriptorHeapManager() const { return descriptorHeapManager.get(); }
     SwapChainManager* GetSwapChain() const { return swapChainManager.get(); };
     PipelineStateManager* GetPipelineStateManager() const { return pipelineStateManager.get(); }
+	SynchronizationManager* GetSynchronizationManager() const { return synchronizationManager.get(); }
 
 	ResourceManager* GetResourceManager() const { return resourceManager_.get(); }
 

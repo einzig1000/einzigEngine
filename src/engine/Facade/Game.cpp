@@ -141,6 +141,11 @@ uint32_t Game::Input::Mouse::GetMouseWheel()
 	return Engine::Instance().GetMouseWheel();
 }
 
+void Game::Input::Mouse::ToggleMouseCursorVisible()
+{
+	Engine::Instance().ToggleMouseCursorVisible();
+}
+
 
 bool Game::Input::Key::IsHeld(BYTE key)
 {

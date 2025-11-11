@@ -10,6 +10,7 @@ MouseController::MouseController(HWND hwnd, CameraManager* cameraManager)
 {
     hwnd_ = hwnd;
     wheelDelta = 0;
+	isVisible = true;
 }
 
 void MouseController::Update()
@@ -89,6 +90,20 @@ uint32_t MouseController::HoldFrames(int i)
     }
 }
 
+void MouseController::ToggleMouseCursorVisible()
+{
+    isVisible = !isVisible;
+    if (isVisible)
+    {
+        // カーソルを表示
+        ShowCursor(TRUE);
+    }
+    else
+    {
+        // カーソルを非表示
+        ShowCursor(FALSE);
+	}
+}
 
 void MouseController::SetMousePosition()
 {

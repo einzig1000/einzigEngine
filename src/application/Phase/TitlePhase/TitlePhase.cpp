@@ -12,5 +12,3 @@ void TitlePhase::Update()
 
 void TitlePhase::Draw()
 {}
-
-
