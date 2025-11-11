@@ -1749,7 +1749,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		}
 		else
 		{
-			// ゲームの処理
+			/// ゲームの処理
 			///////////////////////////////////////
 			///	ImGuiを使う ここからフレームが始まるぜとimguiに伝える
 			///////////////////////////////////////
@@ -1865,11 +1865,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 #pragma region
 
 			// 三角形用のWorldViewProjectionMatrixを作る
-			TransformationMatrixData->World = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 			Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
 			Matrix4x4 viewMatrix = Inverse(cameraMatrix);
 			Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kClientWidth) / float(kClientHeight), 0.1f, 100.0f);
+
 			// WVPMatrixを作る
+			TransformationMatrixData->World = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 			TransformationMatrixData->WVP = Mul(TransformationMatrixData->World, Mul(viewMatrix, projectionMatrix));
 
 
