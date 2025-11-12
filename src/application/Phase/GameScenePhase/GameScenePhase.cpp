@@ -1,4 +1,5 @@
 #include "GameScenePhase.h"
+#include "ResourceID.h"
 #include "Window/WindowManager.h"
 #include <fstream>
 
@@ -59,10 +60,10 @@ GameScenePhase::GameScenePhase()
 
 	for (int i = 0; i < 6; i++)
 	{
-		blockRect_[i].texture = Game::Resource::LoadTexture("resources/Minecraft/breakBlock/breakBlock_0.png");
+		blockRect_[i].texture = ResourceID::blockTextureIDs_[int(BlockTextureID::BreakBlock_0)];
 	}
 
-	reticle_.texture = Game::Resource::LoadTexture("resources/Prototypes/texture/uvChecker.png");
+	reticle_.texture = ResourceID::TextureIDs_[int(TextureID::UVChecker)];
 	reticle_.transforms.scale = Vector3(0.02f, 0.02f, 0.02f);
 	reticle_.transforms.translate = Vector3(
 		WindowManager::winWidth_ / 2.0f,
@@ -196,19 +197,19 @@ void GameScenePhase::LoadMap(const std::string& mapFilePath)
 				else if (BlockID == "1")
 				{
 					block_[X][Y][Z]->model_.texture =
-						Game::Resource::LoadTexture("resources/Minecraft/Stone.png");
+						ResourceID::blockTextureIDs_[int(BlockTextureID::Stone)];
 					block_[X][Y][Z]->maxDurability_ = 60;
 				}
 				else if (BlockID == "2")
 				{
 					block_[X][Y][Z]->model_.texture =
-						Game::Resource::LoadTexture("resources/Minecraft/Dirt.png");
+						ResourceID::blockTextureIDs_[int(BlockTextureID::Dirt)];
 					block_[X][Y][Z]->maxDurability_ = 30;
 				}
 				else if (BlockID == "3")
 				{
 					block_[X][Y][Z]->model_.texture =
-						Game::Resource::LoadTexture("resources/Minecraft/Grass.png");
+						ResourceID::blockTextureIDs_[int(BlockTextureID::Grass)];
 					block_[X][Y][Z]->maxDurability_ = 5;
 				}
 				else
@@ -305,7 +306,8 @@ void GameScenePhase::UpdateCollisionCenterRay()
 							int frame = int(frameF);
 							if (frame > 4)frame = 4;
 
-							blockRect_[i].texture = Game::Resource::LoadTexture("resources/Minecraft/breakBlock/breakBlock_" + std::to_string(frame) + ".png");
+							int tagetID = int(BlockTextureID::BreakBlock_0) + frame;
+							blockRect_[i].texture = ResourceID::blockTextureIDs_[tagetID];
 						}
 						blockTriangleTransform_.rotate = block_[x][y][z]->model_.rotate.value;
 						blockTriangleTransform_.scale = block_[x][y][z]->model_.scale.value;
@@ -315,7 +317,7 @@ void GameScenePhase::UpdateCollisionCenterRay()
 					{
 						for (int i = 0; i < 6; i++)
 						{
-							blockRect_[i].texture = Game::Resource::LoadTexture("resources/Minecraft/breakBlock/breakBlock_0.png");
+							blockRect_[i].texture = ResourceID::blockTextureIDs_[size_t(BlockTextureID::BreakBlock_0)];
 						}
 						block_[x][y][z]->destroyFrame_ = 0;
 						isDestroy_ = false;

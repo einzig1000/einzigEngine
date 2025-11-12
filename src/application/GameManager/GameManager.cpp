@@ -3,6 +3,7 @@
 GameManager::GameManager()
 {
 	// フェーズクラス生成
+	resourceIDManager = std::make_unique<ResourceID>();
 	testPhase_ = std::make_unique<TestPhase>();
 	battlePhase_ = std::make_unique<BattlePhase>();
 	titlePhase_ = std::make_unique<TitlePhase>();

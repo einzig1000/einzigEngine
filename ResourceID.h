@@ -2,10 +2,36 @@
 #include "definition/definition.h"
 #include <vector>
 
-enum class TextureID
+enum class BlockTextureID
 {
 	None,
 	Stone,
+	Grass,
+	Dirt,
+
+	BreakBlock_0,
+	BreakBlock_1,
+	BreakBlock_2,
+	BreakBlock_3,
+	BreakBlock_4,
+
+
+	TexMax,
+};
+
+enum class ModelID
+{
+	None,
+	Cube,
+
+
+	ModelMax,
+};
+
+enum class TextureID
+{
+	None,
+	UVChecker,
 
 	TexMax,
 };
@@ -16,10 +42,11 @@ public:
 	ResourceID();
 	~ResourceID();
 
+	static std::vector<int> blockTextureIDs_;
+	static std::vector<int> blockModelIDs_;
+	static std::vector<int> TextureIDs_;
+
 private:
 	
-	std::vector<int> tt;
-
-	  <int> blockTextureID_;
 
 };

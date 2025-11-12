@@ -10,6 +10,7 @@
 #include "DirectX/DirectXManager.h"
 #include "Camera/CameraManager.h"
 #include "DrawSystem/DrawSystem.h"
+#include "ResourceID.h"
 
 class Engine
 {
@@ -130,9 +131,6 @@ private:
 	Input* inputManager_ = nullptr;
 	// カメラ
 	CameraManager* cameraManager = nullptr;
-	//CameraController* cameraController = nullptr;
-	//CameraController* debugCameraController = nullptr;
-	//bool debugCamera = false;
 
 
 };

@@ -1,4 +1,5 @@
 #include "Block.h"
+#include "ResourceID.h"
 #include "Game.h"
 
 Block::Block()
@@ -14,8 +15,8 @@ Block::~Block()
 void Block::Initialize(const Vector3 & position)
 {
 	model_.translate.value = position;
-	model_.model =
-		 Game::Resource::LoadModel("resources/Prototypes/model/", "cube.obj");
+	int res = ResourceID::blockModelIDs_[int(ModelID::Cube)];
+	model_.model = res;
 }
 
 void Block::Update()
