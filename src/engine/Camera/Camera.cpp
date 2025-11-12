@@ -45,7 +45,7 @@ void Camera::Resize()
 
 void Camera::Draw()
 {
-    Game::DebugDraw::AddSphere(center_, Vector3{ 0.2f,0.2f,0.2f }, 0xFFFF00FF);
+    //Game::DebugDraw::AddSphere(center_, Vector3{ 0.2f,0.2f,0.2f }, 0xFFFF00FF);
 }
 
 void Camera::DrawImGui()
@@ -347,26 +347,21 @@ void Camera::Update_FPS()
 
 #pragma region カメラ演出処理
 
+    if (easeRotate_.easingFlag)
+    {
+        MovingRotate();
+    }
+    if (easeCenter_.easingFlag)
+    {
+        MovingCenter();
+    }
+
 #pragma endregion
 
 #pragma region カメラ行列計算
 
-    // カメラ初期値
-    Vector3 cameraLocalPos = { 0.0f, 0.0f, -distance_ };
-    // カメラに回転適用
-    Matrix4x4 cameraRotateMatrix = Matrix4x4::MakeAffineMatrix(
-        { 1,1,1 },
-        transform_.rotate,
-        { 0,0,0 }
-    );
-    // cameraLocalPos　に　回転適用したマトリックスを適用させる　＝　原点上で回転
-    Vector3 rotatedCameraPos = {
-        cameraLocalPos.x * cameraRotateMatrix.m[0][0] + cameraLocalPos.y * cameraRotateMatrix.m[1][0] + cameraLocalPos.z * cameraRotateMatrix.m[2][0],
-        cameraLocalPos.x * cameraRotateMatrix.m[0][1] + cameraLocalPos.y * cameraRotateMatrix.m[1][1] + cameraLocalPos.z * cameraRotateMatrix.m[2][1],
-        cameraLocalPos.x * cameraRotateMatrix.m[0][2] + cameraLocalPos.y * cameraRotateMatrix.m[1][2] + cameraLocalPos.z * cameraRotateMatrix.m[2][2]
-    };
     // 原点上で回転したrotatedCameraPosに　cameraCenterを足せば中心がcameraCenterに変わる
-    transform_.translate = (center_ + rotatedCameraPos + GetShakeOffset());
+    transform_.translate = (center_ + GetShakeOffset());
     // カメラ行列を作成
     worldMatrix_ = Matrix4x4::MakeAffineMatrix(
         { 1,1,1 },
@@ -374,10 +369,21 @@ void Camera::Update_FPS()
         transform_.translate
     );
     // ビュー行列を作成
-    viewMatrix_ = (worldMatrix_.Inverse());
+    viewMatrix_ = worldMatrix_.Inverse();
     // ビュー行列とプロジェクション行列を掛け合わせた行列を作成
     viewProjectionMatrix = (viewMatrix_ * projectionMatrix_);
 	CreateFrustumPlanes();
+
+
+    //// トランスフォーム設定（FPS用）
+    //transform_.rotate = QuaternionFromYawPitchRoll(cameraRot.y, cameraRot.x, 0); // または行列
+    //transform_.translate = cameraPos + GetShakeOffset();
+
+    //// ワールド→ビュー
+    //worldMatrix_ = Matrix4x4::MakeAffineMatrix({ 1,1,1 }, transform_.rotate, transform_.translate);
+    //viewMatrix_ = worldMatrix_.Inverse();
+    //viewProjectionMatrix = viewMatrix_ * projectionMatrix_;
+    //CreateFrustumPlanes();
 
 #pragma endregion
 
@@ -458,7 +464,7 @@ void Camera::SetRotateTarget(Vector3 target, int spendFrame, EaseType easetype)
     easeRotate_.start = transform_.rotate;
     easeRotate_.end = target;
     easeRotate_.easingFlag = 1;
-    easeRotate_.flame = 0;
+    easeRotate_.flame = 1;
     easeRotate_.maxFrame = spendFrame;
     easeRotate_.easetype = easetype;
 };

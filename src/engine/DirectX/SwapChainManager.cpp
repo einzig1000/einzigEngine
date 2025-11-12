@@ -12,7 +12,12 @@ SwapChainManager::SwapChainManager(ID3D12Device* device, ID3D12CommandQueue* com
     Log("コンストラクタ実行成功 : SwapChainManager");
 }
 
-SwapChainManager::~SwapChainManager(){}
+SwapChainManager::~SwapChainManager()
+{
+    // ここで
+
+	Log("デストラクタ実行成功 : SwapChainManager");
+}
 
 void SwapChainManager::InitializeSwapChainInternal(ID3D12Device* device, ID3D12CommandQueue* commandQueue, HWND hwnd)
 {

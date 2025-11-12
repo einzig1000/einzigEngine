@@ -24,6 +24,16 @@ DirectXManager::DirectXManager(HWND hwnd)
 
 DirectXManager::~DirectXManager()
 {
+	deviceManager = nullptr;
+	commandContextManager = nullptr;
+	swapChainManager = nullptr;
+	depthStencilManager = nullptr;
+	pipelineStateManager = nullptr;
+	descriptorHeapManager = nullptr;
+	synchronizationManager = nullptr;
+	viewportScissorManager = nullptr;
+	resourceManager_ = nullptr;
+
     Log("デストラクタ実行成功 : DirectXManager");
 }
 

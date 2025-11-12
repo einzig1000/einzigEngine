@@ -167,7 +167,42 @@ void Engine::UpdateTransforms()
 #pragma region マウスレイ衝突判定
 
 	// マウスレイ取得
-	const Ray mouseRay = inputManager_->GetMouseController()->GetMouseRay();
+	Ray mouseRay = inputManager_->GetMouseController()->GetMouseRay();
+
+
+	// 中心が0とした時のマウスポジション
+	float ndcX = 0.0f;
+	float ndcY = 0.0f; // Yは上下反転
+
+	// クリップ空間でZ=0(near)とZ=1(far)の2点を作る
+	Vector4 nearPoint = { ndcX, ndcY, 0.0f, 1.0f };
+	Vector4 farPoint = { ndcX, ndcY, 1.0f, 1.0f };
+
+	// 逆射影行列
+	Matrix4x4 inverseViewProj = Game::Camera::Getter().GetCurrentViewProjectionMatrix().Inverse();
+
+	// ワールド空間に変換
+	Vector4 nearWorld = Transform(nearPoint, inverseViewProj);
+	Vector4 farWorld = Transform(farPoint, inverseViewProj);
+
+	// マウスレイの始点・方向
+	mouseRay.origin = { nearWorld.x / nearWorld.w, nearWorld.y / nearWorld.w, nearWorld.z / nearWorld.w };
+	mouseRay.diff = Vector3{
+	(farWorld.x / farWorld.w) - mouseRay.origin.x,
+	(farWorld.y / farWorld.w) - mouseRay.origin.y,
+	(farWorld.z / farWorld.w) - mouseRay.origin.z
+	}.Normalized();
+
+	ImGui::Begin("Mouse Ray Info");
+	ImGui::Text("Origin: (%.2f, %.2f, %.2f)", mouseRay.origin.x, mouseRay.origin.y, mouseRay.origin.z);
+	ImGui::Text("Direction: (%.2f, %.2f, %.2f)", mouseRay.diff.x, mouseRay.diff.y, mouseRay.diff.z);
+	RenderData_Line mouseRayLine;
+	mouseRayLine.points.push_back(mouseRay.origin);
+	mouseRayLine.points.push_back(mouseRay.origin + mouseRay.diff * 1000.0f);
+	mouseRayLine.Draw();
+	ImGui::End();
+
+
 	// モデルと衝突までの距離セット構造体
 	struct HitInfo { RenderData_Model* rdm; float distance; };
 	// のリスト
@@ -279,28 +314,14 @@ void Engine::EndFrame()
 	// アプリケーション終了
 	if (Game::Input::Key::IsJustPressed(DIK_ESCAPE))
 	{
-		Finalize();
+		//Finalize();
 		windowManager->Quit();
 	}
 }
 
-
-
 // 終了処理
 void Engine::Finalize()
 {
-	// GPU 最終同期（保険）
-	if (dxManager)
-	{
-		dxManager->GetSynchronizationManager()->WaitForGPU();
-		// フルスクリーン解除
-		//if (dxManager->GetSwapChain()->GetSwapChainDesc().Flags & DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH)
-		//{
-		//	auto sc = dxManager->GetSwapChain()->GetNative(); // 取得メソッドがあるなら
-		//	if (sc) { sc->SetFullscreenState(FALSE, nullptr); }
-		//}
-	}
-
 	// ImGuiの終了処理
 	ImGui_ImplDX12_Shutdown();
 	ImGui_ImplWin32_Shutdown();
@@ -362,6 +383,11 @@ void Engine::DrawModel(RenderData_Model& renderData)
 void Engine::DrawTriangle(RenderData_Triangle& renderData)
 {
 	drawSystem->DrawTriangle(renderData);
+}
+
+void Engine::DrawRect(RenderData_Rect& renderData)
+{
+	drawSystem->DrawRect(renderData);
 }
 
 void Engine::DrawSprite(RenderData_Sprite& renderData)

@@ -789,6 +789,127 @@ void DrawSystem::DrawTriangle(RenderData_Triangle& renderData)
 	vertexDataUsed_ += kSumVertex;
 }
 
+void DrawSystem::DrawRect(RenderData_Rect& renderData)
+{
+	// 描画回数上限
+	if (drawCallIndex_ >= kMaxDrawCallPerFrame_) return;
+
+	// テクスチャの検索
+	const TextureData* tex = dxManager_->GetResourceManager()->GetTextureManager()->GetTexture(renderData.texture);
+	if (!tex) return;
+
+	// RootSignatureとPSOを設定
+	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootSignature(dxManager_->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
+	if (renderData.options.wireframe || wireframeMode_)
+	{	// ワイヤーフレーム用PSOを設定
+		dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetPipelineState(BlendMode::Wireframe, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
+	}
+	else
+	{	// Triangle用PSOを設定
+		dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetPipelineState(renderData.options.blendMode, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
+	}
+
+	// 頂点数の取得
+	const uint32_t kSumVertex = 6;
+	// 必要な頂点数分配列を拡張
+	if (vertexDataUsed_ + kSumVertex > vertexData_.size())
+	{
+		vertexData_.resize(vertexDataUsed_ + kSumVertex);
+	}
+
+
+	/// 三角形１つめ
+	// 左上
+	vertexData_[vertexDataUsed_ + 0].position = { renderData.pos3.x, renderData.pos3.y, renderData.pos3.z, 1.0f };
+	vertexData_[vertexDataUsed_ + 0].texcoord = { 0.0f, 0.0f };
+	vertexData_[vertexDataUsed_ + 0].normal = { 0.0f, 0.0f, -1.0f };
+
+	// 右上
+	vertexData_[vertexDataUsed_ + 1].position = { renderData.pos1.x, renderData.pos1.y, renderData.pos1.z, 1.0f };
+	vertexData_[vertexDataUsed_ + 1].texcoord = { 1.0f, 0.0f };
+	vertexData_[vertexDataUsed_ + 1].normal = { 0.0f, 0.0f, -1.0f };
+
+	// 右下
+	vertexData_[vertexDataUsed_ + 2].position = { renderData.pos2.x, renderData.pos2.y, renderData.pos2.z, 1.0f };
+	vertexData_[vertexDataUsed_ + 2].texcoord = { 1.0f, 1.0f };
+	vertexData_[vertexDataUsed_ + 2].normal = { 0.0f, 0.0f, -1.0f };
+
+	/// 三角形２つめ
+	// 左上
+	vertexData_[vertexDataUsed_ + 3].position = { renderData.pos3.x, renderData.pos3.y, renderData.pos3.z, 1.0f };
+	vertexData_[vertexDataUsed_ + 3].texcoord = { 0.0f, 0.0f };
+	vertexData_[vertexDataUsed_ + 3].normal = { 0.0f, 0.0f, -1.0f };
+
+	// 右下
+	vertexData_[vertexDataUsed_ + 4].position = { renderData.pos2.x, renderData.pos2.y, renderData.pos2.z, 1.0f };
+	vertexData_[vertexDataUsed_ + 4].texcoord = { 1.0f, 1.0f };
+	vertexData_[vertexDataUsed_ + 4].normal = { 0.0f, 0.0f, -1.0f };
+
+	// 左下
+	vertexData_[vertexDataUsed_ + 5].position = { renderData.pos4.x, renderData.pos4.y, renderData.pos4.z, 1.0f };
+	vertexData_[vertexDataUsed_ + 5].texcoord = { 0.0f, 1.0f };
+	vertexData_[vertexDataUsed_ + 5].normal = { 0.0f, 0.0f, -1.0f };
+
+
+	// WVP行列
+	Matrix4x4 world = Matrix4x4::MakeAffineMatrix(renderData.transforms.scale, renderData.transforms.rotate, renderData.transforms.translate);
+	Matrix4x4 wvpMatrix = world * viewProjectionMatrix_;
+
+	wvpData_[drawCallIndex_]->World = world;
+	wvpData_[drawCallIndex_]->WVP = wvpMatrix;
+
+	// ライトの設定
+	*lightData_[drawCallIndex_] = *directionalLightData_;
+
+	// マテリアル
+	Vector4 color = ConvertUintToVector4(renderData.color);
+	materialData_[drawCallIndex_]->color = color;
+	materialData_[drawCallIndex_]->shininess = 1.0f;
+	Matrix4x4 uvTransformMatrix = Matrix4x4::MakeIdentity4x4();
+	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeScaleMatrix(renderData.uvTransform.scale));
+	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(renderData.uvTransform.rotate.z));
+	uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(renderData.uvTransform.translate));
+	materialData_[drawCallIndex_]->uvTransform = uvTransformMatrix;
+
+	// 頂点リソース
+	VertexData* vData = nullptr;
+	HRESULT hr = vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vData));
+	if (FAILED(hr) || vData == nullptr) return;
+	std::memcpy(vData + vertexDataUsed_, &vertexData_[vertexDataUsed_], sizeof(VertexData) * kSumVertex);
+	vertexResource_->Unmap(0, nullptr);
+
+	// 動的頂点バッファを確保
+	if (!EnsureDynamicVB(vertexDataUsed_ + kSumVertex)) return;
+	memcpy(vertexMappedPtr_ + vertexDataUsed_, &vertexData_[vertexDataUsed_], sizeof(VertexData) * kSumVertex);
+
+	// 頂点バッファビュー
+	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
+	vertexBufferView.BufferLocation = vertexResource_->GetGPUVirtualAddress() + sizeof(VertexData) * (vertexDataUsed_);
+	vertexBufferView.SizeInBytes = sizeof(VertexData) * static_cast<UINT>(kSumVertex);
+	vertexBufferView.StrideInBytes = sizeof(VertexData);
+
+
+	// RootSignatureを設定。
+	dxManager_->GetCommandContextManager()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
+	// 形状を設定
+	dxManager_->GetCommandContextManager()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	// CBVを設定する マテリアル用のCBufferの場所を設定
+	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources_[drawCallIndex_]->GetGPUVirtualAddress());
+	// CBVを設定する wvp用のCBufferの場所を設定
+	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources_[drawCallIndex_]->GetGPUVirtualAddress());
+	// SRVのDescriptorTableの先頭を設定。２はrootParameters[2]。
+	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
+	// CBVを設定する ディレクショナルライト用のCBufferの場所を設定
+	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(3, lightResources_[drawCallIndex_]->GetGPUVirtualAddress());
+
+	// 描画
+	dxManager_->GetCommandContextManager()->GetCommandList()->DrawInstanced(6, 1, 0, 0);
+
+
+	drawCallIndex_++;
+	vertexDataUsed_ += kSumVertex;
+}
+
 void DrawSystem::DrawSprite(RenderData_Sprite& renderData)
 {
 	// 描画回数上限

@@ -20,6 +20,8 @@ private:
 	RenderData_Model wall4_;
 	RenderData_Model player_;
 
+	RenderData_Rect rect_;
+
 	RenderData_Sprite sprite1_;
 	RenderData_Sprite sprite2_;
 

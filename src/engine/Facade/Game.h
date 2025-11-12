@@ -239,7 +239,6 @@ public:
 		static bool InCamera(const AABB& aabb);
 	};
 
-	// EasingとかRandとかもいれるべきか？
 	class Utilitie
 	{
 		// プリミティブモードの設定

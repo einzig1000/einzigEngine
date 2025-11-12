@@ -47,6 +47,12 @@ TestPhase::TestPhase()
 	wall4_.translate.value = { 0.0f,0.5f,5.0f };
 	wall4_.mass = 1000.0f;
 
+	rect_.texture = tex1;
+	rect_.pos1 = { 1.0f,1.0f,0.0f };
+	rect_.pos2 = { 1.0f,-1.0f,0.0f };
+	rect_.pos3 = { -1.0f,1.0f,0.0f };
+	rect_.pos4 = { -1.0f,-1.0f,0.0f };
+
 	player_.model = model4;
 	player_.texture = tex3;
 	player_.name = "player";
@@ -351,7 +357,8 @@ void TestPhase::Update()
 
 void TestPhase::Draw()
 {
-
+	rect_.Draw();
+	rect_.DrawImGui();
 	//ground_.Draw();
 	//ground_.DrawImGui();
 	//ground_.DrawAABB();

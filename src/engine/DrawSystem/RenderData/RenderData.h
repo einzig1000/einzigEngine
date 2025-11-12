@@ -9,19 +9,19 @@ public:
     ~RenderData_Model();
     // 全オブジェクトのSRT更新,それに伴うワールド行列更新
     void Update1();
-	// 全オブジェクトの親を考慮したワールド行列更新,AABB更新
+    // 全オブジェクトの親を考慮したワールド行列更新,AABB更新
     void Update2();
-	// 衝突判定,衝突ペア・深度の保存
+    // 衝突判定,衝突ペア・深度の保存
     void Update3();
     // 衝突時の更新,それに伴うワールド行列更新
-	void Update4();
-	// 全オブジェクトの描画範囲内判定,前フレーム情報保存
+    void Update4();
+    // 全オブジェクトの描画範囲内判定,前フレーム情報保存
     void Update5();
 
-    VectorDynamics scale = { Vector3(1.0f,1.0f,1.0f ), Vector3(0.0f,0.0f,0.0f ), Vector3(0.0f,0.0f,0.0f ) };
-	VectorDynamics rotate = { Vector3(0.0f,0.0f,0.0f), Vector3(0.0f,0.0f,0.0f), Vector3(0.0f,0.0f,0.0f) };
-	VectorDynamics translate = { Vector3(0.0f,0.0f,0.0f), Vector3(0.0f,0.0f,0.0f), Vector3(0.0f,0.0f,0.0f) };
-	// 親のワールドマトリックス
+    VectorDynamics scale = { Vector3(1.0f,1.0f,1.0f), Vector3(0.0f,0.0f,0.0f), Vector3(0.0f,0.0f,0.0f) };
+    VectorDynamics rotate = { Vector3(0.0f,0.0f,0.0f), Vector3(0.0f,0.0f,0.0f), Vector3(0.0f,0.0f,0.0f) };
+    VectorDynamics translate = { Vector3(0.0f,0.0f,0.0f), Vector3(0.0f,0.0f,0.0f), Vector3(0.0f,0.0f,0.0f) };
+    // 親のワールドマトリックス
     RenderData_Model* parentModel = nullptr;
     // 今フレームの移動量
     Vector3 lastMove;
@@ -78,23 +78,23 @@ private:
     // 今フレームでS/R/Tに変化があったか
     bool movedThisFrame = true;
 
-	// 衝突ペアを全部保存
-	static std::vector<CollisionInf*> collisionInfos;
+    // 衝突ペアを全部保存
+    static std::vector<CollisionInf*> collisionInfos;
 
-	// 親を考慮しないワールドマトリックス
-	Matrix4x4 localWorldMatrix;
-	// 親を考慮したワールドマトリックス
-	Matrix4x4 worldMatrix;
+    // 親を考慮しないワールドマトリックス
+    Matrix4x4 localWorldMatrix;
+    // 親を考慮したワールドマトリックス
+    Matrix4x4 worldMatrix;
     Vector3 worldPos;
 
-	// 親を考慮したワールドマトリックスを設定する
+    // 親を考慮したワールドマトリックスを設定する
     Matrix4x4 SetWorldMatrix();
 
     // ID
     int ID = 0;
 
 
-	// 初期化済みフラグ
+    // 初期化済みフラグ
     bool initialized = false;
 
     // 衝突フラグ
@@ -108,7 +108,7 @@ private:
     VectorDynamics preScale;
     VectorDynamics preRotate;
     VectorDynamics preTranslate;
-	Vector3 preWorldPos;
+    Vector3 preWorldPos;
     // 前フレームAABB
     std::vector<AABB> preAABB;
 
@@ -141,10 +141,10 @@ public:
     // 描画オプション
     DrawOptions options;
     // 画像切り取り左上
-	Vector2int cutImageLeftTop = { 0,0 };
+    Vector2int cutImageLeftTop = { 0,0 };
     // 切り出しサイズ
-	Vector2int cutImageSize = { 0,0 };
-  
+    Vector2int cutImageSize = { 0,0 };
+
     // マウスと衝突してるか？
     bool isCollisionMouseRay = false;
     // ID
@@ -193,6 +193,44 @@ private:
 
     static std::vector<RenderData_Triangle*> renderTriangles;
 
+};
+
+class RenderData_Rect
+{
+public:
+    RenderData_Rect();
+    ~RenderData_Rect();
+
+    // 位置、回転、スケール
+    Transforms transforms;
+    // UV座標
+    Transforms uvTransform;
+
+    // 右上
+    Vector3 pos1;
+    // 右下
+    Vector3 pos2;
+    // 左上
+    Vector3 pos3;
+    // 左下
+    Vector3 pos4;
+
+    // テクスチャ
+    uint32_t texture = 0;
+    // 色
+    uint32_t color = 0xFFFFFFFF;
+    // 描画オプション
+    DrawOptions options;
+    // ID
+    int ID = 0;
+    std::optional<std::string> name;
+
+    void Draw();
+    void DrawImGui();
+
+private:
+
+    static std::vector<RenderData_Rect*> renderRects;
 };
 
 class RenderData_Line

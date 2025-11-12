@@ -7,6 +7,7 @@ CameraManager::CameraManager()
 	Camera ReleaseCamera;
 	ReleaseCamera.name_ = "ReleaseCamera";
 	ReleaseCamera.enableControl_ = false;
+	ReleaseCamera.orbitMode_ = false;
 	camera_.push_back(ReleaseCamera);
 
 	Camera DebugCamera;

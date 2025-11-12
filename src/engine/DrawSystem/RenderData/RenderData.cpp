@@ -8,6 +8,7 @@ std::vector<RenderData_Model*> RenderData_Model::renderModels;
 std::vector<CollisionInf*> RenderData_Model::collisionInfos;
 std::vector<RenderData_Sprite*> RenderData_Sprite::renderSprites;
 std::vector<RenderData_Triangle*> RenderData_Triangle::renderTriangles;
+std::vector<RenderData_Rect*> RenderData_Rect::renderRects;
 std::vector<RenderData_Line*> RenderData_Line::renderLines;
 std::vector<RenderData_Particle*> RenderData_Particle::renderParticles;
 
@@ -866,7 +867,6 @@ void RenderData_Line::Draw()
 void RenderData_Line::DrawPoints()
 {
 
-
 }
 
 void RenderData_Line::DrawImGui()
@@ -1206,3 +1206,86 @@ void RenderData_Particle::DrawEmitter()
 }
 
 #pragma endregion
+
+RenderData_Rect::RenderData_Rect()
+{
+	renderRects.push_back(this);
+	this->ID = int(renderRects.size());
+}
+
+RenderData_Rect::~RenderData_Rect()
+{
+	auto it = std::find(renderRects.begin(), renderRects.end(), this);
+	if (it != renderRects.end())
+	{
+		renderRects.erase(it);
+	}
+}
+
+void RenderData_Rect::Draw()
+{
+	Engine::Instance().DrawRect(*this);
+}
+
+void RenderData_Rect::DrawImGui()
+{
+	std::optional<std::string> str = "rect : " + std::to_string(this->ID);
+	if (this->name != std::nullopt) str = (this->name);
+	std::string num = std::to_string(this->ID) + ":";
+	ImGui::Begin(str->c_str());
+	if (ImGui::TreeNode("----------transforms-----------"))
+	{
+		ImGui::DragFloat3((num + "scale").c_str(), &transforms.scale.x, 0.01f);
+		ImGui::DragFloat3((num + "translate").c_str(), &transforms.translate.x, 1.0f);
+		ImGui::DragFloat3((num + "rotate").c_str(), &transforms.rotate.x, 0.01f);
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------uvTransforms---------"))
+	{
+		ImGui::DragFloat2((num + "UVscale").c_str(), &uvTransform.scale.x, 0.01f);
+		ImGui::DragFloat2((num + "UVtranslate").c_str(), &uvTransform.translate.x, 0.01f);
+		ImGui::DragFloat((num + "UVrotate").c_str(), &uvTransform.rotate.z, 0.01f);
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------position-------------"))
+	{
+		ImGui::DragFloat3((num + "pos1").c_str(), &pos1.x, 0.1f);
+		ImGui::DragFloat3((num + "pos2").c_str(), &pos2.x, 0.1f);
+		ImGui::DragFloat3((num + "pos3").c_str(), &pos3.x, 0.1f);
+		ImGui::DragFloat3((num + "pos4").c_str(), &pos4.x, 0.1f);
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------color----------------"))
+	{
+		Vector4 preColor = ConvertUintToVector4(color);
+		float floatColor[4] = { preColor.x, preColor.y, preColor.z, preColor.w };
+		ImGui::ColorEdit4((num + "color").c_str(), floatColor, 1);
+		Vector4 vector4Color = { floatColor[0], floatColor[1], floatColor[2], floatColor[3] };
+		color = ConvertVector4ToUint(vector4Color);
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------texture--------------"))
+	{
+		size_t textureCount = Game::Resource::GetTextureCount();
+		for (size_t i =
+			0; i < textureCount; ++i)
+		{
+			TextureData* texData = Game::Resource::GetTexture(static_cast<uint32_t>(i));
+			if (texData)
+			{
+				ImGui::Image((ImTextureID)texData->textureSrvHandleGPU.ptr, ImVec2(32, 32));
+				// 6個並べたら改行
+				if ((i + 1) % 6 != 0 && i < textureCount - 1)
+				{
+					ImGui::SameLine();
+				}
+				if (ImGui::IsItemClicked())
+				{
+					this->texture = static_cast<uint32_t>(i);
+				}
+			}
+		}
+		ImGui::TreePop();
+	}
+	ImGui::End();
+}

@@ -23,6 +23,15 @@ void MouseController::Update()
 
     // マウスボタン状態取得
     SetMouseButtenState();
+
+    // FPSカメラでマウスカーソルがウィンドウ外に出ないようにする
+    if (!isVisible)
+    {
+		int screenX = WindowManager::winWidth_ / 2;
+		int screenY = WindowManager::winHeight_ / 2;
+
+        //SetCursorPos(screenX, screenY);
+    }
 }
 
 void MouseController::EndFrame()

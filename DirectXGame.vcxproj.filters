@@ -148,6 +148,9 @@
     <Filter Include="engine\DirectXManager\SrvManager">
       <UniqueIdentifier>{09ce842d-ba2c-47b3-8c1a-fcc0da694c8b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="application\GameManeger\Phase\GameScenePhase\Block">
+      <UniqueIdentifier>{1914304b-d65c-4d83-8e80-cd43ac14c5e2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -282,6 +285,12 @@
     <ClCompile Include="src\engine\DirectX\SrvManager.cpp">
       <Filter>engine\DirectXManager\SrvManager</Filter>
     </ClCompile>
+    <ClCompile Include="Block.cpp">
+      <Filter>application\GameManeger\Phase\GameScenePhase\Block</Filter>
+    </ClCompile>
+    <ClCompile Include="ResourceID.cpp">
+      <Filter>application</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="externals\imgui\imconfig.h">
@@ -415,6 +424,12 @@
     </ClInclude>
     <ClInclude Include="src\engine\DirectX\SrvManager.h">
       <Filter>engine\DirectXManager\SrvManager</Filter>
+    </ClInclude>
+    <ClInclude Include="Block.h">
+      <Filter>application\GameManeger\Phase\GameScenePhase\Block</Filter>
+    </ClInclude>
+    <ClInclude Include="ResourceID.h">
+      <Filter>application</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

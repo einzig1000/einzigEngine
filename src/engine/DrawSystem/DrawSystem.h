@@ -31,6 +31,7 @@ public:
 
 	void DrawModel(RenderData_Model& renderData);
 	void DrawTriangle(RenderData_Triangle& renderData);
+	void DrawRect(RenderData_Rect& renderData);
 	void DrawSprite(RenderData_Sprite& renderData);
 	void DrawParticle(RenderData_Particle& renderData);
 	void DrawLine(RenderData_Line& renderData);

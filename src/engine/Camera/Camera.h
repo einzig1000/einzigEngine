@@ -46,11 +46,14 @@ public:
     // 操作可能か
     bool enableControl_;
 
+	// オービットモードかFPSモードか
+	bool orbitMode_ = true;
+
+	// カメラ名
 	std::string name_;
 
 private:
 
-	bool orbitMode_ = false;
 	void Updata_Orbit();
 	void Update_FPS();
 
@@ -113,7 +116,7 @@ private:
     Matrix4x4 projectionMatrix_;
 	float fovY_ = 0.45f;
     float aspect_;
-    float nearZ_ = 0.1f;
+    float nearZ_ = 0.01f;
 	float farZ_ = 100.0f;
 
 	// ビュープロジェクション行列
