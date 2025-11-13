@@ -151,34 +151,52 @@ void GameScenePhase::Draw()
 void GameScenePhase::LoadMap(const std::string& mapFilePath)
 {
 	std::ifstream file(mapFilePath);
-	// ファイルがなかったら0埋めでファイルを作成
 	if (!file.is_open())
 	{
 		std::ofstream createFile(mapFilePath);
-		for (int z = 0; z < MAX_BLOCK_Z; z++)
+
+		const int width = MAX_BLOCK_X;
+		const int depth = MAX_BLOCK_Z;
+		const int maxHeight = MAX_BLOCK_Y;
+		const double scale = 6.0;
+		const int octaves = 4;
+		const double persistence = 0.5;
+		const unsigned int seed = 12345;
+
+		PerlinNoise pn(seed);
+
+		// 高さマップを作る
+		std::vector<std::vector<int>> heightmap(width, std::vector<int>(depth, 0));
+		for (int x = 0; x < width; ++x)
 		{
-			for (int y = 0; y < MAX_BLOCK_Y; y++)
+			for (int z = 0; z < depth; ++z)
 			{
-				for (int x = 0; x < MAX_BLOCK_X; x++)
-				{
-					createFile << "1";
-					if (x < MAX_BLOCK_X - 1)
-					{
-						createFile << ",";
-					}
-				}
-				createFile << "\n";
+				double sampleX = static_cast<double>(x) / scale;
+				double sampleZ = static_cast<double>(z) / scale;
+				double n = fractalPerlin(pn, sampleX, sampleZ, octaves, persistence); // 0..1
+				int h = static_cast<int>(std::floor(n * (maxHeight - 1) + 0.5)); // 0..maxHeight-1
+				if (h < 0) h = 0;
+				if (h > maxHeight - 1) h = maxHeight - 1;
+				heightmap[x][z] = h;
 			}
 		}
+
+		for (int x = 0; x < width; ++x)
+		{
+			for (int z = 0; z < depth; ++z)
+			{
+				createFile << heightmap[x][z] << ",";
+			}
+			createFile << "\n";
+		}
+
 		createFile.close();
 		file.open(mapFilePath);
 	}
 
 	std::string line;
-	std::getline(file, line);
 	int X = 0;
 	int Y = 0;
-	int Z = 0;
 
 	while (std::getline(file, line))
 	{
@@ -186,49 +204,74 @@ void GameScenePhase::LoadMap(const std::string& mapFilePath)
 		std::string BlockID;
 		while (std::getline(ss, BlockID, ','))
 		{
-			if (X < MAX_BLOCK_X && Y < MAX_BLOCK_Y && Z < MAX_BLOCK_Z)
-			{
-				// 空気
-				if (BlockID == "0")
-				{
-					block_[X][Y][Z]->model_.texture = -1;
-					block_[X][Y][Z]->model_.options.wireframe = true;
-				}
-				else if (BlockID == "1")
-				{
-					block_[X][Y][Z]->model_.texture =
-						ResourceID::blockTextureIDs_[int(BlockTextureID::Stone)];
-					block_[X][Y][Z]->maxDurability_ = 60;
-				}
-				else if (BlockID == "2")
-				{
-					block_[X][Y][Z]->model_.texture =
-						ResourceID::blockTextureIDs_[int(BlockTextureID::Dirt)];
-					block_[X][Y][Z]->maxDurability_ = 30;
-				}
-				else if (BlockID == "3")
-				{
-					block_[X][Y][Z]->model_.texture =
-						ResourceID::blockTextureIDs_[int(BlockTextureID::Grass)];
-					block_[X][Y][Z]->maxDurability_ = 5;
-				}
-				else
-				{
-					block_[X][Y][Z]->model_.texture =
-						std::stoi(BlockID);
-				}
+			int id = std::stoi(BlockID);
 
-				X++;
-				if (X >= MAX_BLOCK_X)
+			// blockHeightMap_に高さを保存
+			blockHeightMap_[X][Y] = id;
+
+			X++;
+			if (X >= MAX_BLOCK_X)
+			{
+				X = 0;
+				Y++;
+				if (Y >= MAX_BLOCK_Z)
 				{
-					X = 0;
-					Y++;
-					if (Y >= MAX_BLOCK_Y)
-					{
-						Y = 0;
-						Z++;
-					}
+					break;
 				}
+			}
+		}
+	}
+
+	file.close();
+
+	// ブロック配置
+	for (int x = 0; x < MAX_BLOCK_X; x++)
+	{
+		for (int z = 0; z < MAX_BLOCK_Z; z++)
+		{
+			int height = blockHeightMap_[x][z];
+			for (int y = 0; y < height; y++)
+			{
+				block_[x][y][z]->isDestroy_ = false;
+				block_[x][y][z]->model_.texture = ResourceID::blockTextureIDs_[int(BlockTextureID::Stone)];
+				block_[x][y][z]->maxDurability_ = 60;
+			}
+			for (int y = height; y < MAX_BLOCK_Y; y++)
+			{
+				block_[x][y][z]->isDestroy_ = true;
+				block_[x][y][z]->model_.texture = ResourceID::blockTextureIDs_[int(BlockTextureID::Stone)];
+				block_[x][y][z]->maxDurability_ = 60;
+			}
+		}
+	}
+
+	for (int x = 0; x < MAX_BLOCK_X; x++)
+	{
+		for (int z = 0; z < MAX_BLOCK_Z; z++)
+		{
+			int height = blockHeightMap_[x][z];
+			int neighborHeights[4] = { 0,0,0,0 };
+			if (x + 1 < MAX_BLOCK_X)neighborHeights[0] = blockHeightMap_[x + 1][z];
+			if (x - 1 >= 0)neighborHeights[1] = blockHeightMap_[x - 1][z];
+			if (z + 1 < MAX_BLOCK_Z)neighborHeights[2] = blockHeightMap_[x][z + 1];
+			if (z - 1 >= 0)neighborHeights[3] = blockHeightMap_[x][z - 1];
+
+			int maxHeightGap = 0;
+			for (int i = 0; i < 4; i++)
+			{
+				int gap = height - neighborHeights[i];
+				if (gap > maxHeightGap)
+				{
+					maxHeightGap = gap;
+				}
+			}
+
+			//block_[x][height - 1][z]->isExposed_ = true;
+			// blockHeightMap_[x][z]の上からmaxHeightGap分だけ下まで露出している
+			for (int i = 0; i <= maxHeightGap; i++)
+			{
+				if (height - 1 - i < 0) break;
+				block_[x][height - 1 - i][z]->isExposed_ = true;
 			}
 		}
 	}

@@ -5,18 +5,20 @@
 Block::Block()
 {
 	nowDurability_ = 0;
-	maxDurability_ = 0;
+	maxDurability_ = 60;
 	destroyFrame_ = 0;
 }
 
 Block::~Block()
 {}
 
+
+
+
 void Block::Initialize(const Vector3 & position)
 {
 	model_.translate.value = position;
-	int res = ResourceID::blockModelIDs_[int(ModelID::Cube)];
-	model_.model = res;
+	model_.model = ResourceID::blockModelIDs_[int(ModelID::Cube)];
 }
 
 void Block::Update()
@@ -26,7 +28,7 @@ void Block::Update()
 
 void Block::Draw()
 {
-	if (!isDestroy_)
+	if (!isDestroy_ && isExposed_)
 	model_.Draw();
 }
 

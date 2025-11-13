@@ -291,6 +291,9 @@
     <ClCompile Include="ResourceID.cpp">
       <Filter>application</Filter>
     </ClCompile>
+    <ClCompile Include="PerlinNoise.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="externals\imgui\imconfig.h">
@@ -430,6 +433,9 @@
     </ClInclude>
     <ClInclude Include="ResourceID.h">
       <Filter>application</Filter>
+    </ClInclude>
+    <ClInclude Include="PerlinNoise.h">
+      <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -20,5 +20,8 @@ public:
 	int maxDurability_;
 	int destroyFrame_;
 	bool isDestroy_ = false;
+
+	// 表面に露出しているか
+	bool isExposed_ = false;
 };
 

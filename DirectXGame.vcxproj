@@ -151,6 +151,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Block.cpp" />
+    <ClCompile Include="PerlinNoise.cpp" />
     <ClCompile Include="ResourceID.cpp" />
     <ClCompile Include="src\engine\Camera\Camera.cpp" />
     <ClCompile Include="src\engine\Camera\CameraManager.cpp" />
@@ -254,6 +255,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Block.h" />
+    <ClInclude Include="PerlinNoise.h" />
     <ClInclude Include="ResourceID.h" />
     <ClInclude Include="src\engine\Camera\Camera.h" />
     <ClInclude Include="src\engine\Camera\CameraManager.h" />

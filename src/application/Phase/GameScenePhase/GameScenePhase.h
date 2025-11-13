@@ -1,9 +1,10 @@
 #pragma once
 #include "Phase/PhaseParent/PhaseParent.h"
+#include "PerlinNoise.h"
 #include "Block.h"
-#define MAX_BLOCK_X 10
+#define MAX_BLOCK_X 40
 #define MAX_BLOCK_Y 10
-#define MAX_BLOCK_Z 10
+#define MAX_BLOCK_Z 40
 #define BLOCK_SIZE 1.0f
 #define PLAYER_SPEED 0.1f
 
@@ -30,6 +31,7 @@ private:
 
 	// ブロック
 	Block* block_[MAX_BLOCK_X][MAX_BLOCK_Y][MAX_BLOCK_Z];
+	int blockHeightMap_[MAX_BLOCK_X][MAX_BLOCK_Z];
 
 	// ブロック破壊テクスチャ
 	bool isDestroy_ = false;
