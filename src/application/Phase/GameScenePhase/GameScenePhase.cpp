@@ -119,6 +119,32 @@ void GameScenePhase::Update()
 	UpdateCamera();
 	UpdateCollisionCenterRay();
 	UpdateBlockTriangleTransform();
+
+	if (Game::Input::Key::IsJustPressed(DIK_1))
+	{
+		JsonManager::SaveToJson("resources/Prototypes/testJson/CameraPos.json", "CameraPosX", cameraPos.x);
+	}
+	if (Game::Input::Key::IsJustPressed(DIK_2))
+	{
+		JsonManager::SaveToJson("resources/Prototypes/testJson/CameraPos.json", "CameraPosY", cameraPos.y);
+	}
+	if (Game::Input::Key::IsJustPressed(DIK_3))
+	{
+		JsonManager::SaveToJson("resources/Prototypes/testJson/CameraPos.json", "CameraPosZ", cameraPos.z);
+	}
+	if (Game::Input::Key::IsJustPressed(DIK_4))
+	{
+		JsonManager::SaveToJson("resources/Prototypes/testJson/CameraPos.json", "CameraPosX", cameraPos.x);
+	}
+	if (Game::Input::Key::IsJustPressed(DIK_5))
+	{
+		JsonManager::SaveToJson("resources/Prototypes/testJson/CameraPos.json", "CameraPosX", cameraPos.y);
+	}
+
+	if (Game::Input::Key::IsJustPressed(DIK_6))
+	{
+		JsonManager::SaveToJson("resources/Prototypes/testJson/Camera.json", "CameraPosX", cameraPos.x);
+	}
 }
 
 

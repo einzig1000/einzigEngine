@@ -40,7 +40,7 @@ public:
 	void AddAABB(AABB aabb, uint32_t color);
 
 	void SetLightColor(const Vector4 color) { directionalLightData_->color = color; }
-	void SetLightDirection(const Vector3 direction) { directionalLightData_->direction = direction; }
+	void SetLightDirection(const Vector3 direction) { directionalLightData_->direction = direction.Normalized(); }
 	void SetLightIntensity(float intensity) { directionalLightData_->intensity = intensity; }
 	void ToggleLightMode(const LightMode mode) { directionalLightData_->mode = mode; }
 

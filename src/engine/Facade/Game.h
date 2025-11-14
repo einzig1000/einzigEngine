@@ -5,6 +5,7 @@
 #include "input/Input.h"
 #include "Utilities/Easings.h"
 #include "Utilities/functions.h"
+#include "Utilities/JsonManager.h"
 #include "DrawSystem/RenderData/RenderData.h"
 
 #include "externals/imgui/imgui.h"
@@ -21,47 +22,132 @@ public:
 	public:
 
 		/// <summary>
-		/// 
+		/// モデル読み込み
 		/// </summary>
-		/// <param name="directoryPath"></param>
-		/// <param name="filename"></param>
-		/// <returns></returns>
+		/// <param name="directoryPath">例:"Resources/Prototypes/model/"</param>
+		/// <param name="filename">"cube.obj"</param>
+		/// <returns>モデルID</returns>
 		static uint32_t LoadModel(const std::string& directoryPath, const std::string& filename);
+
+		/// <summary>
+		/// テクスチャ読み込み
+		/// </summary>
+		/// <param name="filePath">例:"Resources/Prototypes/texture/uvChecker.png"</param>
+		/// <returns>テクスチャID</returns>
 		static uint32_t LoadTexture(const std::string& filePath);
+
+		/// <summary>
+		/// オーディオ読み個み
+		/// </summary>
+		/// <param name="filePath">例:"Resources/Prototypes/audio/BGM/InGame.mp3"</param>
+		/// <returns></returns>
 		static uint32_t LoadAudio(const std::string& filePath);
 
 		/// <summary>
 		/// テクスチャデータ取得
-		/// 
+		/// </summary>
+		/// <param name="textureNumber">テクスチャID</param>
+		/// <returns>メタデータを含むテクスチャデータ</returns>
 		static TextureData* GetTexture(uint32_t textureNumber);
+
+		/// <summary>
+		/// 読み込んだテクスチャ数取得
+		/// </summary>
+		/// <returns>読み込んだテクスチャ数</returns>
 		static size_t GetTextureCount();
+
+		/// <summary>
+		/// 読み込んだモデル数取得
+		/// </summary>
+		/// <returns>読み込んだモデル数</returns>
 		static size_t GetModelCount();
 	};
 
 	class DebugDraw
 	{
 	public:
+
+		/// <summary>
+		/// ワイヤーフレーム球描画
+		/// </summary>
+		/// <param name="pos">ワールド座標</param>
+		/// <param name="radius">半径</param>
+		/// <param name="color">色</param>
 		static void AddSphere(Vector3 pos, Vector3 radius, uint32_t color);
+
+		/// <summary>
+		/// ワイヤーフレームAABB描画
+		/// </summary>
+		/// <param name="aabb">AABB</param>
+		/// <param name="color">色</param>
 		static void AddAABB(AABB aabb, uint32_t color);
+
 	};
 
 	class Audio
 	{
 	public:
+
+		/// <summary>
+		/// オーディオ再生
+		/// </summary>
+		/// <param name="audioId">Resource::LoadAudioで取得したオーディオID</param>
+		/// <param name="loop">trueなら自動ループ</param>
 		static void PlayAudio(const uint32_t& audioId, bool loop);
+
+		/// <summary>
+		/// オーディオ停止
+		/// </summary>
+		/// <param name="audioId">Resource::LoadAudioで取得したオーディオID</param>
 		static void StopAudio(const uint32_t& audioId);
+
+		/// <summary>
+		/// オーディオボリューム設定
+		/// </summary>
+		/// <param name="audioId"Resource::LoadAudioで取得したオーディオID></param>
+		/// <param name="volume">0.0f～1.0f</param>
 		static void SetAudioVolume(const uint32_t& audioId, float volume);
+
+		/// <summary>
+		/// マスターボリューム設定
+		/// </summary>
+		/// <param name="volume">0.0f～1.0f</param>
 		static void SetMasterVolume(float volume);
+
+		/// <summary>
+		/// オーディオボリューム取得
+		/// </summary>
+		/// <param name="audioId">Resource::LoadAudioで取得したオーディオID</param>
+		/// <returns>現在の音量</returns>
 		static float GetVolume(const uint32_t& audioId);
+
+		/// <summary>
+		/// マスターボリューム取得
+		/// </summary>
+		/// <returns>現在のマスター音量</returns>
 		static float GetMasterVolume();
+
+		/// <summary>
+		/// オーディオが再生中か？
+		/// </summary>
+		/// <param name="audioId">Resource::LoadAudioで取得したオーディオID</param>
+		/// <returns>bool </returns>
 		static bool IsAudioPlaying(const uint32_t& audioId);
 	};
 
 	class Light
 	{
 	public:
-		// ライト
+		/// <summary>
+		/// 共通ライトカラー設定
+		/// </summary>
+		/// <param name="color">Vector4のcolor</param>
 		static void SetLightColor(const Vector4 color);
+
+		/// <summary>
+		/// 共通ライト方向設定
+		/// </summary>
+		/// <param name="direction">Vector3の方向ベクトル</param>
 		static void SetLightDirection(const Vector3 direction);
 		static void ToggleLightMode(const LightMode mode);
 		static void SetLightIntensity(float intensity);

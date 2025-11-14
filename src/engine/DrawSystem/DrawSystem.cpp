@@ -34,12 +34,12 @@ DrawSystem::DrawSystem(DirectXManager* dxManager)
 	drawCallIndex_ = 0;
 
 	// 頂点リソース
-	vertexResourceSize_ = static_cast<UINT>(sizeof(VertexData) * 1024); // 三角形
+	vertexResourceSize_ = static_cast<UINT>(sizeof(VertexData) * 4096); // 三角形
 	vertexResource_ = CreateBufferResource(dxManager->GetDevice(), vertexResourceSize_);
 	HRESULT hr = vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vertexMappedPtr_));
 	assert(SUCCEEDED(hr));
 
-	kMaxDrawCallPerFrame_ = 1024;
+	kMaxDrawCallPerFrame_ = 4096;
 	materialResources_.resize(kMaxDrawCallPerFrame_);
 	materialData_.resize(kMaxDrawCallPerFrame_);
 	wvpResources_.resize(kMaxDrawCallPerFrame_);
