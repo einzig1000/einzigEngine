@@ -26,6 +26,11 @@ ResourceID::ResourceID()
 	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/lawn.png");
 	blockTextureIDs_[size_t(BlockTextureID::lawn)] = tmp;
 
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/wood.png");
+	blockTextureIDs_[size_t(BlockTextureID::wood)] = tmp;
+
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/leaf.png");
+	blockTextureIDs_[size_t(BlockTextureID::leaf)] = tmp;
 
 	tmp = Game::Resource::LoadTexture("resources/Minecraft/breakBlock/breakBlock_0.png");
 	blockTextureIDs_[size_t(BlockTextureID::BreakBlock_0)] = tmp;

@@ -12,6 +12,9 @@ enum class BlockTextureID
 	// 草付き土
 	lawn,
 
+	wood,
+	leaf,
+
 	BreakBlock_0,
 	BreakBlock_1,
 	BreakBlock_2,
