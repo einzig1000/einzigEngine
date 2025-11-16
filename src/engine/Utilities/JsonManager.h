@@ -45,6 +45,8 @@ public:
 
 private:
 
+	std::vector<json> jsons;
+
 	static json ToJson(const int& data);
 	static json ToJson(const float& data);
 	static json ToJson(const std::string& data);

@@ -224,6 +224,7 @@ void GameScenePhase::LoadMap(const std::string& mapFilePath)
 	int X = 0;
 	int Y = 0;
 
+	// [x][z]の高さを読み込み
 	while (std::getline(file, line))
 	{
 		std::istringstream ss(line);
@@ -250,17 +251,23 @@ void GameScenePhase::LoadMap(const std::string& mapFilePath)
 
 	file.close();
 
-	// ブロック配置
+	// [x][z]に高さ分だけブロックを生成
 	for (int x = 0; x < MAX_BLOCK_X; x++)
 	{
 		for (int z = 0; z < MAX_BLOCK_Z; z++)
 		{
 			int height = blockHeightMap_[x][z];
-			for (int y = 0; y < height; y++)
+			for (int y = 0; y < height - 2; y++)
 			{
 				block_[x][y][z]->isDestroy_ = false;
 				block_[x][y][z]->model_.texture = ResourceID::blockTextureIDs_[int(BlockTextureID::Stone)];
 				block_[x][y][z]->maxDurability_ = 60;
+			}
+			for (int y = height - 2; y < height; y++)
+			{
+				block_[x][y][z]->isDestroy_ = false;
+				block_[x][y][z]->model_.texture = ResourceID::blockTextureIDs_[int(BlockTextureID::Dirt)];
+				block_[x][y][z]->maxDurability_ = 30;
 			}
 			for (int y = height; y < MAX_BLOCK_Y; y++)
 			{
@@ -361,8 +368,11 @@ void GameScenePhase::UpdateCollisionCenterRay()
 					block_[x][y][z]->model_.color = { 0xFF, 0xFF, 0xFF, 0xFF };
 					if (Game::Input::Mouse::IsHeld(0))
 					{
+						// 破壊中 isDestroy_ == trueだと破壊中テクスチャ描画
 						isDestroy_ = true;
+						// 破壊フレーム進行・ブロック耐久値減少
 						block_[x][y][z]->destroyFrame_++;
+						// 破壊中テクスチャ更新
 						for (int i = 0; i < 6; i++)
 						{
 							// 0.0f ~ 1.0f
@@ -378,9 +388,38 @@ void GameScenePhase::UpdateCollisionCenterRay()
 							int tagetID = int(BlockTextureID::BreakBlock_0) + frame;
 							blockRect_[i].texture = ResourceID::blockTextureIDs_[tagetID];
 						}
+						// 破壊中テクスチャ座標更新
 						blockTriangleTransform_.rotate = block_[x][y][z]->model_.rotate.value;
 						blockTriangleTransform_.scale = block_[x][y][z]->model_.scale.value;
 						blockTriangleTransform_.translate = block_[x][y][z]->model_.translate.value;
+						// ブロックが破壊されたら周囲のブロックをアクティブ化
+						if (block_[x][y][z]->isDestroy_)
+						{
+							if (x < MAX_BLOCK_X - 1)
+							{
+								block_[x + 1][y][z]->isExposed_ = true;
+							}
+							if (x > 0)
+							{
+								block_[x - 1][y][z]->isExposed_ = true;
+							}
+							if (y < MAX_BLOCK_Y - 1)
+							{
+								block_[x][y + 1][z]->isExposed_ = true;
+							}
+							if (y > 0)
+							{
+								block_[x][y - 1][z]->isExposed_ = true;
+							}
+							if (z < MAX_BLOCK_Z - 1)
+							{
+								block_[x][y][z + 1]->isExposed_ = true;
+							}
+							if (z > 0)
+							{
+								block_[x][y][z - 1]->isExposed_ = true;
+							}
+						}
 					}
 					else
 					{
