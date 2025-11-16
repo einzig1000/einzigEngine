@@ -7,7 +7,10 @@ enum class BlockTextureID
 	None,
 	Stone,
 	Grass,
+	// 草なし土
 	Dirt,
+	// 草付き土
+	lawn,
 
 	BreakBlock_0,
 	BreakBlock_1,

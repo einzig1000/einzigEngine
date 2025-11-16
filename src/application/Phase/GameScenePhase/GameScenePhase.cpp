@@ -256,17 +256,32 @@ void GameScenePhase::LoadMap(const std::string& mapFilePath)
 	{
 		for (int z = 0; z < MAX_BLOCK_Z; z++)
 		{
+			// Y軸の高さ
 			int height = blockHeightMap_[x][z];
-			for (int y = 0; y < height - 2; y++)
+			// 土の厚さ
+			int dirtThickness = Game::Math::RandInt(2, 3);
+			// 高さより土の厚さが大きい場合は調整
+			if (height - dirtThickness < 0)
+			{
+				dirtThickness = height;
+			}
+
+			for (int y = 0; y < height - dirtThickness; y++)
 			{
 				block_[x][y][z]->isDestroy_ = false;
 				block_[x][y][z]->model_.texture = ResourceID::blockTextureIDs_[int(BlockTextureID::Stone)];
 				block_[x][y][z]->maxDurability_ = 60;
 			}
-			for (int y = height - 2; y < height; y++)
+			for (int y = height - dirtThickness; y < height - 1; y++)
 			{
 				block_[x][y][z]->isDestroy_ = false;
 				block_[x][y][z]->model_.texture = ResourceID::blockTextureIDs_[int(BlockTextureID::Dirt)];
+				block_[x][y][z]->maxDurability_ = 30;
+			}
+			for (int y = height - 1; y < height; y++)
+			{
+				block_[x][y][z]->isDestroy_ = false;
+				block_[x][y][z]->model_.texture = ResourceID::blockTextureIDs_[int(BlockTextureID::lawn)];
 				block_[x][y][z]->maxDurability_ = 30;
 			}
 			for (int y = height; y < MAX_BLOCK_Y; y++)
