@@ -70,6 +70,9 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 
 	inputManager_->GetMouseController()->wheelDelta = 0;
 
+	ImGui_ImplDX12_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
 }
 
 // メインループ用
@@ -95,6 +98,7 @@ bool Engine::ProcessMessage()
 void Engine::BeginFrame()
 {
 	// ImGuiを更新
+#ifdef DEBUG
 	if (isDebugInfo)
 	{
 		ImGui_ImplDX12_NewFrame();
@@ -102,6 +106,9 @@ void Engine::BeginFrame()
 		ImGui::NewFrame();
 		//ImGui::DockSpaceOverViewport
 	}
+#endif // DEBUG
+
+
 
 	// DirectXを更新
 	dxManager->BeginFrame();(ImGui::GetMainViewport());
