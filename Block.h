@@ -19,7 +19,12 @@ public:
 	int nowDurability_;
 	int maxDurability_;
 	int destroyFrame_;
+	// 破壊中か
+	bool isBeingDestroyed_ = false;
+	// 破壊済みか
 	bool isDestroy_ = false;
+	// 破壊された瞬間か
+	bool isJustDestroyed_ = false;
 
 	// 表面に露出しているか
 	bool isExposed_ = false;

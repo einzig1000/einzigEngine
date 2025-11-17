@@ -148,8 +148,17 @@
     <Filter Include="engine\DirectXManager\SrvManager">
       <UniqueIdentifier>{09ce842d-ba2c-47b3-8c1a-fcc0da694c8b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="application\GameManeger\Phase\GameScenePhase\Block">
+    <Filter Include="application\GameManeger\Player">
+      <UniqueIdentifier>{6a027008-0c2c-4e83-a548-37aff76f8489}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManeger\Block">
       <UniqueIdentifier>{1914304b-d65c-4d83-8e80-cd43ac14c5e2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManeger\Map">
+      <UniqueIdentifier>{28f4b7c8-cecf-4edc-a2e3-2071fd41f5b6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManeger\FPSCamera">
+      <UniqueIdentifier>{1918b075-c41b-42c8-91e9-b063504be710}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -286,13 +295,22 @@
       <Filter>engine\DirectXManager\SrvManager</Filter>
     </ClCompile>
     <ClCompile Include="Block.cpp">
-      <Filter>application\GameManeger\Phase\GameScenePhase\Block</Filter>
+      <Filter>application\GameManeger\Block</Filter>
     </ClCompile>
     <ClCompile Include="ResourceID.cpp">
       <Filter>application</Filter>
     </ClCompile>
     <ClCompile Include="PerlinNoise.cpp">
       <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="Player.cpp">
+      <Filter>application\GameManeger\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="MapManager.cpp">
+      <Filter>application\GameManeger\Map</Filter>
+    </ClCompile>
+    <ClCompile Include="FPSCamera.cpp">
+      <Filter>application\GameManeger\FPSCamera</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -429,13 +447,22 @@
       <Filter>engine\DirectXManager\SrvManager</Filter>
     </ClInclude>
     <ClInclude Include="Block.h">
-      <Filter>application\GameManeger\Phase\GameScenePhase\Block</Filter>
+      <Filter>application\GameManeger\Block</Filter>
     </ClInclude>
     <ClInclude Include="ResourceID.h">
       <Filter>application</Filter>
     </ClInclude>
     <ClInclude Include="PerlinNoise.h">
       <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Player.h">
+      <Filter>application\GameManeger\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="MapManager.h">
+      <Filter>application\GameManeger\Map</Filter>
+    </ClInclude>
+    <ClInclude Include="FPSCamera.h">
+      <Filter>application\GameManeger\FPSCamera</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

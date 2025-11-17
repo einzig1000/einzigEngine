@@ -196,10 +196,6 @@ void Engine::UpdateTransforms()
 	ImGui::Begin("Mouse Ray Info");
 	ImGui::Text("Origin: (%.2f, %.2f, %.2f)", mouseRay.origin.x, mouseRay.origin.y, mouseRay.origin.z);
 	ImGui::Text("Direction: (%.2f, %.2f, %.2f)", mouseRay.diff.x, mouseRay.diff.y, mouseRay.diff.z);
-	RenderData_Line mouseRayLine;
-	mouseRayLine.points.push_back(mouseRay.origin);
-	mouseRayLine.points.push_back(mouseRay.origin + mouseRay.diff * 1000.0f);
-	mouseRayLine.Draw();
 	ImGui::End();
 
 

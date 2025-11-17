@@ -26,6 +26,12 @@
 #define HEIGHT 720
 #define eps 1e-6f
 
+#define MAX_BLOCK_X 40
+#define MAX_BLOCK_Y 10
+#define MAX_BLOCK_Z 40
+#define BLOCK_SIZE 1.0f
+#define PLAYER_SPEED 0.1f
+
 template <typename T>
 constexpr const T& my_min(const T& a, const T& b)
 {
@@ -615,8 +621,6 @@ struct Transforms
     Vector3 scale = { 1,1,1 };
     Vector3 rotate = { 0,0,0 };
     Vector3 translate = { 0,0,0 };
-    //Matrix4x4 World;
-    //Matrix4x4* parentWorld = nullptr;
 };
 
 struct VectorDynamics

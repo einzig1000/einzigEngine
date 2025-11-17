@@ -241,6 +241,11 @@ Vector3 Game::Camera::Getter::GetCurrentTranslate()
 	return Engine::Instance().GetCameraManager()->GetCurrentTranslate();
 }
 
+Vector3 Game::Camera::Getter::GetCurrentRotate()
+{
+	return Engine::Instance().GetCameraManager()->GetCurrentRotate();
+}
+
 Matrix4x4 Game::Camera::Getter::GetCurrentViewProjectionMatrix()
 {
 	return Engine::Instance().GetCameraManager()->GetCurrentViewProjectionMatrix();

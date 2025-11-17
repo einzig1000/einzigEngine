@@ -7,6 +7,7 @@ std::vector<int> ResourceID::TextureIDs_;
 
 ResourceID::ResourceID()
 {
+
 #pragma region ブロックテクスチャ読み込み
 
 	blockTextureIDs_.resize(static_cast<size_t>(BlockTextureID::TexMax));
@@ -69,6 +70,7 @@ ResourceID::ResourceID()
 	TextureIDs_[size_t(TextureID::UVChecker)] = tmp;
 
 #pragma endregion
+
 }
 
 ResourceID::~ResourceID()

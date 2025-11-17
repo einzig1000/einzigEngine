@@ -148,6 +148,11 @@ Vector3 CameraManager::GetCurrentTranslate() const
 	return camera_[currentCameraID_].GetTransform().translate;
 }
 
+Vector3 CameraManager::GetCurrentRotate() const
+{
+	return camera_[currentCameraID_].GetTransform().rotate;
+}
+
 Matrix4x4 CameraManager::GetCurrentViewProjectionMatrix() const
 {
 	return camera_[currentCameraID_].GetViewProjectionMatrix();

@@ -31,6 +31,7 @@ public:
 
 	Vector3 GetCurrentCenter() const;			// カメラ回転中心
 	Vector3 GetCurrentTranslate() const;		// カメラ位置
+	Vector3 GetCurrentRotate() const;
 	Matrix4x4 GetCurrentViewProjectionMatrix() const; // ビュープロジェクション行列
 	float GetCurrentDistance() const;			// カメラ距離
 

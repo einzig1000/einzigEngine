@@ -268,6 +268,7 @@ public:
 
 			static Vector3 GetCurrentCenter();			// カメラ回転中心
 			static Vector3 GetCurrentTranslate();		// カメラ位置
+			static Vector3 GetCurrentRotate();
 			static Matrix4x4 GetCurrentViewProjectionMatrix(); // ビュープロジェクション行列
 			static float GetCurrentDistance();			// カメラ距離
 		};
@@ -390,6 +391,30 @@ public:
 		static uint32_t Vector4ToUint(Vector4 color)
 		{
 			return ConvertVector4ToUint(color);
+		}
+
+		static Vector3 DirectionFromYawPitch(float yaw, float pitch)
+		{
+			float sp = std::sinf(pitch);
+			float cp = std::cosf(pitch);
+			float sy = std::sinf(yaw);
+			float cy = std::cosf(yaw);
+
+			Vector3 dir;
+			dir.x = sy * cp;
+			dir.y = -sp;
+			dir.z = cy * cp;
+			dir.Normalize();
+			return dir;
+		}
+
+		static Vector3 YawPitchFromDirection(const Vector3& dir)
+		{
+			Vector3 normDir = dir;
+			normDir.Normalize();
+			float pitch = std::asinf(-normDir.y); // -sin(pitch) = y 成分
+			float yaw = std::atan2f(normDir.x, normDir.z); // sin(yaw) = x 成分, cos(yaw) = z 成分
+			return Vector3(pitch, yaw, 0.0f); // roll はここでは未使用
 		}
 	};
 
