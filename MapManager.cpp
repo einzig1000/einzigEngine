@@ -267,9 +267,6 @@ void MapManager::Update()
 						block_[x][y][z]->model_.rotate.value,
 						block_[x][y][z]->model_.translate.value);
 
-					破壊中ブロックのVector3 = block_[x][y][z]->model_.translate.value;
-					破壊エフェクトのVector3 = blockTriangleTransform_.translate;
-
 					// 破壊割合に応じたテクスチャ更新
 					for (int i = 0; i < 6; i++)
 					{
@@ -341,13 +338,11 @@ void MapManager::Draw()
 		}
 	}
 
-	//if (isBeingDestroyed_)
+	if (isBeingDestroyed_)
 	{
 		for (int i = 0; i < 6; i++)
 		{
 			blockRect_[i].Draw();
 		}
 	}
-	ImGui::Text("破壊中ブロックの座標: (%.2f, %.2f, %.2f)", 破壊中ブロックのVector3.x, 破壊中ブロックのVector3.y, 破壊中ブロックのVector3.z);
-	ImGui::Text("破壊エフェクトの座標: (%.2f, %.2f, %.2f)", 破壊エフェクトのVector3.x, 破壊エフェクトのVector3.y, 破壊エフェクトのVector3.z);
 }

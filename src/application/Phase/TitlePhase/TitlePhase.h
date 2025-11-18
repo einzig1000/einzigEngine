@@ -12,4 +12,7 @@ public:
 
 private:
 
+	RenderData_Sprite warldSelect;
+	RenderData_Sprite options;
+
 };

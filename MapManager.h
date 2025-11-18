@@ -27,9 +27,6 @@ private:
 	RenderData_Rect blockRect_[6];  // 6面分
 	Transforms blockTriangleTransform_;
 
-	Vector3 破壊中ブロックのVector3;
-	Vector3 破壊エフェクトのVector3;
-
 	// プレイヤー参照
 	Player* player_;
 };
