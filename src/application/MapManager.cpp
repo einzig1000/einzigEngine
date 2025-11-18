@@ -33,6 +33,7 @@ MapManager::MapManager(Player* player)
 				);
 				block_[x][y][z]->model_.name = "Block_" + std::to_string(x) + "_" + std::to_string(y) + "_" + std::to_string(z);
 				block_[x][y][z]->model_.mass = 100.0f;
+				block_[x][y][z]->model_.isCheckMouseRay = true;
 				//player->data_.SetBlock(block_[x][y][z]->model_);
 			}
 		}
@@ -86,6 +87,12 @@ MapManager::~MapManager()
 				block_[x][y][z] = nullptr;
 			}
 		}
+	}
+
+	for (auto& item : dropItems_)
+	{
+		delete item;
+		item = nullptr;
 	}
 }
 
@@ -259,7 +266,7 @@ void MapManager::Update()
 			{
 				block_[x][y][z]->Update();
 				// 破壊中
-				if (block_[x][y][z]->isBeingDestroyed_ && block_[x][y][z]->model_.isCollisionMouseRay == 1)
+				if (block_[x][y][z]->isBeingDestroyed_ && block_[x][y][z]->model_.isCollisionMouseRay == 0)
 				{
 					// 破壊中ブロックの周りに破壊テクスチャを配置
 					blockTriangleTransform_ = Transforms(
@@ -314,6 +321,13 @@ void MapManager::Update()
 					{
 						block_[x][y][z - 1]->isExposed_ = true;
 					}
+
+					Vector3 ItemPos = block_[x][y][z]->model_.translate.value;
+					ItemPos.x += Game::Math::RandFloat(-0.4f, 0.4f, 1);
+					ItemPos.z += Game::Math::RandFloat(-0.4f, 0.4f, 1);
+					ItemPos.y -= (BLOCK_SIZE / 2.0f) - 0.4f;
+					DropItem* dropItem = new DropItem(player_, Vector3int(x,y,z), ItemPos, block_[x][y][z]->model_.model, block_[x][y][z]->model_.texture);
+					dropItems_.push_back(dropItem);
 				}
 				// 破壊されていない
 			}
@@ -325,6 +339,11 @@ void MapManager::Update()
 		blockRect_[i].transforms = blockTriangleTransform_;
 	}
 
+	for (auto& item : dropItems_)
+	{
+		item->Update(block_[item->index.x][item->index.y][item->index.z]->isDestroy_);
+	}
+
 	UpdatePlayerCollisionY();
 	//UpdatePlayerCollisionXZ();
 }
@@ -334,10 +353,10 @@ void MapManager::UpdatePlayerCollisionY()
 	float playerHeight = player_->data_.aabbs[0].max.y - player_->data_.aabbs[0].min.y;
 
 	Vector3 corners[4] = {
-		Vector3(player_->data_.aabbs[0].min.x, player_->data_.aabbs[0].min.y - 0.01f, player_->data_.aabbs[0].min.z),
-		Vector3(player_->data_.aabbs[0].max.x, player_->data_.aabbs[0].min.y - 0.01f, player_->data_.aabbs[0].min.z),
-		Vector3(player_->data_.aabbs[0].min.x, player_->data_.aabbs[0].min.y - 0.01f, player_->data_.aabbs[0].max.z),
-		Vector3(player_->data_.aabbs[0].max.x, player_->data_.aabbs[0].min.y - 0.01f, player_->data_.aabbs[0].max.z)
+		Vector3(player_->data_.aabbs[0].min.x, player_->data_.aabbs[0].min.y - 0.1f, player_->data_.aabbs[0].min.z),
+		Vector3(player_->data_.aabbs[0].max.x, player_->data_.aabbs[0].min.y - 0.1f, player_->data_.aabbs[0].min.z),
+		Vector3(player_->data_.aabbs[0].min.x, player_->data_.aabbs[0].min.y - 0.1f, player_->data_.aabbs[0].max.z),
+		Vector3(player_->data_.aabbs[0].max.x, player_->data_.aabbs[0].min.y - 0.1f, player_->data_.aabbs[0].max.z)
 	};
 
 	bool anyCollision = false;
@@ -347,8 +366,9 @@ void MapManager::UpdatePlayerCollisionY()
 	{
 		Vector3int idx = IndexByPosition(corners[i]);
 
-		if (block_[idx.x][idx.y][idx.z]->model_.isCollision(player_->data_))
+		if (block_[idx.x][idx.y][idx.z]->model_.aabbs[0].max.y >= corners[i].y && !block_[idx.x][idx.y][idx.z]->isDestroy_)
 		{
+			//block_[idx.x][idx.y][idx.z]->model_.color = Vector4(0x00, 0xFF, 0x00, 0xFF);
 			anyCollision = true;
 			float groundY = block_[idx.x][idx.y][idx.z]->model_.aabbs[0].max.y;
 
@@ -360,7 +380,7 @@ void MapManager::UpdatePlayerCollisionY()
 	if (anyCollision)
 	{
 		// translate.value.y を地面上に設定する（translate が中心なら center.y = groundY + height/2）
-		player_->data_.translate.value.y = bestGroundY + playerHeight * 0.5f + eps;
+		player_->data_.translate.value.y = bestGroundY + playerHeight * 0.5f;
 
 		// AABB を center から再計算するか、min/max を更新する
 		player_->data_.aabbs[0].min.y = player_->data_.translate.value.y - playerHeight * 0.5f;
@@ -382,16 +402,17 @@ void MapManager::UpdatePlayerCollisionXZ()
 	Vector3 velocityXZ = Vector3(player_->data_.translate.velocity.x, 0.0f, player_->data_.translate.velocity.z);
 	Vector3 movedPosition = currentPosition + velocityXZ;
 	AABB movedAABB = AABB{ currentAABB.min + velocityXZ, currentAABB.max + velocityXZ };
+	movedAABB.min.y -= -0.3f;
 
 	Vector3 corners[8] = {
-		Vector3(movedAABB.min.x, movedAABB.min.y + 0.01f, movedAABB.min.z),
-		Vector3(movedAABB.max.x, movedAABB.min.y + 0.01f, movedAABB.min.z),
-		Vector3(movedAABB.min.x, movedAABB.min.y + 0.01f, movedAABB.max.z),
-		Vector3(movedAABB.max.x, movedAABB.min.y + 0.01f, movedAABB.max.z),
-		Vector3(movedAABB.min.x, movedAABB.max.y - 0.01f, movedAABB.min.z),
-		Vector3(movedAABB.max.x, movedAABB.max.y - 0.01f, movedAABB.min.z),
-		Vector3(movedAABB.min.x, movedAABB.max.y - 0.01f, movedAABB.max.z),
-		Vector3(movedAABB.max.x, movedAABB.max.y - 0.01f, movedAABB.max.z),
+		Vector3(movedAABB.min.x, movedAABB.min.y, movedAABB.min.z),
+		Vector3(movedAABB.max.x, movedAABB.min.y, movedAABB.min.z),
+		Vector3(movedAABB.min.x, movedAABB.min.y, movedAABB.max.z),
+		Vector3(movedAABB.max.x, movedAABB.min.y, movedAABB.max.z),
+		Vector3(movedAABB.min.x, movedAABB.max.y, movedAABB.min.z),
+		Vector3(movedAABB.max.x, movedAABB.max.y, movedAABB.min.z),
+		Vector3(movedAABB.min.x, movedAABB.max.y, movedAABB.max.z),
+		Vector3(movedAABB.max.x, movedAABB.max.y, movedAABB.max.z),
 	};
 
 	bool anyCollision = false;
@@ -404,6 +425,7 @@ void MapManager::UpdatePlayerCollisionXZ()
 		if (!block_[idx.x][idx.y][idx.z]->isDestroy_)
 		{
 			anyCollision = true;
+			block_[idx.x][idx.y][idx.z]->model_.color = Vector4(0x00, 0xFF, 0x00, 0xFF);
 
 			// 衝突している場合、プレイヤーをブロックの外に押し出す
 			AABB blockAABB = block_[idx.x][idx.y][idx.z]->model_.aabbs[0];
@@ -470,6 +492,11 @@ void MapManager::Draw()
 		}
 	}
 
+	for (auto& item : dropItems_)
+	{
+		item->Draw();
+	}
+
 	if (isBeingDestroyed_)
 	{
 		for (int i = 0; i < 6; i++)
@@ -482,9 +509,9 @@ void MapManager::Draw()
 Vector3int MapManager::IndexByPosition(const Vector3& position)
 {
 	Vector3int index;
-	index.x = static_cast<int>((position.x + (MAX_BLOCK_X - 1)) / BLOCK_SIZE);
-	index.y = static_cast<int>((position.y + (MAX_BLOCK_Y - 1)) / BLOCK_SIZE);
-	index.z = static_cast<int>((position.z + (MAX_BLOCK_Z - 1)) / BLOCK_SIZE);
+	index.x = static_cast<int>(((position.x + (MAX_BLOCK_X - 1)) / BLOCK_SIZE) + (BLOCK_SIZE / 2.0f));
+	index.y = static_cast<int>(((position.y + (MAX_BLOCK_Y - 1)) / BLOCK_SIZE));
+	index.z = static_cast<int>(((position.z + (MAX_BLOCK_Z - 1)) / BLOCK_SIZE) + (BLOCK_SIZE / 2.0f));
 
 	if (index.x < 0)index.x = 0;
 	else if (index.x > MAX_BLOCK_X - 1)index.x = MAX_BLOCK_X - 1;

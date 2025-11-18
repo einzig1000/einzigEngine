@@ -42,6 +42,8 @@ enum class TextureID
 	start_title,
 	Options_title,
 
+	Item_slot,
+
 	TexMax,
 };
 

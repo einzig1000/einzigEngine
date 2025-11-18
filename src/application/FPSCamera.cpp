@@ -4,6 +4,7 @@
 FPSCamera::FPSCamera(Player* player)
 {
 	player_ = player;
+	enableControl = true;
 }
 
 void FPSCamera::Update()
@@ -12,7 +13,12 @@ void FPSCamera::Update()
 	mousePos = Game::Input::Mouse::GetMousePosition();
 	mouseGap = mousePos - preMousePos;
 
-	if (!Game::Input::Key::IsHeld(DIK_SPACE))
+	if (Game::Input::Key::IsJustPressed(DIK_T))
+	{
+		enableControl = !enableControl;
+	}
+
+	if (enableControl)
 	{
 		cameraRot.x += mouseGap.y * mouseSensitivity_;
 		cameraRot.y += mouseGap.x * mouseSensitivity_;

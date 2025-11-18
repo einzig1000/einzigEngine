@@ -70,7 +70,9 @@ public:
     void DrawAABB();
     void DrawImGui();
 
-
+    
+    // マウスと衝突判定とるか否か
+	bool isCheckMouseRay = false;
 
     static std::vector<RenderData_Model*> renderModels;
 

@@ -9,6 +9,10 @@ public:
 	FPSCamera(Player* player);
 	void Update();
 
+
+	// カメラ操作可能か
+	bool enableControl;
+
 	// カメラ関係
 	Vector3 cameraPos = { 0.0f,0.0f,0.0f };
 	Vector3 cameraRot = { 0.0f,0.0f,0.0f };

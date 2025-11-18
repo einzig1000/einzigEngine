@@ -150,6 +150,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="DropItem.cpp" />
+    <ClCompile Include="Itemslot.cpp" />
     <ClCompile Include="src\application\Block.cpp" />
     <ClCompile Include="src\application\FPSCamera.cpp" />
     <ClCompile Include="src\application\MapManager.cpp" />
@@ -264,6 +266,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="src\engine\DirectX\SrvManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DropItem.h" />
+    <ClInclude Include="Itemslot.h" />
     <ClInclude Include="src\application\Block.h" />
     <ClInclude Include="src\application\FPSCamera.h" />
     <ClInclude Include="src\application\MapManager.h" />

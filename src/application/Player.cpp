@@ -2,6 +2,7 @@
 #include "ResourceID.h"
 #include "Window/WindowManager.h"
 #include "FPSCamera.h"
+#include "Itemslot.h"
 
 Ray Player::viewRay_;
 
@@ -22,6 +23,7 @@ Player::Player()
 	);
 
 	fpsCamera_ = new FPSCamera(this);
+	Itemslot_ = new Itemslot();
 }
 
 Player::~Player()
@@ -43,32 +45,94 @@ void Player::Update()
 {
 	Vector3 cameraRot = Game::Camera::Getter::GetCurrentRotate();
 	Vector3 forward = Game::Math::DirectionFromYawPitch(cameraRot.y, 0.0f);
-	Vector3 right = Game::Math::DirectionFromYawPitch(cameraRot.y + 1.5708f, 0.0f);
 	Vector3 direction = Game::Math::DirectionFromYawPitch(cameraRot.y, cameraRot.x);
+	forward.Normalize();
 
 	viewRay_.origin = data_.aabbs[0].center();
 	viewRay_.origin.y += (data_.aabbs[0].max.y - data_.aabbs[0].min.y) * 0.5f;
 	viewRay_.diff = direction * 100.0f;
 
-	// 移動
+	// 移動処理
 	if (Game::Input::Key::IsHeld(DIK_W) || Game::Input::Key::IsHeld(DIK_S) || 
 		Game::Input::Key::IsHeld(DIK_A) || Game::Input::Key::IsHeld(DIK_D))
 	{
+		DirectionXZ8Way dir = DirectionXZ8Way::None;
+
 		if (Game::Input::Key::IsHeld(DIK_W))
 		{
-			data_.translate.velocity = forward * PLAYER_SPEED;
+			dir = DirectionXZ8Way::Front;
 		}
 		if (Game::Input::Key::IsHeld(DIK_S))
 		{
-			data_.translate.velocity = -forward * PLAYER_SPEED;
+			if (dir == DirectionXZ8Way::Front)
+			{
+				dir = DirectionXZ8Way::None;
+			}
+			else
+			{
+				dir = DirectionXZ8Way::Back;
+			}
 		}
 		if (Game::Input::Key::IsHeld(DIK_D))
 		{
-			data_.translate.velocity = right * PLAYER_SPEED;
+			if (dir == DirectionXZ8Way::Front)
+			{
+				dir = DirectionXZ8Way::FrontRight;
+			}
+			else if (dir == DirectionXZ8Way::Back)
+			{
+				dir = DirectionXZ8Way::BackRight;
+			}
+			else
+			{
+				dir = DirectionXZ8Way::Right;
+			}
 		}
 		if (Game::Input::Key::IsHeld(DIK_A))
 		{
-			data_.translate.velocity = -right * PLAYER_SPEED;
+			if (dir == DirectionXZ8Way::Front)
+			{
+				dir = DirectionXZ8Way::FrontLeft;
+			}
+			else if (dir == DirectionXZ8Way::Back)
+			{
+				dir = DirectionXZ8Way::BackLeft;
+			}
+			else if (dir == DirectionXZ8Way::Right)
+			{
+				dir = DirectionXZ8Way::None;
+			}
+			else if (dir == DirectionXZ8Way::FrontRight)
+			{
+				dir = DirectionXZ8Way::Front;
+			}
+			else if (dir == DirectionXZ8Way::BackRight)
+			{
+				dir = DirectionXZ8Way::Back;
+			}
+			else
+			{
+				dir = DirectionXZ8Way::Left;
+			}
+		}
+
+		if (dir != DirectionXZ8Way::None)
+		{
+			float angle = int(dir) * 45.0f;
+			Vector3 temp;
+
+			float radians = Game::Math::DegreeToRadian(angle);
+			float cosA = std::cos(radians);
+			float sinA = std::sin(radians);
+
+			temp = Vector3(
+				forward.x * cosA - forward.z * sinA,
+				forward.y,
+				forward.x * sinA + forward.z * cosA
+			);
+
+			data_.translate.velocity.x = temp.x * speed_;
+			data_.translate.velocity.z = temp.z * speed_;
 		}
 	}
 	else
@@ -77,17 +141,56 @@ void Player::Update()
 		data_.translate.velocity.z = 0.0f;
 	}
 
+	// ダッシュ処理
+	if (Game::Input::Key::IsHeld(DIK_W))
+	{
+		wHeldFrames_++;
+	}
+	else
+	{
+		wHeldFrames_ = 0;
+	}
+	if (Game::Input::Key::IsJustReleased(DIK_W) && wHeldFrames_ < 20)
+	{
+		preDash_ = 20;
+	}
+	if (preDash_ > 0)
+	{
+		if (Game::Input::Key::IsJustPressed(DIK_W))
+		{
+			speed_ = dashSpeed_;
+		}
+		preDash_--;
+	}
+	if (Game::Input::Key::IsJustReleased(DIK_W) && speed_ == dashSpeed_)
+	{
+		speed_ = normalSpeed_;
+	}
+
+	// ジャンプ処置
 	if (Game::Input::Key::IsJustPressed(DIK_SPACE))
 	{
 		data_.translate.velocity.y += 0.1f;
+		data_.translate.value.y += data_.translate.velocity.y;
 	}
 
 	fpsCamera_->Update();
+	Itemslot_->Update();
 }
 
 void Player::Draw()
 {
-	reticle_.Draw();
-	//data_.Draw();
 	data_.DrawImGui();
+	ImGui::Text("Player speed: %.3f", speed_);
+	ImGui::Text("Player wHeldFrames_: %d", wHeldFrames_);
+	ImGui::Text("Player preDash_: %d", preDash_);
+
+
+	reticle_.Draw();
+	Itemslot_->Draw();
+}
+
+void Player::AddItemToItemslot(int itemID)
+{
+	Itemslot_->AddItemToItemslot(itemID);
 }

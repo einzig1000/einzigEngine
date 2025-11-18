@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include "Game.h"
+#include "DropItem.h"
 
 class Block;
 class Player;
@@ -32,5 +33,8 @@ private:
 
 	// プレイヤー参照
 	Player* player_;
+
+	// ドロップアイテム管理
+	std::vector<DropItem*> dropItems_;
 };
 

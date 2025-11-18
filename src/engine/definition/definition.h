@@ -953,13 +953,38 @@ struct CameraForGPU
 	Vector3 worldPosition;
 };
 
-enum class Direction
+// 上下左右
+enum class DirectionXY
 {
     None = -1,
     Left = 0,
     Right = 1,
     Down = 2,
     Up = 3,
+};
+
+// 前後左右
+enum class DirectionXZ
+{
+    None = -1,
+    Left = 0,
+    Right = 1,
+    Back = 2,
+    Front = 3,
+};
+
+// 前後左右 + 斜め
+enum class DirectionXZ8Way
+{
+    None = -1,
+    Front = 0,
+    FrontLeft = 1,
+    Left = 2,
+    BackLeft = 3,
+    Back = 4,
+    BackRight = 5,
+    Right = 6,
+    FrontRight = 7,
 };
 
 struct D3DResourceLeakChecker

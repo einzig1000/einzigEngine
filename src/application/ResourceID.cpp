@@ -75,6 +75,9 @@ ResourceID::ResourceID()
 	tmp = Game::Resource::LoadTexture("Resources/Minecraft/Title/option.png");
 	TextureIDs_[size_t(TextureID::Options_title)] = tmp;
 
+	tmp = Game::Resource::LoadTexture("Resources/Minecraft/Item_slot.png");
+	TextureIDs_[size_t(TextureID::Item_slot)] = tmp;
+
 #pragma endregion
 
 }

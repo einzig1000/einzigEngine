@@ -9,7 +9,8 @@ GameScenePhase::GameScenePhase()
 	player_ = new Player();
 
 	map_ = new MapManager(player_);
-	map_->LoadMap("resources/Map/map.csv");
+	//map_->LoadMap("resources/Map/map.csv");
+	map_->LoadMap("resources/Map/mapFlat.csv");
 
 
 
@@ -36,9 +37,9 @@ void GameScenePhase::Initialize()
 
 void GameScenePhase::Update()
 {
-	player_->Update();
 	map_->Update();
 
+	player_->Update();
 }
 
 

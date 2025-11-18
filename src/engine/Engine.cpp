@@ -77,7 +77,7 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 bool Engine::ProcessMessage()
 {
 	MSG msg = {};
-	if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+	while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 	{
 		if (msg.message == WM_QUIT)
 		{
@@ -184,7 +184,7 @@ void Engine::UpdateTransforms()
 	{
 		rd->isCollisionMouseRay = -1;
 		// 描画範囲内なら判定
-		if (rd->inPicture)
+		if (rd->inPicture && rd->isCheckMouseRay)
 		{
 			// 最近接衝突点を取得
 			std::optional<Vector3> colPos = IntersectRayModel(

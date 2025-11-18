@@ -39,7 +39,7 @@ void Block::Draw()
 void Block::DecreaseDurability()
 {
 	// １番目に衝突しているフラグ
-	bool isFirstCollision = model_.isCollisionMouseRay == 1;
+	bool isFirstCollision = model_.isCollisionMouseRay == 0;
 	// マウス左ボタンが押されているフラグ
 	bool isMouseLeftHeld = Game::Input::Mouse::IsHeld(0);
 

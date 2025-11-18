@@ -16,6 +16,8 @@ Camera::Camera()
     preCenter_ = center_;
     preRotate_ = transform_.rotate;
 
+    fovY_ = 0.65f;
+
     Resize();
 }
 
@@ -54,6 +56,22 @@ void Camera::DrawImGui()
     ImGui::DragFloat3("Center", &center_.x, 0.01f);
     ImGui::DragFloat3("Rotate", &transform_.rotate.x, 0.01f);
     ImGui::DragFloat("Distance", &distance_, 0.1f);
+    if (ImGui::DragFloat("fovY", &fovY_, 0.01f))
+    {
+        projectionMatrix_ = Matrix4x4::MakePerspectiveFovMatrix(fovY_, aspect_, nearZ_, farZ_);
+    }
+    if (ImGui::DragFloat("aspect", &aspect_, 0.01f))
+    {
+        projectionMatrix_ = Matrix4x4::MakePerspectiveFovMatrix(fovY_, aspect_, nearZ_, farZ_);
+    }
+    if (ImGui::DragFloat("nearZ", &nearZ_, 0.01f, 0.01f, 10.0f))
+    {
+        projectionMatrix_ = Matrix4x4::MakePerspectiveFovMatrix(fovY_, aspect_, nearZ_, farZ_);
+    }
+    if (ImGui::DragFloat("farZ", &farZ_, 0.01f, 0.01f, 500.0f))
+    {
+        projectionMatrix_ = Matrix4x4::MakePerspectiveFovMatrix(fovY_, aspect_, nearZ_, farZ_);
+    }
     ImGui::Checkbox("enableControl", &enableControl_);
 	ImGui::Checkbox("orbitMode", &orbitMode_);
 }
@@ -374,17 +392,6 @@ void Camera::Update_FPS()
     // ビュー行列とプロジェクション行列を掛け合わせた行列を作成
     viewProjectionMatrix = (viewMatrix_ * projectionMatrix_);
 	CreateFrustumPlanes();
-
-
-    //// トランスフォーム設定（FPS用）
-    //transform_.rotate = QuaternionFromYawPitchRoll(cameraRot.y, cameraRot.x, 0); // または行列
-    //transform_.translate = cameraPos + GetShakeOffset();
-
-    //// ワールド→ビュー
-    //worldMatrix_ = Matrix4x4::MakeAffineMatrix({ 1,1,1 }, transform_.rotate, transform_.translate);
-    //viewMatrix_ = worldMatrix_.Inverse();
-    //viewProjectionMatrix = viewMatrix_ * projectionMatrix_;
-    //CreateFrustumPlanes();
 
 #pragma endregion
 
