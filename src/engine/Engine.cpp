@@ -14,6 +14,7 @@
 
 #include <DirectXMath.h>
 #include <filesystem>
+#include "Player.h"
 using namespace DirectX;
 
 
@@ -170,34 +171,7 @@ void Engine::UpdateTransforms()
 	Ray mouseRay = inputManager_->GetMouseController()->GetMouseRay();
 
 
-	// 中心が0とした時のマウスポジション
-	float ndcX = 0.0f;
-	float ndcY = 0.0f; // Yは上下反転
-
-	// クリップ空間でZ=0(near)とZ=1(far)の2点を作る
-	Vector4 nearPoint = { ndcX, ndcY, 0.0f, 1.0f };
-	Vector4 farPoint = { ndcX, ndcY, 1.0f, 1.0f };
-
-	// 逆射影行列
-	Matrix4x4 inverseViewProj = Game::Camera::Getter().GetCurrentViewProjectionMatrix().Inverse();
-
-	// ワールド空間に変換
-	Vector4 nearWorld = Transform(nearPoint, inverseViewProj);
-	Vector4 farWorld = Transform(farPoint, inverseViewProj);
-
-	// マウスレイの始点・方向
-	mouseRay.origin = { nearWorld.x / nearWorld.w, nearWorld.y / nearWorld.w, nearWorld.z / nearWorld.w };
-	mouseRay.diff = Vector3{
-	(farWorld.x / farWorld.w) - mouseRay.origin.x,
-	(farWorld.y / farWorld.w) - mouseRay.origin.y,
-	(farWorld.z / farWorld.w) - mouseRay.origin.z
-	}.Normalized();
-
-	ImGui::Begin("Mouse Ray Info");
-	ImGui::Text("Origin: (%.2f, %.2f, %.2f)", mouseRay.origin.x, mouseRay.origin.y, mouseRay.origin.z);
-	ImGui::Text("Direction: (%.2f, %.2f, %.2f)", mouseRay.diff.x, mouseRay.diff.y, mouseRay.diff.z);
-	ImGui::End();
-
+	mouseRay = Player::viewRay_;
 
 	// モデルと衝突までの距離セット構造体
 	struct HitInfo { RenderData_Model* rdm; float distance; };

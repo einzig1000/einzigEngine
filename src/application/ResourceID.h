@@ -39,6 +39,9 @@ enum class TextureID
 	None,
 	UVChecker,
 
+	start_title,
+	Options_title,
+
 	TexMax,
 };
 

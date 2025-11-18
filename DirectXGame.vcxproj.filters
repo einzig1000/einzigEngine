@@ -294,23 +294,23 @@
     <ClCompile Include="src\engine\DirectX\SrvManager.cpp">
       <Filter>engine\DirectXManager\SrvManager</Filter>
     </ClCompile>
-    <ClCompile Include="Block.cpp">
-      <Filter>application\GameManeger\Block</Filter>
-    </ClCompile>
-    <ClCompile Include="ResourceID.cpp">
-      <Filter>application</Filter>
-    </ClCompile>
-    <ClCompile Include="PerlinNoise.cpp">
+    <ClCompile Include="src\application\PerlinNoise.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="Player.cpp">
-      <Filter>application\GameManeger\Player</Filter>
+    <ClCompile Include="src\application\ResourceID.cpp">
+      <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="MapManager.cpp">
+    <ClCompile Include="src\application\Block.cpp">
+      <Filter>application\GameManeger\Block</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\MapManager.cpp">
       <Filter>application\GameManeger\Map</Filter>
     </ClCompile>
-    <ClCompile Include="FPSCamera.cpp">
+    <ClCompile Include="src\application\FPSCamera.cpp">
       <Filter>application\GameManeger\FPSCamera</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\Player.cpp">
+      <Filter>application\GameManeger\Player</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -446,23 +446,23 @@
     <ClInclude Include="src\engine\DirectX\SrvManager.h">
       <Filter>engine\DirectXManager\SrvManager</Filter>
     </ClInclude>
-    <ClInclude Include="Block.h">
-      <Filter>application\GameManeger\Block</Filter>
-    </ClInclude>
-    <ClInclude Include="ResourceID.h">
-      <Filter>application</Filter>
-    </ClInclude>
-    <ClInclude Include="PerlinNoise.h">
+    <ClInclude Include="src\application\PerlinNoise.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="Player.h">
-      <Filter>application\GameManeger\Player</Filter>
+    <ClInclude Include="src\application\ResourceID.h">
+      <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="MapManager.h">
+    <ClInclude Include="src\application\Block.h">
+      <Filter>application\GameManeger\Block</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\FPSCamera.h">
+      <Filter>application\GameManeger\FPSCamera</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\MapManager.h">
       <Filter>application\GameManeger\Map</Filter>
     </ClInclude>
-    <ClInclude Include="FPSCamera.h">
-      <Filter>application\GameManeger\FPSCamera</Filter>
+    <ClInclude Include="src\application\Player.h">
+      <Filter>application\GameManeger\Player</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

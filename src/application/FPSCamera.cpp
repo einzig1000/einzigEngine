@@ -19,8 +19,7 @@ void FPSCamera::Update()
 		cameraRot.x = std::clamp<float>(cameraRot.x, -1.5f, 1.5f);
 	}
 
-	cameraPos = player_->data_.GetWorldPosition();
-	cameraPos.y += 2.0f; // プレイヤーの頭上にカメラを配置
+	cameraPos = player_->viewRay_.origin;//->data_.aabbs[0].center();
 
 	Game::Camera::MoveCameraCenter(cameraPos, 0, EaseType::LINEAR);
 	Game::Camera::MoveCameraRotate(cameraRot, 3, EaseType::LINEAR);

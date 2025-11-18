@@ -55,6 +55,7 @@ void Camera::DrawImGui()
     ImGui::DragFloat3("Rotate", &transform_.rotate.x, 0.01f);
     ImGui::DragFloat("Distance", &distance_, 0.1f);
     ImGui::Checkbox("enableControl", &enableControl_);
+	ImGui::Checkbox("orbitMode", &orbitMode_);
 }
 
 void Camera::CreateFrustumPlanes()

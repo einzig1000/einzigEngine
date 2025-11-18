@@ -14,7 +14,8 @@ public:
 	void Draw();
 
 	// 視線レイ
-	Ray viewRay_;
+	static Ray viewRay_;
+
 	// レティクル
 	RenderData_Sprite reticle_;
 
@@ -24,5 +25,7 @@ public:
 	// カメラ
 	FPSCamera* fpsCamera_;
 
+	// 足元４つのブロック上面座標
+	Vector3 footBlockPositions_[4];
 };
 

@@ -32,6 +32,8 @@
 #define BLOCK_SIZE 1.0f
 #define PLAYER_SPEED 0.1f
 
+#define GRAVITY -0.005f
+
 template <typename T>
 constexpr const T& my_min(const T& a, const T& b)
 {
@@ -189,6 +191,29 @@ struct Vector2
     Vector2 Normalized() const;
     // 内積
     float Dot(const Vector2& rhs) const;
+};
+
+struct Vector3int
+{
+    int x = 0;
+    int y = 0;
+    int z = 0;
+    Vector3int operator+(const Vector3int& rhs) const
+    {
+        return Vector3int{ x + rhs.x, y + rhs.y, z + rhs.z };
+    }
+    Vector3int operator-(const Vector3int& rhs) const
+    {
+        return Vector3int{ x - rhs.x, y - rhs.y, z - rhs.z };
+    }
+    bool operator==(const Vector3int& rhs) const
+    {
+        return x == rhs.x && y == rhs.y && z == rhs.z;
+    }
+    bool operator!=(const Vector3int& rhs) const
+    {
+        return x != rhs.x || y != rhs.y || z != rhs.z;
+    }
 };
 
 struct Vector3

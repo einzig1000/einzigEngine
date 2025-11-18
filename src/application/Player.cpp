@@ -3,6 +3,8 @@
 #include "Window/WindowManager.h"
 #include "FPSCamera.h"
 
+Ray Player::viewRay_;
+
 Player::Player()
 {
 	// プレイヤーデータ初期化
@@ -31,8 +33,8 @@ Player::~Player()
 void Player::Initialize()
 {
 	data_.translate.value = Vector3(0.0f, 5.0f, 0.0f);
-	data_.translate.velocity = Vector3(0.0f, 0.0f, 0.0f);
-	data_.translate.acceleration = Vector3(0.0f, -0.001f, 0.0f);
+	data_.translate.velocity = Vector3(0.0f, -0.0f, 0.0f);
+	data_.translate.acceleration = Vector3(0.0f, GRAVITY, 0.0f);
 	data_.scale.value = Vector3(1.0f, 2.0f, 1.0f);
 	data_.rotate.value = Vector3(0.0f, 0.0f, 0.0f);
 }
@@ -40,16 +42,40 @@ void Player::Initialize()
 void Player::Update()
 {
 	Vector3 cameraRot = Game::Camera::Getter::GetCurrentRotate();
-	ImGui::Text("Camera Rot Y: %.2f", Game::Math::RadianToDegree(cameraRot.y));
-
 	Vector3 forward = Game::Math::DirectionFromYawPitch(cameraRot.y, 0.0f);
 	Vector3 right = Game::Math::DirectionFromYawPitch(cameraRot.y + 1.5708f, 0.0f);
+	Vector3 direction = Game::Math::DirectionFromYawPitch(cameraRot.y, cameraRot.x);
 
-	// 移動（フレーム独立）
-	if (Game::Input::Key::IsHeld(DIK_W)) data_.translate.value += forward * PLAYER_SPEED;
-	if (Game::Input::Key::IsHeld(DIK_S)) data_.translate.value -= forward * PLAYER_SPEED;
-	if (Game::Input::Key::IsHeld(DIK_A)) data_.translate.value -= right * PLAYER_SPEED;
-	if (Game::Input::Key::IsHeld(DIK_D)) data_.translate.value += right * PLAYER_SPEED;
+	viewRay_.origin = data_.aabbs[0].center();
+	viewRay_.origin.y += (data_.aabbs[0].max.y - data_.aabbs[0].min.y) * 0.5f;
+	viewRay_.diff = direction * 100.0f;
+
+	// 移動
+	if (Game::Input::Key::IsHeld(DIK_W) || Game::Input::Key::IsHeld(DIK_S) || 
+		Game::Input::Key::IsHeld(DIK_A) || Game::Input::Key::IsHeld(DIK_D))
+	{
+		if (Game::Input::Key::IsHeld(DIK_W))
+		{
+			data_.translate.velocity = forward * PLAYER_SPEED;
+		}
+		if (Game::Input::Key::IsHeld(DIK_S))
+		{
+			data_.translate.velocity = -forward * PLAYER_SPEED;
+		}
+		if (Game::Input::Key::IsHeld(DIK_D))
+		{
+			data_.translate.velocity = right * PLAYER_SPEED;
+		}
+		if (Game::Input::Key::IsHeld(DIK_A))
+		{
+			data_.translate.velocity = -right * PLAYER_SPEED;
+		}
+	}
+	else
+	{
+		data_.translate.velocity.x = 0.0f;
+		data_.translate.velocity.z = 0.0f;
+	}
 
 	if (Game::Input::Key::IsJustPressed(DIK_SPACE))
 	{
@@ -62,4 +88,6 @@ void Player::Update()
 void Player::Draw()
 {
 	reticle_.Draw();
+	//data_.Draw();
+	data_.DrawImGui();
 }

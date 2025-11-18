@@ -150,12 +150,12 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Block.cpp" />
-    <ClCompile Include="FPSCamera.cpp" />
-    <ClCompile Include="MapManager.cpp" />
-    <ClCompile Include="PerlinNoise.cpp" />
-    <ClCompile Include="Player.cpp" />
-    <ClCompile Include="ResourceID.cpp" />
+    <ClCompile Include="src\application\Block.cpp" />
+    <ClCompile Include="src\application\FPSCamera.cpp" />
+    <ClCompile Include="src\application\MapManager.cpp" />
+    <ClCompile Include="src\application\PerlinNoise.cpp" />
+    <ClCompile Include="src\application\Player.cpp" />
+    <ClCompile Include="src\application\ResourceID.cpp" />
     <ClCompile Include="src\engine\Camera\Camera.cpp" />
     <ClCompile Include="src\engine\Camera\CameraManager.cpp" />
     <ClCompile Include="src\engine\FixFPS\FixFPS.cpp" />
@@ -264,12 +264,12 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="src\engine\DirectX\SrvManager.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Block.h" />
-    <ClInclude Include="FPSCamera.h" />
-    <ClInclude Include="MapManager.h" />
-    <ClInclude Include="PerlinNoise.h" />
-    <ClInclude Include="Player.h" />
-    <ClInclude Include="ResourceID.h" />
+    <ClInclude Include="src\application\Block.h" />
+    <ClInclude Include="src\application\FPSCamera.h" />
+    <ClInclude Include="src\application\MapManager.h" />
+    <ClInclude Include="src\application\PerlinNoise.h" />
+    <ClInclude Include="src\application\Player.h" />
+    <ClInclude Include="src\application\ResourceID.h" />
     <ClInclude Include="src\engine\Camera\Camera.h" />
     <ClInclude Include="src\engine\Camera\CameraManager.h" />
     <ClInclude Include="src\engine\FixFPS\FixFPS.h" />

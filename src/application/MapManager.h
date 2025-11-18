@@ -14,8 +14,11 @@ public:
 	void LoadMap(const std::string& mapFilePath);
 	void Initialize();
 	void Update();
+	void UpdatePlayerCollisionY();
+	void UpdatePlayerCollisionXZ();
 	void Draw();
 
+	Vector3int IndexByPosition(const Vector3& position);
 
 private:
 	// マップデータ

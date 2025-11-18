@@ -33,7 +33,7 @@ MapManager::MapManager(Player* player)
 				);
 				block_[x][y][z]->model_.name = "Block_" + std::to_string(x) + "_" + std::to_string(y) + "_" + std::to_string(z);
 				block_[x][y][z]->model_.mass = 100.0f;
-				player->data_.SetBlock(block_[x][y][z]->model_);
+				//player->data_.SetBlock(block_[x][y][z]->model_);
 			}
 		}
 	}
@@ -315,6 +315,7 @@ void MapManager::Update()
 						block_[x][y][z - 1]->isExposed_ = true;
 					}
 				}
+				// 破壊されていない
 			}
 		}
 	}
@@ -323,6 +324,137 @@ void MapManager::Update()
 	{
 		blockRect_[i].transforms = blockTriangleTransform_;
 	}
+
+	UpdatePlayerCollisionY();
+	//UpdatePlayerCollisionXZ();
+}
+
+void MapManager::UpdatePlayerCollisionY()
+{
+	float playerHeight = player_->data_.aabbs[0].max.y - player_->data_.aabbs[0].min.y;
+
+	Vector3 corners[4] = {
+		Vector3(player_->data_.aabbs[0].min.x, player_->data_.aabbs[0].min.y - 0.01f, player_->data_.aabbs[0].min.z),
+		Vector3(player_->data_.aabbs[0].max.x, player_->data_.aabbs[0].min.y - 0.01f, player_->data_.aabbs[0].min.z),
+		Vector3(player_->data_.aabbs[0].min.x, player_->data_.aabbs[0].min.y - 0.01f, player_->data_.aabbs[0].max.z),
+		Vector3(player_->data_.aabbs[0].max.x, player_->data_.aabbs[0].min.y - 0.01f, player_->data_.aabbs[0].max.z)
+	};
+
+	bool anyCollision = false;
+	float bestGroundY = -999.9f;
+
+	for (int i = 0; i < 4; ++i)
+	{
+		Vector3int idx = IndexByPosition(corners[i]);
+
+		if (block_[idx.x][idx.y][idx.z]->model_.isCollision(player_->data_))
+		{
+			anyCollision = true;
+			float groundY = block_[idx.x][idx.y][idx.z]->model_.aabbs[0].max.y;
+
+			// 同一ブロックに複数点で当たっても最高の地面 Y を採用
+			if (groundY > bestGroundY) bestGroundY = groundY;
+		}
+	}
+
+	if (anyCollision)
+	{
+		// translate.value.y を地面上に設定する（translate が中心なら center.y = groundY + height/2）
+		player_->data_.translate.value.y = bestGroundY + playerHeight * 0.5f + eps;
+
+		// AABB を center から再計算するか、min/max を更新する
+		player_->data_.aabbs[0].min.y = player_->data_.translate.value.y - playerHeight * 0.5f;
+		player_->data_.aabbs[0].max.y = player_->data_.translate.value.y + playerHeight * 0.5f;
+
+		player_->data_.translate.velocity.y = 0.0f;
+		player_->data_.translate.acceleration.y = 0.0f;
+	}
+	else
+	{
+		player_->data_.translate.acceleration.y = GRAVITY;
+	}
+}
+
+void MapManager::UpdatePlayerCollisionXZ()
+{
+	Vector3 currentPosition = player_->data_.translate.value;
+	AABB currentAABB = player_->data_.aabbs[0];
+	Vector3 velocityXZ = Vector3(player_->data_.translate.velocity.x, 0.0f, player_->data_.translate.velocity.z);
+	Vector3 movedPosition = currentPosition + velocityXZ;
+	AABB movedAABB = AABB{ currentAABB.min + velocityXZ, currentAABB.max + velocityXZ };
+
+	Vector3 corners[8] = {
+		Vector3(movedAABB.min.x, movedAABB.min.y + 0.01f, movedAABB.min.z),
+		Vector3(movedAABB.max.x, movedAABB.min.y + 0.01f, movedAABB.min.z),
+		Vector3(movedAABB.min.x, movedAABB.min.y + 0.01f, movedAABB.max.z),
+		Vector3(movedAABB.max.x, movedAABB.min.y + 0.01f, movedAABB.max.z),
+		Vector3(movedAABB.min.x, movedAABB.max.y - 0.01f, movedAABB.min.z),
+		Vector3(movedAABB.max.x, movedAABB.max.y - 0.01f, movedAABB.min.z),
+		Vector3(movedAABB.min.x, movedAABB.max.y - 0.01f, movedAABB.max.z),
+		Vector3(movedAABB.max.x, movedAABB.max.y - 0.01f, movedAABB.max.z),
+	};
+
+	bool anyCollision = false;
+	Vector2 bestOffset = { 0.0f,0.0f };
+
+	for (int i = 0; i < 8; ++i)
+	{
+		Vector3int idx = IndexByPosition(corners[i]);
+
+		if (!block_[idx.x][idx.y][idx.z]->isDestroy_)
+		{
+			anyCollision = true;
+
+			// 衝突している場合、プレイヤーをブロックの外に押し出す
+			AABB blockAABB = block_[idx.x][idx.y][idx.z]->model_.aabbs[0];
+			Vector2 offset = { 0.0f, 0.0f };
+			// X方向の押し出し量を計算
+			if (movedAABB.max.x > blockAABB.min.x && currentAABB.max.x <= blockAABB.min.x)
+			{
+				offset.x = blockAABB.min.x - movedAABB.max.x - eps;
+			}
+			else if (movedAABB.min.x < blockAABB.max.x && currentAABB.min.x >= blockAABB.max.x)
+			{
+				offset.x = blockAABB.max.x - movedAABB.min.x + eps;
+			}
+			// Z方向の押し出し量を計算
+			if (movedAABB.max.z > blockAABB.min.z && currentAABB.max.z <= blockAABB.min.z)
+			{
+				offset.y = blockAABB.min.z - movedAABB.max.z - eps;
+			}
+			else if (movedAABB.min.z < blockAABB.max.z && currentAABB.min.z >= blockAABB.max.z)
+			{
+				offset.y = blockAABB.max.z - movedAABB.min.z + eps;
+			}
+			// 最も大きな押し出し量を採用
+			if (std::abs(offset.x) > std::abs(bestOffset.x))
+			{
+				bestOffset.x = offset.x;
+			}
+			if (std::abs(offset.y) > std::abs(bestOffset.y))
+			{
+				bestOffset.y = offset.y;
+			}
+		}
+	}
+
+	if (anyCollision)
+	{
+		// プレイヤー位置を押し出し分だけ修正
+		player_->data_.translate.value.x += bestOffset.x;
+		player_->data_.translate.value.z += bestOffset.y;
+		// AABB も更新
+		player_->data_.aabbs[0].min.x += bestOffset.x;
+		player_->data_.aabbs[0].max.x += bestOffset.x;
+		player_->data_.aabbs[0].min.z += bestOffset.y;
+		player_->data_.aabbs[0].max.z += bestOffset.y;
+		// XZ速度を0にする
+		player_->data_.translate.velocity.x = 0.0f;
+		player_->data_.translate.velocity.z = 0.0f;
+		player_->data_.translate.acceleration.x = 0.0f;
+		player_->data_.translate.acceleration.z = 0.0f;
+	}
+
 }
 
 void MapManager::Draw()
@@ -345,4 +477,21 @@ void MapManager::Draw()
 			blockRect_[i].Draw();
 		}
 	}
+}
+
+Vector3int MapManager::IndexByPosition(const Vector3& position)
+{
+	Vector3int index;
+	index.x = static_cast<int>((position.x + (MAX_BLOCK_X - 1)) / BLOCK_SIZE);
+	index.y = static_cast<int>((position.y + (MAX_BLOCK_Y - 1)) / BLOCK_SIZE);
+	index.z = static_cast<int>((position.z + (MAX_BLOCK_Z - 1)) / BLOCK_SIZE);
+
+	if (index.x < 0)index.x = 0;
+	else if (index.x > MAX_BLOCK_X - 1)index.x = MAX_BLOCK_X - 1;
+	if (index.y < 0)index.y = 0;
+	else if (index.y > MAX_BLOCK_Y - 1)index.y = MAX_BLOCK_Y - 1;
+	if (index.z < 0)index.z = 0;
+	else if (index.z > MAX_BLOCK_Z - 1)index.z = MAX_BLOCK_Z - 1;
+
+	return index;
 }

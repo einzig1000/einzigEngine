@@ -426,40 +426,6 @@ bool IsCollision(const Ray& ray, const std::vector<VertexData>& vertices, const 
     return false;
 }
 
-// モデルのAABBと三角形配列で詳細判定
-//bool IsCollision(const Ray& ray, const std::vector<VertexData>& vertices, const AABB& aabb, const Transforms& data)
-//{
-//    // まずAABBで大まかに判定
-//    if (!IsCollision(ray, aabb))
-//    {
-//        return false;
-//    }
-//
-//    // AABBに当たっていた場合のみ、三角形ごとに詳細判定
-//    for (size_t i = 0; i + 2 < vertices.size(); i += 3)
-//    {
-//        Triangle t;
-//        // 三角形の頂点をワールド座標に変換
-//        t.vertices[0] = Transform(
-//            Vector3{ vertices[i].position.x, vertices[i].position.y, vertices[i].position.z },
-//            data.World
-//        );
-//        t.vertices[1] = Transform(
-//            Vector3{ vertices[i + 1].position.x, vertices[i + 1].position.y, vertices[i + 1].position.z },
-//            data.World
-//        );
-//        t.vertices[2] = Transform(
-//            Vector3{ vertices[i + 2].position.x, vertices[i + 2].position.y, vertices[i + 2].position.z },
-//            data.World
-//        );
-//
-//        if (IsCollision(ray, t))
-//        {
-//            return true; // どれか1つでも当たればtrue
-//        }
-//    }
-//    return false;
-//}
 
 
 std::optional<Vector3> IntersectRayTriangle(const Ray& r, const Triangle& t)
@@ -518,42 +484,6 @@ std::optional<Vector3> IntersectRayTriangle(const Ray& r, const Triangle& t)
     }
     return intersect;
 }
-
-//std::optional<Vector3> IntersectRayModel(const Ray& ray, const std::vector<VertexData>& vertices, const AABB& aabb, const Transforms& data)
-//{
-//    // まずAABBで大まかに判定
-//    if (!IsCollision(ray, aabb))
-//    {
-//        return std::nullopt;
-//    }
-//
-//    // AABBに当たっていた場合のみ、三角形ごとに詳細判定
-//    for (size_t i = 0; i + 2 < vertices.size(); i += 3)
-//    {
-//        Triangle t;
-//        // 三角形の頂点をワールド座標に変換
-//        t.vertices[0] = Transform(
-//            Vector3{ vertices[i].position.x, vertices[i].position.y, vertices[i].position.z },
-//            data.World
-//        );
-//        t.vertices[1] = Transform(
-//            Vector3{ vertices[i + 1].position.x, vertices[i + 1].position.y, vertices[i + 1].position.z },
-//            data.World
-//        );
-//        t.vertices[2] = Transform(
-//            Vector3{ vertices[i + 2].position.x, vertices[i + 2].position.y, vertices[i + 2].position.z },
-//            data.World
-//        );
-//
-//        std::optional<Vector3> pos = IntersectRayTriangle(ray, t);
-//
-//        if (pos != std::nullopt)
-//        {
-//            return pos.value(); // どれか1つでも当たればtrue
-//        }
-//    }
-//    return std::nullopt;
-//}
 
 std::optional<Vector3> IntersectRayModel(const Ray& ray, const std::vector<VertexData>& vertices, const RenderData_Model* data)
 {

@@ -69,6 +69,12 @@ ResourceID::ResourceID()
 	tmp = Game::Resource::LoadTexture("Resources/Prototypes/texture/uvChecker.png");
 	TextureIDs_[size_t(TextureID::UVChecker)] = tmp;
 
+	tmp = Game::Resource::LoadTexture("Resources/Minecraft/Title/start.png");
+	TextureIDs_[size_t(TextureID::start_title)] = tmp;
+
+	tmp = Game::Resource::LoadTexture("Resources/Minecraft/Title/option.png");
+	TextureIDs_[size_t(TextureID::Options_title)] = tmp;
+
 #pragma endregion
 
 }
