@@ -169,9 +169,7 @@ void Engine::UpdateTransforms()
 
 	// マウスレイ取得
 	Ray mouseRay = inputManager_->GetMouseController()->GetMouseRay();
-
-
-	mouseRay = Player::viewRay_;
+	//mouseRay = Player::viewRay_;
 
 	// モデルと衝突までの距離セット構造体
 	struct HitInfo { RenderData_Model* rdm; float distance; };

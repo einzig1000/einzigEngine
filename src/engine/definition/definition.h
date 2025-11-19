@@ -987,6 +987,17 @@ enum class DirectionXZ8Way
     FrontRight = 7,
 };
 
+enum class DirectionXYZ
+{
+    None = -1,
+    Left = 0,
+    Right = 1,
+    Back = 2,
+    Front = 3,
+    Down = 4,
+    Up = 5,
+};
+
 struct D3DResourceLeakChecker
 {
     ~D3DResourceLeakChecker()

@@ -5,6 +5,8 @@
 #include "Player.h"
 #include "PerlinNoise.h"
 #include "ResourceID.h"
+#include "Engine.h"
+#include "Itemslot.h"
 
 MapManager::MapManager(Player* player)
 {
@@ -257,6 +259,79 @@ void MapManager::Initialize()
 
 void MapManager::Update()
 {
+	// モデルと衝突までの距離セット構造体
+	struct HitInfo { Block* block; float distance; DirectionXYZ direction; };
+	// のリスト
+	std::vector<HitInfo> hits;
+	// のリサイズ(リサイズではない)
+	hits.reserve(size_t(MAX_BLOCK_X * MAX_BLOCK_Y * MAX_BLOCK_Z));
+
+	for (int x = 0; x < MAX_BLOCK_X; x++)
+	{
+		for (int y = 0; y < MAX_BLOCK_Y; y++)
+		{
+			for (int z = 0; z < MAX_BLOCK_Z; z++)
+			{
+				block_[x][y][z]->isCollisionRay = -1;
+				// 描画範囲内なら判定
+				if (block_[x][y][z]->model_.inPicture)
+				{
+					// 最近接衝突点を取得
+					std::optional<Vector3> colPos = IntersectRayModel(
+						player_->viewRay_,
+						Engine::Instance().GetAllObject3D()[block_[x][y][z]->model_.model].modelData.vertices,
+						&block_[x][y][z]->model_
+					);
+					// 衝突していたらリストに登録
+					if (colPos)
+					{
+						float minDistance = (colPos.value() - player_->viewRay_.origin).Length();
+						DirectionXYZ dir = DirectionXYZ::None;
+						if (colPos->x >= block_[x][y][z]->model_.translate.value.x + (BLOCK_SIZE / 2.0f) - 0.01f)
+						{
+							dir = DirectionXYZ::Right;
+						}
+						else if (colPos->x <= block_[x][y][z]->model_.translate.value.x - (BLOCK_SIZE / 2.0f) + 0.01f)
+						{
+							dir = DirectionXYZ::Left;
+						}
+						else if (colPos->y >= block_[x][y][z]->model_.translate.value.y + (BLOCK_SIZE / 2.0f) - 0.01f)
+						{
+							dir = DirectionXYZ::Up;
+						}
+						else if (colPos->y <= block_[x][y][z]->model_.translate.value.y - (BLOCK_SIZE / 2.0f) + 0.01f)
+						{
+							dir = DirectionXYZ::Down;
+						}
+						else if (colPos->z >= block_[x][y][z]->model_.translate.value.z + (BLOCK_SIZE / 2.0f) - 0.01f)
+						{
+							dir = DirectionXYZ::Front;
+						}
+						else if (colPos->z <= block_[x][y][z]->model_.translate.value.z - (BLOCK_SIZE / 2.0f) + 0.01f)
+						{
+							dir = DirectionXYZ::Back;
+						}
+						hits.push_back({ block_[x][y][z], minDistance, dir });
+					}
+				}
+			}
+		}
+	}
+
+	// 距離の昇順でソート
+	std::sort(hits.begin(), hits.end(),
+		[](auto& a, auto& b) { return a.distance < b.distance; });
+
+	// ソート後に順序を割り当て
+	for (int order = 0; order < (int)hits.size(); ++order)
+	{
+		hits[order].block->isCollisionRay = order;
+		hits[order].block->direction = hits[order].direction;
+	}
+
+	// マウス右ボタンが押されているフラグ
+	bool isMouseRightHeld = Game::Input::Mouse::IsJustPressed(1);
+
 	isBeingDestroyed_ = false;
 	for (int x = 0; x < MAX_BLOCK_X; x++)
 	{
@@ -266,7 +341,7 @@ void MapManager::Update()
 			{
 				block_[x][y][z]->Update();
 				// 破壊中
-				if (block_[x][y][z]->isBeingDestroyed_ && block_[x][y][z]->model_.isCollisionMouseRay == 0)
+				if (block_[x][y][z]->isBeingDestroyed_ && block_[x][y][z]->isCollisionRay == 0)
 				{
 					// 破壊中ブロックの周りに破壊テクスチャを配置
 					blockTriangleTransform_ = Transforms(
@@ -330,6 +405,48 @@ void MapManager::Update()
 					dropItems_.push_back(dropItem);
 				}
 				// 破壊されていない
+				// マウス右ボタンが押されている
+				if (isMouseRightHeld && block_[x][y][z]->isCollisionRay == 0 && block_[x][y][z]->isDestroy_)
+				{
+					Vector3int targetIndex = Vector3int(x, y, z);
+					switch (block_[x][y][z]->direction)
+					{
+					case DirectionXYZ::None:
+						break;
+					case DirectionXYZ::Left:
+						targetIndex.x -= 1;
+						break;
+					case DirectionXYZ::Right:
+						targetIndex.x += 1;
+						break;
+					case DirectionXYZ::Back:
+						targetIndex.z -= 1;
+						break;
+					case DirectionXYZ::Front:
+						targetIndex.z += 1;
+						break;
+					case DirectionXYZ::Down:
+						targetIndex.y -= 1;
+						break;
+					case DirectionXYZ::Up:
+						targetIndex.y += 1;
+						break;
+					default:
+						break;
+					}
+					
+						 
+					block_[targetIndex.x][targetIndex.y][targetIndex.z]->model_.scale.value = Vector3(1.0f, 1.0f, 1.0f);
+					block_[targetIndex.x][targetIndex.y][targetIndex.z]->model_.texture = player_->Itemslot_->getSelectedItemID();
+					block_[targetIndex.x][targetIndex.y][targetIndex.z]->isDestroy_ = false;
+					block_[targetIndex.x][targetIndex.y][targetIndex.z]->nowDurability_ = 0;
+					block_[targetIndex.x][targetIndex.y][targetIndex.z]->maxDurability_ = 60;
+					block_[targetIndex.x][targetIndex.y][targetIndex.z]->destroyFrame_ = 0;
+					block_[targetIndex.x][targetIndex.y][targetIndex.z]->isBeingDestroyed_ = false;
+					block_[targetIndex.x][targetIndex.y][targetIndex.z]->isJustDestroyed_ = false;
+					block_[targetIndex.x][targetIndex.y][targetIndex.z]->isExposed_ = true;
+					player_->Itemslot_->useSelectedItem();
+				}
 			}
 		}
 	}

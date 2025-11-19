@@ -8,13 +8,18 @@ Itemslot::Itemslot()
 		slotSprite_[i].texture = ResourceID::TextureIDs_[int(TextureID::Item_slot)];
 		slotSprite_[i].transforms.scale = Vector3(0.5f, 0.5f, 1.0f);
 		slotSprite_[i].transforms.translate = Vector3(640.0f + (i - 5) * 60.0f, 680.0f, 0.0f);
-		slotSprite_[i].color = 0x999999FF;
-
-		itemSprite_[i].texture = ResourceID::TextureIDs_[int(TextureID::UVChecker)];
-		itemSprite_[i].transforms.scale = Vector3(0.1f, 0.1f, 1.0f);
-		itemSprite_[i].transforms.translate = Vector3(640.0f + (i - 5) * 60.0f, 680.0f, 0.0f);
+		slotSprite_[i].color = 0x666666FF;
 	}
 
+	for (int i = 0; i < 40; i++)
+	{
+		itemSprite_[i].texture = ResourceID::TextureIDs_[int(TextureID::UVChecker)];
+		itemSprite_[i].transforms.scale = Vector3(0.035f, 0.035f, 1.0f);
+		itemSprite_[i].transforms.translate = Vector3(640.0f + (i - 5) * 60.0f, 680.0f, 0.0f);
+		itemSprite_[i].transforms.rotate.z = -std::numbers::pi_v<float> / 2.0f;
+		itemSprite_[i].cutImageLeftTop = Vector2int(384, 254);
+		itemSprite_[i].cutImageSize = Vector2int(256, 256);
+	}
 }
 
 void Itemslot::Update()
@@ -27,7 +32,7 @@ void Itemslot::Update()
 		}
 		else
 		{
-			slotSprite_[i].color = 0x999999FF;
+			slotSprite_[i].color = 0x666666FF;
 		}
 	}
 
@@ -93,14 +98,44 @@ void Itemslot::Update()
 
 void Itemslot::Draw()
 {
-	for (int i = 0; i < 10; i++)
+	int sumShowItem;
+	if (isShowAllItems_)sumShowItem = 40;
+	else sumShowItem = 10;
+
+	for (int i = 0; i < sumShowItem; i++)
 	{
 		slotSprite_[i].Draw();
-		itemSprite_[i].Draw();
+	}
+
+	for (int i = 0; i < 40; i++)
+	{
+		if (hasItem_[i].hasItemCount > 0)
+		{
+			itemSprite_[i].Draw();
+			itemSprite_[i].DrawImGui();
+		}
 	}
 }
 
 void Itemslot::AddItemToItemslot(int itemID)
 {
+	for (int i = 0; i < 40; i++)
+	{
+		if (hasItem_[i].texture == itemID && hasItem_[i].hasItemCount < 64)
+		{
+			hasItem_[i].hasItemCount++;
+			return;
+		}
+	}
 
+	for (int i = 0; i < 40; i++)
+	{
+		if (hasItem_[i].hasItemCount == 0)
+		{
+			hasItem_[i].texture = itemID;
+			hasItem_[i].hasItemCount = 1;
+			itemSprite_[i].texture = itemID;
+			return;
+		}
+	}
 }

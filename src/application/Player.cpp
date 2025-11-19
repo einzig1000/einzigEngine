@@ -37,7 +37,7 @@ void Player::Initialize()
 	data_.translate.value = Vector3(0.0f, 5.0f, 0.0f);
 	data_.translate.velocity = Vector3(0.0f, -0.0f, 0.0f);
 	data_.translate.acceleration = Vector3(0.0f, GRAVITY, 0.0f);
-	data_.scale.value = Vector3(1.0f, 2.0f, 1.0f);
+	data_.scale.value = Vector3(0.6f, 2.0f, 0.6f);
 	data_.rotate.value = Vector3(0.0f, 0.0f, 0.0f);
 }
 
@@ -180,12 +180,7 @@ void Player::Update()
 
 void Player::Draw()
 {
-	data_.DrawImGui();
-	ImGui::Text("Player speed: %.3f", speed_);
-	ImGui::Text("Player wHeldFrames_: %d", wHeldFrames_);
-	ImGui::Text("Player preDash_: %d", preDash_);
-
-
+	//data_.Draw();
 	reticle_.Draw();
 	Itemslot_->Draw();
 }

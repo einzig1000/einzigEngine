@@ -19,6 +19,8 @@ void TitlePhase::Initialize()
 	options.name = "OptionsButton";
 	options.transforms.translate = { 640.0f,500.0f,0.0f };
 	options.color = 0x777777FF;
+
+	//Game::Input::Mouse::ToggleMouseCursorVisible();
 }
 
 

@@ -28,5 +28,9 @@ public:
 
 	// 表面に露出しているか
 	bool isExposed_ = false;
+
+	// レイと衝突しているか
+	int isCollisionRay = -1;
+	DirectionXYZ direction = DirectionXYZ::None;
 };
 

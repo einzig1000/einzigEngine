@@ -112,6 +112,8 @@ public:
 	// プリミティブモードの設定
 	void toggleWireframeMode();
 
+	 const  std::vector<Object3D> GetAllObject3D(){ return dxManager->GetResourceManager()->GetModelManager()->GetModelList(); }
+
 private:
 	Engine() = default;
 	~Engine() = default;

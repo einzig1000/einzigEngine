@@ -10,12 +10,14 @@ DropItem::DropItem(Player* player, Vector3int indec, Vector3 pos, int model, int
 	index = indec;
 	Yoffset = 0.0f;
 	player_ = player;
+	isDestroy_ = false;
 
 	frame = 0;
 }
 
 void DropItem::Update(bool isUnderBlock)
 {
+	if (isDestroy_) return;
 	frame++;
 
 	offsetPos.y = sinf(frame / 20.0f) * 0.2f;
@@ -27,12 +29,16 @@ void DropItem::Update(bool isUnderBlock)
 	{
 		Yoffset -= 0.05f;
 	}
-
-	if (IsCollision(player_->data_.aabbs[0], Item.aabbs[0]))
+	if (frame > 60)
 	{
-		isDestroy_ = true;
-		player_->AddItemToItemslot(Item.texture);
+		if (IsCollision(player_->data_.aabbs[0], Item.aabbs[0]) && !isDestroy_)
+		{
+			isDestroy_ = true;
+			player_->AddItemToItemslot(Item.texture);
+		}
 	}
+
+
 
 	index = IndexByPosition(Item.translate.value);
 }

@@ -9,12 +9,11 @@ GameScenePhase::GameScenePhase()
 	player_ = new Player();
 
 	map_ = new MapManager(player_);
-	//map_->LoadMap("resources/Map/map.csv");
-	map_->LoadMap("resources/Map/mapFlat.csv");
+	map_->LoadMap("resources/Map/map.csv");
+	//map_->LoadMap("resources/Map/mapFlat.csv");
 
 
 
-	//Game::Input::Mouse::ToggleMouseCursorVisible();
 }
 
 GameScenePhase::~GameScenePhase()
@@ -32,6 +31,8 @@ void GameScenePhase::Initialize()
 
 	map_->Initialize();
 	player_->Initialize();
+
+	//Game::Input::Mouse::ToggleMouseCursorVisible();
 }
 
 
