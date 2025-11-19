@@ -256,6 +256,15 @@ float Game::Camera::Getter::GetCurrentDistance()
 	return Engine::Instance().GetCameraManager()->GetCurrentDistance();
 }
 
+void Game::Camera::ToggleCurrentOrbitMode()
+{
+	Engine::Instance().GetCameraManager()->ToggleCurrentOrbitMode();
+}
+
+void Game::Camera::SetCurrentOrbitMode(bool mode)
+{
+	Engine::Instance().GetCameraManager()->SetCurrentOrbitMode(mode);
+}
 
 void Game::Utilitie::toggleWireframeMode()
 {

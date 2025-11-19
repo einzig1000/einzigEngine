@@ -273,6 +273,9 @@ public:
 			static float GetCurrentDistance();			// カメラ距離
 		};
 
+		static void ToggleCurrentOrbitMode();		// 現在のカメラのオービットモード切り替え
+		static void SetCurrentOrbitMode(bool mode);
+
 		/// <summary>
 		/// カメラの回転中心座標の移動
 		/// </summary>

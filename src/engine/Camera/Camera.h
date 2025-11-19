@@ -46,13 +46,15 @@ public:
     // 操作可能か
     bool enableControl_;
 
-	// オービットモードかFPSモードか
-	bool orbitMode_ = true;
+    void ToggleOrbitMode() { orbitMode_ = !orbitMode_;}
+	void SetOrbitMode(bool mode) { orbitMode_ = mode; }
 
 	// カメラ名
 	std::string name_;
 
 private:
+	// オービットモードかFPSモードか
+	bool orbitMode_ = true;
 
 	void Updata_Orbit();
 	void Update_FPS();

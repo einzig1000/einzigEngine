@@ -533,6 +533,11 @@ void Engine::ToggleCameraMode()
 	cameraManager->ToggleCameraMode();
 }
 
+void Engine::ToggleCurrentOrbitMode()
+{
+	cameraManager->ToggleCurrentOrbitMode();
+}
+
 void Engine::StopCameraShake()
 {
 	cameraManager->StopShake();

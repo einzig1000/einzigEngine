@@ -7,7 +7,6 @@ CameraManager::CameraManager()
 	Camera ReleaseCamera;
 	ReleaseCamera.name_ = "ReleaseCamera";
 	ReleaseCamera.enableControl_ = false;
-	ReleaseCamera.orbitMode_ = false;
 	camera_.push_back(ReleaseCamera);
 
 	Camera DebugCamera;
@@ -163,6 +162,15 @@ float CameraManager::GetCurrentDistance() const
 	return camera_[currentCameraID_].distance_;
 }
 
+void CameraManager::ToggleCurrentOrbitMode()
+{
+	camera_[currentCameraID_].ToggleOrbitMode();
+}
+
+void CameraManager::SetCurrentOrbitMode(bool mode)
+{
+	camera_[currentCameraID_].SetOrbitMode(mode);
+}
 
 bool CameraManager::InCamera(const AABB& aabb)
 {
