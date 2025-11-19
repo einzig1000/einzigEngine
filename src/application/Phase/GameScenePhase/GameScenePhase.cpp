@@ -32,6 +32,7 @@ void GameScenePhase::Initialize()
 	map_->Initialize();
 	player_->Initialize();
 
+	Game::Camera::SetCurrentOrbitMode(false);
 	//Game::Input::Mouse::ToggleMouseCursorVisible();
 }
 

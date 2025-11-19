@@ -98,6 +98,7 @@ public:
 	void StartCameraShake(float intensity, float duration, float frequency = 25.0f);
 	bool IsCameraShaking();
 	void ToggleCameraMode();
+	void ToggleCurrentOrbitMode();
 	void StopCameraShake();
 	CameraManager* GetCameraManager() { return cameraManager; }
 

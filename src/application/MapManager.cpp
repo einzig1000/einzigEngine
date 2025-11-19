@@ -401,12 +401,12 @@ void MapManager::Update()
 					ItemPos.x += Game::Math::RandFloat(-0.4f, 0.4f, 1);
 					ItemPos.z += Game::Math::RandFloat(-0.4f, 0.4f, 1);
 					ItemPos.y -= (BLOCK_SIZE / 2.0f) - 0.4f;
-					DropItem* dropItem = new DropItem(player_, Vector3int(x,y,z), ItemPos, block_[x][y][z]->model_.model, block_[x][y][z]->model_.texture);
+					DropItem* dropItem = new DropItem(player_, Vector3int(x, y, z), ItemPos, block_[x][y][z]->model_.model, block_[x][y][z]->model_.texture);
 					dropItems_.push_back(dropItem);
 				}
 				// 破壊されていない
 				// マウス右ボタンが押されている
-				if (isMouseRightHeld && block_[x][y][z]->isCollisionRay == 0 && block_[x][y][z]->isDestroy_)
+				if (isMouseRightHeld && block_[x][y][z]->isCollisionRay == 0)
 				{
 					Vector3int targetIndex = Vector3int(x, y, z);
 					switch (block_[x][y][z]->direction)
@@ -434,18 +434,26 @@ void MapManager::Update()
 					default:
 						break;
 					}
-					
-						 
-					block_[targetIndex.x][targetIndex.y][targetIndex.z]->model_.scale.value = Vector3(1.0f, 1.0f, 1.0f);
-					block_[targetIndex.x][targetIndex.y][targetIndex.z]->model_.texture = player_->Itemslot_->getSelectedItemID();
-					block_[targetIndex.x][targetIndex.y][targetIndex.z]->isDestroy_ = false;
-					block_[targetIndex.x][targetIndex.y][targetIndex.z]->nowDurability_ = 0;
-					block_[targetIndex.x][targetIndex.y][targetIndex.z]->maxDurability_ = 60;
-					block_[targetIndex.x][targetIndex.y][targetIndex.z]->destroyFrame_ = 0;
-					block_[targetIndex.x][targetIndex.y][targetIndex.z]->isBeingDestroyed_ = false;
-					block_[targetIndex.x][targetIndex.y][targetIndex.z]->isJustDestroyed_ = false;
-					block_[targetIndex.x][targetIndex.y][targetIndex.z]->isExposed_ = true;
-					player_->Itemslot_->useSelectedItem();
+
+					if (targetIndex.x < 0 || targetIndex.x >= MAX_BLOCK_X ||
+						targetIndex.y < 0 || targetIndex.y >= MAX_BLOCK_Y ||
+						targetIndex.z < 0 || targetIndex.z >= MAX_BLOCK_Z)
+					{
+						continue;
+					}
+					if (block_[targetIndex.x][targetIndex.y][targetIndex.z]->isDestroy_)
+					{
+						block_[targetIndex.x][targetIndex.y][targetIndex.z]->model_.scale.value = Vector3(1.0f, 1.0f, 1.0f);
+						block_[targetIndex.x][targetIndex.y][targetIndex.z]->model_.texture = player_->Itemslot_->getSelectedItemID();
+						block_[targetIndex.x][targetIndex.y][targetIndex.z]->isDestroy_ = false;
+						block_[targetIndex.x][targetIndex.y][targetIndex.z]->nowDurability_ = 0;
+						block_[targetIndex.x][targetIndex.y][targetIndex.z]->maxDurability_ = 60;
+						block_[targetIndex.x][targetIndex.y][targetIndex.z]->destroyFrame_ = 0;
+						block_[targetIndex.x][targetIndex.y][targetIndex.z]->isBeingDestroyed_ = false;
+						block_[targetIndex.x][targetIndex.y][targetIndex.z]->isJustDestroyed_ = false;
+						block_[targetIndex.x][targetIndex.y][targetIndex.z]->isExposed_ = true;
+						player_->Itemslot_->useSelectedItem();
+					}
 				}
 			}
 		}
