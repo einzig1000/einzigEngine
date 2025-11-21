@@ -2,6 +2,8 @@
 #include "definition/definition.h"
 #include <optional>
 
+class Block;
+
 class RenderData_Model
 {
 public:
@@ -297,4 +299,63 @@ private:
     bool loadResult = false;
 
     static std::vector<RenderData_Particle*> renderParticles;
+};
+
+class RenderData_Particle2
+{
+public:
+
+    RenderData_Particle2();
+    ~RenderData_Particle2();
+
+    // ファイルパス
+    std::string filePath = "resources/Prototypes/particle/aaa";
+
+	// グループネームとパーティクル情報の登録
+	void CreateParticleGroup(const std::string& name, ParticleInf* particleInf);
+
+    void DeleteParticleGroup(const std::string& name);
+
+    bool LoadJson();
+
+    void Draw();
+    void DrawImGui();
+    void DrawEmitter();
+
+    
+
+
+private:
+    /// 現在存在するパーティクル数
+    uint32_t currentSum = 0;
+
+    static std::unordered_map<std::string, ParticleInf*> particleGroups_;
+};
+
+class RenderData_MinecraftMap
+{
+public:
+    RenderData_MinecraftMap();
+    ~RenderData_MinecraftMap();
+
+    void LoadMap(const std::string& mapFilePath);
+    void Initialize();
+    void Update();
+    void UpdatePlayerCollisionY();
+    void UpdatePlayerCollisionXZ();
+    void Draw();
+
+    Vector3int IndexByPosition(const Vector3& position);
+
+
+	uint32_t texture_ = 0;
+
+    // マップデータ
+    Block* block_[MAX_BLOCK_X][MAX_BLOCK_Y][MAX_BLOCK_Z];
+    int blockHeightMap_[MAX_BLOCK_X][MAX_BLOCK_Z];
+
+    // ブロック破壊テクスチャ
+    bool isBeingDestroyed_ = false; // 破壊中かいなか
+    RenderData_Rect blockRect_[6];  // 6面分
+    Transforms blockTriangleTransform_;
 };

@@ -3,13 +3,8 @@
 #include <wrl.h>
 #include <cassert>
 #include <cstdint>
+#include "definition/definition.h"
 
-struct SRVAllocation
-{
-    uint32_t index = UINT32_MAX;
-    D3D12_CPU_DESCRIPTOR_HANDLE cpu{};
-    D3D12_GPU_DESCRIPTOR_HANDLE gpu{};
-};
 
 class SrvManager
 {

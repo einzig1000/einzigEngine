@@ -35,6 +35,7 @@ private:
 	RenderData_Line line2_;
 	RenderData_Line line3_;
 
+	RenderData_MinecraftMap minecraftMap_;
 
 	float roll_ = 0.0f;
 

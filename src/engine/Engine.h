@@ -45,8 +45,9 @@ public:
 	void DrawTriangle(RenderData_Triangle& renderData);
 	void DrawRect(RenderData_Rect& renderData);
 	void DrawSprite(RenderData_Sprite& renderData);
-	void DrawParticle(RenderData_Particle& renderData);
+	void DrawParticle(ParticleGroup& renderData);
 	void DrawLine(RenderData_Line& renderData);
+	void DrawMinecraftMap(RenderData_MinecraftMap& renderData);
 	void AddSphere(Vector3 pos, Vector3 radius, uint32_t color);
 	void AddAABB(AABB aabb, uint32_t color);
 
@@ -113,7 +114,7 @@ public:
 	// プリミティブモードの設定
 	void toggleWireframeMode();
 
-	 const  std::vector<Object3D> GetAllObject3D(){ return dxManager->GetResourceManager()->GetModelManager()->GetModelList(); }
+	const  std::vector<Object3D> GetAllObject3D() { return dxManager->GetResourceManager()->GetModelManager()->GetModelList(); }
 
 private:
 	Engine() = default;

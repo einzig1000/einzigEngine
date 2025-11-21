@@ -659,7 +659,6 @@ struct TransformationMatrix
 {
     Matrix4x4 WVP;
     Matrix4x4 World;
-    //Matrix4x4* parentWorld = nullptr;
 };
 
 // 3Dオブジェクトデータ
@@ -947,6 +946,15 @@ struct ParticleMonoInfGPU
 
 #pragma endregion
 
+struct BlockInstanceData
+{
+    Matrix4x4 WVP;
+    Matrix4x4 World;
+    Vector4 color;
+	uint32_t textureID;
+	bool isDisplay;
+};
+
 
 struct CameraForGPU
 {
@@ -1054,3 +1062,32 @@ enum class EaseType
     OUT_BOUNCE,
 };
 
+
+struct SRVAllocation
+{
+    uint32_t index = UINT32_MAX;
+    D3D12_CPU_DESCRIPTOR_HANDLE cpu{};
+    D3D12_GPU_DESCRIPTOR_HANDLE gpu{};
+};
+
+struct ParticleGroup
+{
+    // テクスチャ
+    uint32_t texture = 0;
+	// モデル
+	uint32_t model = 0;
+    // 色
+	Material material;
+    // パーティクルのリスト
+    std::list<ParticleMonoInf> particles;
+    // インスタンシングリソース
+    Microsoft::WRL::ComPtr<ID3D12Resource> instanceResource;
+    // インスタンシングデータを書き込むためのポインタ
+    ParticleMonoInf* mappedPtr = nullptr;
+    // インスタンシングデータ用SRVインデックス
+	SRVAllocation srvAllocation;
+    // インスタンス数
+    uint32_t instanceCount = 0;
+    // エミッター
+    ParticleEmitter emitter;
+};

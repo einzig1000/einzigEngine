@@ -33,8 +33,9 @@ public:
 	void DrawTriangle(RenderData_Triangle& renderData);
 	void DrawRect(RenderData_Rect& renderData);
 	void DrawSprite(RenderData_Sprite& renderData);
-	void DrawParticle(RenderData_Particle& renderData);
+	void DrawParticle(ParticleGroup& renderData);
 	void DrawLine(RenderData_Line& renderData);
+	void DrawMap(RenderData_MinecraftMap& renderData);
 
 	void AddSphere(Vector3 pos, Vector3 radius, uint32_t color);
 	void AddAABB(AABB aabb, uint32_t color);
@@ -112,6 +113,16 @@ private:
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> indexResource;
 	D3D12_INDEX_BUFFER_VIEW indexBufferView;
+
+
+
+	/////////////// マップ描画用 ///////////////////
+	TransformationMatrix mapWVPMatrix_;
+	const uint32_t knumInstance_Map = MAX_BLOCK_X * MAX_BLOCK_Y * MAX_BLOCK_Z;
+	std::vector<Transforms> mapTransforms_;
+	Microsoft::WRL::ComPtr<ID3D12Resource> mapInstanceResource;
+	TransformationMatrix* mapInstanceData;
+	SRVAllocation srvAlloc;
 
 
 private:

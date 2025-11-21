@@ -11,6 +11,8 @@ std::vector<RenderData_Triangle*> RenderData_Triangle::renderTriangles;
 std::vector<RenderData_Rect*> RenderData_Rect::renderRects;
 std::vector<RenderData_Line*> RenderData_Line::renderLines;
 std::vector<RenderData_Particle*> RenderData_Particle::renderParticles;
+std::unordered_map<std::string, ParticleInf*> RenderData_Particle2::particleGroups_;
+
 
 #pragma region model
 
@@ -956,7 +958,6 @@ RenderData_Particle::~RenderData_Particle()
 		renderParticles.erase(it);
 	}
 }
-
 bool RenderData_Particle::LoadJson()
 {
 	return JsonManager::LoadFromJson(*this, this->filePath);
@@ -964,7 +965,7 @@ bool RenderData_Particle::LoadJson()
 
 void RenderData_Particle::Draw()
 {
-	Engine::Instance().DrawParticle(*this);
+	//Engine::Instance().DrawParticle(*this);
 }
 
 void RenderData_Particle::DrawImGui()
@@ -1205,7 +1206,10 @@ void RenderData_Particle::DrawEmitter()
 	}
 }
 
+
 #pragma endregion
+
+#pragma region rect
 
 RenderData_Rect::RenderData_Rect()
 {
@@ -1288,4 +1292,33 @@ void RenderData_Rect::DrawImGui()
 		ImGui::TreePop();
 	}
 	ImGui::End();
+}
+
+RenderData_MinecraftMap::RenderData_MinecraftMap()
+{}
+
+RenderData_MinecraftMap::~RenderData_MinecraftMap()
+{}
+
+void RenderData_MinecraftMap::Draw()
+{
+	Engine::Instance().DrawMinecraftMap(*this);
+}
+
+#pragma endregion
+
+RenderData_Particle2::RenderData_Particle2()
+{}
+
+RenderData_Particle2::~RenderData_Particle2()
+{}
+
+void RenderData_Particle2::CreateParticleGroup(const std::string& name, ParticleInf* particleInf)
+{
+	particleGroups_[name] = particleInf;
+}
+
+void RenderData_Particle2::DeleteParticleGroup(const std::string& name)
+{
+	particleGroups_.erase(name);
 }
