@@ -168,7 +168,7 @@ void RenderData_Model::DrawImGui()
 
 		for (size_t i = 0; i < textureCount; ++i)
 		{
-			TextureData* texData = Game::Resource::GetTexture(static_cast<uint32_t>(i));
+			TextureData* texData = Game::Resource::GetTextureData(static_cast<uint32_t>(i));
 			if (texData)
 			{
 				ImGui::Image((ImTextureID)texData->textureSrvHandleGPU.ptr, ImVec2(32, 32));
@@ -694,7 +694,7 @@ void RenderData_Sprite::DrawImGui()
 
 		for (size_t i = 0; i < textureCount; ++i)
 		{
-			TextureData* texData = Game::Resource::GetTexture(static_cast<uint32_t>(i));
+			TextureData* texData = Game::Resource::GetTextureData(static_cast<uint32_t>(i));
 			if (texData)
 			{
 				ImGui::Image((ImTextureID)texData->textureSrvHandleGPU.ptr, ImVec2(32, 32));
@@ -800,7 +800,7 @@ void RenderData_Triangle::DrawImGui()
 	{
 		for (size_t i = 0; i < Game::Resource::GetTextureCount(); ++i)
 		{
-			TextureData* texData = Game::Resource::GetTexture(static_cast<uint32_t>(i));
+			TextureData* texData = Game::Resource::GetTextureData(static_cast<uint32_t>(i));
 			if (texData)
 			{
 				ImGui::Image((ImTextureID)texData->textureSrvHandleGPU.ptr, ImVec2(32, 32));
@@ -1102,7 +1102,7 @@ void RenderData_Particle::DrawImGui()
 
 		for (size_t i = 0; i < textureCount; ++i)
 		{
-			TextureData* texData = Game::Resource::GetTexture(static_cast<uint32_t>(i));
+			TextureData* texData = Game::Resource::GetTextureData(static_cast<uint32_t>(i));
 			if (texData)
 			{
 				ImGui::Image((ImTextureID)texData->textureSrvHandleGPU.ptr, ImVec2(32, 32));
@@ -1274,7 +1274,7 @@ void RenderData_Rect::DrawImGui()
 		for (size_t i =
 			0; i < textureCount; ++i)
 		{
-			TextureData* texData = Game::Resource::GetTexture(static_cast<uint32_t>(i));
+			TextureData* texData = Game::Resource::GetTextureData(static_cast<uint32_t>(i));
 			if (texData)
 			{
 				ImGui::Image((ImTextureID)texData->textureSrvHandleGPU.ptr, ImVec2(32, 32));

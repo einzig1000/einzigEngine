@@ -5,7 +5,6 @@
 #include "Phase/BattlePhase/BattlePhase.h"
 #include "Phase/TitlePhase/TitlePhase.h"
 #include "Phase/GameScenePhase/GameScenePhase.h"
-#include "ResourceID.h"
 
 
 class GameManager
@@ -29,7 +28,5 @@ private:
 	std::unique_ptr<TitlePhase> titlePhase_;
 	std::unique_ptr<GameScenePhase> gameScenePhase_;
 
-	// リソースID管理
-	std::unique_ptr<ResourceID> resourceIDManager;
 };
 

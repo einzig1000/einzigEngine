@@ -1,6 +1,6 @@
 #pragma once
 #include "Phase/PhaseParent/PhaseParent.h"
-#include "Block.h"
+#include "Block/Block.h"
 
 class Player;
 class MapManager;
@@ -24,5 +24,5 @@ private:
 	// マップ
 	MapManager* map_;
 
-
+	RenderData_Model skyDome_;
 };

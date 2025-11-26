@@ -63,7 +63,7 @@ uint32_t TextureManager::LoadTexture(const std::string& filePath, ID3D12Graphics
     return text.number;
 }
 
-TextureData* TextureManager::GetTexture(uint32_t textureID)
+TextureData* TextureManager::GetTextureData(uint32_t textureID)
 {
     if (textureID < textures_.size())
     {

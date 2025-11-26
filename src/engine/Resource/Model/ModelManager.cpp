@@ -13,7 +13,9 @@ ModelManager::~ModelManager()
 
 uint32_t ModelManager::LoadModel(const std::string& directoryPath, const std::string& filename, ID3D12Device* device)
 {
-    auto path = directoryPath + "/" + filename;
+    const std::string directory = directoryPath.ends_with("/") ? directoryPath : (directoryPath + "/");
+
+    auto path = directory + filename;
 
     auto exists = std::find_if(
         objects.begin(), objects.end(),
@@ -27,7 +29,7 @@ uint32_t ModelManager::LoadModel(const std::string& directoryPath, const std::st
     // ボックスを作成
     Object3D obj;
     // モデルデータ
-    obj.modelData = LoadModelFile(directoryPath, filename);
+    obj.modelData = LoadModelFile(directory, filename);
     // 変換行列
     obj.transform = { {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f} };
     // AABB .obj → .csv へ拡張子を変換して渡す
@@ -63,7 +65,7 @@ uint32_t ModelManager::LoadModel(const std::string& directoryPath, const std::st
     return ref.number;
 }
 
-Object3D* ModelManager::GetModel(uint32_t modelID)
+Object3D* ModelManager::GetModelData(uint32_t modelID)
 {
 	if (modelID < objects.size())
 	{

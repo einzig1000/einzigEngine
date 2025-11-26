@@ -34,6 +34,30 @@
 
 #define GRAVITY -0.005f
 
+
+
+enum class BlockID
+{
+    None,
+    Stone,	// 石
+    Glass,	// ガラス
+    Dirt,	// 草なし土
+    lawn,	// 草付き土
+    wood,	// 木材
+    leaf,	// 葉っぱ
+
+
+
+    MAX,
+};
+
+
+struct Blockinfo
+{
+    BlockID type;
+    uint32_t durability;
+};
+
 template <typename T>
 constexpr const T& my_min(const T& a, const T& b)
 {
@@ -307,6 +331,27 @@ struct Vector3
     Vector3 Cross(const Vector3& rhs) const;
     // 反射角
     Vector3 Reflect(const Vector3& input, const Vector3& normal);
+};
+
+struct Vector4int
+{
+    int x = 0, y = 0, z = 0, w = 0;
+    Vector4int operator+(const Vector4int& rhs) const
+    {
+        return Vector4int{ x + rhs.x, y + rhs.y, z + rhs.z, w + rhs.w };
+    }
+    Vector4int operator-(const Vector4int& rhs) const
+    {
+        return Vector4int{ x - rhs.x, y - rhs.y, z - rhs.z, w - rhs.w };
+    }
+    bool operator==(const Vector4int& rhs) const
+    {
+        return x == rhs.x && y == rhs.y && z == rhs.z && w == rhs.w;
+    }
+    bool operator!=(const Vector4int& rhs) const
+    {
+        return x != rhs.x || y != rhs.y || z != rhs.z || w != rhs.w;
+    }
 };
 
 struct Vector4

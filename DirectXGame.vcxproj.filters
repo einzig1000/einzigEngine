@@ -309,10 +309,10 @@
     <ClCompile Include="src\application\PerlinNoise.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="src\application\ResourceID.cpp">
+    <ClCompile Include="src\application\ResourceLoder\ResourceID.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="src\application\Block.cpp">
+    <ClCompile Include="src\application\Block\Block.cpp">
       <Filter>application\GameManeger\Block</Filter>
     </ClCompile>
     <ClCompile Include="src\application\MapManager.cpp">
@@ -324,14 +324,20 @@
     <ClCompile Include="src\application\Player.cpp">
       <Filter>application\GameManeger\Player</Filter>
     </ClCompile>
-    <ClCompile Include="DropItem.cpp">
+    <ClCompile Include="src\application\DropItem.cpp">
       <Filter>application\GameManeger\DropItem</Filter>
     </ClCompile>
-    <ClCompile Include="Itemslot.cpp">
+    <ClCompile Include="src\application\Itemslot.cpp">
       <Filter>application\GameManeger\Itemslot</Filter>
     </ClCompile>
     <ClCompile Include="ParticleManager.cpp">
       <Filter>engine\DrawSystem\ParticleSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\DrawSystem\MinecraftMap\DrawMinecraftMap.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\Block\BlockDurability.cpp">
+      <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -470,10 +476,10 @@
     <ClInclude Include="src\application\PerlinNoise.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="src\application\ResourceID.h">
+    <ClInclude Include="src\application\ResourceLoder\ResourceID.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="src\application\Block.h">
+    <ClInclude Include="src\application\Block\Block.h">
       <Filter>application\GameManeger\Block</Filter>
     </ClInclude>
     <ClInclude Include="src\application\FPSCamera.h">
@@ -485,14 +491,23 @@
     <ClInclude Include="src\application\Player.h">
       <Filter>application\GameManeger\Player</Filter>
     </ClInclude>
-    <ClInclude Include="DropItem.h">
+    <ClInclude Include="src\application\DropItem.h">
       <Filter>application\GameManeger\DropItem</Filter>
     </ClInclude>
-    <ClInclude Include="Itemslot.h">
+    <ClInclude Include="src\application\Itemslot.h">
       <Filter>application\GameManeger\Itemslot</Filter>
     </ClInclude>
     <ClInclude Include="ParticleManager.h">
       <Filter>engine\DrawSystem\ParticleSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\DrawSystem\MinecraftMap\DrawMinecraftMap.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\ResourceLoder\ResourceName.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\Block\BlockDurability.h">
+      <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -507,9 +522,6 @@
     <FxCompile Include="resources\Shaders\Line.VS.hlsl">
       <Filter>engine\Shader\Line</Filter>
     </FxCompile>
-    <FxCompile Include="resources\Shaders\Object3d.PS.hlsl">
-      <Filter>engine\Shader\Object3d</Filter>
-    </FxCompile>
     <FxCompile Include="resources\Shaders\Object3d.VS.hlsl">
       <Filter>engine\Shader\Object3d</Filter>
     </FxCompile>
@@ -519,6 +531,7 @@
     <FxCompile Include="resources\Shaders\Particle.VS.hlsl">
       <Filter>engine\Shader\Particle</Filter>
     </FxCompile>
+    <FxCompile Include="resources\Shaders\Object3d.PS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="resources\Shaders\Line.hlsli">

@@ -2,8 +2,7 @@
 #include "DirectX/DirectXManager.h"
 #include "Window/WindowManager.h"
 #include "Utilities/functions.h"
-#include "Block.h"
-#include "ResourceID.h"
+#include "Block/Block.h"
 
 DrawSystem::DrawSystem(DirectXManager* dxManager)
 	:dxManager_(dxManager)
@@ -142,7 +141,7 @@ void DrawSystem::BeginFrame(const Matrix4x4& viewProjectionMatrix)
 	viewProjectionMatrix_ = viewProjectionMatrix;
 
 	// ライトの向きを正規化
-	directionalLightData_->direction = (directionalLightData_->direction.Normalized());
+	directionalLightData_->direction.Normalize();
 
 	// カメラデータの更新
 	cameraData_->worldPosition = Game::Camera::Getter::GetCurrentTranslate();
@@ -160,18 +159,18 @@ void DrawSystem::Update_ParticleInstanceData()
 	//{
 	//	EmitterPool& pool = it.second;
 	//	if (!pool.mapped || pool.activeCount == 0) continue;
-
+	//
 	//	for (uint32_t i = 0; i < pool.activeCount; /* 手動で増減 */)
 	//	{
 	//		bool isAlive = true;
-
+	//
 	//		// 寿命
 	//		if (pool.mapped[i].liveTime > 0)
 	//		{
 	//			pool.mapped[i].liveTime -= 1;
 	//			if (pool.mapped[i].liveTime <= 0) isAlive = false;
 	//		}
-
+	//
 	//		// 拡縮
 	//		pool.mapped[i].scale.velocity += pool.mapped[i].scale.acceleration * dxManager_->GetDeltaTime();
 	//		pool.mapped[i].scale.value += pool.mapped[i].scale.velocity * dxManager_->GetDeltaTime();
@@ -181,15 +180,15 @@ void DrawSystem::Update_ParticleInstanceData()
 	//		{
 	//			isAlive = false;
 	//		}
-
+	//
 	//		// 平行移動
 	//		pool.mapped[i].translate.velocity += pool.mapped[i].translate.acceleration * dxManager_->GetDeltaTime();
 	//		pool.mapped[i].translate.value += pool.mapped[i].translate.velocity * dxManager_->GetDeltaTime();
-
+	//
 	//		// 回転
 	//		pool.mapped[i].rotate.velocity += pool.mapped[i].rotate.acceleration * dxManager_->GetDeltaTime();
 	//		pool.mapped[i].rotate.value += pool.mapped[i].rotate.velocity * dxManager_->GetDeltaTime();
-
+	//
 	//		// ビルボード
 	//		if (pool.mapped[i].isBillboard)
 	//		{
@@ -198,17 +197,17 @@ void DrawSystem::Update_ParticleInstanceData()
 	//			float pitch = std::asin(-direction.y);              // X軸
 	//			pool.mapped[i].rotate.value = { pitch, yaw, pool.mapped[i].rotate.value.z };
 	//		}
-
+	//
 	//		// 行列
 	//		const Vector3& sc = pool.mapped[i].scale.value;
 	//		const Vector3& rt = pool.mapped[i].rotate.value;
 	//		const Vector3& tr = pool.mapped[i].translate.value;
-
+	//
 	//		Matrix4x4 world = Matrix4x4::MakeAffineMatrix(sc, rt, tr);
 	//		Matrix4x4 wvp = world * viewProjectionMatrix_;
 	//		pool.mapped[i].World = world;
 	//		pool.mapped[i].WVP = wvp;
-
+	//
 	//		// 死亡なら末尾とスワップして詰める
 	//		if (!isAlive)
 	//		{
@@ -224,16 +223,6 @@ void DrawSystem::Update_ParticleInstanceData()
 	//	}
 	//}
 
-	//for (uint32_t i = 0; i < knumInstance_Map; ++i)
-	//{
-	//	Matrix4x4 world = Matrix4x4::MakeAffineMatrix(
-	//		mapTransforms_[i].scale,
-	//		mapTransforms_[i].rotate,
-	//		mapTransforms_[i].translate);
-	//	Matrix4x4 wvp = world * viewProjectionMatrix_;
-	//	mapInstanceData[i].World = world;
-	//	mapInstanceData[i].WVP = wvp;
-	//}
 }
 
 
@@ -243,11 +232,11 @@ void DrawSystem::DrawParticle(ParticleGroup& renderData)
 
 
 	// モデルの検索
-	Object3D* obj = dxManager_->GetResourceManager()->GetModelManager()->GetModel(renderData.model);
+	Object3D* obj = dxManager_->GetResourceManager()->GetModelManager()->GetModelData(renderData.model);
 	if (!obj) return;
 
 	// テクスチャの検索
-	const TextureData* tex = dxManager_->GetResourceManager()->GetTextureManager()->GetTexture(renderData.texture);
+	const TextureData* tex = dxManager_->GetResourceManager()->GetTextureManager()->GetTextureData(renderData.texture);
 	if (!tex) return;
 
 	// RootSignatureとPSOを設定
@@ -299,11 +288,11 @@ void DrawSystem::DrawModel(RenderData_Model& renderData)
 	if (drawCallIndex_ >= kMaxDrawCallPerFrame_) return;
 
 	// モデルの検索
-	const Object3D* obj = dxManager_->GetResourceManager()->GetModelManager()->GetModel(renderData.model);
+	const Object3D* obj = dxManager_->GetResourceManager()->GetModelManager()->GetModelData(renderData.model);
 	if (!obj) return;
 
 	// テクスチャの検索
-	const TextureData* tex = dxManager_->GetResourceManager()->GetTextureManager()->GetTexture(renderData.texture);
+	const TextureData* tex = dxManager_->GetResourceManager()->GetTextureManager()->GetTextureData(renderData.texture);
 	if (!tex) return;
 
 	// ルートシグネチャを設定
@@ -351,14 +340,15 @@ void DrawSystem::DrawModel(RenderData_Model& renderData)
 
 	// 頂点バッファをバインド（描画に使う頂点データを指定）
 	dxManager_->GetCommandContextManager()->GetCommandList()->IASetVertexBuffers(0, 1, &obj->vertexBufferView);
-	// ルートパラメータ0にマテリアル用定数バッファ（色・ライティング情報など）をバインド
-	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources_[drawCallIndex_]->GetGPUVirtualAddress());
-	// ルートパラメータ2にテクスチャのSRV（シェーダリソースビュー）をバインド
-	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
 	// プリミティブトポロジ（描画する形状の種類：三角形リスト）を設定
 	dxManager_->GetCommandContextManager()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	// ルートパラメータ0にマテリアル用定数バッファ（色・ライティング情報など）をバインド
+	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources_[drawCallIndex_]->GetGPUVirtualAddress());
 	// ルートパラメータ1にWVP（ワールド・ビュー・プロジェクション）用定数バッファをバインド
 	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources_[drawCallIndex_]->GetGPUVirtualAddress());
+	// ルートパラメータ2にテクスチャのSRV（シェーダリソースビュー）をバインド
+	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
+	// ルートパラメータ3にライト用定数バッファをバインド
 	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(3, lightResources_[drawCallIndex_]->GetGPUVirtualAddress());
 	// ルートパラメータ4にスペキュラライト用定数バッファをバインド
 	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(4, cameraResource_->GetGPUVirtualAddress());
@@ -374,7 +364,7 @@ void DrawSystem::DrawTriangle(RenderData_Triangle& renderData)
 	if (drawCallIndex_ >= kMaxDrawCallPerFrame_) return;
 
 	// テクスチャの検索
-	const TextureData* tex = dxManager_->GetResourceManager()->GetTextureManager()->GetTexture(renderData.texture);
+	const TextureData* tex = dxManager_->GetResourceManager()->GetTextureManager()->GetTextureData(renderData.texture);
 	if (!tex) return;
 
 	// RootSignatureとPSOを設定
@@ -476,7 +466,7 @@ void DrawSystem::DrawRect(RenderData_Rect& renderData)
 	if (drawCallIndex_ >= kMaxDrawCallPerFrame_) return;
 
 	// テクスチャの検索
-	const TextureData* tex = dxManager_->GetResourceManager()->GetTextureManager()->GetTexture(renderData.texture);
+	const TextureData* tex = dxManager_->GetResourceManager()->GetTextureManager()->GetTextureData(renderData.texture);
 	if (!tex) return;
 
 	// RootSignatureとPSOを設定
@@ -597,7 +587,7 @@ void DrawSystem::DrawSprite(RenderData_Sprite& renderData)
 	if (drawCallIndex_ >= kMaxDrawCallPerFrame_) return;
 
 	// テクスチャの検索
-	const TextureData* tex = dxManager_->GetResourceManager()->GetTextureManager()->GetTexture(renderData.texture);
+	const TextureData* tex = dxManager_->GetResourceManager()->GetTextureManager()->GetTextureData(renderData.texture);
 	if (!tex) return;
 
 	// RootSignatureとPSOを設定 - Triangle
@@ -1120,59 +1110,6 @@ void DrawSystem::DrawLine(RenderData_Line& renderData)
 	
 	drawCallIndex_++;
 	vertexDataUsed_ += kSumVertex;
-}
-
-void DrawSystem::DrawMap(RenderData_MinecraftMap& renderData)
-{
-//	if (drawCallIndex_ >= kMaxDrawCallPerFrame_) return;
-//
-//	// モデルの検索
-//	Object3D* obj = dxManager_->GetResourceManager()->GetModelManager()->GetModel(ResourceID::blockModelIDs_[ModelID::Cube]);
-//	if (!obj) return;
-//
-//	// テクスチャの検索
-//	const TextureData* tex = dxManager_->GetResourceManager()->GetTextureManager()->GetTexture(renderData.texture_);
-//	if (!tex) return;
-//
-//	// RootSignatureを設定
-//	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootSignature(dxManager_->GetPipelineStateManager()->GetRootSignature_minecraftMap());
-//	// Triangle用PSOを設定
-//	dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetMinecraftMapPipelineState(BlendMode::kBlendModeNormal));
-//
-//	// ライトの設定
-//	lightData_[drawCallIndex_]->color = { 0xFF, 0xFF, 0xFF, 0xFF };
-//	lightData_[drawCallIndex_]->mode = LightMode::None;
-//	lightData_[drawCallIndex_]->phong = false;
-//
-//	// 頂点数の取得
-//	const uint32_t kSumVertex = static_cast<uint32_t>(obj->modelData.vertices.size());
-//
-//	// マテリアルデータ
-//	Vector4 color = ConvertUintToVector4(0xFFFFFFFF);
-//	materialData_[drawCallIndex_]->color = color;
-//	materialData_[drawCallIndex_]->shininess = 1.0f;
-//	materialData_[drawCallIndex_]->uvTransform = Matrix4x4::MakeIdentity4x4();
-//
-//
-//	// ルートパラメータ[0]にマテリアル用CBVを設定
-//	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources_[drawCallIndex_]->GetGPUVirtualAddress());
-//	// ルートパラメータ[1]にWVP用CBVを設定
-//	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(1, mapInstanceResource->GetGPUVirtualAddress());
-//	// ルートパラメータ[2]にテクスチャSRVを設定
-//	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
-//	// ルートパラメータ[3]にライト用CBVを設定
-//	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(3, lightResources_[drawCallIndex_]->GetGPUVirtualAddress());
-//	// ルートパラメータ[4]にインスタンス用SRVを設定
-//	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(4, srvAlloc.gpu);
-//
-//	// VertexBufferViewを設定
-//	dxManager_->GetCommandContextManager()->GetCommandList()->IASetVertexBuffers(0, 1, &obj->vertexBufferView);
-//	// 描画形状を設定
-//	dxManager_->GetCommandContextManager()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-//	// 描画コールの発行
-//	dxManager_->GetCommandContextManager()->GetCommandList()->DrawInstanced(kSumVertex, knumInstance_Map, 0, 0);
-//
-//	drawCallIndex_++;
 }
 
 

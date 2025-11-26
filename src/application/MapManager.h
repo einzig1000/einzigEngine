@@ -15,8 +15,11 @@ public:
 	void LoadMap(const std::string& mapFilePath);
 	void Initialize();
 	void Update();
+	void UpDataPlayerRayCollision();
 	void UpdatePlayerCollisionY();
-	void UpdatePlayerCollisionXZ();
+	void UpdatePlayerCollisionX();
+	void UpdatePlayerCollisionZ();
+
 	void Draw();
 
 	Vector3int IndexByPosition(const Vector3& position);
@@ -26,15 +29,13 @@ private:
 	Block* block_[MAX_BLOCK_X][MAX_BLOCK_Y][MAX_BLOCK_Z];
 	int blockHeightMap_[MAX_BLOCK_X][MAX_BLOCK_Z];
 
-	// ブロック破壊テクスチャ
-	bool isBeingDestroyed_ = false; // 破壊中かいなか
-	RenderData_Rect blockRect_[6];  // 6面分
-	Transforms blockTriangleTransform_;
 
 	// プレイヤー参照
 	Player* player_;
 
 	// ドロップアイテム管理
 	std::vector<DropItem*> dropItems_;
+
+	std::map<BlockID, Blockinfo> blockInfoMap_;
 };
 

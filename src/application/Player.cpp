@@ -1,5 +1,4 @@
 #include "Player.h"
-#include "ResourceID.h"
 #include "Window/WindowManager.h"
 #include "FPSCamera.h"
 #include "Itemslot.h"
@@ -9,12 +8,12 @@ Ray Player::viewRay_;
 Player::Player()
 {
 	// プレイヤーデータ初期化
-	data_.model = ResourceID::blockModelIDs_[int(ModelID::Cube)];
-	data_.texture = ResourceID::blockTextureIDs_[int(TextureID::UVChecker)];
+	data_.model = ResourceID::GetModelID(ModelID::Cube);
+	data_.texture = ResourceID::GetTextureID(TextureID::UVChecker);
 	data_.name = "Player";
 
 	// レティクル初期化
-	reticle_.texture = ResourceID::TextureIDs_[int(TextureID::UVChecker)];
+	reticle_.texture = ResourceID::GetTextureID(TextureID::UVChecker);
 	reticle_.transforms.scale = Vector3(0.02f, 0.02f, 0.02f);
 	reticle_.transforms.translate = Vector3(
 		WindowManager::winWidth_ / 2.0f,

@@ -13,13 +13,15 @@ public:
 		const std::string& directoryPath, 
 		const std::string& filename,
 		ID3D12Device* device);
-    Object3D* GetModel(uint32_t modelID);
+	Object3D* GetModelData(uint32_t modelID);
 
 	// モデル数を取得
 	size_t GetModelCount() const { return objects.size(); }
 
 	// モデルリストを取得
 	std::vector<Object3D>& GetModelList() { return objects; }
+
+
 
 private:
 	// モデルデータを詰める

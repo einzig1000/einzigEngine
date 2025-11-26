@@ -1,0 +1,46 @@
+#pragma once
+#include "definition/definition.h"
+#include "DrawSystem/RenderData/RenderData.h"
+
+class BlockDurability;
+
+class Block
+{
+public:
+	Block();
+	~Block();
+	void Initialize();
+	void Update();
+	void Draw();
+
+	// ブロックの種類設定
+	void SetBlockType(Blockinfo type);
+
+	// ブロックの位置設定
+	void SetBlockPosition(const Vector3& position);
+
+	// 破壊更新
+	void UpdateBreak(int power);
+
+	// プレイヤーに見られている時、輝度に応じて色を更新
+	void UpdateColor();
+
+	// ブロック
+	RenderData_Model data_;
+
+	// 輝度
+	uint32_t lightEmission_ = 14;
+
+	// 耐久値
+	BlockDurability* durability_;
+
+	// 表面に露出しているか
+	bool isExposed_ = false;
+
+	// レイと衝突しているか
+	int isCollisionRay = -1;
+	// 始点からの距離
+	float collisionDistance = 0.0f;
+	// 衝突した方向
+	DirectionXYZ direction = DirectionXYZ::None;
+};

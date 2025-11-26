@@ -11,6 +11,8 @@
 #include "Facade/Game.h"
 #include "Resource/Texture/TextureManager.h"
 #include "DrawSystem/RenderData/RenderData.h"
+#include "DrawSystem/DrawSystem.h"
+#include "Camera/CameraManager.h"
 
 #include <DirectXMath.h>
 #include <filesystem>
@@ -327,9 +329,14 @@ uint32_t Engine::LoadAudio(const std::string& filePath)
 	return dxManager->GetResourceManager()->GetAudioManager()->LoadAudio(filePath);
 }
 
-TextureData* Engine::GetTexture(uint32_t textureNumber)
+Object3D* Engine::GetModelData(uint32_t modelNumber)
 {
-	return dxManager->GetResourceManager()->GetTextureManager()->GetTexture(textureNumber);
+	return dxManager->GetResourceManager()->GetModelManager()->GetModelData(modelNumber);
+}
+
+TextureData* Engine::GetTextureData(uint32_t textureNumber)
+{
+	return dxManager->GetResourceManager()->GetTextureManager()->GetTextureData(textureNumber);
 }
 
 size_t Engine::GetTextureCount()
@@ -370,7 +377,7 @@ void Engine::DrawLine(RenderData_Line& renderData)
 
 void Engine::DrawMinecraftMap(RenderData_MinecraftMap& renderData)
 {
-	drawSystem->DrawMap(renderData);
+	//drawSystem->DrawMap(renderData);
 }
 
 void Engine::DrawParticle(ParticleGroup& renderData)
@@ -429,6 +436,23 @@ bool Engine::IsAudioPlaying(const uint32_t& audioId)
 	return dxManager->GetResourceManager()->GetAudioManager()->IsAudioPlaying(audioId);
 }
 
+// ライト
+void Engine::SetLightDirection(const Vector3 direction)
+{
+	drawSystem->SetLightDirection(direction);
+}
+void Engine::SetLightColor(const Vector4 color)
+{
+	drawSystem->SetLightColor(color);
+}
+void Engine::SetLightIntensity(float intensity)
+{
+	drawSystem->SetLightIntensity(intensity);
+}
+void Engine::ToggleLightMode(const LightMode mode)
+{
+	drawSystem->ToggleLightMode(mode);
+}
 
 // 入力
 Vector2 Engine::GetMousePosition()
@@ -609,4 +633,9 @@ std::vector<AABB>  Engine::CreateAABB(RenderData_Model* data)
 void Engine::toggleWireframeMode()
 {
 	drawSystem->toggleWireframeMode();
+}
+
+const std::vector<Object3D> Engine::GetAllObject3D()
+{
+	return dxManager->GetResourceManager()->GetModelManager()->GetModelList();
 }

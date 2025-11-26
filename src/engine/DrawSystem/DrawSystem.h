@@ -35,7 +35,6 @@ public:
 	void DrawSprite(RenderData_Sprite& renderData);
 	void DrawParticle(ParticleGroup& renderData);
 	void DrawLine(RenderData_Line& renderData);
-	void DrawMap(RenderData_MinecraftMap& renderData);
 
 	void AddSphere(Vector3 pos, Vector3 radius, uint32_t color);
 	void AddAABB(AABB aabb, uint32_t color);

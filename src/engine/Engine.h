@@ -4,13 +4,23 @@
 #include <vector>
 #include <string>
 #include <wrl/client.h>
-#include "Game.h" 
+#include "ResourceLoder/ResourceID.h"
 
-#include "Window/WindowManager.h"
-#include "DirectX/DirectXManager.h"
-#include "Camera/CameraManager.h"
-#include "DrawSystem/DrawSystem.h"
-#include "ResourceID.h"
+
+class WindowManager;
+class DirectXManager;
+class DrawSystem;
+class Input;
+class CameraManager;
+
+class RenderData_Model;
+class RenderData_Triangle;
+class RenderData_Rect;
+class RenderData_Sprite;
+class RenderData_Line;
+class RenderData_MinecraftMap;
+
+
 
 class Engine
 {
@@ -36,7 +46,8 @@ public:
 	uint32_t LoadModel(const std::string& directoryPath, const std::string& filename);
 	uint32_t LoadTexture(const std::string& filePath);
 	uint32_t LoadAudio(const std::string& filePath);
-	TextureData* GetTexture(uint32_t textureNumber);
+	Object3D* GetModelData(uint32_t modelNumber);
+	TextureData* GetTextureData(uint32_t textureNumber);
 	size_t GetTextureCount();
 	size_t GetModelCount();
 
@@ -64,10 +75,10 @@ public:
 	bool IsAudioPlaying(const uint32_t& audioId);
 
 	// ライト
-	void SetLightColor(const Vector4 color) { drawSystem->SetLightColor(color); }
-	void SetLightDirection(const Vector3 direction) { drawSystem->SetLightDirection(direction); }
-	void SetLightIntensity(float intensity) { drawSystem->SetLightIntensity(intensity); }
-	void ToggleLightMode(const LightMode mode) { drawSystem->ToggleLightMode(mode); }
+	void SetLightColor(const Vector4 color);
+	void SetLightDirection(const Vector3 direction);
+	void SetLightIntensity(float intensity);
+	void ToggleLightMode(const LightMode mode);
 
 	// マウス
 	Vector2 GetMousePosition();
@@ -114,7 +125,7 @@ public:
 	// プリミティブモードの設定
 	void toggleWireframeMode();
 
-	const  std::vector<Object3D> GetAllObject3D() { return dxManager->GetResourceManager()->GetModelManager()->GetModelList(); }
+	const std::vector<Object3D> GetAllObject3D();
 
 private:
 	Engine() = default;
@@ -135,6 +146,5 @@ private:
 	Input* inputManager_ = nullptr;
 	// カメラ
 	CameraManager* cameraManager = nullptr;
-
 
 };

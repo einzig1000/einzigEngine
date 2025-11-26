@@ -20,7 +20,7 @@ public:
         DescriptorHeapManager* descriptorHeap,
         ID3D12Device* device
     );
-    TextureData* GetTexture(uint32_t textureID);
+    TextureData* GetTextureData(uint32_t textureID);
 
 	// テクスチャ数を取得
 	size_t GetTextureCount() const { return textures_.size(); }

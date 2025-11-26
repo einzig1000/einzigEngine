@@ -2,15 +2,15 @@
 
 TestPhase::TestPhase()
 {
-	uint32_t tex1 = Game::Resource::LoadTexture("resources/Prototypes/texture/uvChecker.png");
-	uint32_t tex2 = Game::Resource::LoadTexture("resources/Prototypes/texture/circle.png");
-	uint32_t tex3 = Game::Resource::LoadTexture("resources/Prototypes/texture/monsterBall.png");
-	uint32_t tex4 = Game::Resource::LoadTexture("resources/Prototypes/texture/white1x1.png");
+	uint32_t tex1 = ResourceID::GetTextureID(TextureID::UVChecker);
+	uint32_t tex2 = ResourceID::GetTextureID(TextureID::monsterBall);
+	uint32_t tex3 = ResourceID::GetTextureID(TextureID::Circle);
+	uint32_t tex4 = ResourceID::GetTextureID(TextureID::white1x1);
 
-	uint32_t model1 = Game::Resource::LoadModel("resources/Prototypes/model/", "plane.obj");
-	uint32_t model2 = Game::Resource::LoadModel("resources/Prototypes/model/", "cube.obj");
-	uint32_t model3 = Game::Resource::LoadModel("resources/Prototypes/model/", "corn.obj");
-	uint32_t model4 = Game::Resource::LoadModel("resources/Prototypes/model/", "sphere.obj");
+	uint32_t model1 = ResourceID::GetModelID(ModelID::Cube);
+	uint32_t model2 = ResourceID::GetModelID(ModelID::Corn);
+	uint32_t model3 = ResourceID::GetModelID(ModelID::Plane);
+	uint32_t model4 = ResourceID::GetModelID(ModelID::Sphere);
 
 	audio1 = Game::Resource::LoadAudio("resources/Prototypes/audio/BGM/InGame.mp3");
 	audio2 = Game::Resource::LoadAudio("resources/Prototypes/audio/SE/バトル用/氷魔法1.mp3");

@@ -1,5 +1,4 @@
 #include "GameScenePhase.h"
-#include "ResourceID.h"
 #include "MapManager.h"
 #include "Player.h"
 #include <fstream>
@@ -12,8 +11,11 @@ GameScenePhase::GameScenePhase()
 	map_->LoadMap("resources/Map/map.csv");
 	//map_->LoadMap("resources/Map/mapFlat.csv");
 
-
-
+	skyDome_.model = ResourceID::GetModelID(ModelID::Sphere);
+	skyDome_.texture = ResourceID::GetTextureID(TextureID::UVChecker);
+	//skyDome_.model = Game::Resource::LoadModel("Resources/Prototypes/model/", "sphere.obj");
+	//skyDome_.texture = Game::Resource::LoadTexture("Resources/Prototypes/texture/uvChecker.png");
+	skyDome_.scale.value = Vector3(100.0f, 100.0f, 100.0f);
 }
 
 GameScenePhase::~GameScenePhase()
@@ -50,6 +52,9 @@ void GameScenePhase::Draw()
 	map_->Draw();
 
 	player_->Draw();
+
+	skyDome_.Draw();
+	skyDome_.DrawImGui();
 }
 
 

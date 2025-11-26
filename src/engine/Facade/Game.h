@@ -7,6 +7,7 @@
 #include "Utilities/functions.h"
 #include "Utilities/JsonManager.h"
 #include "DrawSystem/RenderData/RenderData.h"
+#include "ResourceLoder/ResourceID.h"
 
 #include "externals/imgui/imgui.h"
 #include "externals/imgui/imgui_impl_dx12.h"
@@ -48,7 +49,7 @@ public:
 		/// </summary>
 		/// <param name="textureNumber">テクスチャID</param>
 		/// <returns>メタデータを含むテクスチャデータ</returns>
-		static TextureData* GetTexture(uint32_t textureNumber);
+		static TextureData* GetTextureData(uint32_t textureNumber);
 
 		/// <summary>
 		/// 読み込んだテクスチャ数取得

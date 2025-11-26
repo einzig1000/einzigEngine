@@ -1,11 +1,10 @@
 #include "Itemslot.h"
-#include "ResourceID.h"
 
 Itemslot::Itemslot()
 {
 	for (int i = 0; i < 10; i++)
 	{
-		slotSprite_[i].texture = ResourceID::TextureIDs_[int(TextureID::Item_slot)];
+		slotSprite_[i].texture = ResourceID::GetTextureID(TextureID::Item_slot);
 		slotSprite_[i].transforms.scale = Vector3(0.5f, 0.5f, 1.0f);
 		slotSprite_[i].transforms.translate = Vector3(640.0f + (i - 5) * 60.0f, 680.0f, 0.0f);
 		slotSprite_[i].color = 0x666666FF;
@@ -13,7 +12,7 @@ Itemslot::Itemslot()
 
 	for (int i = 0; i < 40; i++)
 	{
-		itemSprite_[i].texture = ResourceID::TextureIDs_[int(TextureID::UVChecker)];
+		itemSprite_[i].texture = ResourceID::GetTextureID(TextureID::UVChecker);
 		itemSprite_[i].transforms.scale = Vector3(0.035f, 0.035f, 1.0f);
 		itemSprite_[i].transforms.translate = Vector3(640.0f + (i - 5) * 60.0f, 680.0f, 0.0f);
 		itemSprite_[i].transforms.rotate.z = -std::numbers::pi_v<float> / 2.0f;
