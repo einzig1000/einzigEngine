@@ -348,10 +348,6 @@ void TestPhase::Update()
 
 	ImGui::End();
 
-	//elbow_.rotate.value.x += 0.02f;
-	//elbow_.rotate.value.y += 0.02f;
-	//elbow_.rotate.value.z += 0.02f;
-
 	if (Game::Input::Key::IsHeld(DIK_A))
 	{
 		player_.translate.value.x -= 0.1f;
@@ -418,10 +414,11 @@ void TestPhase::Draw()
 
 	//shoulder_.Draw();
 	//shoulder_.DrawImGui();
-	elbow_.Draw();
-	elbow_.DrawImGui();
-	hand_.Draw();
-	hand_.DrawImGui();
+	
+	//elbow_.Draw();
+	//elbow_.DrawImGui();
+	//hand_.Draw();
+	//hand_.DrawImGui();
 
 
 

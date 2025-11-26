@@ -797,7 +797,10 @@ void DrawSystem::DrawSprite()
 		wvpData_[drawCallIndex_]->WVP = wvpMatrix;
 
 		// ライトの設定
-		*lightData_[drawCallIndex_] = *directionalLightData_;
+		lightData_[drawCallIndex_]->color = { 1.0f, 1.0f, 1.0f, 1.0f };
+		lightData_[drawCallIndex_]->intensity = 1.0f;
+		lightData_[drawCallIndex_]->mode = LightMode::None;
+		lightData_[drawCallIndex_]->phong = false;
 
 		// マテリアル
 		float uvCenterX = (renderData->pivot.x) - (halfWidth);
