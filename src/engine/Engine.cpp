@@ -93,6 +93,7 @@ bool Engine::ProcessMessage()
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
+
 	return true;
 }
 void Engine::BeginFrame()
@@ -281,6 +282,9 @@ void Engine::EndFrame()
 	// DirectX終了処理
 	dxManager->EndFrame();
 
+	// GPU同期
+	dxManager->GetSynchronizationManager()->WaitForGPU();
+
 	// アプリケーション終了
 	if (Game::Input::Key::IsJustPressed(DIK_ESCAPE))
 	{
@@ -292,6 +296,8 @@ void Engine::EndFrame()
 // 終了処理
 void Engine::Finalize()
 {
+	dxManager->GetSynchronizationManager()->WaitForGPU();
+
 	// ImGuiの終了処理
 	ImGui_ImplDX12_Shutdown();
 	ImGui_ImplWin32_Shutdown();

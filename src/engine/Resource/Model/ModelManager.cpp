@@ -30,8 +30,6 @@ uint32_t ModelManager::LoadModel(const std::string& directoryPath, const std::st
     Object3D obj;
     // モデルデータ
     obj.modelData = LoadModelFile(directory, filename);
-    // 変換行列
-    obj.transform = { {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f} };
     // AABB .obj → .csv へ拡張子を変換して渡す
     std::string csvFilename = filename;
     size_t dotPos = csvFilename.rfind('.');

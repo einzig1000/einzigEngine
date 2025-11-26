@@ -327,7 +327,6 @@ void RenderData_Model::Update1()
 		for (int i = 0; i < 4; ++i)
 			for (int j = 0; j < 4; ++j)
 				this->localWorldMatrix.m[i][j] = tmp.m[i][j];
-
 	}
 
 	initialized = true;

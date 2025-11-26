@@ -1,8 +1,5 @@
 #include "Engine.h"
-#include <numbers>
 #include "GameManager/GameManager.h"
-
-
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {

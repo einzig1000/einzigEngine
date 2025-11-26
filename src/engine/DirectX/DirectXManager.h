@@ -23,13 +23,13 @@ public:
     ~DirectXManager();
 
     ID3D12Device* GetDevice() const { return deviceManager->GetDevice(); }
-	CommandContextManager* GetCommandContextManager() const { return commandContextManager.get(); }
-    DescriptorHeapManager* GetDescriptorHeapManager() const { return descriptorHeapManager.get(); }
-    SwapChainManager* GetSwapChain() const { return swapChainManager.get(); };
-    PipelineStateManager* GetPipelineStateManager() const { return pipelineStateManager.get(); }
-	SynchronizationManager* GetSynchronizationManager() const { return synchronizationManager.get(); }
+	CommandContextManager* GetCommandContextManager() const { return commandContextManager; }
+    DescriptorHeapManager* GetDescriptorHeapManager() const { return descriptorHeapManager; }
+    SwapChainManager* GetSwapChain() const { return swapChainManager; };
+    PipelineStateManager* GetPipelineStateManager() const { return pipelineStateManager; }
+	SynchronizationManager* GetSynchronizationManager() const { return synchronizationManager; }
 
-	ResourceManager* GetResourceManager() const { return resourceManager_.get(); }
+	ResourceManager* GetResourceManager() const { return resourceManager_; }
 
 	float GetDeltaTime() const { return fixFPS_->GetDeltaTime(); }
 
@@ -38,17 +38,17 @@ public:
 	void Resize();
 
 private:
-    std::unique_ptr<DeviceManager> deviceManager;
-    std::unique_ptr<CommandContextManager> commandContextManager;
-    std::unique_ptr<SwapChainManager> swapChainManager;
-    std::unique_ptr<DepthStencilManager> depthStencilManager;
-    std::unique_ptr<PipelineStateManager> pipelineStateManager;
-    std::unique_ptr<DescriptorHeapManager> descriptorHeapManager;
-    std::unique_ptr<SynchronizationManager> synchronizationManager;
-    std::unique_ptr<ViewportScissorManager> viewportScissorManager;
+    SwapChainManager* swapChainManager;
+    DeviceManager* deviceManager;
+    CommandContextManager* commandContextManager;
+    DepthStencilManager* depthStencilManager;
+    PipelineStateManager* pipelineStateManager;
+    DescriptorHeapManager* descriptorHeapManager;
+    SynchronizationManager* synchronizationManager;
+    ViewportScissorManager* viewportScissorManager;
 
-    std::unique_ptr<ResourceManager> resourceManager_;
-    std::unique_ptr<FixFPS> fixFPS_;
+    ResourceManager* resourceManager_;
+    FixFPS* fixFPS_;
 
     D3D12_RESOURCE_BARRIER barrier = {};
 

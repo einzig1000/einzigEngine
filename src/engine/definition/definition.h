@@ -717,10 +717,6 @@ struct Object3D
     D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
     UINT vertexBufferSize = 0;
 
-    // 変換行列
-    Transforms transform;
-    //TransformationMatrix matrix;
-
     // AABB
     std::vector<AABB> aabb;
 
