@@ -23,6 +23,4 @@ private:
 
 	// マップ
 	MapManager* map_;
-
-	RenderData_Model skyDome_;
 };

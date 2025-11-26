@@ -20,6 +20,7 @@ public:
     // 全オブジェクトの描画範囲内判定,前フレーム情報保存
     void Update5();
 
+    std::optional<std::string> name;
     VectorDynamics scale = { Vector3(1.0f,1.0f,1.0f), Vector3(0.0f,0.0f,0.0f), Vector3(0.0f,0.0f,0.0f) };
     VectorDynamics rotate = { Vector3(0.0f,0.0f,0.0f), Vector3(0.0f,0.0f,0.0f), Vector3(0.0f,0.0f,0.0f) };
     VectorDynamics translate = { Vector3(0.0f,0.0f,0.0f), Vector3(0.0f,0.0f,0.0f), Vector3(0.0f,0.0f,0.0f) };
@@ -27,8 +28,6 @@ public:
     RenderData_Model* parentModel = nullptr;
     // 今フレームの移動量
     Vector3 lastMove;
-    // 回転の中心点
-    Vector3 pivot;
     // UV座標
     Transforms uvTransform;
     // 色
@@ -43,7 +42,6 @@ public:
     std::vector<AABB> aabbs;
     // 重さ
     float mass = 1.0f;
-    std::optional<std::string> name;
     // ファイルパス
     std::string filePath = "resources/Prototypes/model_json/aaa";
     // 画面内に存在するか

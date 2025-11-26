@@ -24,20 +24,28 @@ class DrawSystem
 public:
 	DrawSystem(DirectXManager* dxManager);
 	~DrawSystem();
+	void Update();
+	void Draw();
 
-	void BeginFrame(const Matrix4x4& viewProjectionMatrix);
-	void EndFrame();
+	void SetViewProjectionMatrix(const Matrix4x4& viewProjectionMatrix) { viewProjectionMatrix_ = viewProjectionMatrix; }
 	void Update_ParticleInstanceData();
 
-	void DrawModel(RenderData_Model& renderData);
-	void DrawTriangle(RenderData_Triangle& renderData);
-	void DrawRect(RenderData_Rect& renderData);
-	void DrawSprite(RenderData_Sprite& renderData);
+	void AddModelDrawList(RenderData_Model& renderData);
+	void DrawModel();
+	void AddTriangleDrawList(RenderData_Triangle& renderData);
+	void DrawTriangle();
+	void AddRectDrawList(RenderData_Rect& renderData);
+	void DrawRect();
+	void AddSpriteDrawList(RenderData_Sprite& renderData);
+	void DrawSprite();
+	void AddLineDrawList(RenderData_Line& renderData);
+	void DrawLine();
 	void DrawParticle(ParticleGroup& renderData);
-	void DrawLine(RenderData_Line& renderData);
+
 
 	void AddSphere(Vector3 pos, Vector3 radius, uint32_t color);
 	void AddAABB(AABB aabb, uint32_t color);
+	void AddLine(Vector3 start, Vector3 end, uint32_t color);
 
 	void SetLightColor(const Vector4 color) { directionalLightData_->color = color; }
 	void SetLightDirection(const Vector3 direction) { directionalLightData_->direction = direction.Normalized(); }
@@ -47,6 +55,14 @@ public:
 	void toggleWireframeMode() { wireframeMode_ = !wireframeMode_; }
 
 private:
+	std::vector<RenderData_Model*> modelDrawList_{};
+	std::vector<RenderData_Triangle*> triangleDrawList_{};
+	std::vector<RenderData_Rect*> rectDrawList_{};
+	std::vector<RenderData_Sprite*> spriteDrawList_{};
+	std::vector<RenderData_Line*> lineDrawList_{};
+
+
+
 	uint32_t instancingSrvIndex_ = UINT32_MAX;
 
 

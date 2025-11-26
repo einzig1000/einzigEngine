@@ -16,36 +16,52 @@ TestPhase::TestPhase()
 	audio2 = Game::Resource::LoadAudio("resources/Prototypes/audio/SE/バトル用/氷魔法1.mp3");
 
 
-	ground_.model = model2;
+	ground_.model = model1;
 	ground_.texture = tex1;
 	ground_.name = "ground";
 	ground_.mass = 1001.0f;
 	ground_.scale.value = { 10.0f,1.0f,10.0f };
 
-	wall1_.model = model2;
+	wall1_.model = model1;
 	wall1_.texture = tex1;
 	wall1_.name = "wall1";
 	wall1_.scale.value = { 0.5f,2.0f,10.0f };
 	wall1_.translate.value = { -5.0f,0.5f,0.0f };
 	wall1_.mass = 1000.0f;
-	wall2_.model = model2;
+	wall2_.model = model1;
 	wall2_.texture = tex1;
 	wall2_.name = "wall2";
 	wall2_.scale.value = { 0.5f,2.0f,10.0f };
 	wall2_.translate.value = { 5.0f,0.5f,0.0f };
 	wall2_.mass = 1000.0f;
-	wall3_.model = model2;
+	wall3_.model = model1;
 	wall3_.texture = tex1;
 	wall3_.name = "wall3";
 	wall3_.scale.value = { 10.0f,2.0f,0.5f };
 	wall3_.translate.value = { 0.0f,0.5f,-5.0f };
 	wall3_.mass = 1000.0f;
-	wall4_.model = model2;
+	wall4_.model = model1;
 	wall4_.texture = tex1;
 	wall4_.name = "wall4";
 	wall4_.scale.value = { 10.0f,2.0f,0.5f };
 	wall4_.translate.value = { 0.0f,0.5f,5.0f };
 	wall4_.mass = 1000.0f;
+
+	shoulder_.model = model4;
+	shoulder_.texture = tex2;
+	shoulder_.name = "shoulder";
+	shoulder_.translate.value.y = 0.0f;
+	elbow_.model = model4;
+	elbow_.texture = tex2;
+	elbow_.name = "elbow";
+	elbow_.translate.value.y = 3.0f;
+	hand_.model = model4;
+	hand_.texture = tex2;
+	hand_.name = "hand";
+	hand_.translate.value.y = 6.0f;
+
+	hand_.parentModel = &elbow_;
+	//elbow_.parentModel = &shoulder_;
 
 	rect_.texture = tex1;
 	rect_.pos1 = { 1.0f,1.0f,0.0f };
@@ -332,6 +348,10 @@ void TestPhase::Update()
 
 	ImGui::End();
 
+	//elbow_.rotate.value.x += 0.02f;
+	//elbow_.rotate.value.y += 0.02f;
+	//elbow_.rotate.value.z += 0.02f;
+
 	if (Game::Input::Key::IsHeld(DIK_A))
 	{
 		player_.translate.value.x -= 0.1f;
@@ -372,10 +392,10 @@ void TestPhase::Draw()
 	//player_.DrawAABB();
 	//player_.DrawImGui();
 
-	//sprite1_.Draw();
-	//sprite1_.DrawImGui();
-	//sprite2_.Draw();
-	//sprite2_.DrawImGui();
+	sprite1_.Draw();
+	sprite1_.DrawImGui();
+	sprite2_.Draw();
+	sprite2_.DrawImGui();
 
 	//triangle1_.Draw();
 	//triangle1_.DrawImGui();
@@ -396,5 +416,14 @@ void TestPhase::Draw()
 	//line3_.Draw();
 	//line3_.DrawImGui();
 
-	minecraftMap_.Draw();
+	//shoulder_.Draw();
+	//shoulder_.DrawImGui();
+	elbow_.Draw();
+	elbow_.DrawImGui();
+	hand_.Draw();
+	hand_.DrawImGui();
+
+
+
+	//minecraftMap_.Draw();
 }

@@ -83,6 +83,13 @@ public:
 		/// <param name="color">色</param>
 		static void AddAABB(AABB aabb, uint32_t color);
 
+		/// <summary>
+		/// ライン描画
+		/// </summary>
+		/// <param name="start">ワールド始点</param>
+		/// <param name="end">ワールド終点</param>
+		/// <param name="color">色</param>
+		static void AddLine(Vector3 start, Vector3 end, uint32_t color);
 	};
 
 	class Audio

@@ -20,6 +20,13 @@ private:
 	RenderData_Model wall4_;
 	RenderData_Model player_;
 
+	// 肩
+	RenderData_Model shoulder_;
+	// 肘
+	RenderData_Model elbow_;
+	// 手
+	RenderData_Model hand_;
+
 	RenderData_Rect rect_;
 
 	RenderData_Sprite sprite1_;

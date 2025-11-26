@@ -28,5 +28,7 @@ private:
 	std::unique_ptr<TitlePhase> titlePhase_;
 	std::unique_ptr<GameScenePhase> gameScenePhase_;
 
+
+	RenderData_Model skyDome_;
 };
 

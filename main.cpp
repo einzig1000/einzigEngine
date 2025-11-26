@@ -10,6 +10,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	Engine::Instance().BeginFrame();
 	ResourceID::reload();
 	GameManager* gm = new GameManager();
+	Engine::Instance().UpdateTransforms();
 	Engine::Instance().EndFrame();
 
 	while (Engine::Instance().ProcessMessage())
@@ -19,9 +20,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 		// ↓更新処理ここから
 		gm->Update();
-
-		// モデル情報の更新
-		Engine::Instance().UpdateTransforms();
 
 		// ↓描画処理ここから
 		gm->Draw();

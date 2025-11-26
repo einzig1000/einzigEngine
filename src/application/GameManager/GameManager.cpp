@@ -2,6 +2,10 @@
 
 GameManager::GameManager()
 {
+	skyDome_.model = ResourceID::GetModelID(ModelID::Sphere);
+	skyDome_.texture = ResourceID::GetTextureID(TextureID::UVChecker);
+	skyDome_.scale.value = Vector3(100.0f, 100.0f, 100.0f);
+	skyDome_.name = "SkyDome";
 
 	// フェーズクラス生成
 	testPhase_ = std::make_unique<TestPhase>();
@@ -10,8 +14,7 @@ GameManager::GameManager()
 	gameScenePhase_ = std::make_unique<GameScenePhase>();
 
 	// 初期フェーズ設定
-	requestPhase_ = PHASE::Phase_GameScene;
-
+	requestPhase_ = PHASE::Phase_Test;
 }
 
 GameManager::~GameManager()
@@ -113,5 +116,8 @@ void GameManager::Draw()
 		gameScenePhase_->Draw();
 		break;
 	}
+
+	skyDome_.Draw();
+	skyDome_.DrawImGui();
 
 }

@@ -45,6 +45,10 @@ void Game::DebugDraw::AddAABB(AABB aabb, uint32_t color)
 	Engine::Instance().AddAABB(aabb, color);
 }
 
+void Game::DebugDraw::AddLine(Vector3 start, Vector3 end, uint32_t color)
+{
+	Engine::Instance().AddLine(start, end, color);
+}
 
 void Game::Audio::PlayAudio(const uint32_t& audioId, bool loop)
 {

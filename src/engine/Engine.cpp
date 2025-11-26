@@ -114,7 +114,8 @@ void Engine::BeginFrame()
 	UpdateCamera();
 
 	// 描画関数初期化
-	drawSystem->BeginFrame(cameraManager->GetCurrentViewProjectionMatrix());
+	drawSystem->Update();
+	drawSystem->SetViewProjectionMatrix(cameraManager->GetCurrentViewProjectionMatrix());
 
 	// デバッグ情報更新
 	UpdateDebugInfo();
@@ -147,10 +148,6 @@ void Engine::UpdateTransforms()
 
 	for (auto& rd : modelList)
 	{
-		rd->Update1();
-	}
-	for (auto& rd : modelList)
-	{
 		rd->Update2();
 	}
 	for (auto& rd : modelList)
@@ -172,7 +169,6 @@ void Engine::UpdateTransforms()
 
 	// マウスレイ取得
 	Ray mouseRay = inputManager_->GetMouseController()->GetMouseRay();
-	//mouseRay = Player::viewRay_;
 
 	// モデルと衝突までの距離セット構造体
 	struct HitInfo { RenderData_Model* rdm; float distance; };
@@ -273,8 +269,11 @@ void Engine::EndFrame()
 	// ImGui描画
 	if (isDebugInfo)ImGui::Render();
 
-	// パーティクル更新
-	drawSystem->EndFrame();
+	// 座標更新
+	UpdateTransforms();
+
+	// 描画実行
+	drawSystem->Draw();
 
 	// インプット系終了処理
 	inputManager_->EndFrame();
@@ -356,29 +355,29 @@ size_t Engine::GetModelCount()
 }
 
 // 描画
-void Engine::DrawModel(RenderData_Model& renderData)
+void Engine::AddModelDrawList(RenderData_Model& renderData)
 {
-	drawSystem->DrawModel(renderData);
+	drawSystem->AddModelDrawList(renderData);
 }
 
-void Engine::DrawTriangle(RenderData_Triangle& renderData)
+void Engine::AddTriangleDrawList(RenderData_Triangle& renderData)
 {
-	drawSystem->DrawTriangle(renderData);
+	drawSystem->AddTriangleDrawList(renderData);
 }
 
-void Engine::DrawRect(RenderData_Rect& renderData)
+void Engine::AddRectDrawList(RenderData_Rect& renderData)
 {
-	drawSystem->DrawRect(renderData);
+	drawSystem->AddRectDrawList(renderData);
 }
 
-void Engine::DrawSprite(RenderData_Sprite& renderData)
+void Engine::AddSpriteDrawList(RenderData_Sprite& renderData)
 {
-	drawSystem->DrawSprite(renderData);
+	drawSystem->AddSpriteDrawList(renderData);
 }
 
-void Engine::DrawLine(RenderData_Line& renderData)
+void Engine::AddLineDrawList(RenderData_Line& renderData)
 {
-	drawSystem->DrawLine(renderData);
+	drawSystem->AddLineDrawList(renderData);
 }
 
 void Engine::DrawMinecraftMap(RenderData_MinecraftMap& renderData)
@@ -399,6 +398,11 @@ void Engine::AddSphere(Vector3 pos, Vector3 radius, uint32_t color)
 void Engine::AddAABB(AABB aabb, uint32_t color)
 {
 	if (isDebugInfo)drawSystem->AddAABB(aabb, color);
+}
+
+void Engine::AddLine(Vector3 start, Vector3 end, uint32_t color)
+{
+	if (isDebugInfo)drawSystem->AddLine(start, end, color);
 }
 
 bool Engine::InFrustum(const AABB& aabb)
