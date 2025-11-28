@@ -5,10 +5,11 @@
 #include "DirectX/DescriptorHeapManager.h"
 #include "cassert"
 
-TextureManager::TextureManager()
+TextureManager::TextureManager(ID3D12GraphicsCommandList* commandList, DescriptorHeapManager* descriptorHeap, ID3D12Device* device)
+	:commandList_(commandList), descriptorHeap_(descriptorHeap), device_(device)
 {
-    //assert(device_ != nullptr && "ID3D12Device* device cannot be null.");
-    //assert(srvDescriptorHeap_ != nullptr && "ID3D12DescriptorHeap* srvDescriptorHeap cannot be null.");
+    // 透明テクスチャを最初に作成
+	//CreateTransparentTexture();
 }
 
 TextureManager::~TextureManager()
@@ -17,7 +18,7 @@ TextureManager::~TextureManager()
 }
 
 
-uint32_t TextureManager::LoadTexture(const std::string& filePath, ID3D12GraphicsCommandList* commandList, DescriptorHeapManager* descriptorHeap, ID3D12Device* device)
+int32_t TextureManager::LoadTexture(const std::string& filePath)
 {
     auto exists = std::find_if(
         textures_.begin(), textures_.end(),
@@ -51,11 +52,11 @@ uint32_t TextureManager::LoadTexture(const std::string& filePath, ID3D12Graphics
 
 
     // テクスチャリソースとSRVの作成
-    text.textureResource = CreateTextureResource(device, text.metadata);
-    Microsoft::WRL::ComPtr<ID3D12Resource> tempIntermediateResource = UploadTextureData(text.textureResource.Get(), text.mipImage, device, commandList);
+    text.textureResource = CreateTextureResource(device_, text.metadata);
+    Microsoft::WRL::ComPtr<ID3D12Resource> tempIntermediateResource = UploadTextureData(text.textureResource.Get(), text.mipImage, device_, commandList_);
     intermediateUploadResources_.push_back(tempIntermediateResource);
 
-	SRVAllocation srvAllocation = descriptorHeap->GetSrvManager()->CreateSRVforTexture(text.textureResource.Get(), text.metadata.format, UINT(text.metadata.mipLevels));
+	SRVAllocation srvAllocation = descriptorHeap_->GetSrvManager()->CreateSRVforTexture(text.textureResource.Get(), text.metadata.format, UINT(text.metadata.mipLevels));
 	text.textureSrvHandleGPU = srvAllocation.gpu;
 
     textures_.push_back(std::move(text));
@@ -63,8 +64,13 @@ uint32_t TextureManager::LoadTexture(const std::string& filePath, ID3D12Graphics
     return text.number;
 }
 
-TextureData* TextureManager::GetTexture(uint32_t textureID)
+TextureData* TextureManager::GetTextureData(int32_t textureID)
 {
+    if (textureID < 0)
+    {
+        return &textures_[0];
+	}
+
     if (textureID < textures_.size())
     {
         return &textures_[textureID];
@@ -74,6 +80,36 @@ TextureData* TextureManager::GetTexture(uint32_t textureID)
         Log("存在しないテクスチャIDです:%d", textureID);
         return nullptr;
     }
+}
+
+void TextureManager::CreateTransparentTexture()
+{
+    // 透明テクスチャを作成
+    TextureData text;
+    // ファイルパスを保存
+    text.filePath = "TransparentTexture";
+    // 1x1のRGBA8形式の透明テクスチャデータを作成
+    DirectX::ScratchImage mipImageLocal;
+    DirectX::Image image{};
+    image.width = 1;
+    image.height = 1;
+    image.format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+    image.rowPitch = 4; // 1ピクセルあたり4バイト (RGBA8)
+    image.slicePitch = image.rowPitch * image.height;
+    std::vector<uint8_t> pixelData = { 0, 0, 0, 0 };
+    image.pixels = pixelData.data();
+    HRESULT hr = mipImageLocal.InitializeFromImage(image);
+    assert(SUCCEEDED(hr));
+    text.metadata = mipImageLocal.GetMetadata();
+    text.number = static_cast<uint32_t>(textures_.size());
+    text.mipImage = std::move(mipImageLocal);
+    // テクスチャリソースとSRVの作成
+    text.textureResource = CreateTextureResource(device_, text.metadata);
+    Microsoft::WRL::ComPtr<ID3D12Resource> tempIntermediateResource = UploadTextureData(text.textureResource.Get(), text.mipImage, device_, commandList_);
+    intermediateUploadResources_.push_back(tempIntermediateResource);
+    SRVAllocation srvAllocation = descriptorHeap_->GetSrvManager()->CreateSRVforTexture(text.textureResource.Get(), text.metadata.format, UINT(text.metadata.mipLevels));
+    text.textureSrvHandleGPU = srvAllocation.gpu;
+	textures_.push_back(std::move(text));
 }
 
 

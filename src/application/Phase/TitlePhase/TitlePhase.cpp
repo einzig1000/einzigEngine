@@ -1,5 +1,4 @@
 #include "TitlePhase.h"
-#include "ResourceID.h"
 
 
 void TitlePhase::Initialize()
@@ -8,13 +7,13 @@ void TitlePhase::Initialize()
 	currentState = TitlePhaseState::None;
 	nextState = TitlePhaseState::Title;
 
-	worldSelect.texture = ResourceID::TextureIDs_[int(TextureID::start_title)];
+	worldSelect.texture = ResourceID::GetTextureID(TextureID::TITLE_start);
 	worldSelect.anchor = Anchor::Center;
 	worldSelect.name = "WorldSelectButton";
 	worldSelect.transforms.translate = { 640.0f,300.0f,0.0f };
 	worldSelect.color = 0x777777FF;
 
-	options.texture = ResourceID::TextureIDs_[int(TextureID::Options_title)];
+	options.texture = ResourceID::GetTextureID(TextureID::TITLE_option);
 	options.anchor = Anchor::Center;
 	options.name = "OptionsButton";
 	options.transforms.translate = { 640.0f,500.0f,0.0f };

@@ -29,15 +29,15 @@ PixelShaderOutput main(VertexShaderOutput input)
 		float cos = pow(NdotL * 0.5f + 0.5f, 2.0f);
 
 		// 拡散反射(ハーフランバート)
-		float32_t3 diffuse = 
+		float32_t3 diffuse =
 			// マテリアルの色 *
 			gMaterial0.color.rgb *
 			// テクスチャ自体の色 *
-			textureColor.rgb * 
+			textureColor.rgb *
 			// ライトの色 *
-			gDirectionalLight.color.rgb * 
+			gDirectionalLight.color.rgb *
 			// 角度補正
-			cos * 
+			cos *
 			// ライト輝度 *
 			gDirectionalLight.intensity;
 
@@ -125,7 +125,7 @@ PixelShaderOutput main(VertexShaderOutput input)
 			gMaterial0.color.rgb *
 			// テクスチャ自体の色 *
 			textureColor.rgb;
-		
+
 		// 鏡面反射
 		float32_t3 specular = { 0.0f,0.0f,0.0f };
 

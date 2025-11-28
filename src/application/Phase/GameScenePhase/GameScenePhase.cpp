@@ -1,5 +1,4 @@
 #include "GameScenePhase.h"
-#include "ResourceID.h"
 #include "MapManager.h"
 #include "Player.h"
 #include <fstream>
@@ -9,11 +8,9 @@ GameScenePhase::GameScenePhase()
 	player_ = new Player();
 
 	map_ = new MapManager(player_);
-	map_->LoadMap("resources/Map/map.csv");
+	map_->LoadMap("resources/Map/map1x1.csv");
+	//map_->LoadMap("resources/Map/map.csv");
 	//map_->LoadMap("resources/Map/mapFlat.csv");
-
-
-
 }
 
 GameScenePhase::~GameScenePhase()

@@ -31,15 +31,6 @@ struct TransformationMatrix
     float32_t4x4 World;
 };
 
-//struct DirectionalLight
-//{
-//    float32_t4 color;
-//    float32_t3 direction;
-//    float intensity;
-//    int mode;
-//    float32_t3 padding;
-//};
-
 struct DirectionalLight
 {
     float32_t4 color; // 16 bytes

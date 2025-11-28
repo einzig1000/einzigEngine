@@ -2,50 +2,66 @@
 
 TestPhase::TestPhase()
 {
-	uint32_t tex1 = Game::Resource::LoadTexture("resources/Prototypes/texture/uvChecker.png");
-	uint32_t tex2 = Game::Resource::LoadTexture("resources/Prototypes/texture/circle.png");
-	uint32_t tex3 = Game::Resource::LoadTexture("resources/Prototypes/texture/monsterBall.png");
-	uint32_t tex4 = Game::Resource::LoadTexture("resources/Prototypes/texture/white1x1.png");
+	int32_t tex1 = ResourceID::GetTextureID(TextureID::UVChecker);
+	int32_t tex2 = ResourceID::GetTextureID(TextureID::monsterBall);
+	int32_t tex3 = ResourceID::GetTextureID(TextureID::Circle);
+	int32_t tex4 = ResourceID::GetTextureID(TextureID::white1x1);
 
-	uint32_t model1 = Game::Resource::LoadModel("resources/Prototypes/model/", "plane.obj");
-	uint32_t model2 = Game::Resource::LoadModel("resources/Prototypes/model/", "cube.obj");
-	uint32_t model3 = Game::Resource::LoadModel("resources/Prototypes/model/", "corn.obj");
-	uint32_t model4 = Game::Resource::LoadModel("resources/Prototypes/model/", "sphere.obj");
+	int32_t model1 = ResourceID::GetModelID(ModelID::Cube);
+	int32_t model2 = ResourceID::GetModelID(ModelID::Corn);
+	int32_t model3 = ResourceID::GetModelID(ModelID::Plane);
+	int32_t model4 = ResourceID::GetModelID(ModelID::Sphere);
 
 	audio1 = Game::Resource::LoadAudio("resources/Prototypes/audio/BGM/InGame.mp3");
 	audio2 = Game::Resource::LoadAudio("resources/Prototypes/audio/SE/バトル用/氷魔法1.mp3");
 
 
-	ground_.model = model2;
+	ground_.model = model1;
 	ground_.texture = tex1;
 	ground_.name = "ground";
 	ground_.mass = 1001.0f;
 	ground_.scale.value = { 10.0f,1.0f,10.0f };
 
-	wall1_.model = model2;
+	wall1_.model = model1;
 	wall1_.texture = tex1;
 	wall1_.name = "wall1";
 	wall1_.scale.value = { 0.5f,2.0f,10.0f };
 	wall1_.translate.value = { -5.0f,0.5f,0.0f };
 	wall1_.mass = 1000.0f;
-	wall2_.model = model2;
+	wall2_.model = model1;
 	wall2_.texture = tex1;
 	wall2_.name = "wall2";
 	wall2_.scale.value = { 0.5f,2.0f,10.0f };
 	wall2_.translate.value = { 5.0f,0.5f,0.0f };
 	wall2_.mass = 1000.0f;
-	wall3_.model = model2;
+	wall3_.model = model1;
 	wall3_.texture = tex1;
 	wall3_.name = "wall3";
 	wall3_.scale.value = { 10.0f,2.0f,0.5f };
 	wall3_.translate.value = { 0.0f,0.5f,-5.0f };
 	wall3_.mass = 1000.0f;
-	wall4_.model = model2;
+	wall4_.model = model1;
 	wall4_.texture = tex1;
 	wall4_.name = "wall4";
 	wall4_.scale.value = { 10.0f,2.0f,0.5f };
 	wall4_.translate.value = { 0.0f,0.5f,5.0f };
 	wall4_.mass = 1000.0f;
+
+	shoulder_.model = model4;
+	shoulder_.texture = tex2;
+	shoulder_.name = "shoulder";
+	shoulder_.translate.value.y = 0.0f;
+	elbow_.model = model4;
+	elbow_.texture = tex2;
+	elbow_.name = "elbow";
+	elbow_.translate.value.y = 3.0f;
+	hand_.model = model4;
+	hand_.texture = tex2;
+	hand_.name = "hand";
+	hand_.translate.value.y = 6.0f;
+
+	hand_.parentModel = &elbow_;
+	//elbow_.parentModel = &shoulder_;
 
 	rect_.texture = tex1;
 	rect_.pos1 = { 1.0f,1.0f,0.0f };
@@ -357,8 +373,9 @@ void TestPhase::Update()
 
 void TestPhase::Draw()
 {
-	rect_.Draw();
-	rect_.DrawImGui();
+	//rect_.Draw();
+	//rect_.DrawImGui();
+	
 	//ground_.Draw();
 	//ground_.DrawImGui();
 	//ground_.DrawAABB();
@@ -381,12 +398,12 @@ void TestPhase::Draw()
 	//triangle2_.Draw();
 	//triangle2_.DrawImGui();
 
-	//particle1_.Draw();
-	//particle1_.DrawImGui();
-	//particle1_.DrawEmitter();
-	//particle2_.Draw();
-	//particle2_.DrawImGui();
-	//particle2_.DrawEmitter();
+	particle1_.Draw();
+	particle1_.DrawImGui();
+	particle1_.DrawEmitter();
+	particle2_.Draw();
+	particle2_.DrawImGui();
+	particle2_.DrawEmitter();
 
 	//line_.Draw();
 	//line_.DrawImGui();
@@ -394,4 +411,16 @@ void TestPhase::Draw()
 	//line2_.DrawImGui();
 	//line3_.Draw();
 	//line3_.DrawImGui();
+
+	//shoulder_.Draw();
+	//shoulder_.DrawImGui();
+	
+	//elbow_.Draw();
+	//elbow_.DrawImGui();
+	//hand_.Draw();
+	//hand_.DrawImGui();
+
+
+
+	//minecraftMap_.Draw();
 }

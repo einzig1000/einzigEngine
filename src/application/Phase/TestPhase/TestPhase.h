@@ -20,6 +20,13 @@ private:
 	RenderData_Model wall4_;
 	RenderData_Model player_;
 
+	// 肩
+	RenderData_Model shoulder_;
+	// 肘
+	RenderData_Model elbow_;
+	// 手
+	RenderData_Model hand_;
+
 	RenderData_Rect rect_;
 
 	RenderData_Sprite sprite1_;
@@ -35,6 +42,7 @@ private:
 	RenderData_Line line2_;
 	RenderData_Line line3_;
 
+	RenderData_MinecraftMap minecraftMap_;
 
 	float roll_ = 0.0f;
 

@@ -1,5 +1,7 @@
+#include "Camera/CameraManager.h"
 #include "Facade/Game.h"
 #include "Engine/Engine.h"
+
 using namespace DirectX;
 
 uint32_t Game::Resource::LoadModel(const std::string& directoryPath, const std::string& filename)
@@ -17,9 +19,9 @@ uint32_t Game::Resource::LoadAudio(const std::string& filePath)
 	return Engine::Instance().LoadAudio(filePath);
 }
 
-TextureData* Game::Resource::GetTexture(uint32_t textureNumber)
+TextureData* Game::Resource::GetTextureData(uint32_t textureNumber)
 {
-	return Engine::Instance().GetTexture(textureNumber);
+	return Engine::Instance().GetTextureData(textureNumber);
 }
 
 size_t Game::Resource::GetTextureCount()
@@ -43,6 +45,10 @@ void Game::DebugDraw::AddAABB(AABB aabb, uint32_t color)
 	Engine::Instance().AddAABB(aabb, color);
 }
 
+void Game::DebugDraw::AddLine(Vector3 start, Vector3 end, uint32_t color)
+{
+	Engine::Instance().AddLine(start, end, color);
+}
 
 void Game::Audio::PlayAudio(const uint32_t& audioId, bool loop)
 {

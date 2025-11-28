@@ -7,6 +7,7 @@
 #include "Utilities/functions.h"
 #include "Utilities/JsonManager.h"
 #include "DrawSystem/RenderData/RenderData.h"
+#include "ResourceLoder/ResourceID.h"
 
 #include "externals/imgui/imgui.h"
 #include "externals/imgui/imgui_impl_dx12.h"
@@ -48,7 +49,7 @@ public:
 		/// </summary>
 		/// <param name="textureNumber">テクスチャID</param>
 		/// <returns>メタデータを含むテクスチャデータ</returns>
-		static TextureData* GetTexture(uint32_t textureNumber);
+		static TextureData* GetTextureData(uint32_t textureNumber);
 
 		/// <summary>
 		/// 読み込んだテクスチャ数取得
@@ -82,6 +83,13 @@ public:
 		/// <param name="color">色</param>
 		static void AddAABB(AABB aabb, uint32_t color);
 
+		/// <summary>
+		/// ライン描画
+		/// </summary>
+		/// <param name="start">ワールド始点</param>
+		/// <param name="end">ワールド終点</param>
+		/// <param name="color">色</param>
+		static void AddLine(Vector3 start, Vector3 end, uint32_t color);
 	};
 
 	class Audio

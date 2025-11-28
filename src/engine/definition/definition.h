@@ -25,14 +25,38 @@
 #define WIDTH 1280
 #define HEIGHT 720
 #define eps 1e-6f
-
-#define MAX_BLOCK_X 40
+// 40
+#define MAX_BLOCK_X 1
+#define MAX_BLOCK_Z 1
 #define MAX_BLOCK_Y 10
-#define MAX_BLOCK_Z 40
 #define BLOCK_SIZE 1.0f
 #define PLAYER_SPEED 0.1f
 
 #define GRAVITY -0.005f
+
+
+
+enum class BlockID
+{
+    None,
+    Stone,	// 石
+    Glass,	// ガラス
+    Dirt,	// 草なし土
+    lawn,	// 草付き土
+    wood,	// 木材
+    leaf,	// 葉っぱ
+
+
+
+    MAX,
+};
+
+
+struct Blockinfo
+{
+    BlockID type;
+    uint32_t durability;
+};
 
 template <typename T>
 constexpr const T& my_min(const T& a, const T& b)
@@ -307,6 +331,27 @@ struct Vector3
     Vector3 Cross(const Vector3& rhs) const;
     // 反射角
     Vector3 Reflect(const Vector3& input, const Vector3& normal);
+};
+
+struct Vector4int
+{
+    int x = 0, y = 0, z = 0, w = 0;
+    Vector4int operator+(const Vector4int& rhs) const
+    {
+        return Vector4int{ x + rhs.x, y + rhs.y, z + rhs.z, w + rhs.w };
+    }
+    Vector4int operator-(const Vector4int& rhs) const
+    {
+        return Vector4int{ x - rhs.x, y - rhs.y, z - rhs.z, w - rhs.w };
+    }
+    bool operator==(const Vector4int& rhs) const
+    {
+        return x == rhs.x && y == rhs.y && z == rhs.z && w == rhs.w;
+    }
+    bool operator!=(const Vector4int& rhs) const
+    {
+        return x != rhs.x || y != rhs.y || z != rhs.z || w != rhs.w;
+    }
 };
 
 struct Vector4
@@ -659,7 +704,6 @@ struct TransformationMatrix
 {
     Matrix4x4 WVP;
     Matrix4x4 World;
-    //Matrix4x4* parentWorld = nullptr;
 };
 
 // 3Dオブジェクトデータ
@@ -673,15 +717,11 @@ struct Object3D
     D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
     UINT vertexBufferSize = 0;
 
-    // 変換行列
-    Transforms transform;
-    //TransformationMatrix matrix;
-
     // AABB
     std::vector<AABB> aabb;
 
     // 識別ナンバー
-    uint32_t number = 0;
+    int32_t number = 0;
 
     // ファイルパス
     std::string filePath;
@@ -692,7 +732,7 @@ struct TextureData
 {
     DirectX::TexMetadata metadata;
     DirectX::ScratchImage mipImage;
-    uint32_t number;
+    int32_t number;
     std::string filePath;
     Microsoft::WRL::ComPtr<ID3D12Resource> textureResource;
     D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU;
@@ -947,6 +987,15 @@ struct ParticleMonoInfGPU
 
 #pragma endregion
 
+struct BlockInstanceData
+{
+    Matrix4x4 WVP;
+    Matrix4x4 World;
+    Vector4 color;
+	uint32_t textureID;
+	bool isDisplay;
+};
+
 
 struct CameraForGPU
 {
@@ -1054,3 +1103,32 @@ enum class EaseType
     OUT_BOUNCE,
 };
 
+
+struct SRVAllocation
+{
+    uint32_t index = UINT32_MAX;
+    D3D12_CPU_DESCRIPTOR_HANDLE cpu{};
+    D3D12_GPU_DESCRIPTOR_HANDLE gpu{};
+};
+
+struct ParticleGroup
+{
+    // テクスチャ
+    uint32_t texture = 0;
+	// モデル
+	uint32_t model = 0;
+    // 色
+	Material material;
+    // パーティクルのリスト
+    std::list<ParticleMonoInf> particles;
+    // インスタンシングリソース
+    Microsoft::WRL::ComPtr<ID3D12Resource> instanceResource;
+    // インスタンシングデータを書き込むためのポインタ
+    ParticleMonoInf* mappedPtr = nullptr;
+    // インスタンシングデータ用SRVインデックス
+	SRVAllocation srvAllocation;
+    // インスタンス数
+    uint32_t instanceCount = 0;
+    // エミッター
+    ParticleEmitter emitter;
+};

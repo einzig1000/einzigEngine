@@ -13,16 +13,20 @@ public:
 
     ID3D12RootSignature* GetRootSignature() const { return rootSignature_object.Get(); }
     ID3D12RootSignature* GetRootSignature_particle() const { return rootSignature_particle.Get(); }
+	ID3D12RootSignature* GetRootSignature_minecraftMap() const { return rootSignature_block.Get(); }
 
     ID3D12PipelineState* GetPipelineState(BlendMode mode, D3D12_PRIMITIVE_TOPOLOGY_TYPE type) const;
     ID3D12PipelineState* GetParticlePipelineState(BlendMode mode) const;
+    ID3D12PipelineState* GetBlockPipelineState(BlendMode mode) const;
 
 private:
     Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature_object;
-	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature_particle;
+    Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature_particle;
+    Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature_block;
     std::map<BlendMode, Microsoft::WRL::ComPtr<ID3D12PipelineState>> trianglePSOs; // Triangle描画用PSO
     std::map<BlendMode, Microsoft::WRL::ComPtr<ID3D12PipelineState>> particlePSOs; // Particle描画用PSO
     std::map<BlendMode, Microsoft::WRL::ComPtr<ID3D12PipelineState>> linePSOs;     // Line描画用PSO
+	std::map<BlendMode, Microsoft::WRL::ComPtr<ID3D12PipelineState>> blockPSOs;    // MinecraftMap用PSO
 
     Microsoft::WRL::ComPtr<IDxcUtils> dxcUtils;
     Microsoft::WRL::ComPtr<IDxcCompiler3> dxcCompiler;
@@ -34,6 +38,7 @@ private:
     void InitializeRootSignature(ID3D12Device* device);
     void InitializeRootSignature_object(ID3D12Device* device);
     void InitializeRootSignature_particle(ID3D12Device* device);
+	void InitializeRootSignature_block(ID3D12Device* device);
     void CreateAllPSOs(ID3D12Device* device);
 
     // 追加: キャッシュ付きコンパイル

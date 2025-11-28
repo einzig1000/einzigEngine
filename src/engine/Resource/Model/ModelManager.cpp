@@ -4,16 +4,19 @@
 #include <fstream>
 
 
-ModelManager::ModelManager()
+ModelManager::ModelManager(ID3D12Device* device)
+	: device_(device)
 {}
 
 ModelManager::~ModelManager()
 {}
 
 
-uint32_t ModelManager::LoadModel(const std::string& directoryPath, const std::string& filename, ID3D12Device* device)
+int32_t ModelManager::LoadModel(const std::string& directoryPath, const std::string& filename)
 {
-    auto path = directoryPath + "/" + filename;
+    const std::string directory = directoryPath.ends_with("/") ? directoryPath : (directoryPath + "/");
+
+    auto path = directory + filename;
 
     auto exists = std::find_if(
         objects.begin(), objects.end(),
@@ -27,9 +30,7 @@ uint32_t ModelManager::LoadModel(const std::string& directoryPath, const std::st
     // ボックスを作成
     Object3D obj;
     // モデルデータ
-    obj.modelData = LoadModelFile(directoryPath, filename);
-    // 変換行列
-    obj.transform = { {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f} };
+    obj.modelData = LoadModelFile(directory, filename);
     // AABB .obj → .csv へ拡張子を変換して渡す
     std::string csvFilename = filename;
     size_t dotPos = csvFilename.rfind('.');
@@ -50,7 +51,7 @@ uint32_t ModelManager::LoadModel(const std::string& directoryPath, const std::st
 
     // 頂点バッファ作成
     ref.vertexBufferSize = sizeof(VertexData) * UINT(ref.modelData.vertices.size());
-    ref.vertexBuffer = CreateBufferResource(device, ref.vertexBufferSize);
+    ref.vertexBuffer = CreateBufferResource(device_, ref.vertexBufferSize);
     VertexData* vData = nullptr;
     ref.vertexBuffer->Map(0, nullptr, reinterpret_cast<void**>(&vData));
     std::memcpy(vData, ref.modelData.vertices.data(), ref.vertexBufferSize);
@@ -63,8 +64,13 @@ uint32_t ModelManager::LoadModel(const std::string& directoryPath, const std::st
     return ref.number;
 }
 
-Object3D* ModelManager::GetModel(uint32_t modelID)
+Object3D* ModelManager::GetModelData(int32_t modelID)
 {
+    if (modelID < 0)
+    {
+        return &objects[0];
+    }
+
 	if (modelID < objects.size())
 	{
 		return &objects[modelID];

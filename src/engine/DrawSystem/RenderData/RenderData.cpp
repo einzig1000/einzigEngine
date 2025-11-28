@@ -11,6 +11,8 @@ std::vector<RenderData_Triangle*> RenderData_Triangle::renderTriangles;
 std::vector<RenderData_Rect*> RenderData_Rect::renderRects;
 std::vector<RenderData_Line*> RenderData_Line::renderLines;
 std::vector<RenderData_Particle*> RenderData_Particle::renderParticles;
+std::unordered_map<std::string, ParticleInf*> RenderData_Particle2::particleGroups_;
+
 
 #pragma region model
 
@@ -91,7 +93,8 @@ void RenderData_Model::LookAtFront(float roll)
 
 void RenderData_Model::Draw()
 {
-	Engine::Instance().DrawModel(*this);
+	Engine::Instance().AddModelDrawList(*this);
+	Update1();
 }
 
 void RenderData_Model::DrawAABB()
@@ -148,9 +151,6 @@ void RenderData_Model::DrawImGui()
 		ImGui::Text("Acc"); ImGui::SameLine();
 		ImGui::DragFloat3(dragId.c_str(), &rotate.acceleration.x, 0.01f);
 
-		dragId = std::string("##pivot") + num;
-		ImGui::Text("Pivot");
-		ImGui::DragFloat3(dragId.c_str(), &pivot.x, 0.01f);
 		ImGui::TreePop();
 	}
 	if (ImGui::TreeNode("----------uvTransforms---------"))
@@ -163,14 +163,21 @@ void RenderData_Model::DrawImGui()
 	if (ImGui::TreeNode("----------texture--------------"))
 	{
 		size_t textureCount = Game::Resource::GetTextureCount();
+	
+		//static const char* items[] = { "default", "additional" };
+		//int current_item = static_cast<int>();
+		//if (ImGui::Combo((num + "texture.mode").c_str(), &current_item, items, IM_ARRAYSIZE(items)))
+		//{
+		//	options.dirLight.mode = static_cast<>(current_item);
+		//}
 
 		for (size_t i = 0; i < textureCount; ++i)
 		{
-			TextureData* texData = Game::Resource::GetTexture(static_cast<uint32_t>(i));
+			TextureData* texData = Game::Resource::GetTextureData(static_cast<uint32_t>(i));
 			if (texData)
 			{
 				ImGui::Image((ImTextureID)texData->textureSrvHandleGPU.ptr, ImVec2(32, 32));
-				
+
 				// 6個並べたら改行
 				if ((i + 1) % 6 != 0 && i < textureCount - 1)
 				{
@@ -179,6 +186,7 @@ void RenderData_Model::DrawImGui()
 				if (ImGui::IsItemClicked())
 				{
 					this->texture = static_cast<uint32_t>(i);
+					//else this->additionalTexture = static_cast<uint32_t>(i);
 				}
 			}
 		}
@@ -232,7 +240,6 @@ void RenderData_Model::DrawImGui()
 			ImGui::DragFloat3((num + "dirLight.direction").c_str(), &options.dirLight.direction.x, 0.01f, -1.0f, 1.0f);
 			ImGui::DragFloat((num + "dirLight.intensity").c_str(), &options.dirLight.intensity, 0.01f, 0.0f, 1.0f);
 
-			// 表示名を実際のモードに合わせる
 			static const char* items[] = { "None", "Lambert", "HalfLambert" };
 			int current_item = static_cast<int>(options.dirLight.mode);
 			if (ImGui::Combo((num + "dirLight.mode").c_str(), &current_item, items, IM_ARRAYSIZE(items)))
@@ -299,33 +306,26 @@ void RenderData_Model::Update1()
 		!this->initialized;
 
 	// ワールド座標取得
-	if (this->movedThisFrame)
+	//if (this->movedThisFrame)
 	{
-		// 移動マトリックス作成
 		XMVECTOR scaleVec = XMVectorSet(this->scale.value.x, this->scale.value.y, this->scale.value.z, 0.0f);
-		XMVECTOR pivotVec = XMVectorSet(this->pivot.x, this->pivot.y, this->pivot.z, 0.0f);
 		XMVECTOR translateVec = XMVectorSet(this->translate.value.x, this->translate.value.y, this->translate.value.z, 0.0f);
 		XMVECTOR rotEuler = XMVectorSet(this->rotate.value.x, this->rotate.value.y, this->rotate.value.z, 0.0f);
 		// 1) スケール
 		XMMATRIX S = XMMatrixScalingFromVector(scaleVec);
-		// 2) ピボットオフセット（原点に戻す方）
-		XMMATRIX Tneg = XMMatrixTranslationFromVector(XMVectorNegate(pivotVec));
-		// 3) 回転（オイラー→クォータニオン→行列）
+		// 2) 回転（オイラー→クォータニオン→行列）
 		XMVECTOR quatEuler = XMQuaternionRotationRollPitchYawFromVector(rotEuler);
 		XMMATRIX R = XMMatrixRotationQuaternion(quatEuler);
-		// 4) ピボットオフセット（もとの位置に戻す方）
-		XMMATRIX Tpos = XMMatrixTranslationFromVector(pivotVec);
-		// 5) 平行移動
+		// 3) 平行移動
 		XMMATRIX T = XMMatrixTranslationFromVector(translateVec);
-		// 6) 合成: S → Tneg → R → Tpos → T
-		XMMATRIX world = S * Tneg * R * Tpos * T;
-		// 8) 結果を transforms.World に格納
+		// 4) 合成: S → R → T
+		XMMATRIX world = S * R * T;
+		// 5) 結果を transforms.World に格納
 		XMFLOAT4X4 tmp;
 		DirectX::XMStoreFloat4x4(&tmp, world);
 		for (int i = 0; i < 4; ++i)
 			for (int j = 0; j < 4; ++j)
 				this->localWorldMatrix.m[i][j] = tmp.m[i][j];
-
 	}
 
 	initialized = true;
@@ -357,7 +357,7 @@ Matrix4x4 RenderData_Model::SetWorldMatrix()
 	if (this->parentModel)
 	{
 		Matrix4x4 parentWorld = this->parentModel->SetWorldMatrix();
-		result = parentWorld * result;
+		result = result * parentWorld;
 	}
 
 	// 親がいなかったらそのまま、いたら親の行列を掛けたものを返す
@@ -447,30 +447,23 @@ void RenderData_Model::Update4()
 			// translate.velocityの分めり込んだ状態で固定されてしまうので、velocity分座標を戻す。velocityは変えない。
 			this->translate.value -= this->translate.velocity;
 
-			// ワールド行列更新
 			XMVECTOR scaleVec = XMVectorSet(this->scale.value.x, this->scale.value.y, this->scale.value.z, 0.0f);
-			XMVECTOR pivotVec = XMVectorSet(this->pivot.x, this->pivot.y, this->pivot.z, 0.0f);
 			XMVECTOR translateVec = XMVectorSet(this->translate.value.x, this->translate.value.y, this->translate.value.z, 0.0f);
 			XMVECTOR rotEuler = XMVectorSet(this->rotate.value.x, this->rotate.value.y, this->rotate.value.z, 0.0f);
 			// 1) スケール
 			XMMATRIX S = XMMatrixScalingFromVector(scaleVec);
-			// 2) ピボットオフセット（原点に戻す方）
-			XMMATRIX Tneg = XMMatrixTranslationFromVector(XMVectorNegate(pivotVec));
-			// 3) 回転（オイラー→クォータニオン→行列）
+			// 2) 回転（オイラー→クォータニオン→行列）
 			XMVECTOR quatEuler = XMQuaternionRotationRollPitchYawFromVector(rotEuler);
 			XMMATRIX R = XMMatrixRotationQuaternion(quatEuler);
-			// 4) ピボットオフセット（もとの位置に戻す方）
-			XMMATRIX Tpos = XMMatrixTranslationFromVector(pivotVec);
-			// 5) 平行移動
+			// 3) 平行移動
 			XMMATRIX T = XMMatrixTranslationFromVector(translateVec);
-			// 6) 合成: S → Tneg → R → Tpos → T
-			XMMATRIX world = S * Tneg * R * Tpos * T;
-			// 8) 結果を transforms.World に格納
+			// 4) 合成: S → R → T
+			XMMATRIX world = S * R * T;
+			// 5) 結果を transforms.World に格納
 			XMFLOAT4X4 tmp;
 			DirectX::XMStoreFloat4x4(&tmp, world);
 			for (int i = 0; i < 4; ++i)
-				for (int j = 0; j < 4;
-					++j)
+				for (int j = 0; j < 4; ++j)
 					this->localWorldMatrix.m[i][j] = tmp.m[i][j];
 		}
 	}
@@ -638,7 +631,7 @@ RenderData_Sprite::~RenderData_Sprite()
 
 void RenderData_Sprite::Draw()
 {
-	Engine::Instance().DrawSprite(*this);
+	Engine::Instance().AddSpriteDrawList(*this);
 }
 
 void RenderData_Sprite::DrawImGui()
@@ -692,7 +685,7 @@ void RenderData_Sprite::DrawImGui()
 
 		for (size_t i = 0; i < textureCount; ++i)
 		{
-			TextureData* texData = Game::Resource::GetTexture(static_cast<uint32_t>(i));
+			TextureData* texData = Game::Resource::GetTextureData(static_cast<uint32_t>(i));
 			if (texData)
 			{
 				ImGui::Image((ImTextureID)texData->textureSrvHandleGPU.ptr, ImVec2(32, 32));
@@ -761,7 +754,7 @@ RenderData_Triangle::~RenderData_Triangle()
 
 void RenderData_Triangle::Draw()
 {
-	Engine::Instance().DrawTriangle(*this);
+	Engine::Instance().AddTriangleDrawList(*this);
 }
 
 void RenderData_Triangle::DrawImGui()
@@ -798,7 +791,7 @@ void RenderData_Triangle::DrawImGui()
 	{
 		for (size_t i = 0; i < Game::Resource::GetTextureCount(); ++i)
 		{
-			TextureData* texData = Game::Resource::GetTexture(static_cast<uint32_t>(i));
+			TextureData* texData = Game::Resource::GetTextureData(static_cast<uint32_t>(i));
 			if (texData)
 			{
 				ImGui::Image((ImTextureID)texData->textureSrvHandleGPU.ptr, ImVec2(32, 32));
@@ -861,7 +854,7 @@ void RenderData_Line::Draw()
 		this->points.push_back(Vector3{ 0.0f,0.0f,0.0f });
 		this->points.push_back(Vector3{ 0.0f,0.0f,0.0f });
 	}
-	Engine::Instance().DrawLine(*this);
+	Engine::Instance().AddLineDrawList(*this);
 }
 
 void RenderData_Line::DrawPoints()
@@ -956,7 +949,6 @@ RenderData_Particle::~RenderData_Particle()
 		renderParticles.erase(it);
 	}
 }
-
 bool RenderData_Particle::LoadJson()
 {
 	return JsonManager::LoadFromJson(*this, this->filePath);
@@ -1101,7 +1093,7 @@ void RenderData_Particle::DrawImGui()
 
 		for (size_t i = 0; i < textureCount; ++i)
 		{
-			TextureData* texData = Game::Resource::GetTexture(static_cast<uint32_t>(i));
+			TextureData* texData = Game::Resource::GetTextureData(static_cast<uint32_t>(i));
 			if (texData)
 			{
 				ImGui::Image((ImTextureID)texData->textureSrvHandleGPU.ptr, ImVec2(32, 32));
@@ -1205,7 +1197,10 @@ void RenderData_Particle::DrawEmitter()
 	}
 }
 
+
 #pragma endregion
+
+#pragma region rect
 
 RenderData_Rect::RenderData_Rect()
 {
@@ -1224,7 +1219,7 @@ RenderData_Rect::~RenderData_Rect()
 
 void RenderData_Rect::Draw()
 {
-	Engine::Instance().DrawRect(*this);
+	Engine::Instance().AddRectDrawList(*this);
 }
 
 void RenderData_Rect::DrawImGui()
@@ -1270,7 +1265,7 @@ void RenderData_Rect::DrawImGui()
 		for (size_t i =
 			0; i < textureCount; ++i)
 		{
-			TextureData* texData = Game::Resource::GetTexture(static_cast<uint32_t>(i));
+			TextureData* texData = Game::Resource::GetTextureData(static_cast<uint32_t>(i));
 			if (texData)
 			{
 				ImGui::Image((ImTextureID)texData->textureSrvHandleGPU.ptr, ImVec2(32, 32));
@@ -1288,4 +1283,33 @@ void RenderData_Rect::DrawImGui()
 		ImGui::TreePop();
 	}
 	ImGui::End();
+}
+
+RenderData_MinecraftMap::RenderData_MinecraftMap()
+{}
+
+RenderData_MinecraftMap::~RenderData_MinecraftMap()
+{}
+
+void RenderData_MinecraftMap::Draw()
+{
+	Engine::Instance().DrawMinecraftMap(*this);
+}
+
+#pragma endregion
+
+RenderData_Particle2::RenderData_Particle2()
+{}
+
+RenderData_Particle2::~RenderData_Particle2()
+{}
+
+void RenderData_Particle2::CreateParticleGroup(const std::string& name, ParticleInf* particleInf)
+{
+	particleGroups_[name] = particleInf;
+}
+
+void RenderData_Particle2::DeleteParticleGroup(const std::string& name)
+{
+	particleGroups_.erase(name);
 }
