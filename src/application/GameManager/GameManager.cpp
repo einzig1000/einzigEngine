@@ -15,7 +15,7 @@ GameManager::GameManager()
 	gameScenePhase_ = std::make_unique<GameScenePhase>();
 
 	// 初期フェーズ設定
-	requestPhase_ = PHASE::Phase_Test;
+	requestPhase_ = PHASE::Phase_GameScene;
 }
 
 GameManager::~GameManager()

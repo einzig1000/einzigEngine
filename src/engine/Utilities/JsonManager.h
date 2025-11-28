@@ -11,12 +11,16 @@ class RenderData_Sprite;
 class RenderData_Triangle;
 class RenderData_Line;
 class RenderData_Particle;
+class RenderData_Particle3;
 
 class JsonManager
 {
 public:
 	static bool SaveToJson(RenderData_Particle& data, const std::string& path);
 	static bool LoadFromJson(RenderData_Particle& data, const std::string& path);
+
+	static bool SaveToJson(RenderData_Particle3& data, const std::string& path);
+	static bool LoadFromJson(RenderData_Particle3& data, const std::string& path);
 
 	static bool SaveToJson(RenderData_Model& data, const std::string& path);
 	static bool LoadFromJson(RenderData_Model& data, const std::string& path);

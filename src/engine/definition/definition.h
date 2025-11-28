@@ -26,8 +26,8 @@
 #define HEIGHT 720
 #define eps 1e-6f
 // 40
-#define MAX_BLOCK_X 1
-#define MAX_BLOCK_Z 1
+#define MAX_BLOCK_X 40
+#define MAX_BLOCK_Z 40
 #define MAX_BLOCK_Y 10
 #define BLOCK_SIZE 1.0f
 #define PLAYER_SPEED 0.1f

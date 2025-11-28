@@ -23,4 +23,7 @@ private:
 
 	// マップ
 	MapManager* map_;
+
+
+	RenderData_Particle3* particle;
 };

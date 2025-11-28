@@ -30,6 +30,9 @@ private:
 	int blockHeightMap_[MAX_BLOCK_X][MAX_BLOCK_Z];
 
 
+	// 着地パーティクル
+	RenderData_Particle3* landingParticle_;
+
 	// プレイヤー参照
 	Player* player_;
 

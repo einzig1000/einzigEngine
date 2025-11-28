@@ -380,6 +380,16 @@ bool JsonManager::LoadFromJson(RenderData_Particle& data, const std::string& pat
     }
 }
 
+bool JsonManager::SaveToJson(RenderData_Particle3& data, const std::string& path)
+{
+    return false;
+}
+
+bool JsonManager::LoadFromJson(RenderData_Particle3& data, const std::string& path)
+{
+    return false;
+}
+
 bool JsonManager::SaveToJson(RenderData_Model& data, const std::string& path)
 {
     try
