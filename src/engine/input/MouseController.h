@@ -23,9 +23,13 @@ public:
 	bool IsJustReleased(int i);// 離した瞬間（今フレームで離れた）
 	uint32_t HoldFrames(int i);// 押されてからの経過フレーム数
 
+	void ToggleMouseCursorVisible();
+
 	int wheelDelta = 0;
 
 private:
+
+	bool isVisible;
 
 	mouseButtenState leftButton;
 	mouseButtenState rightButton;

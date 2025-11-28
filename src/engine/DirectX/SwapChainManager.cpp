@@ -12,7 +12,12 @@ SwapChainManager::SwapChainManager(ID3D12Device* device, ID3D12CommandQueue* com
     Log("コンストラクタ実行成功 : SwapChainManager");
 }
 
-SwapChainManager::~SwapChainManager(){}
+SwapChainManager::~SwapChainManager()
+{
+    // ここで
+
+	Log("デストラクタ実行成功 : SwapChainManager");
+}
 
 void SwapChainManager::InitializeSwapChainInternal(ID3D12Device* device, ID3D12CommandQueue* commandQueue, HWND hwnd)
 {
@@ -29,15 +34,20 @@ void SwapChainManager::InitializeSwapChainInternal(ID3D12Device* device, ID3D12C
     swapChainDesc.BufferCount = 2;
     swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 
-    hr = dxgiFactory->CreateSwapChainForHwnd(commandQueue, hwnd, &swapChainDesc, nullptr, nullptr, reinterpret_cast<IDXGISwapChain1**>(swapChain.GetAddressOf()));
+    Microsoft::WRL::ComPtr<IDXGISwapChain1> swapChain1;
+    hr = dxgiFactory->CreateSwapChainForHwnd(
+        commandQueue, hwnd, &swapChainDesc, nullptr, nullptr,
+        swapChain1.ReleaseAndGetAddressOf());
+    assert(SUCCEEDED(hr));
+
+    // IDXGISwapChain4 へ昇格
+    hr = swapChain1.As(&swapChain);
     assert(SUCCEEDED(hr));
 
     hr = swapChain->GetBuffer(0, IID_PPV_ARGS(&swapChainResources[0]));
     assert(SUCCEEDED(hr));
     hr = swapChain->GetBuffer(1, IID_PPV_ARGS(&swapChainResources[1]));
     assert(SUCCEEDED(hr));
-
-    Log("デストラクタ実行成功 : SwapChainManager");
 }
 
 void SwapChainManager::InitializeRenderTargetView(ID3D12Device* device)
@@ -71,50 +81,43 @@ void SwapChainManager::UpdateBackBufferIndex()
 
 void SwapChainManager::Resize(ID3D12Device* device, ID3D12CommandQueue* commandQueue)
 {
-    // 最小化中はスキップ
     if (WindowManager::winWidth_ == 0 || WindowManager::winHeight_ == 0) return;
 
-    // GPUアイドル待ち（簡易フラッシュ）
+    // 全GPU作業の完了待ち（厳密）
     Microsoft::WRL::ComPtr<ID3D12Fence> fence;
     HRESULT hr = device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
     assert(SUCCEEDED(hr));
     HANDLE evt = CreateEvent(nullptr, FALSE, FALSE, nullptr);
     assert(evt != nullptr);
-    const UINT64 fenceValue = 1;
-    hr = commandQueue->Signal(fence.Get(), fenceValue);
+    UINT64 value = 1;
+    hr = commandQueue->Signal(fence.Get(), value);
     assert(SUCCEEDED(hr));
-    hr = fence->SetEventOnCompletion(fenceValue, evt);
+    hr = fence->SetEventOnCompletion(value, evt);
     assert(SUCCEEDED(hr));
     WaitForSingleObject(evt, INFINITE);
     CloseHandle(evt);
 
-    // 古いバックバッファを解放
-    for (auto& res : swapChainResources)
-    {
-        res.Reset();
-    }
+    // バックバッファの参照を解放
+    swapChainResources[0].Reset();
+    swapChainResources[1].Reset();
 
-    // スワップチェーンのサイズ変更
     hr = swapChain->ResizeBuffers(
         swapChainDesc.BufferCount,
         UINT(WindowManager::winWidth_),
         UINT(WindowManager::winHeight_),
         swapChainDesc.Format,
-        0
-    );
+        0);
     assert(SUCCEEDED(hr));
 
-    // 記述情報を更新
     swapChainDesc.Width = UINT(WindowManager::winWidth_);
     swapChainDesc.Height = UINT(WindowManager::winHeight_);
 
-    // 新しいバックバッファを取得
+    // 新しいバックバッファの取得とRTV再作成
     hr = swapChain->GetBuffer(0, IID_PPV_ARGS(&swapChainResources[0]));
     assert(SUCCEEDED(hr));
     hr = swapChain->GetBuffer(1, IID_PPV_ARGS(&swapChainResources[1]));
     assert(SUCCEEDED(hr));
 
-    // 既存のRTVヒープを使ってRTVを再作成（ヒープは再生成しない）
     D3D12_CPU_DESCRIPTOR_HANDLE start = rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
     rtvHandles[0] = start;
     device->CreateRenderTargetView(swapChainResources[0].Get(), &rtvDesc, rtvHandles[0]);
@@ -122,8 +125,5 @@ void SwapChainManager::Resize(ID3D12Device* device, ID3D12CommandQueue* commandQ
     rtvHandles[1].ptr = start.ptr + inc;
     device->CreateRenderTargetView(swapChainResources[1].Get(), &rtvDesc, rtvHandles[1]);
 
-    // 現在のバックバッファインデックスを更新
     backBufferIndex = swapChain->GetCurrentBackBufferIndex();
-
-
 }

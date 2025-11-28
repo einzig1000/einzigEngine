@@ -6,24 +6,45 @@
 
 DirectXManager::DirectXManager(HWND hwnd)
 {
-    deviceManager = std::make_unique<DeviceManager>();
-    commandContextManager = std::make_unique<CommandContextManager>(deviceManager->GetDevice());
-    swapChainManager = std::make_unique<SwapChainManager>(deviceManager->GetDevice(), commandContextManager->GetCommandQueue(), hwnd);
-    depthStencilManager = std::make_unique<DepthStencilManager>(deviceManager->GetDevice());
-    pipelineStateManager = std::make_unique<PipelineStateManager>(deviceManager->GetDevice());
-    descriptorHeapManager = std::make_unique<DescriptorHeapManager>(deviceManager->GetDevice());
-    synchronizationManager = std::make_unique<SynchronizationManager>(deviceManager->GetDevice());
-    viewportScissorManager = std::make_unique<ViewportScissorManager>();
+    deviceManager = new DeviceManager();
+    commandContextManager = new CommandContextManager(deviceManager->GetDevice());
+    swapChainManager = new SwapChainManager(deviceManager->GetDevice(), commandContextManager->GetCommandQueue(), hwnd);
+    depthStencilManager = new DepthStencilManager(deviceManager->GetDevice());
+    pipelineStateManager = new PipelineStateManager(deviceManager->GetDevice());
+    descriptorHeapManager = new DescriptorHeapManager(deviceManager->GetDevice());
+    synchronizationManager = new SynchronizationManager(deviceManager->GetDevice());
+    viewportScissorManager = new ViewportScissorManager();
 
 
-	resourceManager_ = std::make_unique<ResourceManager>();
-    fixFPS_ = std::make_unique<FixFPS>();
+	resourceManager_ = new ResourceManager(commandContextManager->GetCommandList(), descriptorHeapManager, deviceManager->GetDevice());
+    fixFPS_ = new FixFPS();
 
     Log("コンストラクタ実行成功 : DirectXManager");
 }
 
 DirectXManager::~DirectXManager()
 {
+    delete fixFPS_;
+    fixFPS_ = nullptr;
+	delete resourceManager_;
+	resourceManager_ = nullptr;
+	delete viewportScissorManager;
+	viewportScissorManager = nullptr;
+	delete synchronizationManager;
+	synchronizationManager = nullptr;
+	delete descriptorHeapManager;
+	descriptorHeapManager = nullptr;
+	delete pipelineStateManager;
+	pipelineStateManager = nullptr;
+	delete depthStencilManager;
+	depthStencilManager = nullptr;
+	delete swapChainManager;
+	swapChainManager = nullptr;
+	delete commandContextManager;
+	commandContextManager = nullptr;
+    delete deviceManager;
+	deviceManager = nullptr;
+
     Log("デストラクタ実行成功 : DirectXManager");
 }
 
@@ -89,14 +110,11 @@ void DirectXManager::EndFrame()
     ID3D12CommandList* commandLists[] = { commandContextManager->GetCommandList() };
     commandContextManager->GetCommandQueue()->ExecuteCommandLists(1, commandLists);
 
-    // フェンスシグナル
-    synchronizationManager->Signal(commandContextManager->GetCommandQueue());
-
     // スワップチェーンをプレゼンテーション
     swapChainManager->Present();
 
-    // GPU同期
-    synchronizationManager->WaitForGPU();
+    // フェンスシグナル
+    synchronizationManager->Signal(commandContextManager->GetCommandQueue());
 
 	// FPS制限
     fixFPS_->UpdateFixFPS();

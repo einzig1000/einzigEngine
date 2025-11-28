@@ -1,8 +1,5 @@
 #include "Engine.h"
-#include <numbers>
 #include "GameManager/GameManager.h"
-
-
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
@@ -11,6 +8,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	Engine::Instance().Initialize(WIDTH, HEIGHT, L"LE2A_17_ヨコヤマ_タダノブ");
 
 	Engine::Instance().BeginFrame();
+	ResourceID::reload();
 	GameManager* gm = new GameManager();
 	Engine::Instance().EndFrame();
 
@@ -21,9 +19,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 		// ↓更新処理ここから
 		gm->Update();
-
-		// モデル情報の更新
-		Engine::Instance().UpdateTransforms();
 
 		// ↓描画処理ここから
 		gm->Draw();

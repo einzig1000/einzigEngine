@@ -24,6 +24,7 @@ public:
     bool IsShaking();
     void StopShake();
 
+
 	Vector3 GetCenter(const std::string name) const;			// カメラ回転中心
 	Vector3 GetTranslate(const std::string name) const;			// カメラ位置
 	Matrix4x4 GetViewProjectionMatrix(const std::string name) const; // ビュープロジェクション行列
@@ -31,8 +32,11 @@ public:
 
 	Vector3 GetCurrentCenter() const;			// カメラ回転中心
 	Vector3 GetCurrentTranslate() const;		// カメラ位置
+	Vector3 GetCurrentRotate() const;
 	Matrix4x4 GetCurrentViewProjectionMatrix() const; // ビュープロジェクション行列
 	float GetCurrentDistance() const;			// カメラ距離
+	void ToggleCurrentOrbitMode();				// 現在のカメラのオービットモード切り替え
+	void SetCurrentOrbitMode(bool mode);
 
 	// 視錐台内にAABBがあるか
 	bool InCamera(const AABB& aabb);

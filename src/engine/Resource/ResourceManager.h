@@ -9,7 +9,7 @@
 class ResourceManager
 {
 public:
-	ResourceManager();
+	ResourceManager(ID3D12GraphicsCommandList* commandList, DescriptorHeapManager* descriptorHeap, ID3D12Device* device);
 	~ResourceManager();
 
 	AudioManager* GetAudioManager() const { return audioManager_.get(); }

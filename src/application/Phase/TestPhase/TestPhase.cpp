@@ -2,89 +2,146 @@
 
 TestPhase::TestPhase()
 {
-	uint32_t tex1 = Game::Resource::LoadTexture("resources/Prototypes/texture/uvChecker.png");
-	uint32_t tex2 = Game::Resource::LoadTexture("resources/Prototypes/texture/circle.png");
-	uint32_t tex3 = Game::Resource::LoadTexture("resources/Prototypes/texture/monsterBall.png");
-	uint32_t tex4 = Game::Resource::LoadTexture("resources/Prototypes/texture/white1x1.png");
+	int32_t tex1 = ResourceID::GetTextureID(TextureID::UVChecker);
+	int32_t tex2 = ResourceID::GetTextureID(TextureID::monsterBall);
+	int32_t tex3 = ResourceID::GetTextureID(TextureID::Circle);
+	int32_t tex4 = ResourceID::GetTextureID(TextureID::white1x1);
 
-	uint32_t model1 = Game::Resource::LoadModel("resources/Prototypes/model/", "plane.obj");
-	uint32_t model2 = Game::Resource::LoadModel("resources/Prototypes/model/", "cube.obj");
-	uint32_t model3 = Game::Resource::LoadModel("resources/Prototypes/model/", "corn.obj");
-	uint32_t model4 = Game::Resource::LoadModel("resources/Prototypes/model/", "sphere.obj");
+	int32_t model1 = ResourceID::GetModelID(ModelID::Cube);
+	int32_t model2 = ResourceID::GetModelID(ModelID::Corn);
+	int32_t model3 = ResourceID::GetModelID(ModelID::Plane);
+	int32_t model4 = ResourceID::GetModelID(ModelID::Sphere);
 
 	audio1 = Game::Resource::LoadAudio("resources/Prototypes/audio/BGM/InGame.mp3");
 	audio2 = Game::Resource::LoadAudio("resources/Prototypes/audio/SE/バトル用/氷魔法1.mp3");
 
 
-	ground_.model = model2;
-	ground_.texture = tex1;
-	ground_.name = "ground";
-	ground_.mass = 1001.0f;
-	ground_.scale.value = { 10.0f,1.0f,10.0f };
+	ground_ = std::make_unique<RenderData_Model>();
+	wall1_ = std::make_unique<RenderData_Model>();
+	wall2_ = std::make_unique<RenderData_Model>();
+	wall3_ = std::make_unique<RenderData_Model>();
+	wall4_ = std::make_unique<RenderData_Model>();
+	player_ = std::make_unique<RenderData_Model>();
 
-	wall1_.model = model2;
-	wall1_.texture = tex1;
-	wall1_.name = "wall1";
-	wall1_.scale.value = { 0.5f,2.0f,10.0f };
-	wall1_.translate.value = { -5.0f,0.5f,0.0f };
-	wall1_.mass = 1000.0f;
-	wall2_.model = model2;
-	wall2_.texture = tex1;
-	wall2_.name = "wall2";
-	wall2_.scale.value = { 0.5f,2.0f,10.0f };
-	wall2_.translate.value = { 5.0f,0.5f,0.0f };
-	wall2_.mass = 1000.0f;
-	wall3_.model = model2;
-	wall3_.texture = tex1;
-	wall3_.name = "wall3";
-	wall3_.scale.value = { 10.0f,2.0f,0.5f };
-	wall3_.translate.value = { 0.0f,0.5f,-5.0f };
-	wall3_.mass = 1000.0f;
-	wall4_.model = model2;
-	wall4_.texture = tex1;
-	wall4_.name = "wall4";
-	wall4_.scale.value = { 10.0f,2.0f,0.5f };
-	wall4_.translate.value = { 0.0f,0.5f,5.0f };
-	wall4_.mass = 1000.0f;
+	shoulder_ = std::make_unique<RenderData_Model>();
+	elbow_ = std::make_unique<RenderData_Model>();
+	hand_ = std::make_unique<RenderData_Model>();
 
-	player_.model = model4;
-	player_.texture = tex3;
-	player_.name = "player";
-	player_.translate.value = { 0.0f,2.0f,0.0f };
-	player_.translate.acceleration = { 0.0f,-0.2f,0.0f };
-	player_.mass = 1.0f;
-	player_.SetBlock(ground_);
-	player_.SetBlock(wall1_);
-	player_.SetBlock(wall2_);
-	player_.SetBlock(wall3_);
-	player_.SetBlock(wall4_);
+	rect_ = std::make_unique<RenderData_Rect>();
 
-	sprite1_.texture = tex1;
-	sprite1_.transforms.scale = { 0.1f,0.1f };
-	sprite2_.texture = tex3;
-	sprite2_.transforms.scale = { 0.1f,0.1f };
+	sprite1_ = std::make_unique<RenderData_Sprite>();
+	sprite2_ = std::make_unique<RenderData_Sprite>();
 
-	triangle1_.texture = tex1;
-	triangle2_.texture = tex1;
+	particle1_ = std::make_unique<RenderData_Particle>();
 
-	line_.points.push_back(Vector3{ 10.0f,0.0f,0.0f });
-	line_.points.push_back(Vector3{ 0.0f,10.0f,0.0f });
-	line_.points.push_back(Vector3{ -10.0f,0.0f,0.0f });
+	triangle1_ = std::make_unique<RenderData_Triangle>();
+	triangle2_ = std::make_unique<RenderData_Triangle>();
 
-	line2_.points.push_back(Vector3{ 10.0f,0.0f,0.0f });
-	line2_.points.push_back(Vector3{ 0.0f,10.0f,0.0f });
-	line2_.points.push_back(Vector3{ -10.0f,0.0f,0.0f });
-	line2_.lineType = LineType::BezierCurve;
+	line_ = std::make_unique<RenderData_Line>();
+	line2_ = std::make_unique<RenderData_Line>();
+	line3_ = std::make_unique<RenderData_Line>();
+	
+	instanceTest_.model = model2;
+	instanceTest_.texture = tex1;
 
-	line3_.points.push_back(Vector3{ 10.0f,0.0f,0.0f });
-	line3_.points.push_back(Vector3{ 0.0f,10.0f,0.0f });
-	line3_.points.push_back(Vector3{ -10.0f,0.0f,0.0f });
-	line3_.lineType = LineType::SplineCurve;
+	pointTest_->model = model2;
+	pointTest_->texture = tex1;
 
-	//particle_.model = playerModel;
-	//particle_.texture = playerTex;
-	particle1_.filePath = "resources/Prototypes/particle/aaa";
-	particle1_.LoadJson();
+	uniquePointTest_->model = model2;
+	uniquePointTest_->texture = tex1;
+
+	ground_->model = model1;
+	ground_->texture = tex1;
+	ground_->name = "ground";
+	ground_->mass = 1001.0f;
+	ground_->scale.value = { 10.0f,1.0f,10.0f };
+
+	wall1_->model = model1;
+	wall1_->texture = tex1;
+	wall1_->name = "wall1";
+	wall1_->scale.value = { 0.5f,2.0f,10.0f };
+	wall1_->translate.value = { -5.0f,0.5f,0.0f };
+	wall1_->mass = 1000.0f;
+	wall2_->model = model1;
+	wall2_->texture = tex1;
+	wall2_->name = "wall2";
+	wall2_->scale.value = { 0.5f,2.0f,10.0f };
+	wall2_->translate.value = { 5.0f,0.5f,0.0f };
+	wall2_->mass = 1000.0f;
+	wall3_->model = model1;
+	wall3_->texture = tex1;
+	wall3_->name = "wall3";
+	wall3_->scale.value = { 10.0f,2.0f,0.5f };
+	wall3_->translate.value = { 0.0f,0.5f,-5.0f };
+	wall3_->mass = 1000.0f;
+	wall4_->model = model1;
+	wall4_->texture = tex1;
+	wall4_->name = "wall4";
+	wall4_->scale.value = { 10.0f,2.0f,0.5f };
+	wall4_->translate.value = { 0.0f,0.5f,5.0f };
+	wall4_->mass = 1000.0f;
+
+	shoulder_->model = model4;
+	shoulder_->texture = tex2;
+	shoulder_->name = "shoulder";
+	shoulder_->translate.value.y = 0.0f;
+	elbow_->model = model4;
+	elbow_->texture = tex2;
+	elbow_->name = "elbow";
+	elbow_->translate.value.y = 3.0f;
+	hand_->model = model4;
+	hand_->texture = tex2;
+	hand_->name = "hand";
+	hand_->translate.value.y = 6.0f;
+
+	hand_->parentModel = elbow_.get();
+	//elbow_.parentModel = &shoulder_;
+
+	rect_->texture = tex1;
+	rect_->pos1 = { 1.0f,1.0f,0.0f };
+	rect_->pos2 = { 1.0f,-1.0f,0.0f };
+	rect_->pos3 = { -1.0f,1.0f,0.0f };
+	rect_->pos4 = { -1.0f,-1.0f,0.0f };
+
+	player_->model = model4;
+	player_->texture = tex3;
+	player_->name = "player";
+	player_->translate.value = { 0.0f,2.0f,0.0f };
+	player_->translate.acceleration = { 0.0f,-0.2f,0.0f };
+	player_->mass = 1.0f;
+	player_->SetBlock(ground_.get());
+	player_->SetBlock(wall1_.get());
+	player_->SetBlock(wall2_.get());
+	player_->SetBlock(wall3_.get());
+	player_->SetBlock(wall4_.get());
+
+	sprite1_->texture = tex1;
+	sprite1_->transforms.scale = { 0.1f,0.1f };
+	sprite2_->texture = tex3;
+	sprite2_->transforms.scale = { 0.1f,0.1f };
+
+	triangle1_->texture = tex1;
+	triangle2_->texture = tex1;
+
+	line_->points.push_back(Vector3{ 10.0f,0.0f,0.0f });
+	line_->points.push_back(Vector3{ 0.0f,10.0f,0.0f });
+	line_->points.push_back(Vector3{ -10.0f,0.0f,0.0f });
+
+	line2_->points.push_back(Vector3{ 10.0f,0.0f,0.0f });
+	line2_->points.push_back(Vector3{ 0.0f,10.0f,0.0f });
+	line2_->points.push_back(Vector3{ -10.0f,0.0f,0.0f });
+	line2_->lineType = LineType::BezierCurve;
+
+	line3_->points.push_back(Vector3{ 10.0f,0.0f,0.0f });
+	line3_->points.push_back(Vector3{ 0.0f,10.0f,0.0f });
+	line3_->points.push_back(Vector3{ -10.0f,0.0f,0.0f });
+	line3_->lineType = LineType::SplineCurve;
+
+	particle1_->model = model3;
+	particle1_->texture = tex1;
+	particle1_->filePath = "resources/Prototypes/particle/aaa";
+	//particle1_.LoadJson();
+
 
 	particle2_.filePath = "resources/Prototypes/particle/bbb";
 	particle2_.LoadJson();
@@ -331,63 +388,71 @@ void TestPhase::Update()
 
 	if (Game::Input::Key::IsHeld(DIK_A))
 	{
-		player_.translate.value.x -= 0.1f;
+		player_->translate.value.x -= 0.1f;
 	}
 	if (Game::Input::Key::IsHeld(DIK_D))
 	{
-		player_.translate.value.x += 0.1f;
+		player_->translate.value.x += 0.1f;
 	}
 	if (Game::Input::Key::IsHeld(DIK_S))
 	{
-		player_.translate.value.z -= 0.1f;
+		player_->translate.value.z -= 0.1f;
 	}
 	if (Game::Input::Key::IsHeld(DIK_W))
 	{
-		player_.translate.value.z += 0.1f;
+		player_->translate.value.z += 0.1f;
 	}
 	if (Game::Input::Key::IsJustPressed(DIK_SPACE))
 	{
-		player_.translate.velocity.y += 2.5f;
+		player_->translate.velocity.y += 2.5f;
 	}
 }
 
 
 void TestPhase::Draw()
 {
+	rect_->Draw();
+	rect_->DrawImGui();
+	
+	ground_->Draw();
+	ground_->DrawImGui();
+	ground_->DrawAABB();
+	wall1_->Draw();
+	wall2_->Draw();
+	wall3_->Draw();
+	wall4_->Draw();
 
-	//ground_.Draw();
-	//ground_.DrawImGui();
-	//ground_.DrawAABB();
-	//wall1_.Draw();
-	//wall2_.Draw();
-	//wall3_.Draw();
-	//wall4_.Draw();
+	player_->Draw();
+	player_->DrawAABB();
+	player_->DrawImGui();
 
-	//player_.Draw();
-	//player_.DrawAABB();
-	//player_.DrawImGui();
+	sprite1_->Draw();
+	sprite1_->DrawImGui();
+	sprite2_->Draw();
+	sprite2_->DrawImGui();
 
-	//sprite1_.Draw();
-	//sprite1_.DrawImGui();
-	//sprite2_.Draw();
-	//sprite2_.DrawImGui();
+	triangle1_->Draw();
+	triangle1_->DrawImGui();
+	triangle2_->Draw();
+	triangle2_->DrawImGui();
 
-	//triangle1_.Draw();
-	//triangle1_.DrawImGui();
-	//triangle2_.Draw();
-	//triangle2_.DrawImGui();
+	particle1_->Draw();
+	particle1_->DrawEmitter();
+	particle1_->DrawImGui();
+	particle1_->DrawEmitter();
 
-	particle1_.Draw();
-	particle1_.DrawImGui();
-	particle1_.DrawEmitter();
-	particle2_.Draw();
-	particle2_.DrawImGui();
-	particle2_.DrawEmitter();
+	line_->Draw();
+	line_->DrawImGui();
+	line2_->Draw();
+	line2_->DrawImGui();
+	line3_->Draw();
+	line3_->DrawImGui();
 
-	//line_.Draw();
-	//line_.DrawImGui();
-	//line2_.Draw();
-	//line2_.DrawImGui();
-	//line3_.Draw();
-	//line3_.DrawImGui();
+	shoulder_->Draw();
+	shoulder_->DrawImGui();
+	
+	elbow_->Draw();
+	elbow_->DrawImGui();
+	hand_->Draw();
+	hand_->DrawImGui();
 }

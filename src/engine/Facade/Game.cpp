@@ -1,5 +1,7 @@
+#include "Camera/CameraManager.h"
 #include "Facade/Game.h"
 #include "Engine/Engine.h"
+
 using namespace DirectX;
 
 uint32_t Game::Resource::LoadModel(const std::string& directoryPath, const std::string& filename)
@@ -17,9 +19,9 @@ uint32_t Game::Resource::LoadAudio(const std::string& filePath)
 	return Engine::Instance().LoadAudio(filePath);
 }
 
-TextureData* Game::Resource::GetTexture(uint32_t textureNumber)
+TextureData* Game::Resource::GetTextureData(uint32_t textureNumber)
 {
-	return Engine::Instance().GetTexture(textureNumber);
+	return Engine::Instance().GetTextureData(textureNumber);
 }
 
 size_t Game::Resource::GetTextureCount()
@@ -43,6 +45,10 @@ void Game::DebugDraw::AddAABB(AABB aabb, uint32_t color)
 	Engine::Instance().AddAABB(aabb, color);
 }
 
+void Game::DebugDraw::AddLine(Vector3 start, Vector3 end, uint32_t color)
+{
+	Engine::Instance().AddLine(start, end, color);
+}
 
 void Game::Audio::PlayAudio(const uint32_t& audioId, bool loop)
 {
@@ -141,6 +147,11 @@ uint32_t Game::Input::Mouse::GetMouseWheel()
 	return Engine::Instance().GetMouseWheel();
 }
 
+void Game::Input::Mouse::ToggleMouseCursorVisible()
+{
+	Engine::Instance().ToggleMouseCursorVisible();
+}
+
 
 bool Game::Input::Key::IsHeld(BYTE key)
 {
@@ -236,6 +247,11 @@ Vector3 Game::Camera::Getter::GetCurrentTranslate()
 	return Engine::Instance().GetCameraManager()->GetCurrentTranslate();
 }
 
+Vector3 Game::Camera::Getter::GetCurrentRotate()
+{
+	return Engine::Instance().GetCameraManager()->GetCurrentRotate();
+}
+
 Matrix4x4 Game::Camera::Getter::GetCurrentViewProjectionMatrix()
 {
 	return Engine::Instance().GetCameraManager()->GetCurrentViewProjectionMatrix();
@@ -246,6 +262,15 @@ float Game::Camera::Getter::GetCurrentDistance()
 	return Engine::Instance().GetCameraManager()->GetCurrentDistance();
 }
 
+void Game::Camera::ToggleCurrentOrbitMode()
+{
+	Engine::Instance().GetCameraManager()->ToggleCurrentOrbitMode();
+}
+
+void Game::Camera::SetCurrentOrbitMode(bool mode)
+{
+	Engine::Instance().GetCameraManager()->SetCurrentOrbitMode(mode);
+}
 
 void Game::Utilitie::toggleWireframeMode()
 {

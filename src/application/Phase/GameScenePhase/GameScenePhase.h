@@ -1,12 +1,15 @@
 #pragma once
 #include "Phase/PhaseParent/PhaseParent.h"
+#include "Block/Block.h"
 
 class Player;
+class MapManager;
 
 class GameScenePhase :
 	public PhaseParent
 {
 public:
+	GameScenePhase();
 	~GameScenePhase();
 	void Initialize();
 	void Update();
@@ -14,5 +17,13 @@ public:
 
 
 private:
-};
 
+	// プレイヤー
+	Player* player_;
+
+	// マップ
+	MapManager* map_;
+
+
+	RenderData_Particle* particle;
+};

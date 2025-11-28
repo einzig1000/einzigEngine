@@ -86,6 +86,7 @@ SRVAllocation SrvManager::CreateSRVforStructuredBuffer(ID3D12Resource* resource,
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
     srvDesc.Buffer.FirstElement = 0;
+	srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
     srvDesc.Buffer.NumElements = numElements;
     srvDesc.Buffer.StructureByteStride = structureByteStride;
 	return CreateSRV(resource, &srvDesc);

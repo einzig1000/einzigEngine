@@ -11,9 +11,12 @@
 #include "Facade/Game.h"
 #include "Resource/Texture/TextureManager.h"
 #include "DrawSystem/RenderData/RenderData.h"
+#include "DrawSystem/DrawSystem.h"
+#include "Camera/CameraManager.h"
 
 #include <DirectXMath.h>
 #include <filesystem>
+#include "Player.h"
 using namespace DirectX;
 
 
@@ -79,7 +82,7 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 bool Engine::ProcessMessage()
 {
 	MSG msg = {};
-	if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+	while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 	{
 		if (msg.message == WM_QUIT)
 		{
@@ -93,6 +96,7 @@ bool Engine::ProcessMessage()
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
+
 	return true;
 }
 void Engine::BeginFrame()
@@ -111,13 +115,14 @@ void Engine::BeginFrame()
 
 
 	// DirectXを更新
-	dxManager->BeginFrame();(ImGui::GetMainViewport());
+	dxManager->BeginFrame();//(ImGui::GetMainViewport());
 
-	// カメラを更新
+	// カメラを更新	
 	UpdateCamera();
 
 	// 描画関数初期化
-	drawSystem->BeginFrame(cameraManager->GetCurrentViewProjectionMatrix());
+	drawSystem->Update();
+	drawSystem->SetViewProjectionMatrix(cameraManager->GetCurrentViewProjectionMatrix());
 
 	// デバッグ情報更新
 	UpdateDebugInfo();
@@ -129,7 +134,7 @@ void Engine::UpdateTransforms()
 {
 	if (RenderData_Model::renderModels.size() == 0)return;
 
-	if (Game::Input::Key::IsHeld(DIK_LSHIFT))
+	if (Game::Input::Key::IsHeld(DIK_RSHIFT))
 	{
 		if (!Game::Input::Key::IsJustPressed(DIK_RIGHTARROW))
 		{
@@ -148,10 +153,6 @@ void Engine::UpdateTransforms()
 	// オブジェクト更新
 	std::vector<Object3D> objects = dxManager->GetResourceManager()->GetModelManager()->GetModelList();
 
-	for (auto& rd : modelList)
-	{
-		rd->Update1();
-	}
 	for (auto& rd : modelList)
 	{
 		rd->Update2();
@@ -174,7 +175,8 @@ void Engine::UpdateTransforms()
 #pragma region マウスレイ衝突判定
 
 	// マウスレイ取得
-	const Ray mouseRay = inputManager_->GetMouseController()->GetMouseRay();
+	Ray mouseRay = inputManager_->GetMouseController()->GetMouseRay();
+
 	// モデルと衝突までの距離セット構造体
 	struct HitInfo { RenderData_Model* rdm; float distance; };
 	// のリスト
@@ -186,7 +188,7 @@ void Engine::UpdateTransforms()
 	{
 		rd->isCollisionMouseRay = -1;
 		// 描画範囲内なら判定
-		if (rd->inPicture)
+		if (rd->inPicture && rd->isCheckMouseRay)
 		{
 			// 最近接衝突点を取得
 			std::optional<Vector3> colPos = IntersectRayModel(
@@ -214,6 +216,11 @@ void Engine::UpdateTransforms()
 
 #pragma endregion
 
+}
+void Engine::UpdateParticles()
+{
+	// パーティクル更新
+	RenderData_Particle::UpdateAllParticles(cameraManager->GetCurrentViewProjectionMatrix());
 }
 void Engine::UpdateCamera()
 {
@@ -271,31 +278,44 @@ void Engine::UpdateDebugInfo()
 }
 void Engine::EndFrame()
 {
-	// 
+	// ImGui描画
 	if (isDebugInfo)ImGui::Render();
 
+	// 座標更新
+	UpdateTransforms();
+
 	// パーティクル更新
-	drawSystem->EndFrame();
+	UpdateParticles();
+
+	// 描画実行
+	drawSystem->Draw();
 
 	// インプット系終了処理
 	inputManager_->EndFrame();
 
 	// DirectX終了処理
 	dxManager->EndFrame();
+
+	// GPU同期
+	dxManager->GetSynchronizationManager()->WaitForGPU();
+
+	// アプリケーション終了
+	if (Game::Input::Key::IsJustPressed(DIK_ESCAPE))
+	{
+		//Finalize();
+		windowManager->Quit();
+	}
 }
-
-
 
 // 終了処理
 void Engine::Finalize()
 {
+	dxManager->GetSynchronizationManager()->WaitForGPU();
+
 	// ImGuiの終了処理
 	ImGui_ImplDX12_Shutdown();
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
-
-	// COMの終了処理
-	CoUninitialize();
 
 	// 解放
 	delete windowManager;
@@ -308,17 +328,20 @@ void Engine::Finalize()
 	cameraManager = nullptr;
 	delete inputManager_;
 	inputManager_ = nullptr;
+
+	// COMの終了処理
+	CoUninitialize();
 }
 
 // リソース読み込み
 uint32_t Engine::LoadTexture(const std::string& filePath)
 {
-	return dxManager->GetResourceManager()->GetTextureManager()->LoadTexture(filePath, dxManager->GetCommandContextManager()->GetCommandList(), dxManager->GetDescriptorHeapManager(), dxManager->GetDevice());
+	return dxManager->GetResourceManager()->GetTextureManager()->LoadTexture(filePath);
 }
 
 uint32_t Engine::LoadModel(const std::string& directoryPath, const std::string& filename)
 {
-	return dxManager->GetResourceManager()->GetModelManager()->LoadModel(directoryPath, filename, dxManager->GetDevice());
+	return dxManager->GetResourceManager()->GetModelManager()->LoadModel(directoryPath, filename);
 }
 
 uint32_t Engine::LoadAudio(const std::string& filePath)
@@ -326,9 +349,14 @@ uint32_t Engine::LoadAudio(const std::string& filePath)
 	return dxManager->GetResourceManager()->GetAudioManager()->LoadAudio(filePath);
 }
 
-TextureData* Engine::GetTexture(uint32_t textureNumber)
+Object3D* Engine::GetModelData(uint32_t modelNumber)
 {
-	return dxManager->GetResourceManager()->GetTextureManager()->GetTexture(textureNumber);
+	return dxManager->GetResourceManager()->GetModelManager()->GetModelData(modelNumber);
+}
+
+TextureData* Engine::GetTextureData(uint32_t textureNumber)
+{
+	return dxManager->GetResourceManager()->GetTextureManager()->GetTextureData(textureNumber);
 }
 
 size_t Engine::GetTextureCount()
@@ -342,30 +370,42 @@ size_t Engine::GetModelCount()
 }
 
 // 描画
-void Engine::DrawModel(RenderData_Model& renderData)
+void Engine::AddModelDrawList(RenderData_Model* renderData)
 {
-	drawSystem->DrawModel(renderData);
+	drawSystem->AddModelDrawList(renderData);
 }
 
-void Engine::DrawTriangle(RenderData_Triangle& renderData)
+void Engine::AddTriangleDrawList(RenderData_Triangle* renderData)
 {
-	drawSystem->DrawTriangle(renderData);
+	drawSystem->AddTriangleDrawList(renderData);
 }
 
-void Engine::DrawSprite(RenderData_Sprite& renderData)
+void Engine::AddRectDrawList(RenderData_Rect* renderData)
 {
-	drawSystem->DrawSprite(renderData);
+	drawSystem->AddRectDrawList(renderData);
 }
 
-void Engine::DrawLine(RenderData_Line& renderData)
+void Engine::AddSpriteDrawList(RenderData_Sprite* renderData)
 {
-	drawSystem->DrawLine(renderData);
+	drawSystem->AddSpriteDrawList(renderData);
 }
 
-void Engine::DrawParticle(RenderData_Particle& renderData)
+void Engine::AddLineDrawList(RenderData_Line* renderData)
 {
-	drawSystem->DrawParticle(renderData);
+	drawSystem->AddLineDrawList(renderData);
 }
+
+void Engine::AddParticleDrawList(RenderData_Particle* renderData)
+{
+	drawSystem->AddParticleDrawList(renderData);
+}
+
+
+void Engine::DrawMinecraftMap(RenderData_MinecraftMap& renderData)
+{
+	//drawSystem->DrawMap(renderData);
+}
+
 
 void Engine::AddSphere(Vector3 pos, Vector3 radius, uint32_t color)
 {
@@ -375,6 +415,11 @@ void Engine::AddSphere(Vector3 pos, Vector3 radius, uint32_t color)
 void Engine::AddAABB(AABB aabb, uint32_t color)
 {
 	if (isDebugInfo)drawSystem->AddAABB(aabb, color);
+}
+
+void Engine::AddLine(Vector3 start, Vector3 end, uint32_t color)
+{
+	if (isDebugInfo)drawSystem->AddLine(start, end, color);
 }
 
 bool Engine::InFrustum(const AABB& aabb)
@@ -418,6 +463,23 @@ bool Engine::IsAudioPlaying(const uint32_t& audioId)
 	return dxManager->GetResourceManager()->GetAudioManager()->IsAudioPlaying(audioId);
 }
 
+// ライト
+void Engine::SetLightDirection(const Vector3 direction)
+{
+	drawSystem->SetLightDirection(direction);
+}
+void Engine::SetLightColor(const Vector4 color)
+{
+	drawSystem->SetLightColor(color);
+}
+void Engine::SetLightIntensity(float intensity)
+{
+	drawSystem->SetLightIntensity(intensity);
+}
+void Engine::ToggleLightMode(const LightMode mode)
+{
+	drawSystem->ToggleLightMode(mode);
+}
 
 // 入力
 Vector2 Engine::GetMousePosition()
@@ -458,6 +520,11 @@ bool Engine::IsMouseJustReleased(int i)
 uint32_t Engine::MouseHoldFrames(int i)
 {
 	return inputManager_->GetMouseController()->HoldFrames(i);
+}
+
+void Engine::ToggleMouseCursorVisible()
+{
+	inputManager_->GetMouseController()->ToggleMouseCursorVisible();
 }
 
 
@@ -520,6 +587,11 @@ bool Engine::IsCameraShaking()
 void Engine::ToggleCameraMode()
 {
 	cameraManager->ToggleCameraMode();
+}
+
+void Engine::ToggleCurrentOrbitMode()
+{
+	cameraManager->ToggleCurrentOrbitMode();
 }
 
 void Engine::StopCameraShake()
@@ -588,4 +660,55 @@ std::vector<AABB>  Engine::CreateAABB(RenderData_Model* data)
 void Engine::toggleWireframeMode()
 {
 	drawSystem->toggleWireframeMode();
+}
+
+
+Microsoft::WRL::ComPtr<ID3D12Resource> Engine::CreateBufferResource(size_t sizeInBytes)
+{
+	// ID3D12Resourceを格納するポインタ
+	Microsoft::WRL::ComPtr<ID3D12Resource> pResource = nullptr;
+
+	D3D12_HEAP_PROPERTIES heapProperties{};
+	heapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
+
+	// リソース記述子を作成
+	D3D12_RESOURCE_DESC resourceDesc{};
+	// バッファリソース。テクスチャの場合はまた別の設定をする
+	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	resourceDesc.Width = sizeInBytes;
+	// バッファの場合はこれらは１にする決まり
+	resourceDesc.Height = 1;
+	resourceDesc.DepthOrArraySize = 1;
+	resourceDesc.MipLevels = 1;
+	resourceDesc.SampleDesc.Count = 1;
+	// バッファの場合はこれにする決まり
+	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+	// リソースを作成
+	HRESULT hr = dxManager->GetDevice()->CreateCommittedResource(
+		&heapProperties,        // ヒープのプロパティ
+		D3D12_HEAP_FLAG_NONE,   // ヒープフラグ
+		&resourceDesc,          // リソースの記述子
+		D3D12_RESOURCE_STATE_GENERIC_READ,           // 初期状態
+		nullptr,                // Clear値 (バッファの場合はnullptr)
+		IID_PPV_ARGS(&pResource) // ID3D12Resourceポインタを取得
+	);
+
+	assert(SUCCEEDED(hr));
+	pResource->SetName(L"CreateBufferResource()");
+
+	return pResource;
+}
+
+Microsoft::WRL::ComPtr<ID3D12Resource> Engine::CreateConstantBufferResource(size_t sizeInBytes)
+{
+	size_t ConstantSize;
+	ConstantSize = (sizeInBytes + (D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1)) & ~(D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1);
+
+	return CreateBufferResource(ConstantSize);
+}
+
+const std::vector<Object3D> Engine::GetAllObject3D()
+{
+	return dxManager->GetResourceManager()->GetModelManager()->GetModelList();
 }

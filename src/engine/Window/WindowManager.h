@@ -21,6 +21,8 @@ public:
     void ToggleFullscreen();
     bool IsFullscreen() const { return isFullscreen; }
 
+    void Quit();
+
     // ウィンドウサイズ
     static uint32_t winWidth_;
     static uint32_t winHeight_;

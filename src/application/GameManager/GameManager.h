@@ -7,7 +7,6 @@
 #include "Phase/GameScenePhase/GameScenePhase.h"
 
 
-
 class GameManager
 {
 public:
@@ -28,5 +27,8 @@ private:
 	std::unique_ptr<BattlePhase> battlePhase_;
 	std::unique_ptr<TitlePhase> titlePhase_;
 	std::unique_ptr<GameScenePhase> gameScenePhase_;
+
+
+	RenderData_Model skyDome_;
 };
 

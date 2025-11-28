@@ -10,6 +10,7 @@ MouseController::MouseController(HWND hwnd, CameraManager* cameraManager)
 {
     hwnd_ = hwnd;
     wheelDelta = 0;
+	isVisible = true;
 }
 
 void MouseController::Update()
@@ -22,6 +23,15 @@ void MouseController::Update()
 
     // マウスボタン状態取得
     SetMouseButtenState();
+
+    // FPSカメラでマウスカーソルがウィンドウ外に出ないようにする
+    if (!isVisible)
+    {
+		int screenX = WindowManager::winWidth_ / 2;
+		int screenY = WindowManager::winHeight_ / 2;
+
+        //SetCursorPos(screenX, screenY);
+    }
 }
 
 void MouseController::EndFrame()
@@ -89,6 +99,20 @@ uint32_t MouseController::HoldFrames(int i)
     }
 }
 
+void MouseController::ToggleMouseCursorVisible()
+{
+    isVisible = !isVisible;
+    if (isVisible)
+    {
+        // カーソルを表示
+        ShowCursor(TRUE);
+    }
+    else
+    {
+        // カーソルを非表示
+        ShowCursor(FALSE);
+	}
+}
 
 void MouseController::SetMousePosition()
 {

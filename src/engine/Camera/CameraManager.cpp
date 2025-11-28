@@ -147,6 +147,11 @@ Vector3 CameraManager::GetCurrentTranslate() const
 	return camera_[currentCameraID_].GetTransform().translate;
 }
 
+Vector3 CameraManager::GetCurrentRotate() const
+{
+	return camera_[currentCameraID_].GetTransform().rotate;
+}
+
 Matrix4x4 CameraManager::GetCurrentViewProjectionMatrix() const
 {
 	return camera_[currentCameraID_].GetViewProjectionMatrix();
@@ -157,6 +162,15 @@ float CameraManager::GetCurrentDistance() const
 	return camera_[currentCameraID_].distance_;
 }
 
+void CameraManager::ToggleCurrentOrbitMode()
+{
+	camera_[currentCameraID_].ToggleOrbitMode();
+}
+
+void CameraManager::SetCurrentOrbitMode(bool mode)
+{
+	camera_[currentCameraID_].SetOrbitMode(mode);
+}
 
 bool CameraManager::InCamera(const AABB& aabb)
 {

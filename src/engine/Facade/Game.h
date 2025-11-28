@@ -5,15 +5,14 @@
 #include "input/Input.h"
 #include "Utilities/Easings.h"
 #include "Utilities/functions.h"
+#include "Utilities/JsonManager.h"
 #include "DrawSystem/RenderData/RenderData.h"
+#include "ResourceLoder/ResourceID.h"
 
 #include "externals/imgui/imgui.h"
 #include "externals/imgui/imgui_impl_dx12.h"
 #include "externals/imgui/imgui_impl_win32.h"
 #include <algorithm>
-
-
-class CameraController;
 
 class Game
 {
@@ -24,47 +23,139 @@ public:
 	public:
 
 		/// <summary>
-		/// 
+		/// モデル読み込み
 		/// </summary>
-		/// <param name="directoryPath"></param>
-		/// <param name="filename"></param>
-		/// <returns></returns>
+		/// <param name="directoryPath">例:"Resources/Prototypes/model/"</param>
+		/// <param name="filename">"cube.obj"</param>
+		/// <returns>モデルID</returns>
 		static uint32_t LoadModel(const std::string& directoryPath, const std::string& filename);
+
+		/// <summary>
+		/// テクスチャ読み込み
+		/// </summary>
+		/// <param name="filePath">例:"Resources/Prototypes/texture/uvChecker.png"</param>
+		/// <returns>テクスチャID</returns>
 		static uint32_t LoadTexture(const std::string& filePath);
+
+		/// <summary>
+		/// オーディオ読み個み
+		/// </summary>
+		/// <param name="filePath">例:"Resources/Prototypes/audio/BGM/InGame.mp3"</param>
+		/// <returns></returns>
 		static uint32_t LoadAudio(const std::string& filePath);
 
 		/// <summary>
 		/// テクスチャデータ取得
-		/// 
-		static TextureData* GetTexture(uint32_t textureNumber);
+		/// </summary>
+		/// <param name="textureNumber">テクスチャID</param>
+		/// <returns>メタデータを含むテクスチャデータ</returns>
+		static TextureData* GetTextureData(uint32_t textureNumber);
+
+		/// <summary>
+		/// 読み込んだテクスチャ数取得
+		/// </summary>
+		/// <returns>読み込んだテクスチャ数</returns>
 		static size_t GetTextureCount();
+
+		/// <summary>
+		/// 読み込んだモデル数取得
+		/// </summary>
+		/// <returns>読み込んだモデル数</returns>
 		static size_t GetModelCount();
 	};
 
 	class DebugDraw
 	{
 	public:
+
+		/// <summary>
+		/// ワイヤーフレーム球描画
+		/// </summary>
+		/// <param name="pos">ワールド座標</param>
+		/// <param name="radius">半径</param>
+		/// <param name="color">色</param>
 		static void AddSphere(Vector3 pos, Vector3 radius, uint32_t color);
+
+		/// <summary>
+		/// ワイヤーフレームAABB描画
+		/// </summary>
+		/// <param name="aabb">AABB</param>
+		/// <param name="color">色</param>
 		static void AddAABB(AABB aabb, uint32_t color);
+
+		/// <summary>
+		/// ライン描画
+		/// </summary>
+		/// <param name="start">ワールド始点</param>
+		/// <param name="end">ワールド終点</param>
+		/// <param name="color">色</param>
+		static void AddLine(Vector3 start, Vector3 end, uint32_t color);
 	};
 
 	class Audio
 	{
 	public:
+
+		/// <summary>
+		/// オーディオ再生
+		/// </summary>
+		/// <param name="audioId">Resource::LoadAudioで取得したオーディオID</param>
+		/// <param name="loop">trueなら自動ループ</param>
 		static void PlayAudio(const uint32_t& audioId, bool loop);
+
+		/// <summary>
+		/// オーディオ停止
+		/// </summary>
+		/// <param name="audioId">Resource::LoadAudioで取得したオーディオID</param>
 		static void StopAudio(const uint32_t& audioId);
+
+		/// <summary>
+		/// オーディオボリューム設定
+		/// </summary>
+		/// <param name="audioId"Resource::LoadAudioで取得したオーディオID></param>
+		/// <param name="volume">0.0f～1.0f</param>
 		static void SetAudioVolume(const uint32_t& audioId, float volume);
+
+		/// <summary>
+		/// マスターボリューム設定
+		/// </summary>
+		/// <param name="volume">0.0f～1.0f</param>
 		static void SetMasterVolume(float volume);
+
+		/// <summary>
+		/// オーディオボリューム取得
+		/// </summary>
+		/// <param name="audioId">Resource::LoadAudioで取得したオーディオID</param>
+		/// <returns>現在の音量</returns>
 		static float GetVolume(const uint32_t& audioId);
+
+		/// <summary>
+		/// マスターボリューム取得
+		/// </summary>
+		/// <returns>現在のマスター音量</returns>
 		static float GetMasterVolume();
+
+		/// <summary>
+		/// オーディオが再生中か？
+		/// </summary>
+		/// <param name="audioId">Resource::LoadAudioで取得したオーディオID</param>
+		/// <returns>bool </returns>
 		static bool IsAudioPlaying(const uint32_t& audioId);
 	};
 
 	class Light
 	{
 	public:
-		// ライト
+		/// <summary>
+		/// 共通ライトカラー設定
+		/// </summary>
+		/// <param name="color">Vector4のcolor</param>
 		static void SetLightColor(const Vector4 color);
+
+		/// <summary>
+		/// 共通ライト方向設定
+		/// </summary>
+		/// <param name="direction">Vector3の方向ベクトル</param>
 		static void SetLightDirection(const Vector3 direction);
 		static void ToggleLightMode(const LightMode mode);
 		static void SetLightIntensity(float intensity);
@@ -126,6 +217,9 @@ public:
 			/// マウスホイールの回転量取得
 			/// </summary>
 			static uint32_t GetMouseWheel();
+
+			// カーソルの表示・非表示切り替え
+			static void ToggleMouseCursorVisible();
 		};
 
 		class Key
@@ -182,9 +276,13 @@ public:
 
 			static Vector3 GetCurrentCenter();			// カメラ回転中心
 			static Vector3 GetCurrentTranslate();		// カメラ位置
+			static Vector3 GetCurrentRotate();
 			static Matrix4x4 GetCurrentViewProjectionMatrix(); // ビュープロジェクション行列
 			static float GetCurrentDistance();			// カメラ距離
 		};
+
+		static void ToggleCurrentOrbitMode();		// 現在のカメラのオービットモード切り替え
+		static void SetCurrentOrbitMode(bool mode);
 
 		/// <summary>
 		/// カメラの回転中心座標の移動
@@ -239,7 +337,6 @@ public:
 		static bool InCamera(const AABB& aabb);
 	};
 
-	// EasingとかRandとかもいれるべきか？
 	class Utilitie
 	{
 		// プリミティブモードの設定
@@ -247,6 +344,90 @@ public:
 
 	};
 
+	class Math
+	{
+	public:
+		/// <summary>
+		/// イージングfloat版
+		/// </summary>
+		static float Easing(float start, float end, float t, EaseType type)
+		{
+			return Easings::EasingFloat(start, end, type, t);
+		}
+
+		/// <summary>
+		/// イージングVector3版
+		/// </summary>
+		static Vector3 Easing(Vector3 start, Vector3 end, float t, EaseType type)
+		{
+			return Easings::EasingVector3(start, end, type, t);
+		}
+
+		static float Lerp(float start, float end, float t)
+		{
+			return start + (end - start) * t;
+		}
+	
+		static float RandFloat(float min, float max, int decimalPlaces)
+		{
+			return RandomFloat(min, max, decimalPlaces);
+		}
+
+		static int RandInt(int min, int max)
+		{
+			return RandomInt(min, max);
+		}
+
+		/// <summary>
+		/// 度数法を弧度法に変換
+		/// </summary>
+		static float DegreeToRadian(float degree)
+		{
+			return degree * (std::numbers::pi_v<float> / 180.0f);
+		}
+
+		/// <summary>
+		/// 弧度法を度数法に変換
+		/// </summary>
+		static float RadianToDegree(float radian)
+		{
+			return radian * (180.0f / std::numbers::pi_v<float>);
+		}
+
+		static Vector4 UintToVector4(uint32_t color)
+		{
+			return ConvertUintToVector4(color);
+		}
+
+		static uint32_t Vector4ToUint(Vector4 color)
+		{
+			return ConvertVector4ToUint(color);
+		}
+
+		static Vector3 DirectionFromYawPitch(float yaw, float pitch)
+		{
+			float sp = std::sinf(pitch);
+			float cp = std::cosf(pitch);
+			float sy = std::sinf(yaw);
+			float cy = std::cosf(yaw);
+
+			Vector3 dir;
+			dir.x = sy * cp;
+			dir.y = -sp;
+			dir.z = cy * cp;
+			dir.Normalize();
+			return dir;
+		}
+
+		static Vector3 YawPitchFromDirection(const Vector3& dir)
+		{
+			Vector3 normDir = dir;
+			normDir.Normalize();
+			float pitch = std::asinf(-normDir.y); // -sin(pitch) = y 成分
+			float yaw = std::atan2f(normDir.x, normDir.z); // sin(yaw) = x 成分, cos(yaw) = z 成分
+			return Vector3(pitch, yaw, 0.0f); // roll はここでは未使用
+		}
+	};
 
 
 private:

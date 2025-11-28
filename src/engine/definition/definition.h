@@ -25,6 +25,38 @@
 #define WIDTH 1280
 #define HEIGHT 720
 #define eps 1e-6f
+// 40
+#define MAX_BLOCK_X 40
+#define MAX_BLOCK_Z 40
+#define MAX_BLOCK_Y 10
+#define BLOCK_SIZE 1.0f
+#define PLAYER_SPEED 0.1f
+
+#define GRAVITY -0.005f
+
+
+
+enum class BlockID
+{
+    None,
+    Stone,	// 石
+    Glass,	// ガラス
+    Dirt,	// 草なし土
+    lawn,	// 草付き土
+    wood,	// 木材
+    leaf,	// 葉っぱ
+
+
+
+    MAX,
+};
+
+
+struct Blockinfo
+{
+    BlockID type;
+    uint32_t durability;
+};
 
 template <typename T>
 constexpr const T& my_min(const T& a, const T& b)
@@ -185,6 +217,29 @@ struct Vector2
     float Dot(const Vector2& rhs) const;
 };
 
+struct Vector3int
+{
+    int x = 0;
+    int y = 0;
+    int z = 0;
+    Vector3int operator+(const Vector3int& rhs) const
+    {
+        return Vector3int{ x + rhs.x, y + rhs.y, z + rhs.z };
+    }
+    Vector3int operator-(const Vector3int& rhs) const
+    {
+        return Vector3int{ x - rhs.x, y - rhs.y, z - rhs.z };
+    }
+    bool operator==(const Vector3int& rhs) const
+    {
+        return x == rhs.x && y == rhs.y && z == rhs.z;
+    }
+    bool operator!=(const Vector3int& rhs) const
+    {
+        return x != rhs.x || y != rhs.y || z != rhs.z;
+    }
+};
+
 struct Vector3
 {
     float x = 0;
@@ -276,6 +331,27 @@ struct Vector3
     Vector3 Cross(const Vector3& rhs) const;
     // 反射角
     Vector3 Reflect(const Vector3& input, const Vector3& normal);
+};
+
+struct Vector4int
+{
+    int x = 0, y = 0, z = 0, w = 0;
+    Vector4int operator+(const Vector4int& rhs) const
+    {
+        return Vector4int{ x + rhs.x, y + rhs.y, z + rhs.z, w + rhs.w };
+    }
+    Vector4int operator-(const Vector4int& rhs) const
+    {
+        return Vector4int{ x - rhs.x, y - rhs.y, z - rhs.z, w - rhs.w };
+    }
+    bool operator==(const Vector4int& rhs) const
+    {
+        return x == rhs.x && y == rhs.y && z == rhs.z && w == rhs.w;
+    }
+    bool operator!=(const Vector4int& rhs) const
+    {
+        return x != rhs.x || y != rhs.y || z != rhs.z || w != rhs.w;
+    }
 };
 
 struct Vector4
@@ -583,6 +659,20 @@ struct Segment
     Vector3 diff;
 };
 
+enum class PrimitiveType
+{
+    // 球
+	Sphere,
+	// 楕円体
+    SphereXYZ,
+    // 立方体
+    AABB,
+    // 四角形
+    Plane,
+    // 円
+	Circle,
+};
+
 #pragma endregion
 
 
@@ -615,8 +705,6 @@ struct Transforms
     Vector3 scale = { 1,1,1 };
     Vector3 rotate = { 0,0,0 };
     Vector3 translate = { 0,0,0 };
-    //Matrix4x4 World;
-    //Matrix4x4* parentWorld = nullptr;
 };
 
 struct VectorDynamics
@@ -630,7 +718,6 @@ struct TransformationMatrix
 {
     Matrix4x4 WVP;
     Matrix4x4 World;
-    //Matrix4x4* parentWorld = nullptr;
 };
 
 // 3Dオブジェクトデータ
@@ -644,15 +731,11 @@ struct Object3D
     D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
     UINT vertexBufferSize = 0;
 
-    // 変換行列
-    Transforms transform;
-    //TransformationMatrix matrix;
-
     // AABB
     std::vector<AABB> aabb;
 
     // 識別ナンバー
-    uint32_t number = 0;
+    int32_t number = 0;
 
     // ファイルパス
     std::string filePath;
@@ -663,7 +746,7 @@ struct TextureData
 {
     DirectX::TexMetadata metadata;
     DirectX::ScratchImage mipImage;
-    uint32_t number;
+    int32_t number;
     std::string filePath;
     Microsoft::WRL::ComPtr<ID3D12Resource> textureResource;
     D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU;
@@ -918,19 +1001,64 @@ struct ParticleMonoInfGPU
 
 #pragma endregion
 
+struct BlockInstanceData
+{
+    Matrix4x4 WVP;
+    Matrix4x4 World;
+    Vector4 color;
+	uint32_t textureID;
+	bool isDisplay;
+};
+
 
 struct CameraForGPU
 {
 	Vector3 worldPosition;
 };
 
-enum class Direction
+// 上下左右
+enum class DirectionXY
 {
     None = -1,
     Left = 0,
     Right = 1,
     Down = 2,
     Up = 3,
+};
+
+// 前後左右
+enum class DirectionXZ
+{
+    None = -1,
+    Left = 0,
+    Right = 1,
+    Back = 2,
+    Front = 3,
+};
+
+// 前後左右 + 斜め
+enum class DirectionXZ8Way
+{
+    None = -1,
+    Front = 0,
+    FrontLeft = 1,
+    Left = 2,
+    BackLeft = 3,
+    Back = 4,
+    BackRight = 5,
+    Right = 6,
+    FrontRight = 7,
+};
+
+enum class DirectionXYZ
+{
+    None = -1,
+    Left = 0,
+    Right = 1,
+    Back = 2,
+    Front = 3,
+    Down = 4,
+    Up = 5,
 };
 
 struct D3DResourceLeakChecker
@@ -989,3 +1117,32 @@ enum class EaseType
     OUT_BOUNCE,
 };
 
+
+struct SRVAllocation
+{
+    uint32_t index = UINT32_MAX;
+    D3D12_CPU_DESCRIPTOR_HANDLE cpu{};
+    D3D12_GPU_DESCRIPTOR_HANDLE gpu{};
+};
+
+struct ParticleGroup
+{
+    // テクスチャ
+    uint32_t texture = 0;
+	// モデル
+	uint32_t model = 0;
+    // 色
+	Material material;
+    // パーティクルのリスト
+    std::list<ParticleMonoInf> particles;
+    // インスタンシングリソース
+    Microsoft::WRL::ComPtr<ID3D12Resource> instanceResource;
+    // インスタンシングデータを書き込むためのポインタ
+    ParticleMonoInf* mappedPtr = nullptr;
+    // インスタンシングデータ用SRVインデックス
+	SRVAllocation srvAllocation;
+    // インスタンス数
+    uint32_t instanceCount = 0;
+    // エミッター
+    ParticleEmitter emitter;
+};

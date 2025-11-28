@@ -116,6 +116,11 @@ void WindowManager::ToggleFullscreen()
     SetFullscreen(!isFullscreen);
 }
 
+void WindowManager::Quit()
+{
+	PostQuitMessage(0);
+}
+
 // isFullscreen = trueになる
 void WindowManager::EnterBorderlessFullscreen()
 {

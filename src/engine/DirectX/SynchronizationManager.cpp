@@ -1,7 +1,8 @@
 #include "DirectX/SynchronizationManager.h"
 #include "Utilities/functions.h"
 
-SynchronizationManager::SynchronizationManager(ID3D12Device* device) : fenceValue(0)
+SynchronizationManager::SynchronizationManager(ID3D12Device* device)
+    : fenceValue(0)
 {
     HRESULT hr = device->CreateFence(
         fenceValue,
@@ -34,7 +35,8 @@ void SynchronizationManager::Signal(ID3D12CommandQueue* commandQueue)
 
 void SynchronizationManager::WaitForGPU()
 {
-    if (fence->GetCompletedValue() < fenceValue)
+    auto gpuFenceValue = fence->GetCompletedValue();
+    if (gpuFenceValue < fenceValue)
     {
         HANDLE eventHandle = CreateEvent(nullptr, FALSE, FALSE, nullptr);
         if (eventHandle == nullptr)

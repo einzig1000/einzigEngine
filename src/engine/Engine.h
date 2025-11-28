@@ -4,12 +4,24 @@
 #include <vector>
 #include <string>
 #include <wrl/client.h>
-#include "Game.h" 
+#include "ResourceLoder/ResourceID.h"
 
-#include "Window/WindowManager.h"
-#include "DirectX/DirectXManager.h"
-#include "Camera/CameraManager.h"
-#include "DrawSystem/DrawSystem.h"
+
+class WindowManager;
+class DirectXManager;
+class DrawSystem;
+class Input;
+class CameraManager;
+
+class RenderData_Model;
+class RenderData_Triangle;
+class RenderData_Rect;
+class RenderData_Sprite;
+class RenderData_Line;
+class RenderData_MinecraftMap;
+class RenderData_Particle;
+
+
 
 class Engine
 {
@@ -28,6 +40,7 @@ public:
 	bool ProcessMessage();
 	void BeginFrame();
 	void UpdateTransforms();
+	void UpdateParticles();
 	void EndFrame();
 	void Finalize();
 
@@ -35,18 +48,25 @@ public:
 	uint32_t LoadModel(const std::string& directoryPath, const std::string& filename);
 	uint32_t LoadTexture(const std::string& filePath);
 	uint32_t LoadAudio(const std::string& filePath);
-	TextureData* GetTexture(uint32_t textureNumber);
+	Object3D* GetModelData(uint32_t modelNumber);
+	TextureData* GetTextureData(uint32_t textureNumber);
 	size_t GetTextureCount();
 	size_t GetModelCount();
 
 	// 描画
-	void DrawModel(RenderData_Model& renderData);
-	void DrawTriangle(RenderData_Triangle& renderData);
-	void DrawSprite(RenderData_Sprite& renderData);
-	void DrawParticle(RenderData_Particle& renderData);
-	void DrawLine(RenderData_Line& renderData);
+	void AddModelDrawList(RenderData_Model* renderData);
+	void AddTriangleDrawList(RenderData_Triangle* renderData);
+	void AddRectDrawList(RenderData_Rect* renderData);
+	void AddSpriteDrawList(RenderData_Sprite* renderData);
+	void AddLineDrawList(RenderData_Line* renderData);
+	void AddParticleDrawList(RenderData_Particle* renderData);
+
+	void DrawMinecraftMap(RenderData_MinecraftMap& renderData);
+
 	void AddSphere(Vector3 pos, Vector3 radius, uint32_t color);
 	void AddAABB(AABB aabb, uint32_t color);
+	void AddLine(Vector3 start, Vector3 end, uint32_t color);
+
 
 	// AABBが視錐台内にあるか判定する関数
 	bool InFrustum(const AABB& aabb);
@@ -61,10 +81,10 @@ public:
 	bool IsAudioPlaying(const uint32_t& audioId);
 
 	// ライト
-	void SetLightColor(const Vector4 color) { drawSystem->SetLightColor(color); }
-	void SetLightDirection(const Vector3 direction) { drawSystem->SetLightDirection(direction); }
-	void SetLightIntensity(float intensity) { drawSystem->SetLightIntensity(intensity); }
-	void ToggleLightMode(const LightMode mode) { drawSystem->ToggleLightMode(mode); }
+	void SetLightColor(const Vector4 color);
+	void SetLightDirection(const Vector3 direction);
+	void SetLightIntensity(float intensity);
+	void ToggleLightMode(const LightMode mode);
 
 	// マウス
 	Vector2 GetMousePosition();
@@ -75,6 +95,7 @@ public:
 	bool IsMouseJustPressed(int i);// 押した瞬間（今フレームで押された）
 	bool IsMouseJustReleased(int i);// 離した瞬間（今フレームで離れた）
 	uint32_t MouseHoldFrames(int i);// 押されてからの経過フレーム数
+	void ToggleMouseCursorVisible();
 
 	// キーボード
 	bool IsKeyHeld(BYTE key);// 今押しているか
@@ -95,10 +116,10 @@ public:
 	void StartCameraShake(float intensity, float duration, float frequency = 25.0f);
 	bool IsCameraShaking();
 	void ToggleCameraMode();
+	void ToggleCurrentOrbitMode();
 	void StopCameraShake();
 	CameraManager* GetCameraManager() { return cameraManager; }
 
-	/// カメラシェイク
 
 	// フルスクリーン切り替え
 	void ToggleFullscreen();
@@ -108,6 +129,16 @@ public:
 
 	// プリミティブモードの設定
 	void toggleWireframeMode();
+
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(size_t sizeInBytes);
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> CreateConstantBufferResource(size_t sizeInBytes);
+
+	DirectXManager* GetDirectXManager() { return dxManager; }
+
+
+	const std::vector<Object3D> GetAllObject3D();
 
 private:
 	Engine() = default;
@@ -128,9 +159,5 @@ private:
 	Input* inputManager_ = nullptr;
 	// カメラ
 	CameraManager* cameraManager = nullptr;
-	//CameraController* cameraController = nullptr;
-	//CameraController* debugCameraController = nullptr;
-	//bool debugCamera = false;
-
 
 };
