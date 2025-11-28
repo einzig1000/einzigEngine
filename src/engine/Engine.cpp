@@ -213,7 +213,7 @@ void Engine::UpdateTransforms()
 void Engine::UpdateParticles()
 {
 	// パーティクル更新
-	RenderData_Particle3::UpdateAllParticles(cameraManager->GetCurrentViewProjectionMatrix());
+	RenderData_Particle::UpdateAllParticles(cameraManager->GetCurrentViewProjectionMatrix());
 }
 void Engine::UpdateCamera()
 {
@@ -363,32 +363,32 @@ size_t Engine::GetModelCount()
 }
 
 // 描画
-void Engine::AddModelDrawList(RenderData_Model& renderData)
+void Engine::AddModelDrawList(RenderData_Model* renderData)
 {
 	drawSystem->AddModelDrawList(renderData);
 }
 
-void Engine::AddTriangleDrawList(RenderData_Triangle& renderData)
+void Engine::AddTriangleDrawList(RenderData_Triangle* renderData)
 {
 	drawSystem->AddTriangleDrawList(renderData);
 }
 
-void Engine::AddRectDrawList(RenderData_Rect& renderData)
+void Engine::AddRectDrawList(RenderData_Rect* renderData)
 {
 	drawSystem->AddRectDrawList(renderData);
 }
 
-void Engine::AddSpriteDrawList(RenderData_Sprite& renderData)
+void Engine::AddSpriteDrawList(RenderData_Sprite* renderData)
 {
 	drawSystem->AddSpriteDrawList(renderData);
 }
 
-void Engine::AddLineDrawList(RenderData_Line& renderData)
+void Engine::AddLineDrawList(RenderData_Line* renderData)
 {
 	drawSystem->AddLineDrawList(renderData);
 }
 
-void Engine::AddParticleDrawList(RenderData_Particle3& renderData)
+void Engine::AddParticleDrawList(RenderData_Particle* renderData)
 {
 	drawSystem->AddParticleDrawList(renderData);
 }
@@ -399,11 +399,6 @@ void Engine::DrawMinecraftMap(RenderData_MinecraftMap& renderData)
 	//drawSystem->DrawMap(renderData);
 }
 
-
-void Engine::DrawParticle(RenderData_Particle& renderData)
-{
-	drawSystem->DrawParticle(renderData);
-}
 
 void Engine::AddSphere(Vector3 pos, Vector3 radius, uint32_t color)
 {

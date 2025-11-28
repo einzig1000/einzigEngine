@@ -20,7 +20,6 @@ class RenderData_Sprite;
 class RenderData_Line;
 class RenderData_MinecraftMap;
 class RenderData_Particle;
-class RenderData_Particle3;
 
 
 
@@ -55,19 +54,19 @@ public:
 	size_t GetModelCount();
 
 	// 描画
-	void AddModelDrawList(RenderData_Model& renderData);
-	void AddTriangleDrawList(RenderData_Triangle& renderData);
-	void AddRectDrawList(RenderData_Rect& renderData);
-	void AddSpriteDrawList(RenderData_Sprite& renderData);
-	void AddLineDrawList(RenderData_Line& renderData);
-	void AddParticleDrawList(RenderData_Particle3& renderData);
+	void AddModelDrawList(RenderData_Model* renderData);
+	void AddTriangleDrawList(RenderData_Triangle* renderData);
+	void AddRectDrawList(RenderData_Rect* renderData);
+	void AddSpriteDrawList(RenderData_Sprite* renderData);
+	void AddLineDrawList(RenderData_Line* renderData);
+	void AddParticleDrawList(RenderData_Particle* renderData);
 
 	void DrawMinecraftMap(RenderData_MinecraftMap& renderData);
+
 	void AddSphere(Vector3 pos, Vector3 radius, uint32_t color);
 	void AddAABB(AABB aabb, uint32_t color);
 	void AddLine(Vector3 start, Vector3 end, uint32_t color);
 
-	void DrawParticle(RenderData_Particle& renderData);
 
 	// AABBが視錐台内にあるか判定する関数
 	bool InFrustum(const AABB& aabb);

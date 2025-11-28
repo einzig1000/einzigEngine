@@ -8,79 +8,43 @@ DrawSystem::DrawSystem(DirectXManager* dxManager)
 	:dxManager_(dxManager)
 {
 	// 正射影行列
-	this->orthoProjectionMatrix_ = Matrix4x4::MakeOrthographicMatrix(
+	orthoProjectionMatrix_ = Matrix4x4::MakeOrthographicMatrix(
 		0.0f, 0.0f,
 		static_cast<float>(WindowManager::winWidth_),
 		static_cast<float>(WindowManager::winHeight_),
 		0.0f, 100.0f);
 
 	// カメラマトリックス
-	this->viewProjectionMatrix_ = Matrix4x4::MakeIdentity4x4();
+	viewProjectionMatrix_ = Matrix4x4::MakeIdentity4x4();
 
-	// ライト
-	this->directionalLightResource_ = CreateConstantBufferResource(dxManager->GetDevice(), sizeof(DirectionalLight));
-	this->directionalLightData_ = nullptr;
-	this->directionalLightResource_->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData_));
-	this->directionalLightData_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-	this->directionalLightData_->direction = { 0.0f, -1.0f, 0.0f };
-	this->directionalLightData_->intensity = 1.0f;
-	this->directionalLightData_->mode = LightMode::HalfLambert;
-	this->directionalLightData_->phong = false;
+	// ライトリソース初期化
+	InitializeResource_Light();
 
-	cameraResource_ = CreateConstantBufferResource(dxManager->GetDevice(), sizeof(CameraForGPU));
-	cameraData_ = nullptr;
-	cameraResource_->Map(0, nullptr, reinterpret_cast<void**>(&cameraData_));
+	// カメラリソース初期化
+	InitializeResource_Camera();
+
+	// 頂点バッファリソース初期化
+	InitializeResource_VertexBuffer();
+
+	// インデックスバッファリソース初期化
+	InitializeResource_IndexBuffer();
+
+	kMaxDrawCallPerFrame_ = 4096;
+
+	// マテリアルリソース初期化
+	InitializeResource_Material();
+
+	// WVP行列リソース初期化
+	InitializeResource_WVPMatrix();
+
+	// オブジェクト固有ライトリソース初期化
+	InitializeResource_LightPerObject();
 
 	// 描画コールカウント初期化
 	drawCallIndex_ = 0;
 
-	// 頂点リソース
-	vertexResourceSize_ = static_cast<UINT>(sizeof(VertexData) * 4096); // 三角形
-	vertexResource_ = CreateBufferResource(dxManager->GetDevice(), vertexResourceSize_);
-	HRESULT hr = vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vertexMappedPtr_));
-	assert(SUCCEEDED(hr));
 
-	kMaxDrawCallPerFrame_ = 4096;
-	materialResources_.resize(kMaxDrawCallPerFrame_);
-	materialData_.resize(kMaxDrawCallPerFrame_);
-	wvpResources_.resize(kMaxDrawCallPerFrame_);
-	wvpData_.resize(kMaxDrawCallPerFrame_);
-	lightResources_.resize(kMaxDrawCallPerFrame_);
-	lightData_.resize(kMaxDrawCallPerFrame_);
-	for (size_t i = 0; i < kMaxDrawCallPerFrame_; ++i)
-	{
-		materialResources_[i] = CreateConstantBufferResource(dxManager->GetDevice(), sizeof(Material));
-		materialResources_[i]->Map(0, nullptr, reinterpret_cast<void**>(&materialData_[i]));
-		wvpResources_[i] = CreateConstantBufferResource(dxManager->GetDevice(), sizeof(TransformationMatrix));
-		wvpResources_[i]->Map(0, nullptr, reinterpret_cast<void**>(&wvpData_[i]));
-		lightResources_[i] = CreateConstantBufferResource(dxManager->GetDevice(), sizeof(DirectionalLight));
-		lightResources_[i]->Map(0, nullptr, reinterpret_cast<void**>(&lightData_[i]));
-		lightData_[i]->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-		lightData_[i]->direction = { 0.0f, -1.0f, 0.0f };
-		lightData_[i]->intensity = 1.0f;
-		lightData_[i]->mode = LightMode::HalfLambert;
-		lightData_[i]->phong = true;
-	}
 	vertexDataUsed_ = 0;
-
-	// インデックスリソース
-	indexResource = CreateBufferResource(dxManager->GetDevice(), sizeof(uint32_t) * 6);
-	uint32_t* indexData = nullptr;
-	indexResource->Map(0, nullptr, reinterpret_cast<void**>(&indexData));
-	indexData[0] = 0;
-	indexData[1] = 1;
-	indexData[2] = 2;
-	indexData[3] = 1;
-	indexData[4] = 3;
-	indexData[5] = 2;
-	indexResource->Unmap(0, nullptr);
-
-	// リソースの先頭のアドレスから使う
-	indexBufferView.BufferLocation = indexResource->GetGPUVirtualAddress();
-	// 仕様するリソースのサイズはインデックス６つ分のサイズ
-	indexBufferView.SizeInBytes = sizeof(uint32_t) * 6;
-	// インデックスはuint32_tとする
-	indexBufferView.Format = DXGI_FORMAT_R32_UINT;
 }
 
 DrawSystem::~DrawSystem()
@@ -89,34 +53,20 @@ DrawSystem::~DrawSystem()
 	{
 		if (materialResources_[i])
 		{
-			materialResources_[i]->Unmap(0, nullptr);
 			materialResources_[i].Reset();
 			materialData_[i] = nullptr;
 		}
 		if (wvpResources_[i])
 		{
-			wvpResources_[i]->Unmap(0, nullptr);
 			wvpResources_[i].Reset();
 			wvpData_[i] = nullptr;
 		}
 		if (lightResources_[i])
 		{
-			lightResources_[i]->Unmap(0, nullptr);
 			lightResources_[i].Reset();
 			lightData_[i] = nullptr;
 		}
 	}
-
-	for (auto& it : s_particlePools)
-	{
-		if (it.second.buffer)
-		{
-			it.second.buffer->Unmap(0, nullptr);
-			it.second.buffer.Reset();
-			it.second.mapped = nullptr;
-		}
-	}
-	s_particlePools.clear();
 
 	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>>().swap(materialResources_);
 	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>>().swap(wvpResources_);
@@ -124,6 +74,8 @@ DrawSystem::~DrawSystem()
 
 	vertexResource_.Reset();
 	directionalLightResource_.Reset();
+	cameraResource_.Reset();
+	indexResource.Reset();
 }
 
 void DrawSystem::Update()
@@ -150,81 +102,6 @@ void DrawSystem::Update()
 	spriteDrawList_.clear();
 	lineDrawList_.clear();
 	particleDrawList_.clear();
-
-	// パーティクルの更新
-	Update_ParticleInstanceData();
-}
-
-void DrawSystem::Update_ParticleInstanceData()
-{
-	for (auto& it : s_particlePools)
-	{
-		EmitterPool& pool = it.second;
-		if (!pool.mapped || pool.activeCount == 0) continue;
-	
-		for (uint32_t i = 0; i < pool.activeCount; /* 手動で増減 */)
-		{
-			bool isAlive = true;
-	
-			// 寿命
-			if (pool.mapped[i].liveTime > 0)
-			{
-				pool.mapped[i].liveTime -= 1;
-				if (pool.mapped[i].liveTime <= 0) isAlive = false;
-			}
-	
-			// 拡縮
-			pool.mapped[i].scale.velocity += pool.mapped[i].scale.acceleration * dxManager_->GetDeltaTime();
-			pool.mapped[i].scale.value += pool.mapped[i].scale.velocity * dxManager_->GetDeltaTime();
-			if (pool.mapped[i].scale.value.x <= 0.0f ||
-				pool.mapped[i].scale.value.y <= 0.0f ||
-				pool.mapped[i].scale.value.z <= 0.0f)
-			{
-				isAlive = false;
-			}
-	
-			// 平行移動
-			pool.mapped[i].translate.velocity += pool.mapped[i].translate.acceleration * dxManager_->GetDeltaTime();
-			pool.mapped[i].translate.value += pool.mapped[i].translate.velocity * dxManager_->GetDeltaTime();
-	
-			// 回転
-			pool.mapped[i].rotate.velocity += pool.mapped[i].rotate.acceleration * dxManager_->GetDeltaTime();
-			pool.mapped[i].rotate.value += pool.mapped[i].rotate.velocity * dxManager_->GetDeltaTime();
-	
-			// ビルボード
-			if (pool.mapped[i].isBillboard)
-			{
-				Vector3 direction = (Game::Camera::Getter::GetTranslate("ReleaseCamera") - pool.mapped[i].translate.value).Normalized();
-				float yaw = std::atan2(direction.x, direction.z); // Y軸
-				float pitch = std::asin(-direction.y);              // X軸
-				pool.mapped[i].rotate.value = { pitch, yaw, pool.mapped[i].rotate.value.z };
-			}
-	
-			// 行列
-			const Vector3& sc = pool.mapped[i].scale.value;
-			const Vector3& rt = pool.mapped[i].rotate.value;
-			const Vector3& tr = pool.mapped[i].translate.value;
-	
-			Matrix4x4 world = Matrix4x4::MakeAffineMatrix(sc, rt, tr);
-			Matrix4x4 wvp = world * viewProjectionMatrix_;
-			pool.mapped[i].World = world;
-			pool.mapped[i].WVP = wvp;
-	
-			// 死亡なら末尾とスワップして詰める
-			if (!isAlive)
-			{
-				const uint32_t last = pool.activeCount - 1;
-				if (i != last)
-				{
-					pool.mapped[i] = pool.mapped[last];
-				}
-				pool.activeCount--;
-				continue; // iは増やさない（入れ替わった要素を再評価）
-			}
-			++i;
-		}
-	}
-
 }
 
 void DrawSystem::Draw()
@@ -255,33 +132,70 @@ void DrawSystem::Draw()
 }
 
 
-void DrawSystem::AddTriangleDrawList(RenderData_Triangle& renderData)
+void DrawSystem::AddTriangleDrawList(RenderData_Triangle* renderData)
 {
-	triangleDrawList_.emplace_back(&renderData);
+	triangleDrawList_.emplace_back(renderData);
 }
-void DrawSystem::AddModelDrawList(RenderData_Model& renderData)
+void DrawSystem::AddModelDrawList(RenderData_Model* renderData)
 {
-	modelDrawList_.emplace_back(&renderData);
+	modelDrawList_.emplace_back(renderData);
 }
-void DrawSystem::AddRectDrawList(RenderData_Rect& renderData)
+void DrawSystem::AddRectDrawList(RenderData_Rect* renderData)
 {
-	rectDrawList_.emplace_back(&renderData);
+	rectDrawList_.emplace_back(renderData);
 }
-void DrawSystem::AddSpriteDrawList(RenderData_Sprite & renderData)
+void DrawSystem::AddSpriteDrawList(RenderData_Sprite* renderData)
 {
-	spriteDrawList_.emplace_back(&renderData);
+	spriteDrawList_.emplace_back(renderData);
 }
-void DrawSystem::AddLineDrawList(RenderData_Line & renderData)
+void DrawSystem::AddLineDrawList(RenderData_Line* renderData)
 {
-	lineDrawList_.emplace_back(&renderData);
+	lineDrawList_.emplace_back(renderData);
 }
-void DrawSystem::AddParticleDrawList(RenderData_Particle3& renderData)
+void DrawSystem::AddParticleDrawList(RenderData_Particle* renderData)
 {
-	particleDrawList_.emplace_back(&renderData);
+	particleDrawList_.emplace_back(renderData);
 }
 
 void DrawSystem::DrawAllModel()
 {
+	// 描画順をソート
+	// 不透過オブジェクト→
+	// カメラから遠い透過オブジェクト→
+	// カメラから近い透過オブジェクト
+	// なおテクスチャによる透過はこの世に存在しないものとする
+	Vector3 cameraPos = Game::Camera::Getter::GetCurrentTranslate();
+
+	std::sort(modelDrawList_.begin(), modelDrawList_.end(),
+		[cameraPos](RenderData_Model* a, RenderData_Model* b)
+		{
+			bool aTransparent = (a->color.w < 1.0f);
+			bool bTransparent = (b->color.w < 1.0f);
+
+			// 不透明 vs 半透明
+			if (aTransparent != bTransparent)
+			{
+				// 不透明を先に
+				return !aTransparent && bTransparent;
+			}
+
+			// 両方不透明なら順序は気にしない（falseで安定ソート）
+			if (!aTransparent && !bTransparent)
+			{
+				return false;
+			}
+
+			// 両方半透明ならカメラ距離で遠い順に
+			Vector3 aWorldPos = a->GetWorldPosition();
+			Vector3 bWorldPos = b->GetWorldPosition();
+
+			float distA = (aWorldPos - cameraPos).LengthSq();
+			float distB = (bWorldPos - cameraPos).LengthSq();
+
+			return distA > distB; // 遠いものを先に
+		});
+
+
 	for (auto& renderData : modelDrawList_)
 	{
 		// 画面内か判定
@@ -1168,399 +1082,20 @@ void DrawSystem::DrawAllParticle()
 }
 
 
-void DrawSystem::DrawParticle(RenderData_Particle& renderData)
-{
-//	if (drawCallIndex_ >= kMaxDrawCallPerFrame_) return;
-//
-//	// モデルの検索
-//	Object3D* obj = dxManager_->GetResourceManager()->GetModelManager()->GetModelData(renderData.GetParticleInf().resource.model);
-//	if (!obj) return;
-//
-//	// テクスチャの検索
-//	const TextureData* tex = dxManager_->GetResourceManager()->GetTextureManager()->GetTextureData(renderData.GetParticleInf().resource.texture);
-//	if (!tex) return;
-//
-//	// RootSignatureとPSOを設定
-//	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootSignature(dxManager_->GetPipelineStateManager()->GetRootSignature_particle());
-//	dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetParticlePipelineState(BlendMode::kBlendModeAdd));
-//
-//	// ライトの設定
-//	lightData_[drawCallIndex_]->color = { 0xFF, 0xFF, 0xFF, 0xFF };
-//	lightData_[drawCallIndex_]->mode = LightMode::None;
-//	lightData_[drawCallIndex_]->phong = false;
-//
-//	// 頂点数の取得
-//	const uint32_t kSumVertex = static_cast<uint32_t>(obj->modelData.vertices.size());
-//
-//	// マテリアルデータ
-//	Vector4 color = ConvertUintToVector4(renderData.GetParticleInf().material.color);
-//	materialData_[drawCallIndex_]->color = color;
-//	materialData_[drawCallIndex_]->shininess = 1.0f;
-//	materialData_[drawCallIndex_]->uvTransform = Matrix4x4::MakeIdentity4x4();
-//
-//	// エミッター用プールを取得/初期化
-//	auto& pool = s_particlePools[&renderData];
-//	if (!pool.buffer)
-//	{
-//		pool.capacity = kMaxInstanceCount_; // 既存の定数を流用
-//		pool.buffer = CreateBufferResource(dxManager_->GetDevice(), sizeof(ParticleMonoInf) * pool.capacity);
-//		assert(pool.buffer);
-//
-//		HRESULT hr = pool.buffer->Map(0, nullptr, reinterpret_cast<void**>(&pool.mapped));
-//		assert(SUCCEEDED(hr) && pool.mapped);
-//
-//		SRVAllocation srvAlloc = dxManager_->GetDescriptorHeapManager()->GetSrvManager()->CreateSRVforStructuredBuffer(
-//			pool.buffer.Get(),
-//			pool.capacity,
-//			sizeof(ParticleMonoInf));
-//		pool.srvCPU = srvAlloc.cpu;
-//		pool.srvGPU = srvAlloc.gpu;
-//	}
-//
-//	// 発生
-//	if (renderData.GetParticleInf().density.emissionDelay < 1) renderData.GetParticleInf().density.emissionDelay = 1;
-//	if (renderData.GetParticleInf().density.frame % renderData.GetParticleInf().density.emissionDelay == 0)
-//	{
-//		if (renderData.GetParticleInf().density.particlesPerEmission < 0) renderData.GetParticleInf().density.particlesPerEmission = 0;
-//
-//		if (pool.activeCount + static_cast<uint32_t>(renderData.GetParticleInf().density.particlesPerEmission) <= pool.capacity)
-//		{
-//			// AABB使うなら修正
-//			if (!renderData.GetParticleInf().emitter.useSphereEmitter)
-//			{
-//				renderData.GetParticleInf().emitter.emitterAABB.Fix();
-//			}
-//
-//			for (int i = 0; i < renderData.GetParticleInf().density.particlesPerEmission; ++i)
-//			{
-//				const uint32_t idx = pool.activeCount + static_cast<uint32_t>(i);
-//
-//#pragma region translate
-//
-//				ParticleSRT t = renderData.GetParticleInf().translate;
-//
-//				// エミッター形状が球体の場合
-//				if (renderData.GetParticleInf().emitter.useSphereEmitter)
-//				{
-//					// エミッターが内部を指す場合
-//					if (renderData.GetParticleInf().emitter.emitFromInside == true)
-//					{
-//						Vector3 center = renderData.GetParticleInf().emitter.emitterSphere.center;
-//						Vector3 radius = renderData.GetParticleInf().emitter.emitterSphere.radius;
-//
-//						// ランダムな方向（単位ベクトル）を生成
-//						float theta = RandomFloat(0.0f, 2.0f * float(std::numbers::pi), 3);       // 0〜2π
-//						float phi = RandomFloat(0.0f, float(std::numbers::pi), 3);              // 0〜π
-//						float r = RandomFloat(0.0f, 1.0f, 3);            // 0〜1（球内）
-//
-//						// 球内部の距離に合わせてスケーリング（立方根で均等分布）
-//						r = pow(r, 1.0f / 3.0f);
-//
-//						// 球面座標系から直交座標系へ変換
-//						float x = r * sin(phi) * cos(theta) * radius.x;
-//						float y = r * sin(phi) * sin(theta) * radius.y;
-//						float z = r * cos(phi) * radius.z;
-//
-//						t.value.x = center.x + x;
-//						t.value.y = center.y + y;
-//						t.value.z = center.z + z;
-//					}
-//					// エミッターが外殻を指す場合
-//					else
-//					{
-//						Vector3 center = renderData.GetParticleInf().emitter.emitterSphere.center;
-//						Vector3 radius = renderData.GetParticleInf().emitter.emitterSphere.radius;
-//
-//						// ランダムな方向（単位ベクトル）を生成
-//						float theta = RandomFloat(0.0f, 2.0f * float(std::numbers::pi), 3); // 0〜2π
-//						float phi = RandomFloat(0.0f, float(std::numbers::pi), 3);        // 0〜π
-//
-//						// r = 1.0f 固定 → 外殻のみ
-//						float x = sin(phi) * cos(theta) * radius.x;
-//						float y = sin(phi) * sin(theta) * radius.y;
-//						float z = cos(phi) * radius.z;
-//
-//						t.value.x = center.x + x;
-//						t.value.y = center.y + y;
-//						t.value.z = center.z + z;
-//					}
-//				}
-//				// エミッター形状がAABBの場合
-//				else
-//				{
-//					// エミッターが内部を指す場合
-//					if (renderData.GetParticleInf().emitter.emitFromInside == true)
-//					{
-//						t.value.x = RandomFloat(renderData.GetParticleInf().emitter.emitterAABB.min.x, renderData.GetParticleInf().emitter.emitterAABB.max.x);
-//						t.value.y = RandomFloat(renderData.GetParticleInf().emitter.emitterAABB.min.y, renderData.GetParticleInf().emitter.emitterAABB.max.y);
-//						t.value.z = RandomFloat(renderData.GetParticleInf().emitter.emitterAABB.min.z, renderData.GetParticleInf().emitter.emitterAABB.max.z);
-//					}
-//					// エミッターが外殻を指す場合
-//					else
-//					{
-//						int i = RandomInt(1, 6);
-//						if (i == 1 || i == 2)
-//						{
-//							if (i == 1)
-//							{
-//								t.value.x = renderData.GetParticleInf().emitter.emitterAABB.min.x;
-//							}
-//							else
-//							{
-//								t.value.x = renderData.GetParticleInf().emitter.emitterAABB.max.x;
-//							}
-//							t.value.y = RandomFloat(renderData.GetParticleInf().emitter.emitterAABB.min.y, renderData.GetParticleInf().emitter.emitterAABB.max.y, 3);
-//							t.value.z = RandomFloat(renderData.GetParticleInf().emitter.emitterAABB.min.z, renderData.GetParticleInf().emitter.emitterAABB.max.z, 3);
-//						}
-//						else if (i == 3 || i == 4)
-//						{
-//							if (i == 3)
-//							{
-//								t.value.y = renderData.GetParticleInf().emitter.emitterAABB.min.y;
-//							}
-//							else
-//							{
-//								t.value.y = renderData.GetParticleInf().emitter.emitterAABB.max.y;
-//							}
-//							t.value.x = RandomFloat(renderData.GetParticleInf().emitter.emitterAABB.min.x, renderData.GetParticleInf().emitter.emitterAABB.max.x, 3);
-//							t.value.z = RandomFloat(renderData.GetParticleInf().emitter.emitterAABB.min.z, renderData.GetParticleInf().emitter.emitterAABB.max.z, 3);
-//						}
-//						else if (i == 5 || i == 6)
-//						{
-//							if (i == 5)
-//							{
-//								t.value.z = renderData.GetParticleInf().emitter.emitterAABB.min.z;
-//							}
-//							else
-//							{
-//								t.value.z = renderData.GetParticleInf().emitter.emitterAABB.max.z;
-//							}
-//							t.value.y = RandomFloat(renderData.GetParticleInf().emitter.emitterAABB.min.y, renderData.GetParticleInf().emitter.emitterAABB.max.y, 3);
-//							t.value.x = RandomFloat(renderData.GetParticleInf().emitter.emitterAABB.min.x, renderData.GetParticleInf().emitter.emitterAABB.max.x, 3);
-//						}
-//					}
-//				}
-//
-//				// target方向に向かわせる場合(ここでvelocity決定)
-//				if (renderData.GetParticleInf().target.useTarget)
-//				{
-//					Vector3 axis = (renderData.GetParticleInf().target.target - t.value).Normalized();
-//
-//					// 生成位置依存の拡散
-//					if (renderData.GetParticleInf().target.spawnDependent)
-//					{
-//						// エミッター中心
-//						Vector3 center;
-//						if (renderData.GetParticleInf().emitter.useSphereEmitter) center = renderData.GetParticleInf().emitter.emitterSphere.center;
-//						else
-//						{
-//							center = Vector3{
-//								(renderData.GetParticleInf().emitter.emitterAABB.min.x + renderData.GetParticleInf().emitter.emitterAABB.max.x) * 0.5f,
-//								(renderData.GetParticleInf().emitter.emitterAABB.min.y + renderData.GetParticleInf().emitter.emitterAABB.max.y) * 0.5f,
-//								(renderData.GetParticleInf().emitter.emitterAABB.min.z + renderData.GetParticleInf().emitter.emitterAABB.max.z) * 0.5f
-//							};
-//						}
-//
-//						// 生成位置から見た放射状ベクトル
-//						Vector3 radial = (t.value - center).Normalized();
-//
-//						// 奇跡的に中心と同じ位置に生成された場合の対策
-//						if (radial.LengthSq() <= eps) { radial = axis; }
-//
-//						// 
-//						float fullDeg = my_max(0.0f, my_min(360.0f, renderData.GetParticleInf().target.spreadAngle));
-//						const float halfRad = (fullDeg * 0.5f) * (std::numbers::pi_v<float> / 180.0f);
-//
-//						if (fullDeg <= 0.0f)
-//						{
-//							// 完全に target 方向へ集中
-//							t.velocity = axis * renderData.GetParticleInf().target.speed;
-//						}
-//						else if (fullDeg >= 360.0f)
-//						{
-//							// 完全に生成位置から見た放射状（例: 右側に生まれたら右へ）
-//							t.velocity = radial * renderData.GetParticleInf().target.speed;
-//						}
-//						else
-//						{
-//							float dot = axis.Dot(radial);
-//							dot = my_max(-1.0f, my_min(1.0f, dot));
-//							float angle = std::acos(dot);
-//
-//							Vector3 dir;
-//							if (angle <= halfRad || angle < 1e-6f)
-//							{
-//								dir = radial;
-//							}
-//							else
-//							{
-//								// 球面線形補間（Slerp）で axis -> radial を半角分だけ寄せる
-//								float tParam = halfRad / angle;
-//								float sinA = std::sin(angle);
-//								float w0 = std::sin((1.0f - tParam) * angle) / sinA;
-//								float w1 = std::sin(tParam * angle) / sinA;
-//								dir = (axis * w0) + (radial * w1);
-//								dir = dir.Normalized();
-//							}
-//							t.velocity = dir * renderData.GetParticleInf().target.speed;
-//						}
-//					}
-//					else
-//					{
-//						// 完全ランダム拡散
-//						t.velocity = axis * renderData.GetParticleInf().target.speed;
-//
-//						// 拡散
-//						if (renderData.GetParticleInf().target.spreadAngle > 0.0f)
-//						{
-//							// ランダムな角度を生成
-//							float angle = RandomFloat(-renderData.GetParticleInf().target.spreadAngle / 2.0f, renderData.GetParticleInf().target.spreadAngle / 2.0f, 3);
-//							// 回転行列を作成
-//							Matrix4x4 rotationMatrix = Matrix4x4::MakeRotateYMatrix(angle);
-//							// 方向ベクトルを回転
-//							t.velocity = Vector3(
-//								rotationMatrix.m[0][0] * t.velocity.x + rotationMatrix.m[1][0] * t.velocity.y + rotationMatrix.m[2][0] * t.velocity.z,
-//								rotationMatrix.m[0][1] * t.velocity.x + rotationMatrix.m[1][1] * t.velocity.y + rotationMatrix.m[2][1] * t.velocity.z,
-//								rotationMatrix.m[0][2] * t.velocity.x + rotationMatrix.m[1][2] * t.velocity.y + rotationMatrix.m[2][2] * t.velocity.z
-//							);
-//						}
-//					}
-//				}
-//				else
-//				{
-//					if (renderData.GetParticleInf().translate.isRandom_velocity)
-//					{
-//						renderData.GetParticleInf().translate.randomRange_velocity.Fix();
-//						t.velocity.x = RandomFloat(renderData.GetParticleInf().translate.randomRange_velocity.min.x, renderData.GetParticleInf().translate.randomRange_velocity.max.x, 3);
-//						t.velocity.y = RandomFloat(renderData.GetParticleInf().translate.randomRange_velocity.min.y, renderData.GetParticleInf().translate.randomRange_velocity.max.y, 3);
-//						t.velocity.z = RandomFloat(renderData.GetParticleInf().translate.randomRange_velocity.min.z, renderData.GetParticleInf().translate.randomRange_velocity.max.z, 3);
-//					}
-//					if (renderData.GetParticleInf().translate.isRandom_acceleration)
-//					{
-//						renderData.GetParticleInf().translate.randomRange_acceleration.Fix();
-//						t.acceleration.x = RandomFloat(renderData.GetParticleInf().translate.randomRange_acceleration.min.x, renderData.GetParticleInf().translate.randomRange_acceleration.max.x, 3);
-//						t.acceleration.y = RandomFloat(renderData.GetParticleInf().translate.randomRange_acceleration.min.y, renderData.GetParticleInf().translate.randomRange_acceleration.max.y, 3);
-//						t.acceleration.z = RandomFloat(renderData.GetParticleInf().translate.randomRange_acceleration.min.z, renderData.GetParticleInf().translate.randomRange_acceleration.max.z, 3);
-//					}
-//				}
-//
-//#pragma endregion
-//
-//#pragma region scale
-//				ParticleSRT s = renderData.GetParticleInf().scale;
-//				if (renderData.GetParticleInf().scale.isRandom_value)
-//				{
-//					renderData.GetParticleInf().scale.randomRange_value.Fix();
-//					s.value.x = RandomFloat(renderData.GetParticleInf().scale.randomRange_value.min.x, renderData.GetParticleInf().scale.randomRange_value.max.x, 3);
-//					s.value.y = RandomFloat(renderData.GetParticleInf().scale.randomRange_value.min.y, renderData.GetParticleInf().scale.randomRange_value.max.y, 3);
-//					s.value.z = RandomFloat(renderData.GetParticleInf().scale.randomRange_value.min.z, renderData.GetParticleInf().scale.randomRange_value.max.z, 3);
-//				}
-//				if (renderData.GetParticleInf().scale.isRandom_velocity)
-//				{
-//					renderData.GetParticleInf().scale.randomRange_velocity.Fix();
-//					s.velocity.x = RandomFloat(renderData.GetParticleInf().scale.randomRange_velocity.min.x, renderData.GetParticleInf().scale.randomRange_velocity.max.x, 3);
-//					s.velocity.y = RandomFloat(renderData.GetParticleInf().scale.randomRange_velocity.min.y, renderData.GetParticleInf().scale.randomRange_velocity.max.y, 3);
-//					s.velocity.z = RandomFloat(renderData.GetParticleInf().scale.randomRange_velocity.min.z, renderData.GetParticleInf().scale.randomRange_velocity.max.z, 3);
-//				}
-//				if (renderData.GetParticleInf().scale.isRandom_acceleration)
-//				{
-//					renderData.GetParticleInf().scale.randomRange_acceleration.Fix();
-//					s.acceleration.x = RandomFloat(renderData.GetParticleInf().scale.randomRange_acceleration.min.x, renderData.GetParticleInf().scale.randomRange_acceleration.max.x, 3);
-//					s.acceleration.y = RandomFloat(renderData.GetParticleInf().scale.randomRange_acceleration.min.y, renderData.GetParticleInf().scale.randomRange_acceleration.max.y, 3);
-//					s.acceleration.z = RandomFloat(renderData.GetParticleInf().scale.randomRange_acceleration.min.z, renderData.GetParticleInf().scale.randomRange_acceleration.max.z, 3);
-//				}
-//
-//#pragma endregion
-//
-//#pragma region rotate
-//
-//				ParticleSRT r = renderData.GetParticleInf().rotate;
-//
-//				// ビルボードは生まれた瞬間からビルボード
-//				if (renderData.GetParticleInf().option.isBillboard)
-//				{
-//					Vector3 direction = (Game::Camera::Getter::GetTranslate("ReleaseCamera") - t.value).Normalized();
-//					float yaw = std::atan2(direction.x, direction.z); // Y軸
-//					float pitch = std::asin(-direction.y);            // X軸
-//					r.value = { pitch, yaw, 0.0f };
-//				}
-//				// ビルボードではないかつランダム回転指定がある場合
-//				else if (renderData.GetParticleInf().rotate.isRandom_value)
-//				{
-//					renderData.GetParticleInf().rotate.randomRange_value.Fix();
-//					r.value.x = RandomFloat(renderData.GetParticleInf().rotate.randomRange_value.min.x, renderData.GetParticleInf().rotate.randomRange_value.max.x, 3);
-//					r.value.y = RandomFloat(renderData.GetParticleInf().rotate.randomRange_value.min.y, renderData.GetParticleInf().rotate.randomRange_value.max.y, 3);
-//					r.value.z = RandomFloat(renderData.GetParticleInf().rotate.randomRange_value.min.z, renderData.GetParticleInf().rotate.randomRange_value.max.z, 3);
-//				}
-//				if (renderData.GetParticleInf().rotate.isRandom_velocity)
-//				{
-//					renderData.GetParticleInf().rotate.randomRange_velocity.Fix();
-//					r.velocity.x = RandomFloat(renderData.GetParticleInf().rotate.randomRange_velocity.min.x, renderData.GetParticleInf().rotate.randomRange_velocity.max.x, 3);
-//					r.velocity.y = RandomFloat(renderData.GetParticleInf().rotate.randomRange_velocity.min.y, renderData.GetParticleInf().rotate.randomRange_velocity.max.y, 3);
-//					r.velocity.z = RandomFloat(renderData.GetParticleInf().rotate.randomRange_velocity.min.z, renderData.GetParticleInf().rotate.randomRange_velocity.max.z, 3);
-//				}
-//				if (renderData.GetParticleInf().rotate.isRandom_acceleration)
-//				{
-//					renderData.GetParticleInf().rotate.randomRange_acceleration.center();
-//					r.acceleration.x = RandomFloat(renderData.GetParticleInf().rotate.randomRange_acceleration.min.x, renderData.GetParticleInf().rotate.randomRange_acceleration.max.x, 3);
-//					r.acceleration.y = RandomFloat(renderData.GetParticleInf().rotate.randomRange_acceleration.min.y, renderData.GetParticleInf().rotate.randomRange_acceleration.max.y, 3);
-//					r.acceleration.z = RandomFloat(renderData.GetParticleInf().rotate.randomRange_acceleration.min.z, renderData.GetParticleInf().rotate.randomRange_acceleration.max.z, 3);
-//				}
-//
-//#pragma endregion
-//
-//				// セット
-//				pool.mapped[idx].scale = s;
-//				pool.mapped[idx].rotate = r;
-//				pool.mapped[idx].translate = t;
-//				pool.mapped[idx].liveTime = renderData.GetParticleInf().density.liveMax;
-//				pool.mapped[idx].color = color;
-//				pool.mapped[idx].isBillboard = renderData.GetParticleInf().option.isBillboard;
-//
-//				Matrix4x4 world = Matrix4x4::MakeAffineMatrix(s.value, r.value, t.value);
-//				pool.mapped[idx].World = world;
-//				pool.mapped[idx].WVP = world * viewProjectionMatrix_;
-//			}
-//			pool.activeCount += static_cast<uint32_t>(renderData.GetParticleInf().density.particlesPerEmission);
-//		}
-//	}
-//
-//	// SRV（t1 VS）をこのプールのものに
-//	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(4, pool.srvGPU);
-//	// テクスチャ（t0 PS）
-//	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
-//
-//	// VertexBufferViewを設定
-//	dxManager_->GetCommandContextManager()->GetCommandList()->IASetVertexBuffers(0, 1, &obj->vertexBufferView);
-//	// 描画形状を設定
-//	dxManager_->GetCommandContextManager()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-//	// 
-//	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources_[drawCallIndex_]->GetGPUVirtualAddress());
-//	//dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(3, lightResources_[drawCallIndex_]->GetGPUVirtualAddress());
-//	if (pool.activeCount > 0)
-//	{
-//		dxManager_->GetCommandContextManager()->GetCommandList()->DrawInstanced(kSumVertex, pool.activeCount, 0, 0);
-//	}
-//	renderData.currentSum = pool.activeCount;
-//	renderData.GetParticleInf().density.frame++;
-//	drawCallIndex_++;
-
-}
-
 void DrawSystem::AddSphere(Vector3 pos, Vector3 radius, uint32_t color)
 {
-	RenderData_Line Lon[10];
-	RenderData_Line Lat[10];
+	RenderData_Line* Lon[10];
+	RenderData_Line* Lat[10];
 
 	for (int i = 0; i < 10; ++i)
 	{
-		Lon[i].color = color;
-		Lon[i].kSubdivision = 10;
-		Lon[i].lineType = LineType::Line;
+		Lon[i]->color = color;
+		Lon[i]->kSubdivision = 10;
+		Lon[i]->lineType = LineType::Line;
 
-		Lat[i].color = color;
-		Lat[i].kSubdivision = 10;
-		Lat[i].lineType = LineType::Line;
+		Lat[i]->color = color;
+		Lat[i]->kSubdivision = 10;
+		Lat[i]->lineType = LineType::Line;
 	}
 
 	// 経度/緯度の分割数
@@ -1589,25 +1124,25 @@ void DrawSystem::AddSphere(Vector3 pos, Vector3 radius, uint32_t color)
 			lon = lonIndex * kLonEvery;
 			nextLon = (lonIndex + 1) * kLonEvery;
 
-			Lon[latIndex].points.push_back({
+			Lon[latIndex]->points.push_back({
 				pos.x + radius.x * std::cosf(lat) * std::cosf(lon),
 				pos.y + radius.y * std::sinf(lat),
 				pos.z + radius.z * std::cosf(lat) * std::sinf(lon),
 				});
 
-			Lon[latIndex].points.push_back({
+			Lon[latIndex]->points.push_back({
 				pos.x + radius.x * std::cosf(lat) * std::cosf(nextLon),
 				pos.y + radius.y * std::sinf(lat),
 				pos.z + radius.z * std::cosf(lat) * std::sinf(nextLon),
 				});
 
-			Lat[lonIndex].points.push_back({
+			Lat[lonIndex]->points.push_back({
 				pos.x + radius.x * std::cosf(lat) * std::cosf(lon),
 				pos.y + radius.y * std::sinf(lat),
 				pos.z + radius.z * std::cosf(lat) * std::sinf(lon),
 				});
 
-			Lat[lonIndex].points.push_back({
+			Lat[lonIndex]->points.push_back({
 				pos.x + radius.x * std::cosf(nextLat) * std::cosf(lon),
 				pos.y + radius.y * std::sinf(nextLat),
 				pos.z + radius.z * std::cosf(nextLat) * std::sinf(lon),
@@ -1727,13 +1262,98 @@ void DrawSystem::AddAABB(AABB aabb, uint32_t color)
 }
 void DrawSystem::AddLine(Vector3 start, Vector3 end, uint32_t color)
 {
-	RenderData_Line lineData;
-	lineData.color = color;
-	lineData.kSubdivision = 1;
-	lineData.lineType = LineType::Line;
-	lineData.points.push_back(start);
-	lineData.points.push_back(end);
+	RenderData_Line* lineData = nullptr;
+	lineData->color = color;
+	lineData->kSubdivision = 1;
+	lineData->lineType = LineType::Line;
+	lineData->points.push_back(start);
+	lineData->points.push_back(end);
 	AddLineDrawList(lineData);
+}
+
+void DrawSystem::InitializeResource_Light()
+{
+	// 共有ライトリソース
+	directionalLightResource_ = CreateConstantBufferResource(dxManager_->GetDevice(), sizeof(DirectionalLight));
+	directionalLightData_ = nullptr;
+	HRESULT hr = directionalLightResource_->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData_));
+	directionalLightData_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
+	directionalLightData_->direction = { 0.0f, -1.0f, 0.0f };
+	directionalLightData_->intensity = 1.0f;
+	directionalLightData_->mode = LightMode::HalfLambert;
+	directionalLightData_->phong = false;
+	assert(SUCCEEDED(hr));
+}
+void DrawSystem::InitializeResource_LightPerObject()
+{
+	lightResources_.resize(kMaxDrawCallPerFrame_);
+	lightData_.resize(kMaxDrawCallPerFrame_);
+	for (size_t i = 0; i < kMaxDrawCallPerFrame_; ++i)
+	{
+		lightResources_[i] = CreateConstantBufferResource(dxManager_->GetDevice(), sizeof(DirectionalLight));
+		lightResources_[i]->Map(0, nullptr, reinterpret_cast<void**>(&lightData_[i]));
+		lightData_[i]->color = { 1.0f, 1.0f, 1.0f, 1.0f };
+		lightData_[i]->direction = { 0.0f, -1.0f, 0.0f };
+		lightData_[i]->intensity = 1.0f;
+		lightData_[i]->mode = LightMode::HalfLambert;
+		lightData_[i]->phong = true;
+	}
+}
+void DrawSystem::InitializeResource_Camera()
+{
+	// カメラリソース
+	cameraResource_ = CreateConstantBufferResource(dxManager_->GetDevice(), sizeof(CameraForGPU));
+	cameraData_ = nullptr;
+	HRESULT hr = cameraResource_->Map(0, nullptr, reinterpret_cast<void**>(&cameraData_));
+	assert(SUCCEEDED(hr));
+}
+void DrawSystem::InitializeResource_Material()
+{
+	materialResources_.resize(kMaxDrawCallPerFrame_);
+	materialData_.resize(kMaxDrawCallPerFrame_);
+	for (size_t i = 0; i < kMaxDrawCallPerFrame_; ++i)
+	{
+		materialResources_[i] = CreateConstantBufferResource(dxManager_->GetDevice(), sizeof(Material));
+		materialResources_[i]->Map(0, nullptr, reinterpret_cast<void**>(&materialData_[i]));
+	}
+}
+void DrawSystem::InitializeResource_WVPMatrix()
+{
+	wvpResources_.resize(kMaxDrawCallPerFrame_);
+	wvpData_.resize(kMaxDrawCallPerFrame_);
+	for (size_t i = 0; i < kMaxDrawCallPerFrame_; ++i)
+	{
+		wvpResources_[i] = CreateConstantBufferResource(dxManager_->GetDevice(), sizeof(TransformationMatrix));
+		wvpResources_[i]->Map(0, nullptr, reinterpret_cast<void**>(&wvpData_[i]));
+	}
+}
+void DrawSystem::InitializeResource_VertexBuffer()
+{
+	vertexResourceSize_ = sizeof(VertexData) * 4096;
+	vertexResource_ = CreateBufferResource(dxManager_->GetDevice(), vertexResourceSize_);
+	vertexMappedPtr_ = nullptr;
+	//hr = vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
+	assert(SUCCEEDED(hr));
+}
+void DrawSystem::InitializeResource_IndexBuffer()
+{
+	indexResource = CreateBufferResource(dxManager_->GetDevice(), sizeof(uint32_t) * 6);
+	uint32_t* indexData = nullptr;
+	indexResource->Map(0, nullptr, reinterpret_cast<void**>(&indexData));
+	indexData[0] = 0;
+	indexData[1] = 1;
+	indexData[2] = 2;
+	indexData[3] = 1;
+	indexData[4] = 3;
+	indexData[5] = 2;
+	indexResource->Unmap(0, nullptr);
+
+	// リソースの先頭のアドレスから使う
+	indexBufferView.BufferLocation = indexResource->GetGPUVirtualAddress();
+	// 仕様するリソースのサイズはインデックス６つ分のサイズ
+	indexBufferView.SizeInBytes = sizeof(uint32_t) * 6;
+	// インデックスはuint32_tとする
+	indexBufferView.Format = DXGI_FORMAT_R32_UINT;
 }
 
 bool DrawSystem::EnsureDynamicVB(size_t requiredVertexCount)

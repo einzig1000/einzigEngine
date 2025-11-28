@@ -12,7 +12,7 @@ GameScenePhase::GameScenePhase()
 	//map_->LoadMap("resources/Map/map.csv");
 	map_->LoadMap("resources/Map/mapFlat.csv");
 
-	particle = new RenderData_Particle3();
+	particle = new RenderData_Particle();
 	particle->model = ResourceID::GetModelID(ModelID::Plane);
 	particle->texture = ResourceID::GetTextureID(TextureID::Circle);
 	particle->emitterAABB.min = Vector3(-50.0f, -10.0f, -50.0f);

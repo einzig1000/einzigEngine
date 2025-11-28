@@ -12,10 +12,7 @@ std::vector<RenderData_Sprite*> RenderData_Sprite::renderSprites;
 std::vector<RenderData_Triangle*> RenderData_Triangle::renderTriangles;
 std::vector<RenderData_Rect*> RenderData_Rect::renderRects;
 std::vector<RenderData_Line*> RenderData_Line::renderLines;
-std::vector<RenderData_Particle*> RenderData_Particle::renderParticles;
-std::vector<RenderData_Particle3*> RenderData_Particle3::renderParticles3;
-std::unordered_map<std::string, ParticleInf*> RenderData_Particle2::particleGroups_;
-
+std::vector<RenderData_Particle*> RenderData_Particle::renderParticles3;
 
 #pragma region model
 
@@ -36,9 +33,9 @@ RenderData_Model::~RenderData_Model()
 }
 
 // 他のオブジェクトとの衝突判定
-bool RenderData_Model::isCollision(RenderData_Model& target) const
+bool RenderData_Model::isCollision(RenderData_Model* target) const
 {
-	for (const auto& aabb1 : target.aabbs)
+	for (const auto& aabb1 : target->aabbs)
 	{
 		for (const auto& aabb2 : this->aabbs)
 		{
@@ -52,12 +49,12 @@ bool RenderData_Model::isCollision(RenderData_Model& target) const
 	return false;
 }
 
-void RenderData_Model::SetBlock(RenderData_Model& target)
+void RenderData_Model::SetBlock(RenderData_Model* target)
 {
 	// すでに登録済みなら追加しない
-	if (std::find(blockList.begin(), blockList.end(), &target) == blockList.end())
+	if (std::find(blockList.begin(), blockList.end(), target) == blockList.end())
 	{
-		blockList.push_back(&target);
+		blockList.push_back(target);
 	}
 }
 
@@ -80,9 +77,9 @@ void RenderData_Model::LookAtOnce(const Vector3& targetWorldPos, float roll)
 
 	rotate.value = { pitch, yaw, roll };
 }
-void RenderData_Model::LookAtOnce(const RenderData_Model& other, float roll)
+void RenderData_Model::LookAtOnce(const RenderData_Model* other, float roll)
 {
-	LookAtOnce(other.GetWorldPosition(), roll);
+	LookAtOnce(other->GetWorldPosition(), roll);
 }
 void RenderData_Model::LookAtCamera(float roll)
 {
@@ -96,7 +93,7 @@ void RenderData_Model::LookAtFront(float roll)
 
 void RenderData_Model::Draw()
 {
-	Engine::Instance().AddModelDrawList(*this);
+	Engine::Instance().AddModelDrawList(this);
 	Update1();
 }
 
@@ -634,7 +631,7 @@ RenderData_Sprite::~RenderData_Sprite()
 
 void RenderData_Sprite::Draw()
 {
-	Engine::Instance().AddSpriteDrawList(*this);
+	Engine::Instance().AddSpriteDrawList(this);
 }
 
 void RenderData_Sprite::DrawImGui()
@@ -757,7 +754,7 @@ RenderData_Triangle::~RenderData_Triangle()
 
 void RenderData_Triangle::Draw()
 {
-	Engine::Instance().AddTriangleDrawList(*this);
+	Engine::Instance().AddTriangleDrawList(this);
 }
 
 void RenderData_Triangle::DrawImGui()
@@ -857,7 +854,7 @@ void RenderData_Line::Draw()
 		this->points.push_back(Vector3{ 0.0f,0.0f,0.0f });
 		this->points.push_back(Vector3{ 0.0f,0.0f,0.0f });
 	}
-	Engine::Instance().AddLineDrawList(*this);
+	Engine::Instance().AddLineDrawList(this);
 }
 
 void RenderData_Line::DrawPoints()
@@ -940,271 +937,6 @@ void RenderData_Line::DrawImGui()
 
 RenderData_Particle::RenderData_Particle()
 {
-	renderParticles.push_back(this);
-	this->ID = int(renderParticles.size());
-}
-
-RenderData_Particle::~RenderData_Particle()
-{
-	auto it = std::find(renderParticles.begin(), renderParticles.end(), this);
-	if (it != renderParticles.end())
-	{
-		renderParticles.erase(it);
-	}
-}
-bool RenderData_Particle::LoadJson()
-{
-	return JsonManager::LoadFromJson(*this, this->filePath);
-}
-
-void RenderData_Particle::Draw()
-{
-	Engine::Instance().DrawParticle(*this);
-}
-
-void RenderData_Particle::DrawImGui()
-{
-	std::optional<std::string> str = "particle : " + std::to_string(this->ID);
-	if (this->name != std::nullopt) str = (this->name);
-
-	std::string num = ":" + std::to_string(this->ID);
-
-	ImGui::Begin(str->c_str());
-
-	if (ImGui::TreeNode("----------Emitter--------------"))
-	{
-		ImGui::Checkbox(("ToggleShape" + num).c_str(), &this->GetParticleInf().emitter.useSphereEmitter);
-		ImGui::Checkbox(("emitFromInside" + num).c_str(), &this->GetParticleInf().emitter.emitFromInside);
-		if (this->GetParticleInf().emitter.useSphereEmitter)
-		{
-			ImGui::DragFloat3(("Sphere.radius" + num).c_str(), &this->GetParticleInf().emitter.emitterSphere.radius.x, 0.1f);
-			ImGui::DragFloat3(("Sphere.center" + num).c_str(), &this->GetParticleInf().emitter.emitterSphere.center.x, 0.1f);
-		}
-		else
-		{
-			ImGui::DragFloat3(("AABB.min" + num).c_str(), &this->GetParticleInf().emitter.emitterAABB.min.x, 0.1f);
-			ImGui::DragFloat3(("AABB.max" + num).c_str(), &this->GetParticleInf().emitter.emitterAABB.max.x, 0.1f);
-		}
-		ImGui::TreePop();
-	}
-	if (ImGui::TreeNode("----------scale----------------"))
-	{
-		ImGui::Checkbox(("S.isRandom" + num).c_str(), &this->GetParticleInf().scale.isRandom_value);
-		if (this->GetParticleInf().scale.isRandom_value)
-		{
-			ImGui::DragFloat3(("S.min" + num).c_str(), &this->GetParticleInf().scale.randomRange_value.min.x, 0.01f);
-			ImGui::DragFloat3(("S.max" + num).c_str(), &this->GetParticleInf().scale.randomRange_value.max.x, 0.01f);
-		}
-		else
-		{
-			ImGui::DragFloat3(("S.val" + num).c_str(), &this->GetParticleInf().scale.value.x, 0.01f);
-		}
-		ImGui::Checkbox(("S.vel.isRandom" + num).c_str(), &this->GetParticleInf().scale.isRandom_velocity);
-		if (this->GetParticleInf().scale.isRandom_velocity)
-		{
-			ImGui::DragFloat3(("S.vel.min" + num).c_str(), &this->GetParticleInf().scale.randomRange_velocity.min.x, 0.01f);
-			ImGui::DragFloat3(("S.vel.max" + num).c_str(), &this->GetParticleInf().scale.randomRange_velocity.max.x, 0.01f);
-		}
-		else
-		{
-			ImGui::DragFloat3(("S.vel" + num).c_str(), &this->GetParticleInf().scale.velocity.x, 0.01f);
-		}
-		ImGui::Checkbox(("S.acc.isRandom" + num).c_str(), &this->GetParticleInf().scale.isRandom_acceleration);
-		if (this->GetParticleInf().scale.isRandom_acceleration)
-		{
-			ImGui::DragFloat3(("S.acc.min" + num).c_str(), &this->GetParticleInf().scale.randomRange_acceleration.min.x, 0.01f);
-			ImGui::DragFloat3(("S.acc.max" + num).c_str(), &this->GetParticleInf().scale.randomRange_acceleration.max.x, 0.01f);
-		}
-		else
-		{
-			ImGui::DragFloat3(("S.acc" + num).c_str(), &this->GetParticleInf().scale.acceleration.x, 0.01f);
-		}
-		ImGui::TreePop();
-	}
-	if (ImGui::TreeNode("----------rotate---------------"))
-	{
-		ImGui::Checkbox(("R.isRandom" + num).c_str(), &this->GetParticleInf().rotate.isRandom_value);
-		if (this->GetParticleInf().rotate.isRandom_value)
-		{
-			ImGui::DragFloat3(("R.min" + num).c_str(), &this->GetParticleInf().rotate.randomRange_value.min.x, 0.01f);
-			ImGui::DragFloat3(("R.max" + num).c_str(), &this->GetParticleInf().rotate.randomRange_value.max.x, 0.01f);
-		}
-		else
-		{
-			ImGui::DragFloat3(("R.val" + num).c_str(), &this->GetParticleInf().rotate.value.x, 0.01f);
-		}
-		ImGui::Checkbox(("R.vel.isRandom" + num).c_str(), &this->GetParticleInf().rotate.isRandom_velocity);
-		if (this->GetParticleInf().rotate.isRandom_velocity)
-		{
-			ImGui::DragFloat3(("R.vel.min" + num).c_str(), &this->GetParticleInf().rotate.randomRange_velocity.min.x, 0.01f);
-			ImGui::DragFloat3(("R.vel.max" + num).c_str(), &this->GetParticleInf().rotate.randomRange_velocity.max.x, 0.01f);
-		}
-		else
-		{
-			ImGui::DragFloat3(("R.vel" + num).c_str(), &this->GetParticleInf().rotate.velocity.x, 0.01f);
-		}
-		ImGui::Checkbox(("R.acc.isRandom" + num).c_str(), &this->GetParticleInf().rotate.isRandom_acceleration);
-		if (this->GetParticleInf().rotate.isRandom_acceleration)
-		{
-			ImGui::DragFloat3(("R.acc.min" + num).c_str(), &this->GetParticleInf().rotate.randomRange_acceleration.min.x, 0.01f);
-			ImGui::DragFloat3(("R.acc.max" + num).c_str(), &this->GetParticleInf().rotate.randomRange_acceleration.max.x, 0.01f);
-		}
-		else
-		{
-			ImGui::DragFloat3(("R.acc" + num).c_str(), &this->GetParticleInf().rotate.acceleration.x, 0.01f);
-		}
-		ImGui::TreePop();
-	}
-	if (ImGui::TreeNode("----------translate------------"))
-	{
-		//ImGui::DragFloat3(("T.val" + num).c_str(), &this->translate.value.x, 0.01f);
-		ImGui::Checkbox(("T.vel.isRandom" + num).c_str(), &this->GetParticleInf().translate.isRandom_velocity);
-		if (this->GetParticleInf().translate.isRandom_velocity)
-		{
-			ImGui::DragFloat3(("T.vel.min" + num).c_str(), &this->GetParticleInf().translate.randomRange_velocity.min.x, 0.01f);
-			ImGui::DragFloat3(("T.vel.max" + num).c_str(), &this->GetParticleInf().translate.randomRange_velocity.max.x, 0.01f);
-		}
-		else
-		{
-			ImGui::DragFloat3(("T.vel" + num).c_str(), &this->GetParticleInf().translate.velocity.x, 0.01f);
-		}
-		ImGui::Checkbox(("T.acc.isRandom" + num).c_str(), &this->GetParticleInf().translate.isRandom_acceleration);
-		if (this->GetParticleInf().translate.isRandom_acceleration)
-		{
-			ImGui::DragFloat3(("T.acc.min" + num).c_str(), &this->GetParticleInf().translate.randomRange_acceleration.min.x, 0.01f);
-			ImGui::DragFloat3(("T.acc.max" + num).c_str(), &this->GetParticleInf().translate.randomRange_acceleration.max.x, 0.01f);
-		}
-		else
-		{
-			ImGui::DragFloat3(("T.acc" + num).c_str(), &this->GetParticleInf().translate.acceleration.x, 0.01f);
-		}
-		ImGui::TreePop();
-	}
-	if (ImGui::TreeNode("----------target---------------"))
-	{
-		ImGui::Checkbox(("useTarget" + num).c_str(), &this->GetParticleInf().target.useTarget);
-		ImGui::Checkbox(("spawnDependent" + num).c_str(), &this->GetParticleInf().target.spawnDependent);
-		ImGui::DragFloat3(("target" + num).c_str(), &this->GetParticleInf().target.target.x, 0.01f);
-		ImGui::DragFloat(("speed" + num).c_str(), &this->GetParticleInf().target.speed, 0.1f);
-		ImGui::DragFloat(("angle" + num).c_str(), &this->GetParticleInf().target.spreadAngle, 0.1f);
-
-		ImGui::TreePop();
-	}
-	if (ImGui::TreeNode("----------texture--------------"))
-	{
-		size_t textureCount = Game::Resource::GetTextureCount();
-
-		for (size_t i = 0; i < textureCount; ++i)
-		{
-			TextureData* texData = Game::Resource::GetTextureData(static_cast<uint32_t>(i));
-			if (texData)
-			{
-				ImGui::Image((ImTextureID)texData->textureSrvHandleGPU.ptr, ImVec2(32, 32));
-
-				// 6個並べたら改行
-				if ((i + 1) % 6 != 0 && i < textureCount - 1)
-				{
-					ImGui::SameLine();
-				}
-				if (ImGui::IsItemClicked())
-				{
-					this->GetParticleInf().resource.texture = static_cast<uint32_t>(i);
-				}
-			}
-		}
-		ImGui::TreePop();
-	}
-	if (ImGui::TreeNode("----------model----------------"))
-	{
-		if (ImGui::Button("-"))this->GetParticleInf().resource.model -= 1;
-
-		ImGui::SameLine();
-
-		// ラベルを非表示にするために "##" プレフィックスで ID を与える
-		std::string dragId = std::string("##model") + num;
-		ImGui::DragInt(dragId.c_str(), reinterpret_cast<int*>(&this->GetParticleInf().resource.model));
-
-		ImGui::SameLine();
-
-		if (ImGui::Button("+"))this->GetParticleInf().resource.model += 1;
-
-		// クランプ
-		if (this->GetParticleInf().resource.model < 0) this->GetParticleInf().resource.model = 0;
-		if (this->GetParticleInf().resource.model > int(Game::Resource::GetModelCount() - 1)) this->GetParticleInf().resource.model = int(Game::Resource::GetModelCount() - 1);
-
-		ImGui::TreePop();
-	}
-	if (ImGui::TreeNode("----------density--------------"))
-	{
-		int particlesPerEmission = int(this->GetParticleInf().density.particlesPerEmission);
-		ImGui::DragInt(("particlePerEmission" + num).c_str(), &particlesPerEmission);
-		if (particlesPerEmission < 0)particlesPerEmission = 0;
-		this->GetParticleInf().density.particlesPerEmission = uint32_t(particlesPerEmission);
-		int emissionDelay = int(this->GetParticleInf().density.emissionDelay);
-		ImGui::DragInt(("emissionDelay" + num).c_str(), &emissionDelay);
-		if (emissionDelay < 1)emissionDelay = 1;
-		this->GetParticleInf().density.emissionDelay = uint32_t(emissionDelay);
-		ImGui::Text("lifetime");
-		ImGui::DragInt(("liveMax" + num).c_str(), &this->GetParticleInf().density.liveMax);
-
-		ImGui::TreePop();
-	}
-	if (ImGui::TreeNode("----------color----------------"))
-	{
-		Vector4 preColor = ConvertUintToVector4(this->GetParticleInf().material.color);
-		float floatColor[4] = { preColor.x, preColor.y, preColor.z, preColor.w };
-		ImGui::ColorEdit4((num + "color").c_str(), floatColor, 1);
-		Vector4 vector4Color = { floatColor[0], floatColor[1], floatColor[2], floatColor[3] };
-		this->GetParticleInf().material.color = ConvertVector4ToUint(vector4Color);
-		ImGui::TreePop();
-	}
-	if (ImGui::TreeNode("----------option---------------"))
-	{
-		ImGui::Checkbox("Billboard", &this->GetParticleInf().option.isBillboard);
-		ImGui::TreePop();
-	}
-	ImGui::SetNextItemOpen(true, ImGuiCond_Once);
-	if (ImGui::TreeNode("----------load & save----------"))
-	{
-		char buf[256];
-		if (this->filePath.size() < sizeof(buf)) memcpy(buf, this->filePath.c_str(), this->filePath.size() + 1);
-		else buf[sizeof(buf) - 1] = '\0';
-		if (ImGui::InputText(".json", buf, sizeof(buf)))
-		{
-			this->filePath = std::string(buf);
-		}
-		if (ImGui::Button("save"))
-		{
-			JsonManager::SaveToJson(*this, this->filePath);
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("load"))
-		{
-			JsonManager::LoadFromJson(*this, this->filePath);
-		}
-		ImGui::TreePop();
-	}
-
-	ImGui::End();
-}
-
-void RenderData_Particle::DrawEmitter()
-{
-	if (this->GetParticleInf().emitter.useSphereEmitter)
-	{
-		Game::DebugDraw::AddSphere(this->GetParticleInf().emitter.emitterSphere.center, this->GetParticleInf().emitter.emitterSphere.radius, 0xFFFFFF22);
-	}
-	else
-	{
-		Game::DebugDraw::AddAABB(this->GetParticleInf().emitter.emitterAABB, 0xFFFFFF22);
-	}
-}
-
-#pragma endregion
-
-
-RenderData_Particle3::RenderData_Particle3()
-{
 	renderParticles3.push_back(this);
 	this->ID = int(renderParticles3.size());
 
@@ -1230,10 +962,10 @@ RenderData_Particle3::RenderData_Particle3()
 	lifeCount_.resize(capacity, 0);
 	isActive_.resize(capacity, false);
 }
-RenderData_Particle3::~RenderData_Particle3()
+RenderData_Particle::~RenderData_Particle()
 {}
 
-void RenderData_Particle3::UpdateAllParticles(const Matrix4x4& viewProjectionMatrix)
+void RenderData_Particle::UpdateAllParticles(const Matrix4x4& viewProjectionMatrix)
 {
 	for (size_t ID = 0; ID < renderParticles3.size(); ++ID)
 	{
@@ -1241,7 +973,7 @@ void RenderData_Particle3::UpdateAllParticles(const Matrix4x4& viewProjectionMat
 	}
 }
 
-void RenderData_Particle3::Update(const Matrix4x4& viewProjectionMatrix)
+void RenderData_Particle::Update(const Matrix4x4& viewProjectionMatrix)
 {
 	// 非アクティブなパーティクルの削除
 	RemoveInactiveParticles();
@@ -1264,7 +996,7 @@ void RenderData_Particle3::Update(const Matrix4x4& viewProjectionMatrix)
 	frame++;
 }
 
-void RenderData_Particle3::SpawnParticle()
+void RenderData_Particle::SpawnParticle()
 {
 	uint32_t ableParticles = 0;
 	if (frame % emissionDelay == 0)
@@ -1293,7 +1025,7 @@ void RenderData_Particle3::SpawnParticle()
 	}
 }
 
-void RenderData_Particle3::SetSpawnPosition(uint32_t index)
+void RenderData_Particle::SetSpawnPosition(uint32_t index)
 {
 	switch (emitterShape)
 	{
@@ -1457,7 +1189,7 @@ void RenderData_Particle3::SetSpawnPosition(uint32_t index)
 	}
 }
 
-void RenderData_Particle3::SetSpawnScale(uint32_t index)
+void RenderData_Particle::SetSpawnScale(uint32_t index)
 {
 	if (targetScale.isRandom_value)
 	{
@@ -1512,7 +1244,7 @@ void RenderData_Particle3::SetSpawnScale(uint32_t index)
 	}
 }
 
-void RenderData_Particle3::SetSpawnRotate(uint32_t index)
+void RenderData_Particle::SetSpawnRotate(uint32_t index)
 {
 	if (isBillboard)
 	{
@@ -1577,7 +1309,7 @@ void RenderData_Particle3::SetSpawnRotate(uint32_t index)
 	}
 }
 
-void RenderData_Particle3::SetSpawnTranslate(uint32_t index)
+void RenderData_Particle::SetSpawnTranslate(uint32_t index)
 {
 	SetSpawnPosition(index);
 
@@ -1665,7 +1397,7 @@ void RenderData_Particle3::SetSpawnTranslate(uint32_t index)
 	}
 }
 
-void RenderData_Particle3::UpdateTransformationMatrix(const Matrix4x4& viewProjectionMatrix)
+void RenderData_Particle::UpdateTransformationMatrix(const Matrix4x4& viewProjectionMatrix)
 {
 	for (size_t i = 0; i < capacity; ++i)
 	{
@@ -1684,7 +1416,7 @@ void RenderData_Particle3::UpdateTransformationMatrix(const Matrix4x4& viewProje
 	}
 }
 
-void RenderData_Particle3::UpdateTransforms()
+void RenderData_Particle::UpdateTransforms()
 {
 	Vector3 CameraTranslate = Game::Camera::Getter::GetTranslate("ReleaseCamera");
 
@@ -1712,7 +1444,7 @@ void RenderData_Particle3::UpdateTransforms()
 	}
 }
 
-void RenderData_Particle3::UpdateLife()
+void RenderData_Particle::UpdateLife()
 {
 	for (size_t i = 0; i < currentSum; ++i)
 	{
@@ -1720,7 +1452,7 @@ void RenderData_Particle3::UpdateLife()
 	}
 }
 
-void RenderData_Particle3::CheckLife()
+void RenderData_Particle::CheckLife()
 {
 	for (size_t i = 0; i < currentSum; ++i)
 	{
@@ -1748,7 +1480,7 @@ void RenderData_Particle3::CheckLife()
 	}
 }
 
-void RenderData_Particle3::RemoveInactiveParticles()
+void RenderData_Particle::RemoveInactiveParticles()
 {
 	size_t writeIndex = 0;
 	for (size_t readIndex = 0; readIndex < capacity; ++readIndex)
@@ -1779,12 +1511,12 @@ void RenderData_Particle3::RemoveInactiveParticles()
 }
 
 
-void RenderData_Particle3::Draw()
+void RenderData_Particle::Draw()
 {
-	Engine::Instance().AddParticleDrawList(*this);
+	Engine::Instance().AddParticleDrawList(this);
 }
 
-void RenderData_Particle3::DrawEmitter()
+void RenderData_Particle::DrawEmitter()
 {
 	if (emitterShape == PrimitiveType::Sphere)
 	{
@@ -1796,7 +1528,7 @@ void RenderData_Particle3::DrawEmitter()
 	}
 }
 
-void RenderData_Particle3::DrawImGui()
+void RenderData_Particle::DrawImGui()
 {
 	//for (size_t i = 0; i < currentSum; ++i)
 	//{
@@ -2051,6 +1783,8 @@ void RenderData_Particle3::DrawImGui()
 	ImGui::End();
 }
 
+#pragma endregion
+
 #pragma region rect
 
 RenderData_Rect::RenderData_Rect()
@@ -2070,7 +1804,7 @@ RenderData_Rect::~RenderData_Rect()
 
 void RenderData_Rect::Draw()
 {
-	Engine::Instance().AddRectDrawList(*this);
+	Engine::Instance().AddRectDrawList(this);
 }
 
 void RenderData_Rect::DrawImGui()
@@ -2136,31 +1870,4 @@ void RenderData_Rect::DrawImGui()
 	ImGui::End();
 }
 
-RenderData_MinecraftMap::RenderData_MinecraftMap()
-{}
-
-RenderData_MinecraftMap::~RenderData_MinecraftMap()
-{}
-
-void RenderData_MinecraftMap::Draw()
-{
-	Engine::Instance().DrawMinecraftMap(*this);
-}
-
 #pragma endregion
-
-RenderData_Particle2::RenderData_Particle2()
-{}
-
-RenderData_Particle2::~RenderData_Particle2()
-{}
-
-void RenderData_Particle2::CreateParticleGroup(const std::string& name, ParticleInf* particleInf)
-{
-	particleGroups_[name] = particleInf;
-}
-
-void RenderData_Particle2::DeleteParticleGroup(const std::string& name)
-{
-	particleGroups_.erase(name);
-}

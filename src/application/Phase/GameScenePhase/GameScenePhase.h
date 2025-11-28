@@ -25,5 +25,5 @@ private:
 	MapManager* map_;
 
 
-	RenderData_Particle3* particle;
+	RenderData_Particle* particle;
 };

@@ -15,103 +15,125 @@ TestPhase::TestPhase()
 	audio1 = Game::Resource::LoadAudio("resources/Prototypes/audio/BGM/InGame.mp3");
 	audio2 = Game::Resource::LoadAudio("resources/Prototypes/audio/SE/バトル用/氷魔法1.mp3");
 
+	ground_ = new RenderData_Model();
+	wall1_ = new RenderData_Model();
+	wall2_ = new RenderData_Model();
+	wall3_ = new RenderData_Model();
+	wall4_ = new RenderData_Model();
+	player_ = new RenderData_Model();
 
-	ground_.model = model1;
-	ground_.texture = tex1;
-	ground_.name = "ground";
-	ground_.mass = 1001.0f;
-	ground_.scale.value = { 10.0f,1.0f,10.0f };
+	shoulder_ = new RenderData_Model();
+	elbow_ = new RenderData_Model();
+	hand_ = new RenderData_Model();
 
-	wall1_.model = model1;
-	wall1_.texture = tex1;
-	wall1_.name = "wall1";
-	wall1_.scale.value = { 0.5f,2.0f,10.0f };
-	wall1_.translate.value = { -5.0f,0.5f,0.0f };
-	wall1_.mass = 1000.0f;
-	wall2_.model = model1;
-	wall2_.texture = tex1;
-	wall2_.name = "wall2";
-	wall2_.scale.value = { 0.5f,2.0f,10.0f };
-	wall2_.translate.value = { 5.0f,0.5f,0.0f };
-	wall2_.mass = 1000.0f;
-	wall3_.model = model1;
-	wall3_.texture = tex1;
-	wall3_.name = "wall3";
-	wall3_.scale.value = { 10.0f,2.0f,0.5f };
-	wall3_.translate.value = { 0.0f,0.5f,-5.0f };
-	wall3_.mass = 1000.0f;
-	wall4_.model = model1;
-	wall4_.texture = tex1;
-	wall4_.name = "wall4";
-	wall4_.scale.value = { 10.0f,2.0f,0.5f };
-	wall4_.translate.value = { 0.0f,0.5f,5.0f };
-	wall4_.mass = 1000.0f;
+	rect_ = new RenderData_Rect();
 
-	shoulder_.model = model4;
-	shoulder_.texture = tex2;
-	shoulder_.name = "shoulder";
-	shoulder_.translate.value.y = 0.0f;
-	elbow_.model = model4;
-	elbow_.texture = tex2;
-	elbow_.name = "elbow";
-	elbow_.translate.value.y = 3.0f;
-	hand_.model = model4;
-	hand_.texture = tex2;
-	hand_.name = "hand";
-	hand_.translate.value.y = 6.0f;
+	sprite1_ = new RenderData_Sprite();
+	sprite2_ = new RenderData_Sprite();
 
-	hand_.parentModel = &elbow_;
+	particle1_ = new RenderData_Particle();
+
+	triangle1_ = new RenderData_Triangle();
+	triangle2_ = new RenderData_Triangle();
+
+	line_ = new RenderData_Line();
+	line2_ = new RenderData_Line();
+	line3_ = new RenderData_Line();
+		
+
+
+	ground_->model = model1;
+	ground_->texture = tex1;
+	ground_->name = "ground";
+	ground_->mass = 1001.0f;
+	ground_->scale.value = { 10.0f,1.0f,10.0f };
+
+	wall1_->model = model1;
+	wall1_->texture = tex1;
+	wall1_->name = "wall1";
+	wall1_->scale.value = { 0.5f,2.0f,10.0f };
+	wall1_->translate.value = { -5.0f,0.5f,0.0f };
+	wall1_->mass = 1000.0f;
+	wall2_->model = model1;
+	wall2_->texture = tex1;
+	wall2_->name = "wall2";
+	wall2_->scale.value = { 0.5f,2.0f,10.0f };
+	wall2_->translate.value = { 5.0f,0.5f,0.0f };
+	wall2_->mass = 1000.0f;
+	wall3_->model = model1;
+	wall3_->texture = tex1;
+	wall3_->name = "wall3";
+	wall3_->scale.value = { 10.0f,2.0f,0.5f };
+	wall3_->translate.value = { 0.0f,0.5f,-5.0f };
+	wall3_->mass = 1000.0f;
+	wall4_->model = model1;
+	wall4_->texture = tex1;
+	wall4_->name = "wall4";
+	wall4_->scale.value = { 10.0f,2.0f,0.5f };
+	wall4_->translate.value = { 0.0f,0.5f,5.0f };
+	wall4_->mass = 1000.0f;
+
+	shoulder_->model = model4;
+	shoulder_->texture = tex2;
+	shoulder_->name = "shoulder";
+	shoulder_->translate.value.y = 0.0f;
+	elbow_->model = model4;
+	elbow_->texture = tex2;
+	elbow_->name = "elbow";
+	elbow_->translate.value.y = 3.0f;
+	hand_->model = model4;
+	hand_->texture = tex2;
+	hand_->name = "hand";
+	hand_->translate.value.y = 6.0f;
+
+	hand_->parentModel = elbow_;
 	//elbow_.parentModel = &shoulder_;
 
-	rect_.texture = tex1;
-	rect_.pos1 = { 1.0f,1.0f,0.0f };
-	rect_.pos2 = { 1.0f,-1.0f,0.0f };
-	rect_.pos3 = { -1.0f,1.0f,0.0f };
-	rect_.pos4 = { -1.0f,-1.0f,0.0f };
+	rect_->texture = tex1;
+	rect_->pos1 = { 1.0f,1.0f,0.0f };
+	rect_->pos2 = { 1.0f,-1.0f,0.0f };
+	rect_->pos3 = { -1.0f,1.0f,0.0f };
+	rect_->pos4 = { -1.0f,-1.0f,0.0f };
 
-	player_.model = model4;
-	player_.texture = tex3;
-	player_.name = "player";
-	player_.translate.value = { 0.0f,2.0f,0.0f };
-	player_.translate.acceleration = { 0.0f,-0.2f,0.0f };
-	player_.mass = 1.0f;
-	player_.SetBlock(ground_);
-	player_.SetBlock(wall1_);
-	player_.SetBlock(wall2_);
-	player_.SetBlock(wall3_);
-	player_.SetBlock(wall4_);
+	player_->model = model4;
+	player_->texture = tex3;
+	player_->name = "player";
+	player_->translate.value = { 0.0f,2.0f,0.0f };
+	player_->translate.acceleration = { 0.0f,-0.2f,0.0f };
+	player_->mass = 1.0f;
+	player_->SetBlock(ground_);
+	player_->SetBlock(wall1_);
+	player_->SetBlock(wall2_);
+	player_->SetBlock(wall3_);
+	player_->SetBlock(wall4_);
 
-	sprite1_.texture = tex1;
-	sprite1_.transforms.scale = { 0.1f,0.1f };
-	sprite2_.texture = tex3;
-	sprite2_.transforms.scale = { 0.1f,0.1f };
+	sprite1_->texture = tex1;
+	sprite1_->transforms.scale = { 0.1f,0.1f };
+	sprite2_->texture = tex3;
+	sprite2_->transforms.scale = { 0.1f,0.1f };
 
-	triangle1_.texture = tex1;
-	triangle2_.texture = tex1;
+	triangle1_->texture = tex1;
+	triangle2_->texture = tex1;
 
-	line_.points.push_back(Vector3{ 10.0f,0.0f,0.0f });
-	line_.points.push_back(Vector3{ 0.0f,10.0f,0.0f });
-	line_.points.push_back(Vector3{ -10.0f,0.0f,0.0f });
+	line_->points.push_back(Vector3{ 10.0f,0.0f,0.0f });
+	line_->points.push_back(Vector3{ 0.0f,10.0f,0.0f });
+	line_->points.push_back(Vector3{ -10.0f,0.0f,0.0f });
 
-	line2_.points.push_back(Vector3{ 10.0f,0.0f,0.0f });
-	line2_.points.push_back(Vector3{ 0.0f,10.0f,0.0f });
-	line2_.points.push_back(Vector3{ -10.0f,0.0f,0.0f });
-	line2_.lineType = LineType::BezierCurve;
+	line2_->points.push_back(Vector3{ 10.0f,0.0f,0.0f });
+	line2_->points.push_back(Vector3{ 0.0f,10.0f,0.0f });
+	line2_->points.push_back(Vector3{ -10.0f,0.0f,0.0f });
+	line2_->lineType = LineType::BezierCurve;
 
-	line3_.points.push_back(Vector3{ 10.0f,0.0f,0.0f });
-	line3_.points.push_back(Vector3{ 0.0f,10.0f,0.0f });
-	line3_.points.push_back(Vector3{ -10.0f,0.0f,0.0f });
-	line3_.lineType = LineType::SplineCurve;
+	line3_->points.push_back(Vector3{ 10.0f,0.0f,0.0f });
+	line3_->points.push_back(Vector3{ 0.0f,10.0f,0.0f });
+	line3_->points.push_back(Vector3{ -10.0f,0.0f,0.0f });
+	line3_->lineType = LineType::SplineCurve;
 
-	//particle_.model = playerModel;
-	//particle_.texture = playerTex;
-	particle1_.filePath = "resources/Prototypes/particle/aaa";
+	particle1_->model = model3;
+	particle1_->texture = tex1;
+	particle1_->filePath = "resources/Prototypes/particle/aaa";
 	//particle1_.LoadJson();
 
-	particle1_.model = model3;
-	particle1_.texture = tex1;
-	//particle2_.model = model4;
-	//particle2_.texture = tex1;
 
 }
 
@@ -355,78 +377,71 @@ void TestPhase::Update()
 
 	if (Game::Input::Key::IsHeld(DIK_A))
 	{
-		player_.translate.value.x -= 0.1f;
+		player_->translate.value.x -= 0.1f;
 	}
 	if (Game::Input::Key::IsHeld(DIK_D))
 	{
-		player_.translate.value.x += 0.1f;
+		player_->translate.value.x += 0.1f;
 	}
 	if (Game::Input::Key::IsHeld(DIK_S))
 	{
-		player_.translate.value.z -= 0.1f;
+		player_->translate.value.z -= 0.1f;
 	}
 	if (Game::Input::Key::IsHeld(DIK_W))
 	{
-		player_.translate.value.z += 0.1f;
+		player_->translate.value.z += 0.1f;
 	}
 	if (Game::Input::Key::IsJustPressed(DIK_SPACE))
 	{
-		player_.translate.velocity.y += 2.5f;
+		player_->translate.velocity.y += 2.5f;
 	}
 }
 
 
 void TestPhase::Draw()
 {
-	//rect_.Draw();
-	//rect_.DrawImGui();
+	rect_->Draw();
+	rect_->DrawImGui();
 	
-	//ground_.Draw();
-	//ground_.DrawImGui();
-	//ground_.DrawAABB();
-	//wall1_.Draw();
-	//wall2_.Draw();
-	//wall3_.Draw();
-	//wall4_.Draw();
+	ground_->Draw();
+	ground_->DrawImGui();
+	ground_->DrawAABB();
+	wall1_->Draw();
+	wall2_->Draw();
+	wall3_->Draw();
+	wall4_->Draw();
 
-	//player_.Draw();
-	//player_.DrawAABB();
-	//player_.DrawImGui();
+	player_->Draw();
+	player_->DrawAABB();
+	player_->DrawImGui();
 
-	//sprite1_.Draw();
-	//sprite1_.DrawImGui();
-	//sprite2_.Draw();
-	//sprite2_.DrawImGui();
+	sprite1_->Draw();
+	sprite1_->DrawImGui();
+	sprite2_->Draw();
+	sprite2_->DrawImGui();
 
-	//triangle1_.Draw();
-	//triangle1_.DrawImGui();
-	//triangle2_.Draw();
-	//triangle2_.DrawImGui();
+	triangle1_->Draw();
+	triangle1_->DrawImGui();
+	triangle2_->Draw();
+	triangle2_->DrawImGui();
 
-	particle1_.Draw();
-	particle1_.DrawEmitter();
-	particle1_.DrawImGui();
-	//particle1_.DrawEmitter();
-	//particle2_.Draw();
-	//particle2_.DrawImGui();
-	//particle2_.DrawEmitter();
+	particle1_->Draw();
+	particle1_->DrawEmitter();
+	particle1_->DrawImGui();
+	particle1_->DrawEmitter();
 
-	//line_.Draw();
-	//line_.DrawImGui();
-	//line2_.Draw();
-	//line2_.DrawImGui();
-	//line3_.Draw();
-	//line3_.DrawImGui();
+	line_->Draw();
+	line_->DrawImGui();
+	line2_->Draw();
+	line2_->DrawImGui();
+	line3_->Draw();
+	line3_->DrawImGui();
 
-	//shoulder_.Draw();
-	//shoulder_.DrawImGui();
+	shoulder_->Draw();
+	shoulder_->DrawImGui();
 	
-	//elbow_.Draw();
-	//elbow_.DrawImGui();
-	//hand_.Draw();
-	//hand_.DrawImGui();
-
-
-
-	//minecraftMap_.Draw();
+	elbow_->Draw();
+	elbow_->DrawImGui();
+	hand_->Draw();
+	hand_->DrawImGui();
 }

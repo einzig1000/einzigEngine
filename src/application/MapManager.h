@@ -31,7 +31,7 @@ private:
 
 
 	// 着地パーティクル
-	RenderData_Particle3* landingParticle_;
+	RenderData_Particle* landingParticle_;
 
 	// プレイヤー参照
 	Player* player_;
