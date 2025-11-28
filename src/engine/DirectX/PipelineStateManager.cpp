@@ -159,49 +159,38 @@ void PipelineStateManager::InitializeRootSignature_particle(ID3D12Device * devic
     HRESULT hr;
     
     // テクスチャ用(t0, PS) と インスタンス用(t1, VS) の2レンジを別テーブルに
-    D3D12_DESCRIPTOR_RANGE rangeTex{};
-    rangeTex.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-    rangeTex.NumDescriptors = 1;
-    rangeTex.BaseShaderRegister = 0; // t0
-    rangeTex.RegisterSpace = 0;
-    rangeTex.OffsetInDescriptorsFromTableStart = 0;
+    D3D12_DESCRIPTOR_RANGE rangeTex[1] = {};
+    rangeTex[0].BaseShaderRegister = 0; // t0 レジスタ
+    rangeTex[0].NumDescriptors = 1;
+    rangeTex[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    rangeTex[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-    D3D12_DESCRIPTOR_RANGE rangeInst{};
-    rangeInst.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-    rangeInst.NumDescriptors = 1;
-    rangeInst.BaseShaderRegister = 1; // t1
-    rangeInst.RegisterSpace = 0;
-    rangeInst.OffsetInDescriptorsFromTableStart = 0;
+    D3D12_DESCRIPTOR_RANGE rangeInst[1];
+    rangeInst[0].BaseShaderRegister = 1; // t1
+    rangeInst[0].NumDescriptors = 1;
+    rangeInst[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    rangeInst[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+    rangeInst[0].RegisterSpace = 0;
 
 
-    D3D12_ROOT_PARAMETER rootParameters[5] = {};
+    D3D12_ROOT_PARAMETER rootParameters[3] = {};
     
     // ルートパラメータ0: Material (register b0)
     rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
     rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
     rootParameters[0].Descriptor.ShaderRegister = 0;
     
-    // ルートパラメータ1: TransformationMatrix (WVP, World) (register b1)
-    rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-    rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-    rootParameters[1].Descriptor.ShaderRegister = 1;
-    
     // ルートパラメータ2: Texture (SRV) Descriptor Table (register t0)
+    rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	rootParameters[1].DescriptorTable.NumDescriptorRanges = _countof(rangeTex);
+    rootParameters[1].DescriptorTable.pDescriptorRanges = rangeTex;
+
+    // ルートパラメータ3: Instance SRV(t1)（VS可視）
     rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-    rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-    rootParameters[2].DescriptorTable.NumDescriptorRanges = 1;
-    rootParameters[2].DescriptorTable.pDescriptorRanges = &rangeTex;
-
-    // ルートパラメータ3: DirectionalLight CBV(b2)
-    rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-    rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-    rootParameters[3].Descriptor.ShaderRegister = 2;
-
-    // ルートパラメータ4: Instance SRV(t1)（VS可視）
-    rootParameters[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-    rootParameters[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-    rootParameters[4].DescriptorTable.NumDescriptorRanges = 1;
-    rootParameters[4].DescriptorTable.pDescriptorRanges = &rangeInst;
+    rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+	rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(rangeInst);
+    rootParameters[2].DescriptorTable.pDescriptorRanges = rangeInst;
 
     D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};
     staticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;

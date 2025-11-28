@@ -28,10 +28,6 @@ private:
     std::map<BlendMode, Microsoft::WRL::ComPtr<ID3D12PipelineState>> linePSOs;     // Line描画用PSO
 	std::map<BlendMode, Microsoft::WRL::ComPtr<ID3D12PipelineState>> blockPSOs;    // MinecraftMap用PSO
 
-    Microsoft::WRL::ComPtr<IDxcUtils> dxcUtils;
-    Microsoft::WRL::ComPtr<IDxcCompiler3> dxcCompiler;
-    Microsoft::WRL::ComPtr<IDxcIncludeHandler> includeHandler;
-
     std::unordered_map<std::wstring, Microsoft::WRL::ComPtr<IDxcBlob>> shaderCache_;
 
     void InitializeDxc();
@@ -41,10 +37,14 @@ private:
 	void InitializeRootSignature_block(ID3D12Device* device);
     void CreateAllPSOs(ID3D12Device* device);
 
-    // 追加: キャッシュ付きコンパイル
+    Microsoft::WRL::ComPtr<IDxcUtils> dxcUtils;
+    Microsoft::WRL::ComPtr<IDxcCompiler3> dxcCompiler;
+    Microsoft::WRL::ComPtr<IDxcIncludeHandler> includeHandler;
+
+    // まだコンパイルしてなかったらコンパイルする
     Microsoft::WRL::ComPtr<IDxcBlob> GetOrCompileShader(const wchar_t* path, const wchar_t* target);
 
-    // 汎用的なPSO生成関数
+    // PSO生成関数
     Microsoft::WRL::ComPtr<ID3D12PipelineState> CreatePipelineState(
         ID3D12Device* device,
         ID3D12RootSignature* rs,

@@ -32,8 +32,8 @@ private:
 	RenderData_Sprite sprite1_;
 	RenderData_Sprite sprite2_;
 
-	RenderData_Particle particle1_;
-	RenderData_Particle particle2_;
+	RenderData_Particle3 particle1_;
+	//RenderData_Particle3 particle2_;
 
 	RenderData_Triangle triangle1_;
 	RenderData_Triangle triangle2_;

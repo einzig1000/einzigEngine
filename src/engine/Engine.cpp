@@ -210,6 +210,11 @@ void Engine::UpdateTransforms()
 #pragma endregion
 
 }
+void Engine::UpdateParticles()
+{
+	// パーティクル更新
+	RenderData_Particle3::UpdateAllParticles(cameraManager->GetCurrentViewProjectionMatrix());
+}
 void Engine::UpdateCamera()
 {
 	// カメラの更新
@@ -271,6 +276,9 @@ void Engine::EndFrame()
 
 	// 座標更新
 	UpdateTransforms();
+
+	// パーティクル更新
+	UpdateParticles();
 
 	// 描画実行
 	drawSystem->Draw();
@@ -380,10 +388,17 @@ void Engine::AddLineDrawList(RenderData_Line& renderData)
 	drawSystem->AddLineDrawList(renderData);
 }
 
+void Engine::AddParticleDrawList(RenderData_Particle3& renderData)
+{
+	drawSystem->AddParticleDrawList(renderData);
+}
+
+
 void Engine::DrawMinecraftMap(RenderData_MinecraftMap& renderData)
 {
 	//drawSystem->DrawMap(renderData);
 }
+
 
 void Engine::DrawParticle(RenderData_Particle& renderData)
 {
@@ -643,6 +658,52 @@ std::vector<AABB>  Engine::CreateAABB(RenderData_Model* data)
 void Engine::toggleWireframeMode()
 {
 	drawSystem->toggleWireframeMode();
+}
+
+
+Microsoft::WRL::ComPtr<ID3D12Resource> Engine::CreateBufferResource(size_t sizeInBytes)
+{
+	// ID3D12Resourceを格納するポインタ
+	Microsoft::WRL::ComPtr<ID3D12Resource> pResource = nullptr;
+
+	D3D12_HEAP_PROPERTIES heapProperties{};
+	heapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
+
+	// リソース記述子を作成
+	D3D12_RESOURCE_DESC resourceDesc{};
+	// バッファリソース。テクスチャの場合はまた別の設定をする
+	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	resourceDesc.Width = sizeInBytes;
+	// バッファの場合はこれらは１にする決まり
+	resourceDesc.Height = 1;
+	resourceDesc.DepthOrArraySize = 1;
+	resourceDesc.MipLevels = 1;
+	resourceDesc.SampleDesc.Count = 1;
+	// バッファの場合はこれにする決まり
+	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+	// リソースを作成
+	HRESULT hr = dxManager->GetDevice()->CreateCommittedResource(
+		&heapProperties,        // ヒープのプロパティ
+		D3D12_HEAP_FLAG_NONE,   // ヒープフラグ
+		&resourceDesc,          // リソースの記述子
+		D3D12_RESOURCE_STATE_GENERIC_READ,           // 初期状態
+		nullptr,                // Clear値 (バッファの場合はnullptr)
+		IID_PPV_ARGS(&pResource) // ID3D12Resourceポインタを取得
+	);
+
+	assert(SUCCEEDED(hr));
+	pResource->SetName(L"CreateBufferResource()");
+
+	return pResource;
+}
+
+Microsoft::WRL::ComPtr<ID3D12Resource> Engine::CreateConstantBufferResource(size_t sizeInBytes)
+{
+	size_t ConstantSize;
+	ConstantSize = (sizeInBytes + (D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1)) & ~(D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1);
+
+	return CreateBufferResource(ConstantSize);
 }
 
 const std::vector<Object3D> Engine::GetAllObject3D()

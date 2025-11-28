@@ -106,7 +106,12 @@ TestPhase::TestPhase()
 	//particle_.model = playerModel;
 	//particle_.texture = playerTex;
 	particle1_.filePath = "resources/Prototypes/particle/aaa";
-	particle1_.LoadJson();
+	//particle1_.LoadJson();
+
+	particle1_.model = model1;
+	particle1_.texture = tex1;
+	//particle2_.model = model4;
+	//particle2_.texture = tex1;
 
 }
 
@@ -400,10 +405,10 @@ void TestPhase::Draw()
 
 	particle1_.Draw();
 	particle1_.DrawImGui();
-	particle1_.DrawEmitter();
-	particle2_.Draw();
-	particle2_.DrawImGui();
-	particle2_.DrawEmitter();
+	//particle1_.DrawEmitter();
+	//particle2_.Draw();
+	//particle2_.DrawImGui();
+	//particle2_.DrawEmitter();
 
 	//line_.Draw();
 	//line_.DrawImGui();

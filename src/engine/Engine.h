@@ -20,6 +20,7 @@ class RenderData_Sprite;
 class RenderData_Line;
 class RenderData_MinecraftMap;
 class RenderData_Particle;
+class RenderData_Particle3;
 
 
 
@@ -40,6 +41,7 @@ public:
 	bool ProcessMessage();
 	void BeginFrame();
 	void UpdateTransforms();
+	void UpdateParticles();
 	void EndFrame();
 	void Finalize();
 
@@ -58,10 +60,13 @@ public:
 	void AddRectDrawList(RenderData_Rect& renderData);
 	void AddSpriteDrawList(RenderData_Sprite& renderData);
 	void AddLineDrawList(RenderData_Line& renderData);
+	void AddParticleDrawList(RenderData_Particle3& renderData);
+
 	void DrawMinecraftMap(RenderData_MinecraftMap& renderData);
 	void AddSphere(Vector3 pos, Vector3 radius, uint32_t color);
 	void AddAABB(AABB aabb, uint32_t color);
 	void AddLine(Vector3 start, Vector3 end, uint32_t color);
+
 	void DrawParticle(RenderData_Particle& renderData);
 
 	// AABBが視錐台内にあるか判定する関数
@@ -116,7 +121,6 @@ public:
 	void StopCameraShake();
 	CameraManager* GetCameraManager() { return cameraManager; }
 
-	/// カメラシェイク
 
 	// フルスクリーン切り替え
 	void ToggleFullscreen();
@@ -126,6 +130,14 @@ public:
 
 	// プリミティブモードの設定
 	void toggleWireframeMode();
+
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(size_t sizeInBytes);
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> CreateConstantBufferResource(size_t sizeInBytes);
+
+	DirectXManager* GetDirectXManager() { return dxManager; }
+
 
 	const std::vector<Object3D> GetAllObject3D();
 

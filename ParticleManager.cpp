@@ -56,7 +56,6 @@ void ParticleManager::Update(const Matrix4x4& viewProjectionMatrix)
 			group.mappedPtr->color = particle.color;
 			group.mappedPtr->isBillboard = particle.isBillboard;
 			group.mappedPtr++;
-
 		}
 	}
 }
@@ -98,6 +97,4 @@ void ParticleManager::CreateParticleGroup(const std::string& name, uint32_t text
 
 	//  登録
 	particleGroups_[name] = newGroup;
-
-
 }

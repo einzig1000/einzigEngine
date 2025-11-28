@@ -2,6 +2,7 @@
 #include "Utilities/JsonManager.h"
 #include "Game.h"
 #include "Engine.h"
+#include "DirectX/DirectXManager.h"
 using namespace DirectX;
 
 std::vector<RenderData_Model*> RenderData_Model::renderModels;
@@ -11,6 +12,7 @@ std::vector<RenderData_Triangle*> RenderData_Triangle::renderTriangles;
 std::vector<RenderData_Rect*> RenderData_Rect::renderRects;
 std::vector<RenderData_Line*> RenderData_Line::renderLines;
 std::vector<RenderData_Particle*> RenderData_Particle::renderParticles;
+std::vector<RenderData_Particle3*> RenderData_Particle3::renderParticles3;
 std::unordered_map<std::string, ParticleInf*> RenderData_Particle2::particleGroups_;
 
 
@@ -1197,8 +1199,746 @@ void RenderData_Particle::DrawEmitter()
 	}
 }
 
-
 #pragma endregion
+
+
+RenderData_Particle3::RenderData_Particle3()
+{
+	renderParticles3.push_back(this);
+	this->ID = int(renderParticles3.size());
+
+	instancingResource_ =
+		Engine::Instance().CreateBufferResource(
+			sizeof(TransformationMatrix) * capacity
+		);
+	instancingResource_->Map(0, nullptr, reinterpret_cast<void**>(&instancingData_));
+	for (size_t i = 0; i < capacity; ++i)
+	{
+		instancingData_[i].World = Matrix4x4::MakeIdentity4x4();
+		instancingData_[i].WVP = Matrix4x4::MakeIdentity4x4();
+	}
+
+	srvAllocation_ = Engine::Instance().GetDirectXManager() ->GetDescriptorHeapManager()->GetSrvManager()->CreateSRVforStructuredBuffer(
+		instancingResource_.Get(),
+	    capacity,
+	    sizeof(TransformationMatrix));
+
+	scale_.resize(capacity);
+	rotate_.resize(capacity);
+	translate_.resize(capacity);
+	lifeCount_.resize(capacity, 0);
+	isActive_.resize(capacity, false);
+}
+RenderData_Particle3::~RenderData_Particle3()
+{}
+
+void RenderData_Particle3::UpdateAllParticles(const Matrix4x4& viewProjectionMatrix)
+{
+	for (size_t ID = 0; ID < renderParticles3.size(); ++ID)
+	{
+		renderParticles3[ID]->Update(viewProjectionMatrix);
+	}
+}
+
+void RenderData_Particle3::Update(const Matrix4x4& viewProjectionMatrix)
+{
+	// パーティクルの生成
+	SpawnParticle();
+
+	// 
+	UpdateTransforms();
+
+	// ワールド行列・WVP行列の更新
+	UpdateTransformationMatrix(viewProjectionMatrix);
+
+	// 寿命の更新と非アクティブ化
+	UpdateLife();
+
+	frame++;
+}
+
+void RenderData_Particle3::SpawnParticle()
+{
+	if (frame % emissionDelay == 0)
+	{
+		for (uint32_t index = currentSum; index < currentSum + particlesPerEmission; ++index)
+		{
+			if (index >= capacity) break; // キャパシティ超過防止
+			if (!isActive_[index])
+			{
+				// 有効化
+				isActive_[index] = true;
+
+				// 寿命設定
+				lifeCount_[index] = liveMax;
+
+				// スケール・回転・位置の初期化
+				SetSpawnScale(index);
+				SetSpawnRotate(index);
+				SetSpawnTranslate(index);
+			}
+		}
+		currentSum += particlesPerEmission;
+	}
+}
+
+void RenderData_Particle3::SetSpawnPosition(uint32_t index)
+{
+	switch (emitterShape)
+	{
+	case PrimitiveType::Sphere:
+	{
+		// 内側
+		if (emitFromInside)
+		{
+			Vector3 center = emitterSphere.center;
+			float radius = emitterSphere.radius;
+
+			// ランダムな方向（単位ベクトル）を生成
+			float theta = RandomFloat(0.0f, 2.0f * float(std::numbers::pi), 3);   // 0〜2π
+			float phi = RandomFloat(0.0f, float(std::numbers::pi), 3);            // 0〜π
+			float r = RandomFloat(0.0f, 1.0f, 3);								  // 0〜1（球内）
+
+			// 球内部の距離に合わせてスケーリング（立方根で均等分布）
+			r = pow(r, 1.0f / 3.0f);
+
+			// 球面座標系から直交座標系へ変換
+			float x = r * sin(phi) * cos(theta) * radius;
+			float y = r * sin(phi) * sin(theta) * radius;
+			float z = r * cos(phi) * radius;
+
+			translate_[index].value.x = center.x + x;
+			translate_[index].value.y = center.y + y;
+			translate_[index].value.z = center.z + z;
+		}
+		// 外殻
+		else
+		{
+			// 球表面上のランダムな点を生成
+			Vector3 center = emitterSphere.center;
+			float radius = emitterSphere.radius;
+
+			// ランダムな方向（単位ベクトル）を生成
+			float theta = RandomFloat(0.0f, 2.0f * float(std::numbers::pi), 3);   // 0〜2π
+			float phi = RandomFloat(0.0f, float(std::numbers::pi), 3);            // 0〜π
+
+			// 球面座標系から直交座標系へ変換
+			float x = sin(phi) * cos(theta) * radius;
+			float y = sin(phi) * sin(theta) * radius;
+			float z = cos(phi) * radius;
+
+			translate_[index].value.x = center.x + x;
+			translate_[index].value.y = center.y + y;
+			translate_[index].value.z = center.z + z;
+			break;
+		}
+
+		break;
+	}
+	case PrimitiveType::SphereXYZ:
+	{
+		// 内側
+		if (emitFromInside)
+		{
+			Vector3 center = emitterSphereXYZ.center;
+			Vector3 radius = emitterSphereXYZ.radius;
+
+			// ランダムな方向（単位ベクトル）を生成
+			float theta = RandomFloat(0.0f, 2.0f * float(std::numbers::pi), 3);   // 0〜2π
+			float phi = RandomFloat(0.0f, float(std::numbers::pi), 3);            // 0〜π
+			float r = RandomFloat(0.0f, 1.0f, 3);								  // 0〜1（球内）
+
+			// 球内部の距離に合わせてスケーリング（立方根で均等分布）
+			r = pow(r, 1.0f / 3.0f);
+
+			// 球面座標系から直交座標系へ変換
+			float x = r * sin(phi) * cos(theta) * radius.x;
+			float y = r * sin(phi) * sin(theta) * radius.y;
+			float z = r * cos(phi) * radius.z;
+
+			translate_[index].value.x = center.x + x;
+			translate_[index].value.y = center.y + y;
+			translate_[index].value.z = center.z + z;
+		}
+		// 外殻
+		else
+		{
+			// 球表面上のランダムな点を生成
+			Vector3 center = emitterSphereXYZ.center;
+			Vector3 radius = emitterSphereXYZ.radius;
+
+			// ランダムな方向（単位ベクトル）を生成
+			float theta = RandomFloat(0.0f, 2.0f * float(std::numbers::pi), 3);   // 0〜2π
+			float phi = RandomFloat(0.0f, float(std::numbers::pi), 3);            // 0〜π
+
+			// 球面座標系から直交座標系へ変換
+			float x = sin(phi) * cos(theta) * radius.x;
+			float y = sin(phi) * sin(theta) * radius.y;
+			float z = cos(phi) * radius.z;
+
+			translate_[index].value.x = center.x + x;
+			translate_[index].value.y = center.y + y;
+			translate_[index].value.z = center.z + z;
+		}
+		break;
+	}
+	case PrimitiveType::AABB:
+	{
+		// 内側
+		if (emitFromInside)
+		{
+			translate_[index].value.x = RandomFloat(emitterAABB.min.x, emitterAABB.max.x);
+			translate_[index].value.y = RandomFloat(emitterAABB.min.y, emitterAABB.max.y);
+			translate_[index].value.z = RandomFloat(emitterAABB.min.z, emitterAABB.max.z);
+		}
+		else
+		{
+			int i = RandomInt(1, 6);
+			if (i == 1 || i == 2)
+			{
+				if (i == 1)
+				{
+					translate_[index].value.x = emitterAABB.min.x;
+				}
+				else
+				{
+					translate_[index].value.x = emitterAABB.max.x;
+				}
+				translate_[index].value.y = RandomFloat(emitterAABB.min.y, emitterAABB.max.y, 3);
+				translate_[index].value.z = RandomFloat(emitterAABB.min.z, emitterAABB.max.z, 3);
+			}
+			else if (i == 3 || i == 4)
+			{
+				if (i == 3)
+				{
+					translate_[index].value.y = emitterAABB.min.y;
+				}
+				else
+				{
+					translate_[index].value.y = emitterAABB.max.y;
+				}
+				translate_[index].value.x = RandomFloat(emitterAABB.min.x, emitterAABB.max.x, 3);
+				translate_[index].value.z = RandomFloat(emitterAABB.min.z, emitterAABB.max.z, 3);
+			}
+			else if (i == 5 || i == 6)
+			{
+				if (i == 5)
+				{
+					translate_[index].value.z = emitterAABB.min.z;
+				}
+				else
+				{
+					translate_[index].value.z = emitterAABB.max.z;
+				}
+				translate_[index].value.y = RandomFloat(emitterAABB.min.y, emitterAABB.max.y, 3);
+				translate_[index].value.x = RandomFloat(emitterAABB.min.x, emitterAABB.max.x, 3);
+			}
+		}
+
+		break;
+	}
+	case PrimitiveType::Plane:
+		break;
+	case PrimitiveType::Circle:
+		break;
+	default:
+		break;
+	}
+}
+
+void RenderData_Particle3::SetSpawnScale(uint32_t index)
+{
+	if (targetScale.isRandom_value)
+	{
+		targetScale.randomRange_value.Fix();
+		scale_[index].value.x = RandomFloat(
+			targetScale.randomRange_value.min.x,
+			targetScale.randomRange_value.max.x, 2);
+		scale_[index].value.y = RandomFloat(
+			targetScale.randomRange_value.min.y,
+			targetScale.randomRange_value.max.y, 2);
+		scale_[index].value.z = RandomFloat(
+			targetScale.randomRange_value.min.z,
+			targetScale.randomRange_value.max.z, 2);
+	}
+	if (targetScale.isRandom_velocity)
+	{
+		targetScale.randomRange_velocity.Fix();
+		scale_[index].velocity.x = RandomFloat(
+			targetScale.randomRange_velocity.min.x,
+			targetScale.randomRange_velocity.max.x, 2);
+		scale_[index].velocity.y = RandomFloat(
+			targetScale.randomRange_velocity.min.y,
+			targetScale.randomRange_velocity.max.y, 2);
+		scale_[index].velocity.z = RandomFloat(
+			targetScale.randomRange_velocity.min.z,
+			targetScale.randomRange_velocity.max.z, 2);
+	}
+	if (targetScale.isRandom_acceleration)
+	{
+		targetScale.randomRange_acceleration.Fix();
+		scale_[index].acceleration.x = RandomFloat(
+			targetScale.randomRange_acceleration.min.x,
+			targetScale.randomRange_acceleration.max.x, 2);
+		scale_[index].acceleration.y = RandomFloat(
+			targetScale.randomRange_acceleration.min.y,
+			targetScale.randomRange_acceleration.max.y, 2);
+		scale_[index].acceleration.z = RandomFloat(
+			targetScale.randomRange_acceleration.min.z,
+			targetScale.randomRange_acceleration.max.z, 2);
+	}
+}
+
+void RenderData_Particle3::SetSpawnRotate(uint32_t index)
+{
+	if (isBillboard)
+	{
+		rotate_[index].value = Vector3{ 0.0f, 0.0f, 0.0f };
+
+		Vector3 direction = (Game::Camera::Getter::GetTranslate("ReleaseCamera") - translate_[index].value).Normalized();
+		float yaw = std::atan2(direction.x, direction.z); // Y軸
+		float pitch = std::asin(-direction.y);            // X軸
+		rotate_[index].value = {pitch, yaw, 0.0f};
+	}
+	else
+	{
+		if (targetRotate.isRandom_value)
+		{
+			targetRotate.randomRange_value.Fix();
+			rotate_[index].value.x = RandomFloat(
+				targetRotate.randomRange_value.min.x,
+				targetRotate.randomRange_value.max.x, 2);
+			rotate_[index].value.y = RandomFloat(
+				targetRotate.randomRange_value.min.y,
+				targetRotate.randomRange_value.max.y, 2);
+			rotate_[index].value.z = RandomFloat(
+				targetRotate.randomRange_value.min.z,
+				targetRotate.randomRange_value.max.z, 2);
+		}
+		if (targetRotate.isRandom_velocity)
+		{
+			targetRotate.randomRange_velocity.Fix();
+			rotate_[index].velocity.x = RandomFloat(
+				targetRotate.randomRange_velocity.min.x,
+				targetRotate.randomRange_velocity.max.x, 2);
+			rotate_[index].velocity.y = RandomFloat(
+				targetRotate.randomRange_velocity.min.y,
+				targetRotate.randomRange_velocity.max.y, 2);
+			rotate_[index].velocity.z = RandomFloat(
+				targetRotate.randomRange_velocity.min.z,
+				targetRotate.randomRange_velocity.max.z, 2);
+		}
+		if (targetRotate.isRandom_acceleration)
+		{
+			targetRotate.randomRange_acceleration.Fix();
+			rotate_[index].acceleration.x = RandomFloat(
+				targetRotate.randomRange_acceleration.min.x,
+				targetRotate.randomRange_acceleration.max.x, 2);
+			rotate_[index].acceleration.y = RandomFloat(
+				targetRotate.randomRange_acceleration.min.y,
+				targetRotate.randomRange_acceleration.max.y, 2);
+			rotate_[index].acceleration.z = RandomFloat(
+				targetRotate.randomRange_acceleration.min.z,
+				targetRotate.randomRange_acceleration.max.z, 2);
+		}
+	}
+}
+
+void RenderData_Particle3::SetSpawnTranslate(uint32_t index)
+{
+	SetSpawnPosition(index);
+
+	if (useTarget)
+	{
+		// エミッター中心から外側方向に移動
+		if (spawnDependent)
+		{
+			Vector3 direction;
+			switch (emitterShape)
+			{
+			case PrimitiveType::Sphere:
+				direction = translate_[index].value - emitterSphere.center;
+				break;
+			case PrimitiveType::SphereXYZ:
+				direction = translate_[index].value - emitterSphereXYZ.center;
+				break;
+			case PrimitiveType::AABB:
+				direction = translate_[index].value - emitterAABB.center();
+				break;
+			case PrimitiveType::Plane:
+				break;
+			case PrimitiveType::Circle:
+				break;
+			default:
+				break;
+			}
+			direction.Normalize();
+
+			//// 拡散角度を考慮	
+			//float randomAngleX = RandomFloat(-spreadAngle / 2.0f, spreadAngle / 2.0f, 3);
+			//float randomAngleY = RandomFloat(-spreadAngle / 2.0f, spreadAngle / 2.0f, 3);
+			//Matrix4x4 rotationMatrix = Matrix4x4::MakeRotateXMatrix(randomAngleX) * Matrix4x4::MakeRotateYMatrix(randomAngleY);
+			//direction = Vector3::TransformNormal(direction, rotationMatrix);
+
+			translate_[index].velocity = direction * speed;
+		}
+		// ターゲット方向に移動
+		else
+		{
+			Vector3 direction = target - translate_[index].value;
+			direction.Normalize();
+
+			translate_[index].velocity = direction * speed;
+		}
+	}
+	else
+	{
+		// ランダム方向に移動
+		if (targetTranslate.isRandom_velocity)
+		{
+			targetTranslate.randomRange_velocity.Fix();
+			translate_[index].velocity.x = RandomFloat(
+				targetTranslate.randomRange_velocity.min.x,
+				targetTranslate.randomRange_velocity.max.x, 2);
+			translate_[index].velocity.y = RandomFloat(
+				targetTranslate.randomRange_velocity.min.y,
+				targetTranslate.randomRange_velocity.max.y, 2);
+			translate_[index].velocity.z = RandomFloat(
+				targetTranslate.randomRange_velocity.min.z,
+				targetTranslate.randomRange_velocity.max.z, 2);
+		}
+	}
+
+	if (targetTranslate.isRandom_acceleration)
+	{
+		targetTranslate.randomRange_acceleration.Fix();
+		translate_[index].acceleration.x = RandomFloat(
+			targetTranslate.randomRange_acceleration.min.x,
+			targetTranslate.randomRange_acceleration.max.x, 2);
+		translate_[index].acceleration.y = RandomFloat(
+			targetTranslate.randomRange_acceleration.min.y,
+			targetTranslate.randomRange_acceleration.max.y, 2);
+		translate_[index].acceleration.z = RandomFloat(
+			targetTranslate.randomRange_acceleration.min.z,
+			targetTranslate.randomRange_acceleration.max.z, 2);
+	}
+}
+
+void RenderData_Particle3::UpdateTransformationMatrix(const Matrix4x4& viewProjectionMatrix)
+{
+	for (size_t i = 0; i < capacity; ++i)
+	{
+		if (isActive_[i])
+		{
+			instancingData_[i].World
+				= Matrix4x4::MakeAffineMatrix(
+					scale_[i].value,
+					rotate_[i].value,
+					translate_[i].value
+				);
+
+			instancingData_[i].WVP =
+				instancingData_[i].World * viewProjectionMatrix;
+		}
+	}
+}
+
+void RenderData_Particle3::UpdateTransforms()
+{
+	for (size_t i = 0; i < capacity; ++i)
+	{
+		if (isActive_[i])
+		{
+			// スケールの更新
+			scale_[i].velocity += scale_[i].acceleration;
+			scale_[i].value += scale_[i].velocity;
+			// 回転の更新
+			rotate_[i].velocity += rotate_[i].acceleration;
+			rotate_[i].value += rotate_[i].velocity;
+			// 位置の更新
+			translate_[i].velocity += translate_[i].acceleration;
+			translate_[i].value += translate_[i].velocity;
+		}
+	}
+}
+
+void RenderData_Particle3::UpdateLife()
+{
+	for (size_t i = 0; i < capacity; ++i)
+	{
+		if (isActive_[i])
+		{
+			lifeCount_[i]--;
+			// 寿命チェック
+			if (lifeCount_[i] <= 0)
+			{
+				// 非アクティブ化
+				isActive_[i] = false;
+			}
+		}
+	}
+}
+
+
+void RenderData_Particle3::Draw()
+{
+	Engine::Instance().AddParticleDrawList(*this);
+}
+
+void RenderData_Particle3::DrawImGui()
+{
+	//for (size_t i = 0; i < currentSum; ++i)
+	//{
+	//	std::string num = std::to_string(this->ID) + "." + std::to_string(i);
+	//	if (ImGui::TreeNode(("----------particle" + num + "-----------").c_str()))
+	//	{
+	//		ImGui::DragFloat3((num + "scale").c_str(), &transforms_[i].scale.x, 0.01f);
+	//		ImGui::DragFloat3((num + "rotate").c_str(), &transforms_[i].rotate.x, 0.01f);
+	//		ImGui::DragFloat3((num + "translate").c_str(), &transforms_[i].translate.x, 1.0f);
+	//		ImGui::TreePop();
+	//	}
+	//}
+
+
+	std::optional<std::string> str = "particle : " + std::to_string(this->ID);
+	if (this->name != std::nullopt) str = (this->name);
+
+	std::string num = ":" + std::to_string(this->ID);
+
+	ImGui::Begin(str->c_str());
+
+	ImGui::Text("capacity : %d", static_cast<int>(capacity));
+	ImGui::Text("currentSum : %d", static_cast<int>(currentSum));
+
+	if (ImGui::TreeNode("----------Emitter--------------"))
+	{
+		ImGui::Checkbox(("emitFromInside" + num).c_str(), &this->emitFromInside);
+
+		switch (emitterShape)
+		{
+		case PrimitiveType::Sphere:
+			ImGui::DragFloat3(("emitterSphere.center" + num).c_str(), &this->emitterSphere.center.x, 0.1f);
+			ImGui::DragFloat(("emitterSphere.radius" + num).c_str(), &this->emitterSphere.radius, 0.1f);
+			break;
+		case PrimitiveType::SphereXYZ:
+			ImGui::DragFloat3(("emitterSphereXYZ.center" + num).c_str(), &this->emitterSphereXYZ.center.x, 0.1f);
+			ImGui::DragFloat3(("emitterSphereXYZ.radius" + num).c_str(), &this->emitterSphereXYZ.radius.x, 0.1f);
+			break;
+		case PrimitiveType::AABB:
+			ImGui::DragFloat3(("emitterAABB.min" + num).c_str(), &this->emitterAABB.min.x, 0.1f);
+			ImGui::DragFloat3(("emitterAABB.max" + num).c_str(), &this->emitterAABB.max.x, 0.1f);
+			emitterAABB.Fix();
+			break;
+		case PrimitiveType::Plane:
+			break;
+		case PrimitiveType::Circle:
+			break;
+		default:
+			break;
+		}
+
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------scale----------------"))
+	{
+		ImGui::Checkbox(("S.isRandom" + num).c_str(), &this->targetScale.isRandom_value);
+		if (this->targetScale.isRandom_value)
+		{
+			ImGui::DragFloat3(("S.min" + num).c_str(), &this->targetScale.randomRange_value.min.x, 0.01f);
+			ImGui::DragFloat3(("S.max" + num).c_str(), &this->targetScale.randomRange_value.max.x, 0.01f);
+		}
+		else
+		{
+			ImGui::DragFloat3(("S.val" + num).c_str(), &this->targetScale.value.x, 0.01f);
+		}
+		ImGui::Checkbox(("S.vel.isRandom" + num).c_str(), &this->targetScale.isRandom_velocity);
+		if (this->targetScale.isRandom_velocity)
+		{
+			ImGui::DragFloat3(("S.vel.min" + num).c_str(), &this->targetScale.randomRange_velocity.min.x, 0.01f);
+			ImGui::DragFloat3(("S.vel.max" + num).c_str(), &this->targetScale.randomRange_velocity.max.x, 0.01f);
+		}
+		else
+		{
+			ImGui::DragFloat3(("S.vel" + num).c_str(), &this->targetScale.velocity.x, 0.01f);
+		}
+		ImGui::Checkbox(("S.acc.isRandom" + num).c_str(), &this->targetScale.isRandom_acceleration);
+		if (this->targetScale.isRandom_acceleration)
+		{
+			ImGui::DragFloat3(("S.acc.min" + num).c_str(), &this->targetScale.randomRange_acceleration.min.x, 0.01f);
+			ImGui::DragFloat3(("S.acc.max" + num).c_str(), &this->targetScale.randomRange_acceleration.max.x, 0.01f);
+		}
+		else
+		{
+			ImGui::DragFloat3(("S.acc" + num).c_str(), &this->targetScale.acceleration.x, 0.01f);
+		}
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------rotate---------------"))
+	{
+		ImGui::Checkbox(("R.isRandom" + num).c_str(), &this->targetRotate.isRandom_value);
+		if (this->targetRotate.isRandom_value)
+		{
+			ImGui::DragFloat3(("R.min" + num).c_str(), &this->targetRotate.randomRange_value.min.x, 0.01f);
+			ImGui::DragFloat3(("R.max" + num).c_str(), &this->targetRotate.randomRange_value.max.x, 0.01f);
+		}
+		else
+		{
+			ImGui::DragFloat3(("R.val" + num).c_str(), &this->targetRotate.value.x, 0.01f);
+		}
+		ImGui::Checkbox(("R.vel.isRandom" + num).c_str(), &this->targetRotate.isRandom_velocity);
+		if (this->targetRotate.isRandom_velocity)
+		{
+			ImGui::DragFloat3(("R.vel.min" + num).c_str(), &this->targetRotate.randomRange_velocity.min.x, 0.01f);
+			ImGui::DragFloat3(("R.vel.max" + num).c_str(), &this->targetRotate.randomRange_velocity.max.x, 0.01f);
+		}
+		else
+		{
+			ImGui::DragFloat3(("R.vel" + num).c_str(), &this->targetRotate.velocity.x, 0.01f);
+		}
+		ImGui::Checkbox(("R.acc.isRandom" + num).c_str(), &this->targetRotate.isRandom_acceleration);
+		if (this->targetRotate.isRandom_acceleration)
+		{
+			ImGui::DragFloat3(("R.acc.min" + num).c_str(), &this->targetRotate.randomRange_acceleration.min.x, 0.01f);
+			ImGui::DragFloat3(("R.acc.max" + num).c_str(), &this->targetRotate.randomRange_acceleration.max.x, 0.01f);
+		}
+		else
+		{
+			ImGui::DragFloat3(("R.acc" + num).c_str(), &this->targetRotate.acceleration.x, 0.01f);
+		}
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------translate------------"))
+	{
+		//ImGui::DragFloat3(("T.val" + num).c_str(), &this->targetTranslate.value.x, 0.01f);
+		ImGui::Checkbox(("T.vel.isRandom" + num).c_str(), &this->targetTranslate.isRandom_velocity);
+		if (this->targetTranslate.isRandom_velocity)
+		{
+			ImGui::DragFloat3(("T.vel.min" + num).c_str(), &this->targetTranslate.randomRange_velocity.min.x, 0.01f);
+			ImGui::DragFloat3(("T.vel.max" + num).c_str(), &this->targetTranslate.randomRange_velocity.max.x, 0.01f);
+		}
+		else
+		{
+			ImGui::DragFloat3(("T.vel" + num).c_str(), &this->targetTranslate.velocity.x, 0.01f);
+		}
+		ImGui::Checkbox(("T.acc.isRandom" + num).c_str(), &this->targetTranslate.isRandom_acceleration);
+		if (this->targetTranslate.isRandom_acceleration)
+		{
+			ImGui::DragFloat3(("T.acc.min" + num).c_str(), &this->targetTranslate.randomRange_acceleration.min.x, 0.01f);
+			ImGui::DragFloat3(("T.acc.max" + num).c_str(), &this->targetTranslate.randomRange_acceleration.max.x, 0.01f);
+		}
+		else
+		{
+			ImGui::DragFloat3(("T.acc" + num).c_str(), &this->targetTranslate.acceleration.x, 0.01f);
+		}
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------target---------------"))
+	{
+		ImGui::Checkbox(("useTarget" + num).c_str(), &this->useTarget);
+		ImGui::Checkbox(("spawnDependent" + num).c_str(), &this->spawnDependent);
+		ImGui::DragFloat3(("target" + num).c_str(), &this->target.x, 0.01f);
+		ImGui::DragFloat(("speed" + num).c_str(), &this->speed, 0.1f);
+		ImGui::DragFloat(("angle" + num).c_str(), &this->spreadAngle, 0.1f);
+
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------texture--------------"))
+	{
+		size_t textureCount = Game::Resource::GetTextureCount();
+
+		for (size_t i = 0; i < textureCount; ++i)
+		{
+			TextureData* texData = Game::Resource::GetTextureData(static_cast<uint32_t>(i));
+			if (texData)
+			{
+				ImGui::Image((ImTextureID)texData->textureSrvHandleGPU.ptr, ImVec2(32, 32));
+
+				// 6個並べたら改行
+				if ((i + 1) % 6 != 0 && i < textureCount - 1)
+				{
+					ImGui::SameLine();
+				}
+				if (ImGui::IsItemClicked())
+				{
+					this->texture = static_cast<uint32_t>(i);
+				}
+			}
+		}
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------model----------------"))
+	{
+		if (ImGui::Button("-"))this->model -= 1;
+
+		ImGui::SameLine();
+
+		// ラベルを非表示にするために "##" プレフィックスで ID を与える
+		std::string dragId = std::string("##model") + num;
+		ImGui::DragInt(dragId.c_str(), reinterpret_cast<int*>(&this->model));
+
+		ImGui::SameLine();
+
+		if (ImGui::Button("+"))this->model += 1;
+
+		// クランプ
+		if (this->model < 0) this->model = 0;
+		if (this->model > int(Game::Resource::GetModelCount() - 1)) this->model = int(Game::Resource::GetModelCount() - 1);
+
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------density--------------"))
+	{
+		int particlesPerEmission = int(this->particlesPerEmission);
+		ImGui::DragInt(("particlePerEmission" + num).c_str(), &particlesPerEmission);
+		if (particlesPerEmission < 0)particlesPerEmission = 0;
+		this->particlesPerEmission = uint32_t(particlesPerEmission);
+		int emissionDelay = int(this->emissionDelay);
+		ImGui::DragInt(("emissionDelay" + num).c_str(), &emissionDelay);
+		if (emissionDelay < 1)emissionDelay = 1;
+		this->emissionDelay = uint32_t(emissionDelay);
+		ImGui::Text("lifetime");
+		ImGui::DragInt(("liveMax" + num).c_str(), &this->liveMax);
+
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------color----------------"))
+	{
+		Vector4 preColor = ConvertUintToVector4(this->color);
+		float floatColor[4] = { preColor.x, preColor.y, preColor.z, preColor.w };
+		ImGui::ColorEdit4((num + "color").c_str(), floatColor, 1);
+		Vector4 vector4Color = { floatColor[0], floatColor[1], floatColor[2], floatColor[3] };
+		this->color = ConvertVector4ToUint(vector4Color);
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------option---------------"))
+	{
+		ImGui::Checkbox("Billboard", &this->isBillboard);
+		ImGui::TreePop();
+	}
+	ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+	//if (ImGui::TreeNode("----------load & save----------"))
+	//{
+	//	char buf[256];
+	//	if (this->filePath.size() < sizeof(buf)) memcpy(buf, this->filePath.c_str(), this->filePath.size() + 1);
+	//	else buf[sizeof(buf) - 1] = '\0';
+	//	if (ImGui::InputText(".json", buf, sizeof(buf)))
+	//	{
+	//		this->filePath = std::string(buf);
+	//	}
+	//	if (ImGui::Button("save"))
+	//	{
+	//		JsonManager::SaveToJson(*this, this->filePath);
+	//	}
+	//	ImGui::SameLine();
+	//	if (ImGui::Button("load"))
+	//	{
+	//		JsonManager::LoadFromJson(*this, this->filePath);
+	//	}
+	//	ImGui::TreePop();
+	//}
+
+	ImGui::End();
+}
 
 #pragma region rect
 

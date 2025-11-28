@@ -10,7 +10,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	Engine::Instance().BeginFrame();
 	ResourceID::reload();
 	GameManager* gm = new GameManager();
-	Engine::Instance().UpdateTransforms();
 	Engine::Instance().EndFrame();
 
 	while (Engine::Instance().ProcessMessage())

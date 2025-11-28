@@ -31,15 +31,18 @@ public:
 	void Update_ParticleInstanceData();
 
 	void AddModelDrawList(RenderData_Model& renderData);
-	void DrawModel();
+	void DrawAllModel();
 	void AddTriangleDrawList(RenderData_Triangle& renderData);
-	void DrawTriangle();
+	void DrawAllTriangle();
 	void AddRectDrawList(RenderData_Rect& renderData);
-	void DrawRect();
+	void DrawAllRect();
 	void AddSpriteDrawList(RenderData_Sprite& renderData);
-	void DrawSprite();
+	void DrawAllSprite();
 	void AddLineDrawList(RenderData_Line& renderData);
-	void DrawLine();
+	void DrawAllLine();
+	void AddParticleDrawList(RenderData_Particle3& renderData);
+	void DrawAllParticle();
+
 	void DrawParticle(RenderData_Particle& renderData);
 
 
@@ -60,6 +63,8 @@ private:
 	std::vector<RenderData_Rect*> rectDrawList_{};
 	std::vector<RenderData_Sprite*> spriteDrawList_{};
 	std::vector<RenderData_Line*> lineDrawList_{};
+	std::vector<RenderData_Particle3*> particleDrawList_{};
+
 
 
 

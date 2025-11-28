@@ -659,6 +659,20 @@ struct Segment
     Vector3 diff;
 };
 
+enum class PrimitiveType
+{
+    // 球
+	Sphere,
+	// 楕円体
+    SphereXYZ,
+    // 立方体
+    AABB,
+    // 四角形
+    Plane,
+    // 円
+	Circle,
+};
+
 #pragma endregion
 
 

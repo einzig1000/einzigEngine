@@ -331,6 +331,111 @@ private:
     static std::unordered_map<std::string, ParticleInf*> particleGroups_;
 };
 
+class RenderData_Particle3
+{
+public:
+
+    RenderData_Particle3();
+    ~RenderData_Particle3();
+    static void UpdateAllParticles(const Matrix4x4& viewProjectionMatrix);
+    void Update(const Matrix4x4& viewProjectionMatrix);
+
+    // ID
+    std::optional<std::string> name;
+
+    // ファイルパス
+    std::string filePath = "resources/Prototypes/particle/aaa";
+
+    bool LoadJson();
+
+    void Draw();
+    void DrawImGui();
+    void DrawEmitter();
+
+
+    /// リソース
+    uint32_t model = 0;
+    uint32_t texture = 0;
+
+    /// エミッター
+    PrimitiveType emitterShape = PrimitiveType::AABB;
+    Sphere emitterSphere = { Vector3{0.0f,0.0f,0.0f}, 1.0f };
+    SphereXYZ emitterSphereXYZ = { Vector3{0.0f,0.0f,0.0f}, Vector3{1.0f,1.0f,1.0f} };
+    AABB emitterAABB = { Vector3{ -10.0f, -10.0f, -10.0f }, Vector3{ 10.0f, 10.0f, 10.0f } };
+    bool emitFromInside = true;     // 内側から出るか外殻上から出るか
+
+    /// 密度
+    int32_t particlesPerEmission = 1;   // 1フレで生む数
+    int32_t emissionDelay = 60;         // 生成間隔フレーム
+    int32_t liveMax = 300;              // 寿命フレーム(マイナスの時は不老)
+
+    /// 方向
+    bool useTarget = false;             // ターゲット方向に飛ばすかどうか
+    bool spawnDependent = false;        // 発生位置に依存した方向に飛ばすかどうか
+    Vector3 target;
+    float speed = 1.0f;                 // 速度
+    float spreadAngle = 0.0f;           // 拡散角度
+
+    /// オプション
+    bool isBillboard = true;    // ビルボードかどうか
+
+    /// SRT
+    ParticleSRT targetScale;
+    ParticleSRT targetRotate;
+    ParticleSRT targetTranslate;
+    TransformationMatrix transformationMatrix;
+
+    /// マテリアル
+    uint32_t color = 0xFFFFFFFF;
+    Matrix4x4 uvTransform;
+
+
+    uint32_t GetCurrentSum() const { return currentSum; }
+
+
+
+	uint32_t capacity = 1024;
+	Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource_;
+    TransformationMatrix* instancingData_ = nullptr;
+	SRVAllocation srvAllocation_;
+
+	std::vector<VectorDynamics> scale_;
+	std::vector<VectorDynamics> rotate_;
+	std::vector<VectorDynamics> translate_;
+    std::vector<uint32_t> lifeCount_;
+	std::vector<bool> isActive_;
+
+private:
+    /// 現在存在するパーティクル数
+    uint32_t currentSum = 0;
+
+    int ID = 0;
+
+    uint32_t frame = 0;                 // 経過フレーム
+
+	//// パーティクル生成
+    void SpawnParticle();
+    // 生まれる場所設定
+	void SetSpawnPosition(uint32_t index);
+	// SRTの設定
+	void SetSpawnScale(uint32_t index);
+	void SetSpawnRotate(uint32_t index);
+	void SetSpawnTranslate(uint32_t index);
+
+    //// ワールド行列・WVP行列の更新
+	void UpdateTransformationMatrix(const Matrix4x4& viewProjectionMatrix);
+	//// 各パーティクルの変換行列更新
+	void UpdateTransforms();
+
+	//// 寿命管理
+	void UpdateLife();
+
+    // ロードした結果
+    bool loadResult = false;
+
+    static std::vector<RenderData_Particle3*> renderParticles3;
+};
+
 class RenderData_MinecraftMap
 {
 public:
