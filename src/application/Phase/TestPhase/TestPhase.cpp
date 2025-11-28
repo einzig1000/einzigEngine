@@ -40,15 +40,6 @@ TestPhase::TestPhase()
 	line_ = std::make_unique<RenderData_Line>();
 	line2_ = std::make_unique<RenderData_Line>();
 	line3_ = std::make_unique<RenderData_Line>();
-	
-	instanceTest_.model = model2;
-	instanceTest_.texture = tex1;
-
-	pointTest_->model = model2;
-	pointTest_->texture = tex1;
-
-	uniquePointTest_->model = model2;
-	uniquePointTest_->texture = tex1;
 
 	ground_->model = model1;
 	ground_->texture = tex1;
@@ -140,11 +131,6 @@ TestPhase::TestPhase()
 	particle1_->model = model3;
 	particle1_->texture = tex1;
 	particle1_->filePath = "resources/Prototypes/particle/aaa";
-	//particle1_.LoadJson();
-
-
-	particle2_.filePath = "resources/Prototypes/particle/bbb";
-	particle2_.LoadJson();
 
 }
 
