@@ -108,7 +108,7 @@ TestPhase::TestPhase()
 	particle1_.filePath = "resources/Prototypes/particle/aaa";
 	//particle1_.LoadJson();
 
-	particle1_.model = model1;
+	particle1_.model = model3;
 	particle1_.texture = tex1;
 	//particle2_.model = model4;
 	//particle2_.texture = tex1;
@@ -404,6 +404,7 @@ void TestPhase::Draw()
 	//triangle2_.DrawImGui();
 
 	particle1_.Draw();
+	particle1_.DrawEmitter();
 	particle1_.DrawImGui();
 	//particle1_.DrawEmitter();
 	//particle2_.Draw();

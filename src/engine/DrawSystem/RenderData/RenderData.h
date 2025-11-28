@@ -430,6 +430,12 @@ private:
 	//// 寿命管理
 	void UpdateLife();
 
+	//// 死亡判定
+	void CheckLife();
+
+	//// 非アクティブかしたパーティクルの削除
+	void RemoveInactiveParticles();
+
     // ロードした結果
     bool loadResult = false;
 

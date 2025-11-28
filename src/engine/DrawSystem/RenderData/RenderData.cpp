@@ -3,6 +3,7 @@
 #include "Game.h"
 #include "Engine.h"
 #include "DirectX/DirectXManager.h"
+
 using namespace DirectX;
 
 std::vector<RenderData_Model*> RenderData_Model::renderModels;
@@ -1242,23 +1243,30 @@ void RenderData_Particle3::UpdateAllParticles(const Matrix4x4& viewProjectionMat
 
 void RenderData_Particle3::Update(const Matrix4x4& viewProjectionMatrix)
 {
+	// 非アクティブなパーティクルの削除
+	RemoveInactiveParticles();
+
 	// パーティクルの生成
 	SpawnParticle();
 
-	// 
+	// SRTの更新
 	UpdateTransforms();
 
 	// ワールド行列・WVP行列の更新
 	UpdateTransformationMatrix(viewProjectionMatrix);
 
-	// 寿命の更新と非アクティブ化
+	// 寿命の更新
 	UpdateLife();
+
+	// 非アクティブ化
+	CheckLife();
 
 	frame++;
 }
 
 void RenderData_Particle3::SpawnParticle()
 {
+	uint32_t ableParticles = 0;
 	if (frame % emissionDelay == 0)
 	{
 		for (uint32_t index = currentSum; index < currentSum + particlesPerEmission; ++index)
@@ -1276,9 +1284,12 @@ void RenderData_Particle3::SpawnParticle()
 				SetSpawnScale(index);
 				SetSpawnRotate(index);
 				SetSpawnTranslate(index);
+
+				// 作成できたパーティクル数をカウント
+				ableParticles++;
 			}
 		}
-		currentSum += particlesPerEmission;
+		currentSum += ableParticles;
 	}
 }
 
@@ -1461,6 +1472,10 @@ void RenderData_Particle3::SetSpawnScale(uint32_t index)
 			targetScale.randomRange_value.min.z,
 			targetScale.randomRange_value.max.z, 2);
 	}
+	else 
+	{
+		scale_[index].value = targetScale.value;
+	}
 	if (targetScale.isRandom_velocity)
 	{
 		targetScale.randomRange_velocity.Fix();
@@ -1473,6 +1488,10 @@ void RenderData_Particle3::SetSpawnScale(uint32_t index)
 		scale_[index].velocity.z = RandomFloat(
 			targetScale.randomRange_velocity.min.z,
 			targetScale.randomRange_velocity.max.z, 2);
+	}
+	else
+	{
+		scale_[index].velocity = targetScale.velocity;
 	}
 	if (targetScale.isRandom_acceleration)
 	{
@@ -1487,14 +1506,16 @@ void RenderData_Particle3::SetSpawnScale(uint32_t index)
 			targetScale.randomRange_acceleration.min.z,
 			targetScale.randomRange_acceleration.max.z, 2);
 	}
+	else
+	{
+		scale_[index].acceleration = targetScale.acceleration;
+	}
 }
 
 void RenderData_Particle3::SetSpawnRotate(uint32_t index)
 {
 	if (isBillboard)
 	{
-		rotate_[index].value = Vector3{ 0.0f, 0.0f, 0.0f };
-
 		Vector3 direction = (Game::Camera::Getter::GetTranslate("ReleaseCamera") - translate_[index].value).Normalized();
 		float yaw = std::atan2(direction.x, direction.z); // Y軸
 		float pitch = std::asin(-direction.y);            // X軸
@@ -1515,6 +1536,10 @@ void RenderData_Particle3::SetSpawnRotate(uint32_t index)
 				targetRotate.randomRange_value.min.z,
 				targetRotate.randomRange_value.max.z, 2);
 		}
+		else
+		{
+			rotate_[index].value = targetRotate.value;
+		}
 		if (targetRotate.isRandom_velocity)
 		{
 			targetRotate.randomRange_velocity.Fix();
@@ -1528,6 +1553,10 @@ void RenderData_Particle3::SetSpawnRotate(uint32_t index)
 				targetRotate.randomRange_velocity.min.z,
 				targetRotate.randomRange_velocity.max.z, 2);
 		}
+		else
+		{
+			rotate_[index].velocity = targetRotate.velocity;
+		}
 		if (targetRotate.isRandom_acceleration)
 		{
 			targetRotate.randomRange_acceleration.Fix();
@@ -1540,6 +1569,10 @@ void RenderData_Particle3::SetSpawnRotate(uint32_t index)
 			rotate_[index].acceleration.z = RandomFloat(
 				targetRotate.randomRange_acceleration.min.z,
 				targetRotate.randomRange_acceleration.max.z, 2);
+		}
+		else
+		{
+			rotate_[index].acceleration = targetRotate.acceleration;
 		}
 	}
 }
@@ -1607,6 +1640,10 @@ void RenderData_Particle3::SetSpawnTranslate(uint32_t index)
 				targetTranslate.randomRange_velocity.min.z,
 				targetTranslate.randomRange_velocity.max.z, 2);
 		}
+		else
+		{
+			translate_[index].velocity = targetTranslate.velocity;
+		}
 	}
 
 	if (targetTranslate.isRandom_acceleration)
@@ -1621,6 +1658,10 @@ void RenderData_Particle3::SetSpawnTranslate(uint32_t index)
 		translate_[index].acceleration.z = RandomFloat(
 			targetTranslate.randomRange_acceleration.min.z,
 			targetTranslate.randomRange_acceleration.max.z, 2);
+	}
+	else
+	{
+		translate_[index].acceleration = targetTranslate.acceleration;
 	}
 }
 
@@ -1645,44 +1686,114 @@ void RenderData_Particle3::UpdateTransformationMatrix(const Matrix4x4& viewProje
 
 void RenderData_Particle3::UpdateTransforms()
 {
-	for (size_t i = 0; i < capacity; ++i)
+	Vector3 CameraTranslate = Game::Camera::Getter::GetTranslate("ReleaseCamera");
+
+	for (size_t i = 0; i < currentSum; ++i)
 	{
-		if (isActive_[i])
+		// スケールの更新
+		scale_[i].velocity += scale_[i].acceleration;
+		scale_[i].value += scale_[i].velocity;
+		// 回転の更新
+		if (isBillboard)
 		{
-			// スケールの更新
-			scale_[i].velocity += scale_[i].acceleration;
-			scale_[i].value += scale_[i].velocity;
-			// 回転の更新
+			Vector3 direction = (CameraTranslate - translate_[i].value).Normalized();
+			float yaw = std::atan2(direction.x, direction.z); // Y軸
+			float pitch = std::asin(-direction.y);            // X軸
+			rotate_[i].value = { pitch, yaw, 0.0f };
+		}
+		else
+		{
 			rotate_[i].velocity += rotate_[i].acceleration;
 			rotate_[i].value += rotate_[i].velocity;
-			// 位置の更新
-			translate_[i].velocity += translate_[i].acceleration;
-			translate_[i].value += translate_[i].velocity;
 		}
+		// 位置の更新
+		translate_[i].velocity += translate_[i].acceleration;
+		translate_[i].value += translate_[i].velocity;
 	}
 }
 
 void RenderData_Particle3::UpdateLife()
 {
-	for (size_t i = 0; i < capacity; ++i)
+	for (size_t i = 0; i < currentSum; ++i)
 	{
-		if (isActive_[i])
+		lifeCount_[i]--;
+	}
+}
+
+void RenderData_Particle3::CheckLife()
+{
+	for (size_t i = 0; i < currentSum; ++i)
+	{
+		lifeCount_[i]--;
+		// 寿命チェック
+		if (lifeCount_[i] <= 0)
 		{
-			lifeCount_[i]--;
-			// 寿命チェック
-			if (lifeCount_[i] <= 0)
-			{
-				// 非アクティブ化
-				isActive_[i] = false;
-			}
+			// 非アクティブ化
+			isActive_[i] = false;
+		}
+		// scaleチェック
+		if (scale_[i].value.x <= 0.0f ||
+			scale_[i].value.y <= 0.0f ||
+			scale_[i].value.z <= 0.0f)
+		{
+			// 非アクティブ化
+			isActive_[i] = false;
+		}
+		// 透明度チェック
+		if ((color & 0x000000FF) == 0)
+		{
+			// 非アクティブ化
+			isActive_[i] = false;
 		}
 	}
+}
+
+void RenderData_Particle3::RemoveInactiveParticles()
+{
+	size_t writeIndex = 0;
+	for (size_t readIndex = 0; readIndex < capacity; ++readIndex)
+	{
+		if (isActive_[readIndex])
+		{
+			if (writeIndex != readIndex)
+			{
+				// アクティブなパーティクルを前方に詰める
+				scale_[writeIndex] = scale_[readIndex];
+				rotate_[writeIndex] = rotate_[readIndex];
+				translate_[writeIndex] = translate_[readIndex];
+				lifeCount_[writeIndex] = lifeCount_[readIndex];
+				isActive_[writeIndex] = isActive_[readIndex];
+				// ワールド行列・WVP行列も詰める
+				instancingData_[writeIndex] = instancingData_[readIndex];
+			}
+			writeIndex++;
+		}
+	}
+	for (size_t i = writeIndex; i < capacity; ++i)
+	{
+		isActive_[i] = false;
+	}
+
+
+	currentSum = writeIndex;
 }
 
 
 void RenderData_Particle3::Draw()
 {
 	Engine::Instance().AddParticleDrawList(*this);
+}
+
+void RenderData_Particle3::DrawEmitter()
+{
+	if (emitterShape == PrimitiveType::Sphere)
+	{
+		Game::DebugDraw::AddSphere(emitterSphereXYZ.center, emitterSphereXYZ.radius, 0xFFFFFF22);
+	}
+	else
+	{
+		Game::DebugDraw::AddAABB(emitterAABB, 0xFFFFFF22);
+	}
 }
 
 void RenderData_Particle3::DrawImGui()
