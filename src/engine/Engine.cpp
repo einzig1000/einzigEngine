@@ -98,7 +98,7 @@ bool Engine::ProcessMessage()
 void Engine::BeginFrame()
 {
 	// ImGuiを更新
-#ifdef DEBUG
+//#ifdef DEBUG
 	if (isDebugInfo)
 	{
 		ImGui_ImplDX12_NewFrame();
@@ -106,7 +106,7 @@ void Engine::BeginFrame()
 		ImGui::NewFrame();
 		//ImGui::DockSpaceOverViewport
 	}
-#endif // DEBUG
+//#endif // DEBUG
 
 
 

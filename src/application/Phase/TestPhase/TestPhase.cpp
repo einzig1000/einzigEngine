@@ -86,6 +86,9 @@ TestPhase::TestPhase()
 	particle1_.filePath = "resources/Prototypes/particle/aaa";
 	particle1_.LoadJson();
 
+	particle2_.filePath = "resources/Prototypes/particle/bbb";
+	particle2_.LoadJson();
+
 }
 
 TestPhase::~TestPhase()
@@ -352,27 +355,27 @@ void TestPhase::Update()
 void TestPhase::Draw()
 {
 
-	ground_.Draw();
-	ground_.DrawImGui();
-	ground_.DrawAABB();
-	wall1_.Draw();
-	wall2_.Draw();
-	wall3_.Draw();
-	wall4_.Draw();
+	//ground_.Draw();
+	//ground_.DrawImGui();
+	//ground_.DrawAABB();
+	//wall1_.Draw();
+	//wall2_.Draw();
+	//wall3_.Draw();
+	//wall4_.Draw();
 
-	player_.Draw();
-	player_.DrawAABB();
-	player_.DrawImGui();
+	//player_.Draw();
+	//player_.DrawAABB();
+	//player_.DrawImGui();
 
-	sprite1_.Draw();
-	sprite1_.DrawImGui();
-	sprite2_.Draw();
-	sprite2_.DrawImGui();
+	//sprite1_.Draw();
+	//sprite1_.DrawImGui();
+	//sprite2_.Draw();
+	//sprite2_.DrawImGui();
 
-	triangle1_.Draw();
-	triangle1_.DrawImGui();
-	triangle2_.Draw();
-	triangle2_.DrawImGui();
+	//triangle1_.Draw();
+	//triangle1_.DrawImGui();
+	//triangle2_.Draw();
+	//triangle2_.DrawImGui();
 
 	particle1_.Draw();
 	particle1_.DrawImGui();
@@ -381,10 +384,10 @@ void TestPhase::Draw()
 	particle2_.DrawImGui();
 	particle2_.DrawEmitter();
 
-	line_.Draw();
-	line_.DrawImGui();
-	line2_.Draw();
-	line2_.DrawImGui();
-	line3_.Draw();
-	line3_.DrawImGui();
+	//line_.Draw();
+	//line_.DrawImGui();
+	//line2_.Draw();
+	//line2_.DrawImGui();
+	//line3_.Draw();
+	//line3_.DrawImGui();
 }
