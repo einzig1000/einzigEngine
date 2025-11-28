@@ -6,14 +6,13 @@
 class ModelManager
 {
 public:
-	ModelManager();
+	ModelManager(ID3D12Device* device);
 	~ModelManager();
 
-	uint32_t LoadModel(
+	int32_t LoadModel(
 		const std::string& directoryPath, 
-		const std::string& filename,
-		ID3D12Device* device);
-	Object3D* GetModelData(uint32_t modelID);
+		const std::string& filename);
+	Object3D* GetModelData(int32_t modelID);
 
 	// モデル数を取得
 	size_t GetModelCount() const { return objects.size(); }
@@ -24,6 +23,8 @@ public:
 
 
 private:
+	ID3D12Device* device_;
+
 	// モデルデータを詰める
 	std::vector<Object3D> objects;
 

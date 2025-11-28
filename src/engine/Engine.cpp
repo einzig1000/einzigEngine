@@ -108,9 +108,9 @@ void Engine::BeginFrame()
 	}
 
 	// DirectXを更新
-	dxManager->BeginFrame();(ImGui::GetMainViewport());
+	dxManager->BeginFrame();//(ImGui::GetMainViewport());
 
-	// カメラを更新
+	// カメラを更新	
 	UpdateCamera();
 
 	// 描画関数初期化
@@ -321,12 +321,12 @@ void Engine::Finalize()
 // リソース読み込み
 uint32_t Engine::LoadTexture(const std::string& filePath)
 {
-	return dxManager->GetResourceManager()->GetTextureManager()->LoadTexture(filePath, dxManager->GetCommandContextManager()->GetCommandList(), dxManager->GetDescriptorHeapManager(), dxManager->GetDevice());
+	return dxManager->GetResourceManager()->GetTextureManager()->LoadTexture(filePath);
 }
 
 uint32_t Engine::LoadModel(const std::string& directoryPath, const std::string& filename)
 {
-	return dxManager->GetResourceManager()->GetModelManager()->LoadModel(directoryPath, filename, dxManager->GetDevice());
+	return dxManager->GetResourceManager()->GetModelManager()->LoadModel(directoryPath, filename);
 }
 
 uint32_t Engine::LoadAudio(const std::string& filePath)

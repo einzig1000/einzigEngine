@@ -4,14 +4,15 @@
 #include <fstream>
 
 
-ModelManager::ModelManager()
+ModelManager::ModelManager(ID3D12Device* device)
+	: device_(device)
 {}
 
 ModelManager::~ModelManager()
 {}
 
 
-uint32_t ModelManager::LoadModel(const std::string& directoryPath, const std::string& filename, ID3D12Device* device)
+int32_t ModelManager::LoadModel(const std::string& directoryPath, const std::string& filename)
 {
     const std::string directory = directoryPath.ends_with("/") ? directoryPath : (directoryPath + "/");
 
@@ -50,7 +51,7 @@ uint32_t ModelManager::LoadModel(const std::string& directoryPath, const std::st
 
     // 頂点バッファ作成
     ref.vertexBufferSize = sizeof(VertexData) * UINT(ref.modelData.vertices.size());
-    ref.vertexBuffer = CreateBufferResource(device, ref.vertexBufferSize);
+    ref.vertexBuffer = CreateBufferResource(device_, ref.vertexBufferSize);
     VertexData* vData = nullptr;
     ref.vertexBuffer->Map(0, nullptr, reinterpret_cast<void**>(&vData));
     std::memcpy(vData, ref.modelData.vertices.data(), ref.vertexBufferSize);
@@ -63,8 +64,13 @@ uint32_t ModelManager::LoadModel(const std::string& directoryPath, const std::st
     return ref.number;
 }
 
-Object3D* ModelManager::GetModelData(uint32_t modelID)
+Object3D* ModelManager::GetModelData(int32_t modelID)
 {
+    if (modelID < 0)
+    {
+        return &objects[0];
+    }
+
 	if (modelID < objects.size())
 	{
 		return &objects[modelID];

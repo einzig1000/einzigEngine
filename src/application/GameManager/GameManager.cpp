@@ -2,8 +2,9 @@
 
 GameManager::GameManager()
 {
-	skyDome_.model = ResourceID::GetModelID(ModelID::Sphere);
-	skyDome_.texture = ResourceID::GetTextureID(TextureID::UVChecker);
+	skyDome_.model = ResourceID::GetModelID(ModelID::Cube);
+	skyDome_.texture = ResourceID::GetTextureID(BlockID::Stone);
+	skyDome_.additionalTexture = ResourceID::GetTextureID(TextureID::monsterBall);
 	skyDome_.scale.value = Vector3(100.0f, 100.0f, 100.0f);
 	skyDome_.name = "SkyDome";
 

@@ -2,15 +2,15 @@
 
 TestPhase::TestPhase()
 {
-	uint32_t tex1 = ResourceID::GetTextureID(TextureID::UVChecker);
-	uint32_t tex2 = ResourceID::GetTextureID(TextureID::monsterBall);
-	uint32_t tex3 = ResourceID::GetTextureID(TextureID::Circle);
-	uint32_t tex4 = ResourceID::GetTextureID(TextureID::white1x1);
+	int32_t tex1 = ResourceID::GetTextureID(TextureID::UVChecker);
+	int32_t tex2 = ResourceID::GetTextureID(TextureID::monsterBall);
+	int32_t tex3 = ResourceID::GetTextureID(TextureID::Circle);
+	int32_t tex4 = ResourceID::GetTextureID(TextureID::white1x1);
 
-	uint32_t model1 = ResourceID::GetModelID(ModelID::Cube);
-	uint32_t model2 = ResourceID::GetModelID(ModelID::Corn);
-	uint32_t model3 = ResourceID::GetModelID(ModelID::Plane);
-	uint32_t model4 = ResourceID::GetModelID(ModelID::Sphere);
+	int32_t model1 = ResourceID::GetModelID(ModelID::Cube);
+	int32_t model2 = ResourceID::GetModelID(ModelID::Corn);
+	int32_t model3 = ResourceID::GetModelID(ModelID::Plane);
+	int32_t model4 = ResourceID::GetModelID(ModelID::Sphere);
 
 	audio1 = Game::Resource::LoadAudio("resources/Prototypes/audio/BGM/InGame.mp3");
 	audio2 = Game::Resource::LoadAudio("resources/Prototypes/audio/SE/バトル用/氷魔法1.mp3");
@@ -376,8 +376,8 @@ void TestPhase::Draw()
 	//rect_.Draw();
 	//rect_.DrawImGui();
 	
-	//ground_.Draw();
-	//ground_.DrawImGui();
+	ground_.Draw();
+	ground_.DrawImGui();
 	//ground_.DrawAABB();
 	//wall1_.Draw();
 	//wall2_.Draw();
@@ -388,10 +388,10 @@ void TestPhase::Draw()
 	//player_.DrawAABB();
 	//player_.DrawImGui();
 
-	sprite1_.Draw();
-	sprite1_.DrawImGui();
-	sprite2_.Draw();
-	sprite2_.DrawImGui();
+	//sprite1_.Draw();
+	//sprite1_.DrawImGui();
+	//sprite2_.Draw();
+	//sprite2_.DrawImGui();
 
 	//triangle1_.Draw();
 	//triangle1_.DrawImGui();

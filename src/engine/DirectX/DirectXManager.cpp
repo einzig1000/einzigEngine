@@ -16,7 +16,7 @@ DirectXManager::DirectXManager(HWND hwnd)
     viewportScissorManager = new ViewportScissorManager();
 
 
-	resourceManager_ = new ResourceManager();
+	resourceManager_ = new ResourceManager(commandContextManager->GetCommandList(), descriptorHeapManager, deviceManager->GetDevice());
     fixFPS_ = new FixFPS();
 
     Log("コンストラクタ実行成功 : DirectXManager");

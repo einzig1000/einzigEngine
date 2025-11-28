@@ -33,9 +33,10 @@ public:
     // 色
     Vector4 color = { 0xFF, 0xFF, 0xFF, 0xFF };
     // 3Dモデル
-    uint32_t model = 0;
+    int32_t model = -1;
     // テクスチャ
-    uint32_t texture = 0;
+    int32_t texture = -1;
+	int32_t additionalTexture = -1;
     // 描画オプション
     DrawOptions options;
     // 衝突判定用AABB

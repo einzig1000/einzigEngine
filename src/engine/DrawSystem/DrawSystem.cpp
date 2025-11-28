@@ -283,6 +283,8 @@ void DrawSystem::DrawModel()
 		// テクスチャの検索
 		const TextureData* tex = dxManager_->GetResourceManager()->GetTextureManager()->GetTextureData(renderData->texture);
 		if (!tex)continue;
+		const TextureData* tex2 = dxManager_->GetResourceManager()->GetTextureManager()->GetTextureData(renderData->additionalTexture);
+		if (!tex2)continue;
 
 		// ルートシグネチャを設定
 		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootSignature(dxManager_->GetPipelineStateManager()->GetRootSignature());
@@ -337,6 +339,8 @@ void DrawSystem::DrawModel()
 		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources_[drawCallIndex_]->GetGPUVirtualAddress());
 		// ルートパラメータ2にテクスチャのSRV（シェーダリソースビュー）をバインド
 		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
+		// ルートパラメータ2にテクスチャのSRV（シェーダリソースビュー）をバインド
+		//dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(3, tex2->textureSrvHandleGPU);
 		// ルートパラメータ3にライト用定数バッファをバインド
 		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(3, lightResources_[drawCallIndex_]->GetGPUVirtualAddress());
 		// ルートパラメータ4にスペキュラライト用定数バッファをバインド

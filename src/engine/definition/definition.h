@@ -721,7 +721,7 @@ struct Object3D
     std::vector<AABB> aabb;
 
     // 識別ナンバー
-    uint32_t number = 0;
+    int32_t number = 0;
 
     // ファイルパス
     std::string filePath;
@@ -732,7 +732,7 @@ struct TextureData
 {
     DirectX::TexMetadata metadata;
     DirectX::ScratchImage mipImage;
-    uint32_t number;
+    int32_t number;
     std::string filePath;
     Microsoft::WRL::ComPtr<ID3D12Resource> textureResource;
     D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU;

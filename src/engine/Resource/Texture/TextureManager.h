@@ -11,23 +11,33 @@ class DescriptorHeapManager;
 class TextureManager
 {
 public:
-    TextureManager();
-    ~TextureManager();
-
-    uint32_t LoadTexture(
-        const std::string& filePath, 
+    TextureManager(
         ID3D12GraphicsCommandList* commandList,
         DescriptorHeapManager* descriptorHeap,
-        ID3D12Device* device
+        ID3D12Device* device);
+    ~TextureManager();
+
+    int32_t LoadTexture(
+        const std::string& filePath
     );
-    TextureData* GetTextureData(uint32_t textureID);
+    TextureData* GetTextureData(int32_t textureID);
+    
+    void reloadAllTextures();
 
 	// テクスチャ数を取得
 	size_t GetTextureCount() const { return textures_.size(); }
 
 private:
+	ID3D12GraphicsCommandList* commandList_;
+	DescriptorHeapManager* descriptorHeap_;
+	ID3D12Device* device_;
+
+
     // 画像データを詰める
     std::vector<TextureData> textures_;
+
+    // white1x1を読み込まずにコードで作成する
+    void CreateTransparentTexture();
 
     // アップロード用一時リソースを保持するリスト
     std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> intermediateUploadResources_;

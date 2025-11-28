@@ -163,6 +163,13 @@ void RenderData_Model::DrawImGui()
 	if (ImGui::TreeNode("----------texture--------------"))
 	{
 		size_t textureCount = Game::Resource::GetTextureCount();
+	
+		//static const char* items[] = { "default", "additional" };
+		//int current_item = static_cast<int>();
+		//if (ImGui::Combo((num + "texture.mode").c_str(), &current_item, items, IM_ARRAYSIZE(items)))
+		//{
+		//	options.dirLight.mode = static_cast<>(current_item);
+		//}
 
 		for (size_t i = 0; i < textureCount; ++i)
 		{
@@ -170,7 +177,7 @@ void RenderData_Model::DrawImGui()
 			if (texData)
 			{
 				ImGui::Image((ImTextureID)texData->textureSrvHandleGPU.ptr, ImVec2(32, 32));
-				
+
 				// 6個並べたら改行
 				if ((i + 1) % 6 != 0 && i < textureCount - 1)
 				{
@@ -179,6 +186,7 @@ void RenderData_Model::DrawImGui()
 				if (ImGui::IsItemClicked())
 				{
 					this->texture = static_cast<uint32_t>(i);
+					//else this->additionalTexture = static_cast<uint32_t>(i);
 				}
 			}
 		}
@@ -232,7 +240,6 @@ void RenderData_Model::DrawImGui()
 			ImGui::DragFloat3((num + "dirLight.direction").c_str(), &options.dirLight.direction.x, 0.01f, -1.0f, 1.0f);
 			ImGui::DragFloat((num + "dirLight.intensity").c_str(), &options.dirLight.intensity, 0.01f, 0.0f, 1.0f);
 
-			// 表示名を実際のモードに合わせる
 			static const char* items[] = { "None", "Lambert", "HalfLambert" };
 			int current_item = static_cast<int>(options.dirLight.mode);
 			if (ImGui::Combo((num + "dirLight.mode").c_str(), &current_item, items, IM_ARRAYSIZE(items)))
