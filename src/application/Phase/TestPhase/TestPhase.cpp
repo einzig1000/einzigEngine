@@ -143,6 +143,9 @@ TestPhase::TestPhase()
 	//particle1_.LoadJson();
 
 
+	particle2_.filePath = "resources/Prototypes/particle/bbb";
+	particle2_.LoadJson();
+
 }
 
 TestPhase::~TestPhase()
