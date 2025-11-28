@@ -66,7 +66,7 @@ void ParticleManager::Draw()
 	// 各パーティクルグループの描画処理
 	for (auto& [name, group] : particleGroups_)
 	{
-		Engine::Instance().DrawParticle(group);
+		//Engine::Instance().DrawParticle(group);
 	}
 }
 

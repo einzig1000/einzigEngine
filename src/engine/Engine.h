@@ -19,6 +19,7 @@ class RenderData_Rect;
 class RenderData_Sprite;
 class RenderData_Line;
 class RenderData_MinecraftMap;
+class RenderData_Particle;
 
 
 
@@ -56,12 +57,12 @@ public:
 	void AddTriangleDrawList(RenderData_Triangle& renderData);
 	void AddRectDrawList(RenderData_Rect& renderData);
 	void AddSpriteDrawList(RenderData_Sprite& renderData);
-	void DrawParticle(ParticleGroup& renderData);
 	void AddLineDrawList(RenderData_Line& renderData);
 	void DrawMinecraftMap(RenderData_MinecraftMap& renderData);
 	void AddSphere(Vector3 pos, Vector3 radius, uint32_t color);
 	void AddAABB(AABB aabb, uint32_t color);
 	void AddLine(Vector3 start, Vector3 end, uint32_t color);
+	void DrawParticle(RenderData_Particle& renderData);
 
 	// AABBが視錐台内にあるか判定する関数
 	bool InFrustum(const AABB& aabb);

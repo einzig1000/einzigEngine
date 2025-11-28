@@ -40,7 +40,7 @@ public:
 	void DrawSprite();
 	void AddLineDrawList(RenderData_Line& renderData);
 	void DrawLine();
-	void DrawParticle(ParticleGroup& renderData);
+	void DrawParticle(RenderData_Particle& renderData);
 
 
 	void AddSphere(Vector3 pos, Vector3 radius, uint32_t color);

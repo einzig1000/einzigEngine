@@ -118,7 +118,7 @@ void GameManager::Draw()
 		break;
 	}
 
-	skyDome_.Draw();
-	skyDome_.DrawImGui();
+	//skyDome_.Draw();
+	//skyDome_.DrawImGui();
 
 }

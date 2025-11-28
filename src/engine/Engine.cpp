@@ -385,7 +385,7 @@ void Engine::DrawMinecraftMap(RenderData_MinecraftMap& renderData)
 	//drawSystem->DrawMap(renderData);
 }
 
-void Engine::DrawParticle(ParticleGroup& renderData)
+void Engine::DrawParticle(RenderData_Particle& renderData)
 {
 	drawSystem->DrawParticle(renderData);
 }

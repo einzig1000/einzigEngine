@@ -956,7 +956,7 @@ bool RenderData_Particle::LoadJson()
 
 void RenderData_Particle::Draw()
 {
-	//Engine::Instance().DrawParticle(*this);
+	Engine::Instance().DrawParticle(*this);
 }
 
 void RenderData_Particle::DrawImGui()
