@@ -13,30 +13,32 @@ public:
 	void Draw();
 
 private:
-	RenderData_Model* ground_;
-	RenderData_Model* wall1_;
-	RenderData_Model* wall2_;
-	RenderData_Model* wall3_;
-	RenderData_Model* wall4_;
-	RenderData_Model* player_;
 
-	RenderData_Model* shoulder_;
-	RenderData_Model* elbow_;
-	RenderData_Model* hand_;
 
-	RenderData_Rect* rect_;
+	std::unique_ptr<RenderData_Model> ground_;
+	std::unique_ptr<RenderData_Model> wall1_;
+	std::unique_ptr<RenderData_Model> wall2_;
+	std::unique_ptr<RenderData_Model> wall3_;
+	std::unique_ptr<RenderData_Model> wall4_;
+	std::unique_ptr<RenderData_Model> player_;
 
-	RenderData_Sprite* sprite1_;
-	RenderData_Sprite* sprite2_;
+	std::unique_ptr<RenderData_Model> shoulder_;
+	std::unique_ptr<RenderData_Model> elbow_;
+	std::unique_ptr<RenderData_Model> hand_;
 
-	RenderData_Particle* particle1_;
+	std::unique_ptr<RenderData_Rect> rect_;
 
-	RenderData_Triangle* triangle1_;
-	RenderData_Triangle* triangle2_;
+	std::unique_ptr<RenderData_Sprite> sprite1_;
+	std::unique_ptr<RenderData_Sprite> sprite2_;
 
-	RenderData_Line* line_;
-	RenderData_Line* line2_;
-	RenderData_Line* line3_;
+	std::unique_ptr<RenderData_Particle> particle1_;
+
+	std::unique_ptr<RenderData_Triangle> triangle1_;
+	std::unique_ptr<RenderData_Triangle> triangle2_;
+
+	std::unique_ptr<RenderData_Line> line_;
+	std::unique_ptr<RenderData_Line> line2_;
+	std::unique_ptr<RenderData_Line> line3_;
 
 	float roll_ = 0.0f;
 

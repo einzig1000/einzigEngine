@@ -15,32 +15,40 @@ TestPhase::TestPhase()
 	audio1 = Game::Resource::LoadAudio("resources/Prototypes/audio/BGM/InGame.mp3");
 	audio2 = Game::Resource::LoadAudio("resources/Prototypes/audio/SE/バトル用/氷魔法1.mp3");
 
-	ground_ = new RenderData_Model();
-	wall1_ = new RenderData_Model();
-	wall2_ = new RenderData_Model();
-	wall3_ = new RenderData_Model();
-	wall4_ = new RenderData_Model();
-	player_ = new RenderData_Model();
 
-	shoulder_ = new RenderData_Model();
-	elbow_ = new RenderData_Model();
-	hand_ = new RenderData_Model();
+	ground_ = std::make_unique<RenderData_Model>();
+	wall1_ = std::make_unique<RenderData_Model>();
+	wall2_ = std::make_unique<RenderData_Model>();
+	wall3_ = std::make_unique<RenderData_Model>();
+	wall4_ = std::make_unique<RenderData_Model>();
+	player_ = std::make_unique<RenderData_Model>();
 
-	rect_ = new RenderData_Rect();
+	shoulder_ = std::make_unique<RenderData_Model>();
+	elbow_ = std::make_unique<RenderData_Model>();
+	hand_ = std::make_unique<RenderData_Model>();
 
-	sprite1_ = new RenderData_Sprite();
-	sprite2_ = new RenderData_Sprite();
+	rect_ = std::make_unique<RenderData_Rect>();
 
-	particle1_ = new RenderData_Particle();
+	sprite1_ = std::make_unique<RenderData_Sprite>();
+	sprite2_ = std::make_unique<RenderData_Sprite>();
 
-	triangle1_ = new RenderData_Triangle();
-	triangle2_ = new RenderData_Triangle();
+	particle1_ = std::make_unique<RenderData_Particle>();
 
-	line_ = new RenderData_Line();
-	line2_ = new RenderData_Line();
-	line3_ = new RenderData_Line();
-		
+	triangle1_ = std::make_unique<RenderData_Triangle>();
+	triangle2_ = std::make_unique<RenderData_Triangle>();
 
+	line_ = std::make_unique<RenderData_Line>();
+	line2_ = std::make_unique<RenderData_Line>();
+	line3_ = std::make_unique<RenderData_Line>();
+	
+	instanceTest_.model = model2;
+	instanceTest_.texture = tex1;
+
+	pointTest_->model = model2;
+	pointTest_->texture = tex1;
+
+	uniquePointTest_->model = model2;
+	uniquePointTest_->texture = tex1;
 
 	ground_->model = model1;
 	ground_->texture = tex1;
@@ -86,7 +94,7 @@ TestPhase::TestPhase()
 	hand_->name = "hand";
 	hand_->translate.value.y = 6.0f;
 
-	hand_->parentModel = elbow_;
+	hand_->parentModel = elbow_.get();
 	//elbow_.parentModel = &shoulder_;
 
 	rect_->texture = tex1;
@@ -101,11 +109,11 @@ TestPhase::TestPhase()
 	player_->translate.value = { 0.0f,2.0f,0.0f };
 	player_->translate.acceleration = { 0.0f,-0.2f,0.0f };
 	player_->mass = 1.0f;
-	player_->SetBlock(ground_);
-	player_->SetBlock(wall1_);
-	player_->SetBlock(wall2_);
-	player_->SetBlock(wall3_);
-	player_->SetBlock(wall4_);
+	player_->SetBlock(ground_.get());
+	player_->SetBlock(wall1_.get());
+	player_->SetBlock(wall2_.get());
+	player_->SetBlock(wall3_.get());
+	player_->SetBlock(wall4_.get());
 
 	sprite1_->texture = tex1;
 	sprite1_->transforms.scale = { 0.1f,0.1f };
