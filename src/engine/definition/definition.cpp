@@ -390,3 +390,35 @@ Vector3 AABB::GetCollisionDepth(const AABB& other)const
 }
 
 #pragma endregion
+
+std::string BlockIDToString(BlockID id)
+{
+    switch (id)
+    {
+    case BlockID::Air:
+        return "Air";
+        break;
+    case BlockID::Stone:
+        return "Stone";
+        break;
+    case BlockID::Glass:
+        return "Glass";
+        break;
+    case BlockID::Dirt:
+        return "Dirt";
+        break;
+    case BlockID::Lawn:
+        return "Lawn";
+        break;
+    case BlockID::Wood:
+        return "Wood";
+        break;
+    case BlockID::Leaf:
+        return "Leaf";
+        break;
+    case BlockID::MAX:
+    default:
+        return "Unknown";
+        break;
+    }
+}

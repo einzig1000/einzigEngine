@@ -6640,14 +6640,14 @@ bool ImGui::TreeNodeBehavior(ImGuiID id, ImGuiTreeNodeFlags flags, const char* l
                 store_tree_node_stack_data = true;
     }
 
-    const bool is_leaf = (flags & ImGuiTreeNodeFlags_Leaf) != 0;
+    const bool is_Leaf = (flags & ImGuiTreeNodeFlags_Leaf) != 0;
     if (!is_visible)
     {
         if (store_tree_node_stack_data && is_open)
             TreeNodeStoreStackData(flags); // Call before TreePushOverrideID()
         if (is_open && !(flags & ImGuiTreeNodeFlags_NoTreePushOnOpen))
             TreePushOverrideID(id);
-        IMGUI_TEST_ENGINE_ITEM_INFO(g.LastItemData.ID, label, g.LastItemData.StatusFlags | (is_leaf ? 0 : ImGuiItemStatusFlags_Openable) | (is_open ? ImGuiItemStatusFlags_Opened : 0));
+        IMGUI_TEST_ENGINE_ITEM_INFO(g.LastItemData.ID, label, g.LastItemData.StatusFlags | (is_Leaf ? 0 : ImGuiItemStatusFlags_Openable) | (is_open ? ImGuiItemStatusFlags_Opened : 0));
         return is_open;
     }
 
@@ -6661,7 +6661,7 @@ bool ImGui::TreeNodeBehavior(ImGuiID id, ImGuiTreeNodeFlags flags, const char* l
     ImGuiButtonFlags button_flags = ImGuiTreeNodeFlags_None;
     if ((flags & ImGuiTreeNodeFlags_AllowOverlap) || (g.LastItemData.ItemFlags & ImGuiItemFlags_AllowOverlap))
         button_flags |= ImGuiButtonFlags_AllowOverlap;
-    if (!is_leaf)
+    if (!is_Leaf)
         button_flags |= ImGuiButtonFlags_PressedOnDragDropHold;
 
     // We allow clicking on the arrow section with keyboard modifiers held, in order to easily
@@ -6711,7 +6711,7 @@ bool ImGui::TreeNodeBehavior(ImGuiID id, ImGuiTreeNodeFlags flags, const char* l
     bool hovered, held;
     bool pressed = ButtonBehavior(interact_bb, id, &hovered, &held, button_flags);
     bool toggled = false;
-    if (!is_leaf)
+    if (!is_Leaf)
     {
         if (pressed && g.DragDropHoldJustPressedId != id)
         {
@@ -6778,7 +6778,7 @@ bool ImGui::TreeNodeBehavior(ImGuiID id, ImGuiTreeNodeFlags flags, const char* l
             RenderNavCursor(frame_bb, id, nav_render_cursor_flags);
             if (flags & ImGuiTreeNodeFlags_Bullet)
                 RenderBullet(window->DrawList, ImVec2(text_pos.x - text_offset_x * 0.60f, text_pos.y + g.FontSize * 0.5f), text_col);
-            else if (!is_leaf)
+            else if (!is_Leaf)
                 RenderArrow(window->DrawList, ImVec2(text_pos.x - text_offset_x + padding.x, text_pos.y), text_col, is_open ? ((flags & ImGuiTreeNodeFlags_UpsideDownArrow) ? ImGuiDir_Up : ImGuiDir_Down) : ImGuiDir_Right, 1.0f);
             else // Leaf without bullet, left-adjusted text
                 text_pos.x -= text_offset_x - padding.x;
@@ -6798,7 +6798,7 @@ bool ImGui::TreeNodeBehavior(ImGuiID id, ImGuiTreeNodeFlags flags, const char* l
             RenderNavCursor(frame_bb, id, nav_render_cursor_flags);
             if (flags & ImGuiTreeNodeFlags_Bullet)
                 RenderBullet(window->DrawList, ImVec2(text_pos.x - text_offset_x * 0.5f, text_pos.y + g.FontSize * 0.5f), text_col);
-            else if (!is_leaf)
+            else if (!is_Leaf)
                 RenderArrow(window->DrawList, ImVec2(text_pos.x - text_offset_x + padding.x, text_pos.y + g.FontSize * 0.15f), text_col, is_open ? ((flags & ImGuiTreeNodeFlags_UpsideDownArrow) ? ImGuiDir_Up : ImGuiDir_Down) : ImGuiDir_Right, 0.70f);
             if (g.LogEnabled)
                 LogSetNextTextDecoration(">", NULL);
@@ -6822,7 +6822,7 @@ bool ImGui::TreeNodeBehavior(ImGuiID id, ImGuiTreeNodeFlags flags, const char* l
     if (is_open && !(flags & ImGuiTreeNodeFlags_NoTreePushOnOpen))
         TreePushOverrideID(id); // Could use TreePush(label) but this avoid computing twice
 
-    IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags | (is_leaf ? 0 : ImGuiItemStatusFlags_Openable) | (is_open ? ImGuiItemStatusFlags_Opened : 0));
+    IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags | (is_Leaf ? 0 : ImGuiItemStatusFlags_Openable) | (is_open ? ImGuiItemStatusFlags_Opened : 0));
     return is_open;
 }
 
@@ -7287,7 +7287,7 @@ int ImGui::TypingSelectFindMatch(ImGuiTypingSelectRequest* req, int items_count,
     else
         idx = TypingSelectFindBestLeadingMatch(req, items_count, get_item_name_func, user_data);
     if (idx != -1)
-        SetNavCursorVisibleAfterMove();
+        SetNavCursorVisibLeafterMove();
     return idx;
 }
 
@@ -8991,7 +8991,7 @@ bool ImGui::BeginMenuEx(const char* label, const char* icon, bool enabled)
         {
             want_open = want_open_nav_init = true;
             NavMoveRequestCancel();
-            SetNavCursorVisibleAfterMove();
+            SetNavCursorVisibLeafterMove();
         }
     }
     else

@@ -14,10 +14,12 @@ public:
 	void Draw();
 
 	// ブロックの種類設定
-	void SetBlockType(Blockinfo type);
+	void SetBlockType(Blockinfo info);
 
 	// ブロックの位置設定
 	void SetBlockPosition(const Vector3& position);
+
+	BlockID GetBlockID() const { return blockID; };
 
 	// 破壊更新
 	void UpdateBreak(int power);
@@ -25,8 +27,10 @@ public:
 	// プレイヤーに見られている時、輝度に応じて色を更新
 	void UpdateColor();
 
-	// ブロック
-	RenderData_Model data_;
+	BlockID blockID = BlockID::Air;
+
+	Vector3 position_;
+	AABB aabb_;
 
 	// 輝度
 	uint32_t lightEmission_ = 14;

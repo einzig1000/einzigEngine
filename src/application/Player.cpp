@@ -10,6 +10,7 @@ Player::Player()
 	// プレイヤーデータ初期化
 	data_.model = ResourceID::GetModelID(ModelID::Cube);
 	data_.texture = ResourceID::GetTextureID(TextureID::UVChecker);
+	data_.color.w = 0;
 	data_.name = "Player";
 
 	// レティクル初期化
@@ -179,7 +180,7 @@ void Player::Update()
 
 void Player::Draw()
 {
-	//data_.Draw();
+	data_.Draw();
 	reticle_.Draw();
 	Itemslot_->Draw();
 }

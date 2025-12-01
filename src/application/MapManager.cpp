@@ -13,7 +13,6 @@ MapManager::MapManager(Player* player)
 	// プレイヤー参照保存
 	player_ = player;
 
-	// ブロック初期化
 	for (int x = 0; x < MAX_BLOCK_X; x++)
 	{
 		for (int y = 0; y < MAX_BLOCK_Y; y++)
@@ -22,17 +21,26 @@ MapManager::MapManager(Player* player)
 			{
 				block_[x][y][z] = new Block();
 				block_[x][y][z]->Initialize();
-				block_[x][y][z]->data_.name = "Block_" + std::to_string(x) + "_" + std::to_string(y) + "_" + std::to_string(z);
 			}
 		}
 	}
 
+	for (int32_t i = 0; i < int32_t(BlockID::MAX); ++i)
+	{
+		blockData_[BlockID(i)] = std::make_unique<RenderData_Block>(BlockID(i));
+		blockData_[BlockID(i)]->texture = ResourceID::GetTextureID(BlockID(i));
+		blockData_[BlockID(i)]->model = ResourceID::GetModelID(ModelID::Cube);
+		blockData_[BlockID(i)]->blendMode = BlendMode::kBlendModeNormal;
+
+		blockDrawSumMap_[BlockID(i)] = 0;
+	}
+
 	blockInfoMap_[BlockID::Stone] = { BlockID::Stone, 60 };
 	blockInfoMap_[BlockID::Dirt] = { BlockID::Dirt, 30 };
-	blockInfoMap_[BlockID::lawn] = { BlockID::lawn, 30 };
+	blockInfoMap_[BlockID::Lawn] = { BlockID::Lawn, 30 };
 	blockInfoMap_[BlockID::Glass] = { BlockID::Glass, 10 };
-	blockInfoMap_[BlockID::wood] = { BlockID::wood, 40 };
-	blockInfoMap_[BlockID::leaf] = { BlockID::leaf, 20 };
+	blockInfoMap_[BlockID::Wood] = { BlockID::Wood, 40 };
+	blockInfoMap_[BlockID::Leaf] = { BlockID::Leaf, 20 };
 }
 
 MapManager::~MapManager()
@@ -154,37 +162,25 @@ void MapManager::LoadMap(const std::string& mapFilePath)
 			for (int y = 0; y < height - dirtThickness; y++)
 			{
 				block_[x][y][z]->SetBlockType(blockInfoMap_[BlockID::Stone]);
-				blockPosition = Vector3(
-					x * BLOCK_SIZE - (MAX_BLOCK_X - 1),
-					y * BLOCK_SIZE - (MAX_BLOCK_Y - 1),
-					z * BLOCK_SIZE - (MAX_BLOCK_Z - 1));
+				blockPosition = PositionByIndex(Vector3int(x, y, z));
 				block_[x][y][z]->SetBlockPosition(blockPosition);
 			}
 			for (int y = height - dirtThickness; y < height - 1; y++)
 			{
 				block_[x][y][z]->SetBlockType(blockInfoMap_[BlockID::Dirt]);
-				blockPosition = Vector3(
-					x * BLOCK_SIZE - (MAX_BLOCK_X - 1),
-					y * BLOCK_SIZE - (MAX_BLOCK_Y - 1),
-					z * BLOCK_SIZE - (MAX_BLOCK_Z - 1));
+				blockPosition = PositionByIndex(Vector3int(x, y, z));
 				block_[x][y][z]->SetBlockPosition(blockPosition);
 			}
 			for (int y = height - 1; y < height; y++)
 			{
-				block_[x][y][z]->SetBlockType(blockInfoMap_[BlockID::lawn]);
-				blockPosition = Vector3(
-					x * BLOCK_SIZE - (MAX_BLOCK_X - 1),
-					y * BLOCK_SIZE - (MAX_BLOCK_Y - 1),
-					z * BLOCK_SIZE - (MAX_BLOCK_Z - 1));
+				block_[x][y][z]->SetBlockType(blockInfoMap_[BlockID::Lawn]);
+				blockPosition = PositionByIndex(Vector3int(x, y, z));
 				block_[x][y][z]->SetBlockPosition(blockPosition);
 			}
 			for (int y = height; y < MAX_BLOCK_Y; y++)
 			{
-				block_[x][y][z]->SetBlockType(blockInfoMap_[BlockID::None]);
-				blockPosition = Vector3(
-					x * BLOCK_SIZE - (MAX_BLOCK_X - 1),
-					y * BLOCK_SIZE - (MAX_BLOCK_Y - 1),
-					z * BLOCK_SIZE - (MAX_BLOCK_Z - 1));
+				block_[x][y][z]->SetBlockType(blockInfoMap_[BlockID::Air]);
+				blockPosition = PositionByIndex(Vector3int(x, y, z));
 				block_[x][y][z]->SetBlockPosition(blockPosition);
 			}
 		}
@@ -220,6 +216,38 @@ void MapManager::LoadMap(const std::string& mapFilePath)
 			}
 		}
 	}
+
+	SetExposedBlocks();
+}
+
+void MapManager::SetExposedBlocks()
+{
+	for (int x = 0; x < MAX_BLOCK_X; x++)
+	{
+		for (int y = 0; y < MAX_BLOCK_Y; y++)
+		{
+			for (int z = 0; z < MAX_BLOCK_Z; z++)
+			{
+				if (block_[x][y][z]->isExposed_)
+				{
+					// 表示されているブロックのIDを取得
+					BlockID id = block_[x][y][z]->GetBlockID();
+
+					// 現在描画されているパーティクル数を取得
+					uint32_t currentDraw = blockDrawSumMap_[id];
+
+					// ブロックの座標を順番に設定
+					blockData_[id]->AddNewBlock(
+						block_[x][y][z]->position_,
+						Vector3int(x, y, z)
+					);
+
+					// 描画数をインクリメント
+					blockDrawSumMap_[id]++;
+				}
+			}
+		}
+	}
 }
 
 void MapManager::Initialize()
@@ -251,76 +279,77 @@ void MapManager::Update()
 
 void MapManager::UpDataPlayerRayCollision()
 {
-	// モデルと衝突までの距離セット構造体
-	struct HitInfo { Block* block; float distance; DirectionXYZ direction; };
-	// のリスト
-	std::vector<HitInfo> hits;
-	// のリサイズ(リサイズではない)
-	hits.reserve(size_t(MAX_BLOCK_X * MAX_BLOCK_Y * MAX_BLOCK_Z));
-
-	for (int x = 0; x < MAX_BLOCK_X; x++)
-	{
-		for (int y = 0; y < MAX_BLOCK_Y; y++)
-		{
-			for (int z = 0; z < MAX_BLOCK_Z; z++)
-			{
-				block_[x][y][z]->isCollisionRay = -1;
-				// 描画範囲内なら判定
-				if (block_[x][y][z]->data_.inPicture)
-				{
-					// 最近接衝突点を取得
-					std::optional<Vector3> colPos = IntersectRayModel(
-						player_->viewRay_,
-						Engine::Instance().GetAllObject3D()[block_[x][y][z]->data_.model].modelData.vertices,
-						&block_[x][y][z]->data_
-					);
-					// 衝突していたらリストに登録
-					if (colPos)
-					{
-						float minDistance = (colPos.value() - player_->viewRay_.origin).Length();
-						DirectionXYZ dir = DirectionXYZ::None;
-						if (colPos->x >= block_[x][y][z]->data_.translate.value.x + (BLOCK_SIZE / 2.0f) - 0.01f)
-						{
-							dir = DirectionXYZ::Right;
-						}
-						else if (colPos->x <= block_[x][y][z]->data_.translate.value.x - (BLOCK_SIZE / 2.0f) + 0.01f)
-						{
-							dir = DirectionXYZ::Left;
-						}
-						else if (colPos->y >= block_[x][y][z]->data_.translate.value.y + (BLOCK_SIZE / 2.0f) - 0.01f)
-						{
-							dir = DirectionXYZ::Up;
-						}
-						else if (colPos->y <= block_[x][y][z]->data_.translate.value.y - (BLOCK_SIZE / 2.0f) + 0.01f)
-						{
-							dir = DirectionXYZ::Down;
-						}
-						else if (colPos->z >= block_[x][y][z]->data_.translate.value.z + (BLOCK_SIZE / 2.0f) - 0.01f)
-						{
-							dir = DirectionXYZ::Front;
-						}
-						else if (colPos->z <= block_[x][y][z]->data_.translate.value.z - (BLOCK_SIZE / 2.0f) + 0.01f)
-						{
-							dir = DirectionXYZ::Back;
-						}
-						hits.push_back({ block_[x][y][z], minDistance, dir });
-					}
-				}
-			}
-		}
-	}
-
-	// 距離の昇順でソート
-	std::sort(hits.begin(), hits.end(),
-		[](auto& a, auto& b) { return a.distance < b.distance; });
-
-	// ソート後に順序を割り当て
-	for (int order = 0; order < (int)hits.size(); ++order)
-	{
-		hits[order].block->isCollisionRay = order;
-		hits[order].block->collisionDistance = hits[order].distance;
-		hits[order].block->direction = hits[order].direction;
-	}
+//	// モデルと衝突までの距離セット構造体
+//	struct HitInfo { Block* block; float distance; DirectionXYZ direction; };
+//	// のリスト
+//	std::vector<HitInfo> hits;
+//	// のリサイズ(リサイズではない)
+//	hits.reserve(size_t(MAX_BLOCK_X * MAX_BLOCK_Y * MAX_BLOCK_Z));
+//
+//	for (int x = 0; x < MAX_BLOCK_X; x++)
+//	{
+//		for (int y = 0; y < MAX_BLOCK_Y; y++)
+//		{
+//			for (int z = 0; z < MAX_BLOCK_Z; z++)
+//			{
+//				block_[x][y][z]->isCollisionRay = -1;
+//				// 描画範囲内なら判定
+//				if (block_[x][y][z]->isExposed_)
+//				{
+//					// 最近接衝突点を取得
+//					std::optional<Vector3> colPos = IntersectRayBlock(
+//						player_->viewRay_,
+//						Engine::Instance().GetAllObject3D()[blockData_[BlockID::Dirt]->model].modelData.vertices,
+//						block_[x][y][z]->aabb_,
+//						blockData_[BlockID::Dirt]->instancingData_[0].World
+//					);
+//					// 衝突していたらリストに登録
+//					if (colPos)
+//					{
+//						float minDistance = (colPos.value() - player_->viewRay_.origin).Length();
+//						DirectionXYZ dir = DirectionXYZ::None;
+//						if (colPos->x >= block_[x][y][z]->data_.translate.value.x + (BLOCK_SIZE / 2.0f) - 0.01f)
+//						{
+//							dir = DirectionXYZ::Right;
+//						}
+//						else if (colPos->x <= block_[x][y][z]->data_.translate.value.x - (BLOCK_SIZE / 2.0f) + 0.01f)
+//						{
+//							dir = DirectionXYZ::Left;
+//						}
+//						else if (colPos->y >= block_[x][y][z]->data_.translate.value.y + (BLOCK_SIZE / 2.0f) - 0.01f)
+//						{
+//							dir = DirectionXYZ::Up;
+//						}
+//						else if (colPos->y <= block_[x][y][z]->data_.translate.value.y - (BLOCK_SIZE / 2.0f) + 0.01f)
+//						{
+//							dir = DirectionXYZ::Down;
+//						}
+//						else if (colPos->z >= block_[x][y][z]->data_.translate.value.z + (BLOCK_SIZE / 2.0f) - 0.01f)
+//						{
+//							dir = DirectionXYZ::Front;
+//						}
+//						else if (colPos->z <= block_[x][y][z]->data_.translate.value.z - (BLOCK_SIZE / 2.0f) + 0.01f)
+//						{
+//							dir = DirectionXYZ::Back;
+//						}
+//						hits.push_back({ block_[x][y][z], minDistance, dir });
+//					}
+//				}
+//			}
+//		}
+//	}
+//
+//	// 距離の昇順でソート
+//	std::sort(hits.begin(), hits.end(),
+//		[](auto& a, auto& b) { return a.distance < b.distance; });
+//
+//	// ソート後に順序を割り当て
+//	for (int order = 0; order < (int)hits.size(); ++order)
+//	{
+//		hits[order].block->isCollisionRay = order;
+//		hits[order].block->collisionDistance = hits[order].distance;
+//		hits[order].block->direction = hits[order].direction;
+//	}
 }
 
 void MapManager::UpdatePlayerCollisionY()
@@ -343,10 +372,10 @@ void MapManager::UpdatePlayerCollisionY()
 	{
 		Vector3int idx = IndexByPosition(corners[i]);
 
-		if (block_[idx.x][idx.y][idx.z]->data_.aabbs[0].max.y >= corners[i].y && !block_[idx.x][idx.y][idx.z]->durability_->GetIsDestroy())
+		if (block_[idx.x][idx.y][idx.z]->aabb_.max.y >= corners[i].y && !block_[idx.x][idx.y][idx.z]->durability_->GetIsDestroy())
 		{
 			anyCollision = true;
-			float groundY = block_[idx.x][idx.y][idx.z]->data_.aabbs[0].max.y;
+			float groundY = block_[idx.x][idx.y][idx.z]->aabb_.max.y;
 
 			if (groundY > bestGroundY) bestGroundY = groundY;
 		}
@@ -391,10 +420,10 @@ void MapManager::UpdatePlayerCollisionZ()
 	for (int i = 0; i < 4; ++i)
 	{
 		Vector3int idx = IndexByPosition(corners[i]);
-		if (block_[idx.x][idx.y][idx.z]->data_.aabbs[0].min.z <= corners[i].z && !block_[idx.x][idx.y][idx.z]->durability_->GetIsDestroy())
+		if (block_[idx.x][idx.y][idx.z]->aabb_.min.z <= corners[i].z && !block_[idx.x][idx.y][idx.z]->durability_->GetIsDestroy())
 		{
 			anyCollision = true;
-			float frontZ = block_[idx.x][idx.y][idx.z]->data_.aabbs[0].min.z;
+			float frontZ = block_[idx.x][idx.y][idx.z]->aabb_.min.z;
 			if (frontZ < bestFrontZ) bestFrontZ = frontZ;
 		}
 	}
@@ -434,10 +463,10 @@ void MapManager::UpdatePlayerCollisionX()
 	for (int i = 0; i < 4; ++i)
 	{
 		Vector3int idx = IndexByPosition(corners[i]);
-		if (block_[idx.x][idx.y][idx.z]->data_.aabbs[0].min.z <= corners[i].z && !block_[idx.x][idx.y][idx.z]->durability_->GetIsDestroy())
+		if (block_[idx.x][idx.y][idx.z]->aabb_.min.z <= corners[i].z && !block_[idx.x][idx.y][idx.z]->durability_->GetIsDestroy())
 		{
 			anyCollision = true;
-			float frontX = block_[idx.x][idx.y][idx.z]->data_.aabbs[0].min.z;
+			float frontX = block_[idx.x][idx.y][idx.z]->aabb_.min.z;
 			if (frontX < bestFrontX) bestFrontX = frontX;
 		}
 	}
@@ -461,15 +490,9 @@ void MapManager::UpdatePlayerCollisionX()
 
 void MapManager::Draw()
 {
-	for (int x = 0; x < MAX_BLOCK_X; x++)
+	for (int32_t i = 0; i < int32_t(BlockID::MAX); ++i)
 	{
-		for (int y = 0; y < MAX_BLOCK_Y; y++)
-		{
-			for (int z = 0; z < MAX_BLOCK_Z; z++)
-			{
-				block_[x][y][z]->Draw();
-			}
-		}
+		blockData_[BlockID(i)]->Draw();
 	}
 
 	for (auto& item : dropItems_)
@@ -493,4 +516,56 @@ Vector3int MapManager::IndexByPosition(const Vector3& position)
 	else if (index.z > MAX_BLOCK_Z - 1)index.z = MAX_BLOCK_Z - 1;
 
 	return index;
+}
+
+Vector3 MapManager::PositionByIndex(const Vector3int& index)
+{
+	Vector3 position;
+	position.x = (index.x * BLOCK_SIZE) - (MAX_BLOCK_X - 1);
+	position.y = (index.y * BLOCK_SIZE) - (MAX_BLOCK_Y - 1);
+	position.z = (index.z * BLOCK_SIZE) - (MAX_BLOCK_Z - 1);
+	return position;
+}
+
+std::optional<Vector3> MapManager::IntersectRayBlock(const Ray& ray, const std::vector<VertexData>& vertices, const AABB& aabb, const Matrix4x4 worldMatrix)
+{
+	// まずAABBで大まかに判定
+	if (!IsCollision(ray, aabb))
+	{
+		return std::nullopt;
+	}
+
+
+	// AABBに当たっていた場合のみ、三角形ごとに詳細判定 最近衝突点を返す
+	std::optional<Vector3> closestPoint = std::nullopt;
+	float closestDist = std::numeric_limits<float>::infinity();
+	for (size_t i = 0; i + 2 < vertices.size(); i += 3)
+	{
+		Triangle t;
+		// 三角形の頂点をワールド座標に変換
+		t.vertices[0] = Transform(
+			Vector3{ vertices[i].position.x, vertices[i].position.y, vertices[i].position.z },
+			worldMatrix
+		);
+		t.vertices[1] = Transform(
+			Vector3{ vertices[i + 1].position.x, vertices[i + 1].position.y, vertices[i + 1].position.z },
+			worldMatrix
+		);
+		t.vertices[2] = Transform(
+			Vector3{ vertices[i + 2].position.x, vertices[i + 2].position.y, vertices[i + 2].position.z },
+			worldMatrix
+		);
+		std::optional<Vector3> pos = IntersectRayTriangle(ray, t);
+		if (pos != std::nullopt)
+		{
+			// 衝突点までの距離を計算
+			float dist = (pos.value() - ray.origin).Length();
+			if (dist < closestDist)
+			{
+				closestDist = dist;
+				closestPoint = pos;
+			}
+		}
+	}
+	return closestPoint;
 }

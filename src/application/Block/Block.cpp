@@ -5,7 +5,6 @@
 Block::Block()
 {
 	durability_ = new BlockDurability();
-	data_.mass = 100.0f;
 }
 
 Block::~Block()
@@ -18,16 +17,17 @@ void Block::Initialize()
 {
 }
 
-void Block::SetBlockType(Blockinfo type)
+void Block::SetBlockType(Blockinfo info)
 {
-	data_.model = ResourceID::GetModelID(ModelID::Cube);
-	data_.texture = ResourceID::GetTextureID(type.type);
-	durability_->SetMaxDurability(type.durability);
+	blockID = info.type;
+	durability_->SetMaxDurability(info.durability);
 }
 
 void Block::SetBlockPosition(const Vector3& position)
 {
-	data_.translate.value = position;
+	position_ = position;
+	aabb_.min = position - Vector3(BLOCK_SIZE / 2.0f, BLOCK_SIZE / 2.0f, BLOCK_SIZE / 2.0f);
+	aabb_.max = position + Vector3(BLOCK_SIZE / 2.0f, BLOCK_SIZE / 2.0f, BLOCK_SIZE / 2.0f);
 	durability_->SetPosition(position);
 }
 
@@ -50,8 +50,6 @@ void Block::Draw()
 	// 破壊されていないかつ表面に露出している
 	if (!durability_->GetIsDestroy() && isExposed_)
 	{
-		// ブロック本体描画
-		data_.Draw();
 
 		// 破壊エフェクト描画
 		durability_->DrawBreakEffect();
@@ -77,11 +75,11 @@ void Block::UpdateColor()
 {
 	// 輝度に応じて色を変更
 	lightEmission_ = std::clamp(lightEmission_, 0u, 14u);
-	data_.color = Vector4(float(0x11 * lightEmission_), float(0x11 * lightEmission_), float(0x11 * lightEmission_), float(0xFF));
+	//color = Vector4(float(0x11 * lightEmission_), float(0x11 * lightEmission_), float(0x11 * lightEmission_), float(0xFF));
 
 	// １番目に衝突している時
 	if (isCollisionRay == 0)
 	{
-		data_.color += Vector4(0x22, 0x22, 0x22, 0x00);
+		//color += Vector4(0x22, 0x22, 0x22, 0x00);
 	}
 }

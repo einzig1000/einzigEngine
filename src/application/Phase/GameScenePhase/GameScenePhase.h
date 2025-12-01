@@ -19,11 +19,8 @@ public:
 private:
 
 	// プレイヤー
-	Player* player_;
+	std::unique_ptr<Player> player_;
 
 	// マップ
-	MapManager* map_;
-
-
-	RenderData_Particle* particle;
+	std::unique_ptr<MapManager> map_;
 };

@@ -12,14 +12,15 @@ class DirectXManager;
 class DrawSystem;
 class Input;
 class CameraManager;
+class ImGuiManager;
 
 class RenderData_Model;
 class RenderData_Triangle;
 class RenderData_Rect;
 class RenderData_Sprite;
 class RenderData_Line;
-class RenderData_MinecraftMap;
 class RenderData_Particle;
+class RenderData_Block;
 
 
 
@@ -60,8 +61,8 @@ public:
 	void AddSpriteDrawList(RenderData_Sprite* renderData);
 	void AddLineDrawList(RenderData_Line* renderData);
 	void AddParticleDrawList(RenderData_Particle* renderData);
+	void AddBlockDrawList(RenderData_Block* renderData);
 
-	void DrawMinecraftMap(RenderData_MinecraftMap& renderData);
 
 	void AddSphere(Vector3 pos, Vector3 radius, uint32_t color);
 	void AddAABB(AABB aabb, uint32_t color);
@@ -118,7 +119,7 @@ public:
 	void ToggleCameraMode();
 	void ToggleCurrentOrbitMode();
 	void StopCameraShake();
-	CameraManager* GetCameraManager() { return cameraManager; }
+	CameraManager* GetCameraManager() { return cameraManager_; }
 
 
 	// フルスクリーン切り替え
@@ -135,7 +136,7 @@ public:
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateConstantBufferResource(size_t sizeInBytes);
 
-	DirectXManager* GetDirectXManager() { return dxManager; }
+	DirectXManager* GetDirectXManager() { return dxManager_; }
 
 
 	const std::vector<Object3D> GetAllObject3D();
@@ -150,14 +151,15 @@ private:
 	bool isDebugInfo = true;
 
 	// ウィンドウ関連
-	WindowManager* windowManager = nullptr;
+	WindowManager* windowManager_ = nullptr;
 	// DirectX関連
-	DirectXManager* dxManager = nullptr;
+	DirectXManager* dxManager_ = nullptr;
 	// 描画関連
-	DrawSystem* drawSystem = nullptr;
+	DrawSystem* drawSystem_ = nullptr;
 	// 入力関連
 	Input* inputManager_ = nullptr;
 	// カメラ
-	CameraManager* cameraManager = nullptr;
-
+	CameraManager* cameraManager_ = nullptr;
+	// ImGui
+	ImGuiManager* imguiManager_ = nullptr;
 };

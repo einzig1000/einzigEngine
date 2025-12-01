@@ -9,9 +9,6 @@
 #include <string>
 #include <iomanip>
 
-// Media Foundation Headers
-
-// utilities for PROPVARIANT
 #include <propvarutil.h>
 
 #include "Utilities/functions.h"
@@ -90,97 +87,61 @@ uint32_t AudioManager::LoadAudio(const std::string& filePath)
     AudioEntry entry = {};
     HRESULT hr = S_OK;
 
+
     // ファイルパスをワイド文字列に変換
     std::wstring wFilePath = ConvertString(filePath);
 
     Microsoft::WRL::ComPtr<IMFSourceReader> pSourceReader;
 
+
     // ソースリーダー(オーディオデータを読み取るためのインターフェース)の作成
     hr = MFCreateSourceReaderFromURL(wFilePath.c_str(), nullptr, &pSourceReader);
-    if (FAILED(hr))
-    {
-        Log("ソースリーダーの作成に失敗しました: 0x%X", hr);
-        assert(0);
-        return UINT32_MAX;
-    }
+    if (FAILED(hr)) { Log("ソースリーダーの作成に失敗: 0x%X", hr); assert(0); return UINT32_MAX; }
 
     // メディアファイルには 複数のストリーム（音声・動画・字幕など） が含まれていることがあるため音声を取得するよと設定しているらしい
     hr = pSourceReader->SetStreamSelection((DWORD)MF_SOURCE_READER_FIRST_AUDIO_STREAM, TRUE);
-    if (FAILED(hr))
-    {
-        Log("取得ストリームの設定に失敗しました: 0x%X", hr);
-        assert(0);
-        return UINT32_MAX;
-    }
+    if (FAILED(hr)) { Log("取得ストリームの設定に失敗: 0x%X", hr); assert(0); return UINT32_MAX; }
 
     // Media Foundation に対して、オーディオストリームをPCM形式にデコードするように要求
     Microsoft::WRL::ComPtr<IMFMediaType> pOutputMediaType;
     hr = MFCreateMediaType(&pOutputMediaType);
-    if (FAILED(hr))
-    {
-        Log("PCM出力用MFMediaTypeの作成に失敗しました: 0x%X", hr);
-        assert(0);
-        return UINT32_MAX;
-    }
+    if (FAILED(hr)) { Log("PCM出力MFMediaTypeの作成に失敗: 0x%X", hr); assert(0); return UINT32_MAX; }
+
 
     hr = pOutputMediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
-    if (FAILED(hr))
-    {
-        Log("PCM出力の主要タイプ設定に失敗しました: 0x%X", hr);
-        assert(0);
-        return UINT32_MAX;
-    }
+    if (FAILED(hr)) { Log("PCM出力の主要タイプ設定に失敗: 0x%X", hr); assert(0); return UINT32_MAX; }
 
     hr = pOutputMediaType->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_PCM);
-    if (FAILED(hr))
-    {
-        Log("サブタイプをPCMに設定できませんでした: 0x%X", hr);
-        assert(0);
-        return UINT32_MAX;
-    }
+    if (FAILED(hr)) { Log("PCM出力のサブタイプ設定に失敗: 0x%X", hr); assert(0); return UINT32_MAX; }
 
     // 音声データがどんな形式(MP3,WAV,AACとか)で保存されているかを調べる
     hr = pSourceReader->SetCurrentMediaType((DWORD)MF_SOURCE_READER_FIRST_AUDIO_STREAM, nullptr, pOutputMediaType.Get());
-    if (FAILED(hr))
-    {
-        Log("ソースリーダーの出力タイプをPCMに設定できませんでした: 0x%X", hr);
-        assert(0);
-        return UINT32_MAX;
-    }
+    if (FAILED(hr)) { Log("出力タイプをPCMに設定できませんでした: 0x%X", hr); assert(0); return UINT32_MAX; }
 
     // Media FoundationがPCMフォーマットに変えたはずなので確認
     Microsoft::WRL::ComPtr<IMFMediaType> pActualMediaType;
     hr = pSourceReader->GetCurrentMediaType((DWORD)MF_SOURCE_READER_FIRST_AUDIO_STREAM, &pActualMediaType);
-    if (FAILED(hr))
-    {
-        Log("PCM設定後に実際のメディアタイプを取得できませんでした: 0x%X", hr);
-        assert(0);
-        return UINT32_MAX;
-    }
+    if (FAILED(hr)) { Log("実際のメディアタイプ取得に失敗: 0x%X", hr); assert(0); return UINT32_MAX; }
 
-    // 上で取得した形式からWAVEFORMATEXに変換
     UINT32 formatSize = 0;
     WAVEFORMATEX* wfx = nullptr;
     hr = MFCreateWaveFormatExFromMFMediaType(pActualMediaType.Get(), &wfx, &formatSize, 0);
-    if (FAILED(hr))
-    {
-        Log("実際のメディアタイプのWAVEFORMATEX変換に失敗しました: 0x%X", hr);
-        assert(0);
-        return UINT32_MAX;
-    }
-    memcpy(&entry.wfx, wfx, sizeof(WAVEFORMATEX));
-    CoTaskMemFree(wfx); // 取得したメモリを解放
+    if (FAILED(hr)) { Log("実際のメディアタイプのWAVEFORMATEX変換に失敗: 0x%X", hr); assert(0); return UINT32_MAX; }
+    entry.pWfx = wfx;
+    entry.wfxSize = formatSize;
+
 
 
     Log("--- WAVEFORMATEX Debug Info ---");
-    Log("wFormatTag: 0x%X", entry.wfx.wFormatTag);
-    Log("nChannels: %u", entry.wfx.nChannels);
-    Log("nSamplesPerSec: %u", entry.wfx.nSamplesPerSec);
-    Log("nAvgBytesPerSec: %u", entry.wfx.nAvgBytesPerSec);
-    Log("nBlockAlign: %u", entry.wfx.nBlockAlign);
-    Log("wBitsPerSample: %u", entry.wfx.wBitsPerSample);
-    Log("cbSize: %u", entry.wfx.cbSize);
+    Log("wFormatTag: 0x%X", entry.pWfx->wFormatTag);
+    Log("nChannels: %u", entry.pWfx->nChannels);
+    Log("nSamplesPerSec: %u", entry.pWfx->nSamplesPerSec);
+    Log("nAvgBytesPerSec: %u", entry.pWfx->nAvgBytesPerSec);
+    Log("nBlockAlign: %u", entry.pWfx->nBlockAlign);
+    Log("wBitsPerSample: %u", entry.pWfx->wBitsPerSample);
+    Log("cbSize: %u", entry.pWfx->cbSize);
     Log("-------------------------------");
+
 
     // オーディオデータの読み込み
     DWORD currentBufferLength = 0;
@@ -205,101 +166,88 @@ uint32_t AudioManager::LoadAudio(const std::string& filePath)
             &pSample
         );
 
-        if (FAILED(hr))
-        {
-            Log("ReadSample FAILED with HRESULT: 0x%X", hr);
-            break;
-        }
 
-        if (streamFlags & MF_SOURCE_READERF_ENDOFSTREAM)
-        {
-            Log("End of stream reached.");
-            break;
-        }
+        if (FAILED(hr)) { Log("ReadSample FAILED: 0x%X", hr); break; }
+        if (streamFlags & MF_SOURCE_READERF_ENDOFSTREAM) { Log("End of stream reached."); break; }
+        if (!pSample) { Log("pSample is null but not end of stream."); break; }
 
-        if (pSample == nullptr)
-        {
-            Log("pSample is null but not end of stream. This might be unexpected.");
-            break;
-        }
 
         Microsoft::WRL::ComPtr<IMFMediaBuffer> pBuffer;
         hr = pSample->ConvertToContiguousBuffer(&pBuffer);
-        if (FAILED(hr))
-        {
-            Log("ConvertToContiguousBuffer FAILED with HRESULT: 0x%X", hr);
-            break;
-        }
+        if (FAILED(hr)) { Log("ConvertToContiguousBuffer FAILED: 0x%X", hr); break; }
+
+
 
         BYTE* pAudioData = nullptr;
         hr = pBuffer->Lock(&pAudioData, nullptr, &currentBufferLength);
-        if (FAILED(hr))
-        {
-            Log("Buffer Lock FAILED with HRESULT: 0x%X", hr);
-            break;
-        }
+        if (FAILED(hr)) { Log("Buffer Lock FAILED: 0x%X", hr); break; }
 
         if (currentBufferLength > 0)
         {
             // audioData の末尾にデータを追加
-            size_t current_vector_size = entry.audioData.size();
-            entry.audioData.resize(current_vector_size + currentBufferLength);
-            memcpy(entry.audioData.data() + current_vector_size, pAudioData, currentBufferLength);
+            size_t cur = entry.audioData.size();
+            entry.audioData.resize(cur + currentBufferLength);
+            memcpy(entry.audioData.data() + cur, pAudioData, currentBufferLength);
             totalAudioDataSize += currentBufferLength;
             Log("Read chunk: %u bytes. Total: %u bytes.", currentBufferLength, totalAudioDataSize);
         }
 
         hr = pBuffer->Unlock();
-        if (FAILED(hr))
-        {
-            Log("Buffer Unlock FAILED with HRESULT: 0x%X", hr);
-            break;
-        }
+        if (FAILED(hr)) { Log("Buffer Unlock FAILED: 0x%X", hr); break; }
     }
+
 
     Log("Actual total audio data loaded: %u", totalAudioDataSize);
     Log("Final audioData.size(): %u", (uint32_t)entry.audioData.size());
 
-
     if (hr != S_OK && hr != MF_E_END_OF_STREAM)
     {
         Log("LoadAudioの失敗 HRESULT: 0x%X", hr);
+        if (entry.pWfx) { CoTaskMemFree(entry.pWfx); entry.pWfx = nullptr; entry.wfxSize = 0; }
         return UINT32_MAX;
     }
 
+    // 読み込み完了後にメモリを安定化してから pAudioData を設定
+    entry.audioData.shrink_to_fit();
+    entry.audioBytes = totalAudioDataSize;
+
     // XAudio2Bufferの設定
     ZeroMemory(&entry.xAudioBuffer, sizeof(entry.xAudioBuffer));
-    entry.xAudioBuffer.AudioBytes = totalAudioDataSize;
+    entry.xAudioBuffer.AudioBytes = entry.audioBytes;
     entry.xAudioBuffer.pAudioData = entry.audioData.data();
     entry.xAudioBuffer.LoopBegin = 0;
     entry.xAudioBuffer.LoopLength = 0;
     entry.xAudioBuffer.LoopCount = 0; // 0は1回再生
 
-    // ソースボイスの作成
-    // XAudio2Create が成功し、pXAudio2 が有効であることを確認
+    /// ソースボイスの作成
+    /// XAudio2Create が成功し、pXAudio2 が有効であることを確認
     if (!pXAudio2)
     {
         Log("XAudio2 engine not initialized when trying to create source voice.");
+        if (entry.pWfx) { CoTaskMemFree(entry.pWfx); entry.pWfx = nullptr; entry.wfxSize = 0; }
         return UINT32_MAX;
     }
 
     Log("--- Debugging WAVEFORMATEX for CreateSourceVoice ---");
     Log("filePath: %s", filePath.c_str());
-    Log("wFormatTag: 0x%X (0x1 = WAVE_FORMAT_PCM)", entry.wfx.wFormatTag);
-    Log("nChannels: %u", entry.wfx.nChannels);
-    Log("nSamplesPerSec: %u Hz", entry.wfx.nSamplesPerSec);
-    Log("nAvgBytesPerSec: %u bytes/sec", entry.wfx.nAvgBytesPerSec);
-    Log("nBlockAlign: %u bytes", entry.wfx.nBlockAlign);
-    Log("wBitsPerSample: %u bits", entry.wfx.wBitsPerSample);
-    Log("cbSize: %u bytes (extra info size)", entry.wfx.cbSize);
+    Log("wFormatTag: 0x%X (0x1 = WAVE_FORMAT_PCM)", entry.pWfx->wFormatTag);
+    Log("nChannels: %u", entry.pWfx->nChannels);
+    Log("nSamplesPerSec: %u Hz", entry.pWfx->nSamplesPerSec);
+    Log("nAvgBytesPerSec: %u bytes/sec", entry.pWfx->nAvgBytesPerSec);
+    Log("nBlockAlign: %u bytes", entry.pWfx->nBlockAlign);
+    Log("wBitsPerSample: %u bits", entry.pWfx->wBitsPerSample);
+    Log("cbSize: %u bytes (extra info size)", entry.pWfx->cbSize);
     Log("--------------------------------------------------");
 
-    hr = pXAudio2->CreateSourceVoice(&entry.pSourceVoice, &entry.wfx, 0, XAUDIO2_DEFAULT_FREQ_RATIO, &voiceCallback);
+
+    hr = pXAudio2->CreateSourceVoice(&entry.pSourceVoice, entry.pWfx, 0, XAUDIO2_DEFAULT_FREQ_RATIO, &voiceCallback);
     if (FAILED(hr))
     {
         Log("Failed to create source voice: 0x%X", hr);
+        if (entry.pWfx) { CoTaskMemFree(entry.pWfx); entry.pWfx = nullptr; entry.wfxSize = 0; }
         return UINT32_MAX;
     }
+
 
     // マップに格納
     uint32_t id = nextAudioId++;
@@ -336,10 +284,10 @@ void AudioManager::PlayAudio(const uint32_t& audioId, bool loop)
         hr = entry.pSourceVoice->Start(0);
         if (FAILED(hr))
         {
-            Log("%dのオーディオバッファの再生に失敗しました。: % u HRESULT : 0x % X", audioId, hr);
+            Log("ID:%u のオーディオの再生に失敗しました。HRESULT: 0x%X", audioId, hr);
             assert(0);
         }
-        Log("ID:%uのオーディオを再生します。Loop: %d", audioId, loop);
+        Log("ID:%u のオーディオを再生します。Loop: %d", audioId, loop);
     }
     else
     {
@@ -470,13 +418,23 @@ void AudioManager::CleanupAudioEntry(AudioEntry& entry)
 {
     if (entry.pSourceVoice)
     {
-        entry.pSourceVoice->Stop(0); // 停止してからDestroyVoice
-        entry.pSourceVoice->FlushSourceBuffers(); // バッファもクリア
+        entry.pSourceVoice->Stop(0);
+        entry.pSourceVoice->FlushSourceBuffers();
         entry.pSourceVoice->DestroyVoice();
-        //entry.pSourceVoice.Reset(); // ComPtrなのでRelease()ではなくReset()
+        entry.pSourceVoice = nullptr;
     }
+
+    if (entry.pWfx)
+    {
+        CoTaskMemFree(entry.pWfx);
+        entry.pWfx = nullptr;
+        entry.wfxSize = 0;
+    }
+
     entry.audioData.clear();
+    entry.audioData.shrink_to_fit();
 }
+
 
 // なんかいずれ使えるらしいけどまだ理解できない・
 void VoiceCallback::OnBufferEnd(void* pBufferContext)

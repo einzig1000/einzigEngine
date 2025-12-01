@@ -26,6 +26,8 @@ public:
 	void DrawAllLine();
 	void AddParticleDrawList(RenderData_Particle* renderData);
 	void DrawAllParticle();
+	void AddBlockDrawList(RenderData_Block* renderData);
+	void DrawAllBlock();
 
 
 	void AddSphere(Vector3 pos, Vector3 radius, uint32_t color);
@@ -46,6 +48,7 @@ private:
 	std::vector<RenderData_Sprite*> spriteDrawList_{};
 	std::vector<RenderData_Line*> lineDrawList_{};
 	std::vector<RenderData_Particle*> particleDrawList_{};
+	std::vector<RenderData_Block*> blockDrawList_{};
 
 	void InitializeResource_Light();
 	void InitializeResource_LightPerObject();
