@@ -163,9 +163,6 @@
     <Filter Include="application\GameManeger\Itemslot">
       <UniqueIdentifier>{ecf68cbe-9dbb-430c-a41d-ee450f3cf38a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\DrawSystem\ParticleSystem">
-      <UniqueIdentifier>{9c1f0a59-15b9-4f5c-906c-bb2f51c1fc67}</UniqueIdentifier>
-    </Filter>
     <Filter Include="engine\Facade">
       <UniqueIdentifier>{24c1e14d-3c15-48b9-9b53-6d5405a3ce02}</UniqueIdentifier>
     </Filter>
@@ -176,27 +173,6 @@
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="externals\imgui\imgui.cpp">
-      <Filter>engine\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="externals\imgui\imgui_demo.cpp">
-      <Filter>engine\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="externals\imgui\imgui_draw.cpp">
-      <Filter>engine\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="externals\imgui\imgui_impl_dx12.cpp">
-      <Filter>engine\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="externals\imgui\imgui_impl_win32.cpp">
-      <Filter>engine\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="externals\imgui\imgui_tables.cpp">
-      <Filter>engine\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="externals\imgui\imgui_widgets.cpp">
-      <Filter>engine\imgui</Filter>
     </ClCompile>
     <ClCompile Include="src\engine\DirectX\CommandContextManager.cpp">
       <Filter>engine\DirectXManager\CommandContextManager</Filter>
@@ -306,9 +282,6 @@
     <ClCompile Include="src\application\PerlinNoise.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="src\application\ResourceLoder\ResourceID.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="src\application\Block\Block.cpp">
       <Filter>application\GameManeger\Block</Filter>
     </ClCompile>
@@ -327,17 +300,17 @@
     <ClCompile Include="src\application\Itemslot.cpp">
       <Filter>application\GameManeger\Itemslot</Filter>
     </ClCompile>
-    <ClCompile Include="ParticleManager.cpp">
-      <Filter>engine\DrawSystem\ParticleSystem</Filter>
-    </ClCompile>
-    <ClCompile Include="src\engine\DrawSystem\MinecraftMap\DrawMinecraftMap.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\Block\BlockDurability.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="src\engine\Engine.cpp">
       <Filter>engine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\ImGuiManager\ImGuiManager.cpp">
+      <Filter>engine\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\Block\BlockDurability.cpp">
+      <Filter>application\GameManeger\Block</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\ResourceLoder\ResourceID.cpp">
+      <Filter>application</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -473,9 +446,6 @@
     <ClInclude Include="src\application\PerlinNoise.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="src\application\ResourceLoder\ResourceID.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="src\application\Block\Block.h">
       <Filter>application\GameManeger\Block</Filter>
     </ClInclude>
@@ -494,20 +464,20 @@
     <ClInclude Include="src\application\Itemslot.h">
       <Filter>application\GameManeger\Itemslot</Filter>
     </ClInclude>
-    <ClInclude Include="ParticleManager.h">
-      <Filter>engine\DrawSystem\ParticleSystem</Filter>
-    </ClInclude>
-    <ClInclude Include="src\engine\DrawSystem\MinecraftMap\DrawMinecraftMap.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\ResourceLoder\ResourceName.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\Block\BlockDurability.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="src\engine\Engine.h">
       <Filter>engine</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\ImGuiManager\ImGuiManager.h">
+      <Filter>engine\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\Block\BlockDurability.h">
+      <Filter>application\GameManeger\Block</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\ResourceLoder\ResourceID.h">
+      <Filter>application</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\ResourceLoder\ResourceName.h">
+      <Filter>application</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

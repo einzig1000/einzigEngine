@@ -13,6 +13,7 @@
 #include "DrawSystem/RenderData/RenderData.h"
 #include "DrawSystem/DrawSystem.h"
 #include "Camera/CameraManager.h"
+#include "imGuiManager/ImGuiManager.h"
 
 #include <DirectXMath.h>
 #include <filesystem>
@@ -35,47 +36,56 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 	// 例外ハンドラの設定
 	SetUnhandledExceptionFilter(ExportDump);
 
-	if (!windowManager)
+	if (!windowManager_)
 	{
-		windowManager = new  WindowManager(width, height, title);
+		windowManager_ = new  WindowManager(width, height, title);
 	}
-	if (!dxManager)
+	if (!dxManager_)
 	{
-		dxManager = new DirectXManager(windowManager->GetHwnd());
+		dxManager_ = new DirectXManager(windowManager_->GetHwnd());
 	}
-	if (!drawSystem)
+	if (!drawSystem_)
 	{
-		drawSystem = new DrawSystem(dxManager);
+		drawSystem_ = new DrawSystem(dxManager_);
 	}
-	if (!cameraManager)
+	if (!cameraManager_)
 	{
-		cameraManager = new CameraManager();
+		cameraManager_ = new CameraManager();
 	}
 	if (!inputManager_)
 	{
-		inputManager_ = new Input(windowManager->GetHwnd(), cameraManager);
+		inputManager_ = new Input(windowManager_->GetHwnd(), cameraManager_);
+	}
+	if (!imguiManager_)
+	{
+		imguiManager_ = new ImGuiManager();
+		imguiManager_->Initialize(dxManager_, windowManager_);
 	}
 
 	// imguiの初期化
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGui::StyleColorsDark();
-	ImGui_ImplWin32_Init(windowManager->GetHwnd());
-	uint32_t slot = dxManager->GetDescriptorHeapManager()->GetSrvManager()->Allocate();
-	ImGui_ImplDX12_Init(
-		dxManager->GetDevice(),
-		dxManager->GetSwapChain()->GetSwapChainDesc().BufferCount,
-		dxManager->GetSwapChain()->GetRtvDesc().Format,
-		dxManager->GetDescriptorHeapManager()->GetSrvManager()->GetSRVDescriptorHeap(),
-		dxManager->GetDescriptorHeapManager()->GetSrvManager()->GetCPUHandleAt(slot),                    // ImGuiフォントSRV用のCPUハンドル
-		dxManager->GetDescriptorHeapManager()->GetSrvManager()->GetGPUHandleAt(slot)                     // ImGuiフォントSRV用のGPUハンドル
-	);
+	//IMGUI_CHECKVERSION();
+	//ImGui::CreateContext();
+	//ImGui::StyleColorsDark();
+	//ImGui_ImplWin32_Init(windowManager_->GetHwnd());
+	//uint32_t slot = dxManager_->GetDescriptorHeapManager()->GetSrvManager()->Allocate();
+	//ImGui_ImplDX12_Init(
+	//	dxManager_->GetDevice(),
+	//	dxManager_->GetSwapChain()->GetSwapChainDesc().BufferCount,
+	//	dxManager_->GetSwapChain()->GetRtvDesc().Format,
+	//	dxManager_->GetDescriptorHeapManager()->GetSrvManager()->GetSRVDescriptorHeap(),
+	//	dxManager_->GetDescriptorHeapManager()->GetSrvManager()->GetCPUHandleAt(slot),                    // ImGuiフォントSRV用のCPUハンドル
+	//	dxManager_->GetDescriptorHeapManager()->GetSrvManager()->GetGPUHandleAt(slot)                     // ImGuiフォントSRV用のGPUハンドル
+	//);
 
-	inputManager_->GetMouseController()->wheelDelta = 0;
+	//inputManager_->GetMouseController()->wheelDelta = 0;
 
-	ImGui_ImplDX12_NewFrame();
-	ImGui_ImplWin32_NewFrame();
-	ImGui::NewFrame();
+	//ImGui_ImplDX12_NewFrame();
+	//ImGui_ImplWin32_NewFrame();
+	//ImGui::NewFrame();
+
+	dxManager_->BeginFrame();
+	ResourceID::reload();
+	dxManager_->EndFrame();
 }
 
 // メインループ用
@@ -101,28 +111,18 @@ bool Engine::ProcessMessage()
 }
 void Engine::BeginFrame()
 {
-	// ImGuiを更新
-//#ifdef DEBUG
-	if (isDebugInfo)
-	{
-		ImGui_ImplDX12_NewFrame();
-		ImGui_ImplWin32_NewFrame();
-		ImGui::NewFrame();
-		//ImGui::DockSpaceOverViewport
-	}
-//#endif // DEBUG
-
-
-
 	// DirectXを更新
-	dxManager->BeginFrame();//(ImGui::GetMainViewport());
+	dxManager_->BeginFrame();
+
+	// imguiを更新
+	imguiManager_->BeginFrame();
 
 	// カメラを更新	
 	UpdateCamera();
 
 	// 描画関数初期化
-	drawSystem->Update();
-	drawSystem->SetViewProjectionMatrix(cameraManager->GetCurrentViewProjectionMatrix());
+	drawSystem_->Update();
+	drawSystem_->SetViewProjectionMatrix(cameraManager_->GetCurrentViewProjectionMatrix());
 
 	// デバッグ情報更新
 	UpdateDebugInfo();
@@ -151,7 +151,7 @@ void Engine::UpdateTransforms()
 #pragma region 座標更新 & 描画範囲内判定
 
 	// オブジェクト更新
-	std::vector<Object3D> objects = dxManager->GetResourceManager()->GetModelManager()->GetModelList();
+	std::vector<Object3D> objects = dxManager_->GetResourceManager()->GetModelManager()->GetModelList();
 
 	for (auto& rd : modelList)
 	{
@@ -220,12 +220,13 @@ void Engine::UpdateTransforms()
 void Engine::UpdateParticles()
 {
 	// パーティクル更新
-	RenderData_Particle::UpdateAllParticles(cameraManager->GetCurrentViewProjectionMatrix());
+	RenderData_Particle::UpdateAllParticles(cameraManager_->GetCurrentViewProjectionMatrix());
+	RenderData_Block::UpdateAllBlock(cameraManager_->GetCurrentViewProjectionMatrix());
 }
 void Engine::UpdateCamera()
 {
 	// カメラの更新
-	cameraManager->Update();
+	cameraManager_->Update();
 
 	// 左シフト＋左クリックでカメラターゲットをオブジェクトに合わせる
 	if (Game::Input::Key::IsHeld(DIK_LSHIFT))
@@ -236,7 +237,7 @@ void Engine::UpdateCamera()
 			{
 				if (rd->isCollisionMouseRay == 0)
 				{
-					cameraManager->SetCenterTarget(rd->GetWorldPosition(), 0, EaseType::IN_BACK);
+					cameraManager_->SetCenterTarget(rd->GetWorldPosition(), 0, EaseType::IN_BACK);
 				}
 			}
 		}
@@ -259,28 +260,20 @@ void Engine::UpdateDebugInfo()
 
 	if (isDebugInfo)
 	{
-		cameraManager->Draw();
-
-		static float fpsSmooth = 60.0f;
-		float dt = dxManager->GetDeltaTime();
-		float fps = (dt > 0.0f) ? 1.0f / dt : 0.0f;
-		// 指数移動平均で平滑化（α=0.1）
-		fpsSmooth += (fps - fpsSmooth) * 0.1f;
+		cameraManager_->Draw();
 
 		ImGui::Begin("------debug info------");
+		ImGui::Text("ESC : Quit Application");
 		ImGui::Text("F1  : Hide Debug Info");
 		ImGui::Text("F3  : Toggle Camera Mode");
-		//ImGui::Text("F12 : Toggle Fullscreen");
-		ImGui::Text("DeltaTime: %.3f ms", dxManager->GetDeltaTime() * 1000.0f);
-		ImGui::Text("FPS: %.1f ", 1.0f / dxManager->GetDeltaTime());
+		ImGui::Text("F12 : Toggle Fullscreen");
+		ImGui::Text("DeltaTime: %.3f ms", dxManager_->GetFixFPS()->GetDeltaTime() * 1000.0f);
+		ImGui::Text("FPS: %.1f ", dxManager_->GetFixFPS()->GetAverageFPS());
 		ImGui::End();
 	}
 }
 void Engine::EndFrame()
 {
-	// ImGui描画
-	if (isDebugInfo)ImGui::Render();
-
 	// 座標更新
 	UpdateTransforms();
 
@@ -288,46 +281,48 @@ void Engine::EndFrame()
 	UpdateParticles();
 
 	// 描画実行
-	drawSystem->Draw();
+	drawSystem_->Draw();
+
+	// ImGui描画
+	imguiManager_->EndFrame();
+	imguiManager_->Draw();
 
 	// インプット系終了処理
 	inputManager_->EndFrame();
 
 	// DirectX終了処理
-	dxManager->EndFrame();
+	dxManager_->EndFrame();
 
 	// GPU同期
-	dxManager->GetSynchronizationManager()->WaitForGPU();
+	dxManager_->GetSynchronizationManager()->WaitForGPU();
 
 	// アプリケーション終了
 	if (Game::Input::Key::IsJustPressed(DIK_ESCAPE))
 	{
 		//Finalize();
-		windowManager->Quit();
+		windowManager_->Quit();
 	}
 }
 
 // 終了処理
 void Engine::Finalize()
 {
-	dxManager->GetSynchronizationManager()->WaitForGPU();
-
 	// ImGuiの終了処理
-	ImGui_ImplDX12_Shutdown();
-	ImGui_ImplWin32_Shutdown();
-	ImGui::DestroyContext();
+	imguiManager_->Finalize();
 
 	// 解放
-	delete windowManager;
-	windowManager = nullptr;
-	delete dxManager;
-	dxManager = nullptr;
-	delete drawSystem;
-	drawSystem = nullptr;
-	delete cameraManager;
-	cameraManager = nullptr;
+	delete windowManager_;
+	windowManager_ = nullptr;
+	delete dxManager_;
+	dxManager_ = nullptr;
+	delete drawSystem_;
+	drawSystem_ = nullptr;
+	delete cameraManager_;
+	cameraManager_ = nullptr;
 	delete inputManager_;
 	inputManager_ = nullptr;
+	delete imguiManager_;
+	imguiManager_ = nullptr;
 
 	// COMの終了処理
 	CoUninitialize();
@@ -336,149 +331,150 @@ void Engine::Finalize()
 // リソース読み込み
 uint32_t Engine::LoadTexture(const std::string& filePath)
 {
-	return dxManager->GetResourceManager()->GetTextureManager()->LoadTexture(filePath);
+	return dxManager_->GetResourceManager()->GetTextureManager()->LoadTexture(filePath);
 }
 
 uint32_t Engine::LoadModel(const std::string& directoryPath, const std::string& filename)
 {
-	return dxManager->GetResourceManager()->GetModelManager()->LoadModel(directoryPath, filename);
+	return dxManager_->GetResourceManager()->GetModelManager()->LoadModel(directoryPath, filename);
 }
 
 uint32_t Engine::LoadAudio(const std::string& filePath)
 {
-	return dxManager->GetResourceManager()->GetAudioManager()->LoadAudio(filePath);
+	return dxManager_->GetResourceManager()->GetAudioManager()->LoadAudio(filePath);
 }
 
 Object3D* Engine::GetModelData(uint32_t modelNumber)
 {
-	return dxManager->GetResourceManager()->GetModelManager()->GetModelData(modelNumber);
+	return dxManager_->GetResourceManager()->GetModelManager()->GetModelData(modelNumber);
 }
 
 TextureData* Engine::GetTextureData(uint32_t textureNumber)
 {
-	return dxManager->GetResourceManager()->GetTextureManager()->GetTextureData(textureNumber);
+	return dxManager_->GetResourceManager()->GetTextureManager()->GetTextureData(textureNumber);
 }
 
 size_t Engine::GetTextureCount()
 {
-	return dxManager->GetResourceManager()->GetTextureManager()->GetTextureCount();
+	return dxManager_->GetResourceManager()->GetTextureManager()->GetTextureCount();
 }
 
 size_t Engine::GetModelCount()
 {
-	return dxManager->GetResourceManager()->GetModelManager()->GetModelCount();
+	return dxManager_->GetResourceManager()->GetModelManager()->GetModelCount();
 }
 
 // 描画
 void Engine::AddModelDrawList(RenderData_Model* renderData)
 {
-	drawSystem->AddModelDrawList(renderData);
+	drawSystem_->AddModelDrawList(renderData);
 }
 
 void Engine::AddTriangleDrawList(RenderData_Triangle* renderData)
 {
-	drawSystem->AddTriangleDrawList(renderData);
+	drawSystem_->AddTriangleDrawList(renderData);
 }
 
 void Engine::AddRectDrawList(RenderData_Rect* renderData)
 {
-	drawSystem->AddRectDrawList(renderData);
+	drawSystem_->AddRectDrawList(renderData);
 }
 
 void Engine::AddSpriteDrawList(RenderData_Sprite* renderData)
 {
-	drawSystem->AddSpriteDrawList(renderData);
+	drawSystem_->AddSpriteDrawList(renderData);
 }
 
 void Engine::AddLineDrawList(RenderData_Line* renderData)
 {
-	drawSystem->AddLineDrawList(renderData);
+	drawSystem_->AddLineDrawList(renderData);
 }
 
 void Engine::AddParticleDrawList(RenderData_Particle* renderData)
 {
-	drawSystem->AddParticleDrawList(renderData);
+	drawSystem_->AddParticleDrawList(renderData);
 }
 
-
-void Engine::DrawMinecraftMap(RenderData_MinecraftMap& renderData)
+void Engine::AddBlockDrawList(RenderData_Block* renderData)
 {
-	//drawSystem->DrawMap(renderData);
+	drawSystem_->AddBlockDrawList(renderData);
 }
+
+
 
 
 void Engine::AddSphere(Vector3 pos, Vector3 radius, uint32_t color)
 {
-	if (isDebugInfo)drawSystem->AddSphere(pos, radius, color);
+	if (isDebugInfo)drawSystem_->AddSphere(pos, radius, color);
 }
 
 void Engine::AddAABB(AABB aabb, uint32_t color)
 {
-	if (isDebugInfo)drawSystem->AddAABB(aabb, color);
+	if (isDebugInfo)drawSystem_->AddAABB(aabb, color);
 }
 
 void Engine::AddLine(Vector3 start, Vector3 end, uint32_t color)
 {
-	if (isDebugInfo)drawSystem->AddLine(start, end, color);
+	if (isDebugInfo)drawSystem_->AddLine(start, end, color);
 }
 
 bool Engine::InFrustum(const AABB& aabb)
 {
-	return cameraManager->InCamera(aabb);
+	return cameraManager_->InCamera(aabb);
 }
 
 // 音
 void Engine::PlayAudio(const uint32_t& audioId, bool loop)
 {
-	dxManager->GetResourceManager()->GetAudioManager()->PlayAudio(audioId, loop);
+	dxManager_->GetResourceManager()->GetAudioManager()->PlayAudio(audioId, loop);
 }
 
 void Engine::StopAudio(const uint32_t& audioId)
 {
-	dxManager->GetResourceManager()->GetAudioManager()->StopAudio(audioId);
+	dxManager_->GetResourceManager()->GetAudioManager()->StopAudio(audioId);
 }
 
 void Engine::SetAudioVolume(const uint32_t& audioId, float volume)
 {
-	dxManager->GetResourceManager()->GetAudioManager()->SetVolume(audioId, volume);
+	dxManager_->GetResourceManager()->GetAudioManager()->SetVolume(audioId, volume);
 }
 
 void Engine::SetMasterVolume(float volume)
 {
-	dxManager->GetResourceManager()->GetAudioManager()->SetMasterVolume(volume);
+	dxManager_->GetResourceManager()->GetAudioManager()->SetMasterVolume(volume);
 }
 
 float Engine::GetVolume(const uint32_t& audioId)
 {
-	return dxManager->GetResourceManager()->GetAudioManager()->GetVolume(audioId);
+	return dxManager_->GetResourceManager()->GetAudioManager()->GetVolume(audioId);
 }
 
 float Engine::GetMasterVolume()
 {
-	return dxManager->GetResourceManager()->GetAudioManager()->GetMasterVolume();
+	return dxManager_->GetResourceManager()->GetAudioManager()->GetMasterVolume();
 }
 
 bool Engine::IsAudioPlaying(const uint32_t& audioId)
 {
-	return dxManager->GetResourceManager()->GetAudioManager()->IsAudioPlaying(audioId);
+	return dxManager_->GetResourceManager()->GetAudioManager()->IsAudioPlaying(audioId);
 }
 
 // ライト
 void Engine::SetLightDirection(const Vector3 direction)
 {
-	drawSystem->SetLightDirection(direction);
+	drawSystem_->SetLightDirection(direction);
 }
 void Engine::SetLightColor(const Vector4 color)
 {
-	drawSystem->SetLightColor(color);
+	drawSystem_->SetLightColor(color);
 }
 void Engine::SetLightIntensity(float intensity)
 {
-	drawSystem->SetLightIntensity(intensity);
+	drawSystem_->SetLightIntensity(intensity);
 }
 void Engine::ToggleLightMode(const LightMode mode)
 {
-	drawSystem->ToggleLightMode(mode);
+	drawSystem_->ToggleLightMode(mode);
 }
 
 // 入力
@@ -556,73 +552,73 @@ int Engine::TestTapLong(int n, BYTE key)
 // カメラ
 Vector3 Engine::GetCameraTranslate() const
 {
-	return cameraManager->GetCurrentTranslate();
+	return cameraManager_->GetCurrentTranslate();
 }
 
 void Engine::MoveCameraCenter(Vector3 target, int spendFrame, EaseType easetype)
 {
-	cameraManager->SetCenterTarget(target, spendFrame, easetype);
+	cameraManager_->SetCenterTarget(target, spendFrame, easetype);
 }
 
 void Engine::MoveCameraRotate(Vector3 target, int spendFrame, EaseType easetype)
 {
-	cameraManager->SetRotateTarget(target, spendFrame, easetype);
+	cameraManager_->SetRotateTarget(target, spendFrame, easetype);
 }
 
 void Engine::MoveCameraDistance(float target, int spendFrame, EaseType easetype)
 {
-	cameraManager->SetDistanceTarget(target, spendFrame, easetype);
+	cameraManager_->SetDistanceTarget(target, spendFrame, easetype);
 }
 
 void Engine::StartCameraShake(float intensity, float duration, float frequency)
 {
-	cameraManager->StartShake(intensity, duration, frequency);
+	cameraManager_->StartShake(intensity, duration, frequency);
 }
 
 bool Engine::IsCameraShaking()
 {
-	return cameraManager->IsShaking();
+	return cameraManager_->IsShaking();
 }
 
 void Engine::ToggleCameraMode()
 {
-	cameraManager->ToggleCameraMode();
+	cameraManager_->ToggleCameraMode();
 }
 
 void Engine::ToggleCurrentOrbitMode()
 {
-	cameraManager->ToggleCurrentOrbitMode();
+	cameraManager_->ToggleCurrentOrbitMode();
 }
 
 void Engine::StopCameraShake()
 {
-	cameraManager->StopShake();
+	cameraManager_->StopShake();
 }
 
 // ウィンドウ操作
 void Engine::ToggleFullscreen()
 {
-	windowManager->ToggleFullscreen();
+	windowManager_->ToggleFullscreen();
 
 	// DirectXのリサイズ処理
-	dxManager->Resize();
+	dxManager_->Resize();
 
 	// 描画システムのリサイズ処理
-	//drawSystem->Resize();
+	//drawSystem_->Resize();
 
 	// カメラのアスペクト比を更新
-	cameraManager->Resize();
+	cameraManager_->Resize();
 }
 
 // CreateLocalAABBでつくったAABBに座標を適応させる（当たり判定の毎フレーム更新用）
 std::vector<AABB>  Engine::CreateAABB(RenderData_Model* data)
 {
-	if (data->model < 0 || data->model >= (int)dxManager->GetResourceManager()->GetModelManager()->GetModelCount())
+	if (data->model < 0 || data->model >= (int)dxManager_->GetResourceManager()->GetModelManager()->GetModelCount())
 	{
 		return {};
 	}
 	Matrix4x4 worldMatrix = data->GetWorldMatrix();
-	Object3D& obj = dxManager->GetResourceManager()->GetModelManager()->GetModelList()[data->model];
+	Object3D& obj = dxManager_->GetResourceManager()->GetModelManager()->GetModelList()[data->model];
 	std::vector<AABB> result;
 
 	for (const auto& localAABB : obj.aabb)
@@ -659,7 +655,7 @@ std::vector<AABB>  Engine::CreateAABB(RenderData_Model* data)
 
 void Engine::toggleWireframeMode()
 {
-	drawSystem->toggleWireframeMode();
+	drawSystem_->toggleWireframeMode();
 }
 
 
@@ -685,7 +681,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> Engine::CreateBufferResource(size_t sizeI
 	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
 	// リソースを作成
-	HRESULT hr = dxManager->GetDevice()->CreateCommittedResource(
+	HRESULT hr = dxManager_->GetDevice()->CreateCommittedResource(
 		&heapProperties,        // ヒープのプロパティ
 		D3D12_HEAP_FLAG_NONE,   // ヒープフラグ
 		&resourceDesc,          // リソースの記述子
@@ -710,5 +706,5 @@ Microsoft::WRL::ComPtr<ID3D12Resource> Engine::CreateConstantBufferResource(size
 
 const std::vector<Object3D> Engine::GetAllObject3D()
 {
-	return dxManager->GetResourceManager()->GetModelManager()->GetModelList();
+	return dxManager_->GetResourceManager()->GetModelManager()->GetModelList();
 }

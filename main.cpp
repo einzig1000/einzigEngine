@@ -3,14 +3,15 @@
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
+
+#ifdef _DEBUG
 	D3DResourceLeakChecker checker;
+#endif
+
 	// ウィンドウ、DrectX初期化
 	Engine::Instance().Initialize(WIDTH, HEIGHT, L"LE2A_17_ヨコヤマ_タダノブ");
 
-	Engine::Instance().BeginFrame();
-	ResourceID::reload();
 	GameManager* gm = new GameManager();
-	Engine::Instance().EndFrame();
 
 	while (Engine::Instance().ProcessMessage())
 	{

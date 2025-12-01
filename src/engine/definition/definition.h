@@ -25,7 +25,6 @@
 #define WIDTH 1280
 #define HEIGHT 720
 #define eps 1e-6f
-// 40
 #define MAX_BLOCK_X 40
 #define MAX_BLOCK_Z 40
 #define MAX_BLOCK_Y 10
@@ -38,18 +37,19 @@
 
 enum class BlockID
 {
-    None,
+    Air,
     Stone,	// 石
     Glass,	// ガラス
     Dirt,	// 草なし土
-    lawn,	// 草付き土
-    wood,	// 木材
-    leaf,	// 葉っぱ
+    Lawn,	// 草付き土
+    Wood,	// 木材
+    Leaf,	// 葉っぱ
 
 
 
     MAX,
 };
+std::string BlockIDToString(BlockID id);
 
 
 struct Blockinfo

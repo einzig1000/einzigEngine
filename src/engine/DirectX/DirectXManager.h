@@ -31,7 +31,7 @@ public:
 
 	ResourceManager* GetResourceManager() const { return resourceManager_; }
 
-	float GetDeltaTime() const { return fixFPS_->GetDeltaTime(); }
+	FixFPS* GetFixFPS() const { return fixFPS_; }
 
     void BeginFrame();
     void EndFrame();

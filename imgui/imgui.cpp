@@ -12336,7 +12336,7 @@ void ImGui::SetNavCursorVisible(bool visible)
 }
 
 // (was called NavRestoreHighlightAfterMove() before 1.91.4)
-void ImGui::SetNavCursorVisibleAfterMove()
+void ImGui::SetNavCursorVisibLeafterMove()
 {
     ImGuiContext& g = *GImGui;
     if (g.IO.ConfigNavCursorVisibleAuto)
@@ -13183,7 +13183,7 @@ void ImGui::NavInitRequestApplyResult()
     if (result->SelectionUserData != ImGuiSelectionUserData_Invalid)
         g.NavLastValidSelectionUserData = result->SelectionUserData;
     if (g.NavInitRequestFromMove)
-        SetNavCursorVisibleAfterMove();
+        SetNavCursorVisibLeafterMove();
 }
 
 // Bias scoring rect ahead of scoring + update preferred pos (if missing) using source position
@@ -13379,7 +13379,7 @@ void ImGui::NavMoveRequestApplyResult()
         if (g.NavMoveFlags & ImGuiNavMoveFlags_IsTabbing)
             g.NavMoveFlags |= ImGuiNavMoveFlags_NoSetNavCursorVisible;
         if (g.NavId != 0 && (g.NavMoveFlags & ImGuiNavMoveFlags_NoSetNavCursorVisible) == 0)
-            SetNavCursorVisibleAfterMove();
+            SetNavCursorVisibLeafterMove();
         NavClearPreferredPosForAxis(axis); // On a failed move, clear preferred pos for this axis.
         IMGUI_DEBUG_LOG_NAV("[nav] NavMoveSubmitted but not led to a result!\n");
         return;
@@ -13466,7 +13466,7 @@ void ImGui::NavMoveRequestApplyResult()
 
     // Make nav cursor visible
     if ((g.NavMoveFlags & ImGuiNavMoveFlags_NoSetNavCursorVisible) == 0)
-        SetNavCursorVisibleAfterMove();
+        SetNavCursorVisibLeafterMove();
 }
 
 // Process Escape/NavCancel input (to close a popup, get back to parent, clear focus)
@@ -13490,7 +13490,7 @@ static void ImGui::NavUpdateCancelRequest()
     {
         // Leave the "menu" layer
         NavRestoreLayer(ImGuiNavLayer_Main);
-        SetNavCursorVisibleAfterMove();
+        SetNavCursorVisibLeafterMove();
     }
     else if (g.NavWindow && g.NavWindow != g.NavWindow->RootWindow && !(g.NavWindow->RootWindowForNav->Flags & ImGuiWindowFlags_Popup) && g.NavWindow->RootWindowForNav->ParentWindow)
     {
@@ -13500,7 +13500,7 @@ static void ImGui::NavUpdateCancelRequest()
         IM_ASSERT(child_window->ChildId != 0);
         FocusWindow(parent_window);
         SetNavID(child_window->ChildId, ImGuiNavLayer_Main, 0, WindowRectAbsToRel(parent_window, child_window->Rect()));
-        SetNavCursorVisibleAfterMove();
+        SetNavCursorVisibLeafterMove();
     }
     else if (g.OpenPopupStack.Size > 0 && g.OpenPopupStack.back().Window != NULL && !(g.OpenPopupStack.back().Window->Flags & ImGuiWindowFlags_Modal))
     {
@@ -13718,7 +13718,7 @@ static void ImGui::NavUpdateWindowingApplyFocus(ImGuiWindow* apply_focus_window)
     if (g.NavWindow == NULL || apply_focus_window != g.NavWindow->RootWindow)
     {
         ClearActiveID();
-        SetNavCursorVisibleAfterMove();
+        SetNavCursorVisibLeafterMove();
         ClosePopupsOverWindow(apply_focus_window, false);
         FocusWindow(apply_focus_window, ImGuiFocusRequestFlags_RestoreFocusedChild);
         apply_focus_window = g.NavWindow;
@@ -13919,7 +13919,7 @@ static void ImGui::NavUpdateWindowing()
             if (new_nav_layer == ImGuiNavLayer_Menu)
                 g.NavWindow->NavLastIds[new_nav_layer] = 0;
             NavRestoreLayer(new_nav_layer);
-            SetNavCursorVisibleAfterMove();
+            SetNavCursorVisibLeafterMove();
         }
     }
 }

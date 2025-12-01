@@ -64,15 +64,27 @@ public:
 
 private:
     // オーディオデータとソースボイスを保持する構造体
+    //struct AudioEntry
+    //{
+    //    std::vector<BYTE> audioData;
+    //    UINT32 audioBytes;
+    //    WAVEFORMATEX wfx;
+    //    //Microsoft::WRL::ComPtr<IXAudio2SourceVoice> pSourceVoice;
+    //    IXAudio2SourceVoice* pSourceVoice;
+    //    XAUDIO2_BUFFER xAudioBuffer;
+    //};
     struct AudioEntry
     {
         std::vector<BYTE> audioData;
-        UINT32 audioBytes;
-        WAVEFORMATEX wfx;
-        //Microsoft::WRL::ComPtr<IXAudio2SourceVoice> pSourceVoice;
-        IXAudio2SourceVoice* pSourceVoice;
-        XAUDIO2_BUFFER xAudioBuffer;
+        UINT32 audioBytes = 0;
+
+        WAVEFORMATEX* pWfx = nullptr;
+        UINT32 wfxSize = 0;
+
+        IXAudio2SourceVoice* pSourceVoice = nullptr;
+        XAUDIO2_BUFFER xAudioBuffer = {};
     };
+
     std::map<uint32_t, AudioEntry> loadedAudio;
 
     // 初期化

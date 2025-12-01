@@ -13,7 +13,7 @@ void ResourceID::reload()
 	blockTextureIDs_.resize(static_cast<size_t>(BlockID::MAX));
 
 	int tmp = -1;
-	blockTextureIDs_[size_t(BlockID::None)] = tmp;
+	blockTextureIDs_[size_t(BlockID::Air)] = tmp;
 
 	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/stone.png");
 	blockTextureIDs_[size_t(BlockID::Stone)] = tmp;
@@ -24,14 +24,14 @@ void ResourceID::reload()
 	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/dirt.png");
 	blockTextureIDs_[size_t(BlockID::Dirt)] = tmp;
 
-	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/lawn.png");
-	blockTextureIDs_[size_t(BlockID::lawn)] = tmp;
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/Lawn.png");
+	blockTextureIDs_[size_t(BlockID::Lawn)] = tmp;
 
-	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/wood.png");
-	blockTextureIDs_[size_t(BlockID::wood)] = tmp;
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/Wood.png");
+	blockTextureIDs_[size_t(BlockID::Wood)] = tmp;
 
-	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/leaf.png");
-	blockTextureIDs_[size_t(BlockID::leaf)] = tmp;
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/Leaf.png");
+	blockTextureIDs_[size_t(BlockID::Leaf)] = tmp;
 
 
 #pragma endregion

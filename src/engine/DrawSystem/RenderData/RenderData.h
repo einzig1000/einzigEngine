@@ -311,12 +311,12 @@ public:
 
     /// オプション
     bool isBillboard = true;    // ビルボードかどうか
+	BlendMode blendMode = BlendMode::kBlendModeAdd;
 
     /// SRT
     ParticleSRT targetScale;
     ParticleSRT targetRotate;
     ParticleSRT targetTranslate;
-    TransformationMatrix transformationMatrix;
 
     /// マテリアル
     uint32_t color = 0xFFFFFFFF;
@@ -372,6 +372,78 @@ private:
     // ロードした結果
     bool loadResult = false;
 
-    static std::vector<RenderData_Particle*> renderParticles3;
+    static std::vector<RenderData_Particle*> renderParticles;
 };
 
+class RenderData_Block
+{
+public:
+
+    // 新しいブロックを作るときはAddNewBlock()
+	// ブロックを壊すときはRemoveBlockFromList()
+
+    RenderData_Block(BlockID id);
+    ~RenderData_Block();
+    static void UpdateAllBlock(const Matrix4x4& viewProjectionMatrix);
+    void Update(const Matrix4x4& viewProjectionMatrix);
+
+	//// リストに新たなブロックを追加
+	void AddNewBlock(Vector3 position, Vector3int index);
+	//// リストからブロックを削除
+	void RemoveBlock(Vector3int index);
+
+    // 非アクティブなブロックの削除
+	void RemoveInactiveBlocks();
+
+    // ID
+    BlockID name;
+
+    void Draw();
+    void DrawImGui();
+
+
+    /// リソース
+    uint32_t model = 0;
+    uint32_t texture = 0;
+
+    /// オプション
+    BlendMode blendMode = BlendMode::kBlendModeAdd;
+
+    /// マテリアル
+    uint32_t color = 0xFFFFFFFF;
+    Matrix4x4 uvTransform;
+
+    /// 現在存在するブロック数
+    uint32_t currentSum = 0;
+
+    uint32_t capacity = 1024;
+    Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource_;
+    TransformationMatrix* instancingData_ = nullptr;
+    SRVAllocation srvAllocation_;
+
+    std::vector<VectorDynamics> scale_;
+    std::vector<VectorDynamics> rotate_;
+    std::vector<VectorDynamics> translate_;
+	std::vector<Vector3int> indexes_;
+	std::vector<uint32_t> colors_;
+    std::vector<bool> isActive_;
+
+private:
+
+    int ID = 0;
+
+
+    //// ワールド行列・WVP行列の更新
+    void UpdateWorldMatrix();
+    void UpdateWVPMatrix(const Matrix4x4& viewProjectionMatrix);
+    //// 各パーティクルの変換行列更新
+    void UpdateTransforms();
+
+    //// 死亡判定
+    void CheckLife();
+
+    // ロードした結果
+    bool loadResult = false;
+
+	static std::vector<RenderData_Block*> renderBlocks;
+};

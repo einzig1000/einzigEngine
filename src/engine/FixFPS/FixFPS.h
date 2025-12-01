@@ -7,12 +7,16 @@ public:
 	FixFPS();
 	void UpdateFixFPS();
 	float GetDeltaTime() const { return deltaTime_; }
-	float GetFPS() const { return (deltaTime_ > 0.0f) ? (1.0f / deltaTime_) : 0.0f; }
+	float GetRealFPS() const { return realTimeFPS_; }
+	float GetAverageFPS() const { return averageFPS_; }
 
 private:
 	std::chrono::steady_clock::time_point previousTime_;
-	float deltaTime_ = 0.0f;
-	const double targetFPS_ = 60;
+	float targetFPS_;
 
+	float deltaTime_;
+
+	float averageFPS_;
+	float realTimeFPS_;
 
 };

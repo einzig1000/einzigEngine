@@ -12,7 +12,8 @@ std::vector<RenderData_Sprite*> RenderData_Sprite::renderSprites;
 std::vector<RenderData_Triangle*> RenderData_Triangle::renderTriangles;
 std::vector<RenderData_Rect*> RenderData_Rect::renderRects;
 std::vector<RenderData_Line*> RenderData_Line::renderLines;
-std::vector<RenderData_Particle*> RenderData_Particle::renderParticles3;
+std::vector<RenderData_Particle*> RenderData_Particle::renderParticles;
+std::vector<RenderData_Block*> RenderData_Block::renderBlocks;
 
 #pragma region model
 
@@ -937,8 +938,8 @@ void RenderData_Line::DrawImGui()
 
 RenderData_Particle::RenderData_Particle()
 {
-	renderParticles3.push_back(this);
-	this->ID = int(renderParticles3.size());
+	renderParticles.push_back(this);
+	this->ID = int(renderParticles.size());
 
 	instancingResource_ =
 		Engine::Instance().CreateBufferResource(
@@ -956,6 +957,10 @@ RenderData_Particle::RenderData_Particle()
 	    capacity,
 	    sizeof(TransformationMatrix));
 
+	targetScale.value = Vector3{ 1.0f,1.0f,1.0f };
+	targetRotate.value = Vector3{ 0.0f,0.0f,0.0f };
+	targetTranslate.value = Vector3{ 0.0f,0.0f,0.0f };
+
 	scale_.resize(capacity);
 	rotate_.resize(capacity);
 	translate_.resize(capacity);
@@ -967,9 +972,9 @@ RenderData_Particle::~RenderData_Particle()
 
 void RenderData_Particle::UpdateAllParticles(const Matrix4x4& viewProjectionMatrix)
 {
-	for (size_t ID = 0; ID < renderParticles3.size(); ++ID)
+	for (size_t ID = 0; ID < renderParticles.size(); ++ID)
 	{
-		renderParticles3[ID]->Update(viewProjectionMatrix);
+		renderParticles[ID]->Update(viewProjectionMatrix);
 	}
 }
 
@@ -1024,7 +1029,6 @@ void RenderData_Particle::SpawnParticle()
 		currentSum += ableParticles;
 	}
 }
-
 void RenderData_Particle::SetSpawnPosition(uint32_t index)
 {
 	switch (emitterShape)
@@ -1867,6 +1871,291 @@ void RenderData_Rect::DrawImGui()
 		}
 		ImGui::TreePop();
 	}
+	ImGui::End();
+}
+
+#pragma endregion
+
+#pragma region block
+
+RenderData_Block::RenderData_Block(BlockID id)
+{
+	renderBlocks.push_back(this);
+	this->ID = int(renderBlocks.size());
+
+	this->instancingResource_ =
+		Engine::Instance().CreateBufferResource(
+			sizeof(TransformationMatrix) * this->capacity
+		);
+	this->instancingResource_->Map(0, nullptr, reinterpret_cast<void**>(&this->instancingData_));
+	for (size_t i = 0; i < this->capacity; ++i)
+	{
+		this->instancingData_[i].World = Matrix4x4::MakeIdentity4x4();
+		this->instancingData_[i].WVP = Matrix4x4::MakeIdentity4x4();
+	}
+
+	this->srvAllocation_ = Engine::Instance().GetDirectXManager()->GetDescriptorHeapManager()->GetSrvManager()->CreateSRVforStructuredBuffer(
+		this->instancingResource_.Get(),
+		this->capacity,
+		sizeof(TransformationMatrix));
+
+
+	this->scale_.resize(capacity);
+	this->rotate_.resize(capacity);
+	this->translate_.resize(capacity);
+	this->indexes_.resize(capacity);
+	this->colors_.resize(capacity);
+	this->isActive_.resize(capacity, false);
+
+	name = id;
+}
+RenderData_Block::~RenderData_Block()
+{}
+
+void RenderData_Block::UpdateAllBlock(const Matrix4x4 & viewProjectionMatrix)
+{
+	for (size_t ID = 0; ID < renderBlocks.size(); ++ID)
+	{
+		renderBlocks[ID]->Update(viewProjectionMatrix);
+	}
+}
+
+void RenderData_Block::Update(const Matrix4x4 & viewProjectionMatrix)
+{
+	// 非アクティブなブロックをリストから削除
+	//RemoveInactiveBlocks();
+
+	// SRTの更新
+	//UpdateTransforms();
+
+	// ワールド行列・WVP行列の更新
+	UpdateWVPMatrix(viewProjectionMatrix);
+}
+
+// ブロックの追加
+void RenderData_Block::AddNewBlock(Vector3 position, Vector3int index)
+{
+	Log("BlockID:%s", BlockIDToString(name));
+	Log("index:%d,%d,%d", index.x, index.y, index.z);
+	Log("currentSum:%d", currentSum);
+	// 空いているインデックスを探す
+	if (currentSum >= capacity)
+	{
+		Log("キャパオーバー");
+		return;
+	}
+	if (!isActive_[currentSum])
+	{
+
+		// 拡縮量の初期化
+		scale_[currentSum].value = Vector3(1.0f, 1.0f, 1.0f);
+		scale_[currentSum].velocity = Vector3(0.0f, 0.0f, 0.0f);
+		scale_[currentSum].acceleration = Vector3(0.0f, 0.0f, 0.0f);
+		Log("scale 成功");
+
+		// 回転量の初期化
+		rotate_[currentSum].value = Vector3(0.0f, 0.0f, 0.0f);
+		rotate_[currentSum].velocity = Vector3(0.0f, 0.0f, 0.0f);
+		rotate_[currentSum].acceleration = Vector3(0.0f, 0.0f, 0.0f);
+		Log("rotate_ 成功");
+
+		// 座標の初期化
+		translate_[currentSum].value = position;
+		translate_[currentSum].velocity = Vector3(0.0f, 0.0f, 0.0f);
+		translate_[currentSum].acceleration = Vector3(0.0f, 0.0f, 0.0f);
+		Log("translate_ 成功");
+
+		// ワールド行列の更新
+		UpdateWorldMatrix();
+		Log("UpdateWorldMatrix 成功");
+
+		// インデックスの保存
+		indexes_[currentSum] = index;
+		Log("indexes_ 成功");
+
+		// アクティブ化
+		isActive_[currentSum] = true;
+		Log("isActive_ 成功");
+
+
+		currentSum++;
+		Log("currentSum++ 成功");
+	}
+}
+
+void RenderData_Block::RemoveBlock(Vector3int index)
+{
+	for (size_t i = 0; i < capacity; ++i)
+	{
+		if (isActive_[i] && indexes_[i] == index)
+		{
+			isActive_[i] = false;
+			return;
+		}
+	}
+}
+
+// ワールド行列の更新
+void RenderData_Block::UpdateWorldMatrix()
+{
+	for (size_t i = 0; i < currentSum; ++i)
+	{
+		if (isActive_[i])
+		{
+			instancingData_[i].World
+				= Matrix4x4::MakeAffineMatrix(
+					scale_[i].value,
+					rotate_[i].value,
+					translate_[i].value
+				);
+		}
+	}
+}
+
+// WVP行列の更新
+void RenderData_Block::UpdateWVPMatrix(const Matrix4x4 & viewProjectionMatrix)
+{
+	for (size_t i = 0; i < currentSum; ++i)
+	{
+		if (isActive_[i])
+		{
+			instancingData_[i].WVP =
+				instancingData_[i].World * viewProjectionMatrix;
+		}
+	}
+}
+
+// SRTの更新
+void RenderData_Block::UpdateTransforms()
+{
+	for (size_t i = 0; i < currentSum; ++i)
+	{
+		// スケールの更新
+		scale_[i].velocity += scale_[i].acceleration;
+		scale_[i].value += scale_[i].velocity;
+		// 回転の更新
+		rotate_[i].velocity += rotate_[i].acceleration;
+		rotate_[i].value += rotate_[i].velocity;
+		// 位置の更新
+		translate_[i].velocity += translate_[i].acceleration;
+		translate_[i].value += translate_[i].velocity;
+	}
+}
+
+// 非アクティブなブロックをリストから削除
+void RenderData_Block::RemoveInactiveBlocks()
+{
+	size_t writeIndex = 0;
+
+	for (size_t readIndex = 0; readIndex < capacity; ++readIndex)
+	{
+		if (isActive_[readIndex])
+		{
+			if (writeIndex != readIndex)
+			{
+				// アクティブなパーティクルを前方に詰める
+				scale_[writeIndex] = scale_[readIndex];
+				rotate_[writeIndex] = rotate_[readIndex];
+				translate_[writeIndex] = translate_[readIndex];
+				isActive_[writeIndex] = isActive_[readIndex];
+				// ワールド行列・WVP行列も詰める
+				instancingData_[writeIndex] = instancingData_[readIndex];
+			}
+			writeIndex++;
+		}
+	}
+	for (size_t i = writeIndex; i < capacity; ++i)
+	{
+		isActive_[i] = false;
+	}
+
+
+	currentSum = uint32_t(writeIndex);
+}
+
+void RenderData_Block::Draw()
+{
+	Engine::Instance().AddBlockDrawList(this);
+}
+
+void RenderData_Block::DrawImGui()
+{
+	//for (size_t i = 0; i < currentSum; ++i)
+	//{
+	//	std::string num = std::to_string(this->ID) + "." + std::to_string(i);
+	//	if (ImGui::TreeNode(("----------particle" + num + "-----------").c_str()))
+	//	{
+	//		ImGui::DragFloat3((num + "scale").c_str(), &transforms_[i].scale.x, 0.01f);
+	//		ImGui::DragFloat3((num + "rotate").c_str(), &transforms_[i].rotate.x, 0.01f);
+	//		ImGui::DragFloat3((num + "translate").c_str(), &transforms_[i].translate.x, 1.0f);
+	//		ImGui::TreePop();
+	//	}
+	//}
+
+	std::string str = BlockIDToString(this->name);
+
+	std::string num = ":" + std::to_string(this->ID);
+
+	ImGui::Begin(str.c_str());
+
+	ImGui::Text("capacity : %d", static_cast<int>(capacity));
+	ImGui::Text("currentSum : %d", static_cast<int>(currentSum));
+
+	if (ImGui::TreeNode("----------texture--------------"))
+	{
+		size_t textureCount = Game::Resource::GetTextureCount();
+
+		for (size_t i = 0; i < textureCount; ++i)
+		{
+			TextureData* texData = Game::Resource::GetTextureData(static_cast<uint32_t>(i));
+			if (texData)
+			{
+				ImGui::Image((ImTextureID)texData->textureSrvHandleGPU.ptr, ImVec2(32, 32));
+
+				// 6個並べたら改行
+				if ((i + 1) % 6 != 0 && i < textureCount - 1)
+				{
+					ImGui::SameLine();
+				}
+				if (ImGui::IsItemClicked())
+				{
+					this->texture = static_cast<uint32_t>(i);
+				}
+			}
+		}
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------model----------------"))
+	{
+		if (ImGui::Button("-"))this->model -= 1;
+
+		ImGui::SameLine();
+
+		// ラベルを非表示にするために "##" プレフィックスで ID を与える
+		std::string dragId = std::string("##model") + num;
+		ImGui::DragInt(dragId.c_str(), reinterpret_cast<int*>(&this->model));
+
+		ImGui::SameLine();
+
+		if (ImGui::Button("+"))this->model += 1;
+
+		// クランプ
+		if (this->model < 0) this->model = 0;
+		if (this->model > int(Game::Resource::GetModelCount() - 1)) this->model = int(Game::Resource::GetModelCount() - 1);
+
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("----------color----------------"))
+	{
+		Vector4 preColor = ConvertUintToVector4(this->color);
+		float floatColor[4] = { preColor.x, preColor.y, preColor.z, preColor.w };
+		ImGui::ColorEdit4((num + "color").c_str(), floatColor, 1);
+		Vector4 vector4Color = { floatColor[0], floatColor[1], floatColor[2], floatColor[3] };
+		this->color = ConvertVector4ToUint(vector4Color);
+		ImGui::TreePop();
+	}
+	ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+
 	ImGui::End();
 }
 

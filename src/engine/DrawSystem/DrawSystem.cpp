@@ -102,12 +102,19 @@ void DrawSystem::Update()
 	spriteDrawList_.clear();
 	lineDrawList_.clear();
 	particleDrawList_.clear();
+	blockDrawList_.clear();
 }
 
 void DrawSystem::Draw()
 {
 	// プリミティブトポロジ（描画する形状の種類：三角形リスト）を設定
 	dxManager_->GetCommandContextManager()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	// パーティクル描画
+	DrawAllParticle();
+
+	// ブロック描画
+	DrawAllBlock();
 
 	// モデル描画
 	DrawAllModel();
@@ -120,9 +127,6 @@ void DrawSystem::Draw()
 
 	// スプライト描画
 	DrawAllSprite();
-
-	// パーティクル描画
-	DrawAllParticle();
 
 	// 形状を設定
 	dxManager_->GetCommandContextManager()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
@@ -155,6 +159,10 @@ void DrawSystem::AddLineDrawList(RenderData_Line* renderData)
 void DrawSystem::AddParticleDrawList(RenderData_Particle* renderData)
 {
 	particleDrawList_.emplace_back(renderData);
+}
+void DrawSystem::AddBlockDrawList(RenderData_Block* renderData)
+{
+	blockDrawList_.emplace_back(renderData);
 }
 
 void DrawSystem::DrawAllModel()
@@ -1053,7 +1061,7 @@ void DrawSystem::DrawAllParticle()
 
 		// RootSignatureとPSOを設定
 		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootSignature(dxManager_->GetPipelineStateManager()->GetRootSignature_particle());
-		dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetParticlePipelineState(BlendMode::kBlendModeAdd));
+		dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetParticlePipelineState(renderData->blendMode));
 
 		// 頂点数の取得
 		const uint32_t kSumVertex = static_cast<uint32_t>(obj->modelData.vertices.size());
@@ -1080,82 +1088,125 @@ void DrawSystem::DrawAllParticle()
 		drawCallIndex_++;
 	}
 }
+void DrawSystem::DrawAllBlock()
+{
+	for (auto& renderData : blockDrawList_)
+	{
+		if (drawCallIndex_ >= kMaxDrawCallPerFrame_) return;
+
+		// モデルの検索
+		Object3D* obj = dxManager_->GetResourceManager()->GetModelManager()->GetModelData(renderData->model);
+		if (!obj) return;
+
+		// テクスチャの検索
+		const TextureData* tex = dxManager_->GetResourceManager()->GetTextureManager()->GetTextureData(renderData->texture);
+		if (!tex) return;
+
+		// RootSignatureとPSOを設定
+		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootSignature(dxManager_->GetPipelineStateManager()->GetRootSignature_particle());
+		dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetParticlePipelineState(BlendMode::kBlendModeNormal));
+
+		// 頂点数の取得
+		const uint32_t kSumVertex = static_cast<uint32_t>(obj->modelData.vertices.size());
+
+		// マテリアルデータ
+		//materialData_[drawCallIndex_]->color = renderData->colors_[renderData->currentColorIndex_];
+		materialData_[drawCallIndex_]->color = Vector4{ 1.0f, 1.0f, 1.0f, 1.0f };
+		materialData_[drawCallIndex_]->shininess = 1.0f;
+		materialData_[drawCallIndex_]->uvTransform = Matrix4x4::MakeIdentity4x4();
+
+		// 頂点バッファをバインド（描画に使う頂点データを指定）
+		dxManager_->GetCommandContextManager()->GetCommandList()->IASetVertexBuffers(0, 1, &obj->vertexBufferView);
+
+		// ルートパラメータ0にマテリアル用定数バッファ（色・ライティング情報など）をバインド
+		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources_[drawCallIndex_]->GetGPUVirtualAddress());
+		// ルートパラメータ2にテクスチャのSRV（シェーダリソースビュー）をバインド
+		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(1, tex->textureSrvHandleGPU);
+		// ルートパラメータ3にパーティクル情報用SRVをバインド
+		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(2, renderData->srvAllocation_.gpu);
+
+
+		dxManager_->GetCommandContextManager()->GetCommandList()->DrawInstanced(kSumVertex, renderData->currentSum, 0, 0);
+
+		drawCallIndex_++;
+	}
+}
 
 
 void DrawSystem::AddSphere(Vector3 pos, Vector3 radius, uint32_t color)
 {
-	RenderData_Line* Lon[10];
-	RenderData_Line* Lat[10];
+	//RenderData_Line* Lon[10];
+	//RenderData_Line* Lat[10];
 
-	for (int i = 0; i < 10; ++i)
-	{
-		Lon[i]->color = color;
-		Lon[i]->kSubdivision = 10;
-		Lon[i]->lineType = LineType::Line;
+	//for (int i = 0; i < 10; ++i)
+	//{
+	//	Lon[i]->color = color;
+	//	Lon[i]->kSubdivision = 10;
+	//	Lon[i]->lineType = LineType::Line;
 
-		Lat[i]->color = color;
-		Lat[i]->kSubdivision = 10;
-		Lat[i]->lineType = LineType::Line;
-	}
+	//	Lat[i]->color = color;
+	//	Lat[i]->kSubdivision = 10;
+	//	Lat[i]->lineType = LineType::Line;
+	//}
 
-	// 経度/緯度の分割数
-	const uint32_t kSubdivision = 10;
-	// 経度分割１つ分の角度
-	const float kLonEvery = float((2 * std::numbers::pi_v<float>) / kSubdivision);
-	// 緯度分割１つ分の角度
-	const float kLatEvery = float(std::numbers::pi_v<float> / kSubdivision);
+	//// 経度/緯度の分割数
+	//const uint32_t kSubdivision = 10;
+	//// 経度分割１つ分の角度
+	//const float kLonEvery = float((2 * std::numbers::pi_v<float>) / kSubdivision);
+	//// 緯度分割１つ分の角度
+	//const float kLatEvery = float(std::numbers::pi_v<float> / kSubdivision);
 
-	float lat = 0.0f;
-	float nextLat = 0.0f;
-	float lon = 0.0f;
-	float nextLon = 0.0f;
+	//float lat = 0.0f;
+	//float nextLat = 0.0f;
+	//float lon = 0.0f;
+	//float nextLon = 0.0f;
 
-	// 緯度の方向に分割 -π/2 ～ π/2
-	for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex)
-	{
-		// 現在の緯度と次の緯度
-		lat = float(-std::numbers::pi_v<float> / 2.0f + latIndex * kLatEvery);
-		nextLat = float(-std::numbers::pi_v<float> / 2.0f + (latIndex + 1) * kLatEvery);
+	//// 緯度の方向に分割 -π/2 ～ π/2
+	//for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex)
+	//{
+	//	// 現在の緯度と次の緯度
+	//	lat = float(-std::numbers::pi_v<float> / 2.0f + latIndex * kLatEvery);
+	//	nextLat = float(-std::numbers::pi_v<float> / 2.0f + (latIndex + 1) * kLatEvery);
 
-		// 経度方向に分割 0 ～ 2π
-		for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex)
-		{
-			// 現在の経度と次の経度
-			lon = lonIndex * kLonEvery;
-			nextLon = (lonIndex + 1) * kLonEvery;
+	//	// 経度方向に分割 0 ～ 2π
+	//	for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex)
+	//	{
+	//		// 現在の経度と次の経度
+	//		lon = lonIndex * kLonEvery;
+	//		nextLon = (lonIndex + 1) * kLonEvery;
 
-			Lon[latIndex]->points.push_back({
-				pos.x + radius.x * std::cosf(lat) * std::cosf(lon),
-				pos.y + radius.y * std::sinf(lat),
-				pos.z + radius.z * std::cosf(lat) * std::sinf(lon),
-				});
+	//		Lon[latIndex]->points.push_back({
+	//			pos.x + radius.x * std::cosf(lat) * std::cosf(lon),
+	//			pos.y + radius.y * std::sinf(lat),
+	//			pos.z + radius.z * std::cosf(lat) * std::sinf(lon),
+	//			});
 
-			Lon[latIndex]->points.push_back({
-				pos.x + radius.x * std::cosf(lat) * std::cosf(nextLon),
-				pos.y + radius.y * std::sinf(lat),
-				pos.z + radius.z * std::cosf(lat) * std::sinf(nextLon),
-				});
+	//		Lon[latIndex]->points.push_back({
+	//			pos.x + radius.x * std::cosf(lat) * std::cosf(nextLon),
+	//			pos.y + radius.y * std::sinf(lat),
+	//			pos.z + radius.z * std::cosf(lat) * std::sinf(nextLon),
+	//			});
 
-			Lat[lonIndex]->points.push_back({
-				pos.x + radius.x * std::cosf(lat) * std::cosf(lon),
-				pos.y + radius.y * std::sinf(lat),
-				pos.z + radius.z * std::cosf(lat) * std::sinf(lon),
-				});
+	//		Lat[lonIndex]->points.push_back({
+	//			pos.x + radius.x * std::cosf(lat) * std::cosf(lon),
+	//			pos.y + radius.y * std::sinf(lat),
+	//			pos.z + radius.z * std::cosf(lat) * std::sinf(lon),
+	//			});
 
-			Lat[lonIndex]->points.push_back({
-				pos.x + radius.x * std::cosf(nextLat) * std::cosf(lon),
-				pos.y + radius.y * std::sinf(nextLat),
-				pos.z + radius.z * std::cosf(nextLat) * std::sinf(lon),
-				});
-		}
-	}
+	//		Lat[lonIndex]->points.push_back({
+	//			pos.x + radius.x * std::cosf(nextLat) * std::cosf(lon),
+	//			pos.y + radius.y * std::sinf(nextLat),
+	//			pos.z + radius.z * std::cosf(nextLat) * std::sinf(lon),
+	//			});
+	//	}
+	//}
 
-	// 線を描画
-	for (uint32_t i = 0; i < kSubdivision; ++i)
-	{
-		AddLineDrawList(Lon[i]);
-		AddLineDrawList(Lat[i]);
-	}
+	//// 線を描画
+	//for (uint32_t i = 0; i < kSubdivision; ++i)
+	//{
+	//	AddLineDrawList(Lon[i]);
+	//	AddLineDrawList(Lat[i]);
+	//}
 }
 void DrawSystem::AddAABB(AABB aabb, uint32_t color)
 {
@@ -1262,13 +1313,13 @@ void DrawSystem::AddAABB(AABB aabb, uint32_t color)
 }
 void DrawSystem::AddLine(Vector3 start, Vector3 end, uint32_t color)
 {
-	RenderData_Line* lineData = nullptr;
-	lineData->color = color;
-	lineData->kSubdivision = 1;
-	lineData->lineType = LineType::Line;
-	lineData->points.push_back(start);
-	lineData->points.push_back(end);
-	AddLineDrawList(lineData);
+	//RenderData_Line* lineData = new RenderData_Line();
+	//lineData->color = color;
+	//lineData->kSubdivision = 1;
+	//lineData->lineType = LineType::Line;
+	//lineData->points.push_back(start);
+	//lineData->points.push_back(end);
+	//AddLineDrawList(lineData);
 }
 
 void DrawSystem::InitializeResource_Light()
@@ -1332,7 +1383,7 @@ void DrawSystem::InitializeResource_VertexBuffer()
 	vertexResourceSize_ = sizeof(VertexData) * 4096;
 	vertexResource_ = CreateBufferResource(dxManager_->GetDevice(), vertexResourceSize_);
 	vertexMappedPtr_ = nullptr;
-	//hr = vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
+	HRESULT hr = vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vertexMappedPtr_));
 	assert(SUCCEEDED(hr));
 }
 void DrawSystem::InitializeResource_IndexBuffer()
