@@ -9,13 +9,21 @@ GameScenePhase::GameScenePhase()
 
 	map_ = std::make_unique<MapManager>(player_.get());
 
+	particle_ = new RenderData_Particle();
+	particle_->model = ResourceID::GetModelID(ModelID::Cube);
+	particle_->texture = ResourceID::GetTextureID(TextureID::monsterBall);
+
+
 	//map_->LoadMap("resources/Map/map1x1.csv");
 	map_->LoadMap("resources/Map/map.csv");
-	map_->LoadMap("resources/Map/mapFlat.csv");
+	//map_->LoadMap("resources/Map/mapFlat.csv");
 }
 
 GameScenePhase::~GameScenePhase()
 {
+	delete particle_;
+	particle_ = nullptr;	
+
 	//delete map_;
 	//map_ = nullptr;
 
@@ -47,9 +55,9 @@ void GameScenePhase::Draw()
 {
 	map_->Draw();
 
-	//particle->Draw();
-	//particle->DrawEmitter();
-	//particle->DrawImGui();
+	particle_->Draw();
+	particle_->DrawEmitter();
+	particle_->DrawImGui();
 
 	player_->Draw();
 }

@@ -5,7 +5,7 @@ GameManager::GameManager()
 	skyDome_.model = ResourceID::GetModelID(ModelID::Cube);
 	skyDome_.texture = ResourceID::GetTextureID(BlockID::Stone);
 	skyDome_.additionalTexture = ResourceID::GetTextureID(TextureID::monsterBall);
-	skyDome_.scale.value = Vector3(100.0f, 100.0f, 100.0f);
+	skyDome_.scale.value = Vector3(200.0f, 200.0f, 200.0f);
 	skyDome_.name = "SkyDome";
 
 	// フェーズクラス生成
@@ -15,7 +15,7 @@ GameManager::GameManager()
 	gameScenePhase_ = std::make_unique<GameScenePhase>();
 
 	// 初期フェーズ設定
-	requestPhase_ = PHASE::Phase_Test;
+	requestPhase_ = PHASE::Phase_GameScene;
 }
 
 GameManager::~GameManager()

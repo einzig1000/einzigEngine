@@ -12,7 +12,17 @@ public:
 	void Update();
 	void Draw();
 
-	void SetViewProjectionMatrix(const Matrix4x4& viewProjectionMatrix) { viewProjectionMatrix_ = viewProjectionMatrix; }
+
+	void SetViewProjectionMatrix(const Matrix4x4& viewProjectionMatrix)
+	{
+		// CPU側のキャッシュも保持
+		viewProjectionMatrix_ = viewProjectionMatrix;
+		// 永続Map済みのCBVへ値を書き込む（ポインタを差し替えない）
+		if (viewProjectionData_)
+		{
+			*viewProjectionData_ = viewProjectionMatrix;
+		}
+	}
 
 	void AddModelDrawList(RenderData_Model* renderData);
 	void DrawAllModel();
@@ -53,6 +63,7 @@ private:
 	void InitializeResource_Light();
 	void InitializeResource_LightPerObject();
 	void InitializeResource_Camera();
+	void InitializeResource_ViewProjectionMatrix();
 	void InitializeResource_Material();
 	void InitializeResource_WVPMatrix();
 	void InitializeResource_VertexBuffer();
@@ -103,6 +114,11 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Resource> cameraResource_ = nullptr;
 	// カメラデータの永続Mapポインタ
 	CameraForGPU* cameraData_ = nullptr;
+
+	// カメラ
+	Microsoft::WRL::ComPtr<ID3D12Resource> viewProjectionResource_ = nullptr;
+	// カメラデータの永続Mapポインタ
+	Matrix4x4* viewProjectionData_ = nullptr;
 
 	// 共有ライト
 	Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource_ = nullptr;

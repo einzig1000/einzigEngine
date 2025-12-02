@@ -173,24 +173,29 @@ void PipelineStateManager::InitializeRootSignature_particle(ID3D12Device * devic
     rangeInst[0].RegisterSpace = 0;
 
 
-    D3D12_ROOT_PARAMETER rootParameters[3] = {};
+    D3D12_ROOT_PARAMETER rootParameters[4] = {};
     
-    // ルートパラメータ0: Material (register b0)
+    // ルートパラメータ0: Material (b0)
     rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
     rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
     rootParameters[0].Descriptor.ShaderRegister = 0;
     
-    // ルートパラメータ2: Texture (SRV) Descriptor Table (register t0)
+    // ルートパラメータ1: Texture [SRV] (register t0)
     rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 	rootParameters[1].DescriptorTable.NumDescriptorRanges = _countof(rangeTex);
     rootParameters[1].DescriptorTable.pDescriptorRanges = rangeTex;
 
-    // ルートパラメータ3: Instance SRV(t1)（VS可視）
+    // ルートパラメータ2: WorldMatrix [SRV] (t1)（VS可視）
     rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
 	rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(rangeInst);
     rootParameters[2].DescriptorTable.pDescriptorRanges = rangeInst;
+
+	// ルートパラメータ3: ViewProjectionMatrix (b1)
+	rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+	rootParameters[3].Descriptor.ShaderRegister = 1;
 
     D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};
     staticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
@@ -240,39 +245,43 @@ void PipelineStateManager::InitializeRootSignature_block(ID3D12Device* device)
     addTexture[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
 
-    D3D12_ROOT_PARAMETER rootParameters[6]{};
+    D3D12_DESCRIPTOR_RANGE rangeInst[1];
+    rangeInst[0].BaseShaderRegister = 2; // t2
+    rangeInst[0].NumDescriptors = 1;
+    rangeInst[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    rangeInst[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+    rangeInst[0].RegisterSpace = 0;
+
+    D3D12_ROOT_PARAMETER rootParameters[5]{};
 
     // ルートパラメータ0: Material (register b0)
     rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
     rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL; // VS, PS 両方からアクセス可能
     rootParameters[0].Descriptor.ShaderRegister = 0; // b0
 
-    // ルートパラメータ1: TransformationMatrix (WVP, World) (register b1)
-    rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-    rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL; // VS, PS 両方からアクセス可能
-    rootParameters[1].Descriptor.ShaderRegister = 1; // b1
+    // ルートパラメータ1: WorldMatrix [SRV]  (register b1)（VS可視）
+    rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+    rootParameters[1].DescriptorTable.NumDescriptorRanges = _countof(rangeInst);
+    rootParameters[1].DescriptorTable.pDescriptorRanges = rangeInst;
 
     // ルートパラメータ2: Texture (SRV) Descriptor Table (register t0)
     rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; // PSからのみアクセス
-    rootParameters[2].DescriptorTable.pDescriptorRanges = defaultTexture;
     rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(defaultTexture);
+    rootParameters[2].DescriptorTable.pDescriptorRanges = defaultTexture;
 
     // ルートパラメータ3: Texture (SRV) Descriptor Table (register t1)
     rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; // PSからのみアクセス
-    rootParameters[3].DescriptorTable.pDescriptorRanges = addTexture;
     rootParameters[3].DescriptorTable.NumDescriptorRanges = _countof(addTexture);
+    rootParameters[3].DescriptorTable.pDescriptorRanges = addTexture;
 
-    // ルートパラメータ4: DirectionalLight (color, direction, intensity) (register b2)
+    // ルートパラメータ4: ViewProjectionMatrix (b1)
     rootParameters[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-    rootParameters[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL; // VS, PS 両方からアクセス可能
-    rootParameters[4].Descriptor.ShaderRegister = 2; // b2
+    rootParameters[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+    rootParameters[4].Descriptor.ShaderRegister = 1;
 
-    // ルートパラメータ5 : Camera (register b3)
-    rootParameters[5].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-    rootParameters[5].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL; // VS, PS 両方からアクセス可能
-    rootParameters[5].Descriptor.ShaderRegister = 3; // b3
 
     D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};
     staticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
@@ -474,7 +483,7 @@ void PipelineStateManager::CreateAllPSOs(ID3D12Device* device)
     particlePSOs[BlendMode::kBlendModeMul] = CreatePipelineState(device, rootSignature_particle.Get(), blendMulDesc, rasterizerSolidDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, particleInputElementDescs, _countof(particleInputElementDescs), vsParticle.Get(), psParticle.Get(), depthTestOnlyDesc);
     particlePSOs[BlendMode::kBlendModeScreen] = CreatePipelineState(device, rootSignature_particle.Get(), blendScreenDesc, rasterizerSolidDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, particleInputElementDescs, _countof(particleInputElementDescs), vsParticle.Get(), psParticle.Get(), depthTestOnlyDesc);
 
-    // minecraftMap(三角形)
+    // block(三角形)
     blockPSOs[BlendMode::kBlendModeNone] = CreatePipelineState(device, rootSignature_block.Get(), blendOpaqueDesc, rasterizerSolidDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, blockInputElementDescs, _countof(blockInputElementDescs), vsBlock.Get(), psBlock.Get(), depthWriteDesc);
 	blockPSOs[BlendMode::kBlendModeNormal] = CreatePipelineState(device, rootSignature_block.Get(), blendTransparentDesc, rasterizerSolidDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, blockInputElementDescs, _countof(blockInputElementDescs), vsBlock.Get(), psBlock.Get(), depthWriteDesc);
 	blockPSOs[BlendMode::kBlendModeAdd] = CreatePipelineState(device, rootSignature_block.Get(), blendAddDesc, rasterizerSolidDesc, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, blockInputElementDescs, _countof(blockInputElementDescs), vsBlock.Get(), psBlock.Get(), depthWriteDesc);

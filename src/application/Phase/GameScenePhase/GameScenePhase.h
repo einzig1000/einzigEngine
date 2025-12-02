@@ -23,4 +23,7 @@ private:
 
 	// マップ
 	std::unique_ptr<MapManager> map_;
+
+
+	RenderData_Particle* particle_;
 };

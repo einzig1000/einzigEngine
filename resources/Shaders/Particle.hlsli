@@ -26,12 +26,15 @@ struct PixelShaderOutput
     float32_t4 color : SV_TARGET0;
 };
 
-struct TransformationMatrix
+struct WorldMatrix
 {
-    float32_t4x4 WVP;
     float32_t4x4 World;
 };
 
+struct ViewProjectionMatrix
+{
+    float32_t4x4 ViewProjection;
+};
 struct DirectionalLight
 {
     float32_t4 color;

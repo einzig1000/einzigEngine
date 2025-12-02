@@ -82,13 +82,6 @@ void DirectXManager::BeginFrame()
 
 void DirectXManager::EndFrame()
 {
-    // ImGui の初期化みたいなもん
-    //ImDrawData* draw_data = ImGui::GetDrawData();
-    //if (draw_data != nullptr && draw_data->CmdListsCount > 0)
-    //{
-    //    ImGui_ImplDX12_RenderDrawData(draw_data, commandContextManager->GetCommandList());
-    //}
-
     // ResourceStateをRENDER_TARGETからPRESENTへ遷移
     barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
     barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;

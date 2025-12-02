@@ -270,8 +270,8 @@ public:
 
     RenderData_Particle();
     ~RenderData_Particle();
-    static void UpdateAllParticles(const Matrix4x4& viewProjectionMatrix);
-    void Update(const Matrix4x4& viewProjectionMatrix);
+    static void UpdateAllParticles();
+    void Update();
 
     // ID
     std::optional<std::string> name;
@@ -299,7 +299,7 @@ public:
 
     /// 密度
     int32_t particlesPerEmission = 1;   // 1フレで生む数
-    int32_t emissionDelay = 60;         // 生成間隔フレーム
+    int32_t emissionDelay = 1;          // 生成間隔フレーム
     int32_t liveMax = 300;              // 寿命フレーム(マイナスの時は不老)
 
     /// 方向
@@ -329,7 +329,7 @@ public:
 
 	uint32_t capacity = 1024;
 	Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource_;
-    TransformationMatrix* instancingData_ = nullptr;
+    Matrix4x4* instancingData_ = nullptr;
 	SRVAllocation srvAllocation_;
 
 	std::vector<VectorDynamics> scale_;
@@ -356,7 +356,7 @@ private:
 	void SetSpawnTranslate(uint32_t index);
 
     //// ワールド行列・WVP行列の更新
-	void UpdateTransformationMatrix(const Matrix4x4& viewProjectionMatrix);
+	void UpdateTransformationMatrix();
 	//// 各パーティクルの変換行列更新
 	void UpdateTransforms();
 
@@ -384,8 +384,8 @@ public:
 
     RenderData_Block(BlockID id);
     ~RenderData_Block();
-    static void UpdateAllBlock(const Matrix4x4& viewProjectionMatrix);
-    void Update(const Matrix4x4& viewProjectionMatrix);
+    static void UpdateAllBlock();
+    void Update();
 
 	//// リストに新たなブロックを追加
 	void AddNewBlock(Vector3 position, Vector3int index);
@@ -405,6 +405,7 @@ public:
     /// リソース
     uint32_t model = 0;
     uint32_t texture = 0;
+	uint32_t additionalTexture = 0;
 
     /// オプション
     BlendMode blendMode = BlendMode::kBlendModeAdd;
@@ -416,9 +417,9 @@ public:
     /// 現在存在するブロック数
     uint32_t currentSum = 0;
 
-    uint32_t capacity = 1024;
+    uint32_t capacity = 2048;
     Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource_;
-    TransformationMatrix* instancingData_ = nullptr;
+    Matrix4x4* instancingData_ = nullptr;
     SRVAllocation srvAllocation_;
 
     std::vector<VectorDynamics> scale_;
@@ -435,7 +436,6 @@ private:
 
     //// ワールド行列・WVP行列の更新
     void UpdateWorldMatrix();
-    void UpdateWVPMatrix(const Matrix4x4& viewProjectionMatrix);
     //// 各パーティクルの変換行列更新
     void UpdateTransforms();
 

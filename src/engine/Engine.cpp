@@ -62,26 +62,6 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 		imguiManager_->Initialize(dxManager_, windowManager_);
 	}
 
-	// imguiの初期化
-	//IMGUI_CHECKVERSION();
-	//ImGui::CreateContext();
-	//ImGui::StyleColorsDark();
-	//ImGui_ImplWin32_Init(windowManager_->GetHwnd());
-	//uint32_t slot = dxManager_->GetDescriptorHeapManager()->GetSrvManager()->Allocate();
-	//ImGui_ImplDX12_Init(
-	//	dxManager_->GetDevice(),
-	//	dxManager_->GetSwapChain()->GetSwapChainDesc().BufferCount,
-	//	dxManager_->GetSwapChain()->GetRtvDesc().Format,
-	//	dxManager_->GetDescriptorHeapManager()->GetSrvManager()->GetSRVDescriptorHeap(),
-	//	dxManager_->GetDescriptorHeapManager()->GetSrvManager()->GetCPUHandleAt(slot),                    // ImGuiフォントSRV用のCPUハンドル
-	//	dxManager_->GetDescriptorHeapManager()->GetSrvManager()->GetGPUHandleAt(slot)                     // ImGuiフォントSRV用のGPUハンドル
-	//);
-
-	//inputManager_->GetMouseController()->wheelDelta = 0;
-
-	//ImGui_ImplDX12_NewFrame();
-	//ImGui_ImplWin32_NewFrame();
-	//ImGui::NewFrame();
 
 	dxManager_->BeginFrame();
 	ResourceID::reload();
@@ -220,8 +200,8 @@ void Engine::UpdateTransforms()
 void Engine::UpdateParticles()
 {
 	// パーティクル更新
-	RenderData_Particle::UpdateAllParticles(cameraManager_->GetCurrentViewProjectionMatrix());
-	RenderData_Block::UpdateAllBlock(cameraManager_->GetCurrentViewProjectionMatrix());
+	RenderData_Particle::UpdateAllParticles();
+	//RenderData_Block::UpdateAllBlock();
 }
 void Engine::UpdateCamera()
 {

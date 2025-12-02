@@ -3,13 +3,17 @@
 #include "Particle.hlsli"
 
 // TransformationMatrix: レジスタ t1 に設定
-StructuredBuffer<TransformationMatrix> gTransformationMatrix : register(t1);
+StructuredBuffer<WorldMatrix> gWorldMatrix : register(t1);
+
+ConstantBuffer<ViewProjectionMatrix> gViewProjection : register(b1);
 
 VertexShaderOutput main(VertexShaderInput input, uint32_t instancedID : SV_InstanceID)
 {
     VertexShaderOutput output;
-    output.position = mul(input.position, gTransformationMatrix[instancedID].WVP);
+
+    float32_t4 worldPos = mul(input.position, gWorldMatrix[instancedID].World);
+    output.position = mul(worldPos, gViewProjection.ViewProjection);
     output.texcoord = input.texcoord;
-    output.normal = normalize(mul(input.normal, (float32_t3x3)gTransformationMatrix[instancedID].World));
+    output.normal = normalize(mul(input.normal, (float32_t3x3)gWorldMatrix[instancedID].World));
     return output;
 }
