@@ -15,9 +15,7 @@ public:
 
 	void SetViewProjectionMatrix(const Matrix4x4& viewProjectionMatrix)
 	{
-		// CPU側のキャッシュも保持
 		viewProjectionMatrix_ = viewProjectionMatrix;
-		// 永続Map済みのCBVへ値を書き込む（ポインタを差し替えない）
 		if (viewProjectionData_)
 		{
 			*viewProjectionData_ = viewProjectionMatrix;
