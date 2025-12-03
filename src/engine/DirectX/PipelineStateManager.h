@@ -13,7 +13,7 @@ public:
 
     ID3D12RootSignature* GetRootSignature() const { return rootSignature_object.Get(); }
     ID3D12RootSignature* GetRootSignature_particle() const { return rootSignature_particle.Get(); }
-	ID3D12RootSignature* GetRootSignature_minecraftMap() const { return rootSignature_block.Get(); }
+	ID3D12RootSignature* GetRootSignature_block() const { return rootSignature_block.Get(); }
 
     ID3D12PipelineState* GetPipelineState(BlendMode mode, D3D12_PRIMITIVE_TOPOLOGY_TYPE type) const;
     ID3D12PipelineState* GetParticlePipelineState(BlendMode mode) const;

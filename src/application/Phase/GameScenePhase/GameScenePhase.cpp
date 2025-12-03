@@ -9,13 +9,16 @@ GameScenePhase::GameScenePhase()
 
 	map_ = std::make_unique<MapManager>(player_.get());
 
+
 	//map_->LoadMap("resources/Map/map1x1.csv");
 	map_->LoadMap("resources/Map/map.csv");
-	map_->LoadMap("resources/Map/mapFlat.csv");
+	//map_->LoadMap("resources/Map/mapFlat.csv");
+	//map_->LoadMap("resources/Map/map140x140.csv");
 }
 
 GameScenePhase::~GameScenePhase()
-{
+{	
+
 	//delete map_;
 	//map_ = nullptr;
 
@@ -46,10 +49,6 @@ void GameScenePhase::Update()
 void GameScenePhase::Draw()
 {
 	map_->Draw();
-
-	//particle->Draw();
-	//particle->DrawEmitter();
-	//particle->DrawImGui();
 
 	player_->Draw();
 }

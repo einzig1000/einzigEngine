@@ -943,19 +943,18 @@ RenderData_Particle::RenderData_Particle()
 
 	instancingResource_ =
 		Engine::Instance().CreateBufferResource(
-			sizeof(TransformationMatrix) * capacity
+			sizeof(Matrix4x4) * capacity
 		);
 	instancingResource_->Map(0, nullptr, reinterpret_cast<void**>(&instancingData_));
 	for (size_t i = 0; i < capacity; ++i)
 	{
-		instancingData_[i].World = Matrix4x4::MakeIdentity4x4();
-		instancingData_[i].WVP = Matrix4x4::MakeIdentity4x4();
+		instancingData_[i] = Matrix4x4::MakeIdentity4x4();
 	}
 
 	srvAllocation_ = Engine::Instance().GetDirectXManager() ->GetDescriptorHeapManager()->GetSrvManager()->CreateSRVforStructuredBuffer(
 		instancingResource_.Get(),
 	    capacity,
-	    sizeof(TransformationMatrix));
+	    sizeof(Matrix4x4));
 
 	targetScale.value = Vector3{ 1.0f,1.0f,1.0f };
 	targetRotate.value = Vector3{ 0.0f,0.0f,0.0f };
@@ -970,15 +969,15 @@ RenderData_Particle::RenderData_Particle()
 RenderData_Particle::~RenderData_Particle()
 {}
 
-void RenderData_Particle::UpdateAllParticles(const Matrix4x4& viewProjectionMatrix)
+void RenderData_Particle::UpdateAllParticles()
 {
 	for (size_t ID = 0; ID < renderParticles.size(); ++ID)
 	{
-		renderParticles[ID]->Update(viewProjectionMatrix);
+		renderParticles[ID]->Update();
 	}
 }
 
-void RenderData_Particle::Update(const Matrix4x4& viewProjectionMatrix)
+void RenderData_Particle::Update()
 {
 	// 非アクティブなパーティクルの削除
 	RemoveInactiveParticles();
@@ -989,8 +988,8 @@ void RenderData_Particle::Update(const Matrix4x4& viewProjectionMatrix)
 	// SRTの更新
 	UpdateTransforms();
 
-	// ワールド行列・WVP行列の更新
-	UpdateTransformationMatrix(viewProjectionMatrix);
+	// ワールド行列の更新
+	UpdateTransformationMatrix();
 
 	// 寿命の更新
 	UpdateLife();
@@ -1401,21 +1400,18 @@ void RenderData_Particle::SetSpawnTranslate(uint32_t index)
 	}
 }
 
-void RenderData_Particle::UpdateTransformationMatrix(const Matrix4x4& viewProjectionMatrix)
+void RenderData_Particle::UpdateTransformationMatrix()
 {
 	for (size_t i = 0; i < capacity; ++i)
 	{
 		if (isActive_[i])
 		{
-			instancingData_[i].World
+			instancingData_[i]
 				= Matrix4x4::MakeAffineMatrix(
 					scale_[i].value,
 					rotate_[i].value,
 					translate_[i].value
 				);
-
-			instancingData_[i].WVP =
-				instancingData_[i].World * viewProjectionMatrix;
 		}
 	}
 }
@@ -1460,7 +1456,6 @@ void RenderData_Particle::CheckLife()
 {
 	for (size_t i = 0; i < currentSum; ++i)
 	{
-		lifeCount_[i]--;
 		// 寿命チェック
 		if (lifeCount_[i] <= 0)
 		{
@@ -1885,19 +1880,18 @@ RenderData_Block::RenderData_Block(BlockID id)
 
 	this->instancingResource_ =
 		Engine::Instance().CreateBufferResource(
-			sizeof(TransformationMatrix) * this->capacity
+			sizeof(Matrix4x4) * this->capacity
 		);
 	this->instancingResource_->Map(0, nullptr, reinterpret_cast<void**>(&this->instancingData_));
 	for (size_t i = 0; i < this->capacity; ++i)
 	{
-		this->instancingData_[i].World = Matrix4x4::MakeIdentity4x4();
-		this->instancingData_[i].WVP = Matrix4x4::MakeIdentity4x4();
+		this->instancingData_[i] = Matrix4x4::MakeIdentity4x4();
 	}
 
 	this->srvAllocation_ = Engine::Instance().GetDirectXManager()->GetDescriptorHeapManager()->GetSrvManager()->CreateSRVforStructuredBuffer(
 		this->instancingResource_.Get(),
 		this->capacity,
-		sizeof(TransformationMatrix));
+		sizeof(Matrix4x4));
 
 
 	this->scale_.resize(capacity);
@@ -1912,24 +1906,21 @@ RenderData_Block::RenderData_Block(BlockID id)
 RenderData_Block::~RenderData_Block()
 {}
 
-void RenderData_Block::UpdateAllBlock(const Matrix4x4 & viewProjectionMatrix)
+void RenderData_Block::UpdateAllBlock()
 {
 	for (size_t ID = 0; ID < renderBlocks.size(); ++ID)
 	{
-		renderBlocks[ID]->Update(viewProjectionMatrix);
+		renderBlocks[ID]->Update();
 	}
 }
 
-void RenderData_Block::Update(const Matrix4x4 & viewProjectionMatrix)
+void RenderData_Block::Update()
 {
 	// 非アクティブなブロックをリストから削除
 	//RemoveInactiveBlocks();
 
 	// SRTの更新
 	//UpdateTransforms();
-
-	// ワールド行列・WVP行列の更新
-	UpdateWVPMatrix(viewProjectionMatrix);
 }
 
 // ブロックの追加
@@ -1966,7 +1957,10 @@ void RenderData_Block::AddNewBlock(Vector3 position, Vector3int index)
 		Log("translate_ 成功");
 
 		// ワールド行列の更新
-		UpdateWorldMatrix();
+		instancingData_[currentSum]	= Matrix4x4::MakeAffineMatrix(
+				scale_[currentSum].value,
+				rotate_[currentSum].value,
+				translate_[currentSum].value);
 		Log("UpdateWorldMatrix 成功");
 
 		// インデックスの保存
@@ -2002,7 +1996,7 @@ void RenderData_Block::UpdateWorldMatrix()
 	{
 		if (isActive_[i])
 		{
-			instancingData_[i].World
+			instancingData_[i]
 				= Matrix4x4::MakeAffineMatrix(
 					scale_[i].value,
 					rotate_[i].value,
@@ -2012,18 +2006,6 @@ void RenderData_Block::UpdateWorldMatrix()
 	}
 }
 
-// WVP行列の更新
-void RenderData_Block::UpdateWVPMatrix(const Matrix4x4 & viewProjectionMatrix)
-{
-	for (size_t i = 0; i < currentSum; ++i)
-	{
-		if (isActive_[i])
-		{
-			instancingData_[i].WVP =
-				instancingData_[i].World * viewProjectionMatrix;
-		}
-	}
-}
 
 // SRTの更新
 void RenderData_Block::UpdateTransforms()

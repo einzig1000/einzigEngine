@@ -51,6 +51,15 @@ void BlockDurability::SetMaxDurability(int maxDurability)
 {
 	maxDurability_ = maxDurability;
 	nowDurability_ = maxDurability_;
+
+	if (nowDurability_ <= 0)
+	{
+		isDestroy_ = true;
+	}
+	else
+	{
+		isDestroy_ = false;
+	}
 }
 
 void BlockDurability::DrawBreakEffect()

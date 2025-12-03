@@ -14,7 +14,6 @@ struct VertexShaderOutput
     float32_t2 texcoord : TEXCOORD0;
     float32_t2 texcoord2 : TEXCOORD1;
     float32_t3 normal : NORMAL0;
-    float32_t3 worldPosition : POSITION0;
 };
 struct PixelShaderOutput
 {
@@ -27,10 +26,14 @@ struct Material
     float32_t4x4 uvTransform;
     float32_t shininess;
 };
-struct TransformationMatrix
+struct WorldMatrix
 {
-    float32_t4x4 WVP;
     float32_t4x4 World;
+};
+
+struct ViewProjectionMatrix
+{
+    float32_t4x4 ViewProjection;
 };
 
 struct DirectionalLight

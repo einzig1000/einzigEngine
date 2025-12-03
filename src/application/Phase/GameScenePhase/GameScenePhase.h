@@ -23,4 +23,5 @@ private:
 
 	// マップ
 	std::unique_ptr<MapManager> map_;
+
 };

@@ -5,6 +5,7 @@
 
 class Block;
 class Player;
+class BlockConfig;
 
 class MapManager
 {
@@ -29,14 +30,17 @@ public:
 
 	Vector3int IndexByPosition(const Vector3& position);
 	Vector3 PositionByIndex(const Vector3int& index);
+	AABB AABBByIndex(const Vector3int& index);
 
 private:
 	// マップデータ
 	Block* block_[MAX_BLOCK_X][MAX_BLOCK_Y][MAX_BLOCK_Z];
 	int blockHeightMap_[MAX_BLOCK_X][MAX_BLOCK_Z];
-
+	// 描画データ
 	std::map<BlockID, std::unique_ptr<RenderData_Block>> blockData_;
-	std::map<BlockID, Blockinfo> blockInfoMap_;
+
+	BlockConfig* blockConfig_;
+
 	std::map<BlockID, uint32_t> blockDrawSumMap_;
 
 

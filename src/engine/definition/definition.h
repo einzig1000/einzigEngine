@@ -55,7 +55,7 @@ std::string BlockIDToString(BlockID id);
 struct Blockinfo
 {
     BlockID type;
-    uint32_t durability;
+    int32_t durability;
 };
 
 template <typename T>
@@ -585,6 +585,8 @@ struct Matrix4x4
     static Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip);
     // ビューポート変換
     static Matrix4x4 MakeViewPortMatrix(float left, float top, float width, float height, float minD, float maxD);
+	// 任意軸回転行列
+	static Matrix4x4 MakeRotateAxisMatrix(const Vector3& axis, float radian);
 };
 
 #pragma endregion

@@ -23,6 +23,9 @@ DrawSystem::DrawSystem(DirectXManager* dxManager)
 	// カメラリソース初期化
 	InitializeResource_Camera();
 
+	// カメラViewProjection行列リソース初期化	
+	InitializeResource_ViewProjectionMatrix();
+
 	// 頂点バッファリソース初期化
 	InitializeResource_VertexBuffer();
 
@@ -112,27 +115,34 @@ void DrawSystem::Draw()
 
 	// パーティクル描画
 	DrawAllParticle();
+	Log("パーティクル描画完了");
 
 	// ブロック描画
 	DrawAllBlock();
+	Log("ブロック描画完了");
 
 	// モデル描画
 	DrawAllModel();
+	Log("モデル描画完了");
 
 	// 三角形描画
 	DrawAllTriangle();
+	Log("三角形描画完了");
 
 	// 矩形描画
 	DrawAllRect();
+	Log("矩形描画完了");
 
 	// スプライト描画
 	DrawAllSprite();
+	Log("スプライト描画完了");
 
 	// 形状を設定
 	dxManager_->GetCommandContextManager()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
 
 	// 線描画
 	DrawAllLine();
+	Log("ライン描画完了");
 }
 
 
@@ -1051,13 +1061,16 @@ void DrawSystem::DrawAllParticle()
 	{
 		if (drawCallIndex_ >= kMaxDrawCallPerFrame_) return;
 
+		// インスタンス数 0
+		if (renderData->GetCurrentSum() == 0) continue;
+
 		// モデルの検索
 		Object3D* obj = dxManager_->GetResourceManager()->GetModelManager()->GetModelData(renderData->model);
-		if (!obj) return;
+		if (!obj) continue;
 
 		// テクスチャの検索
 		const TextureData* tex = dxManager_->GetResourceManager()->GetTextureManager()->GetTextureData(renderData->texture);
-		if (!tex) return;
+		if (!tex) continue;
 
 		// RootSignatureとPSOを設定
 		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootSignature(dxManager_->GetPipelineStateManager()->GetRootSignature_particle());
@@ -1067,7 +1080,7 @@ void DrawSystem::DrawAllParticle()
 		const uint32_t kSumVertex = static_cast<uint32_t>(obj->modelData.vertices.size());
 
 		// マテリアルデータ
-		Vector4 color = Vector4{ 1.0f, 1.0f, 1.0f, 1.0f }; // ConvertUintToVector4(renderData->color);
+		Vector4 color = ConvertUintToVector4(renderData->color);
 		materialData_[drawCallIndex_]->color = color;
 		materialData_[drawCallIndex_]->shininess = 1.0f;
 		materialData_[drawCallIndex_]->uvTransform = Matrix4x4::MakeIdentity4x4();
@@ -1081,6 +1094,8 @@ void DrawSystem::DrawAllParticle()
 		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(1, tex->textureSrvHandleGPU);
 		// ルートパラメータ3にパーティクル情報用SRVをバインド
 		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(2, renderData->srvAllocation_.gpu);
+		// ルートパラメータ4にカメラViewProjection行列用定数バッファをバインド
+		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(3, viewProjectionResource_->GetGPUVirtualAddress());
 
  
 		dxManager_->GetCommandContextManager()->GetCommandList()->DrawInstanced(kSumVertex, renderData->GetCurrentSum() , 0, 0);
@@ -1094,17 +1109,22 @@ void DrawSystem::DrawAllBlock()
 	{
 		if (drawCallIndex_ >= kMaxDrawCallPerFrame_) return;
 
+		// インスタンス数 0
+		if (renderData->currentSum == 0) continue;
+
 		// モデルの検索
 		Object3D* obj = dxManager_->GetResourceManager()->GetModelManager()->GetModelData(renderData->model);
-		if (!obj) return;
+		if (!obj) continue;
 
 		// テクスチャの検索
 		const TextureData* tex = dxManager_->GetResourceManager()->GetTextureManager()->GetTextureData(renderData->texture);
-		if (!tex) return;
+		if (!tex) continue;
+		const TextureData* tex2 = dxManager_->GetResourceManager()->GetTextureManager()->GetTextureData(renderData->additionalTexture);
+		if (!tex2) continue;
 
 		// RootSignatureとPSOを設定
-		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootSignature(dxManager_->GetPipelineStateManager()->GetRootSignature_particle());
-		dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetParticlePipelineState(BlendMode::kBlendModeNormal));
+		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootSignature(dxManager_->GetPipelineStateManager()->GetRootSignature_block());
+		dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetBlockPipelineState(BlendMode::kBlendModeNormal));
 
 		// 頂点数の取得
 		const uint32_t kSumVertex = static_cast<uint32_t>(obj->modelData.vertices.size());
@@ -1120,10 +1140,14 @@ void DrawSystem::DrawAllBlock()
 
 		// ルートパラメータ0にマテリアル用定数バッファ（色・ライティング情報など）をバインド
 		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources_[drawCallIndex_]->GetGPUVirtualAddress());
+		// ルートパラメータ1にワールド行列配列をバインド
+		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(1, renderData->srvAllocation_.gpu);
 		// ルートパラメータ2にテクスチャのSRV（シェーダリソースビュー）をバインド
-		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(1, tex->textureSrvHandleGPU);
-		// ルートパラメータ3にパーティクル情報用SRVをバインド
-		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(2, renderData->srvAllocation_.gpu);
+		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
+		// ルートパラメータ3に追加テクスチャのSRV（シェーダリソースビュー）をバインド
+		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(3, tex2->textureSrvHandleGPU);
+		// ルートパラメータ4にカメラViewProjection行列用定数バッファをバインド
+		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(4, viewProjectionResource_->GetGPUVirtualAddress());
 
 
 		dxManager_->GetCommandContextManager()->GetCommandList()->DrawInstanced(kSumVertex, renderData->currentSum, 0, 0);
@@ -1356,6 +1380,13 @@ void DrawSystem::InitializeResource_Camera()
 	cameraResource_ = CreateConstantBufferResource(dxManager_->GetDevice(), sizeof(CameraForGPU));
 	cameraData_ = nullptr;
 	HRESULT hr = cameraResource_->Map(0, nullptr, reinterpret_cast<void**>(&cameraData_));
+	assert(SUCCEEDED(hr));
+}
+void DrawSystem::InitializeResource_ViewProjectionMatrix()
+{
+	viewProjectionResource_ = CreateConstantBufferResource(dxManager_->GetDevice(), sizeof(Matrix4x4));
+	viewProjectionData_ = nullptr;
+	HRESULT hr = viewProjectionResource_->Map(0, nullptr, reinterpret_cast<void**>(&viewProjectionData_));
 	assert(SUCCEEDED(hr));
 }
 void DrawSystem::InitializeResource_Material()
