@@ -417,7 +417,7 @@ public:
     /// 現在存在するブロック数
     uint32_t currentSum = 0;
 
-    uint32_t capacity = 2048;
+    uint32_t capacity = 4096;
     Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource_;
     Matrix4x4* instancingData_ = nullptr;
     SRVAllocation srvAllocation_;
