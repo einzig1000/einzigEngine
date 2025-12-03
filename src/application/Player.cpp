@@ -170,7 +170,7 @@ void Player::Update()
 	// ジャンプ処置
 	if (Game::Input::Key::IsJustPressed(DIK_SPACE))
 	{
-		data_.translate.velocity.y += 0.1f;
+		data_.translate.velocity.y = 0.1f;
 		data_.translate.value.y += data_.translate.velocity.y;
 	}
 

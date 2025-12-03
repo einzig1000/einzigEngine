@@ -7,6 +7,7 @@
 #include "Engine.h"
 #include "Itemslot.h"
 #include "Block/BlockDurability.h"
+#include "Block/BlockConfig.h"
 
 MapManager::MapManager(Player* player)
 {
@@ -21,6 +22,7 @@ MapManager::MapManager(Player* player)
 			{
 				block_[x][y][z] = new Block();
 				block_[x][y][z]->Initialize();
+				block_[x][y][z]->aabb_ = AABBByIndex(Vector3int(x, y, z));
 			}
 		}
 	}
@@ -35,16 +37,14 @@ MapManager::MapManager(Player* player)
 		blockDrawSumMap_[BlockID(i)] = 0;
 	}
 
-	blockInfoMap_[BlockID::Stone] = { BlockID::Stone, 60 };
-	blockInfoMap_[BlockID::Dirt] = { BlockID::Dirt, 30 };
-	blockInfoMap_[BlockID::Lawn] = { BlockID::Lawn, 30 };
-	blockInfoMap_[BlockID::Glass] = { BlockID::Glass, 10 };
-	blockInfoMap_[BlockID::Wood] = { BlockID::Wood, 40 };
-	blockInfoMap_[BlockID::Leaf] = { BlockID::Leaf, 20 };
+	blockConfig_ = new BlockConfig();
 }
 
 MapManager::~MapManager()
 {
+	delete blockConfig_;
+	blockConfig_ = nullptr;
+
 	for (int x = 0; x < MAX_BLOCK_X; x++)
 	{
 		for (int y = 0; y < MAX_BLOCK_Y; y++)
@@ -161,25 +161,25 @@ void MapManager::LoadMap(const std::string& mapFilePath)
 			Vector3 blockPosition;
 			for (int y = 0; y < height - dirtThickness; y++)
 			{
-				block_[x][y][z]->SetBlockType(blockInfoMap_[BlockID::Stone]);
+				block_[x][y][z]->SetBlockType(blockConfig_->GetBlockInfo(BlockID::Stone));
 				blockPosition = PositionByIndex(Vector3int(x, y, z));
 				block_[x][y][z]->SetBlockPosition(blockPosition);
 			}
 			for (int y = height - dirtThickness; y < height - 1; y++)
 			{
-				block_[x][y][z]->SetBlockType(blockInfoMap_[BlockID::Dirt]);
+				block_[x][y][z]->SetBlockType(blockConfig_->GetBlockInfo(BlockID::Dirt));
 				blockPosition = PositionByIndex(Vector3int(x, y, z));
 				block_[x][y][z]->SetBlockPosition(blockPosition);
 			}
 			for (int y = height - 1; y < height; y++)
 			{
-				block_[x][y][z]->SetBlockType(blockInfoMap_[BlockID::Lawn]);
+				block_[x][y][z]->SetBlockType(blockConfig_->GetBlockInfo(BlockID::Lawn));
 				blockPosition = PositionByIndex(Vector3int(x, y, z));
 				block_[x][y][z]->SetBlockPosition(blockPosition);
 			}
 			for (int y = height; y < MAX_BLOCK_Y; y++)
 			{
-				block_[x][y][z]->SetBlockType(blockInfoMap_[BlockID::Air]);
+				block_[x][y][z]->SetBlockType(blockConfig_->GetBlockInfo(BlockID::Air));
 				blockPosition = PositionByIndex(Vector3int(x, y, z));
 				block_[x][y][z]->SetBlockPosition(blockPosition);
 			}
@@ -525,6 +525,23 @@ Vector3 MapManager::PositionByIndex(const Vector3int& index)
 	position.y = (index.y * BLOCK_SIZE) - (MAX_BLOCK_Y - 1);
 	position.z = (index.z * BLOCK_SIZE) - (MAX_BLOCK_Z - 1);
 	return position;
+}
+
+AABB MapManager::AABBByIndex(const Vector3int& index)
+{
+	AABB aabb;
+	Vector3 center = PositionByIndex(index);
+	aabb.min = Vector3(
+		center.x - (BLOCK_SIZE / 2.0f),
+		center.y - (BLOCK_SIZE / 2.0f),
+		center.z - (BLOCK_SIZE / 2.0f)
+	);
+	aabb.max = Vector3(
+		center.x + (BLOCK_SIZE / 2.0f),
+		center.y + (BLOCK_SIZE / 2.0f),
+		center.z + (BLOCK_SIZE / 2.0f)
+	);
+	return aabb;
 }
 
 std::optional<Vector3> MapManager::IntersectRayBlock(const Ray& ray, const std::vector<VertexData>& vertices, const AABB& aabb, const Matrix4x4 worldMatrix)

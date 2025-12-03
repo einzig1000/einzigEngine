@@ -15,9 +15,9 @@ public:
 	void DrawBreakEffect();
 
 private:
-	int nowDurability_ = 0;
-	int maxDurability_ = 60;
-	int destroyFrame_ = 0; 
+	int32_t nowDurability_ = 0;
+	int32_t maxDurability_ = 60;
+	int32_t destroyFrame_ = 0; 
 
 	// 破壊中か
 	bool isBeingDestroyed_ = false;

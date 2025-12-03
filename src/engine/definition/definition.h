@@ -55,7 +55,7 @@ std::string BlockIDToString(BlockID id);
 struct Blockinfo
 {
     BlockID type;
-    uint32_t durability;
+    int32_t durability;
 };
 
 template <typename T>

@@ -258,7 +258,7 @@ void Engine::EndFrame()
 	UpdateTransforms();
 
 	// パーティクル更新
-	UpdateParticles();
+	//UpdateParticles();
 
 	// 描画実行
 	drawSystem_->Draw();
