@@ -268,6 +268,7 @@ void Engine::UpdateDebugInfo()
 void Engine::EndFrame()
 {
 	// ImGui描画
+	isDebugInfo = false;
 	if (isDebugInfo)ImGui::Render();
 
 	// パーティクル更新
