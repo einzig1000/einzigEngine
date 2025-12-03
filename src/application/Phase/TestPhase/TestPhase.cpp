@@ -144,6 +144,94 @@ void TestPhase::Initialize()
 
 void TestPhase::Update()
 {
+	if (Game::Input::Key::IsHeld(DIK_A))
+	{
+		player_->translate.value.x -= 0.1f;
+	}
+	if (Game::Input::Key::IsHeld(DIK_D))
+	{
+		player_->translate.value.x += 0.1f;
+	}
+	if (Game::Input::Key::IsHeld(DIK_S))
+	{
+		player_->translate.value.z -= 0.1f;
+	}
+	if (Game::Input::Key::IsHeld(DIK_W))
+	{
+		player_->translate.value.z += 0.1f;
+	}
+	if (Game::Input::Key::IsJustPressed(DIK_SPACE))
+	{
+		player_->translate.velocity.y += 2.5f;
+	}
+}
+
+
+void TestPhase::Draw()
+{
+	ImGui::Begin("MT4 01_01 rotateMatrix");
+	static Vector3 axis = Vector3(1.0f, 1.0f, 1.0f).Normalized();
+	static float angle = 0.44f;
+	ImGui::DragFloat3("axis", &axis.x, 0.1f);
+	ImGui::DragFloat("angle", &angle, 0.1f);
+	Matrix4x4 rotateMatrix = Matrix4x4::MakeRotateAxisMatrix(axis, angle);
+
+
+
+	ImGui::Text("%7.3f %7.3f %7.3f %7.3f", rotateMatrix.m[0][0], rotateMatrix.m[0][1], rotateMatrix.m[0][2], rotateMatrix.m[0][3]);
+	ImGui::Text("%7.3f %7.3f %7.3f %7.3f", rotateMatrix.m[1][0], rotateMatrix.m[1][1], rotateMatrix.m[1][2], rotateMatrix.m[1][3]);
+	ImGui::Text("%7.3f %7.3f %7.3f %7.3f", rotateMatrix.m[2][0], rotateMatrix.m[2][1], rotateMatrix.m[2][2], rotateMatrix.m[2][3]);
+	ImGui::Text("%7.3f %7.3f %7.3f %7.3f", rotateMatrix.m[3][0], rotateMatrix.m[3][1], rotateMatrix.m[3][2], rotateMatrix.m[3][3]);
+
+	ImGui::End();
+
+
+	rect_->Draw();
+	rect_->DrawImGui();
+	
+	ground_->Draw();
+	ground_->DrawImGui();
+	ground_->DrawAABB();
+	wall1_->Draw();
+	wall2_->Draw();
+	wall3_->Draw();
+	wall4_->Draw();
+
+	player_->Draw();
+	player_->DrawAABB();
+	player_->DrawImGui();
+
+	sprite1_->Draw();
+	sprite1_->DrawImGui();
+	sprite2_->Draw();
+	sprite2_->DrawImGui();
+
+	triangle1_->Draw();
+	triangle1_->DrawImGui();
+	triangle2_->Draw();
+	triangle2_->DrawImGui();
+
+	particle1_->Draw();
+	particle1_->DrawEmitter();
+	particle1_->DrawImGui();
+	particle1_->DrawEmitter();
+
+	line_->Draw();
+	line_->DrawImGui();
+	line2_->Draw();
+	line2_->DrawImGui();
+	line3_->Draw();
+	line3_->DrawImGui();
+
+	shoulder_->Draw();
+	shoulder_->DrawImGui();
+	
+	elbow_->Draw();
+	elbow_->DrawImGui();
+	hand_->Draw();
+	hand_->DrawImGui();
+
+
 	ImGui::Begin("TestPhase");
 
 	if (ImGui::BeginTabBar("Facade Test", ImGuiTabBarFlags_::ImGuiTabBarFlags_Reorderable))
@@ -202,7 +290,7 @@ void TestPhase::Update()
 			static float lightIntensity = 1.0f;
 			ImGui::SliderFloat("light intensity", &lightIntensity, 0.0f, 10.0f);
 			Game::Light::SetLightIntensity(lightIntensity);
-	
+
 			static int current_item = 0;
 			static const char* items[] = { "None", "Lambert", "HalfLambert" };
 			if (ImGui::Combo("dirLight.shadingType", &current_item, items, IM_ARRAYSIZE(items)))
@@ -318,7 +406,8 @@ void TestPhase::Update()
 
 		if (ImGui::BeginTabItem("keyboard Test"))
 		{
-			struct KeyInfo {
+			struct KeyInfo
+			{
 				const char* name;
 				int dik;
 			};
@@ -348,7 +437,8 @@ void TestPhase::Update()
 				{"5", DIK_5}, {"6", DIK_6}, {"7", DIK_7}, {"8", DIK_8}, {"9", DIK_9}
 			};
 
-			for (const auto& k : kKeys) {
+			for (const auto& k : kKeys)
+			{
 				if (Game::Input::Key::IsHeld(k.dik) ||
 					Game::Input::Key::IsJustPressed(k.dik) ||
 					Game::Input::Key::IsJustReleased(k.dik))
@@ -371,74 +461,4 @@ void TestPhase::Update()
 	}
 
 	ImGui::End();
-
-	if (Game::Input::Key::IsHeld(DIK_A))
-	{
-		player_->translate.value.x -= 0.1f;
-	}
-	if (Game::Input::Key::IsHeld(DIK_D))
-	{
-		player_->translate.value.x += 0.1f;
-	}
-	if (Game::Input::Key::IsHeld(DIK_S))
-	{
-		player_->translate.value.z -= 0.1f;
-	}
-	if (Game::Input::Key::IsHeld(DIK_W))
-	{
-		player_->translate.value.z += 0.1f;
-	}
-	if (Game::Input::Key::IsJustPressed(DIK_SPACE))
-	{
-		player_->translate.velocity.y += 2.5f;
-	}
-}
-
-
-void TestPhase::Draw()
-{
-	rect_->Draw();
-	rect_->DrawImGui();
-	
-	ground_->Draw();
-	ground_->DrawImGui();
-	ground_->DrawAABB();
-	wall1_->Draw();
-	wall2_->Draw();
-	wall3_->Draw();
-	wall4_->Draw();
-
-	player_->Draw();
-	player_->DrawAABB();
-	player_->DrawImGui();
-
-	sprite1_->Draw();
-	sprite1_->DrawImGui();
-	sprite2_->Draw();
-	sprite2_->DrawImGui();
-
-	triangle1_->Draw();
-	triangle1_->DrawImGui();
-	triangle2_->Draw();
-	triangle2_->DrawImGui();
-
-	particle1_->Draw();
-	particle1_->DrawEmitter();
-	particle1_->DrawImGui();
-	particle1_->DrawEmitter();
-
-	line_->Draw();
-	line_->DrawImGui();
-	line2_->Draw();
-	line2_->DrawImGui();
-	line3_->Draw();
-	line3_->DrawImGui();
-
-	shoulder_->Draw();
-	shoulder_->DrawImGui();
-	
-	elbow_->Draw();
-	elbow_->DrawImGui();
-	hand_->Draw();
-	hand_->DrawImGui();
 }

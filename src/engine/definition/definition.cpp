@@ -351,6 +351,24 @@ Matrix4x4 Matrix4x4::MakeViewPortMatrix(float left, float top, float width, floa
     return Return;
 }
 
+Matrix4x4 Matrix4x4::MakeRotateAxisMatrix(const Vector3& axis, float radian)
+{
+    Matrix4x4 Return = MakeIdentity4x4();
+    float cosTheta = std::cos(radian);
+    float sinTheta = std::sin(radian);
+    float oneSubCosTheta = 1.0f - cosTheta;
+    Return.m[0][0] = axis.x * axis.x * oneSubCosTheta + cosTheta;
+    Return.m[1][0] = axis.x * axis.y * oneSubCosTheta - axis.z * sinTheta;
+    Return.m[2][0] = axis.x * axis.z * oneSubCosTheta + axis.y * sinTheta;
+    Return.m[0][1] = axis.y * axis.x * oneSubCosTheta + axis.z * sinTheta;
+    Return.m[1][1] = axis.y * axis.y * oneSubCosTheta + cosTheta;
+    Return.m[2][1] = axis.y * axis.z * oneSubCosTheta - axis.x * sinTheta;
+    Return.m[0][2] = axis.z * axis.x * oneSubCosTheta - axis.y * sinTheta;
+    Return.m[1][2] = axis.z * axis.y * oneSubCosTheta + axis.x * sinTheta;
+    Return.m[2][2] = axis.z * axis.z * oneSubCosTheta + cosTheta;
+	return Return;
+}
+
 
 #pragma endregion
 
