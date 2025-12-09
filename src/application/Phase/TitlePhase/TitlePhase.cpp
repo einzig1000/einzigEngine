@@ -66,10 +66,10 @@ void TitlePhase::Update()
 		if (options.isCollisionMouseRay)
 		{
 			options.color = 0xFFFFFFFF;
-			if (Game::Input::Mouse::IsHeld(0))
-			{
-				nextState = TitlePhaseState::Options;
-			}
+			//if (Game::Input::Mouse::IsHeld(0))
+			//{
+			//	nextState = TitlePhaseState::Options;
+			//}
 		}
 		else
 		{
@@ -108,9 +108,9 @@ void TitlePhase::Draw()
 	case TitlePhaseState::Title:
 	{
 		worldSelect.Draw();
-		worldSelect.DrawImGui();
+		//worldSelect.DrawImGui();
 		options.Draw();
-		options.DrawImGui();
+		//options.DrawImGui();
 		break;
 	}
 	case TitlePhaseState::WorldSelect:
