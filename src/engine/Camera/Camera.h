@@ -42,6 +42,9 @@ public:
 
     // 視錐台内にAABBがあるか
     bool InFrustum(const AABB& aabb);
+	// 視錐台内にAABBがあるか 中心に近いほど1.0、遠いほど0.0を返す
+	float InFrustum_Lod(const AABB& aabb);
+    
 
     // 操作可能か
     bool enableControl_;
@@ -97,6 +100,7 @@ private:
     //////////////////////////////////////////////
     void CreateFrustumPlanes();
     std::array<Plane, 6> frustumPlanes_;// 視錐台を構成する6つの平面
+	std::array<Plane, 6> centerFrustumPlanes_;// 画面中心に入っているか確認するための狭めた視錐台
 
     //////////////////////////////////////////////
     ///              カメラシェイク            ///
@@ -120,6 +124,14 @@ private:
     float aspect_;
     float nearZ_ = 0.01f;
 	float farZ_ = 100.0f;
+
+    // 画面中心のみカバーしたちいさプロジェクション行列関連データ
+	Matrix4x4 centerProjectionMatrix_;
+	float centerFovY_ = 0.3f;
+	float centerAspect_;
+	float centerNearZ_ = 0.01f;
+	float centerFarZ_ = 100.0f;
+
 
 	// ビュープロジェクション行列
     Matrix4x4 viewProjectionMatrix;

@@ -42,7 +42,7 @@ void Camera::Resize()
 {
 	aspect_ = float(WindowManager::winWidth_) / float(WindowManager::winHeight_);
     projectionMatrix_ = Matrix4x4::MakePerspectiveFovMatrix(fovY_, aspect_, nearZ_, farZ_);
-    //viewportMatrix = Matrix4x4::MakeViewPortMatrix(0.0f, 0.0f, float(WindowManager::winWidth_), float(WindowManager::winHeight_), 0.0f, 1.0f);
+    viewportMatrix = Matrix4x4::MakeViewPortMatrix(0.0f, 0.0f, float(WindowManager::winWidth_), float(WindowManager::winHeight_), 0.0f, 1.0f);
 }
 
 void Camera::Draw()
@@ -118,11 +118,12 @@ void Camera::CreateFrustumPlanes()
         frustumPlanes_[i].normal = frustumPlanes_[i].normal / length;
         frustumPlanes_[i].distance /= length;
     }
+
+
 }
 
 bool Camera::InFrustum(const AABB& aabb)
 {
-    // AABBの8つの頂点をワールド空間に変換
     Vector3 points[8];
 
     points[0] = Vector3{ aabb.min.x, aabb.min.y, aabb.min.z };
@@ -155,6 +156,24 @@ bool Camera::InFrustum(const AABB& aabb)
     }
 
     return true; // どの平面の外側にもない場合は、視錐台内にあると判定
+}
+
+float Camera::InFrustum_Lod(const AABB& aabb)
+{
+    struct Hits { Vector3 point{}; bool in = false; };
+
+    Hits points[8];
+
+    points[0] = Hits(Vector3{ aabb.min.x, aabb.min.y, aabb.min.z }, false);
+    points[1] = Hits(Vector3{ aabb.max.x, aabb.min.y, aabb.min.z }, false);
+    points[2] = Hits(Vector3{ aabb.max.x, aabb.max.y, aabb.min.z }, false);
+    points[3] = Hits(Vector3{ aabb.min.x, aabb.max.y, aabb.min.z }, false);
+    points[4] = Hits(Vector3{ aabb.min.x, aabb.min.y, aabb.max.z }, false);
+    points[5] = Hits(Vector3{ aabb.max.x, aabb.min.y, aabb.max.z }, false);
+    points[6] = Hits(Vector3{ aabb.max.x, aabb.max.y, aabb.max.z }, false);
+    points[7] = Hits(Vector3{ aabb.min.x, aabb.max.y, aabb.max.z }, false);
+
+	return 0.0f;
 }
 
 void Camera::Updata_Orbit()

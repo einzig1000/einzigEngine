@@ -2,14 +2,8 @@
 
 GameManager::GameManager()
 {
-	// フェーズクラス生成
-	testPhase_ = std::make_unique<TestPhase>();
-	battlePhase_ = std::make_unique<BattlePhase>();
-	titlePhase_ = std::make_unique<TitlePhase>();
-	gameScenePhase_ = std::make_unique<GameScenePhase>();
-
 	// 初期フェーズ設定
-	requestPhase_ = PHASE::Phase_Test;
+	requestPhase_ = PHASE::Phase_Title;
 }
 
 GameManager::~GameManager()
@@ -70,16 +64,19 @@ void GameManager::Update()
 		}
 		case PHASE::Phase_Test:
 		{
+			testPhase_ = std::make_unique<TestPhase>();
 			testPhase_->Initialize();
 			break;
 		}
 		case PHASE::Phase_Title:
 		{
+			titlePhase_ = std::make_unique<TitlePhase>();
 			titlePhase_->Initialize();
 			break;
 		}
 		case PHASE::Phase_GameScene:
 		{
+			gameScenePhase_ = std::make_unique<GameScenePhase>();
 			gameScenePhase_->Initialize();
 			break;
 		}

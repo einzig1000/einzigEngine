@@ -56,6 +56,6 @@ private:
 	std::vector<DropItem*> dropItems_;
 
 
-	std::optional<Vector3> IntersectRayBlock(const Ray& ray, const std::vector<VertexData>& vertices, const AABB& aabb, const Matrix4x4 worldMatrix);
+	std::optional<Vector3> IntersectRayBlock(const Ray& ray, const std::vector<VertexData>& vertices, const AABB& aabb);
 };
 

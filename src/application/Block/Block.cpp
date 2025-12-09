@@ -28,7 +28,7 @@ void Block::SetBlockPosition(const Vector3& position)
 	position_ = position;
 	aabb_.min = position - Vector3(BLOCK_SIZE / 2.0f, BLOCK_SIZE / 2.0f, BLOCK_SIZE / 2.0f);
 	aabb_.max = position + Vector3(BLOCK_SIZE / 2.0f, BLOCK_SIZE / 2.0f, BLOCK_SIZE / 2.0f);
-	durability_->SetPosition(position);
+	//durability_->SetPosition(position);
 }
 
 void Block::Update()
@@ -80,6 +80,6 @@ void Block::UpdateColor()
 	// １番目に衝突している時
 	if (isCollisionRay == 0)
 	{
-		//color += Vector4(0x22, 0x22, 0x22, 0x00);
+		color_ += Vector4(0x22, 0x22, 0x22, 0x00);
 	}
 }

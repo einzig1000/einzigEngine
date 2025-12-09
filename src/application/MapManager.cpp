@@ -257,10 +257,7 @@ void MapManager::Initialize()
 
 void MapManager::Update()
 {
-	UpDataPlayerRayCollision();
-
-	// マウス右ボタンが押されているフラグ
-	bool isMouseRightHeld = Game::Input::Mouse::IsJustPressed(1);
+	//UpDataPlayerRayCollision();
 
 	for (int x = 0; x < MAX_BLOCK_X; x++)
 	{
@@ -279,77 +276,79 @@ void MapManager::Update()
 
 void MapManager::UpDataPlayerRayCollision()
 {
-//	// モデルと衝突までの距離セット構造体
-//	struct HitInfo { Block* block; float distance; DirectionXYZ direction; };
-//	// のリスト
-//	std::vector<HitInfo> hits;
-//	// のリサイズ(リサイズではない)
-//	hits.reserve(size_t(MAX_BLOCK_X * MAX_BLOCK_Y * MAX_BLOCK_Z));
-//
-//	for (int x = 0; x < MAX_BLOCK_X; x++)
-//	{
-//		for (int y = 0; y < MAX_BLOCK_Y; y++)
-//		{
-//			for (int z = 0; z < MAX_BLOCK_Z; z++)
-//			{
-//				block_[x][y][z]->isCollisionRay = -1;
-//				// 描画範囲内なら判定
-//				if (block_[x][y][z]->isExposed_)
-//				{
-//					// 最近接衝突点を取得
-//					std::optional<Vector3> colPos = IntersectRayBlock(
-//						player_->viewRay_,
-//						Engine::Instance().GetAllObject3D()[blockData_[BlockID::Dirt]->model].modelData.vertices,
-//						block_[x][y][z]->aabb_,
-//						blockData_[BlockID::Dirt]->instancingData_[0].World
-//					);
-//					// 衝突していたらリストに登録
-//					if (colPos)
-//					{
-//						float minDistance = (colPos.value() - player_->viewRay_.origin).Length();
-//						DirectionXYZ dir = DirectionXYZ::None;
-//						if (colPos->x >= block_[x][y][z]->data_.translate.value.x + (BLOCK_SIZE / 2.0f) - 0.01f)
-//						{
-//							dir = DirectionXYZ::Right;
-//						}
-//						else if (colPos->x <= block_[x][y][z]->data_.translate.value.x - (BLOCK_SIZE / 2.0f) + 0.01f)
-//						{
-//							dir = DirectionXYZ::Left;
-//						}
-//						else if (colPos->y >= block_[x][y][z]->data_.translate.value.y + (BLOCK_SIZE / 2.0f) - 0.01f)
-//						{
-//							dir = DirectionXYZ::Up;
-//						}
-//						else if (colPos->y <= block_[x][y][z]->data_.translate.value.y - (BLOCK_SIZE / 2.0f) + 0.01f)
-//						{
-//							dir = DirectionXYZ::Down;
-//						}
-//						else if (colPos->z >= block_[x][y][z]->data_.translate.value.z + (BLOCK_SIZE / 2.0f) - 0.01f)
-//						{
-//							dir = DirectionXYZ::Front;
-//						}
-//						else if (colPos->z <= block_[x][y][z]->data_.translate.value.z - (BLOCK_SIZE / 2.0f) + 0.01f)
-//						{
-//							dir = DirectionXYZ::Back;
-//						}
-//						hits.push_back({ block_[x][y][z], minDistance, dir });
-//					}
-//				}
-//			}
-//		}
-//	}
-//
-//	// 距離の昇順でソート
-//	std::sort(hits.begin(), hits.end(),
-//		[](auto& a, auto& b) { return a.distance < b.distance; });
-//
-//	// ソート後に順序を割り当て
-//	for (int order = 0; order < (int)hits.size(); ++order)
-//	{
-//		hits[order].block->isCollisionRay = order;
-//		hits[order].block->collisionDistance = hits[order].distance;
-//		hits[order].block->direction = hits[order].direction;
-//	}
+	// モデルと衝突までの距離セット構造体
+	struct HitInfo { Block* block; float distance; DirectionXYZ direction; };
+	// のリスト
+	std::vector<HitInfo> hits;
+	// のリサイズ(リサイズではない)
+	hits.reserve(size_t(MAX_BLOCK_X * MAX_BLOCK_Y * MAX_BLOCK_Z));
+
+	uint32_t count = 0;
+	for (int x = 0; x < MAX_BLOCK_X; x++)
+	{
+		for (int y = 0; y < MAX_BLOCK_Y; y++)
+		{
+			for (int z = 0; z < MAX_BLOCK_Z; z++)
+			{
+				block_[x][y][z]->isCollisionRay = -1;
+				// 描画範囲内なら判定
+				if (block_[x][y][z]->isExposed_)
+				{
+					count++;
+
+					// 最近接衝突点を取得
+					std::optional<Vector3> colPos = IntersectRayBlock(
+						player_->viewRay_,
+						Engine::Instance().GetAllObject3D()[blockData_[BlockID::Dirt]->model].modelData.vertices,
+						block_[x][y][z]->aabb_
+					);
+					// 衝突していたらリストに登録
+					if (colPos)
+					{
+						float minDistance = (colPos.value() - player_->viewRay_.origin).Length();
+						DirectionXYZ dir = DirectionXYZ::None;
+						if (colPos->x >= block_[x][y][z]->aabb_.max.x)
+						{
+							dir = DirectionXYZ::Right;
+						}
+						if (colPos->x <= block_[x][y][z]->aabb_.min.x)
+						{
+							dir = DirectionXYZ::Left;
+						}
+						if (colPos->y >= block_[x][y][z]->aabb_.max.y)
+						{
+							dir = DirectionXYZ::Up;
+						}
+						if (colPos->y <= block_[x][y][z]->aabb_.min.y)
+						{
+							dir = DirectionXYZ::Down;
+						}
+						if (colPos->z >= block_[x][y][z]->aabb_.max.z)
+						{
+							dir = DirectionXYZ::Front;
+						}
+						if (colPos->z <= block_[x][y][z]->aabb_.min.z)
+						{
+							dir = DirectionXYZ::Back;
+						}
+						hits.push_back({ block_[x][y][z], minDistance, dir });
+					}
+				}
+			}
+		}
+	}
+
+	// 距離の昇順でソート
+	std::sort(hits.begin(), hits.end(),
+		[](auto& a, auto& b) { return a.distance < b.distance; });
+
+	// ソート後に順序を割り当て
+	for (int order = 0; order < (int)hits.size(); ++order)
+	{
+		hits[order].block->isCollisionRay = order;
+		hits[order].block->collisionDistance = hits[order].distance;
+		hits[order].block->direction = hits[order].direction;
+	}
 }
 
 void MapManager::UpdatePlayerCollisionY()
@@ -544,7 +543,7 @@ AABB MapManager::AABBByIndex(const Vector3int& index)
 	return aabb;
 }
 
-std::optional<Vector3> MapManager::IntersectRayBlock(const Ray& ray, const std::vector<VertexData>& vertices, const AABB& aabb, const Matrix4x4 worldMatrix)
+std::optional<Vector3> MapManager::IntersectRayBlock(const Ray& ray, const std::vector<VertexData>& vertices, const AABB& aabb)
 {
 	// まずAABBで大まかに判定
 	if (!IsCollision(ray, aabb))
@@ -560,18 +559,22 @@ std::optional<Vector3> MapManager::IntersectRayBlock(const Ray& ray, const std::
 	{
 		Triangle t;
 		// 三角形の頂点をワールド座標に変換
-		t.vertices[0] = Transform(
-			Vector3{ vertices[i].position.x, vertices[i].position.y, vertices[i].position.z },
-			worldMatrix
+		t.vertices[0] = Vector3(
+			vertices[i].position.x,
+			vertices[i].position.y,
+			vertices[i].position.z
 		);
-		t.vertices[1] = Transform(
-			Vector3{ vertices[i + 1].position.x, vertices[i + 1].position.y, vertices[i + 1].position.z },
-			worldMatrix
+		t.vertices[1] = Vector3(
+			vertices[i + 1].position.x,
+			vertices[i + 1].position.y,
+			vertices[i + 1].position.z
 		);
-		t.vertices[2] = Transform(
-			Vector3{ vertices[i + 2].position.x, vertices[i + 2].position.y, vertices[i + 2].position.z },
-			worldMatrix
+		t.vertices[2] = Vector3(
+			vertices[i + 2].position.x,
+			vertices[i + 2].position.y,
+			vertices[i + 2].position.z
 		);
+
 		std::optional<Vector3> pos = IntersectRayTriangle(ray, t);
 		if (pos != std::nullopt)
 		{
