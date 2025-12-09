@@ -10,27 +10,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 	// ウィンドウ、DrectX初期化
 	Engine::Instance().Initialize(WIDTH, HEIGHT, L"LE2A_17_ヨコヤマ_タダノブ");
-
 	GameManager* gm = new GameManager();
-
 	while (Engine::Instance().ProcessMessage())
 	{
 		// フレームの開始
 		Engine::Instance().BeginFrame();
-
 		// ↓更新処理ここから
 		gm->Update();
-
 		// ↓描画処理ここから
 		gm->Draw();
-
 		// フレームの終了
 		Engine::Instance().EndFrame();
 	}
-
 	delete gm;
-
 	Engine::Instance().Finalize();
-
 	return 0;
 }
