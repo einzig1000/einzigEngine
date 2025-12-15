@@ -2,16 +2,6 @@
 #include "definition/definition.h"
 #include <array>
 
-struct easingSet
-{
-    Vector3 start;
-    Vector3 end;
-    bool easingFlag = 0;
-    int flame = 0;
-    int maxFrame = 0;
-    EaseType easetype = EaseType::OUT_QUART;
-};
-
 class Camera
 {
 public:
@@ -49,15 +39,13 @@ public:
     // 操作可能か
     bool enableControl_;
 
-    void ToggleOrbitMode() { orbitMode_ = !orbitMode_;}
-	void SetOrbitMode(bool mode) { orbitMode_ = mode; }
+	void SetCameraMode(CameraMode mode) { cameraMode_ = mode; }
 
 	// カメラ名
 	std::string name_;
 
 private:
-	// オービットモードかFPSモードか
-	bool orbitMode_ = true;
+	CameraMode cameraMode_ = CameraMode::ORBIT;
 
 	void Updata_Orbit();
 	void Update_FPS();
@@ -74,7 +62,7 @@ private:
     Vector2 mousePositionGap_;
     Vector3 preRotate_;
     // 演出による回転中
-    easingSet easeRotate_;
+    EasingSetVector3 easeRotate_;
 
     //////////////////////////////////////////////
     ///                回転中心                ///
@@ -84,7 +72,7 @@ private:
     Vector3 preCenter_;
     Vector3 normalize_;
     // 演出による回転中心の変更中
-    easingSet easeCenter_;
+    EasingSetVector3 easeCenter_;
 
     //////////////////////////////////////////////
     ///               カメラ距離               ///
@@ -93,7 +81,7 @@ private:
     bool prePressMouse0_ = 0;
     int mouseWheel_ = 0;
     // 演出によるカメラ距離の変更中
-    easingSet easeDistance_;
+    EasingSetVector3 easeDistance_;
 
     //////////////////////////////////////////////
     ///             視錐台判定用              ///

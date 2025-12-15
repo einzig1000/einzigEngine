@@ -10,10 +10,13 @@ class GameScenePhase :
 {
 public:
 	GameScenePhase();
-	~GameScenePhase();
-	void Initialize();
-	void Update();
-	void Draw();
+	~GameScenePhase() override;
+
+	void Initialize() override;
+	void Update() override;
+	void Draw() override;
+	void DrawImGui() override;
+	void ChangePhase(PHASE phase) override { nextPhase_ = phase; }
 
 
 private:

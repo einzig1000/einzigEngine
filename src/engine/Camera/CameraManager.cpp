@@ -162,14 +162,9 @@ float CameraManager::GetCurrentDistance() const
 	return camera_[currentCameraID_].distance_;
 }
 
-void CameraManager::ToggleCurrentOrbitMode()
+void CameraManager::SetCameraMode(CameraMode mode)
 {
-	camera_[currentCameraID_].ToggleOrbitMode();
-}
-
-void CameraManager::SetCurrentOrbitMode(bool mode)
-{
-	camera_[currentCameraID_].SetOrbitMode(mode);
+	camera_[currentCameraID_].SetCameraMode(mode);
 }
 
 bool CameraManager::InCamera(const AABB& aabb)
@@ -177,7 +172,7 @@ bool CameraManager::InCamera(const AABB& aabb)
 	return camera_[currentCameraID_].InFrustum(aabb);
 }
 
-void CameraManager::ToggleCameraMode()
+void CameraManager::ToggleCamera()
 {
 	currentCameraID_++;
 	if (currentCameraID_ >= static_cast<int>(camera_.size()))

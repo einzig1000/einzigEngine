@@ -25,9 +25,9 @@
 #define WIDTH 1280
 #define HEIGHT 720
 #define eps 1e-6f
-#define MAX_BLOCK_X 40
-#define MAX_BLOCK_Z 40
-#define MAX_BLOCK_Y 10
+#define CHUNK_X 16
+#define CHUNK_Y 16
+#define CHUNK_Z 16
 #define BLOCK_SIZE 1.0f
 #define PLAYER_SPEED 0.1f
 
@@ -49,7 +49,7 @@ enum class BlockID
 
     MAX,
 };
-std::string BlockIDToString(BlockID id);
+std::string EnumToString(BlockID id);
 
 
 struct Blockinfo
@@ -57,6 +57,21 @@ struct Blockinfo
     BlockID type;
     int32_t durability;
 };
+
+
+// ゲームのフェーズ
+enum class PHASE
+{
+    Phase_None,
+    Phase_Test,
+    Phase_Title,
+    Phase_GameScene,
+    Phase_StageSelect,
+    Phase_GameClear,
+};
+std::string EnumToString(PHASE e);
+
+#pragma region 演算
 
 template <typename T>
 constexpr const T& my_min(const T& a, const T& b)
@@ -99,32 +114,7 @@ constexpr T my_max(std::initializer_list<T> list)
     return result;
 }
 
-// ゲームのフェーズ
-enum class PHASE
-{
-    Phase_None,
-    Phase_Test,
-    Phase_Title,
-    Phase_GameScene,
-    Phase_StageSelect,
-    Phase_GameClear,
-};
-
-// スプライトのアンカー位置
-enum class Anchor
-{
-    Center,
-
-    CenterLeft,
-    CenterRight,
-    CenterTop,
-    CenterDown,
-
-    LeftTop,
-    RightTop,
-    LeftDown,
-    RightDown,
-};
+#pragma endregion
 
 
 #pragma region 基盤構造体
@@ -585,8 +575,8 @@ struct Matrix4x4
     static Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip);
     // ビューポート変換
     static Matrix4x4 MakeViewPortMatrix(float left, float top, float width, float height, float minD, float maxD);
-	// 任意軸回転行列
-	static Matrix4x4 MakeRotateAxisMatrix(const Vector3& axis, float radian);
+    // 任意軸回転行列
+    static Matrix4x4 MakeRotateAxisMatrix(const Vector3& axis, float radian);
 };
 
 #pragma endregion
@@ -664,15 +654,76 @@ struct Segment
 enum class PrimitiveType
 {
     // 球
-	Sphere,
-	// 楕円体
+    Sphere,
+    // 楕円体
     SphereXYZ,
     // 立方体
     AABB,
     // 四角形
     Plane,
     // 円
-	Circle,
+    Circle,
+};
+std::string EnumToString(PrimitiveType e);
+
+#pragma endregion
+
+
+#pragma region イージング構造体
+
+enum class EaseType
+{
+    LINEAR,
+    IN_SINE,
+    OUT_SINE,
+    IN_OUT_SINE,
+    IN_QUAD,
+    OUT_QUAD,
+    IN_OUT_QUAD,
+    IN_CUBIC,
+    OUT_CUBIC,
+    IN_OUT_CUBIC,
+    IN_QUART,
+    OUT_QUART,
+    IN_OUT_QUART,
+    IN_QUINT,
+    OUT_QUINT,
+    IN_OUT_QUINT,
+    IN_EXPO,
+    OUT_EXPO,
+    IN_OUT_EXPO,
+    IN_CIRC,
+    OUT_CIRC,
+    IN_OUT_CIRC,
+    IN_BACK,
+    OUT_BACK,
+    IN_OUT_BACK,
+    IN_ELASTIC,
+    OUT_ELASTIC,
+    IN_OUT_ELASTIC,
+    IN_BOUNCE,
+    OUT_BOUNCE,
+};
+std::string EnumToString(EaseType e);
+
+struct EasingSetVector3
+{
+    Vector3 start;
+    Vector3 end;
+    bool easingFlag = 0;
+    int flame = 0;
+    int maxFrame = 0;
+    EaseType easetype = EaseType::OUT_QUART;
+};
+
+struct EasingSetFloat
+{
+    float start;
+    float end;
+    bool easingFlag = 0;
+    int flame = 0;
+    int maxFrame = 0;
+    EaseType easetype = EaseType::OUT_QUART;
 };
 
 #pragma endregion
@@ -796,6 +847,7 @@ enum class BlendMode
     // 使用したら殺す
     Wireframe
 };
+std::string EnumToString(BlendMode e);
 
 enum class LightMode
 {
@@ -803,6 +855,7 @@ enum class LightMode
     Lambert,
     HalfLambert,
 };
+std::string EnumToString(LightMode e);
 
 struct DirectionalLight
 {
@@ -810,7 +863,7 @@ struct DirectionalLight
     Vector3 direction = { 0.0f, -1.0f, 0.0f };
     float intensity = 1.0f;//輝度
     LightMode mode = LightMode::HalfLambert;
-	bool phong = false;
+    bool phong = false;
 };
 
 struct DrawOptions
@@ -820,7 +873,7 @@ struct DrawOptions
     // 固有ライトを使うか共有ライトを使うか
     bool useOwnLight = false;
     // ライト
-	DirectionalLight dirLight;
+    DirectionalLight dirLight;
     // ブレンドモード
     BlendMode blendMode = BlendMode::kBlendModeNormal;
 };
@@ -831,6 +884,23 @@ struct Material
     Matrix4x4 uvTransform;
     float shininess;
 };
+
+// スプライトのアンカー位置
+enum class Anchor
+{
+    Center,
+
+    CenterLeft,
+    CenterRight,
+    CenterTop,
+    CenterDown,
+
+    LeftTop,
+    RightTop,
+    LeftDown,
+    RightDown,
+};
+std::string EnumToString(Anchor e);
 
 #pragma endregion
 
@@ -843,6 +913,7 @@ enum class CollisionResult
     接触,
     衝突
 };
+std::string EnumToString(CollisionResult e);
 
 struct CollisionFlags
 {
@@ -869,13 +940,14 @@ enum class AABBFace
     BACK = 4,
     FRONT = 5,
 };
+std::string EnumToString(AABBFace e);
 
 struct CollisionPair
 {
     // 軽い方
     int light = 0;
-	// 重い方
-	int heavy = 0;
+    // 重い方
+    int heavy = 0;
 
     bool operator==(const CollisionPair& rhs) const
     {
@@ -1003,20 +1075,22 @@ struct ParticleMonoInfGPU
 
 #pragma endregion
 
-struct BlockInstanceData
-{
-    Matrix4x4 WVP;
-    Matrix4x4 World;
-    Vector4 color;
-	uint32_t textureID;
-	bool isDisplay;
-};
+
+#pragma region カメラ構造体
 
 
-struct CameraForGPU
+enum class CameraMode
 {
-	Vector3 worldPosition;
+    ORBIT,
+    FPS
 };
+std::string EnumToString(CameraMode e);
+
+#pragma endregion
+
+
+#pragma region 方向
+
 
 // 上下左右
 enum class DirectionXY
@@ -1027,6 +1101,7 @@ enum class DirectionXY
     Down = 2,
     Up = 3,
 };
+std::string EnumToString(DirectionXY e);
 
 // 前後左右
 enum class DirectionXZ
@@ -1037,6 +1112,7 @@ enum class DirectionXZ
     Back = 2,
     Front = 3,
 };
+std::string EnumToString(DirectionXZ e);
 
 // 前後左右 + 斜め
 enum class DirectionXZ8Way
@@ -1051,7 +1127,9 @@ enum class DirectionXZ8Way
     Right = 6,
     FrontRight = 7,
 };
+std::string EnumToString(DirectionXZ8Way e);
 
+// 上下左右前後
 enum class DirectionXYZ
 {
     None = -1,
@@ -1061,6 +1139,15 @@ enum class DirectionXYZ
     Front = 3,
     Down = 4,
     Up = 5,
+};
+std::string EnumToString(DirectionXYZ e);
+
+#pragma endregion
+
+
+struct CameraForGPU
+{
+    Vector3 worldPosition;
 };
 
 struct D3DResourceLeakChecker
@@ -1084,40 +1171,7 @@ enum class LineType
     BezierCurve,
     SplineCurve,
 };
-
-enum class EaseType
-{
-    LINEAR,
-    IN_SINE,
-    OUT_SINE,
-    IN_OUT_SINE,
-    IN_QUAD,
-    OUT_QUAD,
-    IN_OUT_QUAD,
-    IN_CUBIC,
-    OUT_CUBIC,
-    IN_OUT_CUBIC,
-    IN_QUART,
-    OUT_QUART,
-    IN_OUT_QUART,
-    IN_QUINT,
-    OUT_QUINT,
-    IN_OUT_QUINT,
-    IN_EXPO,
-    OUT_EXPO,
-    IN_OUT_EXPO,
-    IN_CIRC,
-    OUT_CIRC,
-    IN_OUT_CIRC,
-    IN_BACK,
-    OUT_BACK,
-    IN_OUT_BACK,
-    IN_ELASTIC,
-    OUT_ELASTIC,
-    IN_OUT_ELASTIC,
-    IN_BOUNCE,
-    OUT_BOUNCE,
-};
+std::string EnumToString(LineType e);
 
 
 struct SRVAllocation
@@ -1125,26 +1179,4 @@ struct SRVAllocation
     uint32_t index = UINT32_MAX;
     D3D12_CPU_DESCRIPTOR_HANDLE cpu{};
     D3D12_GPU_DESCRIPTOR_HANDLE gpu{};
-};
-
-struct ParticleGroup
-{
-    // テクスチャ
-    uint32_t texture = 0;
-	// モデル
-	uint32_t model = 0;
-    // 色
-	Material material;
-    // パーティクルのリスト
-    std::list<ParticleMonoInf> particles;
-    // インスタンシングリソース
-    Microsoft::WRL::ComPtr<ID3D12Resource> instanceResource;
-    // インスタンシングデータを書き込むためのポインタ
-    ParticleMonoInf* mappedPtr = nullptr;
-    // インスタンシングデータ用SRVインデックス
-	SRVAllocation srvAllocation;
-    // インスタンス数
-    uint32_t instanceCount = 0;
-    // エミッター
-    ParticleEmitter emitter;
 };

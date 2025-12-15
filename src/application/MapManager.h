@@ -27,6 +27,7 @@ public:
 	void UpdatePlayerCollisionZ();
 
 	void Draw();
+	void DrawImGui();
 
 	Vector3int IndexByPosition(const Vector3& position);
 	Vector3 PositionByIndex(const Vector3int& index);
@@ -34,8 +35,8 @@ public:
 
 private:
 	// マップデータ
-	Block* block_[MAX_BLOCK_X][MAX_BLOCK_Y][MAX_BLOCK_Z];
-	int blockHeightMap_[MAX_BLOCK_X][MAX_BLOCK_Z];
+	Block* block_[CHUNK_X][CHUNK_Z][CHUNK_Y];
+	int blockHeightMap_[CHUNK_X][CHUNK_Y];
 	// 描画データ
 	std::map<BlockID, std::unique_ptr<RenderData_Block>> blockData_;
 

@@ -27,14 +27,16 @@ Camera::~Camera()
 
 void Camera::Update()
 {
-    // カメラ操作
-    if (orbitMode_)
+    switch (cameraMode_)
     {
+    case CameraMode::ORBIT:
         Updata_Orbit();
-    }
-    else
-    {
+        break;
+    case CameraMode::FPS:
         Update_FPS();
+        break;
+    default:
+        break;
     }
 }
 
@@ -52,28 +54,71 @@ void Camera::Draw()
 
 void Camera::DrawImGui()
 {
+    std::string tag = "##" + name_;
+
     ImGui::Text(name_.c_str());
-    ImGui::DragFloat3("Center", &center_.x, 0.01f);
-    ImGui::DragFloat3("Rotate", &transform_.rotate.x, 0.01f);
-    ImGui::DragFloat("Distance", &distance_, 0.1f);
-    if (ImGui::DragFloat("fovY", &fovY_, 0.01f))
+
+	std::string centerTag = tag + ".Center";
+    ImGui::DragFloat3(centerTag.c_str(), &center_.x, 0.01f);
+	ImGui::SameLine();
+	ImGui::Text("Center");
+
+	std::string rotateTag = tag + ".Rotate";
+    ImGui::DragFloat3(rotateTag.c_str(), &transform_.rotate.x, 0.01f);
+    ImGui::SameLine();
+	ImGui::Text("Rotate");
+
+	std::string distanceTag = tag + ".Distance";
+    ImGui::DragFloat(distanceTag.c_str(), &distance_, 0.1f);
+    ImGui::SameLine();
+	ImGui::Text("Distance");
+
+	std::string fovYTag = tag + ".fovY";
+    if (ImGui::DragFloat(fovYTag.c_str(), &fovY_, 0.01f))
     {
         projectionMatrix_ = Matrix4x4::MakePerspectiveFovMatrix(fovY_, aspect_, nearZ_, farZ_);
     }
-    if (ImGui::DragFloat("aspect", &aspect_, 0.01f))
+    ImGui::SameLine();
+	ImGui::Text("fovY");
+
+	std::string aspectTag = tag + ".aspect";
+    if (ImGui::DragFloat(aspectTag.c_str(), &aspect_, 0.01f))
     {
         projectionMatrix_ = Matrix4x4::MakePerspectiveFovMatrix(fovY_, aspect_, nearZ_, farZ_);
     }
-    if (ImGui::DragFloat("nearZ", &nearZ_, 0.01f, 0.01f, 10.0f))
+    ImGui::SameLine();
+	ImGui::Text("aspect");
+
+	std::string nearZTag = tag + ".nearZ";
+    if (ImGui::DragFloat(nearZTag.c_str(), &nearZ_, 0.01f, 0.01f, 10.0f))
     {
         projectionMatrix_ = Matrix4x4::MakePerspectiveFovMatrix(fovY_, aspect_, nearZ_, farZ_);
     }
-    if (ImGui::DragFloat("farZ", &farZ_, 0.01f, 0.01f, 500.0f))
+    ImGui::SameLine();
+	ImGui::Text("nearZ");
+
+	std::string farZTag = tag + ".farZ";
+    if (ImGui::DragFloat(farZTag.c_str(), &farZ_, 0.01f, 0.01f, 500.0f))
     {
         projectionMatrix_ = Matrix4x4::MakePerspectiveFovMatrix(fovY_, aspect_, nearZ_, farZ_);
     }
-    ImGui::Checkbox("enableControl", &enableControl_);
-	ImGui::Checkbox("orbitMode", &orbitMode_);
+    ImGui::SameLine();
+	ImGui::Text("farZ");
+
+	std::string enableControlTag = tag + ".enableControl";
+    ImGui::Checkbox(enableControlTag.c_str(), &enableControl_);
+    ImGui::SameLine();
+	ImGui::Text("enableControl");
+
+	std::string cameraModeTag = tag + ".cameraMode";
+	int currentMode = static_cast<int>(cameraMode_);
+	static const char* items[] = { "ORBIT", "FPS" };
+    if (ImGui::Combo(cameraModeTag.c_str(), &currentMode, items, IM_ARRAYSIZE(items)))
+    {
+        cameraMode_ = static_cast<CameraMode>(currentMode);
+	}
+    ImGui::SameLine();
+	ImGui::Text("cameraMode");
 }
 
 void Camera::CreateFrustumPlanes()

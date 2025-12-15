@@ -75,6 +75,7 @@ TextureData* TextureManager::GetTextureData(int32_t textureID)
     {
         return &textures_[textureID];
     }
+
     else
     {
         Log("存在しないテクスチャIDです:%d", textureID);

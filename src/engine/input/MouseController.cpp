@@ -9,8 +9,8 @@ MouseController::MouseController(HWND hwnd, CameraManager* cameraManager)
 	:cameraManager_(cameraManager)
 {
     hwnd_ = hwnd;
-    wheelDelta = 0;
-	isVisible = true;
+    wheelDelta_ = 0;
+	isVisible_ = true;
 }
 
 void MouseController::Update()
@@ -25,84 +25,89 @@ void MouseController::Update()
     SetMouseButtenState();
 
     // FPSカメラでマウスカーソルがウィンドウ外に出ないようにする
-    if (!isVisible)
+    if (!isVisible_)
     {
 		int screenX = WindowManager::winWidth_ / 2;
 		int screenY = WindowManager::winHeight_ / 2;
 
-        //SetCursorPos(screenX, screenY);
+        SetCursorPos(screenX, screenY);
     }
 }
 
 void MouseController::EndFrame()
 {
-    wheelDelta = 0;
+    wheelDelta_ = 0;
 }
 
+// 今押しているか  i: 0=左ボタン、1=右ボタン、2=中ボタン
 bool MouseController::IsHeld(int i)
 {
     switch (i)
     {
     case 0:
-        return leftButton.curr;
+        return leftButton_.curr;
     case 1:
-        return rightButton.curr;
+        return rightButton_.curr;
     case 2:
-        return middleButton.curr;
+        return middleButton_.curr;
     default:
         return false;
     }
 }
 
+// 押した瞬間（今フレームで押された） i: 0=左ボタン、1=右ボタン、2=中ボタン
 bool MouseController::IsJustPressed(int i)
 {
     switch (i)
     {
     case 0:
-        return (!leftButton.prev && leftButton.curr);
+        return (!leftButton_.prev && leftButton_.curr);
     case 1:
-        return (!rightButton.prev && rightButton.curr);
+        return (!rightButton_.prev && rightButton_.curr);
     case 2:
-        return (!middleButton.prev && middleButton.curr);
+        return (!middleButton_.prev && middleButton_.curr);
     default:
         return false;
     }
 }
 
+// 離した瞬間（今フレームで離れた） i: 0=左ボタン、1=右ボタン、2=中ボタン
 bool MouseController::IsJustReleased(int i)
 {
     switch (i)
     {
     case 0:
-        return (leftButton.prev && !leftButton.curr);
+        return (leftButton_.prev && !leftButton_.curr);
     case 1:
-        return (rightButton.prev && !rightButton.curr);
+        return (rightButton_.prev && !rightButton_.curr);
     case 2:
-        return (middleButton.prev && !middleButton.curr);
+        return (middleButton_.prev && !middleButton_.curr);
     default:
         return false;
     }
 }
 
+// 押されてからの経過フレーム数 i: 0=左ボタン、1=右ボタン、2=中ボタン
 uint32_t MouseController::HoldFrames(int i)
 {
     switch (i)
     {
     case 0:
-        return leftButton.holdFrames;
+        return leftButton_.holdFrames;
     case 1:
-        return rightButton.holdFrames;
+        return rightButton_.holdFrames;
     case 2:
-        return middleButton.holdFrames;
+        return middleButton_.holdFrames;
     default:
         return 0;
     }
 }
 
+// マウスカーソルの表示・非表示切り替え
 void MouseController::ToggleMouseCursorVisible()
 {
-    isVisible = !isVisible;
-    if (isVisible)
+    isVisible_ = !isVisible_;
+    if (isVisible_)
     {
         // カーソルを表示
         ShowCursor(TRUE);
@@ -114,6 +119,22 @@ void MouseController::ToggleMouseCursorVisible()
 	}
 }
 
+// マウスカーソルの表示・非表示設定
+void MouseController::ShowCursor(bool visible)
+{
+    if (visible)
+    {
+        // カーソルを表示
+        ::ShowCursor(TRUE);
+    }
+    else
+    {
+        // カーソルを非表示
+        ::ShowCursor(FALSE);
+	}
+}
+
+// マウスポジション取得
 void MouseController::SetMousePosition()
 {
     // hwnd: ゲームウィンドウのハンドル（WindowManagerなどから取得）
@@ -127,6 +148,7 @@ void MouseController::SetMousePosition()
     position_ = Vector2{ float(mousePosScreen.x),float(mousePosScreen.y) };
 }
 
+// マウスレイ取得
 void MouseController::SetMouseRay()
 {
     // 左下が０、右上が１とした時のマウスポジション
@@ -153,20 +175,21 @@ void MouseController::SetMouseRay()
     }.Normalized();
 }
 
+// マウスボタン状態取得
 void MouseController::SetMouseButtenState()
 {
-    leftButton.prev = leftButton.curr;
-	rightButton.prev = rightButton.curr;
-	middleButton.prev = middleButton.curr;
+    leftButton_.prev = leftButton_.curr;
+	rightButton_.prev = rightButton_.curr;
+	middleButton_.prev = middleButton_.curr;
 
-    leftButton.curr = (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
-    rightButton.curr = (GetAsyncKeyState(VK_RBUTTON) & 0x8000) != 0;
-    middleButton.curr = (GetAsyncKeyState(VK_MBUTTON) & 0x8000) != 0;
+    leftButton_.curr = (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
+    rightButton_.curr = (GetAsyncKeyState(VK_RBUTTON) & 0x8000) != 0;
+    middleButton_.curr = (GetAsyncKeyState(VK_MBUTTON) & 0x8000) != 0;
 
-    if (leftButton.curr)leftButton.holdFrames++;
-    else leftButton.holdFrames = 0;
-    if (rightButton.curr) rightButton.holdFrames++;
-    else rightButton.holdFrames = 0;
-    if (middleButton.curr) middleButton.holdFrames++;
-    else middleButton.holdFrames = 0;
+    if (leftButton_.curr)leftButton_.holdFrames++;
+    else leftButton_.holdFrames = 0;
+    if (rightButton_.curr) rightButton_.holdFrames++;
+    else rightButton_.holdFrames = 0;
+    if (middleButton_.curr) middleButton_.holdFrames++;
+    else middleButton_.holdFrames = 0;
 }

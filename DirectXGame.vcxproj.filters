@@ -103,9 +103,6 @@
     <Filter Include="engine\ResourceManager\TextureManager">
       <UniqueIdentifier>{5ac7ac8c-cfc8-4b8e-80bf-d8b5369d0613}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\DrawSystem">
-      <UniqueIdentifier>{c33b27c6-9c84-4600-b956-0acdc8f3c453}</UniqueIdentifier>
-    </Filter>
     <Filter Include="application\GameManeger\Phase">
       <UniqueIdentifier>{e81b7604-cb9c-4ea4-9294-38c65d0c2c9a}</UniqueIdentifier>
     </Filter>
@@ -123,9 +120,6 @@
     </Filter>
     <Filter Include="application\GameManeger\Phase\GameScenePhase">
       <UniqueIdentifier>{187336b4-48e9-448a-a699-e7a55fb56ae1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="engine\DrawSystem\RenderDataClass">
-      <UniqueIdentifier>{7d8d53d3-04c0-4caa-ac10-735e5054f1f5}</UniqueIdentifier>
     </Filter>
     <Filter Include="engine\FixFPS">
       <UniqueIdentifier>{8ed84834-c43a-4dda-a3bf-3b95cd1b75fd}</UniqueIdentifier>
@@ -148,9 +142,6 @@
     <Filter Include="application\GameManeger\Player">
       <UniqueIdentifier>{6a027008-0c2c-4e83-a548-37aff76f8489}</UniqueIdentifier>
     </Filter>
-    <Filter Include="application\GameManeger\Block">
-      <UniqueIdentifier>{1914304b-d65c-4d83-8e80-cd43ac14c5e2}</UniqueIdentifier>
-    </Filter>
     <Filter Include="application\GameManeger\Map">
       <UniqueIdentifier>{28f4b7c8-cecf-4edc-a2e3-2071fd41f5b6}</UniqueIdentifier>
     </Filter>
@@ -168,6 +159,15 @@
     </Filter>
     <Filter Include="engine\Shader\Block">
       <UniqueIdentifier>{4af80ac8-f820-4247-b010-9c9144ea5715}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManeger\Map\Block">
+      <UniqueIdentifier>{1914304b-d65c-4d83-8e80-cd43ac14c5e2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\DrawSystem">
+      <UniqueIdentifier>{c33b27c6-9c84-4600-b956-0acdc8f3c453}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\DrawSystem\RenderDataClass">
+      <UniqueIdentifier>{7d8d53d3-04c0-4caa-ac10-735e5054f1f5}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -283,7 +283,7 @@
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="src\application\Block\Block.cpp">
-      <Filter>application\GameManeger\Block</Filter>
+      <Filter>application\GameManeger\Map\Block</Filter>
     </ClCompile>
     <ClCompile Include="src\application\MapManager.cpp">
       <Filter>application\GameManeger\Map</Filter>
@@ -307,7 +307,7 @@
       <Filter>engine\imgui</Filter>
     </ClCompile>
     <ClCompile Include="src\application\Block\BlockDurability.cpp">
-      <Filter>application\GameManeger\Block</Filter>
+      <Filter>application\GameManeger\Map\Block</Filter>
     </ClCompile>
     <ClCompile Include="src\application\ResourceLoder\ResourceID.cpp">
       <Filter>application</Filter>
@@ -426,7 +426,7 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="src\application\Block\Block.h">
-      <Filter>application\GameManeger\Block</Filter>
+      <Filter>application\GameManeger\Map\Block</Filter>
     </ClInclude>
     <ClInclude Include="src\application\FPSCamera.h">
       <Filter>application\GameManeger\FPSCamera</Filter>
@@ -450,12 +450,9 @@
       <Filter>engine\imgui</Filter>
     </ClInclude>
     <ClInclude Include="src\application\Block\BlockDurability.h">
-      <Filter>application\GameManeger\Block</Filter>
+      <Filter>application\GameManeger\Map\Block</Filter>
     </ClInclude>
     <ClInclude Include="src\application\ResourceLoder\ResourceID.h">
-      <Filter>application</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\ResourceLoder\ResourceName.h">
       <Filter>application</Filter>
     </ClInclude>
     <ClInclude Include="src\application\Block\BlockConfig.h">

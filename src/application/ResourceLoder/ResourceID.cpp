@@ -73,7 +73,7 @@ void ResourceID::reload()
 	tmp = Game::Resource::LoadTexture("resources/Prototypes/texture/white1x1.png");
 	TextureIDs_[size_t(TextureID::white1x1)] = tmp;
 
-	tmp = Game::Resource::LoadTexture("resources/Prototypes/texture/circle.png");
+	tmp = Game::Resource::LoadTexture("resources/Prototypes/texture/particle/circle.png");
 	TextureIDs_[size_t(TextureID::Circle)] = tmp;
 
 	tmp = Game::Resource::LoadTexture("resources/Minecraft/Title/start.png");

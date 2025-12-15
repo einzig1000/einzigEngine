@@ -16,25 +16,17 @@ GameScenePhase::GameScenePhase()
 	//map_->LoadMap("resources/Map/map140x140.csv");
 }
 
-GameScenePhase::~GameScenePhase()
-{	
-
-	//delete map_;
-	//map_ = nullptr;
-
-	//delete player_;
-	//player_ = nullptr;
-}
+GameScenePhase::~GameScenePhase() {}
 
 void GameScenePhase::Initialize()
 {
-	nextPhase = PHASE::Phase_None;
+	nextPhase_ = PHASE::Phase_None;
 
 	map_->Initialize();
 	player_->Initialize();
 
-	Game::Camera::SetCurrentOrbitMode(false);
-	//Game::Input::Mouse::ToggleMouseCursorVisible();
+	Game::Camera::SetCameraMode(CameraMode::FPS);
+	Game::Input::Mouse::ShowCursor(false);
 }
 
 
@@ -51,6 +43,11 @@ void GameScenePhase::Draw()
 	map_->Draw();
 
 	player_->Draw();
+}
+
+void GameScenePhase::DrawImGui()
+{
+	map_->DrawImGui();
 }
 
 

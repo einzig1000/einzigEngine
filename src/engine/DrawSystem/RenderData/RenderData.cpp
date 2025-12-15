@@ -1926,7 +1926,7 @@ void RenderData_Block::Update()
 // ブロックの追加
 void RenderData_Block::AddNewBlock(Vector3 position, Vector3int index)
 {
-	Log("BlockID:%s", BlockIDToString(name));
+	Log("BlockID:%s", EnumToString(name));
 	Log("index:%d,%d,%d", index.x, index.y, index.z);
 	Log("currentSum:%d", currentSum);
 	// 空いているインデックスを探す
@@ -2074,7 +2074,7 @@ void RenderData_Block::DrawImGui()
 	//	}
 	//}
 
-	std::string str = BlockIDToString(this->name);
+	std::string str = EnumToString(this->name);
 
 	std::string num = ":" + std::to_string(this->ID);
 

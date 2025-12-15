@@ -14,11 +14,11 @@ MapManager::MapManager(Player* player)
 	// プレイヤー参照保存
 	player_ = player;
 
-	for (int x = 0; x < MAX_BLOCK_X; x++)
+	for (int x = 0; x < CHUNK_X; x++)
 	{
-		for (int y = 0; y < MAX_BLOCK_Y; y++)
+		for (int y = 0; y < CHUNK_Z; y++)
 		{
-			for (int z = 0; z < MAX_BLOCK_Z; z++)
+			for (int z = 0; z < CHUNK_Y; z++)
 			{
 				block_[x][y][z] = new Block();
 				block_[x][y][z]->Initialize();
@@ -31,6 +31,7 @@ MapManager::MapManager(Player* player)
 	{
 		blockData_[BlockID(i)] = std::make_unique<RenderData_Block>(BlockID(i));
 		blockData_[BlockID(i)]->texture = ResourceID::GetTextureID(BlockID(i));
+		blockData_[BlockID(i)]->additionalTexture = ResourceID::GetTextureID(TextureID::BreakBlock_1);
 		blockData_[BlockID(i)]->model = ResourceID::GetModelID(ModelID::Cube);
 		blockData_[BlockID(i)]->blendMode = BlendMode::kBlendModeNormal;
 
@@ -45,11 +46,11 @@ MapManager::~MapManager()
 	delete blockConfig_;
 	blockConfig_ = nullptr;
 
-	for (int x = 0; x < MAX_BLOCK_X; x++)
+	for (int x = 0; x < CHUNK_X; x++)
 	{
-		for (int y = 0; y < MAX_BLOCK_Y; y++)
+		for (int y = 0; y < CHUNK_Z; y++)
 		{
-			for (int z = 0; z < MAX_BLOCK_Z; z++)
+			for (int z = 0; z < CHUNK_Y; z++)
 			{
 				delete block_[x][y][z];
 				block_[x][y][z] = nullptr;
@@ -73,9 +74,9 @@ void MapManager::LoadMap(const std::string& mapFilePath)
 	{
 		std::ofstream createFile(mapFilePath);
 
-		const int width = MAX_BLOCK_X;
-		const int depth = MAX_BLOCK_Z;
-		const int maxHeight = MAX_BLOCK_Y;
+		const int width = CHUNK_X;
+		const int depth = CHUNK_Y;
+		const int maxHeight = CHUNK_Z;
 		const double scale = 6.0;
 		const int octaves = 4;
 		const double persistence = 0.5;
@@ -129,11 +130,11 @@ void MapManager::LoadMap(const std::string& mapFilePath)
 			blockHeightMap_[X][Y] = id;
 
 			X++;
-			if (X >= MAX_BLOCK_X)
+			if (X >= CHUNK_X)
 			{
 				X = 0;
 				Y++;
-				if (Y >= MAX_BLOCK_Z)
+				if (Y >= CHUNK_Y)
 				{
 					break;
 				}
@@ -144,9 +145,9 @@ void MapManager::LoadMap(const std::string& mapFilePath)
 	file.close();
 
 	// [x][z]に高さ分だけブロックを生成
-	for (int x = 0; x < MAX_BLOCK_X; x++)
+	for (int x = 0; x < CHUNK_X; x++)
 	{
-		for (int z = 0; z < MAX_BLOCK_Z; z++)
+		for (int z = 0; z < CHUNK_Y; z++)
 		{
 			// Y軸の高さ
 			int height = blockHeightMap_[x][z];
@@ -177,7 +178,7 @@ void MapManager::LoadMap(const std::string& mapFilePath)
 				blockPosition = PositionByIndex(Vector3int(x, y, z));
 				block_[x][y][z]->SetBlockPosition(blockPosition);
 			}
-			for (int y = height; y < MAX_BLOCK_Y; y++)
+			for (int y = height; y < CHUNK_Z; y++)
 			{
 				block_[x][y][z]->SetBlockType(blockConfig_->GetBlockInfo(BlockID::Air));
 				blockPosition = PositionByIndex(Vector3int(x, y, z));
@@ -186,15 +187,15 @@ void MapManager::LoadMap(const std::string& mapFilePath)
 		}
 	}
 
-	for (int x = 0; x < MAX_BLOCK_X; x++)
+	for (int x = 0; x < CHUNK_X; x++)
 	{
-		for (int z = 0; z < MAX_BLOCK_Z; z++)
+		for (int z = 0; z < CHUNK_Y; z++)
 		{
 			int height = blockHeightMap_[x][z];
 			int neighborHeights[4] = { 0,0,0,0 };
-			if (x + 1 < MAX_BLOCK_X)neighborHeights[0] = blockHeightMap_[x + 1][z];
+			if (x + 1 < CHUNK_X)neighborHeights[0] = blockHeightMap_[x + 1][z];
 			if (x - 1 >= 0)neighborHeights[1] = blockHeightMap_[x - 1][z];
-			if (z + 1 < MAX_BLOCK_Z)neighborHeights[2] = blockHeightMap_[x][z + 1];
+			if (z + 1 < CHUNK_Y)neighborHeights[2] = blockHeightMap_[x][z + 1];
 			if (z - 1 >= 0)neighborHeights[3] = blockHeightMap_[x][z - 1];
 
 			int maxHeightGap = 0;
@@ -222,11 +223,11 @@ void MapManager::LoadMap(const std::string& mapFilePath)
 
 void MapManager::SetExposedBlocks()
 {
-	for (int x = 0; x < MAX_BLOCK_X; x++)
+	for (int x = 0; x < CHUNK_X; x++)
 	{
-		for (int y = 0; y < MAX_BLOCK_Y; y++)
+		for (int y = 0; y < CHUNK_Z; y++)
 		{
-			for (int z = 0; z < MAX_BLOCK_Z; z++)
+			for (int z = 0; z < CHUNK_Y; z++)
 			{
 				if (block_[x][y][z]->isExposed_)
 				{
@@ -259,11 +260,11 @@ void MapManager::Update()
 {
 	//UpDataPlayerRayCollision();
 
-	for (int x = 0; x < MAX_BLOCK_X; x++)
+	for (int x = 0; x < CHUNK_X; x++)
 	{
-		for (int y = 0; y < MAX_BLOCK_Y; y++)
+		for (int y = 0; y < CHUNK_Z; y++)
 		{
-			for (int z = 0; z < MAX_BLOCK_Z; z++)
+			for (int z = 0; z < CHUNK_Y; z++)
 			{
 				block_[x][y][z]->Update();
 			}
@@ -281,14 +282,14 @@ void MapManager::UpDataPlayerRayCollision()
 	// のリスト
 	std::vector<HitInfo> hits;
 	// のリサイズ(リサイズではない)
-	hits.reserve(size_t(MAX_BLOCK_X * MAX_BLOCK_Y * MAX_BLOCK_Z));
+	hits.reserve(size_t(CHUNK_X * CHUNK_Z * CHUNK_Y));
 
 	uint32_t count = 0;
-	for (int x = 0; x < MAX_BLOCK_X; x++)
+	for (int x = 0; x < CHUNK_X; x++)
 	{
-		for (int y = 0; y < MAX_BLOCK_Y; y++)
+		for (int y = 0; y < CHUNK_Z; y++)
 		{
-			for (int z = 0; z < MAX_BLOCK_Z; z++)
+			for (int z = 0; z < CHUNK_Y; z++)
 			{
 				block_[x][y][z]->isCollisionRay = -1;
 				// 描画範囲内なら判定
@@ -500,19 +501,27 @@ void MapManager::Draw()
 	}
 }
 
+void MapManager::DrawImGui()
+{
+	for (int32_t i = 0; i < int32_t(BlockID::MAX); ++i)
+	{
+		blockData_[BlockID(i)]->DrawImGui();
+	}
+}
+
 Vector3int MapManager::IndexByPosition(const Vector3& position)
 {
 	Vector3int index;
-	index.x = static_cast<int>(((position.x + (MAX_BLOCK_X - 1)) / BLOCK_SIZE) + (BLOCK_SIZE / 2.0f));
-	index.y = static_cast<int>(((position.y + (MAX_BLOCK_Y - 1)) / BLOCK_SIZE));
-	index.z = static_cast<int>(((position.z + (MAX_BLOCK_Z - 1)) / BLOCK_SIZE) + (BLOCK_SIZE / 2.0f));
+	index.x = static_cast<int>(((position.x + (CHUNK_X - 1)) / BLOCK_SIZE) + (BLOCK_SIZE / 2.0f));
+	index.y = static_cast<int>(((position.y + (CHUNK_Z - 1)) / BLOCK_SIZE));
+	index.z = static_cast<int>(((position.z + (CHUNK_Y - 1)) / BLOCK_SIZE) + (BLOCK_SIZE / 2.0f));
 
 	if (index.x < 0)index.x = 0;
-	else if (index.x > MAX_BLOCK_X - 1)index.x = MAX_BLOCK_X - 1;
+	else if (index.x > CHUNK_X - 1)index.x = CHUNK_X - 1;
 	if (index.y < 0)index.y = 0;
-	else if (index.y > MAX_BLOCK_Y - 1)index.y = MAX_BLOCK_Y - 1;
+	else if (index.y > CHUNK_Z - 1)index.y = CHUNK_Z - 1;
 	if (index.z < 0)index.z = 0;
-	else if (index.z > MAX_BLOCK_Z - 1)index.z = MAX_BLOCK_Z - 1;
+	else if (index.z > CHUNK_Y - 1)index.z = CHUNK_Y - 1;
 
 	return index;
 }
@@ -520,9 +529,9 @@ Vector3int MapManager::IndexByPosition(const Vector3& position)
 Vector3 MapManager::PositionByIndex(const Vector3int& index)
 {
 	Vector3 position;
-	position.x = (index.x * BLOCK_SIZE) - (MAX_BLOCK_X - 1);
-	position.y = (index.y * BLOCK_SIZE) - (MAX_BLOCK_Y - 1);
-	position.z = (index.z * BLOCK_SIZE) - (MAX_BLOCK_Z - 1);
+	position.x = (index.x * BLOCK_SIZE) - (CHUNK_X - 1);
+	position.y = (index.y * BLOCK_SIZE) - (CHUNK_Z - 1);
+	position.z = (index.z * BLOCK_SIZE) - (CHUNK_Y - 1);
 	return position;
 }
 

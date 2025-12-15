@@ -96,7 +96,8 @@ public:
 	bool IsMouseJustPressed(int i);// 押した瞬間（今フレームで押された）
 	bool IsMouseJustReleased(int i);// 離した瞬間（今フレームで離れた）
 	uint32_t MouseHoldFrames(int i);// 押されてからの経過フレーム数
-	void ToggleMouseCursorVisible();
+	void ToggleMouseCursorVisible();// マウスカーソルの表示非表示切り替え
+	void SetMouseCursorVisible(bool visible);// マウスカーソルの表示非表示設定
 
 	// キーボード
 	bool IsKeyHeld(BYTE key);// 今押しているか
@@ -116,8 +117,8 @@ public:
 	void MoveCameraDistance(float target, int spendFrame, EaseType easetype);
 	void StartCameraShake(float intensity, float duration, float frequency = 25.0f);
 	bool IsCameraShaking();
-	void ToggleCameraMode();
-	void ToggleCurrentOrbitMode();
+	void SetCameraMode(CameraMode mode);
+	void ToggleCamera();
 	void StopCameraShake();
 	CameraManager* GetCameraManager() { return cameraManager_; }
 

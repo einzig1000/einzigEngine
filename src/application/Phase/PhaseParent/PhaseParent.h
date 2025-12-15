@@ -6,10 +6,17 @@
 class PhaseParent
 {
 public:
+	virtual ~PhaseParent() = default;
 
-	PHASE GetNextPhase();
+	virtual void Initialize() = 0;
+	virtual	void Update() = 0;
+	virtual	void Draw() = 0;
+	virtual void DrawImGui() = 0;
+
+	virtual void ChangePhase(PHASE phase);
+	virtual PHASE GetNextPhase();
 
 protected:
-	PHASE nextPhase;
+	PHASE nextPhase_;
 };
 
