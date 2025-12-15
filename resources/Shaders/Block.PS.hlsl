@@ -13,8 +13,14 @@ PixelShaderOutput main(VertexShaderOutput input)
     // UV同次座標
     PixelShaderOutput output;
     float32_t4 transformedUV = mul(gMaterial0.uvTransform, float32_t4(input.texcoord, 0.0f, 1.0f));
+	float32_t4 transformedUV2 = mul(gMaterial0.uvTransform, float32_t4(input.texcoord2, 0.0f, 1.0f));
     float32_t4 textureColor = gTexture0.Sample(gSampler, transformedUV.xy);
-    output.color = gMaterial0.color * textureColor;
+	float32_t4 textureColor2 = gTexture1.Sample(gSampler, transformedUV2.xy);
+
+    float useTex2 = step(1e-5, textureColor2.a); // 0 or 1
+    float4 blended = lerp(textureColor, textureColor2, useTex2);
+    output.color = gMaterial0.color * blended;
+
     if (output.color.a <= 1e-5) discard;
     return output;
 }

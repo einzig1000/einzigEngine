@@ -6,11 +6,15 @@ class TestPhase :
 {
 public:
 	TestPhase();
-	~TestPhase();
+	~TestPhase() override;
 
-	void Initialize();
-	void Update();
-	void Draw();
+	void Initialize() override;
+	void Update() override;
+	void Draw() override;
+	void DrawImGui() override;
+	void ChangePhase(PHASE phase) override { nextPhase_ = phase; }
+
+
 
 private:
 

@@ -82,7 +82,7 @@ bool Engine::ProcessMessage()
 		if (msg.message == WM_MOUSEWHEEL)
 		{
 			// ホイールの回転量を加算　クリックはboolで回転量はintだからmessageを使う。らしい。なんで？
-			inputManager_->GetMouseController()->wheelDelta += GET_WHEEL_DELTA_WPARAM(msg.wParam);
+			inputManager_->GetMouseController()->wheelDelta_ += GET_WHEEL_DELTA_WPARAM(msg.wParam);
 		}
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
@@ -232,7 +232,7 @@ void Engine::UpdateDebugInfo()
 	}
 	if (Game::Input::Key::IsJustPressed(DIK_F3))
 	{
-		ToggleCameraMode();
+		ToggleCamera();
 	}
 	if (Game::Input::Key::IsJustPressed(DIK_F12))
 	{
@@ -476,7 +476,7 @@ Ray Engine::GetMouseRay()
 
 uint32_t Engine::GetMouseWheel()
 {
-	return inputManager_->GetMouseController()->wheelDelta;
+	return inputManager_->GetMouseController()->wheelDelta_;
 }
 
 bool Engine::IsMouseHeld(int i)
@@ -502,6 +502,11 @@ uint32_t Engine::MouseHoldFrames(int i)
 void Engine::ToggleMouseCursorVisible()
 {
 	inputManager_->GetMouseController()->ToggleMouseCursorVisible();
+}
+
+void Engine::SetMouseCursorVisible(bool visible)
+{
+	inputManager_->GetMouseController()->ShowCursor(visible);
 }
 
 
@@ -561,14 +566,14 @@ bool Engine::IsCameraShaking()
 	return cameraManager_->IsShaking();
 }
 
-void Engine::ToggleCameraMode()
+void Engine::SetCameraMode(CameraMode mode)
 {
-	cameraManager_->ToggleCameraMode();
+	cameraManager_->SetCameraMode(mode); 
 }
 
-void Engine::ToggleCurrentOrbitMode()
+void Engine::ToggleCamera()
 {
-	cameraManager_->ToggleCurrentOrbitMode();
+	cameraManager_->ToggleCamera();
 }
 
 void Engine::StopCameraShake()

@@ -2,16 +2,6 @@
 #include "definition/definition.h"
 #include <array>
 
-struct easingSet
-{
-    Vector3 start;
-    Vector3 end;
-    bool easingFlag = 0;
-    int flame = 0;
-    int maxFrame = 0;
-    EaseType easetype = EaseType::OUT_QUART;
-};
-
 class Camera
 {
 public:
@@ -42,19 +32,20 @@ public:
 
     // 視錐台内にAABBがあるか
     bool InFrustum(const AABB& aabb);
+	// 視錐台内にAABBがあるか 中心に近いほど1.0、遠いほど0.0を返す
+	float InFrustum_Lod(const AABB& aabb);
+    
 
     // 操作可能か
     bool enableControl_;
 
-    void ToggleOrbitMode() { orbitMode_ = !orbitMode_;}
-	void SetOrbitMode(bool mode) { orbitMode_ = mode; }
+	void SetCameraMode(CameraMode mode) { cameraMode_ = mode; }
 
 	// カメラ名
 	std::string name_;
 
 private:
-	// オービットモードかFPSモードか
-	bool orbitMode_ = true;
+	CameraMode cameraMode_ = CameraMode::ORBIT;
 
 	void Updata_Orbit();
 	void Update_FPS();
@@ -71,7 +62,7 @@ private:
     Vector2 mousePositionGap_;
     Vector3 preRotate_;
     // 演出による回転中
-    easingSet easeRotate_;
+    EasingSetVector3 easeRotate_;
 
     //////////////////////////////////////////////
     ///                回転中心                ///
@@ -81,7 +72,7 @@ private:
     Vector3 preCenter_;
     Vector3 normalize_;
     // 演出による回転中心の変更中
-    easingSet easeCenter_;
+    EasingSetVector3 easeCenter_;
 
     //////////////////////////////////////////////
     ///               カメラ距離               ///
@@ -90,13 +81,14 @@ private:
     bool prePressMouse0_ = 0;
     int mouseWheel_ = 0;
     // 演出によるカメラ距離の変更中
-    easingSet easeDistance_;
+    EasingSetVector3 easeDistance_;
 
     //////////////////////////////////////////////
     ///             視錐台判定用              ///
     //////////////////////////////////////////////
     void CreateFrustumPlanes();
     std::array<Plane, 6> frustumPlanes_;// 視錐台を構成する6つの平面
+	std::array<Plane, 6> centerFrustumPlanes_;// 画面中心に入っているか確認するための狭めた視錐台
 
     //////////////////////////////////////////////
     ///              カメラシェイク            ///
@@ -120,6 +112,14 @@ private:
     float aspect_;
     float nearZ_ = 0.01f;
 	float farZ_ = 100.0f;
+
+    // 画面中心のみカバーしたちいさプロジェクション行列関連データ
+	Matrix4x4 centerProjectionMatrix_;
+	float centerFovY_ = 0.3f;
+	float centerAspect_;
+	float centerNearZ_ = 0.01f;
+	float centerFarZ_ = 100.0f;
+
 
 	// ビュープロジェクション行列
     Matrix4x4 viewProjectionMatrix;

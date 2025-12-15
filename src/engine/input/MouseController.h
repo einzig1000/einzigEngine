@@ -24,16 +24,17 @@ public:
 	uint32_t HoldFrames(int i);// 押されてからの経過フレーム数
 
 	void ToggleMouseCursorVisible();
+	void ShowCursor(bool visible);
 
-	int wheelDelta = 0;
+	int wheelDelta_ = 0;
 
 private:
 
-	bool isVisible;
+	bool isVisible_;
 
-	mouseButtenState leftButton;
-	mouseButtenState rightButton;
-	mouseButtenState middleButton;
+	mouseButtenState leftButton_;
+	mouseButtenState rightButton_;
+	mouseButtenState middleButton_;
 
 	Vector2 position_;
 	Ray ray_;

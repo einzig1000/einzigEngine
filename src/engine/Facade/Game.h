@@ -218,6 +218,9 @@ public:
 
 			// カーソルの表示・非表示切り替え
 			static void ToggleMouseCursorVisible();
+
+			// カーソルの表示・非表示設定
+			static void ShowCursor(bool visible);
 		};
 
 		class Key
@@ -279,8 +282,7 @@ public:
 			static float GetCurrentDistance();			// カメラ距離
 		};
 
-		static void ToggleCurrentOrbitMode();		// 現在のカメラのオービットモード切り替え
-		static void SetCurrentOrbitMode(bool mode);
+		static void SetCameraMode(CameraMode mode);
 
 		/// <summary>
 		/// カメラの回転中心座標の移動

@@ -152,6 +152,11 @@ void Game::Input::Mouse::ToggleMouseCursorVisible()
 	Engine::Instance().ToggleMouseCursorVisible();
 }
 
+void Game::Input::Mouse::ShowCursor(bool visible)
+{
+	Engine::Instance().SetMouseCursorVisible(visible);
+}
+
 
 bool Game::Input::Key::IsHeld(BYTE key)
 {
@@ -262,15 +267,11 @@ float Game::Camera::Getter::GetCurrentDistance()
 	return Engine::Instance().GetCameraManager()->GetCurrentDistance();
 }
 
-void Game::Camera::ToggleCurrentOrbitMode()
+void Game::Camera::SetCameraMode(CameraMode mode)
 {
-	Engine::Instance().GetCameraManager()->ToggleCurrentOrbitMode();
+	Engine::Instance().GetCameraManager()->SetCameraMode(mode);
 }
 
-void Game::Camera::SetCurrentOrbitMode(bool mode)
-{
-	Engine::Instance().GetCameraManager()->SetCurrentOrbitMode(mode);
-}
 
 void Game::Utilitie::toggleWireframeMode()
 {

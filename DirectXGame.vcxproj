@@ -239,7 +239,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="src\application\Block\BlockConfig.h" />
     <ClInclude Include="src\engine\ImGuiManager\ImGuiManager.h" />
     <ClInclude Include="src\application\Block\BlockDurability.h" />
-    <ClInclude Include="src\application\ResourceLoder\ResourceName.h" />
     <ClInclude Include="src\application\DropItem.h" />
     <ClInclude Include="src\application\Itemslot.h" />
     <ClInclude Include="src\application\Block\Block.h" />

@@ -13,15 +13,20 @@ class TitlePhase :
 	public PhaseParent
 {
 public:
-	void Initialize();
-	void Update();
-	void Draw();
+	TitlePhase();
+	~TitlePhase() override;
+
+	void Initialize() override;
+	void Update() override;
+	void Draw() override;
+	void DrawImGui() override;
+	void ChangePhase(PHASE phase) override { nextPhase_ = phase; }
 
 
 private:
 
-	RenderData_Sprite worldSelect;
-	RenderData_Sprite options;
+	std::unique_ptr<RenderData_Sprite> worldSelect;
+	std::unique_ptr<RenderData_Sprite> options;
 
 	uint32_t frameCount = 0;
 

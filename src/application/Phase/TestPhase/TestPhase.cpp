@@ -86,7 +86,7 @@ TestPhase::TestPhase()
 	hand_->translate.value.y = 6.0f;
 
 	hand_->parentModel = elbow_.get();
-	//elbow_.parentModel = &shoulder_;
+	elbow_->parentModel = shoulder_.get();
 
 	rect_->texture = tex1;
 	rect_->pos1 = { 1.0f,1.0f,0.0f };
@@ -134,12 +134,16 @@ TestPhase::TestPhase()
 
 }
 
+
 TestPhase::~TestPhase()
 {
 }
 
+
 void TestPhase::Initialize()
-{}
+{
+	nextPhase_ = PHASE::Phase_None;
+}
 
 
 void TestPhase::Update()
@@ -169,28 +173,9 @@ void TestPhase::Update()
 
 void TestPhase::Draw()
 {
-	ImGui::Begin("MT4 01_01 rotateMatrix");
-	static Vector3 axis = Vector3(1.0f, 1.0f, 1.0f).Normalized();
-	static float angle = 0.44f;
-	ImGui::DragFloat3("axis", &axis.x, 0.1f);
-	ImGui::DragFloat("angle", &angle, 0.1f);
-	Matrix4x4 rotateMatrix = Matrix4x4::MakeRotateAxisMatrix(axis, angle);
-
-
-
-	ImGui::Text("%7.3f %7.3f %7.3f %7.3f", rotateMatrix.m[0][0], rotateMatrix.m[0][1], rotateMatrix.m[0][2], rotateMatrix.m[0][3]);
-	ImGui::Text("%7.3f %7.3f %7.3f %7.3f", rotateMatrix.m[1][0], rotateMatrix.m[1][1], rotateMatrix.m[1][2], rotateMatrix.m[1][3]);
-	ImGui::Text("%7.3f %7.3f %7.3f %7.3f", rotateMatrix.m[2][0], rotateMatrix.m[2][1], rotateMatrix.m[2][2], rotateMatrix.m[2][3]);
-	ImGui::Text("%7.3f %7.3f %7.3f %7.3f", rotateMatrix.m[3][0], rotateMatrix.m[3][1], rotateMatrix.m[3][2], rotateMatrix.m[3][3]);
-
-	ImGui::End();
-
-
 	rect_->Draw();
-	rect_->DrawImGui();
 	
 	ground_->Draw();
-	ground_->DrawImGui();
 	ground_->DrawAABB();
 	wall1_->Draw();
 	wall2_->Draw();
@@ -199,38 +184,49 @@ void TestPhase::Draw()
 
 	player_->Draw();
 	player_->DrawAABB();
-	player_->DrawImGui();
 
 	sprite1_->Draw();
-	sprite1_->DrawImGui();
 	sprite2_->Draw();
-	sprite2_->DrawImGui();
 
 	triangle1_->Draw();
-	triangle1_->DrawImGui();
 	triangle2_->Draw();
-	triangle2_->DrawImGui();
 
 	particle1_->Draw();
 	particle1_->DrawEmitter();
-	particle1_->DrawImGui();
-	particle1_->DrawEmitter();
 
 	line_->Draw();
-	line_->DrawImGui();
 	line2_->Draw();
-	line2_->DrawImGui();
 	line3_->Draw();
-	line3_->DrawImGui();
 
 	shoulder_->Draw();
-	shoulder_->DrawImGui();
-	
 	elbow_->Draw();
-	elbow_->DrawImGui();
 	hand_->Draw();
-	hand_->DrawImGui();
+}
 
+
+void TestPhase::DrawImGui()
+{
+	rect_->DrawImGui();
+
+	ground_->DrawImGui();
+
+	player_->DrawImGui();
+	
+	sprite1_->DrawImGui();
+	sprite2_->DrawImGui();
+	
+	triangle1_->DrawImGui();
+	triangle2_->DrawImGui();
+	
+	particle1_->DrawImGui();
+	
+	line_->DrawImGui();
+	line2_->DrawImGui();
+	line3_->DrawImGui();
+	
+	shoulder_->DrawImGui();
+	elbow_->DrawImGui();
+	hand_->DrawImGui();
 
 	ImGui::Begin("TestPhase");
 
@@ -462,3 +458,4 @@ void TestPhase::Draw()
 
 	ImGui::End();
 }
+

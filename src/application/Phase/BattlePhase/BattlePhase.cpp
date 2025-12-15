@@ -22,3 +22,6 @@ void BattlePhase::Draw()
 
 
 }
+
+void BattlePhase::DrawImGui()
+{}

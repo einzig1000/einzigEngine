@@ -35,13 +35,12 @@ public:
 	Vector3 GetCurrentRotate() const;
 	Matrix4x4 GetCurrentViewProjectionMatrix() const; // ビュープロジェクション行列
 	float GetCurrentDistance() const;			// カメラ距離
-	void ToggleCurrentOrbitMode();				// 現在のカメラのオービットモード切り替え
-	void SetCurrentOrbitMode(bool mode);
+	void SetCameraMode(CameraMode mode);
 
 	// 視錐台内にAABBがあるか
 	bool InCamera(const AABB& aabb);
 
-	void ToggleCameraMode();
+	void ToggleCamera();
 
 private:
 	int currentCameraID_ = 0;

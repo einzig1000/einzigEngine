@@ -1,7 +1,42 @@
 #pragma once
 #include "definition/definition.h"
 #include <vector>
-#include "ResourceName.h"
+#include <unordered_map>
+
+
+enum class ModelID
+{
+	None,
+	Cube,
+	Plane,
+	Corn,
+	Sphere,
+
+	MAX,
+};
+
+enum class TextureID
+{
+	None,
+	UVChecker,
+	monsterBall,
+	white1x1,
+	empty1x1,
+	Circle,
+
+	TITLE_start,
+	TITLE_option,
+
+	Item_slot,
+
+	BreakBlock_0,
+	BreakBlock_1,
+	BreakBlock_2,
+	BreakBlock_3,
+	BreakBlock_4,
+
+	MAX,
+};
 
 class ResourceID
 {
@@ -29,6 +64,24 @@ private:
 	static std::vector<int> blockTextureIDs_;
 	static std::vector<int> modelIDs_;
 	static std::vector<int> TextureIDs_;
+
+
+	static inline const std::unordered_map<TextureID, std::string> textureFilePaths_ =
+	{
+	{ TextureID::UVChecker,    "resources/Prototypes/texture/uvChecker.png" },
+	{ TextureID::monsterBall,  "resources/Prototypes/texture/monsterBall.png" },
+	{ TextureID::white1x1,     "resources/Prototypes/texture/white1x1.png" },
+	{ TextureID::empty1x1,     "resources/Prototypes/texture/empty1x1.png" },
+	{ TextureID::Circle,       "resources/Prototypes/texture/circle.png" },
+	{ TextureID::TITLE_start,  "resources/Minecraft/Title/start.png" },
+	{ TextureID::TITLE_option, "resources/Minecraft/Title/option.png" },
+	{ TextureID::Item_slot,    "resources/Minecraft/Item_slot.png" },
+	{ TextureID::BreakBlock_0, "resources/Minecraft/breakBlock/breakBlock_0.png" },
+	{ TextureID::BreakBlock_1, "resources/Minecraft/breakBlock/breakBlock_1.png" },
+	{ TextureID::BreakBlock_2, "resources/Minecraft/breakBlock/breakBlock_2.png" },
+	{ TextureID::BreakBlock_3, "resources/Minecraft/breakBlock/breakBlock_3.png" },
+	{ TextureID::BreakBlock_4, "resources/Minecraft/breakBlock/breakBlock_4.png" },
+	};
 
 	ResourceID() = delete;
 	~ResourceID() = delete;

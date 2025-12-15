@@ -409,7 +409,8 @@ Vector3 AABB::GetCollisionDepth(const AABB& other)const
 
 #pragma endregion
 
-std::string BlockIDToString(BlockID id)
+
+std::string EnumToString(BlockID id)
 {
     switch (id)
     {
@@ -438,5 +439,331 @@ std::string BlockIDToString(BlockID id)
     default:
         return "Unknown";
         break;
+    }
+}
+
+std::string EnumToString(PHASE e)
+{
+    switch (e)
+    {
+    case PHASE::Phase_None:
+        return "Phase_None";
+    case PHASE::Phase_Test:
+        return "Phase_Test";
+    case PHASE::Phase_Title:
+        return "Phase_Title";
+    case PHASE::Phase_GameScene:
+        return "Phase_GameScene";
+    case PHASE::Phase_StageSelect:
+        return "Phase_StageSelect";
+    case PHASE::Phase_GameClear:
+        return "Phase_GameClear";
+    default:
+        return "Unknown";
+    }
+}
+
+std::string EnumToString(PrimitiveType e)
+{
+    switch (e)
+    {
+    case PrimitiveType::Sphere:
+        return "Sphere";
+    case PrimitiveType::SphereXYZ:
+        return "SphereXYZ";
+    case PrimitiveType::AABB:
+        return "AABB";
+    case PrimitiveType::Plane:
+        return "Plane";
+    case PrimitiveType::Circle:
+        return "Circle";
+    default:
+        return "Unknown";
+    }
+}
+
+std::string EnumToString(EaseType e)
+{
+    switch (e)
+    {
+    case EaseType::LINEAR:
+        return "LINEAR";
+    case EaseType::IN_SINE:
+        return "IN_SINE";
+    case EaseType::OUT_SINE:
+        return "OUT_SINE";
+    case EaseType::IN_OUT_SINE:
+        return "IN_OUT_SINE";
+    case EaseType::IN_QUAD:
+        return "IN_QUAD";
+    case EaseType::OUT_QUAD:
+        return "OUT_QUAD";
+    case EaseType::IN_OUT_QUAD:
+        return "IN_OUT_QUAD";
+    case EaseType::IN_CUBIC:
+        return "IN_CUBIC";
+    case EaseType::OUT_CUBIC:
+        return "OUT_CUBIC";
+    case EaseType::IN_OUT_CUBIC:
+        return "IN_OUT_CUBIC";
+    case EaseType::IN_QUART:
+        return "IN_QUART";
+    case EaseType::OUT_QUART:
+        return "OUT_QUART";
+    case EaseType::IN_OUT_QUART:
+        return "IN_OUT_QUART";
+    case EaseType::IN_QUINT:
+        return "IN_QUINT";
+    case EaseType::OUT_QUINT:
+        return "OUT_QUINT";
+    case EaseType::IN_OUT_QUINT:
+        return "IN_OUT_QUINT";
+    case EaseType::IN_EXPO:
+        return "IN_EXPO";
+    case EaseType::OUT_EXPO:
+        return "OUT_EXPO";
+    case EaseType::IN_OUT_EXPO:
+        return "IN_OUT_EXPO";
+    case EaseType::IN_CIRC:
+        return "IN_CIRC";
+    case EaseType::OUT_CIRC:
+        return "OUT_CIRC";
+    case EaseType::IN_OUT_CIRC:
+        return "IN_OUT_CIRC";
+    case EaseType::IN_BACK:
+        return "IN_BACK";
+    case EaseType::OUT_BACK:
+        return "OUT_BACK";
+    case EaseType::IN_OUT_BACK:
+        return "IN_OUT_BACK";
+    case EaseType::IN_ELASTIC:
+        return "IN_ELASTIC";
+    case EaseType::OUT_ELASTIC:
+        return "OUT_ELASTIC";
+    case EaseType::IN_OUT_ELASTIC:
+        return "IN_OUT_ELASTIC";
+    case EaseType::IN_BOUNCE:
+        return "IN_BOUNCE";
+    case EaseType::OUT_BOUNCE:
+        return "OUT_BOUNCE";
+    default:
+        return "Unknown";
+    }
+}
+
+std::string EnumToString(BlendMode e)
+{
+    switch (e)
+    {
+    case BlendMode::kBlendModeNone:
+        return "kBlendModeNone";
+    case BlendMode::kBlendModeNormal:
+        return "kBlendModeNormal";
+    case BlendMode::kBlendModeAdd:
+        return "kBlendModeAdd";
+    case BlendMode::kBlendModeSub:
+        return "kBlendModeSub";
+    case BlendMode::kBlendModeMul:
+        return "kBlendModeMul";
+    case BlendMode::kBlendModeScreen:
+        return "kBlendModeScreen";
+    case BlendMode::Wireframe:
+        return "Wireframe";
+    default:
+        return "Unknown";
+    }
+}
+
+std::string EnumToString(LightMode e)
+{
+    switch (e)
+    {
+    case LightMode::None:
+        return "None";
+    case LightMode::Lambert:
+        return "Lambert";
+    case LightMode::HalfLambert:
+        return "HalfLambert";
+    default:
+        return "Unknown";
+    }
+}
+
+std::string EnumToString(Anchor e)
+{
+    switch (e)
+    {
+    case Anchor::Center:
+        return "Center";
+    case Anchor::CenterLeft:
+        return "CenterLeft";
+    case Anchor::CenterRight:
+        return "CenterRight";
+    case Anchor::CenterTop:
+        return "CenterTop";
+    case Anchor::CenterDown:
+        return "CenterDown";
+    case Anchor::LeftTop:
+        return "LeftTop";
+    case Anchor::RightTop:
+        return "RightTop";
+    case Anchor::LeftDown:
+        return "LeftDown";
+    case Anchor::RightDown:
+        return "RightDown";
+    default:
+        return "Unknown";
+    }
+}
+
+std::string EnumToString(CollisionResult e)
+{
+    switch (e)
+    {
+    case CollisionResult::非衝突:
+        return "非衝突";
+    case CollisionResult::接触:
+        return "接触";
+    case CollisionResult::衝突:
+        return "衝突";
+    default:
+        return "Unknown";
+    }
+}
+
+std::string EnumToString(AABBFace e)
+{
+    switch (e)
+    {
+    case AABBFace::NONE:
+        return "NONE";
+    case AABBFace::LEFT:
+        return "LEFT";
+    case AABBFace::RIGHT:
+        return "RIGHT";
+    case AABBFace::BOTTOM:
+        return "BOTTOM";
+    case AABBFace::TOP:
+        return "TOP";
+    case AABBFace::BACK:
+        return "BACK";
+    case AABBFace::FRONT:
+        return "FRONT";
+    default:
+        return "Unknown";
+    }
+}
+
+std::string EnumToString(CameraMode e)
+{
+    switch (e)
+    {
+    case CameraMode::ORBIT:   return "ORBIT";
+    case CameraMode::FPS:     return "FPS";
+    default:
+			return "Unknown";
+    }
+}
+
+std::string EnumToString(DirectionXY e)
+{
+    switch (e)
+    {
+    case DirectionXY::None:
+        return "None";
+    case DirectionXY::Left:
+        return "Left";
+    case DirectionXY::Right:
+        return "Right";
+    case DirectionXY::Down:
+        return "Down";
+    case DirectionXY::Up:
+        return "Up";
+    default:
+        return "Unknown";
+    }
+}
+
+std::string EnumToString(DirectionXZ e)
+{
+    switch (e)
+    {
+    case DirectionXZ::None:
+        return "None";
+    case DirectionXZ::Left:
+        return "Left";
+    case DirectionXZ::Right:
+        return "Right";
+    case DirectionXZ::Back:
+        return "Back";
+    case DirectionXZ::Front:
+        return "Front";
+    default:
+        return "Unknown";
+    }
+}
+
+std::string EnumToString(DirectionXZ8Way e)
+{
+    switch (e)
+    {
+    case DirectionXZ8Way::None:
+        return "None";
+    case DirectionXZ8Way::Front:
+        return "Front";
+    case DirectionXZ8Way::FrontLeft:
+        return "FrontLeft";
+    case DirectionXZ8Way::Left:
+        return "Left";
+    case DirectionXZ8Way::BackLeft:
+        return "BackLeft";
+    case DirectionXZ8Way::Back:
+        return "Back";
+    case DirectionXZ8Way::BackRight:
+        return "BackRight";
+    case DirectionXZ8Way::Right:
+        return "Right";
+    case DirectionXZ8Way::FrontRight:
+        return "FrontRight";
+    default:
+        return "Unknown";
+    }
+}
+
+std::string EnumToString(DirectionXYZ e)
+{
+    switch (e)
+    {
+    case DirectionXYZ::None:
+        return "None";
+    case DirectionXYZ::Left:
+        return "Left";
+    case DirectionXYZ::Right:
+        return "Right";
+    case DirectionXYZ::Back:
+        return "Back";
+    case DirectionXYZ::Front:
+        return "Front";
+    case DirectionXYZ::Down:
+        return "Down";
+    case DirectionXYZ::Up:
+        return "Up";
+    default:
+        return "Unknown";
+    }
+}
+
+std::string EnumToString(LineType e)
+{
+    switch (e)
+    {
+    case LineType::Line:
+        return "Line";
+    case LineType::BezierCurve:
+        return "BezierCurve";
+    case LineType::SplineCurve:
+        return "SplineCurve";
+    default:
+        return "Unknown";
     }
 }

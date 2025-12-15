@@ -414,6 +414,9 @@ public:
     uint32_t color = 0xFFFFFFFF;
     Matrix4x4 uvTransform;
 
+    // 破壊ステージ
+	uint32_t breakStage = 0;
+
     /// 現在存在するブロック数
     uint32_t currentSum = 0;
 
