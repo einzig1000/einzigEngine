@@ -411,7 +411,7 @@ public:
     BlendMode blendMode = BlendMode::kBlendModeAdd;
 
     /// マテリアル
-    uint32_t color = 0xFFFFFFFF;
+    //uint32_t color = 0xFFFFFFFF;
     Matrix4x4 uvTransform;
 
     // 破壊ステージ

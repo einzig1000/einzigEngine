@@ -2129,12 +2129,12 @@ void RenderData_Block::DrawImGui()
 	}
 	if (ImGui::TreeNode("----------color----------------"))
 	{
-		Vector4 preColor = ConvertUintToVector4(this->color);
-		float floatColor[4] = { preColor.x, preColor.y, preColor.z, preColor.w };
-		ImGui::ColorEdit4((num + "color").c_str(), floatColor, 1);
-		Vector4 vector4Color = { floatColor[0], floatColor[1], floatColor[2], floatColor[3] };
-		this->color = ConvertVector4ToUint(vector4Color);
-		ImGui::TreePop();
+		//Vector4 preColor = ConvertUintToVector4(this->color);
+		//float floatColor[4] = { preColor.x, preColor.y, preColor.z, preColor.w };
+		//ImGui::ColorEdit4((num + "color").c_str(), floatColor, 1);
+		//Vector4 vector4Color = { floatColor[0], floatColor[1], floatColor[2], floatColor[3] };
+		//this->color = ConvertVector4ToUint(vector4Color);
+		//ImGui::TreePop();
 	}
 	ImGui::SetNextItemOpen(true, ImGuiCond_Once);
 

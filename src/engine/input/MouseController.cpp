@@ -10,33 +10,31 @@ MouseController::MouseController(HWND hwnd, CameraManager* cameraManager)
 {
     hwnd_ = hwnd;
     wheelDelta_ = 0;
-	isVisible_ = true;
+	isVisible_ = false;
 }
 
 void MouseController::Update()
 {
     // マウスポジション取得
-    SetMousePosition();
+    UpdatePosition();
 
     // マウスレイ取得
-    SetMouseRay();
+    UpdateRay();
 
     // マウスボタン状態取得
-    SetMouseButtenState();
+    UpdateButtenState();
 
-    // FPSカメラでマウスカーソルがウィンドウ外に出ないようにする
-    if (!isVisible_)
-    {
-		int screenX = WindowManager::winWidth_ / 2;
-		int screenY = WindowManager::winHeight_ / 2;
-
-        SetCursorPos(screenX, screenY);
-    }
+	// マウス感度適用
+	UpdateSensitivity();
 }
 
 void MouseController::EndFrame()
 {
+	// マウスホイール回転量リセット
     wheelDelta_ = 0;
+
+    // マウス相対移動量リセット
+    rawDelta_ = Vector2{ 0,0 }; 
 }
 
 // 今押しているか  i: 0=左ボタン、1=右ボタン、2=中ボタン
@@ -124,18 +122,36 @@ void MouseController::ShowCursor(bool visible)
 {
     if (visible)
     {
-        // カーソルを表示
-        ::ShowCursor(TRUE);
+        // カウンタが負になるまで表示側へ（1024敗）
+        while (::ShowCursor(TRUE) < 0) {}
+
+        // クリップ解除
+        ::ClipCursor(nullptr);
+
+		// カーソルをウィンドウ中央に移動
+        int screenX = WindowManager::winWidth_ / 2;
+        int screenY = WindowManager::winHeight_ / 2;
+        SetCursorPos(screenX, screenY);
     }
     else
     {
-        // カーソルを非表示
-        ::ShowCursor(FALSE);
-	}
+        // カウンタが負になるまで非表示側へ
+        while (::ShowCursor(FALSE) >= 0) {}
+
+        // クライアント領域にカーソルを閉じ込める
+        RECT rc;
+        ::GetClientRect(hwnd_, &rc);
+        // クライアント座標をスクリーン座標に変換
+        POINT tl{ rc.left, rc.top }, br{ rc.right, rc.bottom };
+        ::ClientToScreen(hwnd_, &tl);
+        ::ClientToScreen(hwnd_, &br);
+        RECT clip{ tl.x, tl.y, br.x, br.y };
+        ::ClipCursor(&clip);
+    }
 }
 
 // マウスポジション取得
-void MouseController::SetMousePosition()
+void MouseController::UpdatePosition()
 {
     // hwnd: ゲームウィンドウのハンドル（WindowManagerなどから取得）
     POINT mousePosScreen;
@@ -149,7 +165,7 @@ void MouseController::SetMousePosition()
 }
 
 // マウスレイ取得
-void MouseController::SetMouseRay()
+void MouseController::UpdateRay()
 {
     // 左下が０、右上が１とした時のマウスポジション
     float ndcX = (position_.x / WindowManager::winWidth_) * 2.0f - 1.0f;
@@ -176,7 +192,7 @@ void MouseController::SetMouseRay()
 }
 
 // マウスボタン状態取得
-void MouseController::SetMouseButtenState()
+void MouseController::UpdateButtenState()
 {
     leftButton_.prev = leftButton_.curr;
 	rightButton_.prev = rightButton_.curr;
@@ -192,4 +208,18 @@ void MouseController::SetMouseButtenState()
     else rightButton_.holdFrames = 0;
     if (middleButton_.curr) middleButton_.holdFrames++;
     else middleButton_.holdFrames = 0;
+}
+
+// マウス感度の適用
+void MouseController::UpdateSensitivity()
+{
+	rawDelta_ *= mouseSensitivity_;
+}
+
+
+// 相対移動の蓄積
+void MouseController::OnRawMouseDelta(int dx, int dy)
+{
+    rawDelta_.x += static_cast<float>(dx);
+    rawDelta_.y += static_cast<float>(dy);
 }

@@ -1,9 +1,6 @@
 #include "Player.h"
 #include "Window/WindowManager.h"
-#include "FPSCamera.h"
 #include "Itemslot.h"
-
-Ray Player::viewRay_;
 
 Player::Player()
 {
@@ -22,14 +19,11 @@ Player::Player()
 		0.0f
 	);
 
-	fpsCamera_ = new FPSCamera(this);
 	Itemslot_ = new Itemslot();
 }
 
 Player::~Player()
 {
-	delete fpsCamera_;
-	fpsCamera_ = nullptr;
 }
 
 void Player::Initialize()
@@ -48,9 +42,9 @@ void Player::Update()
 	Vector3 direction = Game::Math::DirectionFromYawPitch(cameraRot.y, cameraRot.x);
 	forward.Normalize();
 
-	viewRay_.origin = data_.aabbs[0].center();
-	viewRay_.origin.y += (data_.aabbs[0].max.y - data_.aabbs[0].min.y) * 0.5f;
-	viewRay_.diff = direction * 100.0f;
+	viewLine_.origin = data_.aabbs[0].center();
+	viewLine_.origin.y += (data_.aabbs[0].max.y - data_.aabbs[0].min.y) * 0.5f;
+	viewLine_.end = viewLine_.origin + direction * 10.0f;
 
 	// 移動処理
 	if (Game::Input::Key::IsHeld(DIK_W) || Game::Input::Key::IsHeld(DIK_S) || 
@@ -174,7 +168,6 @@ void Player::Update()
 		data_.translate.value.y += data_.translate.velocity.y;
 	}
 
-	fpsCamera_->Update();
 	Itemslot_->Update();
 }
 

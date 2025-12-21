@@ -62,6 +62,8 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 		imguiManager_->Initialize(dxManager_, windowManager_);
 	}
 
+	windowManager_->AttachMouseController(inputManager_->GetMouseController());
+
 
 	dxManager_->BeginFrame();
 	ResourceID::reload();
@@ -78,11 +80,11 @@ bool Engine::ProcessMessage()
 		{
 			return false;
 		}
-		if (msg.message == WM_MOUSEWHEEL)
-		{
-			// ホイールの回転量を加算　クリックはboolで回転量はintだからmessageを使う。らしい。なんで？
-			inputManager_->GetMouseController()->wheelDelta_ += GET_WHEEL_DELTA_WPARAM(msg.wParam);
-		}
+		//if (msg.message == WM_MOUSEWHEEL)
+		//{
+		//	// ホイールの回転量を加算　クリックはboolで回転量はintだからmessageを使う。らしい。なんで？
+		//	inputManager_->GetMouseController()->wheelDelta_ += GET_WHEEL_DELTA_WPARAM(msg.wParam);
+		//}
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
@@ -155,7 +157,7 @@ void Engine::UpdateTransforms()
 #pragma region マウスレイ衝突判定
 
 	// マウスレイ取得
-	Ray mouseRay = inputManager_->GetMouseController()->GetMouseRay();
+	Ray mouseRay = inputManager_->GetMouseController()->GetRay();
 
 	// モデルと衝突までの距離セット構造体
 	struct HitInfo { RenderData_Model* rdm; float distance; };
@@ -245,7 +247,8 @@ void Engine::UpdateDebugInfo()
 		ImGui::Begin("------debug info------");
 		ImGui::Text("ESC : Quit Application");
 		ImGui::Text("F1  : Hide Debug Info");
-		ImGui::Text("F3  : Toggle Camera Mode");
+		ImGui::Text("F3  : Toggle Camera Release or Debug");
+		ImGui::Text("F5  : Toggle Camera FirstPerson or ThirdPerson");
 		ImGui::Text("F12 : Toggle Fullscreen");
 		ImGui::Text("DeltaTime: %.3f ms", dxManager_->GetFixFPS()->GetDeltaTime() * 1000.0f);
 		ImGui::Text("FPS: %.1f ", dxManager_->GetFixFPS()->GetAverageFPS());
@@ -460,22 +463,27 @@ void Engine::ToggleLightMode(const LightMode mode)
 // 入力
 Vector2 Engine::GetMousePosition()
 {
-	return inputManager_->GetMouseController()->GetMousePosition();
+	return inputManager_->GetMouseController()->GetPosition();
+}
+
+Vector2 Engine::GetMousePositionDelta()
+{
+	return inputManager_->GetMouseController()->GetRawDelta();
 }
 
 Vector3 Engine::GetMouseWorldPosition()
 {
-	return inputManager_->GetMouseController()->GetMouseWorldPosition();
+	return inputManager_->GetMouseController()->GetWorldPosition();
 }
 
 Ray Engine::GetMouseRay()
 {
-	return inputManager_->GetMouseController()->GetMouseRay();
+	return inputManager_->GetMouseController()->GetRay();
 }
 
-uint32_t Engine::GetMouseWheel()
+int32_t Engine::GetMouseWheel()
 {
-	return inputManager_->GetMouseController()->wheelDelta_;
+	return inputManager_->GetMouseController()->GetWheelDelta();
 }
 
 bool Engine::IsMouseHeld(int i)
@@ -508,6 +516,10 @@ void Engine::SetMouseCursorVisible(bool visible)
 	inputManager_->GetMouseController()->ShowCursor(visible);
 }
 
+void Engine::SetMouseSensitivity(float sensitivity)
+{
+	inputManager_->GetMouseController()->SetSensitivity(sensitivity);
+}
 
 bool Engine::IsKeyHeld(BYTE key)
 {
@@ -565,7 +577,7 @@ bool Engine::IsCameraShaking()
 	return cameraManager_->IsShaking();
 }
 
-void Engine::SetCameraMode(CameraMode mode)
+void Engine::SetCameraMode(CameraMode_ORBIT_FPS mode)
 {
 	cameraManager_->SetCameraMode(mode); 
 }

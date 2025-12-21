@@ -12,15 +12,15 @@ class PerlinNoise
 public:
     explicit PerlinNoise(unsigned int seed = 0);
 
-    double noise(double x, double y) const;
+    float noise(float x, float y) const;
 
 private:
     std::vector<int> pen;
 
-    static double fade(double t);
-    static double lerp(double a, double b, double t);
-    static double grad(int hash, double x, double y);
+    static float fade(float t);
+    static float lerp(float a, float b, float t);
+    static float grad(int hash, float x, float y);
 };
 
 // フラクタル（オクターブ）合成
-double fractalPerlin(const PerlinNoise& pn, double x, double y, int octaves, double persistence);
+float fractalPerlin(const PerlinNoise& pn, float x, float y, int octaves, float persistence);

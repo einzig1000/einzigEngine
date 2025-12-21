@@ -159,13 +159,14 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CameraController.cpp" />
+    <ClCompile Include="MapCollider.cpp" />
     <ClCompile Include="src\application\Block\BlockConfig.cpp" />
     <ClCompile Include="src\engine\ImGuiManager\ImGuiManager.cpp" />
     <ClCompile Include="src\application\Block\BlockDurability.cpp" />
     <ClCompile Include="src\application\DropItem.cpp" />
     <ClCompile Include="src\application\Itemslot.cpp" />
     <ClCompile Include="src\application\Block\Block.cpp" />
-    <ClCompile Include="src\application\FPSCamera.cpp" />
     <ClCompile Include="src\application\MapManager.cpp" />
     <ClCompile Include="src\application\PerlinNoise.cpp" />
     <ClCompile Include="src\application\Player.cpp" />
@@ -236,13 +237,14 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="src\engine\DirectX\SrvManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CameraController.h" />
+    <ClInclude Include="MapCollider.h" />
     <ClInclude Include="src\application\Block\BlockConfig.h" />
     <ClInclude Include="src\engine\ImGuiManager\ImGuiManager.h" />
     <ClInclude Include="src\application\Block\BlockDurability.h" />
     <ClInclude Include="src\application\DropItem.h" />
     <ClInclude Include="src\application\Itemslot.h" />
     <ClInclude Include="src\application\Block\Block.h" />
-    <ClInclude Include="src\application\FPSCamera.h" />
     <ClInclude Include="src\application\MapManager.h" />
     <ClInclude Include="src\application\PerlinNoise.h" />
     <ClInclude Include="src\application\Player.h" />

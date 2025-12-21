@@ -77,9 +77,9 @@ void MapManager::LoadMap(const std::string& mapFilePath)
 		const int width = CHUNK_X;
 		const int depth = CHUNK_Y;
 		const int maxHeight = CHUNK_Z;
-		const double scale = 6.0;
+		const float scale = 6.0f;
 		const int octaves = 4;
-		const double persistence = 0.5;
+		const float persistence = 0.5f;
 		const unsigned int seed = 12345;
 
 		PerlinNoise pn(seed);
@@ -90,10 +90,10 @@ void MapManager::LoadMap(const std::string& mapFilePath)
 		{
 			for (int z = 0; z < depth; ++z)
 			{
-				double sampleX = static_cast<double>(x) / scale;
-				double sampleZ = static_cast<double>(z) / scale;
-				double n = fractalPerlin(pn, sampleX, sampleZ, octaves, persistence); // 0..1
-				int h = static_cast<int>(std::floor(n * (maxHeight - 1) + 0.5)); // 0..maxHeight-1
+				float sampleX = static_cast<float>(x) / scale;
+				float sampleZ = static_cast<float>(z) / scale;
+				float n = fractalPerlin(pn, sampleX, sampleZ, octaves, persistence); // 0..1
+				int h = static_cast<int>(std::floor(n * float(maxHeight - 1) + 0.5f)); // 0..maxHeight-1
 				if (h < 0) h = 0;
 				if (h > maxHeight - 1) h = maxHeight - 1;
 				heightmap[x][z] = h;
@@ -112,6 +112,8 @@ void MapManager::LoadMap(const std::string& mapFilePath)
 		createFile.close();
 		file.open(mapFilePath);
 	}
+
+	int blockHeightMap_[CHUNK_X][CHUNK_Y];
 
 	std::string line;
 	int X = 0;
@@ -165,24 +167,28 @@ void MapManager::LoadMap(const std::string& mapFilePath)
 				block_[x][y][z]->SetBlockType(blockConfig_->GetBlockInfo(BlockID::Stone));
 				blockPosition = PositionByIndex(Vector3int(x, y, z));
 				block_[x][y][z]->SetBlockPosition(blockPosition);
+				block_[x][y][z]->instanceIndex_ = blockDrawSumMap_[BlockID::Stone];
 			}
 			for (int y = height - dirtThickness; y < height - 1; y++)
 			{
 				block_[x][y][z]->SetBlockType(blockConfig_->GetBlockInfo(BlockID::Dirt));
 				blockPosition = PositionByIndex(Vector3int(x, y, z));
 				block_[x][y][z]->SetBlockPosition(blockPosition);
+				block_[x][y][z]->instanceIndex_ = blockDrawSumMap_[BlockID::Dirt];
 			}
 			for (int y = height - 1; y < height; y++)
 			{
 				block_[x][y][z]->SetBlockType(blockConfig_->GetBlockInfo(BlockID::Lawn));
 				blockPosition = PositionByIndex(Vector3int(x, y, z));
 				block_[x][y][z]->SetBlockPosition(blockPosition);
+				block_[x][y][z]->instanceIndex_ = blockDrawSumMap_[BlockID::Lawn];
 			}
 			for (int y = height; y < CHUNK_Z; y++)
 			{
 				block_[x][y][z]->SetBlockType(blockConfig_->GetBlockInfo(BlockID::Air));
 				blockPosition = PositionByIndex(Vector3int(x, y, z));
 				block_[x][y][z]->SetBlockPosition(blockPosition);
+				block_[x][y][z]->instanceIndex_ = 0;
 			}
 		}
 	}
@@ -208,7 +214,6 @@ void MapManager::LoadMap(const std::string& mapFilePath)
 				}
 			}
 
-			//block_[x][height - 1][z]->isExposed_ = true;
 			// blockHeightMap_[x][z]の上からmaxHeightGap分だけ下まで露出している
 			for (int i = 0; i <= maxHeightGap; i++)
 			{
@@ -219,6 +224,11 @@ void MapManager::LoadMap(const std::string& mapFilePath)
 	}
 
 	SetExposedBlocks();
+}
+
+void MapManager::CreateNewMap()
+{
+
 }
 
 void MapManager::SetExposedBlocks()
@@ -258,8 +268,14 @@ void MapManager::Initialize()
 
 void MapManager::Update()
 {
-	//UpDataPlayerRayCollision();
+	UpDataPlayerRayCollision();
 
+	if (Game::Input::Key::IsJustPressed(DIK_0))
+	{
+		LoadMap("Resources/Map/map.csv");
+	}
+
+	
 	for (int x = 0; x < CHUNK_X; x++)
 	{
 		for (int y = 0; y < CHUNK_Z; y++)
@@ -267,88 +283,118 @@ void MapManager::Update()
 			for (int z = 0; z < CHUNK_Y; z++)
 			{
 				block_[x][y][z]->Update();
+				blockData_[block_[x][y][z]->GetBlockID()]->colors_[block_[x][y][z]->instanceIndex_]
+					= ConvertVector4ToUint(block_[x][y][z]->color_);
 			}
 		}
 	}
 
+	
+
+	/// 
 	UpdatePlayerCollisionY();
 	//UpdatePlayerCollisionXZ();
 }
 
+//void MapManager::UpDataPlayerRayCollision()
+//{
+//	// プレイヤー視点のインデックス
+//	Vector3int lineStartIdx = IndexByPosition(player_->viewLine_.origin);
+//	Vector3int lineEndIdx = IndexByPosition(player_->viewLine_.end);
+//	Vector3int currentIdx = lineStartIdx;
+//
+//	// 始点インデックスのブロックから順番に衝突判定していき、衝突したらそこで終了する
+//	while (currentIdx != lineEndIdx)
+//	{
+//		// もし調査インデックスのブロックが表面に出ている(存在している && 見えるところにある)ブロックなら
+//		if (block_[currentIdx.x][currentIdx.y][currentIdx.z]->isExposed_)
+//		{
+//			block_[currentIdx.x][currentIdx.y][currentIdx.z]->isCollisionRay = true;
+//		}
+//
+//		// インデックスを１ステップ進める
+//		Vector3 direction = (player_->viewLine_.end - player_->viewLine_.origin).Normalized();
+//		Vector3 nextPosition = PositionByIndex(currentIdx) + direction * BLOCK_SIZE;
+//		currentIdx = IndexByPosition(nextPosition);
+//	}
+//}
+
 void MapManager::UpDataPlayerRayCollision()
 {
-	// モデルと衝突までの距離セット構造体
-	struct HitInfo { Block* block; float distance; DirectionXYZ direction; };
-	// のリスト
-	std::vector<HitInfo> hits;
-	// のリサイズ(リサイズではない)
-	hits.reserve(size_t(CHUNK_X * CHUNK_Z * CHUNK_Y));
+	// プレイヤー視点のインデックス
+	Vector3 rayStart = player_->viewLine_.origin;
+	Vector3 rayEnd = player_->viewLine_.end;
+	Vector3 dir = (rayEnd - rayStart).Normalized();
 
-	uint32_t count = 0;
-	for (int x = 0; x < CHUNK_X; x++)
+	// 現在のインデックス
+	Vector3int currentIdx = IndexByPosition(rayStart);
+	// 最終目的地のインデックス
+	Vector3int endIdx = IndexByPosition(rayEnd);
+
+	// 各軸に進む方向 (1 または -1)
+	int stepX = (dir.x > 0) ? 1 : -1;
+	int stepY = (dir.y > 0) ? 1 : -1;
+	int stepZ = (dir.z > 0) ? 1 : -1;
+
+	// 次の境界線までの距離を算出するための準備
+	// deltaDist: その軸方向にブロック1つ分進むのに必要なレイの長さ
+	float deltaDistX = std::abs(BLOCK_SIZE / dir.x);
+	float deltaDistY = std::abs(BLOCK_SIZE / dir.y);
+	float deltaDistZ = std::abs(BLOCK_SIZE / dir.z);
+
+	// sideDist: 現在地から「次の境界線」までのレイの長さ
+	Vector3 blockPos = PositionByIndex(currentIdx); // ブロックの中心（または最小角）
+	float sideDistX = (stepX > 0) ? (blockPos.x + BLOCK_SIZE - rayStart.x) : (rayStart.x - blockPos.x);
+	float sideDistY = (stepY > 0) ? (blockPos.y + BLOCK_SIZE - rayStart.y) : (rayStart.y - blockPos.y);
+	float sideDistZ = (stepZ > 0) ? (blockPos.z + BLOCK_SIZE - rayStart.z) : (rayStart.z - blockPos.z);
+
+	sideDistX = (dir.x != 0) ? sideDistX / std::abs(dir.x) : FLT_MAX;
+	sideDistY = (dir.y != 0) ? sideDistY / std::abs(dir.y) : FLT_MAX;
+	sideDistZ = (dir.z != 0) ? sideDistZ / std::abs(dir.z) : FLT_MAX;
+
+	// 最大ループ回数（安全のため。レイの長さに応じて調整）
+	int maxSteps = 100;
+
+	for (int i = 0; i < maxSteps; i++)
 	{
-		for (int y = 0; y < CHUNK_Z; y++)
+		// 衝突判定
+		if (block_[currentIdx.x][currentIdx.y][currentIdx.z]->isActive_)
 		{
-			for (int z = 0; z < CHUNK_Y; z++)
-			{
-				block_[x][y][z]->isCollisionRay = -1;
-				// 描画範囲内なら判定
-				if (block_[x][y][z]->isExposed_)
-				{
-					count++;
+			block_[currentIdx.x][currentIdx.y][currentIdx.z]->isCollisionRay = true;
+			return; // 衝突したら終了
+		}
 
-					// 最近接衝突点を取得
-					std::optional<Vector3> colPos = IntersectRayBlock(
-						player_->viewRay_,
-						Engine::Instance().GetAllObject3D()[blockData_[BlockID::Dirt]->model].modelData.vertices,
-						block_[x][y][z]->aabb_
-					);
-					// 衝突していたらリストに登録
-					if (colPos)
-					{
-						float minDistance = (colPos.value() - player_->viewRay_.origin).Length();
-						DirectionXYZ dir = DirectionXYZ::None;
-						if (colPos->x >= block_[x][y][z]->aabb_.max.x)
-						{
-							dir = DirectionXYZ::Right;
-						}
-						if (colPos->x <= block_[x][y][z]->aabb_.min.x)
-						{
-							dir = DirectionXYZ::Left;
-						}
-						if (colPos->y >= block_[x][y][z]->aabb_.max.y)
-						{
-							dir = DirectionXYZ::Up;
-						}
-						if (colPos->y <= block_[x][y][z]->aabb_.min.y)
-						{
-							dir = DirectionXYZ::Down;
-						}
-						if (colPos->z >= block_[x][y][z]->aabb_.max.z)
-						{
-							dir = DirectionXYZ::Front;
-						}
-						if (colPos->z <= block_[x][y][z]->aabb_.min.z)
-						{
-							dir = DirectionXYZ::Back;
-						}
-						hits.push_back({ block_[x][y][z], minDistance, dir });
-					}
-				}
+		// ゴールに到達したら終了
+		if (currentIdx == endIdx) break;
+
+		// 最も近い境界線（X, Y, Zのどれか）を跨ぐ
+		if (sideDistX < sideDistY)
+		{
+			if (sideDistX < sideDistZ)
+			{
+				sideDistX += deltaDistX;
+				currentIdx.x += stepX;
+				//block_[currentIdx.x][currentIdx.y][currentIdx.z]->direction =
+			}
+			else
+			{
+				sideDistZ += deltaDistZ;
+				currentIdx.z += stepZ;
 			}
 		}
-	}
-
-	// 距離の昇順でソート
-	std::sort(hits.begin(), hits.end(),
-		[](auto& a, auto& b) { return a.distance < b.distance; });
-
-	// ソート後に順序を割り当て
-	for (int order = 0; order < (int)hits.size(); ++order)
-	{
-		hits[order].block->isCollisionRay = order;
-		hits[order].block->collisionDistance = hits[order].distance;
-		hits[order].block->direction = hits[order].direction;
+		else
+		{
+			if (sideDistY < sideDistZ)
+			{
+				sideDistY += deltaDistY;
+				currentIdx.y += stepY;
+			}
+			else
+			{
+				sideDistZ += deltaDistZ;
+				currentIdx.z += stepZ;
+			}
+		}
 	}
 }
 

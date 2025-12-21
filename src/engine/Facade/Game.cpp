@@ -112,6 +112,11 @@ Vector2 Game::Input::Mouse::GetMousePosition()
 	return Engine::Instance().GetMousePosition();
 }
 
+Vector2 Game::Input::Mouse::GetMousePositionDelta()
+{
+	return Engine::Instance().GetMousePositionDelta();
+}
+
 Vector3 Game::Input::Mouse::GetMouseWorldPosition()
 {
 	return Engine::Instance().GetMouseWorldPosition();
@@ -142,7 +147,7 @@ uint32_t Game::Input::Mouse::HoldFrames(int i)
 	return Engine::Instance().MouseHoldFrames(i);
 }
 
-uint32_t Game::Input::Mouse::GetMouseWheel()
+int32_t Game::Input::Mouse::GetMouseWheel()
 {
 	return Engine::Instance().GetMouseWheel();
 }
@@ -157,6 +162,10 @@ void Game::Input::Mouse::ShowCursor(bool visible)
 	Engine::Instance().SetMouseCursorVisible(visible);
 }
 
+void Game::Input::Mouse::SetMouseSensitivity(float sensitivity)
+{
+	Engine::Instance().SetMouseSensitivity(sensitivity);
+}
 
 bool Game::Input::Key::IsHeld(BYTE key)
 {
@@ -267,7 +276,7 @@ float Game::Camera::Getter::GetCurrentDistance()
 	return Engine::Instance().GetCameraManager()->GetCurrentDistance();
 }
 
-void Game::Camera::SetCameraMode(CameraMode mode)
+void Game::Camera::SetCameraMode(CameraMode_ORBIT_FPS mode)
 {
 	Engine::Instance().GetCameraManager()->SetCameraMode(mode);
 }

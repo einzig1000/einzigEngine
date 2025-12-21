@@ -654,12 +654,12 @@ std::string EnumToString(AABBFace e)
     }
 }
 
-std::string EnumToString(CameraMode e)
+std::string EnumToString(CameraMode_ORBIT_FPS e)
 {
     switch (e)
     {
-    case CameraMode::ORBIT:   return "ORBIT";
-    case CameraMode::FPS:     return "FPS";
+    case CameraMode_ORBIT_FPS::ORBIT:   return "ORBIT";
+    case CameraMode_ORBIT_FPS::FPS:     return "FPS";
     default:
 			return "Unknown";
     }

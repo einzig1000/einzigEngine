@@ -51,13 +51,12 @@ enum class BlockID
 };
 std::string EnumToString(BlockID id);
 
-
+// ブロックごとの情報
 struct Blockinfo
 {
     BlockID type;
     int32_t durability;
 };
-
 
 // ゲームのフェーズ
 enum class PHASE
@@ -70,6 +69,18 @@ enum class PHASE
     Phase_GameClear,
 };
 std::string EnumToString(PHASE e);
+
+
+
+enum class CameraMode_FirstPerson_ThirdPerson
+{
+    // 一人称視点
+    FirstPerson,
+    // 三人称後方視点
+    ThirdPerson_Back,
+    // 三人称前方視点
+    ThirdPerson_Front,
+};
 
 #pragma region 演算
 
@@ -630,7 +641,7 @@ struct Line
     // 始点
     Vector3 origin;
     // 終点
-    Vector3 diff;
+    Vector3 end;
 };
 
 // 半直線
@@ -1079,12 +1090,12 @@ struct ParticleMonoInfGPU
 #pragma region カメラ構造体
 
 
-enum class CameraMode
+enum class CameraMode_ORBIT_FPS
 {
     ORBIT,
     FPS
 };
-std::string EnumToString(CameraMode e);
+std::string EnumToString(CameraMode_ORBIT_FPS e);
 
 #pragma endregion
 

@@ -35,7 +35,7 @@ public:
 	Vector3 GetCurrentRotate() const;
 	Matrix4x4 GetCurrentViewProjectionMatrix() const; // ビュープロジェクション行列
 	float GetCurrentDistance() const;			// カメラ距離
-	void SetCameraMode(CameraMode mode);
+	void SetCameraMode(CameraMode_ORBIT_FPS mode);
 
 	// 視錐台内にAABBがあるか
 	bool InCamera(const AABB& aabb);

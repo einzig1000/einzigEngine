@@ -1,10 +1,10 @@
 #pragma once
 #include "Game.h"
+#include "MapCollider.h"
 
 class Itemslot;
-class FPSCamera;
 
-class Player
+class Player : public MapCollider
 {
 public:
 	Player();
@@ -17,7 +17,7 @@ public:
 	void AddItemToItemslot(int itemID);
 
 	// 視線レイ
-	static Ray viewRay_;
+	Line viewLine_;
 
 	// 速度
 	float speed_ = 0.15f;
@@ -32,9 +32,6 @@ public:
 
 	// プレイヤー
 	RenderData_Model data_;
-
-	// カメラ
-	FPSCamera* fpsCamera_;
 
 	// 足元４つのブロック上面座標
 	Vector3 footBlockPositions_[4];

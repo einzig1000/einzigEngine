@@ -4,7 +4,7 @@
 
 Camera::Camera()
 {
-    mousePositionGap_ = { 0,0 };
+    mouseDelta_ = { 0,0 };
     enableControl_ = true;
 
     // カメラ
@@ -29,10 +29,10 @@ void Camera::Update()
 {
     switch (cameraMode_)
     {
-    case CameraMode::ORBIT:
+    case CameraMode_ORBIT_FPS::ORBIT:
         Updata_Orbit();
         break;
-    case CameraMode::FPS:
+    case CameraMode_ORBIT_FPS::FPS:
         Update_FPS();
         break;
     default:
@@ -115,7 +115,7 @@ void Camera::DrawImGui()
 	static const char* items[] = { "ORBIT", "FPS" };
     if (ImGui::Combo(cameraModeTag.c_str(), &currentMode, items, IM_ARRAYSIZE(items)))
     {
-        cameraMode_ = static_cast<CameraMode>(currentMode);
+        cameraMode_ = static_cast<CameraMode_ORBIT_FPS>(currentMode);
 	}
     ImGui::SameLine();
 	ImGui::Text("cameraMode");
@@ -240,48 +240,28 @@ void Camera::Updata_Orbit()
 
 #pragma region カメラ手動操作
 
+
     if (enableControl_)
     {
+	    // マウス移動量取得
+	    mouseDelta_ = Game::Input::Mouse::GetMousePositionDelta();
+	    // ホイール取得
         mouseWheel_ = Game::Input::Mouse::GetMouseWheel();
 
 #pragma region カメラ回転
-
-        // クリックした瞬間
-        if (Game::Input::Mouse::IsJustPressed(2) && !Game::Input::Key::IsHeld(DIK_LSHIFT))
-        {
-            preMousePosition_ = Game::Input::Mouse::GetMousePosition();
-        }
-        // クリックしている最中
+       
         if (Game::Input::Mouse::IsHeld(2) && !Game::Input::Key::IsHeld(DIK_LSHIFT))
         {
-            mousePosition_ = Game::Input::Mouse::GetMousePosition();
-            mousePositionGap_.x = mousePosition_.x - preMousePosition_.x;
-            mousePositionGap_.y = mousePosition_.y - preMousePosition_.y;
-            transform_.rotate.x = (mousePositionGap_.y / 100.0f) + (preRotate_.x);
-            transform_.rotate.y = (mousePositionGap_.x / 100.0f) + (preRotate_.y);
-        }
-        // クリックやめた瞬間
-        if (Game::Input::Mouse::IsJustReleased(2) && !Game::Input::Key::IsHeld(DIK_LSHIFT))
-        {
-            preRotate_ = transform_.rotate;
+			transform_.rotate.x -= mouseDelta_.y / 100.0f;
+			transform_.rotate.y -= mouseDelta_.x / 100.0f;
         }
 
 #pragma endregion
 
 #pragma region 回転中心
 
-        // クリックした瞬間
-        if (Game::Input::Mouse::IsJustPressed(2) && Game::Input::Key::IsHeld(DIK_LSHIFT))
-        {
-            preMousePosition_ = Game::Input::Mouse::GetMousePosition();
-            preCenter_ = center_;
-        }
-        // クリックしている最中
         if (Game::Input::Mouse::IsHeld(2) && Game::Input::Key::IsHeld(DIK_LSHIFT))
         {
-            mousePosition_ = Game::Input::Mouse::GetMousePosition();
-            mousePositionGap_.x = mousePosition_.x - preMousePosition_.x;
-            mousePositionGap_.y = mousePosition_.y - preMousePosition_.y;
             // カメラの右方向と上方向を取得
             Matrix4x4 cameraRotateMatrix = Matrix4x4::MakeAffineMatrix(
                 { 1,1,1 },
@@ -298,7 +278,7 @@ void Camera::Updata_Orbit()
                 cameraRotateMatrix.m[1][1],
                 cameraRotateMatrix.m[2][1]
             };
-            center_ = preCenter_ - (cameraRight * (mousePositionGap_.x / 100.0f)) + (cameraUp * (mousePositionGap_.y / 100.0f));
+			center_ = center_ - (cameraRight * (mouseDelta_.x / 100.0f)) + (cameraUp * (mouseDelta_.y / 100.0f));
         }
 
 #pragma endregion
@@ -397,32 +377,15 @@ void Camera::Update_FPS()
 
     if (enableControl_)
     {
+        // マウス移動量取得
+        mouseDelta_ = Game::Input::Mouse::GetMousePositionDelta();
+        // ホイール取得
         mouseWheel_ = Game::Input::Mouse::GetMouseWheel();
-        // カメラ回転
-        if (Game::Input::Mouse::IsJustPressed(2))
+
+        if (Game::Input::Mouse::IsHeld(2) && !Game::Input::Key::IsHeld(DIK_LSHIFT))
         {
-            preMousePosition_ = Game::Input::Mouse::GetMousePosition();
-        }
-        if (Game::Input::Mouse::IsHeld(2))
-        {
-            mousePosition_ = Game::Input::Mouse::GetMousePosition();
-            mousePositionGap_.x = mousePosition_.x - preMousePosition_.x;
-            mousePositionGap_.y = mousePosition_.y - preMousePosition_.y;
-            transform_.rotate.x = (mousePositionGap_.y / 100.0f) + (preRotate_.x);
-            transform_.rotate.y = (mousePositionGap_.x / 100.0f) + (preRotate_.y);
-        }
-        if (Game::Input::Mouse::IsJustReleased(2))
-        {
-            preRotate_ = transform_.rotate;
-        }
-        // カメラ距離
-        if (mouseWheel_ > 0)
-        {
-            distance_ -= float(mouseWheel_) / 100;
-        }
-        if (mouseWheel_ < 0)
-        {
-            distance_ -= float(mouseWheel_) / 100;
+            transform_.rotate.x -= mouseDelta_.y / 100.0f;
+            transform_.rotate.y -= mouseDelta_.x / 100.0f;
         }
 	}
 

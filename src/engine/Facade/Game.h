@@ -168,13 +168,19 @@ public:
 			/// <summary>
 			/// マウスのスクリーン座標位置取得
 			/// </summary>
-			/// <returns></returns>
+			/// <returns>マウスのスクリーン座標</returns>
 			static Vector2 GetMousePosition();
+
+			/// <summary>
+			/// マウスのスクリーン座標位置変化量取得
+			/// </summary>
+			/// <returns>マウスのスクリーン座標位置変化量</returns>
+			static Vector2 GetMousePositionDelta();
 
 			/// <summary>
 			/// マウスのワールド座標位置取得
 			/// </summary>
-			/// <returns></returns>
+			/// <returns>マウスのワールド座標</returns>
 			static Vector3 GetMouseWorldPosition();
 
 			/// <summary>
@@ -184,43 +190,47 @@ public:
 			static Ray GetMouseRay();
 
 			/// <summary>
+			/// マウスホイールの回転量取得
+			/// </summary>
+			/// <returns>マウスホイールの回転量</returns>
+			static int32_t GetMouseWheel();
+
+			/// <summary>
 			/// マウスボタンの入力取得(現在押されているか)
 			/// </summary>
 			/// <param name="i">0 = 左クリック  1 = 右クリック  2 = ミドルボタン</param>
-			/// <returns></returns>
+			/// <returns>現在押されているか</returns>
 			static bool IsHeld(int i);
 
 			/// <summary>
 			/// マウスボタンの入力取得(押した瞬間)
 			/// </summary>
 			/// <param name="i">0 = 左クリック  1 = 右クリック  2 = ミドルボタン</param>
-			/// <returns></returns>
+			/// <returns>押した瞬間か</returns>
 			static bool IsJustPressed(int i);
 
 			/// <summary>
 			/// マウスボタンの入力取得(離した瞬間)
 			/// </summary>
 			/// <param name="i">0 = 左クリック  1 = 右クリック  2 = ミドルボタン</param>
-			/// <returns></returns>
+			/// <returns>離した瞬間か</returns>
 			static bool IsJustReleased(int i);
 
 			/// <summary>
 			/// マウスボタンの入力取得(押されてからの経過フレーム数)
 			/// </summary>
 			/// <param name="i">0 = 左クリック  1 = 右クリック  2 = ミドルボタン</param>
-			/// <returns></returns>
+			/// <returns>押されてからの経過フレーム数</returns>
 			static uint32_t HoldFrames(int i);
-
-			/// <summary>
-			/// マウスホイールの回転量取得
-			/// </summary>
-			static uint32_t GetMouseWheel();
 
 			// カーソルの表示・非表示切り替え
 			static void ToggleMouseCursorVisible();
 
 			// カーソルの表示・非表示設定
 			static void ShowCursor(bool visible);
+
+			// マウス感度設定
+			static void SetMouseSensitivity(float sensitivity);
 		};
 
 		class Key
@@ -282,7 +292,7 @@ public:
 			static float GetCurrentDistance();			// カメラ距離
 		};
 
-		static void SetCameraMode(CameraMode mode);
+		static void SetCameraMode(CameraMode_ORBIT_FPS mode);
 
 		/// <summary>
 		/// カメラの回転中心座標の移動

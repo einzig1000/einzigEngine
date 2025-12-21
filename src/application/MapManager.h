@@ -14,6 +14,7 @@ public:
 	~MapManager();
 
 	void LoadMap(const std::string& mapFilePath);
+	void CreateNewMap();
 	void SaveMap(const std::string& mapFilePath);
 
 	// 表面にでているブロックの座標をblockData_の対応するデータに変換して格納
@@ -36,7 +37,6 @@ public:
 private:
 	// マップデータ
 	Block* block_[CHUNK_X][CHUNK_Z][CHUNK_Y];
-	int blockHeightMap_[CHUNK_X][CHUNK_Y];
 	// 描画データ
 	std::map<BlockID, std::unique_ptr<RenderData_Block>> blockData_;
 

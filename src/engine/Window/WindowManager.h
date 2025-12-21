@@ -3,14 +3,19 @@
 #include <string>           // std::wstring 用
 #include <mmsystem.h>
 
+class MouseController;  // 無念ながら前方宣言
+
 class WindowManager {
 public:
     WindowManager(int width, int height, const std::wstring& title);
     ~WindowManager();
 
+    void AttachMouseController(MouseController* mc);
+
+	// ウィンドウハンドル取得
     HWND GetHwnd() const { return hwnd; }
 
-    // 追加: フルスクリーン制御API
+	// フルスクリーン制御
     void SetFullscreen(bool enable);
     void ToggleFullscreen();
     bool IsFullscreen() const { return isFullscreen; }
@@ -20,6 +25,9 @@ public:
     // ウィンドウサイズ
     static uint32_t winWidth_;
     static uint32_t winHeight_;
+
+	// アクティブフラグ(ウィンドウが最小化されている時とかはfalse)
+	bool isActive_ = true;
 
 private:
     HWND hwnd;
@@ -40,6 +48,10 @@ private:
 	// クライアントサイズ更新
     void UpdateClientSize();
 
+	// ウィンドウクラス登録
     void RegisterWindowClass();
+    // 
+    void RegisterMouseRawInput(HWND hwnd);
+	// メインウィンドウ生成
     void CreateMainWindow(int width, int height, const std::wstring& title);
 };

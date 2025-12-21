@@ -162,7 +162,7 @@ float CameraManager::GetCurrentDistance() const
 	return camera_[currentCameraID_].distance_;
 }
 
-void CameraManager::SetCameraMode(CameraMode mode)
+void CameraManager::SetCameraMode(CameraMode_ORBIT_FPS mode)
 {
 	camera_[currentCameraID_].SetCameraMode(mode);
 }

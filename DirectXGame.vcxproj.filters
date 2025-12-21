@@ -145,9 +145,6 @@
     <Filter Include="application\GameManeger\Map">
       <UniqueIdentifier>{28f4b7c8-cecf-4edc-a2e3-2071fd41f5b6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="application\GameManeger\FPSCamera">
-      <UniqueIdentifier>{1918b075-c41b-42c8-91e9-b063504be710}</UniqueIdentifier>
-    </Filter>
     <Filter Include="application\GameManeger\DropItem">
       <UniqueIdentifier>{dbf079b1-300b-4849-979f-d718265501b7}</UniqueIdentifier>
     </Filter>
@@ -168,6 +165,12 @@
     </Filter>
     <Filter Include="engine\DrawSystem\RenderDataClass">
       <UniqueIdentifier>{7d8d53d3-04c0-4caa-ac10-735e5054f1f5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManeger\CameraController">
+      <UniqueIdentifier>{e3cb53ce-025d-48fe-8c9b-c99c3395bb59}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManeger\Map\MapCollider">
+      <UniqueIdentifier>{1b07bb9c-b240-473c-a395-80c2d55fbf24}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -288,9 +291,6 @@
     <ClCompile Include="src\application\MapManager.cpp">
       <Filter>application\GameManeger\Map</Filter>
     </ClCompile>
-    <ClCompile Include="src\application\FPSCamera.cpp">
-      <Filter>application\GameManeger\FPSCamera</Filter>
-    </ClCompile>
     <ClCompile Include="src\application\Player.cpp">
       <Filter>application\GameManeger\Player</Filter>
     </ClCompile>
@@ -314,6 +314,12 @@
     </ClCompile>
     <ClCompile Include="src\application\Block\BlockConfig.cpp">
       <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="CameraController.cpp">
+      <Filter>application\GameManeger\CameraController</Filter>
+    </ClCompile>
+    <ClCompile Include="MapCollider.cpp">
+      <Filter>application\GameManeger\Map\MapCollider</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -428,9 +434,6 @@
     <ClInclude Include="src\application\Block\Block.h">
       <Filter>application\GameManeger\Map\Block</Filter>
     </ClInclude>
-    <ClInclude Include="src\application\FPSCamera.h">
-      <Filter>application\GameManeger\FPSCamera</Filter>
-    </ClInclude>
     <ClInclude Include="src\application\MapManager.h">
       <Filter>application\GameManeger\Map</Filter>
     </ClInclude>
@@ -457,6 +460,12 @@
     </ClInclude>
     <ClInclude Include="src\application\Block\BlockConfig.h">
       <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="CameraController.h">
+      <Filter>application\GameManeger\CameraController</Filter>
+    </ClInclude>
+    <ClInclude Include="MapCollider.h">
+      <Filter>application\GameManeger\Map\MapCollider</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

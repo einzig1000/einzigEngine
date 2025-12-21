@@ -1,6 +1,7 @@
 #include "GameScenePhase.h"
 #include "MapManager.h"
 #include "Player.h"
+#include "CameraController.h"
 #include <fstream>
 
 GameScenePhase::GameScenePhase()
@@ -9,11 +10,10 @@ GameScenePhase::GameScenePhase()
 
 	map_ = std::make_unique<MapManager>(player_.get());
 
+	cameraController_ = std::make_unique<CameraController>(player_.get());
 
-	//map_->LoadMap("resources/Map/map1x1.csv");
+
 	map_->LoadMap("resources/Map/map.csv");
-	//map_->LoadMap("resources/Map/mapFlat.csv");
-	//map_->LoadMap("resources/Map/map140x140.csv");
 }
 
 GameScenePhase::~GameScenePhase() {}
@@ -25,7 +25,8 @@ void GameScenePhase::Initialize()
 	map_->Initialize();
 	player_->Initialize();
 
-	Game::Camera::SetCameraMode(CameraMode::FPS);
+
+	Game::Camera::SetCameraMode(CameraMode_ORBIT_FPS::FPS);
 	Game::Input::Mouse::ShowCursor(false);
 }
 
@@ -35,6 +36,13 @@ void GameScenePhase::Update()
 	map_->Update();
 
 	player_->Update();
+
+	cameraController_->Update();
+
+	if (Game::Input::Key::IsJustPressed(DIK_R))
+	{
+		Game::Input::Mouse::ToggleMouseCursorVisible();
+	}
 }
 
 

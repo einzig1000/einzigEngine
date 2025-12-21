@@ -4,6 +4,7 @@
 
 class Player;
 class MapManager;
+class CameraController;
 
 class GameScenePhase :
 	public PhaseParent
@@ -20,6 +21,9 @@ public:
 
 
 private:
+
+	// カメラ
+	std::unique_ptr<CameraController> cameraController_;
 
 	// プレイヤー
 	std::unique_ptr<Player> player_;

@@ -3,12 +3,13 @@
 
 class Player;
 
-class FPSCamera
+class CameraController
 {
 public:
-	FPSCamera(Player* player);
+	CameraController(Player* player);
 	void Update();
 
+	CameraMode_FirstPerson_ThirdPerson cameraMode_;
 
 	// カメラ操作可能か
 	bool enableControl;
@@ -18,9 +19,7 @@ public:
 	Vector3 cameraRot = { 0.0f,0.0f,0.0f };
 
 	// マウス関連
-	Vector2 mousePos = { 0.0f,0.0f };
-	Vector2 preMousePos = { 0.0f,0.0f };
-	Vector2 mouseGap = { 0.0f,0.0f };
+	Vector2 mousedelta = { 0.0f,0.0f };
 	float mouseSensitivity_ = 0.02f;
 
 	// プレイヤー
