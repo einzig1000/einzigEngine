@@ -72,16 +72,6 @@ std::string EnumToString(PHASE e);
 
 
 
-enum class CameraMode_FirstPerson_ThirdPerson
-{
-    // 一人称視点
-    FirstPerson,
-    // 三人称後方視点
-    ThirdPerson_Back,
-    // 三人称前方視点
-    ThirdPerson_Front,
-};
-
 #pragma region 演算
 
 template <typename T>
@@ -1089,6 +1079,16 @@ struct ParticleMonoInfGPU
 
 #pragma region カメラ構造体
 
+enum class CameraMode_FirstPerson_ThirdPerson
+{
+    // 一人称視点
+    FirstPerson,
+    // 三人称後方視点
+    ThirdPerson_Back,
+    // 三人称前方視点
+    ThirdPerson_Front,
+};
+
 
 enum class CameraMode_ORBIT_FPS
 {
@@ -1155,7 +1155,7 @@ std::string EnumToString(DirectionXYZ e);
 
 #pragma endregion
 
-
+// GPU用カメラ構造体
 struct CameraForGPU
 {
     Vector3 worldPosition;

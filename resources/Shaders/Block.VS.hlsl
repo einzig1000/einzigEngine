@@ -1,4 +1,4 @@
-// Object3d.VS.hlsl
+// Block.VS.hlsl
 
 #include "Block.hlsli"
 
@@ -15,5 +15,6 @@ VertexShaderOutput main(VertexShaderInput input, uint32_t instancedID : SV_Insta
     output.texcoord = input.texcoord;
     output.texcoord2 = input.texcoord;
     output.normal = normalize(mul(input.normal, (float32_t3x3)gWorldMatrix[instancedID].World));
+	output.instancedID = instancedID;
     return output;
 }

@@ -379,8 +379,8 @@ class RenderData_Block
 {
 public:
 
-    // 新しいブロックを作るときはAddNewBlock()
-	// ブロックを壊すときはRemoveBlockFromList()
+    /// 新しいブロックを作るときはAddNewBlock()
+	/// ブロックを壊すときはRemoveBlockFromList() <- 未完成
 
     RenderData_Block(BlockID id);
     ~RenderData_Block();
@@ -407,40 +407,30 @@ public:
     uint32_t texture = 0;
 	uint32_t additionalTexture = 0;
 
-    /// オプション
-    BlendMode blendMode = BlendMode::kBlendModeAdd;
+	uint32_t capacity = CHUNK_X * CHUNK_Y * CHUNK_Z;    // 最大ブロック数
+	uint32_t currentSum = 0;        // チャンク内に存在するブロック数
+	uint32_t currentDrawSum = 0;    // チャンク内の描画されているブロック数
 
-    /// マテリアル
-    //uint32_t color = 0xFFFFFFFF;
-    Matrix4x4 uvTransform;
 
-    // 破壊ステージ
-	uint32_t breakStage = 0;
+	// シェーダーに渡すブロックごとのデータ
+    Microsoft::WRL::ComPtr<ID3D12Resource> worldMatrixResource_;
+    Matrix4x4* worldMatrixData_ = nullptr;
+    SRVAllocation worldMatrixSrvAllocation_;
 
-    /// 現在存在するブロック数
-    uint32_t currentSum = 0;
+    Microsoft::WRL::ComPtr<ID3D12Resource> colorResource_;
+    Vector4* colorData_ = nullptr;
+    SRVAllocation colorSrvAllocation_;
 
-    uint32_t capacity = 4096;
-    Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource_;
-    Matrix4x4* instancingData_ = nullptr;
-    SRVAllocation srvAllocation_;
-
+	// シェーダーに渡さなくてもいいけどブロックごとに管理したいデータ
     std::vector<VectorDynamics> scale_;
     std::vector<VectorDynamics> rotate_;
     std::vector<VectorDynamics> translate_;
 	std::vector<Vector3int> indexes_;
-	std::vector<uint32_t> colors_;
     std::vector<bool> isActive_;
 
 private:
 
     int ID = 0;
-
-
-    //// ワールド行列・WVP行列の更新
-    void UpdateWorldMatrix();
-    //// 各パーティクルの変換行列更新
-    void UpdateTransforms();
 
     //// 死亡判定
     void CheckLife();

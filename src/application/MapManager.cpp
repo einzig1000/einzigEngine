@@ -33,9 +33,9 @@ MapManager::MapManager(Player* player)
 		blockData_[BlockID(i)]->texture = ResourceID::GetTextureID(BlockID(i));
 		blockData_[BlockID(i)]->additionalTexture = ResourceID::GetTextureID(TextureID::BreakBlock_1);
 		blockData_[BlockID(i)]->model = ResourceID::GetModelID(ModelID::Cube);
-		blockData_[BlockID(i)]->blendMode = BlendMode::kBlendModeNormal;
 
-		blockDrawSumMap_[BlockID(i)] = 0;
+		blockData_[BlockID(i)]->currentDrawSum = 0;
+		blockData_[BlockID(i)]->currentSum = 0;
 	}
 
 	blockConfig_ = new BlockConfig();
@@ -161,67 +161,102 @@ void MapManager::LoadMap(const std::string& mapFilePath)
 				dirtThickness = height;
 			}
 
-			Vector3 blockPosition;
-			for (int y = 0; y < height - dirtThickness; y++)
-			{
-				block_[x][y][z]->SetBlockType(blockConfig_->GetBlockInfo(BlockID::Stone));
-				blockPosition = PositionByIndex(Vector3int(x, y, z));
-				block_[x][y][z]->SetBlockPosition(blockPosition);
-				block_[x][y][z]->instanceIndex_ = blockDrawSumMap_[BlockID::Stone];
-			}
-			for (int y = height - dirtThickness; y < height - 1; y++)
-			{
-				block_[x][y][z]->SetBlockType(blockConfig_->GetBlockInfo(BlockID::Dirt));
-				blockPosition = PositionByIndex(Vector3int(x, y, z));
-				block_[x][y][z]->SetBlockPosition(blockPosition);
-				block_[x][y][z]->instanceIndex_ = blockDrawSumMap_[BlockID::Dirt];
-			}
-			for (int y = height - 1; y < height; y++)
-			{
-				block_[x][y][z]->SetBlockType(blockConfig_->GetBlockInfo(BlockID::Lawn));
-				blockPosition = PositionByIndex(Vector3int(x, y, z));
-				block_[x][y][z]->SetBlockPosition(blockPosition);
-				block_[x][y][z]->instanceIndex_ = blockDrawSumMap_[BlockID::Lawn];
-			}
-			for (int y = height; y < CHUNK_Z; y++)
-			{
-				block_[x][y][z]->SetBlockType(blockConfig_->GetBlockInfo(BlockID::Air));
-				blockPosition = PositionByIndex(Vector3int(x, y, z));
-				block_[x][y][z]->SetBlockPosition(blockPosition);
-				block_[x][y][z]->instanceIndex_ = 0;
-			}
-		}
-	}
+			//Vector3 blockPosition;
+			//BlockID blockID = BlockID::Air;
+			//for (int y = 0; y < height - dirtThickness; y++)
+			//{
+			//	blockID = BlockID::Stone;
+			//	block_[x][y][z]->SetBlockType(blockConfig_->GetBlockInfo(blockID));
+			//	blockPosition = PositionByIndex(Vector3int(x, y, z));
+			//	block_[x][y][z]->SetBlockPosition(blockPosition);
+			//	block_[x][y][z]->instanceIndex_ = blockData_[blockID]->currentSum;
+			//	blockData_[blockID]->currentSum++;
+			//}
+			//for (int y = height - dirtThickness; y < height - 1; y++)
+			//{
+			//	blockID = BlockID::Dirt;
+			//	block_[x][y][z]->SetBlockType(blockConfig_->GetBlockInfo(blockID));
+			//	blockPosition = PositionByIndex(Vector3int(x, y, z));
+			//	block_[x][y][z]->SetBlockPosition(blockPosition);
+			//	block_[x][y][z]->instanceIndex_ = blockData_[blockID]->currentSum;
+			//	blockData_[blockID]->currentSum++;
+			//}
+			//for (int y = height - 1; y < height; y++)
+			//{
+			//	blockID = BlockID::Lawn;
+			//	block_[x][y][z]->SetBlockType(blockConfig_->GetBlockInfo(blockID));
+			//	blockPosition = PositionByIndex(Vector3int(x, y, z));
+			//	block_[x][y][z]->SetBlockPosition(blockPosition);
+			//	block_[x][y][z]->instanceIndex_ = blockData_[blockID]->currentSum;
+			//	blockData_[blockID]->currentSum++;
+			//}
+			//for (int y = height; y < CHUNK_Z; y++)
+			//{
+			//	blockID = BlockID::Air;
+			//	block_[x][y][z]->SetBlockType(blockConfig_->GetBlockInfo(blockID));
+			//	blockPosition = PositionByIndex(Vector3int(x, y, z));
+			//	block_[x][y][z]->SetBlockPosition(blockPosition);
+			//	block_[x][y][z]->instanceIndex_ = 0;
+			//}
 
-	for (int x = 0; x < CHUNK_X; x++)
-	{
-		for (int z = 0; z < CHUNK_Y; z++)
-		{
-			int height = blockHeightMap_[x][z];
-			int neighborHeights[4] = { 0,0,0,0 };
-			if (x + 1 < CHUNK_X)neighborHeights[0] = blockHeightMap_[x + 1][z];
-			if (x - 1 >= 0)neighborHeights[1] = blockHeightMap_[x - 1][z];
-			if (z + 1 < CHUNK_Y)neighborHeights[2] = blockHeightMap_[x][z + 1];
-			if (z - 1 >= 0)neighborHeights[3] = blockHeightMap_[x][z - 1];
-
-			int maxHeightGap = 0;
-			for (int i = 0; i < 4; i++)
+			for (int y = 0; y < CHUNK_Z; y++)
 			{
-				int gap = height - neighborHeights[i];
-				if (gap > maxHeightGap)
+				BlockID blockID;
+
+				if (y < height - dirtThickness)
 				{
-					maxHeightGap = gap;
+					blockID = BlockID::Stone;
 				}
-			}
+				else if (y < height - 1)
+				{
+					blockID = BlockID::Dirt;
+				}
+				else if (y < height)
+				{
+					blockID = BlockID::Lawn;
+				}
+				else
+				{
+					blockID = BlockID::Air;
+				}
 
-			// blockHeightMap_[x][z]の上からmaxHeightGap分だけ下まで露出している
-			for (int i = 0; i <= maxHeightGap; i++)
-			{
-				if (height - 1 - i < 0) break;
-				block_[x][height - 1 - i][z]->isExposed_ = true;
+				block_[x][y][z]->SetBlockType(blockConfig_->GetBlockInfo(blockID));
+				block_[x][y][z]->SetBlockPosition(PositionByIndex(Vector3int(x, y, z)));
+				block_[x][y][z]->instanceIndex_ = blockData_[blockID]->currentSum;
+				blockData_[blockID]->currentSum++;
 			}
 		}
 	}
+
+	//for (int x = 0; x < CHUNK_X; x++)
+	//{
+	//	for (int z = 0; z < CHUNK_Y; z++)
+	//	{
+	//		int height = blockHeightMap_[x][z];
+	//		int neighborHeights[4] = { 0,0,0,0 };
+	//		if (x + 1 < CHUNK_X)neighborHeights[0] = blockHeightMap_[x + 1][z];
+	//		if (x - 1 >= 0)neighborHeights[1] = blockHeightMap_[x - 1][z];
+	//		if (z + 1 < CHUNK_Y)neighborHeights[2] = blockHeightMap_[x][z + 1];
+	//		if (z - 1 >= 0)neighborHeights[3] = blockHeightMap_[x][z - 1];
+	//
+	//		int maxHeightGap = 0;
+	//		for (int i = 0; i < 4; i++)
+	//		{
+	//			int gap = height - neighborHeights[i];
+	//			if (gap > maxHeightGap)
+	//			{
+	//				maxHeightGap = gap;
+	//			}
+	//		}
+	//
+	//		// blockHeightMap_[x][z]の上からmaxHeightGap分だけ下まで露出している
+	//		for (int i = 0; i <= maxHeightGap; i++)
+	//		{
+	//			if (height - 1 - i < 0) break;
+	//			block_[x][height - 1 - i][z]->isExposed_ = true;
+	//		}
+	//	}
+	//}
 
 	SetExposedBlocks();
 }
@@ -239,22 +274,35 @@ void MapManager::SetExposedBlocks()
 		{
 			for (int z = 0; z < CHUNK_Y; z++)
 			{
+				// ブロックのIDを取得
+				BlockID id = block_[x][y][z]->GetBlockID();
+
+
+				// Air は露出していても描画しない
+				if (id == BlockID::Air)
+				{
+					block_[x][y][z]->isExposed_ = false;
+					continue;
+				}
+
+
+				bool exposed = false;
+				if (x - 1 >= 0 && block_[x - 1][y][z]->GetBlockID() == BlockID::Air)exposed = true;
+				else if (x + 1 < CHUNK_X && block_[x + 1][y][z]->GetBlockID() == BlockID::Air)exposed = true;
+				else if (y - 1 >= 0 && block_[x][y - 1][z]->GetBlockID() == BlockID::Air)exposed = true;
+				else if (y + 1 < CHUNK_Z && block_[x][y + 1][z]->GetBlockID() == BlockID::Air)exposed = true;
+				else if (z - 1 >= 0 && block_[x][y][z - 1]->GetBlockID() == BlockID::Air)exposed = true;
+				else if (z + 1 < CHUNK_Y && block_[x][y][z + 1]->GetBlockID() == BlockID::Air)exposed = true;
+
+				block_[x][y][z]->isExposed_ = exposed;
+
 				if (block_[x][y][z]->isExposed_)
 				{
-					// 表示されているブロックのIDを取得
-					BlockID id = block_[x][y][z]->GetBlockID();
-
-					// 現在描画されているパーティクル数を取得
-					uint32_t currentDraw = blockDrawSumMap_[id];
-
 					// ブロックの座標を順番に設定
 					blockData_[id]->AddNewBlock(
 						block_[x][y][z]->position_,
 						Vector3int(x, y, z)
 					);
-
-					// 描画数をインクリメント
-					blockDrawSumMap_[id]++;
 				}
 			}
 		}
@@ -268,7 +316,7 @@ void MapManager::Initialize()
 
 void MapManager::Update()
 {
-	UpDataPlayerRayCollision();
+	//UpDataPlayerRayCollision();
 
 	if (Game::Input::Key::IsJustPressed(DIK_0))
 	{
@@ -283,8 +331,8 @@ void MapManager::Update()
 			for (int z = 0; z < CHUNK_Y; z++)
 			{
 				block_[x][y][z]->Update();
-				blockData_[block_[x][y][z]->GetBlockID()]->colors_[block_[x][y][z]->instanceIndex_]
-					= ConvertVector4ToUint(block_[x][y][z]->color_);
+				blockData_[block_[x][y][z]->GetBlockID()]->colorData_[block_[x][y][z]->instanceIndex_]
+					= block_[x][y][z]->color_;
 			}
 		}
 	}
@@ -536,7 +584,8 @@ void MapManager::UpdatePlayerCollisionX()
 
 void MapManager::Draw()
 {
-	for (int32_t i = 0; i < int32_t(BlockID::MAX); ++i)
+	// 0 はAirなので描画しない
+	for (int32_t i = 1; i < int32_t(BlockID::MAX); ++i)
 	{
 		blockData_[BlockID(i)]->Draw();
 	}

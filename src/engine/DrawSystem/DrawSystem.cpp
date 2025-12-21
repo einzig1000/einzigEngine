@@ -1107,10 +1107,8 @@ void DrawSystem::DrawAllBlock()
 {
 	for (auto& renderData : blockDrawList_)
 	{
-		if (drawCallIndex_ >= kMaxDrawCallPerFrame_) return;
-
-		// インスタンス数 0
-		if (renderData->currentSum == 0) continue;
+		// 描画数０
+		if (renderData->currentDrawSum == 0) continue;
 
 		// モデルの検索
 		Object3D* obj = dxManager_->GetResourceManager()->GetModelManager()->GetModelData(renderData->model);
@@ -1129,19 +1127,13 @@ void DrawSystem::DrawAllBlock()
 		// 頂点数の取得
 		const uint32_t kSumVertex = static_cast<uint32_t>(obj->modelData.vertices.size());
 
-		// マテリアルデータ
-		//materialData_[drawCallIndex_]->color = renderData->colors_[renderData->currentColorIndex_];
-		materialData_[drawCallIndex_]->color = Vector4{ 1.0f, 1.0f, 1.0f, 1.0f };
-		materialData_[drawCallIndex_]->shininess = 1.0f;
-		materialData_[drawCallIndex_]->uvTransform = Matrix4x4::MakeIdentity4x4();
-
 		// 頂点バッファをバインド（描画に使う頂点データを指定）
 		dxManager_->GetCommandContextManager()->GetCommandList()->IASetVertexBuffers(0, 1, &obj->vertexBufferView);
 
-		// ルートパラメータ0にマテリアル用定数バッファ（色・ライティング情報など）をバインド
-		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources_[drawCallIndex_]->GetGPUVirtualAddress());
+		// ルートパラメータ0にカラー配列をバインド
+		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(0, renderData->colorSrvAllocation_.gpu);
 		// ルートパラメータ1にワールド行列配列をバインド
-		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(1, renderData->srvAllocation_.gpu);
+		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(1, renderData->worldMatrixSrvAllocation_.gpu);
 		// ルートパラメータ2にテクスチャのSRV（シェーダリソースビュー）をバインド
 		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
 		// ルートパラメータ3に追加テクスチャのSRV（シェーダリソースビュー）をバインド
@@ -1150,9 +1142,7 @@ void DrawSystem::DrawAllBlock()
 		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(4, viewProjectionResource_->GetGPUVirtualAddress());
 
 
-		dxManager_->GetCommandContextManager()->GetCommandList()->DrawInstanced(kSumVertex, renderData->currentSum, 0, 0);
-
-		drawCallIndex_++;
+		dxManager_->GetCommandContextManager()->GetCommandList()->DrawInstanced(kSumVertex, renderData->currentDrawSum, 0, 0);
 	}
 }
 

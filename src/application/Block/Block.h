@@ -33,7 +33,7 @@ public:
 
 	BlockID blockID = BlockID::Air;
 
-	Vector4 color_ = { 255,255,255,255 };
+	Vector4 color_ = { 1.0f,1.0f,1.0f,1.0f };
 	Vector3 position_;
 	AABB aabb_;
 

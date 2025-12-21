@@ -36,15 +36,10 @@ public:
 
 private:
 	// マップデータ
-	Block* block_[CHUNK_X][CHUNK_Z][CHUNK_Y];
-	// 描画データ
-	std::map<BlockID, std::unique_ptr<RenderData_Block>> blockData_;
+	Block* block_[CHUNK_X][CHUNK_Z][CHUNK_Y];								// [CHUNK_X][CHUNK_Z][CHUNK_Y]のブロック1つ1つの3次元データ配列		(1チャンクにつき１つ必要)
+	std::map<BlockID, std::unique_ptr<RenderData_Block>> blockData_;		// ブロックごとの描画データ管理マップ								(1チャンクにつき１つ必要)
 
 	BlockConfig* blockConfig_;
-
-	std::map<BlockID, uint32_t> blockDrawSumMap_;
-
-
 
 
 	// 着地パーティクル

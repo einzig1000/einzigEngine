@@ -1,4 +1,4 @@
-// Object3d.hlsli
+// Block.hlsli
 
 
 struct VertexShaderInput
@@ -14,7 +14,10 @@ struct VertexShaderOutput
     float32_t2 texcoord : TEXCOORD0;
     float32_t2 texcoord2 : TEXCOORD1;
     float32_t3 normal : NORMAL0;
+    uint32_t instancedID : TEXCOORD2; // TEXCOORD2ではない
 };
+
+
 struct PixelShaderOutput
 {
     float32_t4 color : SV_TARGET0;

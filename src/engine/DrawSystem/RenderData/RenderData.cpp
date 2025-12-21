@@ -1878,27 +1878,36 @@ RenderData_Block::RenderData_Block(BlockID id)
 	renderBlocks.push_back(this);
 	this->ID = int(renderBlocks.size());
 
-	this->instancingResource_ =
-		Engine::Instance().CreateBufferResource(
-			sizeof(Matrix4x4) * this->capacity
-		);
-	this->instancingResource_->Map(0, nullptr, reinterpret_cast<void**>(&this->instancingData_));
-	for (size_t i = 0; i < this->capacity; ++i)
-	{
-		this->instancingData_[i] = Matrix4x4::MakeIdentity4x4();
-	}
-
-	this->srvAllocation_ = Engine::Instance().GetDirectXManager()->GetDescriptorHeapManager()->GetSrvManager()->CreateSRVforStructuredBuffer(
-		this->instancingResource_.Get(),
+	// ワールド行列バッファの作成
+	this->worldMatrixResource_ = Engine::Instance().CreateBufferResource(sizeof(Matrix4x4) * this->capacity);
+	this->worldMatrixResource_->Map(0, nullptr, reinterpret_cast<void**>(&this->worldMatrixData_));
+	this->worldMatrixSrvAllocation_ = Engine::Instance().GetDirectXManager()->GetDescriptorHeapManager()->GetSrvManager()->CreateSRVforStructuredBuffer(
+		this->worldMatrixResource_.Get(),
 		this->capacity,
 		sizeof(Matrix4x4));
 
+	// 色バッファの作成
+	this->colorResource_ = Engine::Instance().CreateBufferResource(sizeof(Vector4) * this->capacity);
+	this->colorResource_->Map(0, nullptr, reinterpret_cast<void**>(&this->colorData_));
+	this->colorSrvAllocation_ = Engine::Instance().GetDirectXManager()->GetDescriptorHeapManager()->GetSrvManager()->CreateSRVforStructuredBuffer(
+		this->colorResource_.Get(),
+		this->capacity,
+		sizeof(Vector4));
+
+	// データ初期化(多分いらない)
+	for (size_t i = 0; i < this->capacity; ++i)
+	{
+		// ワールド行列初期化
+		this->worldMatrixData_[i] = Matrix4x4::MakeIdentity4x4(); 
+
+		// 色初期化
+		this->colorData_[i] = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	}
 
 	this->scale_.resize(capacity);
 	this->rotate_.resize(capacity);
 	this->translate_.resize(capacity);
 	this->indexes_.resize(capacity);
-	this->colors_.resize(capacity);
 	this->isActive_.resize(capacity, false);
 
 	name = id;
@@ -1928,52 +1937,47 @@ void RenderData_Block::AddNewBlock(Vector3 position, Vector3int index)
 {
 	Log("BlockID:%s", EnumToString(name));
 	Log("index:%d,%d,%d", index.x, index.y, index.z);
-	Log("currentSum:%d", currentSum);
+	Log("currentSum:%d", currentDrawSum);
 	// 空いているインデックスを探す
-	if (currentSum >= capacity)
+	if (currentDrawSum >= capacity)
 	{
-		Log("キャパオーバー");
+		Log("キャパオーバー(あり得ないためこれが出る時は致命的なミスがある)");
 		return;
 	}
-	if (!isActive_[currentSum])
+	if (!isActive_[currentDrawSum])
 	{
-
 		// 拡縮量の初期化
-		scale_[currentSum].value = Vector3(1.0f, 1.0f, 1.0f);
-		scale_[currentSum].velocity = Vector3(0.0f, 0.0f, 0.0f);
-		scale_[currentSum].acceleration = Vector3(0.0f, 0.0f, 0.0f);
-		Log("scale 成功");
+		scale_[currentDrawSum].value = Vector3(1.0f, 1.0f, 1.0f);
+		scale_[currentDrawSum].velocity = Vector3(0.0f, 0.0f, 0.0f);
+		scale_[currentDrawSum].acceleration = Vector3(0.0f, 0.0f, 0.0f);
 
 		// 回転量の初期化
-		rotate_[currentSum].value = Vector3(0.0f, 0.0f, 0.0f);
-		rotate_[currentSum].velocity = Vector3(0.0f, 0.0f, 0.0f);
-		rotate_[currentSum].acceleration = Vector3(0.0f, 0.0f, 0.0f);
-		Log("rotate_ 成功");
+		rotate_[currentDrawSum].value = Vector3(0.0f, 0.0f, 0.0f);
+		rotate_[currentDrawSum].velocity = Vector3(0.0f, 0.0f, 0.0f);
+		rotate_[currentDrawSum].acceleration = Vector3(0.0f, 0.0f, 0.0f);
 
 		// 座標の初期化
-		translate_[currentSum].value = position;
-		translate_[currentSum].velocity = Vector3(0.0f, 0.0f, 0.0f);
-		translate_[currentSum].acceleration = Vector3(0.0f, 0.0f, 0.0f);
-		Log("translate_ 成功");
+		translate_[currentDrawSum].value = position;
+		translate_[currentDrawSum].velocity = Vector3(0.0f, 0.0f, 0.0f);
+		translate_[currentDrawSum].acceleration = Vector3(0.0f, 0.0f, 0.0f);
 
 		// ワールド行列の更新
-		instancingData_[currentSum]	= Matrix4x4::MakeAffineMatrix(
-				scale_[currentSum].value,
-				rotate_[currentSum].value,
-				translate_[currentSum].value);
-		Log("UpdateWorldMatrix 成功");
+		worldMatrixData_[currentDrawSum] = Matrix4x4::MakeAffineMatrix(
+				scale_[currentDrawSum].value,
+				rotate_[currentDrawSum].value,
+				translate_[currentDrawSum].value);
+
+		// 色の初期化
+		colorData_[currentDrawSum] = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 
 		// インデックスの保存
-		indexes_[currentSum] = index;
-		Log("indexes_ 成功");
+		indexes_[currentDrawSum] = index;
 
 		// アクティブ化
-		isActive_[currentSum] = true;
-		Log("isActive_ 成功");
+		isActive_[currentDrawSum] = true;
 
-
-		currentSum++;
-		Log("currentSum++ 成功");
+		// 描画カウントインクリメント
+		currentDrawSum++;
 	}
 }
 
@@ -1989,70 +1993,35 @@ void RenderData_Block::RemoveBlock(Vector3int index)
 	}
 }
 
-// ワールド行列の更新
-void RenderData_Block::UpdateWorldMatrix()
-{
-	for (size_t i = 0; i < currentSum; ++i)
-	{
-		if (isActive_[i])
-		{
-			instancingData_[i]
-				= Matrix4x4::MakeAffineMatrix(
-					scale_[i].value,
-					rotate_[i].value,
-					translate_[i].value
-				);
-		}
-	}
-}
-
-
-// SRTの更新
-void RenderData_Block::UpdateTransforms()
-{
-	for (size_t i = 0; i < currentSum; ++i)
-	{
-		// スケールの更新
-		scale_[i].velocity += scale_[i].acceleration;
-		scale_[i].value += scale_[i].velocity;
-		// 回転の更新
-		rotate_[i].velocity += rotate_[i].acceleration;
-		rotate_[i].value += rotate_[i].velocity;
-		// 位置の更新
-		translate_[i].velocity += translate_[i].acceleration;
-		translate_[i].value += translate_[i].velocity;
-	}
-}
-
-// 非アクティブなブロックをリストから削除
+// 非アクティブなブロックをリストから削除(未実装)
 void RenderData_Block::RemoveInactiveBlocks()
 {
-	size_t writeIndex = 0;
-
-	for (size_t readIndex = 0; readIndex < capacity; ++readIndex)
-	{
-		if (isActive_[readIndex])
-		{
-			if (writeIndex != readIndex)
-			{
-				// アクティブなパーティクルを前方に詰める
-				scale_[writeIndex] = scale_[readIndex];
-				rotate_[writeIndex] = rotate_[readIndex];
-				translate_[writeIndex] = translate_[readIndex];
-				isActive_[writeIndex] = isActive_[readIndex];
-				// ワールド行列・WVP行列も詰める
-				instancingData_[writeIndex] = instancingData_[readIndex];
-			}
-			writeIndex++;
-		}
-	}
-	for (size_t i = writeIndex; i < capacity; ++i)
-	{
-		isActive_[i] = false;
-	}
-
-
-	currentSum = uint32_t(writeIndex);
+	//size_t writeIndex = 0;
+	//
+	//for (size_t readIndex = 0; readIndex < capacity; ++readIndex)
+	//{
+	//	if (isActive_[readIndex])
+	//	{
+	//		if (writeIndex != readIndex)
+	//		{
+	//			// アクティブなパーティクルを前方に詰める
+	//			scale_[writeIndex] = scale_[readIndex];
+	//			rotate_[writeIndex] = rotate_[readIndex];
+	//			translate_[writeIndex] = translate_[readIndex];
+	//			isActive_[writeIndex] = isActive_[readIndex];
+	//			// ワールド行列・WVP行列も詰める
+	//			instancingData_[writeIndex] = instancingData_[readIndex];
+	//		}
+	//		writeIndex++;
+	//	}
+	//}
+	//for (size_t i = writeIndex; i < capacity; ++i)
+	//{
+	//	isActive_[i] = false;
+	//}
+	//
+	//
+	//currentSum = uint32_t(writeIndex);
 }
 
 void RenderData_Block::Draw()

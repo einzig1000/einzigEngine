@@ -76,22 +76,27 @@ void Block::UpdateBreak(int power)
 void Block::UpdateColor()
 {
 	// 輝度に応じて色を変更
-	lightEmission_ = std::clamp(lightEmission_, 0u, 14u);
+	//lightEmission_ = std::clamp(lightEmission_, 0u, 14u);
 	
-	color_ = Vector4(float(0x11 * lightEmission_), float(0x11 * lightEmission_), float(0x11 * lightEmission_), float(0xFF));
-	color_ = Vector4(
-		Game::Math::RandInt(color_.x - 8, color_.x + 8),
-		Game::Math::RandInt(color_.y - 8, color_.y + 8),
-		Game::Math::RandInt(color_.z - 8, color_.z + 8),
-		color_.w);
-	color_.x = std::clamp(color_.x, 0.0f, 255.0f);
-	color_.y = std::clamp(color_.y, 0.0f, 255.0f);
-	color_.z = std::clamp(color_.z, 0.0f, 255.0f);
+	//color_ = Vector4(float(0x11 * lightEmission_), float(0x11 * lightEmission_), float(0x11 * lightEmission_), float(0xFF));
+	//color_ = Vector4(
+	//	Game::Math::RandInt(color_.x - 8, color_.x + 8),
+	//	Game::Math::RandInt(color_.y - 8, color_.y + 8),
+	//	Game::Math::RandInt(color_.z - 8, color_.z + 8),
+	//	color_.w);
+	//color_.x = std::clamp(color_.x, 0.0f, 255.0f);
+	//color_.y = std::clamp(color_.y, 0.0f, 255.0f);
+	//color_.z = std::clamp(color_.z, 0.0f, 255.0f);
 
+	color_ = Vector4(
+		Game::Math::RandFloat(0.0f, 1.0f, 2),
+		Game::Math::RandFloat(0.0f, 1.0f, 2),
+		Game::Math::RandFloat(0.0f, 1.0f, 2),
+		1.0f);
 
 	// １番目に衝突している時
-	if (isCollisionRay == true)
-	{
-		color_ = Vector4(0x22, 0x22, 0x22, 0x00);
-	}
+	//if (isCollisionRay == true)
+	//{
+	//	color_ = Vector4(0x22, 0x22, 0x22, 0x00);
+	//}
 }
