@@ -154,9 +154,6 @@
     <Filter Include="engine\Shader\Block">
       <UniqueIdentifier>{4af80ac8-f820-4247-b010-9c9144ea5715}</UniqueIdentifier>
     </Filter>
-    <Filter Include="application\GameManeger\Map\Block">
-      <UniqueIdentifier>{1914304b-d65c-4d83-8e80-cd43ac14c5e2}</UniqueIdentifier>
-    </Filter>
     <Filter Include="engine\DrawSystem">
       <UniqueIdentifier>{c33b27c6-9c84-4600-b956-0acdc8f3c453}</UniqueIdentifier>
     </Filter>
@@ -174,6 +171,12 @@
     </Filter>
     <Filter Include="application\GameManeger\Charactor\BaseCharactor">
       <UniqueIdentifier>{686134fb-a1b8-47f3-af73-021a2c7fa321}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManeger\Map\Chunk">
+      <UniqueIdentifier>{35fdb512-caaa-4061-a301-e55e6a01029f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManeger\Map\Chunk\Block">
+      <UniqueIdentifier>{1914304b-d65c-4d83-8e80-cd43ac14c5e2}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -289,7 +292,7 @@
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="src\application\Block\Block.cpp">
-      <Filter>application\GameManeger\Map\Block</Filter>
+      <Filter>application\GameManeger\Map\Chunk\Block</Filter>
     </ClCompile>
     <ClCompile Include="src\application\MapManager.cpp">
       <Filter>application\GameManeger\Map</Filter>
@@ -310,7 +313,7 @@
       <Filter>engine\imgui</Filter>
     </ClCompile>
     <ClCompile Include="src\application\Block\BlockDurability.cpp">
-      <Filter>application\GameManeger\Map\Block</Filter>
+      <Filter>application\GameManeger\Map\Chunk\Block</Filter>
     </ClCompile>
     <ClCompile Include="src\application\ResourceLoder\ResourceID.cpp">
       <Filter>application</Filter>
@@ -319,10 +322,13 @@
       <Filter>application\GameManeger\CameraController</Filter>
     </ClCompile>
     <ClCompile Include="src\application\Block\BlockConfig.cpp">
-      <Filter>application\GameManeger\Map\Block</Filter>
+      <Filter>application\GameManeger\Map\Chunk\Block</Filter>
     </ClCompile>
     <ClCompile Include="BaseCharactor.cpp">
       <Filter>application\GameManeger\Charactor\BaseCharactor</Filter>
+    </ClCompile>
+    <ClCompile Include="Chunk.cpp">
+      <Filter>application\GameManeger\Map\Chunk</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -435,7 +441,7 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="src\application\Block\Block.h">
-      <Filter>application\GameManeger\Map\Block</Filter>
+      <Filter>application\GameManeger\Map\Chunk\Block</Filter>
     </ClInclude>
     <ClInclude Include="src\application\MapManager.h">
       <Filter>application\GameManeger\Map</Filter>
@@ -456,7 +462,7 @@
       <Filter>engine\imgui</Filter>
     </ClInclude>
     <ClInclude Include="src\application\Block\BlockDurability.h">
-      <Filter>application\GameManeger\Map\Block</Filter>
+      <Filter>application\GameManeger\Map\Chunk\Block</Filter>
     </ClInclude>
     <ClInclude Include="src\application\ResourceLoder\ResourceID.h">
       <Filter>application</Filter>
@@ -465,10 +471,13 @@
       <Filter>application\GameManeger\CameraController</Filter>
     </ClInclude>
     <ClInclude Include="src\application\Block\BlockConfig.h">
-      <Filter>application\GameManeger\Map\Block</Filter>
+      <Filter>application\GameManeger\Map\Chunk\Block</Filter>
     </ClInclude>
     <ClInclude Include="BaseCharactor.h">
       <Filter>application\GameManeger\Charactor\BaseCharactor</Filter>
+    </ClInclude>
+    <ClInclude Include="Chunk.h">
+      <Filter>application\GameManeger\Map\Chunk</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

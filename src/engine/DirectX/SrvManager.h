@@ -29,7 +29,7 @@ public:
     void CreateSRVforImGui(UINT bufferCount, D3D12_RENDER_TARGET_VIEW_DESC format);
 
 private:
-
+	void ExpandCapacity();
 
     ID3D12Device* device_ = nullptr;
 

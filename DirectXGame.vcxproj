@@ -161,6 +161,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
   <ItemGroup>
     <ClCompile Include="BaseCharactor.cpp" />
     <ClCompile Include="CameraController.cpp" />
+    <ClCompile Include="Chunk.cpp" />
     <ClCompile Include="src\application\Block\BlockConfig.cpp" />
     <ClCompile Include="src\engine\ImGuiManager\ImGuiManager.cpp" />
     <ClCompile Include="src\application\Block\BlockDurability.cpp" />
@@ -239,6 +240,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
   <ItemGroup>
     <ClInclude Include="BaseCharactor.h" />
     <ClInclude Include="CameraController.h" />
+    <ClInclude Include="Chunk.h" />
     <ClInclude Include="src\application\Block\BlockConfig.h" />
     <ClInclude Include="src\engine\ImGuiManager\ImGuiManager.h" />
     <ClInclude Include="src\application\Block\BlockDurability.h" />

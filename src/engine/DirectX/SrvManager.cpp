@@ -31,8 +31,9 @@ uint32_t SrvManager::Allocate()
 {
     if (nextIndex_ >= capacity_)
     {
-        Log("DescriptorHeapが小さいぜ");
-        return UINT32_MAX;
+        Log("DescriptorHeapが小さいぜ\n");
+        ExpandCapacity();
+		Log("拡張に成功したぜ\n");
     }
     return nextIndex_++;
 }
@@ -104,3 +105,33 @@ void SrvManager::CreateSRVforImGui(UINT bufferCount, D3D12_RENDER_TARGET_VIEW_DE
     //    GetGPUHandleAt(index)                     // ImGuiフォントSRV用のGPUハンドル
     //);
 }
+
+void SrvManager::ExpandCapacity()
+{
+    uint32_t newCapacity = capacity_ * 2;
+
+    // 新しいヒープを作成
+    D3D12_DESCRIPTOR_HEAP_DESC desc{};
+    desc.NumDescriptors = newCapacity;
+    desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+    desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> newHeap;
+    HRESULT hr = device_->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&newHeap));
+    assert(SUCCEEDED(hr));
+
+    // 古いヒープの内容をコピー
+    device_->CopyDescriptorsSimple(
+        nextIndex_, // コピーする数
+        newHeap->GetCPUDescriptorHandleForHeapStart(),
+        descriptorHeap->GetCPUDescriptorHandleForHeapStart(),
+        D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
+    );
+
+    // ヒープを差し替え
+    descriptorHeap = newHeap;
+    capacity_ = newCapacity;
+
+    Log("SRV Heap expanded to " + std::to_string(newCapacity));
+}
+

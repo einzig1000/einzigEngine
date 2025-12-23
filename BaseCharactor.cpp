@@ -1,5 +1,6 @@
 #include "BaseCharactor.h"
 #include "MapManager.h"
+#include "Chunk.h"
 
 void BaseCharactor::SetMapManager(MapManager* mapManager)
 {
@@ -24,14 +25,15 @@ void BaseCharactor::ResolveMapCollision()
 
 	for (int i = 0; i < 4; ++i)
 	{
-		Vector3int idx = mapManager_->IndexByPosition(corners[i]);
-		AABB blockAABB = mapManager_->GetAABB(Vector3int(idx.x, idx.y, idx.z));
+		// 足元のブロックAABBを取得
+		AABB blockAABB = mapManager_->GetAABB(corners[i]);
 
 		if (
 			// 足元のブロックAABBとキャラクターAABBが衝突していて
 			IsCollision(blockAABB, data_.aabbs[0]) &&
 			// そのブロックがアクティブなら
-			mapManager_->GetIsActive(Vector3int(idx.x,idx.y,idx.z)))
+			mapManager_->GetIsActive(corners[i])
+			)
 		{
 			// 衝突判定成立
 			anyCollision = true;

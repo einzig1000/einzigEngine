@@ -482,6 +482,181 @@ bool JsonManager::LoadFromJson(RenderData_Model& m, const std::string& path)
     return false;
 }
 
+bool JsonManager::SaveToJson(RenderData_Block& data, const std::string& path, Vector2int chunkPos)
+{
+    try
+    {
+        json j;
+		std::string chunkPosStr = "[" + std::to_string(chunkPos.x) + "][" + std::to_string(chunkPos.y) + "]";
+		j["name"] = chunkPosStr;    // チャンク位置を名前にする
+		j["BlockID"] = data.name;   // ブロックの名前をIDとして保存
+		// ブロックデータ全てを保存
+        for (uint32_t i = 0; i < data.capacity; ++i)
+        {
+            if (data.isActive_[i])
+            {
+				// Vector3int のdata.indexes_[i]を配列で保存
+				j["blocks"][i]["position"] = ToJson(data.indexes_[i]);
+            }
+		}
+
+        // 出力パスに.json を付与
+        const std::string finalPath = path.ends_with(".json") ? path : (path + ".json");
+        // 親ディレクトリ作成
+        std::filesystem::path dst(finalPath);
+        if (!dst.parent_path().empty())
+        {
+            std::error_code ec;
+            std::filesystem::create_directories(dst.parent_path(), ec);
+            if (ec)
+            {
+                std::cerr << "Create directories failed: " << ec.message() << "\n";
+                return false;
+            }
+        }
+        // 一意な一時ファイル名を作る
+        const std::string tmp = finalPath + ".tmp." + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count());
+        {
+            std::ofstream ofs(tmp); // テキストなので binary は不要
+            if (!ofs)
+            {
+                std::cerr << "Failed to open tmp file for write: " << tmp << "\n";
+                return false;
+            }
+            ofs << j.dump(2);
+            if (!ofs.good())
+            {
+                std::cerr << "Failed to write JSON to tmp file\n";
+                std::filesystem::remove(tmp);
+                return false;
+            }
+        }
+        std::error_code ec;
+        std::filesystem::rename(tmp, finalPath, ec);
+        if (ec)
+        {
+            // 別ファイルシステム（EXDEV）ならコピー→削除で代替
+            if (std::filesystem::exists(finalPath))
+            {
+                std::filesystem::remove(finalPath, ec);
+                if (ec) { std::cerr << "remove existing failed: " << ec.message() << "\n"; std::filesystem::remove(tmp); return false; }
+            }
+            std::filesystem::rename(tmp, finalPath, ec);
+            if (ec) { std::cerr << "rename failed: " << ec.message() << "\n"; std::filesystem::remove(tmp); return false; }
+        }
+        return true;
+    }
+    catch (const std::exception& ex)
+    {
+        std::cerr << "SaveToJson exception: " << ex.what() << "\n";
+        return false;
+    }
+}
+
+bool JsonManager::LoadFromJson(RenderData_Block& data, const std::string& path, Vector2int& chunkPos)
+{
+    try
+    {
+        // パス確認
+        const std::string finalPath = path.ends_with(".json") ? path : (path + ".json");
+        std::ifstream ifs(finalPath);
+        if (!ifs)
+        {
+            std::cerr << "Failed to open JSON file: " << finalPath << "\n";
+            return false;
+        }
+
+        json j;
+        ifs >> j;
+
+        // -----------------------------
+        // ① チャンク位置の読み取り
+        // -----------------------------
+        if (!j.contains("name") || !j["name"].is_string())
+        {
+            std::cerr << "Invalid JSON: missing chunk name\n";
+            return false;
+        }
+
+        std::string name = j["name"].get<std::string>();
+		// name は "[x][y]" の形式
+        {
+			size_t firstBracket = name.find('[');
+			size_t secondBracket = name.find(']', firstBracket);
+			size_t thirdBracket = name.find('[', secondBracket);
+			size_t fourthBracket = name.find(']', thirdBracket);
+			if (firstBracket == std::string::npos || secondBracket == std::string::npos ||
+				thirdBracket == std::string::npos || fourthBracket == std::string::npos)
+			{
+				std::cerr << "Invalid chunk name format: " << name << "\n";
+				return false;
+			}
+			int x = std::stoi(name.substr(firstBracket + 1, secondBracket - firstBracket - 1));
+			int y = std::stoi(name.substr(thirdBracket + 1, fourthBracket - thirdBracket - 1));
+
+            chunkPos = { x, y };
+        }
+
+        // -----------------------------
+        // ② BlockID の読み取り
+        // -----------------------------
+        if (!j.contains("BlockID") || !j["BlockID"].is_string())
+        {
+            std::cerr << "Invalid JSON: missing BlockID\n";
+            return false;
+        }
+		data.name = BlockID(ToInt(j["BlockID"]));
+
+        // -----------------------------
+        // ③ ブロックデータの読み取り
+        // -----------------------------
+        if (!j.contains("blocks"))
+        {
+            // ブロックが1つもない場合は空のまま
+            std::fill(data.isActive_.begin(), data.isActive_.end(), false);
+            return true;
+        }
+
+        const json& blocks = j["blocks"];
+
+        // 事前に全て inactive に
+        for (uint32_t i = 0; i < data.capacity; i++)
+        {
+            data.isActive_[i] = false;
+        }
+
+        // blocks は "0", "5", "10" のようなキーを持つオブジェクト
+        for (auto it = blocks.begin(); it != blocks.end(); ++it)
+        {
+            uint32_t index = std::stoi(it.key());
+            if (index < 0 || index >= data.capacity)
+            {
+                std::cerr << "Invalid block index: " << index << "\n";
+                continue;
+            }
+
+            const json& blockObj = it.value();
+            if (!blockObj.contains("position"))
+            {
+                std::cerr << "Block missing position: index=" << index << "\n";
+                continue;
+            }
+
+            // Vector3int を読み取る
+            Vector3int pos = ToVector3int(blockObj["position"]);
+
+            data.indexes_[index] = pos;
+            data.isActive_[index] = true;
+        }
+
+        return true;
+    }
+    catch (const std::exception& ex)
+    {
+        std::cerr << "LoadFromJson exception: " << ex.what() << "\n";
+        return false;
+    }
+}
 
 
 bool JsonManager::SaveToJson(const std::string& path, const std::string key, const int& data)
@@ -659,6 +834,10 @@ json JsonManager::ToJson(const Vector3& data)
 {
     return json::array({ data.x, data.y, data.z });
 }
+json JsonManager::ToJson(const Vector3int& data)
+{
+	return json::array({ data.x, data.y, data.z });
+}
 json JsonManager::ToJson(const Vector4& data)
 {
     return json::array({ data.x, data.y, data.z, data.w });
@@ -715,6 +894,11 @@ Vector3 JsonManager::ToVector3(const json& j)
 {
     if (!j.is_array() || j.size() < 3) return Vector3{};
     return Vector3{ j[0].get<float>(), j[1].get<float>(), j[2].get<float>() };
+}
+Vector3int JsonManager::ToVector3int(const json& j)
+{
+    if (!j.is_array() || j.size() < 3) return Vector3int{};
+	return Vector3int{ j[0].get<int>(), j[1].get<int>(), j[2].get<int>() };
 }
 Vector4 JsonManager::ToVector4(const json& j)
 {

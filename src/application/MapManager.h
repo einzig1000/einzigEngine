@@ -4,14 +4,10 @@
 #include "DropItem.h"
 
 class Block;
+class Chunk;
 class Player;
 class BlockConfig;
 
-struct Chunk
-{
-	Block* blocks[CHUNK_X][CHUNK_Z][CHUNK_Y];
-	Vector2int chunkPos; // チャンク座標
-};
 
 class MapManager
 {
@@ -20,11 +16,10 @@ public:
 	~MapManager();
 
 	void LoadMap(const std::string& mapFilePath);
-	void CreateNewMap();
 	void SaveMap(const std::string& mapFilePath);
-
-	// 表面にでているブロックの座標をblockData_の対応するデータに変換して格納
-	void SetExposedBlocks();;
+	void CreateNewMap();
+	Chunk* CreateChunk(const Vector2int& chunkPos);
+	Chunk* GetOrCreateChunk(const Vector2int& chunkPos);
 
 	void Initialize();
 	void Update();
@@ -33,17 +28,19 @@ public:
 	void Draw();
 	void DrawImGui();
 
-	AABB GetAABB(const Vector3int& index);
-	bool GetIsActive(const Vector3int& index);
-
-	Vector3int IndexByPosition(const Vector3& position);
-	Vector3 PositionByIndex(const Vector3int& index);
-	AABB AABBByIndex(const Vector3int& index);
+	AABB GetAABB(const Vector2int& chunkPos, const Vector3int& index);
+	AABB GetAABB(const Vector3& position);
+	bool GetIsActive(const Vector2int& chunkPos, const Vector3int& index);
+	bool GetIsActive(const Vector3& position);
+	Vector2int ChunkIndexByPosition(const Vector3& position);		// ワールド座標				→	chunksのキーインデックス座標
+	Vector3int BlockIndexByPosition(const Vector3& position);		// ワールド座標				→	ブロックインデックス座標
 
 private:
+
+	std::string mapFilePath_;
+
 	// マップデータ
-	Block* block_[CHUNK_X][CHUNK_Z][CHUNK_Y];								// [CHUNK_X][CHUNK_Z][CHUNK_Y]のブロック1つ1つの3次元データ配列		(1チャンクにつき１つ必要)
-	std::map<BlockID, std::unique_ptr<RenderData_Block>> blockData_;		// ブロックごとの描画データ管理マップ								(1チャンクにつき１つ必要)
+	std::unordered_map<Vector2int, Chunk*, Vector2intHash> chunks;
 
 	BlockConfig* blockConfig_;
 

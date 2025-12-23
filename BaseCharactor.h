@@ -16,6 +16,8 @@ public:
 	virtual void ResolveMapCollision();
 	virtual void Jump();
 
+	virtual RenderData_Model& GetRenderData() { return data_; }
+
 
 protected:
 	MapManager* mapManager_ = nullptr;

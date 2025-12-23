@@ -150,6 +150,16 @@ struct Vector2int
     }
 };
 
+struct Vector2intHash
+{
+    std::size_t operator()(const Vector2int& v) const noexcept
+    {
+        uint64_t x = static_cast<uint64_t>(v.x);
+        uint64_t y = static_cast<uint64_t>(v.y);
+        return (x * 73856093) ^ (y * 19349663);
+    }
+};
+
 struct Vector2
 {
     float x = 0;
