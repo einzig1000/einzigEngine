@@ -30,6 +30,9 @@ public:
 	void Draw();
 	void DrawImGui();
 
+	AABB GetAABB(const Vector3int& index);
+	bool GetIsActive(const Vector3int& index);
+
 	Vector3int IndexByPosition(const Vector3& position);
 	Vector3 PositionByIndex(const Vector3int& index);
 	AABB AABBByIndex(const Vector3int& index);

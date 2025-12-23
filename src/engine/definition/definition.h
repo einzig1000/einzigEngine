@@ -31,7 +31,7 @@
 #define BLOCK_SIZE 1.0f
 #define PLAYER_SPEED 0.1f
 
-#define GRAVITY -0.005f
+#define GRAVITY -0.006f
 
 
 

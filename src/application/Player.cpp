@@ -37,17 +37,49 @@ void Player::Initialize()
 
 void Player::Update()
 {
+	// 移動更新
+	UpdateDush();
+	UpdateMove();
+	UpdateJump();
+
+	// 移動後のめりこみ修正
+	ResolveMapCollision();
+
+	// 移動後の視線レイ更新
+	UpdateViewLine();
+
+
+	Itemslot_->Update();
+}
+
+void Player::Draw()
+{
+	data_.Draw();
+	reticle_.Draw();
+	Itemslot_->Draw();
+}
+
+void Player::DrawImGui()
+{}
+
+void Player::UpdateViewLine()
+{
 	Vector3 cameraRot = Game::Camera::Getter::GetCurrentRotate();
-	Vector3 forward = Game::Math::DirectionFromYawPitch(cameraRot.y, 0.0f);
 	Vector3 direction = Game::Math::DirectionFromYawPitch(cameraRot.y, cameraRot.x);
-	forward.Normalize();
 
 	viewLine_.origin = data_.aabbs[0].center();
 	viewLine_.origin.y += (data_.aabbs[0].max.y - data_.aabbs[0].min.y) * 0.5f;
 	viewLine_.end = viewLine_.origin + direction * 10.0f;
+}
+
+void Player::UpdateMove()
+{
+	Vector3 cameraRot = Game::Camera::Getter::GetCurrentRotate();
+	Vector3 forward = Game::Math::DirectionFromYawPitch(cameraRot.y, 0.0f);
+	forward.Normalize();
 
 	// 移動処理
-	if (Game::Input::Key::IsHeld(DIK_W) || Game::Input::Key::IsHeld(DIK_S) || 
+	if (Game::Input::Key::IsHeld(DIK_W) || Game::Input::Key::IsHeld(DIK_S) ||
 		Game::Input::Key::IsHeld(DIK_A) || Game::Input::Key::IsHeld(DIK_D))
 	{
 		DirectionXZ8Way dir = DirectionXZ8Way::None;
@@ -113,20 +145,21 @@ void Player::Update()
 		if (dir != DirectionXZ8Way::None)
 		{
 			float angle = int(dir) * 45.0f;
-			Vector3 temp;
+			Vector3 speed;
+
 
 			float radians = Game::Math::DegreeToRadian(angle);
 			float cosA = std::cos(radians);
 			float sinA = std::sin(radians);
 
-			temp = Vector3(
+			speed = Vector3(
 				forward.x * cosA - forward.z * sinA,
 				forward.y,
 				forward.x * sinA + forward.z * cosA
 			);
 
-			data_.translate.velocity.x = temp.x * speed_;
-			data_.translate.velocity.z = temp.z * speed_;
+			data_.translate.velocity.x = speed.x * speed_;
+			data_.translate.velocity.z = speed.z * speed_;
 		}
 	}
 	else
@@ -134,48 +167,34 @@ void Player::Update()
 		data_.translate.velocity.x = 0.0f;
 		data_.translate.velocity.z = 0.0f;
 	}
+}
 
-	// ダッシュ処理
-	if (Game::Input::Key::IsHeld(DIK_W))
+void Player::UpdateDush()
+{
+	if (Game::Input::Key::IsJustReleased(DIK_W))
 	{
-		wHeldFrames_++;
+		speed_ = normalSpeed_;
+		if (wHeldFrames_ < 20)dashBufferTimer_ = 20;
 	}
-	else
+	if (dashBufferTimer_ > 0)
 	{
-		wHeldFrames_ = 0;
-	}
-	if (Game::Input::Key::IsJustReleased(DIK_W) && wHeldFrames_ < 20)
-	{
-		preDash_ = 20;
-	}
-	if (preDash_ > 0)
-	{
+		dashBufferTimer_--;
 		if (Game::Input::Key::IsJustPressed(DIK_W))
 		{
 			speed_ = dashSpeed_;
 		}
-		preDash_--;
-	}
-	if (Game::Input::Key::IsJustReleased(DIK_W) && speed_ == dashSpeed_)
-	{
-		speed_ = normalSpeed_;
 	}
 
+	wHeldFrames_ = Game::Input::Key::HoldFrames(DIK_W);
+}
+
+void Player::UpdateJump()
+{
 	// ジャンプ処置
 	if (Game::Input::Key::IsJustPressed(DIK_SPACE))
 	{
-		data_.translate.velocity.y = 0.1f;
-		data_.translate.value.y += data_.translate.velocity.y;
+		Jump();
 	}
-
-	Itemslot_->Update();
-}
-
-void Player::Draw()
-{
-	data_.Draw();
-	reticle_.Draw();
-	Itemslot_->Draw();
 }
 
 void Player::AddItemToItemslot(int itemID)

@@ -1933,8 +1933,10 @@ void RenderData_Block::Update()
 }
 
 // ブロックの追加
-void RenderData_Block::AddNewBlock(Vector3 position, Vector3int index)
+uint32_t RenderData_Block::AddNewBlock(Vector3 position, Vector3int index)
 {
+	const uint32_t slot = currentDrawSum;
+
 	Log("BlockID:%s", EnumToString(name));
 	Log("index:%d,%d,%d", index.x, index.y, index.z);
 	Log("currentSum:%d", currentDrawSum);
@@ -1942,7 +1944,7 @@ void RenderData_Block::AddNewBlock(Vector3 position, Vector3int index)
 	if (currentDrawSum >= capacity)
 	{
 		Log("キャパオーバー(あり得ないためこれが出る時は致命的なミスがある)");
-		return;
+		return UINT32_MAX;
 	}
 	if (!isActive_[currentDrawSum])
 	{
@@ -1978,7 +1980,10 @@ void RenderData_Block::AddNewBlock(Vector3 position, Vector3int index)
 
 		// 描画カウントインクリメント
 		currentDrawSum++;
+
 	}
+	// 追加したスロットを返す
+	return slot;
 }
 
 void RenderData_Block::RemoveBlock(Vector3int index)

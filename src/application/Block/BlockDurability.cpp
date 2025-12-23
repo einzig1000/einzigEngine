@@ -61,14 +61,3 @@ void BlockDurability::SetMaxDurability(int maxDurability)
 		isDestroy_ = false;
 	}
 }
-
-void BlockDurability::DrawBreakEffect()
-{
-	if (isBeingDestroyed_)
-	{
-		// 耐久値を五段階に分けて破壊テクスチャを変更
-		uint32_t breakStage = (maxDurability_ - nowDurability_) * 5 / maxDurability_;
-		//breakEffect.texture = ResourceID::GetTextureID(TextureID(uint32_t(TextureID::BreakBlock_0) + breakStage));
-		//breakEffect.Draw();
-	}
-}

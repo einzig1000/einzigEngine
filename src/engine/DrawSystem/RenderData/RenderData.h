@@ -388,7 +388,7 @@ public:
     void Update();
 
 	//// リストに新たなブロックを追加
-	void AddNewBlock(Vector3 position, Vector3int index);
+	uint32_t AddNewBlock(Vector3 position, Vector3int index);
 	//// リストからブロックを削除
 	void RemoveBlock(Vector3int index);
 

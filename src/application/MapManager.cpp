@@ -222,41 +222,10 @@ void MapManager::LoadMap(const std::string& mapFilePath)
 
 				block_[x][y][z]->SetBlockType(blockConfig_->GetBlockInfo(blockID));
 				block_[x][y][z]->SetBlockPosition(PositionByIndex(Vector3int(x, y, z)));
-				block_[x][y][z]->instanceIndex_ = blockData_[blockID]->currentSum;
 				blockData_[blockID]->currentSum++;
 			}
 		}
 	}
-
-	//for (int x = 0; x < CHUNK_X; x++)
-	//{
-	//	for (int z = 0; z < CHUNK_Y; z++)
-	//	{
-	//		int height = blockHeightMap_[x][z];
-	//		int neighborHeights[4] = { 0,0,0,0 };
-	//		if (x + 1 < CHUNK_X)neighborHeights[0] = blockHeightMap_[x + 1][z];
-	//		if (x - 1 >= 0)neighborHeights[1] = blockHeightMap_[x - 1][z];
-	//		if (z + 1 < CHUNK_Y)neighborHeights[2] = blockHeightMap_[x][z + 1];
-	//		if (z - 1 >= 0)neighborHeights[3] = blockHeightMap_[x][z - 1];
-	//
-	//		int maxHeightGap = 0;
-	//		for (int i = 0; i < 4; i++)
-	//		{
-	//			int gap = height - neighborHeights[i];
-	//			if (gap > maxHeightGap)
-	//			{
-	//				maxHeightGap = gap;
-	//			}
-	//		}
-	//
-	//		// blockHeightMap_[x][z]の上からmaxHeightGap分だけ下まで露出している
-	//		for (int i = 0; i <= maxHeightGap; i++)
-	//		{
-	//			if (height - 1 - i < 0) break;
-	//			block_[x][height - 1 - i][z]->isExposed_ = true;
-	//		}
-	//	}
-	//}
 
 	SetExposedBlocks();
 }
@@ -285,22 +254,38 @@ void MapManager::SetExposedBlocks()
 					continue;
 				}
 
-
 				bool exposed = false;
-				if (x - 1 >= 0 && block_[x - 1][y][z]->GetBlockID() == BlockID::Air)exposed = true;
-				else if (x + 1 < CHUNK_X && block_[x + 1][y][z]->GetBlockID() == BlockID::Air)exposed = true;
-				else if (y - 1 >= 0 && block_[x][y - 1][z]->GetBlockID() == BlockID::Air)exposed = true;
-				else if (y + 1 < CHUNK_Z && block_[x][y + 1][z]->GetBlockID() == BlockID::Air)exposed = true;
-				else if (z - 1 >= 0 && block_[x][y][z - 1]->GetBlockID() == BlockID::Air)exposed = true;
-				else if (z + 1 < CHUNK_Y && block_[x][y][z + 1]->GetBlockID() == BlockID::Air)exposed = true;
+
+				// 6方向のオフセット
+				int dx[6] = { -1, 1, 0, 0, 0, 0 };
+				int dy[6] = { 0, 0, -1, 1, 0, 0 };
+				int dz[6] = { 0, 0, 0, 0, -1, 1 };
+
+				for (int i = 0; i < 6; i++)
+				{
+					int nx = x + dx[i];
+					int ny = y + dy[i];
+					int nz = z + dz[i];
+
+					if (nx < 0 || nx >= CHUNK_X) continue;
+					if (ny < 0 || ny >= CHUNK_Y) continue;
+					if (nz < 0 || nz >= CHUNK_Z) continue;
+
+					if (block_[nx][ny][nz]->GetBlockID() == BlockID::Air)
+					{
+						exposed = true;
+						break; // 早期終了
+					}
+				}
 
 				block_[x][y][z]->isExposed_ = exposed;
 
 				if (block_[x][y][z]->isExposed_)
 				{
 					// ブロックの座標を順番に設定
+					block_[x][y][z]->instanceIndex_ = 
 					blockData_[id]->AddNewBlock(
-						block_[x][y][z]->position_,
+						block_[x][y][z]->position_, 
 						Vector3int(x, y, z)
 					);
 				}
@@ -331,8 +316,12 @@ void MapManager::Update()
 			for (int z = 0; z < CHUNK_Y; z++)
 			{
 				block_[x][y][z]->Update();
-				blockData_[block_[x][y][z]->GetBlockID()]->colorData_[block_[x][y][z]->instanceIndex_]
-					= block_[x][y][z]->color_;
+
+				if (block_[x][y][z]->isExposed_ && block_[x][y][z]->GetBlockID() != BlockID::Air)
+				{
+					blockData_[block_[x][y][z]->GetBlockID()]->colorData_[block_[x][y][z]->instanceIndex_]
+						= block_[x][y][z]->color_;
+				}
 			}
 		}
 	}
@@ -340,7 +329,7 @@ void MapManager::Update()
 	
 
 	/// 
-	UpdatePlayerCollisionY();
+	//UpdatePlayerCollisionY();
 	//UpdatePlayerCollisionXZ();
 }
 
@@ -406,7 +395,7 @@ void MapManager::UpDataPlayerRayCollision()
 	for (int i = 0; i < maxSteps; i++)
 	{
 		// 衝突判定
-		if (block_[currentIdx.x][currentIdx.y][currentIdx.z]->isActive_)
+		if (block_[currentIdx.x][currentIdx.y][currentIdx.z]->GetBlockID() != BlockID::Air)
 		{
 			block_[currentIdx.x][currentIdx.y][currentIdx.z]->isCollisionRay = true;
 			return; // 衝突したら終了
@@ -446,141 +435,141 @@ void MapManager::UpDataPlayerRayCollision()
 	}
 }
 
-void MapManager::UpdatePlayerCollisionY()
-{
-#pragma region 下方向
-
-	float playerHeight = player_->data_.aabbs[0].max.y - player_->data_.aabbs[0].min.y;
-
-	Vector3 corners[4] = {
-		Vector3(player_->data_.aabbs[0].min.x, player_->data_.aabbs[0].min.y - 0.1f, player_->data_.aabbs[0].min.z),
-		Vector3(player_->data_.aabbs[0].max.x, player_->data_.aabbs[0].min.y - 0.1f, player_->data_.aabbs[0].min.z),
-		Vector3(player_->data_.aabbs[0].min.x, player_->data_.aabbs[0].min.y - 0.1f, player_->data_.aabbs[0].max.z),
-		Vector3(player_->data_.aabbs[0].max.x, player_->data_.aabbs[0].min.y - 0.1f, player_->data_.aabbs[0].max.z)
-	};
-
-	bool anyCollision = false;
-	float bestGroundY = -999.9f;
-
-	for (int i = 0; i < 4; ++i)
-	{
-		Vector3int idx = IndexByPosition(corners[i]);
-
-		if (block_[idx.x][idx.y][idx.z]->aabb_.max.y >= corners[i].y && !block_[idx.x][idx.y][idx.z]->durability_->GetIsDestroy())
-		{
-			anyCollision = true;
-			float groundY = block_[idx.x][idx.y][idx.z]->aabb_.max.y;
-
-			if (groundY > bestGroundY) bestGroundY = groundY;
-		}
-	}
-
-	if (anyCollision)
-	{
-		// translate.value.y を地面上に設定する（translate が中心なら center.y = groundY + height/2）
-		player_->data_.translate.value.y = bestGroundY + playerHeight * 0.5f;
-
-		// AABB を center から再計算するか、min/max を更新する
-		player_->data_.aabbs[0].min.y = player_->data_.translate.value.y - playerHeight * 0.5f;
-		player_->data_.aabbs[0].max.y = player_->data_.translate.value.y + playerHeight * 0.5f;
-
-		player_->data_.translate.velocity.y = 0.0f;
-		player_->data_.translate.acceleration.y = 0.0f;
-	}
-	else
-	{
-		player_->data_.translate.acceleration.y = GRAVITY;
-	}
-
-#pragma endregion
-}
-
-void MapManager::UpdatePlayerCollisionZ()
-{
-#pragma region 前方向
-
-	float playerWidth = player_->data_.aabbs[0].max.z - player_->data_.aabbs[0].min.z;
-
-	Vector3 corners[4] = {
-		Vector3(player_->data_.aabbs[0].min.x, player_->data_.aabbs[0].min.y + 0.1f, player_->data_.aabbs[0].min.z + 0.1f),
-		Vector3(player_->data_.aabbs[0].max.x, player_->data_.aabbs[0].min.y + 0.1f, player_->data_.aabbs[0].min.z + 0.1f),
-		Vector3(player_->data_.aabbs[0].min.x, player_->data_.aabbs[0].max.y - 0.1f, player_->data_.aabbs[0].min.z + 0.1f),
-		Vector3(player_->data_.aabbs[0].max.x, player_->data_.aabbs[0].max.y - 0.1f, player_->data_.aabbs[0].min.z + 0.1f)
-	};
-
-	bool anyCollision = false;
-	float bestFrontZ = 9999.9f;
-
-	for (int i = 0; i < 4; ++i)
-	{
-		Vector3int idx = IndexByPosition(corners[i]);
-		if (block_[idx.x][idx.y][idx.z]->aabb_.min.z <= corners[i].z && !block_[idx.x][idx.y][idx.z]->durability_->GetIsDestroy())
-		{
-			anyCollision = true;
-			float frontZ = block_[idx.x][idx.y][idx.z]->aabb_.min.z;
-			if (frontZ < bestFrontZ) bestFrontZ = frontZ;
-		}
-	}
-
-	if (anyCollision)
-	{
-		// translate.value.z を地面上に設定する（translate が中心なら center.z = frontZ - width/2）
-		player_->data_.translate.value.z = bestFrontZ - playerWidth * 0.5f;
-		// AABB を center から再計算するか、min/max を更新する
-		player_->data_.aabbs[0].min.z = player_->data_.translate.value.z - playerWidth * 0.5f;
-		player_->data_.aabbs[0].max.z = player_->data_.translate.value.z + playerWidth * 0.5f;
-		if (player_->data_.translate.velocity.z > 0)
-		{
-			player_->data_.translate.velocity.z = 0.0f;
-		}
-	}
-
-#pragma endregion
-}
-
-void MapManager::UpdatePlayerCollisionX()
-{
-#pragma region 右方向
-
-	float playerWidth = player_->data_.aabbs[0].max.x - player_->data_.aabbs[0].min.x;
-
-	Vector3 corners[4] = {
-		Vector3(player_->data_.aabbs[0].max.x + 0.1f, player_->data_.aabbs[0].min.y + 0.1f, player_->data_.aabbs[0].min.z),
-		Vector3(player_->data_.aabbs[0].max.x + 0.1f, player_->data_.aabbs[0].min.y + 0.1f, player_->data_.aabbs[0].max.z),
-		Vector3(player_->data_.aabbs[0].max.x + 0.1f, player_->data_.aabbs[0].max.y - 0.1f, player_->data_.aabbs[0].min.z),
-		Vector3(player_->data_.aabbs[0].max.x + 0.1f, player_->data_.aabbs[0].max.y - 0.1f, player_->data_.aabbs[0].max.z)
-	};
-
-	bool anyCollision = false;
-	float bestFrontX = 9999.9f;
-
-	for (int i = 0; i < 4; ++i)
-	{
-		Vector3int idx = IndexByPosition(corners[i]);
-		if (block_[idx.x][idx.y][idx.z]->aabb_.min.z <= corners[i].z && !block_[idx.x][idx.y][idx.z]->durability_->GetIsDestroy())
-		{
-			anyCollision = true;
-			float frontX = block_[idx.x][idx.y][idx.z]->aabb_.min.z;
-			if (frontX < bestFrontX) bestFrontX = frontX;
-		}
-	}
-
-	if (anyCollision)
-	{
-		// translate.value.z を地面上に設定する（translate が中心なら center.z = frontZ - width/2）
-		player_->data_.translate.value.x = bestFrontX - playerWidth * 0.5f;
-		// AABB を center から再計算するか、min/max を更新する
-		player_->data_.aabbs[0].min.x = player_->data_.translate.value.x - playerWidth * 0.5f;
-		player_->data_.aabbs[0].max.x = player_->data_.translate.value.x + playerWidth * 0.5f;
-		if (player_->data_.translate.velocity.x > 0)
-		{
-			player_->data_.translate.velocity.x = 0.0f;
-		}
-	}
-
-#pragma endregion
-
-}
+//void MapManager::UpdatePlayerCollisionY()
+//{
+//#pragma region 下方向
+//
+//	float playerHeight = player_->data_.aabbs[0].max.y - player_->data_.aabbs[0].min.y;
+//
+//	Vector3 corners[4] = {
+//		Vector3(player_->data_.aabbs[0].min.x, player_->data_.aabbs[0].min.y - 0.1f, player_->data_.aabbs[0].min.z),
+//		Vector3(player_->data_.aabbs[0].max.x, player_->data_.aabbs[0].min.y - 0.1f, player_->data_.aabbs[0].min.z),
+//		Vector3(player_->data_.aabbs[0].min.x, player_->data_.aabbs[0].min.y - 0.1f, player_->data_.aabbs[0].max.z),
+//		Vector3(player_->data_.aabbs[0].max.x, player_->data_.aabbs[0].min.y - 0.1f, player_->data_.aabbs[0].max.z)
+//	};
+//
+//	bool anyCollision = false;
+//	float bestGroundY = -999.9f;
+//
+//	for (int i = 0; i < 4; ++i)
+//	{
+//		Vector3int idx = IndexByPosition(corners[i]);
+//
+//		if (block_[idx.x][idx.y][idx.z]->aabb_.max.y >= corners[i].y && !block_[idx.x][idx.y][idx.z]->durability_->GetIsDestroy())
+//		{
+//			anyCollision = true;
+//			float groundY = block_[idx.x][idx.y][idx.z]->aabb_.max.y;
+//
+//			if (groundY > bestGroundY) bestGroundY = groundY;
+//		}
+//	}
+//
+//	if (anyCollision)
+//	{
+//		// translate.value.y を地面上に設定する（translate が中心なら center.y = groundY + height/2）
+//		player_->data_.translate.value.y = bestGroundY + playerHeight * 0.5f;
+//
+//		// AABB を center から再計算するか、min/max を更新する
+//		player_->data_.aabbs[0].min.y = player_->data_.translate.value.y - playerHeight * 0.5f;
+//		player_->data_.aabbs[0].max.y = player_->data_.translate.value.y + playerHeight * 0.5f;
+//
+//		player_->data_.translate.velocity.y = 0.0f;
+//		player_->data_.translate.acceleration.y = 0.0f;
+//	}
+//	else
+//	{
+//		player_->data_.translate.acceleration.y = GRAVITY;
+//	}
+//
+//#pragma endregion
+//}
+//
+//void MapManager::UpdatePlayerCollisionZ()
+//{
+//#pragma region 前方向
+//
+//	float playerWidth = player_->data_.aabbs[0].max.z - player_->data_.aabbs[0].min.z;
+//
+//	Vector3 corners[4] = {
+//		Vector3(player_->data_.aabbs[0].min.x, player_->data_.aabbs[0].min.y + 0.1f, player_->data_.aabbs[0].min.z + 0.1f),
+//		Vector3(player_->data_.aabbs[0].max.x, player_->data_.aabbs[0].min.y + 0.1f, player_->data_.aabbs[0].min.z + 0.1f),
+//		Vector3(player_->data_.aabbs[0].min.x, player_->data_.aabbs[0].max.y - 0.1f, player_->data_.aabbs[0].min.z + 0.1f),
+//		Vector3(player_->data_.aabbs[0].max.x, player_->data_.aabbs[0].max.y - 0.1f, player_->data_.aabbs[0].min.z + 0.1f)
+//	};
+//
+//	bool anyCollision = false;
+//	float bestFrontZ = 9999.9f;
+//
+//	for (int i = 0; i < 4; ++i)
+//	{
+//		Vector3int idx = IndexByPosition(corners[i]);
+//		if (block_[idx.x][idx.y][idx.z]->aabb_.min.z <= corners[i].z && !block_[idx.x][idx.y][idx.z]->durability_->GetIsDestroy())
+//		{
+//			anyCollision = true;
+//			float frontZ = block_[idx.x][idx.y][idx.z]->aabb_.min.z;
+//			if (frontZ < bestFrontZ) bestFrontZ = frontZ;
+//		}
+//	}
+//
+//	if (anyCollision)
+//	{
+//		// translate.value.z を地面上に設定する（translate が中心なら center.z = frontZ - width/2）
+//		player_->data_.translate.value.z = bestFrontZ - playerWidth * 0.5f;
+//		// AABB を center から再計算するか、min/max を更新する
+//		player_->data_.aabbs[0].min.z = player_->data_.translate.value.z - playerWidth * 0.5f;
+//		player_->data_.aabbs[0].max.z = player_->data_.translate.value.z + playerWidth * 0.5f;
+//		if (player_->data_.translate.velocity.z > 0)
+//		{
+//			player_->data_.translate.velocity.z = 0.0f;
+//		}
+//	}
+//
+//#pragma endregion
+//}
+//
+//void MapManager::UpdatePlayerCollisionX()
+//{
+//#pragma region 右方向
+//
+//	float playerWidth = player_->data_.aabbs[0].max.x - player_->data_.aabbs[0].min.x;
+//
+//	Vector3 corners[4] = {
+//		Vector3(player_->data_.aabbs[0].max.x + 0.1f, player_->data_.aabbs[0].min.y + 0.1f, player_->data_.aabbs[0].min.z),
+//		Vector3(player_->data_.aabbs[0].max.x + 0.1f, player_->data_.aabbs[0].min.y + 0.1f, player_->data_.aabbs[0].max.z),
+//		Vector3(player_->data_.aabbs[0].max.x + 0.1f, player_->data_.aabbs[0].max.y - 0.1f, player_->data_.aabbs[0].min.z),
+//		Vector3(player_->data_.aabbs[0].max.x + 0.1f, player_->data_.aabbs[0].max.y - 0.1f, player_->data_.aabbs[0].max.z)
+//	};
+//
+//	bool anyCollision = false;
+//	float bestFrontX = 9999.9f;
+//
+//	for (int i = 0; i < 4; ++i)
+//	{
+//		Vector3int idx = IndexByPosition(corners[i]);
+//		if (block_[idx.x][idx.y][idx.z]->aabb_.min.z <= corners[i].z && !block_[idx.x][idx.y][idx.z]->durability_->GetIsDestroy())
+//		{
+//			anyCollision = true;
+//			float frontX = block_[idx.x][idx.y][idx.z]->aabb_.min.z;
+//			if (frontX < bestFrontX) bestFrontX = frontX;
+//		}
+//	}
+//
+//	if (anyCollision)
+//	{
+//		// translate.value.z を地面上に設定する（translate が中心なら center.z = frontZ - width/2）
+//		player_->data_.translate.value.x = bestFrontX - playerWidth * 0.5f;
+//		// AABB を center から再計算するか、min/max を更新する
+//		player_->data_.aabbs[0].min.x = player_->data_.translate.value.x - playerWidth * 0.5f;
+//		player_->data_.aabbs[0].max.x = player_->data_.translate.value.x + playerWidth * 0.5f;
+//		if (player_->data_.translate.velocity.x > 0)
+//		{
+//			player_->data_.translate.velocity.x = 0.0f;
+//		}
+//	}
+//
+//#pragma endregion
+//
+//}
 
 void MapManager::Draw()
 {
@@ -602,6 +591,26 @@ void MapManager::DrawImGui()
 	{
 		blockData_[BlockID(i)]->DrawImGui();
 	}
+}
+
+AABB MapManager::GetAABB(const Vector3int& index)
+{
+	Vector3int clampedIndex = index;
+	clampedIndex.x = std::clamp(index.x, 0, CHUNK_X - 1);
+	clampedIndex.y = std::clamp(index.y, 0, CHUNK_Z - 1);
+	clampedIndex.z = std::clamp(index.z, 0, CHUNK_Y - 1);
+
+	return block_[clampedIndex.x][clampedIndex.y][clampedIndex.z]->aabb_;
+}
+
+bool MapManager::GetIsActive(const Vector3int& index)
+{
+	Vector3int clampedIndex = index;
+	clampedIndex.x = std::clamp(index.x, 0, CHUNK_X - 1);
+	clampedIndex.y = std::clamp(index.y, 0, CHUNK_Z - 1);
+	clampedIndex.z = std::clamp(index.z, 0, CHUNK_Y - 1);
+
+	return block_[clampedIndex.x][clampedIndex.y][clampedIndex.z]->isActive_;
 }
 
 Vector3int MapManager::IndexByPosition(const Vector3& position)

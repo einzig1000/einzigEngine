@@ -159,8 +159,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BaseCharactor.cpp" />
     <ClCompile Include="CameraController.cpp" />
-    <ClCompile Include="MapCollider.cpp" />
     <ClCompile Include="src\application\Block\BlockConfig.cpp" />
     <ClCompile Include="src\engine\ImGuiManager\ImGuiManager.cpp" />
     <ClCompile Include="src\application\Block\BlockDurability.cpp" />
@@ -237,8 +237,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="src\engine\DirectX\SrvManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BaseCharactor.h" />
     <ClInclude Include="CameraController.h" />
-    <ClInclude Include="MapCollider.h" />
     <ClInclude Include="src\application\Block\BlockConfig.h" />
     <ClInclude Include="src\engine\ImGuiManager\ImGuiManager.h" />
     <ClInclude Include="src\application\Block\BlockDurability.h" />

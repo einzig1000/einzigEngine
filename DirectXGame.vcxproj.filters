@@ -139,9 +139,6 @@
     <Filter Include="engine\DirectXManager\SrvManager">
       <UniqueIdentifier>{09ce842d-ba2c-47b3-8c1a-fcc0da694c8b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="application\GameManeger\Player">
-      <UniqueIdentifier>{6a027008-0c2c-4e83-a548-37aff76f8489}</UniqueIdentifier>
-    </Filter>
     <Filter Include="application\GameManeger\Map">
       <UniqueIdentifier>{28f4b7c8-cecf-4edc-a2e3-2071fd41f5b6}</UniqueIdentifier>
     </Filter>
@@ -169,8 +166,14 @@
     <Filter Include="application\GameManeger\CameraController">
       <UniqueIdentifier>{e3cb53ce-025d-48fe-8c9b-c99c3395bb59}</UniqueIdentifier>
     </Filter>
-    <Filter Include="application\GameManeger\Map\MapCollider">
-      <UniqueIdentifier>{1b07bb9c-b240-473c-a395-80c2d55fbf24}</UniqueIdentifier>
+    <Filter Include="application\GameManeger\Charactor">
+      <UniqueIdentifier>{2d9745b8-e424-4cfc-b609-c19145556b45}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManeger\Charactor\Player">
+      <UniqueIdentifier>{6a027008-0c2c-4e83-a548-37aff76f8489}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManeger\Charactor\BaseCharactor">
+      <UniqueIdentifier>{686134fb-a1b8-47f3-af73-021a2c7fa321}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -292,7 +295,7 @@
       <Filter>application\GameManeger\Map</Filter>
     </ClCompile>
     <ClCompile Include="src\application\Player.cpp">
-      <Filter>application\GameManeger\Player</Filter>
+      <Filter>application\GameManeger\Charactor\Player</Filter>
     </ClCompile>
     <ClCompile Include="src\application\DropItem.cpp">
       <Filter>application\GameManeger\DropItem</Filter>
@@ -312,14 +315,14 @@
     <ClCompile Include="src\application\ResourceLoder\ResourceID.cpp">
       <Filter>application</Filter>
     </ClCompile>
-    <ClCompile Include="src\application\Block\BlockConfig.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="CameraController.cpp">
       <Filter>application\GameManeger\CameraController</Filter>
     </ClCompile>
-    <ClCompile Include="MapCollider.cpp">
-      <Filter>application\GameManeger\Map\MapCollider</Filter>
+    <ClCompile Include="src\application\Block\BlockConfig.cpp">
+      <Filter>application\GameManeger\Map\Block</Filter>
+    </ClCompile>
+    <ClCompile Include="BaseCharactor.cpp">
+      <Filter>application\GameManeger\Charactor\BaseCharactor</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -438,7 +441,7 @@
       <Filter>application\GameManeger\Map</Filter>
     </ClInclude>
     <ClInclude Include="src\application\Player.h">
-      <Filter>application\GameManeger\Player</Filter>
+      <Filter>application\GameManeger\Charactor\Player</Filter>
     </ClInclude>
     <ClInclude Include="src\application\DropItem.h">
       <Filter>application\GameManeger\DropItem</Filter>
@@ -458,14 +461,14 @@
     <ClInclude Include="src\application\ResourceLoder\ResourceID.h">
       <Filter>application</Filter>
     </ClInclude>
-    <ClInclude Include="src\application\Block\BlockConfig.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="CameraController.h">
       <Filter>application\GameManeger\CameraController</Filter>
     </ClInclude>
-    <ClInclude Include="MapCollider.h">
-      <Filter>application\GameManeger\Map\MapCollider</Filter>
+    <ClInclude Include="src\application\Block\BlockConfig.h">
+      <Filter>application\GameManeger\Map\Block</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseCharactor.h">
+      <Filter>application\GameManeger\Charactor\BaseCharactor</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

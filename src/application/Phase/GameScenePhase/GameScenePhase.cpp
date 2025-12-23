@@ -10,6 +10,8 @@ GameScenePhase::GameScenePhase()
 
 	map_ = std::make_unique<MapManager>(player_.get());
 
+	player_->SetMapManager(map_.get());
+
 	cameraController_ = std::make_unique<CameraController>(player_.get());
 
 

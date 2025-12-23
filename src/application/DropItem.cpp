@@ -31,11 +31,11 @@ void DropItem::Update(bool isUnderBlock)
 	}
 	if (frame > 60)
 	{
-		if (IsCollision(player_->data_.aabbs[0], Item.aabbs[0]) && !isDestroy_)
-		{
-			isDestroy_ = true;
-			player_->AddItemToItemslot(Item.texture);
-		}
+		//if (IsCollision(player_->data_.aabbs[0], Item.aabbs[0]) && !isDestroy_)
+		//{
+		//	isDestroy_ = true;
+		//	player_->AddItemToItemslot(Item.texture);
+		//}
 	}
 
 

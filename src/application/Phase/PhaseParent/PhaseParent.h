@@ -17,6 +17,6 @@ public:
 	virtual PHASE GetNextPhase();
 
 protected:
-	PHASE nextPhase_;
+	PHASE nextPhase_ = PHASE::Phase_None;
 };
 

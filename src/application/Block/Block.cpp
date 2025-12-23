@@ -5,6 +5,7 @@
 Block::Block()
 {
 	durability_ = new BlockDurability();
+	isActive_ = false;
 }
 
 Block::~Block()
@@ -21,7 +22,7 @@ void Block::SetBlockType(Blockinfo info)
 {
 	blockID = info.type;
 	durability_->SetMaxDurability(info.durability);
-	isActive_ = true;
+	if (blockID != BlockID::Air)isActive_ = true;
 }
 
 void Block::SetBlockPosition(const Vector3& position)
@@ -33,31 +34,20 @@ void Block::SetBlockPosition(const Vector3& position)
 
 void Block::Update()
 {
-	// 破壊されていないかつ表面に露出している
-	if (!durability_->GetIsDestroy() && isExposed_)
-	{
-		// 色更新
-		UpdateColor();
+	if (!isExposed_) return;
 
-		// プレイヤーに見られている時の更新処理
-		UpdateBreak(1);
-	}
+	// 色更新
+	UpdateColor();
+
+	// プレイヤーに見られている時の更新処理
+	UpdateBreak(1);
+
+	// 破壊されていたら非アクティブ化
 	if (durability_->GetIsDestroy())
 	{
 		isActive_ = false;
 	}
 }
-
-void Block::Draw()
-{
-	// 破壊されていないかつ表面に露出している
-	if (!durability_->GetIsDestroy() && isExposed_)
-	{
-		// 破壊エフェクト描画
-		durability_->DrawBreakEffect();
-	}
-}
-
 
 void Block::UpdateBreak(int power)
 {
@@ -75,28 +65,16 @@ void Block::UpdateBreak(int power)
 
 void Block::UpdateColor()
 {
-	// 輝度に応じて色を変更
-	//lightEmission_ = std::clamp(lightEmission_, 0u, 14u);
-	
-	//color_ = Vector4(float(0x11 * lightEmission_), float(0x11 * lightEmission_), float(0x11 * lightEmission_), float(0xFF));
-	//color_ = Vector4(
-	//	Game::Math::RandInt(color_.x - 8, color_.x + 8),
-	//	Game::Math::RandInt(color_.y - 8, color_.y + 8),
-	//	Game::Math::RandInt(color_.z - 8, color_.z + 8),
-	//	color_.w);
-	//color_.x = std::clamp(color_.x, 0.0f, 255.0f);
-	//color_.y = std::clamp(color_.y, 0.0f, 255.0f);
-	//color_.z = std::clamp(color_.z, 0.0f, 255.0f);
+	lightEmission_ = std::clamp(lightEmission_, 0u, 9u);
 
-	color_ = Vector4(
-		Game::Math::RandFloat(0.0f, 1.0f, 2),
-		Game::Math::RandFloat(0.0f, 1.0f, 2),
-		Game::Math::RandFloat(0.0f, 1.0f, 2),
-		1.0f);
+	float emission = 1.0f * (float(lightEmission_) / 9.0f);
+
+	// 輝度に応じて色を変更
+	color_ = Vector4(emission, emission, emission, 1.0f);
 
 	// １番目に衝突している時
-	//if (isCollisionRay == true)
-	//{
-	//	color_ = Vector4(0x22, 0x22, 0x22, 0x00);
-	//}
+	if (isCollisionRay == true)
+	{
+		color_ = Vector4(0.1f, 0.1f, 0.1f, 1.0f);
+	}
 }
