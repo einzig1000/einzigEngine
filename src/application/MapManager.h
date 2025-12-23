@@ -7,6 +7,12 @@ class Block;
 class Player;
 class BlockConfig;
 
+struct Chunk
+{
+	Block* blocks[CHUNK_X][CHUNK_Z][CHUNK_Y];
+	Vector2int chunkPos; // チャンク座標
+};
+
 class MapManager
 {
 public:
@@ -23,9 +29,6 @@ public:
 	void Initialize();
 	void Update();
 	void UpDataPlayerRayCollision();
-	void UpdatePlayerCollisionY();
-	void UpdatePlayerCollisionX();
-	void UpdatePlayerCollisionZ();
 
 	void Draw();
 	void DrawImGui();

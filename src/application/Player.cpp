@@ -79,88 +79,33 @@ void Player::UpdateMove()
 	forward.Normalize();
 
 	// 移動処理
-	if (Game::Input::Key::IsHeld(DIK_W) || Game::Input::Key::IsHeld(DIK_S) ||
-		Game::Input::Key::IsHeld(DIK_A) || Game::Input::Key::IsHeld(DIK_D))
+	Vector2 input(0.0f, 0.0f);
+
+	if (Game::Input::Key::IsHeld(DIK_W)) input.y += 1.0f;
+	if (Game::Input::Key::IsHeld(DIK_S)) input.y -= 1.0f;
+	if (Game::Input::Key::IsHeld(DIK_A)) input.x += 1.0f;
+	if (Game::Input::Key::IsHeld(DIK_D)) input.x -= 1.0f;
+
+	if (input.x != 0.0f || input.y != 0.0f)
 	{
-		DirectionXZ8Way dir = DirectionXZ8Way::None;
+		// 正規化
+		input.Normalize();
 
-		if (Game::Input::Key::IsHeld(DIK_W))
-		{
-			dir = DirectionXZ8Way::Front;
-		}
-		if (Game::Input::Key::IsHeld(DIK_S))
-		{
-			if (dir == DirectionXZ8Way::Front)
-			{
-				dir = DirectionXZ8Way::None;
-			}
-			else
-			{
-				dir = DirectionXZ8Way::Back;
-			}
-		}
-		if (Game::Input::Key::IsHeld(DIK_D))
-		{
-			if (dir == DirectionXZ8Way::Front)
-			{
-				dir = DirectionXZ8Way::FrontRight;
-			}
-			else if (dir == DirectionXZ8Way::Back)
-			{
-				dir = DirectionXZ8Way::BackRight;
-			}
-			else
-			{
-				dir = DirectionXZ8Way::Right;
-			}
-		}
-		if (Game::Input::Key::IsHeld(DIK_A))
-		{
-			if (dir == DirectionXZ8Way::Front)
-			{
-				dir = DirectionXZ8Way::FrontLeft;
-			}
-			else if (dir == DirectionXZ8Way::Back)
-			{
-				dir = DirectionXZ8Way::BackLeft;
-			}
-			else if (dir == DirectionXZ8Way::Right)
-			{
-				dir = DirectionXZ8Way::None;
-			}
-			else if (dir == DirectionXZ8Way::FrontRight)
-			{
-				dir = DirectionXZ8Way::Front;
-			}
-			else if (dir == DirectionXZ8Way::BackRight)
-			{
-				dir = DirectionXZ8Way::Back;
-			}
-			else
-			{
-				dir = DirectionXZ8Way::Left;
-			}
-		}
+		// 入力ベクトルの角度（ラジアン）
+		float angle = std::atan2(input.x, input.y); // XZ平面での回転
 
-		if (dir != DirectionXZ8Way::None)
-		{
-			float angle = int(dir) * 45.0f;
-			Vector3 speed;
+		// forward を angle だけ回転
+		float cosA = std::cos(angle);
+		float sinA = std::sin(angle);
 
+		Vector3 speed(
+			forward.x * cosA - forward.z * sinA,
+			forward.y,
+			forward.x * sinA + forward.z * cosA
+		);
 
-			float radians = Game::Math::DegreeToRadian(angle);
-			float cosA = std::cos(radians);
-			float sinA = std::sin(radians);
-
-			speed = Vector3(
-				forward.x * cosA - forward.z * sinA,
-				forward.y,
-				forward.x * sinA + forward.z * cosA
-			);
-
-			data_.translate.velocity.x = speed.x * speed_;
-			data_.translate.velocity.z = speed.z * speed_;
-		}
+		data_.translate.velocity.x = speed.x * speed_;
+		data_.translate.velocity.z = speed.z * speed_;
 	}
 	else
 	{
