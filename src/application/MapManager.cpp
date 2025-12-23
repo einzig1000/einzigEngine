@@ -149,12 +149,14 @@ void MapManager::Update()
 
 	Vector2int playerIndex = ChunkIndexByPosition(player_->GetRenderData().translate.value);
 
+	// プレイヤーから周囲2チャンクは更新する
 	for (int32_t dx = -1; dx <= 1; ++dx)
 	{
 		for (int32_t dz = -1; dz <= 1; ++dz)
 		{
 			Vector2int chunkPos = Vector2int(playerIndex.x + dx, playerIndex.y + dz);
-			GetOrCreateChunk(chunkPos);
+			Chunk* chunk = GetOrCreateChunk(chunkPos);
+			chunk->Update();
 		}
 	}
 }
@@ -242,22 +244,23 @@ void MapManager::Draw()
 {
 	Vector2int playerIndex = ChunkIndexByPosition(player_->GetRenderData().translate.value);
 
-	// プレイヤー周辺のチャンクを描画(いずれ操作できるように)
-	for (int32_t dx = -5; dx <= 5; ++dx)
-	{
-		for (int32_t dz = -5; dz <= 5; ++dz)
-		{
-			Vector2int chunkPos = Vector2int(playerIndex.x + dx, playerIndex.y + dz);
-			Chunk* chunk = GetOrCreateChunk(chunkPos);
-			chunk->Draw();
-		}
-	}
+
+	// プレイヤーから周囲5チャンクは描画する
+	//for (int32_t dx = -2; dx <= 2; ++dx)
+	//{
+	//	for (int32_t dz = -2; dz <= 2; ++dz)
+	//	{
+	//		Vector2int chunkPos = Vector2int(playerIndex.x + dx, playerIndex.y + dz);
+	//		Chunk* chunk = GetOrCreateChunk(chunkPos);
+	//		chunk->Draw();
+	//	}
+	//}
 
 	// 存在するすべてのチャンクを描画（デバッグ用）
-	//for (const auto& [chunkPos, chunk] : chunks)
-	//{
-	//	chunk->Draw();
-	//}
+	for (const auto& [chunkPos, chunk] : chunks)
+	{
+		chunk->Draw();
+	}
 
 	for (auto& item : dropItems_)
 	{

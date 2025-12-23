@@ -6,18 +6,30 @@ SrvManager::SrvManager(ID3D12Device* device)
     :device_(device)
 {
 	// SRVスロット一つ分のサイズ取得
-    descriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    descriptorSize_ = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-	// SRV用ディスクリプタヒープ作成
-    capacity_ = 512;
+	capacity_ = 16384;
     nextIndex_ = 0;
-    D3D12_DESCRIPTOR_HEAP_DESC DescriptorHeapDesc{};
-	DescriptorHeapDesc.NumDescriptors = capacity_;
-    DescriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-    DescriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 
-    HRESULT hr = device->CreateDescriptorHeap(&DescriptorHeapDesc, IID_PPV_ARGS(&descriptorHeap));
-    assert(SUCCEEDED(hr));
+    // CPU-only staging heap
+    {
+        D3D12_DESCRIPTOR_HEAP_DESC desc{};
+        desc.NumDescriptors = capacity_;
+        desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+        desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+
+        device_->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&stagingHeap));
+    }
+
+    // GPU-visible heap
+    {
+        D3D12_DESCRIPTOR_HEAP_DESC desc{};
+        desc.NumDescriptors = capacity_;
+        desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+        desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+
+        device_->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&gpuHeap));
+    }
 
     Log("コンストラクタ実行成功 : DescriptorHeapManager");
 }
@@ -38,18 +50,32 @@ uint32_t SrvManager::Allocate()
     return nextIndex_++;
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE SrvManager::GetCPUHandleAt(uint32_t i) const
+D3D12_CPU_DESCRIPTOR_HANDLE SrvManager::GetGPUHeapCPUHandleAt(uint32_t index) const
 {
-    D3D12_CPU_DESCRIPTOR_HANDLE handleCPU = descriptorHeap.Get()->GetCPUDescriptorHandleForHeapStart();
-    handleCPU.ptr += (descriptorSize * i);
-    return handleCPU;
+	D3D12_CPU_DESCRIPTOR_HANDLE handleCPU = gpuHeap->GetCPUDescriptorHandleForHeapStart();
+    handleCPU.ptr += (descriptorSize_ * index);
+	return handleCPU;
 }
 
-D3D12_GPU_DESCRIPTOR_HANDLE SrvManager::GetGPUHandleAt(uint32_t i) const
+D3D12_GPU_DESCRIPTOR_HANDLE SrvManager::GetGPUHeapGPUHandleAt(uint32_t index) const
 {
-    D3D12_GPU_DESCRIPTOR_HANDLE handleGPU = descriptorHeap.Get()->GetGPUDescriptorHandleForHeapStart();
-    handleGPU.ptr += (descriptorSize * i);
-    return handleGPU;
+    D3D12_GPU_DESCRIPTOR_HANDLE handleGPU = gpuHeap->GetGPUDescriptorHandleForHeapStart();
+    handleGPU.ptr += (descriptorSize_ * index);
+	return handleGPU;
+}
+
+D3D12_CPU_DESCRIPTOR_HANDLE SrvManager::GetStagingHeapCPUHandleAt(uint32_t index) const
+{
+    D3D12_CPU_DESCRIPTOR_HANDLE handleCPU = stagingHeap->GetCPUDescriptorHandleForHeapStart();
+    handleCPU.ptr += (descriptorSize_ * index);
+	return handleCPU;
+}
+
+D3D12_GPU_DESCRIPTOR_HANDLE SrvManager::GetStagingHeapGPUHandleAt(uint32_t index) const
+{
+    D3D12_GPU_DESCRIPTOR_HANDLE handleGPU = stagingHeap->GetGPUDescriptorHandleForHeapStart();
+    handleGPU.ptr += (descriptorSize_ * index);
+	return handleGPU;
 }
 
 SRVAllocation SrvManager::CreateSRV(ID3D12Resource* resource, const D3D12_SHADER_RESOURCE_VIEW_DESC* desc)
@@ -57,16 +83,29 @@ SRVAllocation SrvManager::CreateSRV(ID3D12Resource* resource, const D3D12_SHADER
     // 次スロットのインデックス取得
     uint32_t index = Allocate();
 
-    D3D12_CPU_DESCRIPTOR_HANDLE cpu = GetCPUHandleAt(index);
-    D3D12_GPU_DESCRIPTOR_HANDLE gpu = GetGPUHandleAt(index);
+	// CPU/GPUハンドル計算
+    D3D12_CPU_DESCRIPTOR_HANDLE cpuStaging = stagingHeap->GetCPUDescriptorHandleForHeapStart();
+    cpuStaging.ptr += index * descriptorSize_;
 
-    // SRV作成
-    device_->CreateShaderResourceView(resource, desc, cpu);
+    // SRV を stagingHeap に作成
+    device_->CreateShaderResourceView(resource, desc, cpuStaging);
+
+    // staging → gpuHeap にコピー
+    D3D12_CPU_DESCRIPTOR_HANDLE cpuGPU = gpuHeap->GetCPUDescriptorHandleForHeapStart();
+    cpuGPU.ptr += index * descriptorSize_;
+    device_->CopyDescriptorsSimple(
+        1,
+        cpuGPU,
+        cpuStaging,
+        D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
+    );
 
     SRVAllocation alloc{};
     alloc.index = index;
-    alloc.cpu = cpu;
-    alloc.gpu = gpu;
+    alloc.cpu = cpuStaging;
+    alloc.gpu = gpuHeap->GetGPUDescriptorHandleForHeapStart();
+    alloc.gpu.ptr += index * descriptorSize_;
+
     return alloc;
 }
 
@@ -110,28 +149,45 @@ void SrvManager::ExpandCapacity()
 {
     uint32_t newCapacity = capacity_ * 2;
 
-    // 新しいヒープを作成
-    D3D12_DESCRIPTOR_HEAP_DESC desc{};
-    desc.NumDescriptors = newCapacity;
-    desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-    desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+    // 新 staging heap
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> newStaging;
+    {
+        D3D12_DESCRIPTOR_HEAP_DESC desc{};
+        desc.NumDescriptors = newCapacity;
+        desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+        desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+        device_->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&newStaging));
+    }
 
-    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> newHeap;
-    HRESULT hr = device_->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&newHeap));
-    assert(SUCCEEDED(hr));
+    // 新 GPU heap
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> newGPU;
+    {
+        D3D12_DESCRIPTOR_HEAP_DESC desc{};
+        desc.NumDescriptors = newCapacity;
+        desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+        desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+        device_->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&newGPU));
+    }
 
-    // 古いヒープの内容をコピー
+    // staging → newStaging にコピー
     device_->CopyDescriptorsSimple(
-        nextIndex_, // コピーする数
-        newHeap->GetCPUDescriptorHandleForHeapStart(),
-        descriptorHeap->GetCPUDescriptorHandleForHeapStart(),
+        nextIndex_,
+        newStaging->GetCPUDescriptorHandleForHeapStart(),
+        stagingHeap->GetCPUDescriptorHandleForHeapStart(),
         D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
     );
 
-    // ヒープを差し替え
-    descriptorHeap = newHeap;
+    // newStaging → newGPU にコピー
+    device_->CopyDescriptorsSimple(
+        nextIndex_,
+        newGPU->GetCPUDescriptorHandleForHeapStart(),
+        newStaging->GetCPUDescriptorHandleForHeapStart(),
+        D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
+    );
+
+    stagingHeap = newStaging;
+    gpuHeap = newGPU;
     capacity_ = newCapacity;
 
-    Log("SRV Heap expanded to " + std::to_string(newCapacity));
 }
 

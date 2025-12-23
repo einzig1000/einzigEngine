@@ -20,14 +20,16 @@ void ImGuiManager::Initialize(DirectXManager* dxManager, WindowManager* windowMa
 
 	// imguiのDirectX12初期化
 	uint32_t slot = dxManager_->GetDescriptorHeapManager()->GetSrvManager()->Allocate();
+
 	ImGui_ImplDX12_Init(
 		dxManager_->GetDevice(),
 		dxManager_->GetSwapChain()->GetSwapChainDesc().BufferCount,
 		dxManager_->GetSwapChain()->GetRtvDesc().Format,
-		dxManager_->GetDescriptorHeapManager()->GetSrvManager()->GetSRVDescriptorHeap(),
-		dxManager_->GetDescriptorHeapManager()->GetSrvManager()->GetCPUHandleAt(slot),                    // ImGuiフォントSRV用のCPUハンドル
-		dxManager_->GetDescriptorHeapManager()->GetSrvManager()->GetGPUHandleAt(slot)                     // ImGuiフォントSRV用のGPUハンドル
+		dxManager_->GetDescriptorHeapManager()->GetSrvManager()->GetSRVDescriptorHeap(),               // ← gpuHeap
+		dxManager_->GetDescriptorHeapManager()->GetSrvManager()->GetGPUHeapCPUHandleAt(slot),          // ← gpuHeap の CPU ハンドル
+		dxManager_->GetDescriptorHeapManager()->GetSrvManager()->GetGPUHeapGPUHandleAt(slot)                  // ← gpuHeap の GPU ハンドル
 	);
+
 }
 
 void ImGuiManager::BeginFrame()
