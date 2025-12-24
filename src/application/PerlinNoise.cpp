@@ -1,6 +1,6 @@
 #include "PerlinNoise.h"
 
-PerlinNoise::PerlinNoise(unsigned int seed)
+PerlinNoise::PerlinNoise(uint32_t seed)
 {
     pen.resize(256);
     std::iota(pen.begin(), pen.end(), 0);

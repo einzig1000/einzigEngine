@@ -286,3 +286,24 @@ void Game::Utilitie::toggleWireframeMode()
 {
 	Engine::Instance().toggleWireframeMode();
 }
+
+
+float Game::Time::GetDeltaTime()
+{
+	return Engine::Instance().GetDeltaTime();
+}
+
+uint32_t Game::Time::GetElapsedTime()
+{
+	return Engine::Instance().GetElapsedTime();
+}
+
+float Game::Time::GetFrameRate()
+{
+	return Engine::Instance().GetFrameRate();
+}
+
+void Game::Time::SetTimeScale(float scale)
+{
+	Engine::Instance().SetTimeScale(scale);
+}

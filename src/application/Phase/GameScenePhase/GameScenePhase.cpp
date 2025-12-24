@@ -15,7 +15,7 @@ GameScenePhase::GameScenePhase()
 	cameraController_ = std::make_unique<CameraController>(player_.get());
 
 
-	map_->LoadMap("resources/Map/map.csv");
+	map_->LoadMap("resources/Map/map.json");
 }
 
 GameScenePhase::~GameScenePhase() {}

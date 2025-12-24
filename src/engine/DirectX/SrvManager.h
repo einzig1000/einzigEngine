@@ -12,17 +12,15 @@ public:
     SrvManager(ID3D12Device* device);
     ~SrvManager();
 
-    ID3D12DescriptorHeap* GetSRVDescriptorHeap() const { return gpuHeap.Get(); }
-    uint32_t GetdescriptorSizeSRV() const { return descriptorSize_; }
+    ID3D12DescriptorHeap* GetSRVDescriptorHeap() const { return descriptorHeap.Get(); }
+    uint32_t GetdescriptorSizeSRV() const { return descriptorSize; }
 
     // 空いてるスロットインデックスを取得しnextIndex_をインクリメント
     uint32_t Allocate();
 
     // Allocate()で取得したスロットインデックスのCPU/GPUハンドルを取得
-    D3D12_CPU_DESCRIPTOR_HANDLE GetGPUHeapCPUHandleAt(uint32_t index) const;
-    D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHeapGPUHandleAt(uint32_t index) const;
-	D3D12_CPU_DESCRIPTOR_HANDLE GetStagingHeapCPUHandleAt(uint32_t index) const;
-    D3D12_GPU_DESCRIPTOR_HANDLE GetStagingHeapGPUHandleAt(uint32_t index) const;
+    D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandleAt(uint32_t index) const;
+    D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandleAt(uint32_t index) const;
 
     SRVAllocation CreateSRV(ID3D12Resource* resource, const D3D12_SHADER_RESOURCE_VIEW_DESC* desc);
 
@@ -31,22 +29,18 @@ public:
     void CreateSRVforImGui(UINT bufferCount, D3D12_RENDER_TARGET_VIEW_DESC format);
 
 private:
-	// 拡張するための基盤は作ったが、SRVをつかっているやつらの対応が終わっていない。SrvManager自体は完成している。
-    void ExpandCapacity();
+
 
     ID3D12Device* device_ = nullptr;
 
 
     // SRV用のディスクリプタヒープ
-    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> stagingHeap; // CPU-only
-    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> gpuHeap;     // Shader Visible
-
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeap;
 
     // ディスクリプタサイズ
-    uint32_t descriptorSize_;
+    uint32_t descriptorSize;
     // 最大スロット数
     uint32_t capacity_ = 0;
     // 次のスロットインデックス
     uint32_t nextIndex_ = 0;
 };
-

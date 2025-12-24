@@ -124,6 +124,12 @@ public:
 	void StopCameraShake();
 	CameraManager* GetCameraManager() { return cameraManager_; }
 
+	// 時間制御
+	float GetDeltaTime();			// デルタタイム取得
+	uint32_t GetElapsedTime();			// 起動からの経過時間取得
+	float GetFrameRate();			// フレームレート取得
+	void SetTimeScale(float scale);	// タイムスケール設定
+
 
 	// フルスクリーン切り替え
 	void ToggleFullscreen();

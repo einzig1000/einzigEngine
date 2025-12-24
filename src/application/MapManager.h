@@ -2,6 +2,9 @@
 #include <string>
 #include "Game.h"
 #include "DropItem.h"
+#include <queue>
+#include <unordered_set>
+#include "PerlinNoise.h"
 
 class Block;
 class Chunk;
@@ -17,36 +20,42 @@ public:
 
 	void LoadMap(const std::string& mapFilePath);
 	void SaveMap(const std::string& mapFilePath);
-	void CreateNewMap();
-	Chunk* CreateChunk(const Vector2int& chunkPos);
-	Chunk* GetOrCreateChunk(const Vector2int& chunkPos);
+	void CreateNewMap(uint32_t seed);
 
 	void Initialize();
 	void Update();
 	void UpDataPlayerRayCollision();
-
 	void Draw();
 	void DrawImGui();
+
+	void SetDrawRadius(int r) { drawRadius_ = r; }
+	void SetUpdateRadius(int r) { updateRadius_ = r; }
+
 
 	AABB GetAABB(const Vector2int& chunkPos, const Vector3int& index);
 	AABB GetAABB(const Vector3& position);
 	bool GetIsActive(const Vector2int& chunkPos, const Vector3int& index);
 	bool GetIsActive(const Vector3& position);
-	Vector2int ChunkIndexByPosition(const Vector3& position);		// ワールド座標				→	chunksのキーインデックス座標
-	Vector3int BlockIndexByPosition(const Vector3& position);		// ワールド座標				→	ブロックインデックス座標
-
-private:
-
-	std::string mapFilePath_;
+	Vector2int ChunkIndexByPosition(const Vector3& position);		// ワールド座標 → chunksのキーインデックス座標
+	Vector3int BlockIndexByPosition(const Vector3& position);		// ワールド座標 → ブロックインデックス座標
 
 	// マップデータ
 	std::unordered_map<Vector2int, Chunk*, Vector2intHash> chunks;
+	
+	// チャンク有無確認
+	bool HasChunk(const Vector2int& chunkPos) const;
+	// チャンク取得、なくても生成はしない
+	Chunk* TryGetChunk(const Vector2int& chunkPos) const;
+	// チャンク取得、なければスケジュールに登録して生成
+	Chunk* GetOrCreateChunk(const Vector2int& chunkPos);
+private:
+	// 欲しいチャンクが存在しなければスケジュールに登録
+	void EnsureChunkScheduled(const Vector2int& chunkPos);
+	// スケジュールに登録されたチャンクを1Fに1つ生成
+	void ProcessChunkGeneration();
 
-	BlockConfig* blockConfig_;
 
-
-	// 着地パーティクル
-	RenderData_Particle* landingParticle_;
+	std::string mapFilePath_;
 
 	// プレイヤー参照
 	Player* player_;
@@ -54,6 +63,17 @@ private:
 	// ドロップアイテム管理
 	std::vector<DropItem*> dropItems_;
 
+	// このキューに入っているチャンクを順次生成していく
+	std::queue<Vector2int> chunkGenQueue_;		
+	// スケジュール済みチャンク集合
+	std::unordered_set<Vector2int, Vector2intHash> chunkScheduled_;
+	// 既に作成されたチャンク集合
+	std::unordered_set<Vector2int, Vector2intHash> chunkCreated_;
+
+	// パラメータ
+	int drawRadius_ = 10;    // 描画半径（チャンク単位）
+	int updateRadius_ = 4;   // 更新半径（チャンク単位）
+	NoiseParameter noiseParam_;
 
 	std::optional<Vector3> IntersectRayBlock(const Ray& ray, const std::vector<VertexData>& vertices, const AABB& aabb);
 };

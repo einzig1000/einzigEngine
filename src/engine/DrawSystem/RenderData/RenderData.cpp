@@ -291,13 +291,17 @@ void RenderData_Model::DrawImGui()
 // 全オブジェクトのSRT更新,それに伴うワールド行列更新
 void RenderData_Model::Update1()
 {
+	// デルタタイム取得
+	float deltaTime = Engine::Instance().GetDeltaTime();
+	deltaTime *= 60.0f; // 60FPS基準に変換
+
 	// S/R/Tの更新
-	this->translate.velocity += this->translate.acceleration;
-	this->translate.value += this->translate.velocity;
-	this->rotate.velocity += this->rotate.acceleration;
-	this->rotate.value += this->rotate.velocity;
-	this->scale.velocity += this->scale.acceleration;
-	this->scale.value += this->scale.velocity;
+	this->translate.velocity += this->translate.acceleration * deltaTime;
+	this->translate.value += this->translate.velocity * deltaTime;
+	this->rotate.velocity += this->rotate.acceleration * deltaTime;
+	this->rotate.value += this->rotate.velocity * deltaTime;
+	this->scale.velocity += this->scale.acceleration * deltaTime;
+	this->scale.value += this->scale.velocity * deltaTime;
 
 	// 今フレームでS/R/Tに変化があったか
 	this->movedThisFrame =

@@ -12,6 +12,8 @@ class RenderData_Triangle;
 class RenderData_Line;
 class RenderData_Particle;
 class RenderData_Block;
+class Chunk;
+class MapManager;
 
 class JsonManager
 {
@@ -32,8 +34,8 @@ public:
 	static bool SaveToJson(RenderData_Sprite& data, const std::string& path);
 	static bool LoadFromJson(RenderData_Sprite& data, const std::string& path);
 
-	static bool SaveToJson(RenderData_Block& data, const std::string& path, Vector2int chunkPos);
-	static bool LoadFromJson(RenderData_Block& data, const std::string& path, Vector2int& chunkPos);
+	static bool SaveToJson(MapManager& data, const std::string& path);
+	static bool LoadFromJson(MapManager& data, const std::string& path);
 
 
 	static bool SaveToJson(const std::string& path, const std::string key, const int& data);

@@ -7,22 +7,22 @@
 #include "Engine.h"
 #include "Itemslot.h"
 #include "Block/BlockDurability.h"
-#include "Block/BlockConfig.h"
 #include "Chunk.h"
 
 MapManager::MapManager(Player* player)
 {
 	// プレイヤー参照保存
 	player_ = player;
-
-	blockConfig_ = new BlockConfig();
 }
 
 MapManager::~MapManager()
 {
-	delete blockConfig_;
-	blockConfig_ = nullptr;
-
+	// チャンク解放
+	for (auto& pair : chunks)
+	{
+		delete pair.second;
+		pair.second = nullptr;
+	}
 
 	for (auto& item : dropItems_)
 	{
@@ -31,112 +31,162 @@ MapManager::~MapManager()
 	}
 }
 
+void MapManager::Initialize()
+{
+	CreateNewMap(12345);
+}
+
+void MapManager::CreateNewMap(uint32_t seed)
+{
+	// ノイズパラメータ設定
+	noiseParam_.seed = seed;			// 俗に言うシード値
+	noiseParam_.scale = 32.0f;			// 地形の粗さ（大きくすると緩やか）
+	noiseParam_.octaves = 4;			// 反復回数 (大きくすると細かい起伏が増える)
+	noiseParam_.persistence = 0.5f;		// 各オクターブの振幅減衰 (大きくすると細かい起伏が増える)
+	noiseParam_.pn = PerlinNoise(seed);	// PerlinNoise インスタンス生成
+
+	//Vector2int playerIndex = ChunkIndexByPosition(player_->GetRenderData().translate.value);
+	//// プレイヤー周辺のチャンクを生成スケジュールに登録
+	//for (int dx = -20; dx <= 20; ++dx)
+	//{
+	//	for (int dz = -20; dz <= 20; ++dz)
+	//	{
+	//		Vector2int chunkPos = { playerIndex.x + dx, playerIndex.y + dz };
+	//		EnsureChunkScheduled(chunkPos);
+	//	}
+	//}
+}
+
 void MapManager::LoadMap(const std::string& mapFilePath)
 {
 	mapFilePath_ = mapFilePath;
 
-	std::ifstream file(mapFilePath_);
+	JsonManager json;
+	json.LoadFromJson(*this, mapFilePath);
 
-	if (!file.is_open())
+	// ロード後プレイヤーが乗ってるチャンクを生成
+	Vector2int playerIndex = ChunkIndexByPosition(player_->GetRenderData().translate.value);
+	if (!(chunkCreated_.find(playerIndex) != chunkCreated_.end()))
 	{
-
+		EnsureChunkScheduled(playerIndex);
+		ProcessChunkGeneration();
 	}
+
+	player_->data_.translate.value.y = 500.0f;
+	player_->data_.translate.velocity.y = 0.0f;
+	player_->data_.translate.acceleration.y = 0.0f;
 }
 
 void MapManager::SaveMap(const std::string& mapFilePath)
 {
-	for (const auto& [chunkPos, chunk] : chunks)
-	{
-		chunk->SaveChunkData(mapFilePath_);
-	}
+	JsonManager json;
+	json.SaveToJson(*this, mapFilePath);
 }
 
-void MapManager::CreateNewMap()
+// チャンク有無確認
+bool MapManager::HasChunk(const Vector2int& chunkPos) const
 {
-
+	return chunks.find(chunkPos) != chunks.end();
 }
 
-// チャンク生成
-Chunk* MapManager::CreateChunk(const Vector2int& chunkPos)
-{
-	Chunk* chunk = new Chunk();
-	chunk->chunkPos = chunkPos;
-
-	const int maxHeight = CHUNK_Z;
-	const float scale = 32.0f;         // 地形の粗さ（大きくすると緩やか）
-	const int octaves = 4;             // 反復回数 (大きくすると細かい起伏が増える)
-	const float persistence = 0.5f;    // 各オクターブの振幅減衰 (大きくすると細かい起伏が増える)
-	static const unsigned int seed = 12345;	// 俗に言うシード値
-	static PerlinNoise pn(seed);
-
-
-	// チャンク内すべてのブロック生成
-	for (int x = 0; x < CHUNK_X; ++x)
-	{
-		for (int z = 0; z < CHUNK_Y; ++z)
-		{
-			// ワールド座標でのブロックインデックス
-			const int worldX = chunkPos.x * CHUNK_X + x;
-			const int worldZ = chunkPos.y * CHUNK_Y + z;
-
-			// ワールド座標をノイズサンプル空間へスケールダウン（連続性が鍵）
-			const float sampleX = static_cast<float>(worldX) / scale;
-			const float sampleZ = static_cast<float>(worldZ) / scale;
-
-			// フラクタルノイズ（0..1）
-			float n = fractalPerlin(pn, sampleX, sampleZ, octaves, persistence);
-
-			// 高さへ変換（0..maxHeight-1）
-			int height = static_cast<int>(std::floor(n * float(maxHeight - 1) + 0.5f));
-			if (height < 0) height = 0;
-			if (height > maxHeight - 1) height = maxHeight - 1;
-
-			// 素材の割り当て（例）
-			int dirtThickness = 3;
-			if (height - dirtThickness < 0) dirtThickness = height;
-
-			for (int y = 0; y < CHUNK_Z; ++y)
-			{
-				// ブロックID決定
-				BlockID id;
-				if (y < height - dirtThickness) id = BlockID::Stone;
-				else if (y < height - 1)		id = BlockID::Dirt;
-				else if (y < height)			id = BlockID::Lawn;
-				else                            id = BlockID::Air;
-				// ブロックのAABB取得
-				AABB aabb = GetAABB(chunkPos, Vector3int(x, y, z));
-				// ブロックの中心座標取得
-				Vector3 center = aabb.center();
-
-				chunk->blocks[x][y][z]->SetBlockType(blockConfig_->GetBlockInfo(id));
-				chunk->blocks[x][y][z]->aabb_ = aabb;
-				chunk->blocks[x][y][z]->SetBlockPosition(center);
-			}
-		}
-	}
-
-	chunk->SetExposedBlocks();
-
-	return chunk;
-}
-
-// チャンク取得、なければCreateChunk
-Chunk* MapManager::GetOrCreateChunk(const Vector2int& chunkPos)
+// チャンク取得、なくても生成はしない
+Chunk* MapManager::TryGetChunk(const Vector2int& chunkPos) const
 {
 	auto it = chunks.find(chunkPos);
-	if (it != chunks.end())
-		return it->second;
-
-	// なければ作る
-	Chunk* newChunk = CreateChunk(chunkPos);
-	chunks[chunkPos] = newChunk;
-	return newChunk;
+	if (it != chunks.end()) return it->second;
+	return nullptr;
 }
 
-void MapManager::Initialize()
+// チャンク取得、なければスケジュールに登録して生成
+Chunk* MapManager::GetOrCreateChunk(const Vector2int& chunkPos)
 {
+	// chunkCreated_から既に生成済みか確認
+	if (chunkCreated_.find(chunkPos) != chunkCreated_.end())
+	{
+		return TryGetChunk(chunkPos);
+	}
 
+
+	// 欲しいチャンクが存在しなければスケジュールに登録
+	EnsureChunkScheduled(chunkPos);
+	// スケジュールに登録されたチャンクを1つ生成
+	ProcessChunkGeneration();
+
+	return TryGetChunk(chunkPos);
 }
+
+// 欲しいチャンクが存在しなければスケジュールに登録
+void MapManager::EnsureChunkScheduled(const Vector2int& chunkPos)
+{
+	// チャンクが既に作成されているならreturn
+	if (chunkCreated_.find(chunkPos) != chunkCreated_.end()) return;
+	// 既にスケジュール済みならreturn
+	if (chunkScheduled_.find(chunkPos) != chunkScheduled_.end()) return;
+	// スケジュール登録
+	chunkGenQueue_.push(chunkPos);
+	// スケジュール済み集合にも登録
+	chunkScheduled_.insert(chunkPos);
+}
+
+// スケジュールに登録されたチャンクを1つ生成
+void MapManager::ProcessChunkGeneration()
+{
+	// スケジュールキューが空ではないなら作成
+	if (!chunkGenQueue_.empty())
+	{
+		// chunkGenQueue_をプレイヤー位置から近い順にソートする
+		std::vector<Vector2int> tempQueue;
+		while (!chunkGenQueue_.empty())
+		{
+			tempQueue.push_back(chunkGenQueue_.front());
+			chunkGenQueue_.pop();
+		}
+		Vector2int playerIndex = ChunkIndexByPosition(player_->GetRenderData().translate.value);
+		std::sort(tempQueue.begin(), tempQueue.end(),
+			[playerIndex](const Vector2int& a, const Vector2int& b)
+			{
+				int distA = (a.x - playerIndex.x) * (a.x - playerIndex.x) + (a.y - playerIndex.y) * (a.y - playerIndex.y);
+				int distB = (b.x - playerIndex.x) * (b.x - playerIndex.x) + (b.y - playerIndex.y) * (b.y - playerIndex.y);
+				return distA < distB;
+			});
+		for (const auto& pos : tempQueue)
+		{
+			chunkGenQueue_.push(pos);
+		}
+
+		// キューから取り出し
+		Vector2int pos = chunkGenQueue_.front();
+		chunkGenQueue_.pop();
+		chunkScheduled_.erase(pos);
+
+		// Jsonから読み取り座標だけ設定されていた場合(chunksに存在しているがデータがない場合)はデータを生成
+		if (HasChunk(pos))
+		{
+			Chunk* chunk = TryGetChunk(pos);
+			if (chunk && chunk->loadResult)
+			{
+				// データ生成
+				chunk->CreateChunkData(noiseParam_, pos);
+			}
+			else
+			{
+				assert(false && "既に存在しているチャンクにデータが存在しません。");
+			}
+		}
+		// 完全に新規の場合
+		else
+		{
+			// チャンク生成
+			Chunk* chunk = new Chunk();
+			chunk->CreateChunkData(noiseParam_, pos);
+			chunks[pos] = chunk;
+		}
+
+		// 生成済み集合に登録
+		chunkCreated_.insert(pos);
+	}
+}
+
 
 void MapManager::Update()
 {
@@ -144,19 +194,28 @@ void MapManager::Update()
 
 	if (Game::Input::Key::IsJustPressed(DIK_0))
 	{
-		LoadMap("Resources/Map/map.csv");
+		LoadMap(mapFilePath_);
 	}
 
+	if (Game::Input::Key::IsJustPressed(DIK_1))
+	{
+		SaveMap(mapFilePath_);
+	}
+
+	// 生成を段階的に実行
+	ProcessChunkGeneration();
+
+	// プレイヤー視点のインデックス
 	Vector2int playerIndex = ChunkIndexByPosition(player_->GetRenderData().translate.value);
 
-	// プレイヤーから周囲2チャンクは更新する
-	for (int32_t dx = -1; dx <= 1; ++dx)
+	// 既存チャンクのみ更新
+	for (int32_t dx = -updateRadius_; dx <= updateRadius_; ++dx)
 	{
-		for (int32_t dz = -1; dz <= 1; ++dz)
+		for (int32_t dz = -updateRadius_; dz <= updateRadius_; ++dz)
 		{
-			Vector2int chunkPos = Vector2int(playerIndex.x + dx, playerIndex.y + dz);
-			Chunk* chunk = GetOrCreateChunk(chunkPos);
-			chunk->Update();
+			Vector2int pos(playerIndex.x + dx, playerIndex.y + dz);
+			Chunk* chunk = TryGetChunk(pos);
+			if (chunk) { chunk->Update(); }
 		}
 	}
 }
@@ -244,22 +303,16 @@ void MapManager::Draw()
 {
 	Vector2int playerIndex = ChunkIndexByPosition(player_->GetRenderData().translate.value);
 
-
-	// プレイヤーから周囲5チャンクは描画する
-	//for (int32_t dx = -2; dx <= 2; ++dx)
-	//{
-	//	for (int32_t dz = -2; dz <= 2; ++dz)
-	//	{
-	//		Vector2int chunkPos = Vector2int(playerIndex.x + dx, playerIndex.y + dz);
-	//		Chunk* chunk = GetOrCreateChunk(chunkPos);
-	//		chunk->Draw();
-	//	}
-	//}
-
-	// 存在するすべてのチャンクを描画（デバッグ用）
-	for (const auto& [chunkPos, chunk] : chunks)
+	// プレイヤーから周囲のみ描画（既存チャンクのみ）
+	for (int32_t dx = -drawRadius_; dx <= drawRadius_; ++dx)
 	{
-		chunk->Draw();
+		for (int32_t dz = -drawRadius_; dz <= drawRadius_; ++dz)
+		{
+			Vector2int chunkPos = Vector2int(playerIndex.x + dx, playerIndex.y + dz);
+			EnsureChunkScheduled(chunkPos);
+			Chunk* chunk = TryGetChunk(chunkPos);
+			if (chunk) { chunk->Draw(); }
+		}
 	}
 
 	for (auto& item : dropItems_)
@@ -297,12 +350,15 @@ AABB MapManager::GetAABB(const Vector3& position)
 }
 bool MapManager::GetIsActive(const Vector2int& chunkPos, const Vector3int& index)
 {
-	Vector3int clampedIndex = index;
-	clampedIndex.x = std::clamp(index.x, 0, CHUNK_X - 1);
-	clampedIndex.y = std::clamp(index.y, 0, CHUNK_Z - 1);
-	clampedIndex.z = std::clamp(index.z, 0, CHUNK_Y - 1);
-	Chunk* chunk = GetOrCreateChunk(chunkPos);
-	return chunk->blocks[clampedIndex.x][clampedIndex.y][clampedIndex.z]->isActive_;
+	Chunk* chunk = TryGetChunk(chunkPos);
+	if (chunk)
+	{
+		if (chunk->blocks[index.x][index.y][index.z])
+		{
+			return chunk->blocks[index.x][index.y][index.z]->isActive_;
+		}
+	}
+	return false;
 }
 bool MapManager::GetIsActive(const Vector3& position)
 {

@@ -592,6 +592,29 @@ void Engine::StopCameraShake()
 	cameraManager_->StopShake();
 }
 
+
+// 時間制御
+float Engine::GetDeltaTime()
+{
+	return dxManager_->GetFixFPS()->GetDeltaTime();
+}
+
+uint32_t Engine::GetElapsedTime()
+{
+	return dxManager_->GetFixFPS()->GetFrameCount();
+}
+
+float Engine::GetFrameRate()
+{
+	return dxManager_->GetFixFPS()->GetAverageFPS();
+}
+
+void Engine::SetTimeScale(float scale)
+{
+	dxManager_->GetFixFPS()->SetTimeScale(scale);
+}
+
+
 // ウィンドウ操作
 void Engine::ToggleFullscreen()
 {

@@ -9,6 +9,9 @@ public:
 	float GetDeltaTime() const { return deltaTime_; }
 	float GetRealFPS() const { return realTimeFPS_; }
 	float GetAverageFPS() const { return averageFPS_; }
+	float GetTimeScale() const { return timeScale_; }
+	void SetTimeScale(float timeScale) { timeScale_ = timeScale; }
+	uint32_t GetFrameCount() const { return frameCount_; }
 
 private:
 	std::chrono::steady_clock::time_point previousTime_;
@@ -19,4 +22,7 @@ private:
 	float averageFPS_;
 	float realTimeFPS_;
 
+	float timeScale_ = 1.0f;
+
+	uint32_t frameCount_ = 0;
 };

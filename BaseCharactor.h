@@ -19,10 +19,10 @@ public:
 	virtual RenderData_Model& GetRenderData() { return data_; }
 
 
+	RenderData_Model data_;
 protected:
 	MapManager* mapManager_ = nullptr;
 
-	RenderData_Model data_;
 
 	float jumpPower_ = 0.1491f;
 };

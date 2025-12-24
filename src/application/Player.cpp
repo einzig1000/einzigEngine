@@ -28,7 +28,7 @@ Player::~Player()
 
 void Player::Initialize()
 {
-	data_.translate.value = Vector3(0.0f, 5.0f, 0.0f);
+	data_.translate.value = Vector3(0.0f, 20.0f, 0.0f);
 	data_.translate.velocity = Vector3(0.0f, -0.0f, 0.0f);
 	data_.translate.acceleration = Vector3(0.0f, GRAVITY, 0.0f);
 	data_.scale.value = Vector3(0.6f, 2.0f, 0.6f);

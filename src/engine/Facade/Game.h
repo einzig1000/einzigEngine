@@ -439,6 +439,30 @@ public:
 		}
 	};
 
+	class Time
+	{
+	public:
+		/// <summary>
+		/// デルタタイム取得
+		/// </summary>
+		/// <returns>デルタタイム</returns>
+		static float GetDeltaTime();
+
+		/// <summary>
+		/// 起動からの経過時間取得
+		/// </summary>
+		static uint32_t GetElapsedTime();
+
+		/// <summary>
+		/// フレームレート取得
+		/// </summary>
+		static float GetFrameRate();
+
+		/// <summary>
+		/// タイムスケール設定　タイムスケールとは時間の進み具合を調整する値。1.0が通常速度、0.5が半分の速度、2.0が2倍の速度になる。
+		/// </summary>
+		static void SetTimeScale(float scale);
+	};
 
 private:
 	Game() = delete;
