@@ -25,6 +25,7 @@ public:
     SRVAllocation CreateSRV(ID3D12Resource* resource, const D3D12_SHADER_RESOURCE_VIEW_DESC* desc);
 
     SRVAllocation CreateSRVforTexture(ID3D12Resource* resource, DXGI_FORMAT format, UINT mipLevels);
+	SRVAllocation CreateSRVforTextureArray(ID3D12Resource* resource, DXGI_FORMAT format, UINT mipLevels, UINT arraySize);
     SRVAllocation CreateSRVforStructuredBuffer(ID3D12Resource* resource, UINT numElements, UINT structureByteStride);
     void CreateSRVforImGui(UINT bufferCount, D3D12_RENDER_TARGET_VIEW_DESC format);
 

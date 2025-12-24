@@ -86,17 +86,20 @@ void ResourceID::reload()
 	TextureIDs_[size_t(TextureID::Item_slot)] = tmp;
 
 
-	tmp = Game::Resource::LoadTexture("resources/Minecraft/breakBlock/breakBlock_0.png");
-	TextureIDs_[size_t(TextureID::BreakBlock_0)] = tmp;
-	tmp = Game::Resource::LoadTexture("resources/Minecraft/breakBlock/breakBlock_1.png");
-	TextureIDs_[size_t(TextureID::BreakBlock_1)] = tmp;
-	tmp = Game::Resource::LoadTexture("resources/Minecraft/breakBlock/breakBlock_2.png");
-	TextureIDs_[size_t(TextureID::BreakBlock_2)] = tmp;
-	tmp = Game::Resource::LoadTexture("resources/Minecraft/breakBlock/breakBlock_3.png");
-	TextureIDs_[size_t(TextureID::BreakBlock_3)] = tmp;
-	tmp = Game::Resource::LoadTexture("resources/Minecraft/breakBlock/breakBlock_4.png");
-	TextureIDs_[size_t(TextureID::BreakBlock_4)] = tmp;
 
 #pragma endregion
+
+	std::vector<std::string> breakBlockFilePaths =
+	{
+		"resources/Minecraft/breakBlock/breakBlock_0.png",
+		"resources/Minecraft/breakBlock/breakBlock_1.png",
+		"resources/Minecraft/breakBlock/breakBlock_2.png",
+		"resources/Minecraft/breakBlock/breakBlock_3.png",
+		"resources/Minecraft/breakBlock/breakBlock_4.png",
+		"resources/Minecraft/breakBlock/breakBlock_5.png",
+	};
+
+	tmp = Game::Resource::LoadTextureArray(breakBlockFilePaths);
+	TextureIDs_[size_t(TextureID::BreakBlock_Array)] = tmp;
 
 }

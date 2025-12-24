@@ -1117,7 +1117,7 @@ void DrawSystem::DrawAllBlock()
 		// テクスチャの検索
 		const TextureData* tex = dxManager_->GetResourceManager()->GetTextureManager()->GetTextureData(renderData->texture);
 		if (!tex) continue;
-		const TextureData* tex2 = dxManager_->GetResourceManager()->GetTextureManager()->GetTextureData(renderData->additionalTexture);
+		const TextureData* tex2 = dxManager_->GetResourceManager()->GetTextureManager()->GetTextureData(renderData->breakTexture);
 		if (!tex2) continue;
 
 		// RootSignatureとPSOを設定
@@ -1138,9 +1138,10 @@ void DrawSystem::DrawAllBlock()
 		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
 		// ルートパラメータ3に追加テクスチャのSRV（シェーダリソースビュー）をバインド
 		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(3, tex2->textureSrvHandleGPU);
-		// ルートパラメータ4にカメラViewProjection行列用定数バッファをバインド
-		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(4, viewProjectionResource_->GetGPUVirtualAddress());
-
+		// ルートパラメータ4に追加テクスチャ配列インデックスのSRVをバインド
+		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(4, renderData->breakLayerSrvAllocation_.gpu);
+		// ルートパラメータ5にカメラViewProjection行列用定数バッファをバインド
+		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(5, viewProjectionResource_->GetGPUVirtualAddress());
 
 		dxManager_->GetCommandContextManager()->GetCommandList()->DrawInstanced(kSumVertex, renderData->currentDrawSum, 0, 0);
 	}

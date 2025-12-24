@@ -29,11 +29,7 @@ enum class TextureID
 
 	Item_slot,
 
-	BreakBlock_0,
-	BreakBlock_1,
-	BreakBlock_2,
-	BreakBlock_3,
-	BreakBlock_4,
+	BreakBlock_Array,
 
 	MAX,
 };
@@ -76,11 +72,6 @@ private:
 	{ TextureID::TITLE_start,  "resources/Minecraft/Title/start.png" },
 	{ TextureID::TITLE_option, "resources/Minecraft/Title/option.png" },
 	{ TextureID::Item_slot,    "resources/Minecraft/Item_slot.png" },
-	{ TextureID::BreakBlock_0, "resources/Minecraft/breakBlock/breakBlock_0.png" },
-	{ TextureID::BreakBlock_1, "resources/Minecraft/breakBlock/breakBlock_1.png" },
-	{ TextureID::BreakBlock_2, "resources/Minecraft/breakBlock/breakBlock_2.png" },
-	{ TextureID::BreakBlock_3, "resources/Minecraft/breakBlock/breakBlock_3.png" },
-	{ TextureID::BreakBlock_4, "resources/Minecraft/breakBlock/breakBlock_4.png" },
 	};
 
 	ResourceID() = delete;

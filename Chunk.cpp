@@ -2,6 +2,7 @@
 #include "Block/Block.h"
 #include "Utilities/JsonManager.h"
 #include "Block/BlockConfig.h"
+#include "Block/BlockDurability.h"
 
 Chunk::Chunk()
 {
@@ -12,7 +13,7 @@ Chunk::Chunk()
 	{
 		blockData_[BlockID(i)] = std::make_unique<RenderData_Block>(BlockID(i));
 		blockData_[BlockID(i)]->texture = ResourceID::GetTextureID(BlockID(i));
-		blockData_[BlockID(i)]->additionalTexture = ResourceID::GetTextureID(TextureID::BreakBlock_1);
+		blockData_[BlockID(i)]->breakTexture = ResourceID::GetTextureID(TextureID::BreakBlock_Array);
 		blockData_[BlockID(i)]->model = ResourceID::GetModelID(ModelID::Cube);
 
 		blockData_[BlockID(i)]->currentDrawSum = 0;
@@ -176,6 +177,9 @@ void Chunk::Update()
 					{
 						blockData_[blocks[x][y][z]->GetBlockID()]->colorData_[blocks[x][y][z]->instanceIndex_]
 							= blocks[x][y][z]->color_;
+
+						blockData_[blocks[x][y][z]->GetBlockID()]->breakLayerData_[blocks[x][y][z]->instanceIndex_]
+							= blocks[x][y][z]->durability_->GetBreakStage();
 					}
 				}
 			}

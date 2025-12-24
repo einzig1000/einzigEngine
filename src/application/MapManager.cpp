@@ -206,7 +206,7 @@ void MapManager::ProcessChunkGeneration()
 
 void MapManager::Update()
 {
-	//UpDataPlayerRayCollision();
+	UpDataPlayerRayCollision();
 
 	if (Game::Input::Key::IsJustPressed(DIK_0))
 	{
@@ -238,6 +238,177 @@ void MapManager::Update()
 
 void MapManager::UpDataPlayerRayCollision()
 {
+	// まず全ブロックの isCollisionRay を戻す…は重いので、最低限「前回当たったブロックだけ戻す」等が望ましい。
+	// ここでは要件外なので省略。
+
+	// プレイヤー視点のレイ
+	const Vector3 rayStart = player_->viewLine_.origin;
+	const Vector3 rayEnd = player_->viewLine_.end;
+
+	Vector3 dir = (rayEnd - rayStart);
+	const float rayLen = dir.Length();
+	if (rayLen <= 1e-6f) return;
+	dir /= rayLen; // normalize
+
+	// ブロック座標（ワールドブロック座標）へ
+	auto WorldBlockIndexByPosition = [](const Vector3& p) -> Vector3int
+		{
+			return Vector3int(
+				int(std::floor(p.x / BLOCK_SIZE)),
+				int(std::floor(p.y / BLOCK_SIZE)),
+				int(std::floor(p.z / BLOCK_SIZE))
+			);
+		};
+
+	auto WorldChunkIndexFromWorldBlock = [](const Vector3int& wb) -> Vector2int
+		{
+			Vector2int cp;
+			cp.x = int(std::floor(float(wb.x) / float(CHUNK_X)));
+			cp.y = int(std::floor(float(wb.z) / float(CHUNK_Z)));
+			return cp;
+		};
+
+	auto LocalMod = [](int a, int n) -> int { return (a % n + n) % n; };
+
+	auto LocalIndexFromWorldBlock = [&](const Vector3int& wb) -> Vector3int
+		{
+			return Vector3int(
+				LocalMod(wb.x, CHUNK_X),
+				LocalMod(wb.y, CHUNK_Y),
+				LocalMod(wb.z, CHUNK_Z)
+			);
+		};
+
+	auto Sign = [](float v) -> int { return (v > 0.0f) - (v < 0.0f); };
+
+	// 現在のワールドブロックインデックス
+	Vector3int currentWB = WorldBlockIndexByPosition(rayStart);
+	const Vector3int endWB = WorldBlockIndexByPosition(rayEnd);
+
+	// step（dir==0 の軸は 0）
+	const int stepX = Sign(dir.x);
+	const int stepY = Sign(dir.y);
+	const int stepZ = Sign(dir.z);
+
+	// deltaDist（dir==0 は INF 扱い）
+	const float INF = std::numeric_limits<float>::infinity();
+	const float deltaDistX = (std::abs(dir.x) < 1e-6f) ? INF : std::abs(BLOCK_SIZE / dir.x);
+	const float deltaDistY = (std::abs(dir.y) < 1e-6f) ? INF : std::abs(BLOCK_SIZE / dir.y);
+	const float deltaDistZ = (std::abs(dir.z) < 1e-6f) ? INF : std::abs(BLOCK_SIZE / dir.z);
+
+	// sideDist（次の境界までの距離 t）
+	auto NextBoundaryT = [](float origin, float dir, int cell, int step) -> float
+		{
+			// cell = floor(origin/BLOCK_SIZE) のブロック座標
+			if (step > 0)
+			{
+				const float next = (float(cell) + 1.0f) * BLOCK_SIZE;
+				return (next - origin) / dir;
+			}
+			else
+			{
+				const float next = float(cell) * BLOCK_SIZE;
+				return (next - origin) / dir;
+			}
+		};
+
+	float sideDistX = (stepX == 0) ? INF : NextBoundaryT(rayStart.x, dir.x, currentWB.x, stepX);
+	float sideDistY = (stepY == 0) ? INF : NextBoundaryT(rayStart.y, dir.y, currentWB.y, stepY);
+	float sideDistZ = (stepZ == 0) ? INF : NextBoundaryT(rayStart.z, dir.z, currentWB.z, stepZ);
+
+	// 最大ステップ（安全）
+	const int maxSteps = 2048;
+
+	// 直前に跨いだ面（＝ currentWB に入った面）
+	AABBFace enterFace = AABBFace::NONE;
+
+	for (int i = 0; i < maxSteps; ++i)
+	{
+		// currentWB -> chunk/local
+		const Vector2int chunkPos = WorldChunkIndexFromWorldBlock(currentWB);
+		const Vector3int local = LocalIndexFromWorldBlock(currentWB);
+
+		Chunk* chunk = TryGetChunk(chunkPos);
+		if (chunk)
+		{
+			// local.y は縦制限があるので範囲チェック
+			if (0 <= local.x && local.x < CHUNK_X &&
+				0 <= local.y && local.y < CHUNK_Y &&
+				0 <= local.z && local.z < CHUNK_Z)
+			{
+				Block* b = chunk->blocks[local.x][local.y][local.z].get();
+				if (b && b->GetBlockID() != BlockID::Air && b->isActive_)
+				{
+					// 衝突したブロックにフラグを立てる
+					b->isCollisionRay = true;
+
+					// 衝突面（「このブロックに入ってきた面」＝直前ステップの軸で決まる）
+					b->direction = enterFace;
+
+					return;
+				}
+			}
+		}
+
+		// 終点ブロックまで到達したら終了
+		if (currentWB == endWB) return;
+
+		// 次に跨ぐ境界（最小のsideDist）を選ぶ
+		if (sideDistX < sideDistY)
+		{
+			if (sideDistX < sideDistZ)
+			{
+				// X方向へ進む
+				currentWB.x += stepX;
+
+				// X方向に進む場合、入ってきた面は stepX の反対側
+				// stepX=+1 なら “LEFT面から入る”、stepX=-1 なら “RIGHT面から入る”
+				enterFace = (stepX > 0) ? AABBFace::LEFT : AABBFace::RIGHT;
+
+				sideDistX += deltaDistX;
+			}
+			else
+			{
+				// Z方向へ進む
+				currentWB.z += stepZ;
+
+				// stepZ=+1 なら “BACK面から入る”、stepZ=-1 なら “FRONT面から入る”
+				enterFace = (stepZ > 0) ? AABBFace::BACK : AABBFace::FRONT;
+
+				sideDistZ += deltaDistZ;
+			}
+		}
+		else
+		{
+			if (sideDistY < sideDistZ)
+			{
+				// Y方向へ進む
+				currentWB.y += stepY;
+
+				// stepY=+1 なら “BOTTOM面から入る”、stepY=-1 なら “TOP面から入る”
+				enterFace = (stepY > 0) ? AABBFace::BOTTOM : AABBFace::TOP;
+
+				sideDistY += deltaDistY;
+			}
+			else
+			{
+				// Z方向へ進む
+				currentWB.z += stepZ;
+
+				enterFace = (stepZ > 0) ? AABBFace::BACK : AABBFace::FRONT;
+
+				sideDistZ += deltaDistZ;
+			}
+		}
+
+		// 伸びすぎ防止：レイ長を超えたら終了（tの近似として最小sideDistを使う）
+		const float tApprox = my_min(sideDistX, my_min(sideDistY, sideDistZ));
+		if (tApprox > rayLen) return;
+	}
+}
+
+//void MapManager::UpDataPlayerRayCollision()
+//{
 //	// プレイヤー視点のインデックス
 //	Vector3 rayStart = player_->viewLine_.origin;
 //	Vector3 rayEnd = player_->viewLine_.end;
@@ -313,7 +484,7 @@ void MapManager::UpDataPlayerRayCollision()
 //			}
 //		}
 //	}
-}
+//}
 
 void MapManager::Draw()
 {

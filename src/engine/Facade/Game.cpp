@@ -14,6 +14,11 @@ uint32_t Game::Resource::LoadTexture(const std::string& filePath)
 	return Engine::Instance().LoadTexture(filePath);
 }
 
+uint32_t Game::Resource::LoadTextureArray(const std::vector<std::string>& filePaths)
+{
+	return Engine::Instance().LoadTextureArray(filePaths);
+}
+
 uint32_t Game::Resource::LoadAudio(const std::string& filePath)
 {
 	return Engine::Instance().LoadAudio(filePath);

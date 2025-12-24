@@ -7,6 +7,7 @@ public:
 	void Update(int power);
 	void SetMaxDurability(int maxDurability);
 	bool GetIsDestroy() const { return isDestroy_; }
+	uint32_t GetBreakStage() const;
 
 private:
 	int32_t nowDurability_ = 0;

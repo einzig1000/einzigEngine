@@ -77,7 +77,7 @@ void Player::UpdateViewLine()
 
 	viewLine_.origin = data_.aabbs[0].center();
 	viewLine_.origin.y += (data_.aabbs[0].max.y - data_.aabbs[0].min.y) * 0.5f;
-	viewLine_.end = viewLine_.origin + direction * 10.0f;
+	viewLine_.end = viewLine_.origin + direction * 20.0f;
 }
 
 void Player::UpdateMove()

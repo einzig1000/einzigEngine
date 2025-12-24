@@ -48,5 +48,5 @@ public:
 	// レイと衝突しているか
 	bool isCollisionRay = false;
 	// 衝突した方向
-	DirectionXYZ direction = DirectionXYZ::None;
+	AABBFace direction = AABBFace::BACK;
 };

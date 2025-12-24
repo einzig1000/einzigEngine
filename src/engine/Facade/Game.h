@@ -36,6 +36,13 @@ public:
 		static uint32_t LoadTexture(const std::string& filePath);
 
 		/// <summary>
+		/// テクスチャ配列読み込み
+		/// </summary>
+		/// <param name="filePaths">例:{"Resources/Prototypes/texture/uvChecker1.png","Resources/Prototypes/texture/uvChecker2.png"}</param>
+		/// <returns>テクスチャID</returns>
+		static uint32_t LoadTextureArray(const std::vector<std::string>& filePaths);
+
+		/// <summary>
 		/// オーディオ読み個み
 		/// </summary>
 		/// <param name="filePath">例:"Resources/Prototypes/audio/BGM/InGame.mp3"</param>

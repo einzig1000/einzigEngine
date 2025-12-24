@@ -317,6 +317,11 @@ uint32_t Engine::LoadTexture(const std::string& filePath)
 	return dxManager_->GetResourceManager()->GetTextureManager()->LoadTexture(filePath);
 }
 
+uint32_t Engine::LoadTextureArray(const std::vector<std::string>& filePaths)
+{
+	return dxManager_->GetResourceManager()->GetTextureManager()->LoadTexture2DArray(filePaths);
+}
+
 uint32_t Engine::LoadModel(const std::string& directoryPath, const std::string& filename)
 {
 	return dxManager_->GetResourceManager()->GetModelManager()->LoadModel(directoryPath, filename);

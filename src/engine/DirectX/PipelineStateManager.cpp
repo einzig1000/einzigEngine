@@ -233,33 +233,41 @@ void PipelineStateManager::InitializeRootSignature_block(ID3D12Device* device)
     HRESULT hr;
 
     D3D12_DESCRIPTOR_RANGE defaultTexture[1] = {};
-    defaultTexture[0].BaseShaderRegister = 0; // t0 レジスタ
+    defaultTexture[0].BaseShaderRegister = 0; // t0
     defaultTexture[0].NumDescriptors = 1;
     defaultTexture[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
     defaultTexture[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-
+    
     D3D12_DESCRIPTOR_RANGE addTexture[1] = {};
-    addTexture[0].BaseShaderRegister = 1; // t1 レジスタ
+    addTexture[0].BaseShaderRegister = 1; // t1
     addTexture[0].NumDescriptors = 1;
     addTexture[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
     addTexture[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-    D3D12_DESCRIPTOR_RANGE worldMatrixRange[1];
+    D3D12_DESCRIPTOR_RANGE worldMatrixRange[1] = {};
     worldMatrixRange[0].BaseShaderRegister = 2; // t2
     worldMatrixRange[0].NumDescriptors = 1;
     worldMatrixRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
     worldMatrixRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
     worldMatrixRange[0].RegisterSpace = 0;
 
-	D3D12_DESCRIPTOR_RANGE colorRange[1];
-	colorRange[0].BaseShaderRegister = 3; // t3
-	colorRange[0].NumDescriptors = 1;
-	colorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-	colorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-	colorRange[0].RegisterSpace = 0;
+    D3D12_DESCRIPTOR_RANGE colorRange[1] = {};
+    colorRange[0].BaseShaderRegister = 3; // t3
+    colorRange[0].NumDescriptors = 1;
+    colorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    colorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+    colorRange[0].RegisterSpace = 0;
+
+    D3D12_DESCRIPTOR_RANGE textureArrayIndexRange[1] = {};
+    textureArrayIndexRange[0].BaseShaderRegister = 4; // t4
+    textureArrayIndexRange[0].NumDescriptors = 1;
+    textureArrayIndexRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    textureArrayIndexRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+    textureArrayIndexRange[0].RegisterSpace = 0;
 
 
-    D3D12_ROOT_PARAMETER rootParameters[5]{};
+
+    D3D12_ROOT_PARAMETER rootParameters[6]{};
 
     // ルートパラメータ0(t3): Color 
     rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
@@ -285,10 +293,16 @@ void PipelineStateManager::InitializeRootSignature_block(ID3D12Device* device)
     rootParameters[3].DescriptorTable.NumDescriptorRanges = _countof(addTexture);
     rootParameters[3].DescriptorTable.pDescriptorRanges = addTexture;
 
-    // ルートパラメータ4(b1): ViewProjectionMatrix 
-    rootParameters[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-    rootParameters[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-    rootParameters[4].Descriptor.ShaderRegister = 1;
+    // ルートパラメータ3(t4): Break Layer Index (PS)
+    rootParameters[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    rootParameters[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+    rootParameters[4].DescriptorTable.NumDescriptorRanges = _countof(textureArrayIndexRange);
+    rootParameters[4].DescriptorTable.pDescriptorRanges = textureArrayIndexRange;
+
+    // ルートパラメータ5(b1): ViewProjectionMatrix 
+    rootParameters[5].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+    rootParameters[5].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+    rootParameters[5].Descriptor.ShaderRegister = 1;
 
 
     D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};

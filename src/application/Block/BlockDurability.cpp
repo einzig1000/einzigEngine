@@ -61,3 +61,12 @@ void BlockDurability::SetMaxDurability(int maxDurability)
 		isDestroy_ = false;
 	}
 }
+
+uint32_t BlockDurability::GetBreakStage() const
+{
+	// 0~5段階で返す
+	if (isDestroy_) return 5;
+	if (!isBeingDestroyed_) return 0;
+	float ratio = static_cast<float>(nowDurability_) / static_cast<float>(maxDurability_);
+	return static_cast<uint32_t>(5 - std::ceil(ratio * 5.0f));
+}

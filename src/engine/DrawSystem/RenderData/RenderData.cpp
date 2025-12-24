@@ -1898,6 +1898,14 @@ RenderData_Block::RenderData_Block(BlockID id)
 		this->capacity,
 		sizeof(Vector4));
 
+	// テクスチャインデックスバッファの作成
+	this->breakLayerResource_ = Engine::Instance().CreateBufferResource(sizeof(uint32_t) * this->capacity);
+	this->breakLayerResource_->Map(0, nullptr, reinterpret_cast<void**>(&this->breakLayerData_));
+	this->breakLayerSrvAllocation_ = Engine::Instance().GetDirectXManager()->GetDescriptorHeapManager()->GetSrvManager()->CreateSRVforStructuredBuffer(
+		this->breakLayerResource_.Get(),
+		this->capacity,
+		sizeof(uint32_t));
+
 	// データ初期化(多分いらない)
 	for (size_t i = 0; i < this->capacity; ++i)
 	{
@@ -1906,6 +1914,9 @@ RenderData_Block::RenderData_Block(BlockID id)
 
 		// 色初期化
 		this->colorData_[i] = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+
+		// テクスチャインデックス初期化
+		this->breakLayerData_[i] = 0;
 	}
 
 	this->scale_.resize(capacity);
@@ -1981,6 +1992,9 @@ uint32_t RenderData_Block::AddNewBlock(Vector3 position, Vector3int index)
 
 		// 色の初期化
 		colorData_[currentDrawSum] = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+
+		// 破壊レイヤーの初期値
+		breakLayerData_[currentDrawSum] = 0;
 
 		// インデックスの保存
 		indexes_[currentDrawSum] = index;

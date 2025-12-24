@@ -405,7 +405,7 @@ public:
     /// リソース
     uint32_t model = 0;
     uint32_t texture = 0;
-	uint32_t additionalTexture = 0;
+	uint32_t breakTexture = 0;
 
 	uint32_t capacity = CHUNK_X * CHUNK_Y * CHUNK_Z;    // 最大ブロック数
 	uint32_t currentSum = 0;        // チャンク内に存在するブロック数
@@ -420,6 +420,10 @@ public:
     Microsoft::WRL::ComPtr<ID3D12Resource> colorResource_;
     Vector4* colorData_ = nullptr;
     SRVAllocation colorSrvAllocation_;
+
+    Microsoft::WRL::ComPtr<ID3D12Resource> breakLayerResource_;
+    uint32_t* breakLayerData_ = nullptr;
+    SRVAllocation breakLayerSrvAllocation_;
 
 	// シェーダーに渡さなくてもいいけどブロックごとに管理したいデータ
     std::vector<VectorDynamics> scale_;

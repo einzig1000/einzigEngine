@@ -72,9 +72,9 @@ void Block::UpdateColor()
 	// 輝度に応じて色を変更
 	color_ = Vector4(emission, emission, emission, 1.0f);
 
-	// １番目に衝突している時
-	if (isCollisionRay == true)
-	{
-		color_ = Vector4(0.1f, 0.1f, 0.1f, 1.0f);
-	}
+	//// １番目に衝突している時
+	//if (isCollisionRay == true)
+	//{
+	//	color_ = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+	//}
 }
