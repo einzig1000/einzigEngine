@@ -1917,14 +1917,20 @@ RenderData_Block::RenderData_Block(BlockID id)
 	name = id;
 }
 RenderData_Block::~RenderData_Block()
-{}
+{
+	auto it = std::find(renderBlocks.begin(), renderBlocks.end(), this);
+	if (it != renderBlocks.end())
+	{
+		renderBlocks.erase(it);
+	}
+}
 
 void RenderData_Block::UpdateAllBlock()
 {
-	for (size_t ID = 0; ID < renderBlocks.size(); ++ID)
-	{
-		renderBlocks[ID]->Update();
-	}
+	//for (size_t ID = 0; ID < renderBlocks.size(); ++ID)
+	//{
+	//	renderBlocks[ID]->Update();
+	//}
 }
 
 void RenderData_Block::Update()

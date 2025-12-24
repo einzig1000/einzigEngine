@@ -9,7 +9,7 @@ SrvManager::SrvManager(ID3D12Device* device)
     descriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
     // SRV用ディスクリプタヒープ作成
-	capacity_ = 16384 * 4;
+	capacity_ = 16384 * 8;
     nextIndex_ = 0;
     D3D12_DESCRIPTOR_HEAP_DESC DescriptorHeapDesc{};
     DescriptorHeapDesc.NumDescriptors = capacity_;

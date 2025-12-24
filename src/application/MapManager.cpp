@@ -59,6 +59,22 @@ void MapManager::CreateNewMap(uint32_t seed)
 
 void MapManager::LoadMap(const std::string& mapFilePath)
 {
+	// chunks 全解放&clear
+	for (auto& pair : chunks)
+	{
+		delete pair.second;
+		pair.second = nullptr;
+	}
+	// chunkGenQueue_ を空に
+	while (!chunkGenQueue_.empty())
+	{
+		chunkGenQueue_.pop();
+	}
+	// chunkScheduled_/chunkCreated_ をclear
+	chunkScheduled_.clear();
+	chunkCreated_.clear();
+
+
 	mapFilePath_ = mapFilePath;
 
 	JsonManager json;
@@ -126,6 +142,26 @@ void MapManager::EnsureChunkScheduled(const Vector2int& chunkPos)
 	chunkGenQueue_.push(chunkPos);
 	// スケジュール済み集合にも登録
 	chunkScheduled_.insert(chunkPos);
+
+	// chunkGenQueue_をプレイヤー位置から近い順にソートする
+	std::vector<Vector2int> tempQueue;
+	while (!chunkGenQueue_.empty())
+	{
+		tempQueue.push_back(chunkGenQueue_.front());
+		chunkGenQueue_.pop();
+	}
+	Vector2int playerIndex = ChunkIndexByPosition(player_->GetRenderData().translate.value);
+	std::sort(tempQueue.begin(), tempQueue.end(),
+		[playerIndex](const Vector2int& a, const Vector2int& b)
+		{
+			int distA = (a.x - playerIndex.x) * (a.x - playerIndex.x) + (a.y - playerIndex.y) * (a.y - playerIndex.y);
+			int distB = (b.x - playerIndex.x) * (b.x - playerIndex.x) + (b.y - playerIndex.y) * (b.y - playerIndex.y);
+			return distA < distB;
+		});
+	for (const auto& pos : tempQueue)
+	{
+		chunkGenQueue_.push(pos);
+	}
 }
 
 // スケジュールに登録されたチャンクを1つ生成
@@ -134,26 +170,6 @@ void MapManager::ProcessChunkGeneration()
 	// スケジュールキューが空ではないなら作成
 	if (!chunkGenQueue_.empty())
 	{
-		// chunkGenQueue_をプレイヤー位置から近い順にソートする
-		std::vector<Vector2int> tempQueue;
-		while (!chunkGenQueue_.empty())
-		{
-			tempQueue.push_back(chunkGenQueue_.front());
-			chunkGenQueue_.pop();
-		}
-		Vector2int playerIndex = ChunkIndexByPosition(player_->GetRenderData().translate.value);
-		std::sort(tempQueue.begin(), tempQueue.end(),
-			[playerIndex](const Vector2int& a, const Vector2int& b)
-			{
-				int distA = (a.x - playerIndex.x) * (a.x - playerIndex.x) + (a.y - playerIndex.y) * (a.y - playerIndex.y);
-				int distB = (b.x - playerIndex.x) * (b.x - playerIndex.x) + (b.y - playerIndex.y) * (b.y - playerIndex.y);
-				return distA < distB;
-			});
-		for (const auto& pos : tempQueue)
-		{
-			chunkGenQueue_.push(pos);
-		}
-
 		// キューから取り出し
 		Vector2int pos = chunkGenQueue_.front();
 		chunkGenQueue_.pop();

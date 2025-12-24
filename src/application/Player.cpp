@@ -37,6 +37,14 @@ void Player::Initialize()
 
 void Player::Update()
 {
+	if (Game::Input::Key::IsJustPressed(DIK_X))
+	{
+		data_.translate.value.y = 500.0f;
+		data_.translate.velocity.y = 0.0f;
+		data_.translate.acceleration.y = 0.0f;
+	}
+
+
 	// 移動更新
 	UpdateDush();
 	UpdateMove();
