@@ -370,11 +370,11 @@ void TestPhase::DrawImGui()
 
 		if (ImGui::BeginTabItem("mouse Test"))
 		{
-			ImGui::Text("Mouse Position: (%.1f, %.1f)", Game::Input::Mouse::GetMousePosition().x, Game::Input::Mouse::GetMousePosition().y);
-			ImGui::Text("Mouse World Position: (%.1f, %.1f, %.1f)", Game::Input::Mouse::GetMouseWorldPosition().x, Game::Input::Mouse::GetMouseWorldPosition().y, Game::Input::Mouse::GetMouseWorldPosition().z);
-			ImGui::Text("Mouse Ray Origin: (%.1f, %.1f, %.1f)", Game::Input::Mouse::GetMouseRay().origin.x, Game::Input::Mouse::GetMouseRay().origin.y, Game::Input::Mouse::GetMouseRay().origin.z);
-			ImGui::Text("Mouse Ray Diff  : (%.1f, %.1f, %.1f)", Game::Input::Mouse::GetMouseRay().diff.x, Game::Input::Mouse::GetMouseRay().diff.y, Game::Input::Mouse::GetMouseRay().diff.z);
-			ImGui::Text("Mouse Wheel: %d", Game::Input::Mouse::GetMouseWheel());
+			ImGui::Text("Mouse Position: (%.1f, %.1f)", Game::Input::Mouse::GetPosition().x, Game::Input::Mouse::GetPosition().y);
+			ImGui::Text("Mouse World Position: (%.1f, %.1f, %.1f)", Game::Input::Mouse::GetWorldPosition().x, Game::Input::Mouse::GetWorldPosition().y, Game::Input::Mouse::GetWorldPosition().z);
+			ImGui::Text("Mouse Ray Origin: (%.1f, %.1f, %.1f)", Game::Input::Mouse::GetRay().origin.x, Game::Input::Mouse::GetRay().origin.y, Game::Input::Mouse::GetRay().origin.z);
+			ImGui::Text("Mouse Ray Diff  : (%.1f, %.1f, %.1f)", Game::Input::Mouse::GetRay().diff.x, Game::Input::Mouse::GetRay().diff.y, Game::Input::Mouse::GetRay().diff.z);
+			ImGui::Text("Mouse Wheel: %d", Game::Input::Mouse::GetWheel());
 
 			ImGui::Text("Mouse Buttons:");
 			ImGui::Text("Left Button - %d-%d-%d : %d",

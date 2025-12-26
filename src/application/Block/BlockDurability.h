@@ -4,10 +4,14 @@
 class BlockDurability
 {
 public:
-	void Update(int power);
+	void Update();
+	void DecreaseDurability(int power);
+	void SetIsCollisionRay(bool isCollisionRay) { isCollisionRay_ = isCollisionRay; }
+
 	void SetMaxDurability(int maxDurability);
 	bool GetIsDestroy() const { return isDestroy_; }
 	uint32_t GetBreakStage() const;
+	bool GetUpdateRequest() const { return updateRequest_; }
 
 private:
 	int32_t nowDurability_ = 0;
@@ -21,5 +25,9 @@ private:
 	// 破壊された瞬間か
 	bool isJustDestroyed_ = false;
 
+	// 視線レイと衝突しているか
+	bool isCollisionRay_ = false;
+	// 更新リクエストフラグ
+	bool updateRequest_ = false;
 };
 

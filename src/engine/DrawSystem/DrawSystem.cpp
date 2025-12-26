@@ -824,7 +824,7 @@ void DrawSystem::DrawAllSprite()
 		bottom *= float(WindowManager::winHeight_) / 720.0f;
 
 		// マウス座標取得
-		Vector2 mousePos = Game::Input::Mouse::GetMousePosition();
+		Vector2 mousePos = Game::Input::Mouse::GetPosition();
 
 		// マウス座標は仮想座標へ変換してから衝突判定に使う。
 		float windowWidth = float(WindowManager::winWidth_);

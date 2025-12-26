@@ -244,9 +244,9 @@ void Camera::Updata_Orbit()
     if (enableControl_)
     {
 	    // マウス移動量取得
-	    mouseDelta_ = Game::Input::Mouse::GetMousePositionDelta();
+	    mouseDelta_ = Game::Input::Mouse::GetPositionDelta();
 	    // ホイール取得
-        mouseWheel_ = Game::Input::Mouse::GetMouseWheel();
+        mouseWheel_ = Game::Input::Mouse::GetWheel();
 
 #pragma region カメラ回転
        
@@ -378,9 +378,9 @@ void Camera::Update_FPS()
     if (enableControl_)
     {
         // マウス移動量取得
-        mouseDelta_ = Game::Input::Mouse::GetMousePositionDelta();
+        mouseDelta_ = Game::Input::Mouse::GetPositionDelta();
         // ホイール取得
-        mouseWheel_ = Game::Input::Mouse::GetMouseWheel();
+        mouseWheel_ = Game::Input::Mouse::GetWheel();
 
         if (Game::Input::Mouse::IsHeld(2) && !Game::Input::Key::IsHeld(DIK_LSHIFT))
         {

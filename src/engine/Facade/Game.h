@@ -176,31 +176,31 @@ public:
 			/// マウスのスクリーン座標位置取得
 			/// </summary>
 			/// <returns>マウスのスクリーン座標</returns>
-			static Vector2 GetMousePosition();
+			static Vector2 GetPosition();
 
 			/// <summary>
 			/// マウスのスクリーン座標位置変化量取得
 			/// </summary>
 			/// <returns>マウスのスクリーン座標位置変化量</returns>
-			static Vector2 GetMousePositionDelta();
+			static Vector2 GetPositionDelta();
 
 			/// <summary>
 			/// マウスのワールド座標位置取得
 			/// </summary>
 			/// <returns>マウスのワールド座標</returns>
-			static Vector3 GetMouseWorldPosition();
+			static Vector3 GetWorldPosition();
 
 			/// <summary>
 			/// マウスのワールド座標レイ取得
 			/// </summary>
 			/// <returns></returns>
-			static Ray GetMouseRay();
+			static Ray GetRay();
 
 			/// <summary>
 			/// マウスホイールの回転量取得
 			/// </summary>
 			/// <returns>マウスホイールの回転量</returns>
-			static int32_t GetMouseWheel();
+			static int32_t GetWheel();
 
 			/// <summary>
 			/// マウスボタンの入力取得(現在押されているか)

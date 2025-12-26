@@ -1,14 +1,21 @@
 #include "Block/BlockDurability.h"
 #include "Game.h"
 
-void BlockDurability::Update(int power)
+void BlockDurability::Update()
 {
-	// 破壊された瞬間フラグを毎フレームリセット
-	isJustDestroyed_ = false;
+	if (isDestroy_ == true) return;
 
-	if (!isDestroy_)
+	// 視線レイと衝突している
+	if (isCollisionRay_)
 	{
-		if (power <= 0)
+		updateRequest_ = true;
+
+		// マウス左クリックが押されている間
+		if (Game::Input::Mouse::IsHeld(0))
+		{
+			DecreaseDurability(1);
+		}
+		else
 		{
 			// 非破壊中
 			isBeingDestroyed_ = false;
@@ -16,34 +23,30 @@ void BlockDurability::Update(int power)
 			destroyFrame_ = 0;
 			// 耐久値回復
 			nowDurability_ = maxDurability_;
-			// 破壊済みフラグリセット
-			isDestroy_ = false;
 		}
-		else
-		{
-			// 破壊中
-			isBeingDestroyed_ = true;
-			// 破壊フレーム数加算
-			destroyFrame_++;
+	}
+	// 視線レイと衝突しなくなった瞬間
+	else
+	{
+		updateRequest_ = false;
 
-			if (nowDurability_ > 0)
-			{
-				// 耐久値減少
-				nowDurability_ -= power;
-				// 耐久値が０以下になったら破壊済みフラグを立てる
-				if (nowDurability_ <= 0)
-				{
-					// 耐久値を０に固定
-					nowDurability_ = 0;
-					// 破壊された瞬間フラグを立てる
-					isJustDestroyed_ = true;
-					// 破壊済みフラグを立てる
-					isDestroy_ = true;
-					// 破壊中フラグを下ろす
-					isBeingDestroyed_ = false;
-				}
-			}
-		}
+		// 破壊中フラグを下ろす
+		isBeingDestroyed_ = false;
+		// 破壊フレーム数リセット
+		destroyFrame_ = 0;
+		// 耐久値回復
+		nowDurability_ = maxDurability_;
+	}
+}
+
+void BlockDurability::DecreaseDurability(int power)
+{
+	nowDurability_ -= power;
+	destroyFrame_++;
+	if (nowDurability_ <= 0)
+	{
+		nowDurability_ = 0;
+		isDestroy_ = true;
 	}
 }
 

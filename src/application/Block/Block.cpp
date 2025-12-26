@@ -51,15 +51,12 @@ void Block::Update()
 
 void Block::UpdateBreak(int power)
 {
-	// １番目に衝突している時
-	if (isCollisionRay == true)
+	// １番目に衝突している時 || 更新リクエストがある時
+	if (isCollisionRay == true || durability_->GetUpdateRequest())
 	{
-		// マウス左ボタンが押されている時
-		if (Game::Input::Mouse::IsHeld(0))
-		{
-			// 耐久値更新
-			durability_->Update(power);
-		}
+		durability_->SetIsCollisionRay(isCollisionRay);
+		// 耐久値更新
+		durability_->Update();
 	}
 }
 

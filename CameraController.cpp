@@ -15,7 +15,7 @@ CameraController::CameraController(Player* player)
 
 void CameraController::Update()
 {
-	mousedelta = Game::Input::Mouse::GetMousePositionDelta();
+	mousedelta = Game::Input::Mouse::GetPositionDelta();
 
 	if (Game::Input::Key::IsJustPressed(DIK_T))
 	{

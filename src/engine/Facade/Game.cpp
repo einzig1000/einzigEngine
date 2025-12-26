@@ -112,22 +112,22 @@ void Game::Light::ToggleLightMode(const LightMode mode)
 }
 
 
-Vector2 Game::Input::Mouse::GetMousePosition()
+Vector2 Game::Input::Mouse::GetPosition()
 {
 	return Engine::Instance().GetMousePosition();
 }
 
-Vector2 Game::Input::Mouse::GetMousePositionDelta()
+Vector2 Game::Input::Mouse::GetPositionDelta()
 {
 	return Engine::Instance().GetMousePositionDelta();
 }
 
-Vector3 Game::Input::Mouse::GetMouseWorldPosition()
+Vector3 Game::Input::Mouse::GetWorldPosition()
 {
 	return Engine::Instance().GetMouseWorldPosition();
 }
 
-Ray Game::Input::Mouse::GetMouseRay()
+Ray Game::Input::Mouse::GetRay()
 {
 	return Engine::Instance().GetMouseRay();
 }
@@ -152,7 +152,7 @@ uint32_t Game::Input::Mouse::HoldFrames(int i)
 	return Engine::Instance().MouseHoldFrames(i);
 }
 
-int32_t Game::Input::Mouse::GetMouseWheel()
+int32_t Game::Input::Mouse::GetWheel()
 {
 	return Engine::Instance().GetMouseWheel();
 }

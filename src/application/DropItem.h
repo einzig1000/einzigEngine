@@ -6,6 +6,16 @@ class Player;
 class DropItem
 {
 public:
+
+	//
+	// DropItemもRenderData_Blockで描画
+	// 
+
+
+
+
+
+
 	DropItem(Player* player, Vector3int indec, Vector3 pos, int model, int tex);
 	void Update(bool isUnderBlock);
 	void Draw();

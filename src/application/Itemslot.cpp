@@ -35,7 +35,7 @@ void Itemslot::Update()
 		}
 	}
 
-	int mouseWheel = Game::Input::Mouse::GetMouseWheel();
+	int mouseWheel = Game::Input::Mouse::GetWheel();
 	if (mouseWheel > 0)
 	{
 		selectedSlot_--;
