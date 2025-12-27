@@ -509,7 +509,7 @@ bool JsonManager::SaveToJson(MapManager& data, const std::string& path)
                 BlockID id = BlockID(i);
                 RenderData_Block* blockData = chunk.blockData_[id].get();
                 if (!blockData) continue;
-
+               
                 json blockEntry;  // { "BlockID1": [ {...}, {...} ] }
                 std::string blockKey = "BlockID" + std::to_string(i);
 

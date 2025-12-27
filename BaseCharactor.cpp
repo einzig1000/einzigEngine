@@ -146,6 +146,12 @@ void BaseCharactor::BreakTargetBlock()
 			if (block != nullptr)
 			{
 				block->durability_->DecreaseDurability(breakPower_);
+
+				// 破壊されていたら非アクティブ化
+				if (block->durability_->GetIsDestroy())
+				{
+					mapManager_->DestroyBlockAt(lab->chunkIndex, lab->localIndex);
+				}
 			}
 		}
 	}

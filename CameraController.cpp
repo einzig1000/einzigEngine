@@ -83,6 +83,23 @@ void CameraController::Update()
 		}
 	}
 
+	/// カメラがマップにめり込まないようにする処理
+	//{
+	//	// カメラの位置がブロック内にあるかチェック
+	//	Vector3int cameraBlockPos = {
+	//		static_cast<int>(std::floor(cameraPos.x)),
+	//		static_cast<int>(std::floor(cameraPos.y)),
+	//		static_cast<int>(std::floor(cameraPos.z))
+	//	};
+	//	if (player_->mapManager_)
+	//	{
+	//		if (player_->mapManager_->IsBlockAt(cameraBlockPos))
+	//		{
+	//			// ブロック内にある場合、カメラをプレイヤーの目の位置に戻す
+	//			cameraPos = player_->viewRay_.origin;
+	//		}
+	//	}
+	//}
 
 	Game::Camera::MoveCameraCenter(cameraPos, 0, EaseType::LINEAR);
 	Game::Camera::MoveCameraRotate(cameraRot, 3, EaseType::LINEAR);

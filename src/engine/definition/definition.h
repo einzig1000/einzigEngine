@@ -39,6 +39,8 @@ enum class BlockID
 {
     Air,
     Stone,	// 石
+	Iron,   // 鉄
+	Diamond,// ダイヤ
     Glass,	// ガラス
     Dirt,	// 草なし土
     Lawn,	// 草付き土
@@ -1204,6 +1206,8 @@ class Block;
 struct lookAtBlock
 {
     Block* block = nullptr;
+	Vector2int chunkIndex = { 0,0 };
+	Vector3int localIndex = { 0,0,0 };
     AABBFace face = AABBFace::NONE;
 	float distance = 0.0f;
 };

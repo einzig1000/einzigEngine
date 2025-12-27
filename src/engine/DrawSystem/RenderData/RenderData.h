@@ -430,17 +430,17 @@ public:
     std::vector<VectorDynamics> rotate_;
     std::vector<VectorDynamics> translate_;
 	std::vector<Vector3int> indexes_;
-    std::vector<bool> isActive_;
+	std::vector<bool> isActive_;    // 描画されてるかとか関係なく、そのスロットが使われているかどうか
 
 private:
+	// 空きスロット管理
+    std::vector<uint32_t> freeSlots_;
 
+    // なににつかってるか忘れた
     int ID = 0;
 
     //// 死亡判定
     void CheckLife();
-
-    // ロードした結果
-    bool loadResult = false;
 
 	static std::vector<RenderData_Block*> renderBlocks;
 };

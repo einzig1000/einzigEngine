@@ -33,7 +33,7 @@ MapManager::~MapManager()
 
 void MapManager::Initialize()
 {
-	CreateNewMap(12345);
+	CreateNewMap(123456);
 }
 
 void MapManager::CreateNewMap(uint32_t seed)
@@ -43,6 +43,7 @@ void MapManager::CreateNewMap(uint32_t seed)
 	noiseParam_.scale = 32.0f;			// 地形の粗さ（大きくすると緩やか）
 	noiseParam_.octaves = 4;			// 反復回数 (大きくすると細かい起伏が増える)
 	noiseParam_.persistence = 0.5f;		// 各オクターブの振幅減衰 (大きくすると細かい起伏が増える)
+	noiseParam_.height = CHUNK_Y;		// マップの高さ
 	noiseParam_.pn = PerlinNoise(seed);	// PerlinNoise インスタンス生成
 
 	//Vector2int playerIndex = ChunkIndexByPosition(player_->data_.translate.value);
@@ -59,12 +60,22 @@ void MapManager::CreateNewMap(uint32_t seed)
 
 void MapManager::LoadMap(const std::string& mapFilePath)
 {
+	// 相互参照を切る
+	for (auto& [pos, chunk] : chunks)
+	{
+		if (!chunk) continue;
+		for (int dir = 0; dir < 4; ++dir)
+		{
+			chunk->SetNeighborChunk(dir, nullptr);
+		}
+	}
 	// chunks 全解放&clear
 	for (auto& pair : chunks)
 	{
 		delete pair.second;
 		pair.second = nullptr;
 	}
+	chunks.clear();
 	// chunkGenQueue_ を空に
 	while (!chunkGenQueue_.empty())
 	{
@@ -80,13 +91,13 @@ void MapManager::LoadMap(const std::string& mapFilePath)
 	JsonManager json;
 	json.LoadFromJson(*this, mapFilePath);
 
-	// ロード後プレイヤーが乗ってるチャンクを生成
-	Vector2int playerIndex = ChunkIndexByPosition(player_->data_.translate.value);
-	if (!(chunkCreated_.find(playerIndex) != chunkCreated_.end()))
-	{
-		EnsureChunkScheduled(playerIndex);
-		ProcessChunkGeneration();
-	}
+	//// ロード後プレイヤーが乗ってるチャンクを生成
+	//Vector2int playerIndex = ChunkIndexByPosition(player_->data_.translate.value);
+	//if (!(chunkCreated_.find(playerIndex) != chunkCreated_.end()))
+	//{
+	//	EnsureChunkScheduled(playerIndex);
+	//	ProcessChunkGeneration();
+	//}
 
 	player_->data_.translate.value.y = 500.0f;
 	player_->data_.translate.velocity.y = 0.0f;
@@ -183,6 +194,24 @@ void MapManager::ProcessChunkGeneration()
 			{
 				// データ生成
 				chunk->CreateChunkData(noiseParam_, pos);
+				// 隣接チャンクのポインタ更新
+				Chunk* neighbor[4] = {
+					TryGetChunk(Vector2int(pos.x + 1, pos.y)), // +X
+					TryGetChunk(Vector2int(pos.x - 1, pos.y)), // -X
+					TryGetChunk(Vector2int(pos.x, pos.y + 1)), // +Z
+					TryGetChunk(Vector2int(pos.x, pos.y - 1))  // -Z
+				};
+
+				for (int dir = 0; dir < 4; ++dir)
+				{
+					if (neighbor[dir])
+					{
+						chunk->SetNeighborChunk(dir, neighbor[dir]);
+						// 隣接チャンクにも自分をセット
+						int oppositeDir = (dir % 2 == 0) ? dir + 1 : dir - 1;
+						neighbor[dir]->SetNeighborChunk(oppositeDir, chunk);
+					}
+				}
 			}
 			else
 			{
@@ -516,6 +545,14 @@ void MapManager::DrawImGui()
 	ImGui::End();
 }
 
+void MapManager::DestroyBlockAt(const Vector2int& chunkPos, const Vector3int& localIndex)
+{
+	Chunk* chunk = TryGetChunk(chunkPos);
+	if (!chunk) return;
+
+	chunk->DestroyBlock(localIndex);
+}
+
 std::optional<lookAtBlock*> MapManager::IntersectRayBlock(const Ray& ray)
 {
 	lookAtBlock* result = new lookAtBlock();
@@ -617,6 +654,8 @@ std::optional<lookAtBlock*> MapManager::IntersectRayBlock(const Ray& ray)
 					Vector3 blockWorldPos = b->aabb_.center();
 
 					result->block = b;
+					result->chunkIndex = chunkPos;
+					result->localIndex = local;
 					result->face = enterFace;
 					result->distance = Vector3(blockWorldPos - rayStart).LengthSq();
 

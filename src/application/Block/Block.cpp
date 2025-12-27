@@ -42,12 +42,6 @@ void Block::Update()
 
 	// 耐久値更新
 	durability_->Update();
-
-	// 破壊されていたら非アクティブ化
-	if (durability_->GetIsDestroy())
-	{
-		isActive_ = false;
-	}
 }
 
 void Block::UpdateColor()

@@ -23,12 +23,14 @@ public:
 
 	void Initialize();
 	void Update();
-	//void UpDataPlayerRayCollision();
 	void Draw();
 	void DrawImGui();
 
 	void SetDrawRadius(int r) { drawRadius_ = r; }
 	void SetUpdateRadius(int r) { updateRadius_ = r; }
+
+	// ブロック破壊
+	void DestroyBlockAt(const Vector2int& chunkPos, const Vector3int& localIndex);
 
 	// レイと衝突しているブロックを返す
 	std::optional<lookAtBlock*> IntersectRayBlock(const Ray& ray);

@@ -1956,67 +1956,89 @@ void RenderData_Block::Update()
 // ブロックの追加
 uint32_t RenderData_Block::AddNewBlock(Vector3 position, Vector3int index)
 {
-	const uint32_t slot = currentDrawSum;
+	uint32_t slot = currentDrawSum;
 
 	Log("BlockID:%s", EnumToString(name));
 	Log("index:%d,%d,%d", index.x, index.y, index.z);
 	Log("currentSum:%d", currentDrawSum);
-	// 空いているインデックスを探す
-	if (currentDrawSum >= capacity)
+
+	// 空きスロットがあればそれを使う
+	if (!freeSlots_.empty())
 	{
-		Log("キャパオーバー(あり得ないためこれが出る時は致命的なミスがある)");
-		return UINT32_MAX;
+		slot = freeSlots_.back();
+		freeSlots_.pop_back();
 	}
-	if (!isActive_[currentDrawSum])
+	// 空きスロットがなければ末尾に追加
+	else
 	{
-		// 拡縮量の初期化
-		scale_[currentDrawSum].value = Vector3(1.0f, 1.0f, 1.0f);
-		scale_[currentDrawSum].velocity = Vector3(0.0f, 0.0f, 0.0f);
-		scale_[currentDrawSum].acceleration = Vector3(0.0f, 0.0f, 0.0f);
-
-		// 回転量の初期化
-		rotate_[currentDrawSum].value = Vector3(0.0f, 0.0f, 0.0f);
-		rotate_[currentDrawSum].velocity = Vector3(0.0f, 0.0f, 0.0f);
-		rotate_[currentDrawSum].acceleration = Vector3(0.0f, 0.0f, 0.0f);
-
-		// 座標の初期化
-		translate_[currentDrawSum].value = position;
-		translate_[currentDrawSum].velocity = Vector3(0.0f, 0.0f, 0.0f);
-		translate_[currentDrawSum].acceleration = Vector3(0.0f, 0.0f, 0.0f);
-
-		// ワールド行列の更新
-		worldMatrixData_[currentDrawSum] = Matrix4x4::MakeAffineMatrix(
-				scale_[currentDrawSum].value,
-				rotate_[currentDrawSum].value,
-				translate_[currentDrawSum].value);
-
-		// 色の初期化
-		colorData_[currentDrawSum] = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-
-		// 破壊レイヤーの初期値
-		breakLayerData_[currentDrawSum] = 0;
-
-		// インデックスの保存
-		indexes_[currentDrawSum] = index;
-
-		// アクティブ化
-		isActive_[currentDrawSum] = true;
-
-		// 描画カウントインクリメント
+		if (currentDrawSum >= capacity)
+		{
+			Log("キャパオーバー(あり得ないためこれが出る時は多分致命的なミスがある)");
+			return UINT32_MAX;
+		}
+		slot = currentDrawSum;
 		currentDrawSum++;
-
 	}
+	
+	// アクティブ化
+	isActive_[slot] = true;
+
+	// 拡縮量の初期化
+	scale_[slot].value = Vector3(1.0f, 1.0f, 1.0f);
+	scale_[slot].velocity = Vector3(0.0f, 0.0f, 0.0f);
+	scale_[slot].acceleration = Vector3(0.0f, 0.0f, 0.0f);
+
+	// 回転量の初期化
+	rotate_[slot].value = Vector3(0.0f, 0.0f, 0.0f);
+	rotate_[slot].velocity = Vector3(0.0f, 0.0f, 0.0f);
+	rotate_[slot].acceleration = Vector3(0.0f, 0.0f, 0.0f);
+
+	// 座標の初期化
+	translate_[slot].value = position;
+	translate_[slot].velocity = Vector3(0.0f, 0.0f, 0.0f);
+	translate_[slot].acceleration = Vector3(0.0f, 0.0f, 0.0f);
+
+	// ワールド行列の更新
+	worldMatrixData_[slot] = Matrix4x4::MakeAffineMatrix(
+		scale_[slot].value,
+		rotate_[slot].value,
+		translate_[slot].value);
+
+	// 色の初期化
+	colorData_[slot] = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+
+	// 破壊レイヤーの初期値
+	breakLayerData_[slot] = 0;
+
+	// インデックスの保存
+	indexes_[slot] = index;
+
 	// 追加したスロットを返す
 	return slot;
 }
 
+// ブロックの削除
 void RenderData_Block::RemoveBlock(Vector3int index)
 {
 	for (size_t i = 0; i < capacity; ++i)
 	{
 		if (isActive_[i] && indexes_[i] == index)
 		{
+			// 非アクティブ化
 			isActive_[i] = false;
+
+			// 見えない場所へ飛ばす（穴を描かせない）
+			worldMatrixData_[i] = Matrix4x4::MakeTranslateMatrix(Vector3(0.0f, -1000000.0f, 0.0f));
+
+			// 透明化
+			colorData_[i] = Vector4(0.0f, 0.0f, 0.0f, 0.0f);
+
+			// 破壊レイヤー初期化
+			breakLayerData_[i] = 0;
+
+			// 空きスロットとして設定
+			freeSlots_.push_back(static_cast<uint32_t>(i));
+
 			return;
 		}
 	}
@@ -2060,18 +2082,6 @@ void RenderData_Block::Draw()
 
 void RenderData_Block::DrawImGui()
 {
-	//for (size_t i = 0; i < currentSum; ++i)
-	//{
-	//	std::string num = std::to_string(this->ID) + "." + std::to_string(i);
-	//	if (ImGui::TreeNode(("----------particle" + num + "-----------").c_str()))
-	//	{
-	//		ImGui::DragFloat3((num + "scale").c_str(), &transforms_[i].scale.x, 0.01f);
-	//		ImGui::DragFloat3((num + "rotate").c_str(), &transforms_[i].rotate.x, 0.01f);
-	//		ImGui::DragFloat3((num + "translate").c_str(), &transforms_[i].translate.x, 1.0f);
-	//		ImGui::TreePop();
-	//	}
-	//}
-
 	std::string str = EnumToString(this->name);
 
 	std::string num = ":" + std::to_string(this->ID);

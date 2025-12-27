@@ -12,14 +12,29 @@ public:
 	Chunk();
 	~Chunk();
 	void CreateChunkData(const NoiseParameter& param, const Vector2int& chunkPos);
+	void SetNeighborChunk(int direction, Chunk* neighbor);
+	bool IsNeighborExist(int direction);
 	void Update();
 	void Draw();
 
+	// ブロック取得  自チャンク＋隣接チャンク対応 (隣接チャンクは隣接しているブロックのみ)
+	Block* GetBlock(const Vector3int& localIndex);
 
+	// AABB取得  全チャンク対応
 	AABB GetAABB(const Vector3int& index);
+
+	// ブロック破壊
+	void DestroyBlock(const Vector3int& localIndex);
 
 	// インスタンスを作成する
 	void CreateInstance();
+
+	// 表面に露出しているブロックを判定
+	void SetExposedBlocks();
+
+	// localIndexの周り６ブロックの露出状態を更新
+	void UpdateExposedAround(const Vector3int& localIndex);
+
 
 	// Jsonから読み込まれていたか(初めての生成かどうか)
 	// true : 既にマップのセーブデータに存在していたチャンク
@@ -36,10 +51,8 @@ public:
 	// ブロックごとの描画データ管理マップ		
 	std::map<BlockID, std::unique_ptr<RenderData_Block>> blockData_;
 
-	// 表面に露出しているブロックを判定
-	void SetExposedBlocks();
 
-
+	Chunk* neighbors[4] = { nullptr, nullptr, nullptr, nullptr }; // 0:+X,1:-X,2:+Z,3:-Z
 
 	BlockConfig* blockConfig_;
 };
