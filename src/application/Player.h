@@ -15,16 +15,13 @@ public:
 	void Draw() override;
 	void DrawImGui() override;
 
-	void UpdateViewLine();	// 視線レイ更新
+	void UpdateViewRay();	// 視線レイ更新
 	void UpdateMove();		// 移動更新
 	void UpdateDush();		// ダッシュ更新
 	void UpdateJump();		// ジャンプ更新
 
 	// アイテムスロットにアイテムを追加
 	void AddItemToItemslot(int itemID);
-
-	// 視線レイ
-	Line viewLine_;
 
 	// 速度
 	float speed_ = 0.15f;
@@ -39,8 +36,6 @@ public:
 	// レティクル
 	RenderData_Sprite reticle_;
 
-	// 足元４つのブロック上面座標
-	Vector3 footBlockPositions_[4];
 
 	// 所持アイテム
 	Itemslot* Itemslot_;

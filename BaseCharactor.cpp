@@ -1,6 +1,23 @@
 #include "BaseCharactor.h"
 #include "MapManager.h"
 #include "Chunk.h"
+#include "Block/Block.h"
+#include "Block/BlockDurability.h"
+
+// 見ているブロックをtargetBlock_にセットする
+void BaseCharactor::SetTargetBlock()
+{
+	//// 視線レイ取得
+	//Vector3 direction = Game::Math::DirectionFromYawPitch(data_.rotate.value.y, data_.rotate.value.x);
+	//viewRay_.origin = data_.aabbs[0].center();
+	//viewRay_.diff = direction.Normalized();
+
+	// 前フレームの見ているブロック保存
+	preTargetBlock_ = targetBlock_;
+	// 見ているブロック取得
+	targetBlock_ = mapManager_->IntersectRayBlock(viewRay_);
+}
+
 
 void BaseCharactor::SetMapManager(MapManager* mapManager)
 {
@@ -13,7 +30,7 @@ void BaseCharactor::ResolveMapCollision()
 
 	float playerHeight = data_.aabbs[0].max.y - data_.aabbs[0].min.y;
 
-	Vector3 corners[4] = {
+	Vector3 downCorners[4] = {
 		Vector3(data_.aabbs[0].min.x, data_.aabbs[0].min.y - 0.1f, data_.aabbs[0].min.z),
 		Vector3(data_.aabbs[0].max.x, data_.aabbs[0].min.y - 0.1f, data_.aabbs[0].min.z),
 		Vector3(data_.aabbs[0].min.x, data_.aabbs[0].min.y - 0.1f, data_.aabbs[0].max.z),
@@ -26,13 +43,13 @@ void BaseCharactor::ResolveMapCollision()
 	for (int i = 0; i < 4; ++i)
 	{
 		// 足元のブロックAABBを取得
-		AABB blockAABB = mapManager_->GetAABB(corners[i]);
+		AABB blockAABB = mapManager_->GetAABB(downCorners[i]);
 
 		if (
 			// 足元のブロックAABBとキャラクターAABBが衝突していて
 			IsCollision(blockAABB, data_.aabbs[0]) &&
 			// そのブロックがアクティブなら
-			mapManager_->GetIsActive(corners[i])
+			mapManager_->GetIsActive(downCorners[i])
 			)
 		{
 			// 衝突判定成立
@@ -66,6 +83,36 @@ void BaseCharactor::ResolveMapCollision()
 	}
 
 #pragma endregion
+
+#pragma region 左右方向
+
+	float playerWidthX = data_.aabbs[0].max.x - data_.aabbs[0].min.x;
+
+	Vector3 XplusCorners[4] = {
+		Vector3(data_.aabbs[0].max.x + 0.1f, data_.aabbs[0].min.y, data_.aabbs[0].min.z),
+		Vector3(data_.aabbs[0].max.x + 0.1f, data_.aabbs[0].min.y, data_.aabbs[0].max.z),
+		Vector3(data_.aabbs[0].max.x + 0.1f, data_.aabbs[0].max.y, data_.aabbs[0].min.z),
+		Vector3(data_.aabbs[0].max.x + 0.1f, data_.aabbs[0].max.y, data_.aabbs[0].max.z)
+	};
+	Vector3 XminusCorners[4] = {
+		Vector3(data_.aabbs[0].min.x - 0.1f, data_.aabbs[0].min.y, data_.aabbs[0].min.z),
+		Vector3(data_.aabbs[0].min.x - 0.1f, data_.aabbs[0].min.y, data_.aabbs[0].max.z),
+		Vector3(data_.aabbs[0].min.x - 0.1f, data_.aabbs[0].max.y, data_.aabbs[0].min.z),
+		Vector3(data_.aabbs[0].min.x - 0.1f, data_.aabbs[0].max.y, data_.aabbs[0].max.z)
+	};
+
+
+
+#pragma endregion
+
+#pragma region 前後方向
+
+	float playerWidthZ = data_.aabbs[0].max.z - data_.aabbs[0].min.z;
+
+
+#pragma endregion
+
+
 }
 
 void BaseCharactor::Jump()
@@ -74,4 +121,32 @@ void BaseCharactor::Jump()
 	//data_.translate.acceleration.y = GRAVITY;
 	data_.aabbs[0].min.y += jumpPower_;
 	data_.aabbs[0].max.y += jumpPower_;
+}
+
+void BaseCharactor::Move(const Vector3& direction, float speed)
+{
+	data_.translate.velocity.x = direction.x * speed;
+	data_.translate.velocity.z = direction.z * speed;
+
+	data_.aabbs[0].min.x += data_.translate.velocity.x;
+	data_.aabbs[0].max.x += data_.translate.velocity.x;
+	data_.aabbs[0].min.z += data_.translate.velocity.z;
+	data_.aabbs[0].max.z += data_.translate.velocity.z;
+}
+
+
+void BaseCharactor::BreakTargetBlock()
+{
+	if (targetBlock_.has_value())
+	{
+		lookAtBlock* lab = targetBlock_.value();
+		if (lab != nullptr)
+		{
+			Block* block = lab->block;
+			if (block != nullptr)
+			{
+				block->durability_->DecreaseDurability(breakPower_);
+			}
+		}
+	}
 }

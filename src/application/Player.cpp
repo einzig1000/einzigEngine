@@ -19,12 +19,13 @@ Player::Player()
 		0.0f
 	);
 
+	breakPower_ = 10;
+
 	Itemslot_ = new Itemslot();
 }
 
 Player::~Player()
-{
-}
+{}
 
 void Player::Initialize()
 {
@@ -54,8 +55,16 @@ void Player::Update()
 	ResolveMapCollision();
 
 	// 移動後の視線レイ更新
-	UpdateViewLine();
+	UpdateViewRay();
 
+	// ターゲットブロック取得
+	SetTargetBlock();
+
+	// ブロック破壊
+	if (Game::Input::Mouse::IsHeld(0))
+	{
+		BreakTargetBlock();
+	}
 
 	Itemslot_->Update();
 }
@@ -70,56 +79,16 @@ void Player::Draw()
 void Player::DrawImGui()
 {}
 
-void Player::UpdateViewLine()
+void Player::UpdateViewRay()
 {
 	Vector3 cameraRot = Game::Camera::Getter::GetCurrentRotate();
 	Vector3 direction = Game::Math::DirectionFromYawPitch(cameraRot.y, cameraRot.x);
 
-	viewLine_.origin = data_.aabbs[0].center();
-	viewLine_.origin.y += (data_.aabbs[0].max.y - data_.aabbs[0].min.y) * 0.5f;
-	viewLine_.end = viewLine_.origin + direction * 20.0f;
-}
+	viewRay_.origin = data_.aabbs[0].center();
+	viewRay_.origin.y += data_.scale.value.y * 0.4f; // プレイヤーの目線の高さに調整
+	viewRay_.diff = direction.Normalized();
 
-void Player::UpdateMove()
-{
-	Vector3 cameraRot = Game::Camera::Getter::GetCurrentRotate();
-	Vector3 forward = Game::Math::DirectionFromYawPitch(cameraRot.y, 0.0f);
-	forward.Normalize();
-
-	// 移動処理
-	Vector2 input(0.0f, 0.0f);
-
-	if (Game::Input::Key::IsHeld(DIK_W)) input.y += 1.0f;
-	if (Game::Input::Key::IsHeld(DIK_S)) input.y -= 1.0f;
-	if (Game::Input::Key::IsHeld(DIK_A)) input.x += 1.0f;
-	if (Game::Input::Key::IsHeld(DIK_D)) input.x -= 1.0f;
-
-	if (input.x != 0.0f || input.y != 0.0f)
-	{
-		// 正規化
-		input.Normalize();
-
-		// 入力ベクトルの角度（ラジアン）
-		float angle = std::atan2(input.x, input.y); // XZ平面での回転
-
-		// forward を angle だけ回転
-		float cosA = std::cos(angle);
-		float sinA = std::sin(angle);
-
-		Vector3 speed(
-			forward.x * cosA - forward.z * sinA,
-			forward.y,
-			forward.x * sinA + forward.z * cosA
-		);
-
-		data_.translate.velocity.x = speed.x * speed_;
-		data_.translate.velocity.z = speed.z * speed_;
-	}
-	else
-	{
-		data_.translate.velocity.x = 0.0f;
-		data_.translate.velocity.z = 0.0f;
-	}
+	SetViewRay(viewRay_);
 }
 
 void Player::UpdateDush()
@@ -139,6 +108,54 @@ void Player::UpdateDush()
 	}
 
 	wHeldFrames_ = Game::Input::Key::HoldFrames(DIK_W);
+}
+
+void Player::UpdateMove()
+{
+	Vector3 cameraRot = Game::Camera::Getter::GetCurrentRotate();
+	Vector3 forward = Game::Math::DirectionFromYawPitch(cameraRot.y, 0.0f);
+	forward.Normalize();
+
+	// 移動処理
+	Vector2 input(0.0f, 0.0f);
+
+	if (Game::Input::Key::IsHeld(DIK_W)) input.y += 1.0f;
+	if (Game::Input::Key::IsHeld(DIK_S)) input.y -= 1.0f;
+	if (Game::Input::Key::IsHeld(DIK_A)) input.x += 1.0f;
+	if (Game::Input::Key::IsHeld(DIK_D)) input.x -= 1.0f;
+
+	// 移動方向ベクトル
+	Vector3 moveDir;
+
+	if (input.x != 0.0f || input.y != 0.0f)
+	{
+		// 正規化
+		input.Normalize();
+
+		// 入力ベクトルの角度（ラジアン）
+		float angle = std::atan2(input.x, input.y); // XZ平面での回転
+
+		// forward を angle だけ回転
+		float cosA = std::cos(angle);
+		float sinA = std::sin(angle);
+
+		// 進む方向ベクトル
+		moveDir = Vector3(
+			forward.x * cosA - forward.z * sinA,
+			forward.y,
+			forward.x * sinA + forward.z * cosA
+		);
+
+		moveDir.Normalize();
+
+		Move(moveDir, speed_);
+	}
+	else
+	{
+		moveDir = Vector3(0.0f, 0.0f, 0.0f);
+
+		Move(moveDir, speed_);
+	}
 }
 
 void Player::UpdateJump()

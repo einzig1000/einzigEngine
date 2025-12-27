@@ -1,7 +1,9 @@
 #pragma once
 #include "Game.h"
+#include "definition/definition.h"
 
 class MapManager;
+class Block;
 
 class BaseCharactor
 {
@@ -9,21 +11,37 @@ public:
 	virtual ~BaseCharactor() = default;
 
 	virtual void Initialize() = 0;
+	virtual void SetMapManager(MapManager* mapManager);
 	virtual void Update() = 0;
 	virtual void Draw() = 0;
 	virtual void DrawImGui() = 0;
-	virtual void SetMapManager(MapManager* mapManager);
-	virtual void ResolveMapCollision();
+
+	// 移動
+	virtual void Move(const Vector3& direction, float speed);
+	// ジャンプ
 	virtual void Jump();
+	// ターゲットブロック破壊
+	virtual void BreakTargetBlock();
+	// 移動後のめりこみ修正
+	virtual void ResolveMapCollision();
 
-	virtual RenderData_Model& GetRenderData() { return data_; }
+	// 見ているブロックをtargetBlock_にセットする
+	virtual void SetTargetBlock();
+	// 取得した視線レイをセットする
+	virtual void SetViewRay(Ray ray) { viewRay_ = ray; }
 
 
-	RenderData_Model data_;
+
+	RenderData_Model data_;		// データ
+	Ray viewRay_;				// 視線レイ
 protected:
+
 	MapManager* mapManager_ = nullptr;
+	std::optional<lookAtBlock*> targetBlock_;	// ターゲットにしているブロック
+	std::optional<lookAtBlock*> preTargetBlock_;// 前フレームでターゲットにしていたブロック
 
 
-	float jumpPower_ = 0.1491f;
+	float jumpPower_ = 0.1491f;	// ジャンプ力
+	int32_t breakPower_ = 1;	// ブロック破壊力
 };
 

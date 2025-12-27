@@ -35,9 +35,10 @@ void GameScenePhase::Initialize()
 
 void GameScenePhase::Update()
 {
+	player_->Update();
+
 	map_->Update();
 
-	player_->Update();
 
 	cameraController_->Update();
 

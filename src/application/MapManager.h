@@ -11,7 +11,6 @@ class Chunk;
 class Player;
 class BlockConfig;
 
-
 class MapManager
 {
 public:
@@ -24,13 +23,15 @@ public:
 
 	void Initialize();
 	void Update();
-	void UpDataPlayerRayCollision();
+	//void UpDataPlayerRayCollision();
 	void Draw();
 	void DrawImGui();
 
 	void SetDrawRadius(int r) { drawRadius_ = r; }
 	void SetUpdateRadius(int r) { updateRadius_ = r; }
 
+	// レイと衝突しているブロックを返す
+	std::optional<lookAtBlock*> IntersectRayBlock(const Ray& ray);
 
 	AABB GetAABB(const Vector2int& chunkPos, const Vector3int& index);
 	AABB GetAABB(const Vector3& position);
@@ -54,7 +55,7 @@ private:
 	// スケジュールに登録されたチャンクを1Fに1つ生成
 	void ProcessChunkGeneration();
 
-
+	// マップファイルパス
 	std::string mapFilePath_;
 
 	// プレイヤー参照
@@ -69,6 +70,11 @@ private:
 	std::unordered_set<Vector2int, Vector2intHash> chunkScheduled_;
 	// 既に作成されたチャンク集合
 	std::unordered_set<Vector2int, Vector2intHash> chunkCreated_;
+
+	// 現在ターゲットにしているブロック
+	Block* targetBlock_ = nullptr;
+	// 1フレーム前にターゲットにしていたブロック
+	Block* preTargetBlock_ = nullptr;
 
 	// パラメータ
 	int drawRadius_ = 10;    // 描画半径（チャンク単位）

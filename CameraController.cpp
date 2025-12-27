@@ -53,7 +53,7 @@ void CameraController::Update()
 		case CameraMode_FirstPerson_ThirdPerson::FirstPerson:
 		{
 			// カメラ位置はプレイヤーの目の位置
-			cameraPos = player_->viewLine_.origin;
+			cameraPos = player_->viewRay_.origin;
 			break;
 		}
 		case CameraMode_FirstPerson_ThirdPerson::ThirdPerson_Back:
@@ -64,7 +64,7 @@ void CameraController::Update()
 			backOffset.x = -std::sin(cameraRot.y) * 4.0f;
 			backOffset.y = 2.0f + std::sin(cameraRot.x) * 2.0f;
 			backOffset.z = -std::cos(cameraRot.y) * 4.0f;
-			cameraPos = player_->viewLine_.origin + backOffset;
+			cameraPos = player_->viewRay_.origin + backOffset;
 			break;
 		}
 		case CameraMode_FirstPerson_ThirdPerson::ThirdPerson_Front:
@@ -75,7 +75,7 @@ void CameraController::Update()
 			frontOffset.x = std::sin(cameraRot.y) * 4.0f;
 			frontOffset.y = 2.0f + std::sin(cameraRot.x) * 2.0f;
 			frontOffset.z = std::cos(cameraRot.y) * 4.0f;
-			cameraPos = player_->viewLine_.origin + frontOffset;
+			cameraPos = player_->viewRay_.origin + frontOffset;
 			break;
 		}
 		default:

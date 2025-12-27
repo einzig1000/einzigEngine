@@ -10,6 +10,7 @@ public:
 	Block();
 	~Block();
 	void Initialize();
+	// チャンク内の更新
 	void Update();
 
 	// インスタンシング描画の配列のインデックス
@@ -24,8 +25,6 @@ public:
 
 	BlockID GetBlockID() const { return blockID; };
 
-	// 破壊更新
-	void UpdateBreak(int power);
 
 	// プレイヤーに見られている時、輝度に応じて色を更新
 	void UpdateColor();
@@ -45,8 +44,4 @@ public:
 	bool isActive_ = false;
 	// 表面に露出しているか
 	bool isExposed_ = false;
-	// レイと衝突しているか
-	bool isCollisionRay = false;
-	// 衝突した方向
-	AABBFace direction = AABBFace::BACK;
 };

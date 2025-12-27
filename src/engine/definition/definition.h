@@ -70,8 +70,6 @@ enum class PHASE
 };
 std::string EnumToString(PHASE e);
 
-
-
 #pragma region 演算
 
 template <typename T>
@@ -1200,4 +1198,12 @@ struct SRVAllocation
     uint32_t index = UINT32_MAX;
     D3D12_CPU_DESCRIPTOR_HANDLE cpu{};
     D3D12_GPU_DESCRIPTOR_HANDLE gpu{};
+};
+
+class Block;
+struct lookAtBlock
+{
+    Block* block = nullptr;
+    AABBFace face = AABBFace::NONE;
+	float distance = 0.0f;
 };

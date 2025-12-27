@@ -34,29 +34,19 @@ void Block::SetBlockPosition(const Vector3& position)
 
 void Block::Update()
 {
+	// 表面に露出していなかったらreturn
 	if (!isExposed_) return;
 
 	// 色更新
-	UpdateColor();
+	//UpdateColor();
 
-	// プレイヤーに見られている時の更新処理
-	UpdateBreak(1);
+	// 耐久値更新
+	durability_->Update();
 
 	// 破壊されていたら非アクティブ化
 	if (durability_->GetIsDestroy())
 	{
 		isActive_ = false;
-	}
-}
-
-void Block::UpdateBreak(int power)
-{
-	// １番目に衝突している時 || 更新リクエストがある時
-	if (isCollisionRay == true || durability_->GetUpdateRequest())
-	{
-		durability_->SetIsCollisionRay(isCollisionRay);
-		// 耐久値更新
-		durability_->Update();
 	}
 }
 
@@ -68,10 +58,4 @@ void Block::UpdateColor()
 
 	// 輝度に応じて色を変更
 	color_ = Vector4(emission, emission, emission, 1.0f);
-
-	//// １番目に衝突している時
-	//if (isCollisionRay == true)
-	//{
-	//	color_ = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
-	//}
 }
