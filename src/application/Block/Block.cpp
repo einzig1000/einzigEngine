@@ -23,6 +23,7 @@ void Block::SetBlockType(Blockinfo info)
 	blockID = info.type;
 	durability_->SetMaxDurability(info.durability);
 	if (blockID != BlockID::Air)isActive_ = true;
+	else isActive_ = false;
 }
 
 void Block::SetBlockPosition(const Vector3& position)

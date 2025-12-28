@@ -53,9 +53,8 @@ uint32_t BlockDurability::GetBreakStage() const
 {
 	// 0~5段階で返す
 	if (isDestroy_) return 5;
-	//if (!isBeingDestroyed_) return 0;
 	float ratio = static_cast<float>(nowDurability_) / static_cast<float>(maxDurability_);
-	uint32_t result = static_cast<uint32_t>(5 - std::ceil(ratio * 5.0f));
+	uint32_t result = static_cast<uint32_t>(6 - std::ceil(ratio * 6.0f));
 	result = std::clamp(result, 0u, 5u);
 	return result;
 }

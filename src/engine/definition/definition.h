@@ -26,7 +26,7 @@
 #define HEIGHT 720
 #define eps 1e-6f
 #define CHUNK_X 6
-#define CHUNK_Y 16
+#define CHUNK_Y 24
 #define CHUNK_Z 6
 #define BLOCK_SIZE 1.0f
 #define PLAYER_SPEED 0.1f
@@ -41,6 +41,7 @@ enum class BlockID
     Stone,	// 石
 	Iron,   // 鉄
 	Diamond,// ダイヤ
+	Bedrock,// 岩盤
     Glass,	// ガラス
     Dirt,	// 草なし土
     Lawn,	// 草付き土

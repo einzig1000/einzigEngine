@@ -18,6 +18,15 @@ void ResourceID::reload()
 	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/stone.png");
 	blockTextureIDs_[size_t(BlockID::Stone)] = tmp;
 
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/bedrock.png");
+	blockTextureIDs_[size_t(BlockID::Bedrock)] = tmp;
+
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/iron.png");
+	blockTextureIDs_[size_t(BlockID::Iron)] = tmp;
+
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/diamond.png");
+	blockTextureIDs_[size_t(BlockID::Diamond)] = tmp;
+
 	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/glass.png");
 	blockTextureIDs_[size_t(BlockID::Glass)] = tmp;
 

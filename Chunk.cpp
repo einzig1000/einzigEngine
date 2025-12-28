@@ -4,6 +4,40 @@
 #include "Block/BlockConfig.h"
 #include "Block/BlockDurability.h"
 
+namespace
+{
+	// chunkごとに決定論的に乱数を出す（seed + chunk座標で固定化）
+	static uint32_t Hash32(uint32_t x)
+	{
+		x ^= x >> 16;
+		x *= 0x7feb352d;
+		x ^= x >> 15;
+		x *= 0x846ca68b;
+		x ^= x >> 16;
+		return x;
+	}
+
+	static uint32_t MakeChunkSeed(uint32_t seed, const Vector2int& chunkPos)
+	{
+		uint32_t h = seed;
+		h ^= Hash32(static_cast<uint32_t>(chunkPos.x));
+		h ^= Hash32(static_cast<uint32_t>(chunkPos.y) + 0x9e3779b9u);
+		return Hash32(h);
+	}
+
+	static int RandRange(std::mt19937& rng, int minV, int maxV)
+	{
+		std::uniform_int_distribution<int> dist(minV, maxV);
+		return dist(rng);
+	}
+
+	static float Rand01(std::mt19937& rng)
+	{
+		std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+		return dist(rng);
+	}
+}
+
 Chunk::Chunk()
 {
 	blockConfig_ = new BlockConfig();
@@ -33,98 +67,9 @@ void Chunk::CreateChunkData(const NoiseParameter& param, const Vector2int & chun
 	CreateInstance();
 
 	// 既にセーブデータが存在している場合
-	if (loadResult)
-	{
-		// blockPositions に基づいてブロックを生成
-		for (const auto& [blockID, positions] : blockPositions)
-		{
-			for (const auto& pos : positions)
-			{
-				// ブロックのAABB取得
-				AABB aabb = GetAABB(pos);
-				// ブロックの中心座標取得
-				Vector3 center = aabb.center();
-
-				blocks[pos.x][pos.y][pos.z]->SetBlockType(blockConfig_->GetBlockInfo(blockID));
-				blocks[pos.x][pos.y][pos.z]->SetBlockPosition(center);
-			}
-		}
-	}
+	if (loadResult)CreateChunkDataFromJson();
 	// 新規生成の場合
-	else
-	{
-		// 事前に定数を計算
-		const float invScale = 1.0f / param.scale;
-		const int maxY = param.height - 1;
-
-		// ブロック中心座標
-		const float half = BLOCK_SIZE * 0.5f;
-		const float baseX = chunkPos.x * CHUNK_X * BLOCK_SIZE + half;
-		const float baseZ = chunkPos.y * CHUNK_Z * BLOCK_SIZE + half;
-
-		// チャンク内すべてのブロック生成
-		for (int x = 0; x < CHUNK_X; ++x)
-		{
-			for (int z = 0; z < CHUNK_Z; ++z)
-			{
-				// ワールド座標でのブロックインデックス
-				const int worldX = chunkPos.x * CHUNK_X + x;
-				const int worldZ = chunkPos.y * CHUNK_Z + z;
-
-				// ワールド座標をノイズサンプル空間へスケールダウン
-				const float sampleX = static_cast<float>(worldX) * invScale;
-				const float sampleZ = static_cast<float>(worldZ) * invScale;
-
-				// フラクタルノイズ（0..1）
-				const float n = fractalPerlin(param.pn, sampleX, sampleZ, param.octaves, param.persistence);
-
-				// 高さへ変換（0..maxY）
-				int height = static_cast<int>(std::floor(n * float(maxY) + 0.5f));
-				if (height < 0) height = 0;
-				if (height > maxY) height = maxY;
-
-				// 素材の割り当て
-				int dirtThickness = 3;
-				if (height - dirtThickness < 0) dirtThickness = height;
-
-				// 境界を計算（yの区間でブロックIDが決まる）
-				const int stoneEnd = my_max(0, height - dirtThickness); // [0, stoneEnd)
-				const int dirtEnd = my_max(0, height - 1);              // [stoneEnd, dirtEnd)
-				const int lawnY = height - 1;                           // y==lawnY が Lawn（height>0のとき）
-
-				// BlockConfig::GetBlockInfo() を毎回呼ばず、必要な分だけ取得
-				const Blockinfo stoneInfo = blockConfig_->GetBlockInfo(BlockID::Stone);
-				const Blockinfo dirtInfo = blockConfig_->GetBlockInfo(BlockID::Dirt);
-				const Blockinfo lawnInfo = blockConfig_->GetBlockInfo(BlockID::Lawn);
-				const Blockinfo airInfo = blockConfig_->GetBlockInfo(BlockID::Air);
-
-				for (int y = 0; y < CHUNK_Y; ++y)
-				{
-					const float cx = baseX + x * BLOCK_SIZE;
-					const float cy = y * BLOCK_SIZE + half;
-					const float cz = baseZ + z * BLOCK_SIZE;
-
-					// ブロックID決定
-					BlockID id;
-					if (y < height - dirtThickness) id = BlockID::Stone;
-					else if (y < height - 1)       id = BlockID::Dirt;
-					else if (y < height)           id = BlockID::Lawn;
-					else                            id = BlockID::Air;
-
-					// 中心座標を直計算
-					const Vector3 center(cx, cy, cz);
-
-					blocks[x][y][z]->SetBlockType(blockConfig_->GetBlockInfo(id));
-					blocks[x][y][z]->SetBlockPosition(center);
-
-					if (id != BlockID::Air)
-					{
-						blockPositions[id].emplace_back(x, y, z);
-					}
-				}
-			}
-		}
-	}
+	else CreateChunkDataNewly(param, chunkPos);
 
 	//else
 	//{
@@ -176,6 +121,235 @@ void Chunk::CreateChunkData(const NoiseParameter& param, const Vector2int & chun
 	SetExposedBlocks();
 }
 
+// Jsonから読み込まれたデータを元にチャンクデータを生成
+void Chunk::CreateChunkDataFromJson()
+{
+	// blockPositions に基づいてブロックを生成
+	for (const auto& [blockID, positions] : blockPositions)
+	{
+		for (const auto& pos : positions)
+		{
+			// ブロックのAABB取得
+			AABB aabb = GetAABB(pos);
+			// ブロックの中心座標取得
+			Vector3 center = aabb.center();
+
+			blocks[pos.x][pos.y][pos.z]->SetBlockType(blockConfig_->GetBlockInfo(blockID));
+			blocks[pos.x][pos.y][pos.z]->SetBlockPosition(center);
+		}
+	}
+}
+
+// 新規生成されたチャンクデータを作成
+void Chunk::CreateChunkDataNewly(const NoiseParameter & param, const Vector2int & chunkPos)
+{
+	// 既存データをクリア(Json読んでないからあるはずない)
+	blockPositions.clear();
+
+	// 事前に定数を計算
+	const float invScale = 1.0f / param.scale;
+	const int maxY = param.height - 1;
+
+	// チャンク内すべてのブロック生成
+	for (int x = 0; x < CHUNK_X; ++x)
+	{
+		for (int z = 0; z < CHUNK_Z; ++z)
+		{
+			// ワールド座標でのブロックインデックス
+			const int worldX = chunkPos.x * CHUNK_X + x;
+			const int worldZ = chunkPos.y * CHUNK_Z + z;
+
+			// ワールド座標をノイズサンプル空間へスケールダウン
+			const float sampleX = static_cast<float>(worldX) * invScale;
+			const float sampleZ = static_cast<float>(worldZ) * invScale;
+
+			// フラクタルノイズ（0..1）
+			const float n = fractalPerlin(param.pn, sampleX, sampleZ, param.octaves, param.persistence);
+
+			// 高さへ変換（0..maxY）
+			int height = static_cast<int>(std::floor(n * float(maxY) + 0.5f));
+			if (height < 0) height = 0;
+			if (height > maxY) height = maxY;
+
+			// 素材の割り当て
+			std::mt19937 rng(MakeChunkSeed(param.seed, chunkPos));
+			int dirtThickness = RandRange(rng, 2, 5);
+			if (height - dirtThickness < 0) dirtThickness = height;
+
+			// 境界を計算（yの区間でブロックIDが決まる）
+			const int stoneEnd = my_max(0, height - dirtThickness); // [0, stoneEnd)
+			const int dirtEnd = my_max(0, height - 1);              // [stoneEnd, dirtEnd)
+			const int lawnY = height - 1;                           // y==lawnY が Lawn（height>0のとき）
+
+			for (int y = 0; y < CHUNK_Y; ++y)
+			{
+				// ブロックID決定
+				BlockID id;
+				
+				if (y == 0)							 id = BlockID::Bedrock;
+				else if (y < height - dirtThickness) id = BlockID::Stone;
+				else if (y < height - 1)			 id = BlockID::Dirt;
+				else if (y < height)				 id = BlockID::Lawn;
+				else								 id = BlockID::Air;
+
+				SetBlockLocal(Vector3int(x, y, z), id);
+			}
+		}
+	}
+
+	GenerateOres(param);
+	GenerateTrees(param);
+}
+
+void Chunk::GenerateOres(const NoiseParameter& param)
+{
+	// chunkごと固定の乱数（同じseed＆chunkPosなら必ず同じ鉱脈）
+	std::mt19937 rng(MakeChunkSeed(param.seed, chunkPos));
+
+	auto ClampY = [&](int& minY, int& maxY)
+		{
+			minY = my_max(0, minY);
+			maxY = my_min(CHUNK_Y - 1, maxY);
+			if (minY > maxY) std::swap(minY, maxY);
+		};
+
+	// 6近傍ランダムウォーク鉱脈
+	auto CarveVeins = [&](BlockID oreId, int veinsPerChunk, int sizeMean, int sizeRand, int minY, int maxY)
+		{
+			if (veinsPerChunk <= 0) return;
+			if (sizeMean <= 0) return;
+
+			ClampY(minY, maxY);
+
+			static const int dx[6] = { -1, 1, 0, 0, 0, 0 };
+			static const int dy[6] = { 0, 0, -1, 1, 0, 0 };
+			static const int dz[6] = { 0, 0, 0, 0, -1, 1 };
+
+			for (int v = 0; v < veinsPerChunk; ++v)
+			{
+				int x = RandRange(rng, 0, CHUNK_X - 1);
+				int y = RandRange(rng, minY, maxY);
+				int z = RandRange(rng, 0, CHUNK_Z - 1);
+
+				int veinSize = sizeMean + RandRange(rng, -sizeRand, sizeRand);
+				if (veinSize < 1) veinSize = 1;
+
+				for (int i = 0; i < veinSize; ++i)
+				{
+					// Stone のみ置換（Bedrock/Dirt/Lawnは壊さない）
+					if (blocks[x][y][z]->GetBlockID() == BlockID::Stone)
+					{
+						SetBlockLocal(Vector3int(x, y, z), oreId);
+					}
+
+					// 次へ（ランダムウォーク）
+					const int dir = RandRange(rng, 0, 5);
+					x = my_min(CHUNK_X - 1, my_max(0, x + dx[dir]));
+					y = my_min(CHUNK_Y - 1, my_max(0, y + dy[dir]));
+					z = my_min(CHUNK_Z - 1, my_max(0, z + dz[dir]));
+
+					// 高さ帯から外れたら戻す（分布を安定させる）
+					if (y < minY) y = minY;
+					if (y > maxY) y = maxY;
+				}
+			}
+		};
+
+	CarveVeins(BlockID::Iron,
+		param.ironVeinsPerChunk,
+		param.ironVeinSizeMean,
+		param.ironVeinSizeRand,
+		param.ironMinY,
+		param.ironMaxY);
+
+	CarveVeins(BlockID::Diamond,
+		param.diamondVeinsPerChunk,
+		param.diamondVeinSizeMean,
+		param.diamondVeinSizeRand,
+		param.diamondMinY,
+		param.diamondMaxY);
+}
+
+void Chunk::GenerateTrees(const NoiseParameter& param)
+{
+	std::mt19937 rng(MakeChunkSeed(param.seed ^ 0xA53A9C1Du, chunkPos));
+
+	auto FindSurfaceY_Lawn = [&](int x, int z) -> int
+		{
+			for (int y = CHUNK_Y - 1; y >= 0; --y)
+			{
+				if (blocks[x][y][z]->GetBlockID() == BlockID::Lawn) return y;
+			}
+			return -1;
+		};
+
+	auto CanPlaceTrunk = [&](int x, int y0, int z, int height) -> bool
+		{
+			if (y0 < 0 || y0 + height >= CHUNK_Y) return false;
+			for (int y = y0; y < y0 + height; ++y)
+			{
+				if (blocks[x][y][z]->GetBlockID() != BlockID::Air) return false;
+			}
+			return true;
+		};
+
+	for (int x = 0; x < CHUNK_X; ++x)
+	{
+		for (int z = 0; z < CHUNK_Z; ++z)
+		{
+			if (Rand01(rng) > param.treeChancePerColumn) continue;
+
+			const int groundY = FindSurfaceY_Lawn(x, z);
+			if (groundY < 0) continue;
+
+			const int trunkY0 = groundY + 1;
+			const int trunkH = RandRange(rng, param.treeHeightMin, param.treeHeightMax);
+
+			// チャンク内に収まる木だけ作る（跨ぎは後回し）
+			if (!CanPlaceTrunk(x, trunkY0, z, trunkH)) continue;
+
+			// 幹
+			for (int y = trunkY0; y < trunkY0 + trunkH; ++y)
+			{
+				SetBlockLocal(Vector3int(x, y, z), BlockID::Wood);
+			}
+
+			// 葉（幹先端に球っぽく）
+			const int leafRadius = RandRange(rng, param.leafRadiusMin, param.leafRadiusMax);
+			const int leafCenterY = trunkY0 + trunkH - 1;
+
+			for (int ly = leafCenterY - leafRadius; ly <= leafCenterY + leafRadius; ++ly)
+			{
+				if (ly < 0 || ly >= CHUNK_Y) continue;
+
+				for (int lx = x - leafRadius; lx <= x + leafRadius; ++lx)
+				{
+					if (lx < 0 || lx >= CHUNK_X) continue;
+
+					for (int lz = z - leafRadius; lz <= z + leafRadius; ++lz)
+					{
+						if (lz < 0 || lz >= CHUNK_Z) continue;
+
+						const int dx0 = lx - x;
+						const int dy0 = ly - leafCenterY;
+						const int dz0 = lz - z;
+
+						// 球っぽい形
+						if (dx0 * dx0 + dy0 * dy0 + dz0 * dz0 > leafRadius * leafRadius + 1) continue;
+
+						// 空気だけ葉にする（地形と幹を潰さない）
+						if (blocks[lx][ly][lz]->GetBlockID() == BlockID::Air)
+						{
+							SetBlockLocal(Vector3int(lx, ly, lz), BlockID::Leaf);
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+
 void Chunk::SetNeighborChunk(int direction, Chunk* neighbor)
 {
 	if (direction < 0 || direction >= 4) return;
@@ -210,9 +384,9 @@ void Chunk::SetExposedBlocks()
 				bool exposed = false;
 
 				// 6方向のオフセット
-				int dx[6] = { -1, 1, 0, 0, 0, 0 };
-				int dy[6] = { 0, 0, -1, 1, 0, 0 };
-				int dz[6] = { 0, 0, 0, 0, -1, 1 };
+				static const int dx[6] = { -1, 1, 0, 0, 0, 0 };
+				static const int dz[6] = { 0, 0, 0, 0, -1, 1 };
+				static const int dy[6] = { 0, 0, -1, 1, 0, 0 };
 
 				for (int i = 0; i < 6; i++)
 				{
@@ -446,34 +620,65 @@ AABB Chunk::GetAABB(const Vector3int& index)
 	return AABB(mint, maxt);
 }
 
+Vector3 Chunk::LocalCenter(const Vector3int& index) const
+{
+	const float half = BLOCK_SIZE * 0.5f;
+	const float baseX = chunkPos.x * CHUNK_X * BLOCK_SIZE + half;
+	const float baseZ = chunkPos.y * CHUNK_Z * BLOCK_SIZE + half;
+
+	const float cx = baseX + index.x * BLOCK_SIZE;
+	const float cy = index.y * BLOCK_SIZE + half;
+	const float cz = baseZ + index.z * BLOCK_SIZE;
+
+	return Vector3(cx, cy, cz);
+}
+
+void Chunk::SetBlockLocal(const Vector3int& index, const BlockID id)
+{
+	const BlockID oldId = blocks[index.x][index.y][index.z]->GetBlockID();
+	if (oldId == id) return;
+
+	// blockPositions更新
+	if (oldId != BlockID::Air)
+	{
+		auto& v = blockPositions[oldId];
+		v.erase(std::remove(v.begin(), v.end(), index), v.end());
+	}
+
+	// ブロック更新
+	blocks[index.x][index.y][index.z]->SetBlockType(blockConfig_->GetBlockInfo(id));
+	blocks[index.x][index.y][index.z]->SetBlockPosition(LocalCenter(index));
+
+	// blockPositions 更新（Airは記録しない）
+	if (id != BlockID::Air)
+	{
+		blockPositions[id].emplace_back(index);
+	}
+}
+
 void Chunk::DestroyBlock(const Vector3int& localIndex)
 {
-	const BlockID preBlockID = blocks[localIndex.x][localIndex.y][localIndex.z]->GetBlockID();
+	Block* block = blocks[localIndex.x][localIndex.y][localIndex.z].get();
+	if (!block) return;
 
-	if (!blocks[localIndex.x][localIndex.y][localIndex.z]) return;
-	if (!blocks[localIndex.x][localIndex.y][localIndex.z]->isActive_ || 
-		preBlockID == BlockID::Air) return;
+	const BlockID preBlockID = block->GetBlockID();
+	if (!block->isActive_ || preBlockID == BlockID::Air) return;
 
-	// BlockをAirに置換
-	blocks[localIndex.x][localIndex.y][localIndex.z]->isActive_ = false;
-	blocks[localIndex.x][localIndex.y][localIndex.z]->blockID = BlockID::Air;
-	blocks[localIndex.x][localIndex.y][localIndex.z]->isExposed_ = false;
-	// blockPositions[preBlockID]の
-	// [localIndex.x][localIndex.y][localIndex.z]の位置を削除
-	auto& positions = blockPositions[preBlockID];
-	positions.erase(
-		std::remove(positions.begin(), positions.end(), localIndex),
-		positions.end()
-	);
+	// ブロックをAirに置換（blockPositionsの整合もここで取る）
+	SetBlockLocal(localIndex, BlockID::Air);
 
-	blockPositions[BlockID::Air].emplace_back(localIndex);
+	// ブロック側の状態フラグ
+	block->isExposed_ = false;
 
 	// 描画データから削除
 	blockData_[preBlockID]->RemoveBlock(localIndex);
 
-	// 周囲の露出判定を更新して、露出したら描画登録
+	// 周囲の露出判定更新
 	UpdateExposedAround(localIndex);
 }
+
+void Chunk::RebuildBlockPositions()
+{}
 
 // ブロックのインスタンス生成
 void Chunk::CreateInstance()

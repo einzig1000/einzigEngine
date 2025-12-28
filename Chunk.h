@@ -11,7 +11,14 @@ class Chunk
 public:
 	Chunk();
 	~Chunk();
+
+	// チャンクデータ生成
 	void CreateChunkData(const NoiseParameter& param, const Vector2int& chunkPos);
+	void CreateChunkDataFromJson();		// Jsonからチャンクデータを読み込み
+	void CreateChunkDataNewly(const NoiseParameter& param, const Vector2int& chunkPos);	// 新規生成チャンクデータ作成
+	void GenerateOres(const NoiseParameter& param);	// 鉱石を生成
+	void GenerateTrees(const NoiseParameter& param);// 木を生成
+
 	void SetNeighborChunk(int direction, Chunk* neighbor);
 	bool IsNeighborExist(int direction);
 	void Update();
@@ -23,8 +30,17 @@ public:
 	// AABB取得  全チャンク対応
 	AABB GetAABB(const Vector3int& index);
 
+	// 座標取得  
+	Vector3 LocalCenter(const Vector3int& index) const;
+
+	// ブロック設置(置換)
+	void SetBlockLocal(const Vector3int& index, const BlockID id);
+
 	// ブロック破壊
 	void DestroyBlock(const Vector3int& localIndex);
+
+	// blockPositionsの再構築
+	void RebuildBlockPositions();
 
 	// インスタンスを作成する
 	void CreateInstance();
