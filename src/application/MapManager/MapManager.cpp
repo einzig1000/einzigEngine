@@ -1,13 +1,13 @@
-#include "MapManager.h"
+#include "MapManager/MapManager.h"
 #include <fstream>
 #include <sstream>
-#include "Block/Block.h"
-#include "Player.h"
-#include "PerlinNoise.h"
+#include "MapManager/Chunk/Block/Block.h"
+#include "Charactor/Player/Player.h"
+#include "Utilities/PerlinNoise.h"
 #include "Engine.h"
 #include "Itemslot.h"
-#include "Block/BlockDurability.h"
-#include "Chunk.h"
+#include "MapManager/Chunk/Block/BlockDurability.h"
+#include "MapManager/Chunk/Chunk.h"
 
 MapManager::MapManager(Player* player)
 {

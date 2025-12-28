@@ -1,5 +1,5 @@
-#include "DropItem.h"
-#include "Player.h"
+#include "MapManager/DropItem/DropItem.h"
+#include "Charactor/Player/Player.h"
 
 DropItem::DropItem(Player* player, Vector3int indec, Vector3 pos, int model, int tex)
 {

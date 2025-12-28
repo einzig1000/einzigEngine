@@ -2,7 +2,7 @@
 #include "DirectX/DirectXManager.h"
 #include "Window/WindowManager.h"
 #include "Utilities/functions.h"
-#include "Block/Block.h"
+#include "MapManager/Chunk/Block/Block.h"
 
 DrawSystem::DrawSystem(DirectXManager* dxManager)
 	:dxManager_(dxManager)

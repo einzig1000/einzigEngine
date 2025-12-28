@@ -17,7 +17,7 @@
 
 #include <DirectXMath.h>
 #include <filesystem>
-#include "Player.h"
+#include "Charactor/Player/Player.h"
 using namespace DirectX;
 
 

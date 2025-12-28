@@ -1,6 +1,6 @@
 #pragma once
-#include "Phase/PhaseParent/PhaseParent.h"
-#include "Block/Block.h"
+#include "GameManager/Phase/PhaseParent/PhaseParent.h"
+#include "MapManager/Chunk/Block/Block.h"
 
 class Player;
 class MapManager;

@@ -1,4 +1,4 @@
-#include "Block/BlockConfig.h"
+#include "MapManager/Chunk/Block/BlockConfig.h"
 
 BlockConfig::BlockConfig()
 {

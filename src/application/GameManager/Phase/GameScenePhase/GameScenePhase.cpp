@@ -1,7 +1,7 @@
 #include "GameScenePhase.h"
-#include "MapManager.h"
-#include "Player.h"
-#include "CameraController.h"
+#include "MapManager/MapManager.h"
+#include "Charactor/Player/Player.h"
+#include "Camera/CameraController.h"
 #include <fstream>
 
 GameScenePhase::GameScenePhase()

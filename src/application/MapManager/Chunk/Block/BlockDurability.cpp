@@ -1,4 +1,4 @@
-#include "Block/BlockDurability.h"
+#include "MapManager/Chunk/Block/BlockDurability.h"
 #include "Game.h"
 
 void BlockDurability::Update()

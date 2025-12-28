@@ -77,6 +77,17 @@ enum class PHASE
 };
 std::string EnumToString(PHASE e);
 
+// UIモード
+enum class UIMode
+{
+	// プレイ中　(手持ちアイテムのみ表示)
+	Playing,
+	// インベントリ表示中
+	Inventory,
+    // ポーズ画面
+	Pause
+};
+
 #pragma region 演算
 
 template <typename T>

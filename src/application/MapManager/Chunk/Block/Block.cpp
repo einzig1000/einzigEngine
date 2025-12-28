@@ -1,5 +1,5 @@
-#include "Block/Block.h"
-#include "Block/BlockDurability.h"
+#include "MapManager/Chunk/Block/Block.h"
+#include "MapManager/Chunk/Block/BlockDurability.h"
 #include "Game.h"
 
 Block::Block()

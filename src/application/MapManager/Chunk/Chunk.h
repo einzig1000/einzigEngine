@@ -1,7 +1,7 @@
 #pragma once
 #include "Game.h"
 #include <map>
-#include "PerlinNoise.h"
+#include "Utilities/PerlinNoise.h"
 
 class Block;
 class BlockConfig;

@@ -1,6 +1,6 @@
 #pragma once
 #include "Game.h"
-#include "BaseCharactor.h"
+#include "Charactor/BaseCharactor.h"
 
 class Itemslot;
 

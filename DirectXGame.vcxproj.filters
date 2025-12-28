@@ -142,9 +142,6 @@
     <Filter Include="application\GameManeger\Map">
       <UniqueIdentifier>{28f4b7c8-cecf-4edc-a2e3-2071fd41f5b6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="application\GameManeger\DropItem">
-      <UniqueIdentifier>{dbf079b1-300b-4849-979f-d718265501b7}</UniqueIdentifier>
-    </Filter>
     <Filter Include="application\GameManeger\Itemslot">
       <UniqueIdentifier>{ecf68cbe-9dbb-430c-a41d-ee450f3cf38a}</UniqueIdentifier>
     </Filter>
@@ -177,6 +174,27 @@
     </Filter>
     <Filter Include="application\GameManeger\Map\Chunk\Block">
       <UniqueIdentifier>{1914304b-d65c-4d83-8e80-cd43ac14c5e2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManeger\UIManager">
+      <UniqueIdentifier>{4c2f64e3-7657-4b9d-b5b3-2ff37c2f8ab9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManeger\UIManager\UIScreen">
+      <UniqueIdentifier>{ca3c0f42-1edc-4113-8ad6-a20184b856a0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManeger\UIManager\UIScreen\UIElement">
+      <UniqueIdentifier>{904e6f54-289b-4d46-8369-9c545a1e9df1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManeger\UIManager\UIScreen\InventoryScreen">
+      <UniqueIdentifier>{5ff58466-0018-40f5-8fa0-8091a5ef559a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManeger\UIManager\UIScreen\PlayingScreen">
+      <UniqueIdentifier>{ba423f92-ea59-4dfd-9c66-1b748e1340c7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManeger\Map\DropItem">
+      <UniqueIdentifier>{dbf079b1-300b-4849-979f-d718265501b7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\Utilities\PerlinNoise">
+      <UniqueIdentifier>{313938a3-c0d2-4b3c-89d1-88f4efa161c6}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -255,19 +273,19 @@
     <ClCompile Include="src\engine\Window\WindowManager.cpp">
       <Filter>engine\WindowManager</Filter>
     </ClCompile>
-    <ClCompile Include="src\application\Phase\BattlePhase\BattlePhase.cpp">
+    <ClCompile Include="src\application\GameManager\Phase\BattlePhase\BattlePhase.cpp">
       <Filter>application\GameManeger\Phase\BattlePhase</Filter>
     </ClCompile>
-    <ClCompile Include="src\application\Phase\PhaseParent\PhaseParent.cpp">
+    <ClCompile Include="src\application\GameManager\Phase\PhaseParent\PhaseParent.cpp">
       <Filter>application\GameManeger\Phase\PhaseParent</Filter>
     </ClCompile>
-    <ClCompile Include="src\application\Phase\TestPhase\TestPhase.cpp">
+    <ClCompile Include="src\application\GameManager\Phase\TestPhase\TestPhase.cpp">
       <Filter>application\GameManeger\Phase\TestPhase</Filter>
     </ClCompile>
-    <ClCompile Include="src\application\Phase\TitlePhase\TitlePhase.cpp">
+    <ClCompile Include="src\application\GameManager\Phase\TitlePhase\TitlePhase.cpp">
       <Filter>application\GameManeger\Phase\TitlePhase</Filter>
     </ClCompile>
-    <ClCompile Include="src\application\Phase\GameScenePhase\GameScenePhase.cpp">
+    <ClCompile Include="src\application\GameManager\Phase\GameScenePhase\GameScenePhase.cpp">
       <Filter>application\GameManeger\Phase\GameScenePhase</Filter>
     </ClCompile>
     <ClCompile Include="src\engine\DrawSystem\RenderData\RenderData.cpp">
@@ -288,20 +306,17 @@
     <ClCompile Include="src\engine\DirectX\SrvManager.cpp">
       <Filter>engine\DirectXManager\SrvManager</Filter>
     </ClCompile>
-    <ClCompile Include="src\application\PerlinNoise.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\Block\Block.cpp">
+    <ClCompile Include="src\application\MapManager\Chunk\Block\Block.cpp">
       <Filter>application\GameManeger\Map\Chunk\Block</Filter>
     </ClCompile>
-    <ClCompile Include="src\application\MapManager.cpp">
+    <ClCompile Include="src\application\MapManager\MapManager.cpp">
       <Filter>application\GameManeger\Map</Filter>
     </ClCompile>
-    <ClCompile Include="src\application\Player.cpp">
+    <ClCompile Include="src\application\Charactor\Player\Player.cpp">
       <Filter>application\GameManeger\Charactor\Player</Filter>
     </ClCompile>
-    <ClCompile Include="src\application\DropItem.cpp">
-      <Filter>application\GameManeger\DropItem</Filter>
+    <ClCompile Include="src\application\MapManager\DropItem\DropItem.cpp">
+      <Filter>application\GameManeger\Map\DropItem</Filter>
     </ClCompile>
     <ClCompile Include="src\application\Itemslot.cpp">
       <Filter>application\GameManeger\Itemslot</Filter>
@@ -312,23 +327,38 @@
     <ClCompile Include="src\engine\ImGuiManager\ImGuiManager.cpp">
       <Filter>engine\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="src\application\Block\BlockDurability.cpp">
+    <ClCompile Include="src\application\MapManager\Chunk\Block\BlockDurability.cpp">
       <Filter>application\GameManeger\Map\Chunk\Block</Filter>
     </ClCompile>
     <ClCompile Include="src\application\ResourceLoder\ResourceID.cpp">
       <Filter>application</Filter>
     </ClCompile>
-    <ClCompile Include="CameraController.cpp">
+    <ClCompile Include="src\application\Camera\CameraController.cpp">
       <Filter>application\GameManeger\CameraController</Filter>
     </ClCompile>
-    <ClCompile Include="src\application\Block\BlockConfig.cpp">
+    <ClCompile Include="src\application\MapManager\Chunk\Block\BlockConfig.cpp">
       <Filter>application\GameManeger\Map\Chunk\Block</Filter>
     </ClCompile>
-    <ClCompile Include="BaseCharactor.cpp">
+    <ClCompile Include="src\application\Charactor\BaseCharactor.cpp">
       <Filter>application\GameManeger\Charactor\BaseCharactor</Filter>
     </ClCompile>
-    <ClCompile Include="Chunk.cpp">
+    <ClCompile Include="src\application\MapManager\Chunk\Chunk.cpp">
       <Filter>application\GameManeger\Map\Chunk</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\UIManager\UIManager.cpp">
+      <Filter>application\GameManeger\UIManager</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\UIManager\ScreenMode\UIScreen.cpp">
+      <Filter>application\GameManeger\UIManager\UIScreen</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\UIManager\ScreenMode\InventoryScreen\InventoryScreen.cpp">
+      <Filter>application\GameManeger\UIManager\UIScreen\InventoryScreen</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\UIManager\ScreenMode\PlayingScreen\PlayingScreen.cpp">
+      <Filter>application\GameManeger\UIManager\UIScreen\PlayingScreen</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\Utilities\PerlinNoise.cpp">
+      <Filter>engine\Utilities\PerlinNoise</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -404,19 +434,19 @@
     <ClInclude Include="src\engine\Window\WindowManager.h">
       <Filter>engine\WindowManager</Filter>
     </ClInclude>
-    <ClInclude Include="src\application\Phase\BattlePhase\BattlePhase.h">
+    <ClInclude Include="src\application\GameManager\Phase\BattlePhase\BattlePhase.h">
       <Filter>application\GameManeger\Phase\BattlePhase</Filter>
     </ClInclude>
-    <ClInclude Include="src\application\Phase\PhaseParent\PhaseParent.h">
+    <ClInclude Include="src\application\GameManager\Phase\PhaseParent\PhaseParent.h">
       <Filter>application\GameManeger\Phase\PhaseParent</Filter>
     </ClInclude>
-    <ClInclude Include="src\application\Phase\TestPhase\TestPhase.h">
+    <ClInclude Include="src\application\GameManager\Phase\TestPhase\TestPhase.h">
       <Filter>application\GameManeger\Phase\TestPhase</Filter>
     </ClInclude>
-    <ClInclude Include="src\application\Phase\TitlePhase\TitlePhase.h">
+    <ClInclude Include="src\application\GameManager\Phase\TitlePhase\TitlePhase.h">
       <Filter>application\GameManeger\Phase\TitlePhase</Filter>
     </ClInclude>
-    <ClInclude Include="src\application\Phase\GameScenePhase\GameScenePhase.h">
+    <ClInclude Include="src\application\GameManager\Phase\GameScenePhase\GameScenePhase.h">
       <Filter>application\GameManeger\Phase\GameScenePhase</Filter>
     </ClInclude>
     <ClInclude Include="src\engine\DrawSystem\RenderData\RenderData.h">
@@ -437,20 +467,17 @@
     <ClInclude Include="src\engine\DirectX\SrvManager.h">
       <Filter>engine\DirectXManager\SrvManager</Filter>
     </ClInclude>
-    <ClInclude Include="src\application\PerlinNoise.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\Block\Block.h">
+    <ClInclude Include="src\application\MapManager\Chunk\Block\Block.h">
       <Filter>application\GameManeger\Map\Chunk\Block</Filter>
     </ClInclude>
-    <ClInclude Include="src\application\MapManager.h">
+    <ClInclude Include="src\application\MapManager\MapManager.h">
       <Filter>application\GameManeger\Map</Filter>
     </ClInclude>
-    <ClInclude Include="src\application\Player.h">
+    <ClInclude Include="src\application\Charactor\Player\Player.h">
       <Filter>application\GameManeger\Charactor\Player</Filter>
     </ClInclude>
-    <ClInclude Include="src\application\DropItem.h">
-      <Filter>application\GameManeger\DropItem</Filter>
+    <ClInclude Include="src\application\MapManager\DropItem\DropItem.h">
+      <Filter>application\GameManeger\Map\DropItem</Filter>
     </ClInclude>
     <ClInclude Include="src\application\Itemslot.h">
       <Filter>application\GameManeger\Itemslot</Filter>
@@ -461,23 +488,38 @@
     <ClInclude Include="src\engine\ImGuiManager\ImGuiManager.h">
       <Filter>engine\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="src\application\Block\BlockDurability.h">
+    <ClInclude Include="src\application\MapManager\Chunk\Block\BlockDurability.h">
       <Filter>application\GameManeger\Map\Chunk\Block</Filter>
     </ClInclude>
     <ClInclude Include="src\application\ResourceLoder\ResourceID.h">
       <Filter>application</Filter>
     </ClInclude>
-    <ClInclude Include="CameraController.h">
+    <ClInclude Include="src\application\Camera\CameraController.h">
       <Filter>application\GameManeger\CameraController</Filter>
     </ClInclude>
-    <ClInclude Include="src\application\Block\BlockConfig.h">
+    <ClInclude Include="src\application\MapManager\Chunk\Block\BlockConfig.h">
       <Filter>application\GameManeger\Map\Chunk\Block</Filter>
     </ClInclude>
-    <ClInclude Include="BaseCharactor.h">
+    <ClInclude Include="src\application\Charactor\BaseCharactor.h">
       <Filter>application\GameManeger\Charactor\BaseCharactor</Filter>
     </ClInclude>
-    <ClInclude Include="Chunk.h">
+    <ClInclude Include="src\application\MapManager\Chunk\Chunk.h">
       <Filter>application\GameManeger\Map\Chunk</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\UIManager\UIManager.h">
+      <Filter>application\GameManeger\UIManager</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\UIManager\ScreenMode\UIScreen.h">
+      <Filter>application\GameManeger\UIManager\UIScreen</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\UIManager\ScreenMode\InventoryScreen\InventoryScreen.h">
+      <Filter>application\GameManeger\UIManager\UIScreen\InventoryScreen</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\UIManager\ScreenMode\PlayingScreen\PlayingScreen.h">
+      <Filter>application\GameManeger\UIManager\UIScreen\PlayingScreen</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\Utilities\PerlinNoise.h">
+      <Filter>engine\Utilities\PerlinNoise</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

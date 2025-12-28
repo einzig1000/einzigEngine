@@ -1,8 +1,8 @@
 #include "BaseCharactor.h"
-#include "MapManager.h"
-#include "Chunk.h"
-#include "Block/Block.h"
-#include "Block/BlockDurability.h"
+#include "MapManager/MapManager.h"
+#include "MapManager/Chunk/Chunk.h"
+#include "MapManager/Chunk/Block/Block.h"
+#include "MapManager/Chunk/Block/BlockDurability.h"
 
 // 見ているブロックをtargetBlock_にセットする
 void BaseCharactor::SetTargetBlock()

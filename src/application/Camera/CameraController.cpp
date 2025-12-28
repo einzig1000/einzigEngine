@@ -1,5 +1,5 @@
 #include "CameraController.h"
-#include "Player.h"
+#include "Charactor/Player/Player.h"
 
 CameraController::CameraController(Player* player)
 {

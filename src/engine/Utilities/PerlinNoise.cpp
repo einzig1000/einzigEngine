@@ -1,4 +1,4 @@
-#include "PerlinNoise.h"
+#include "Utilities/PerlinNoise.h"
 
 PerlinNoise::PerlinNoise(uint32_t seed)
 {

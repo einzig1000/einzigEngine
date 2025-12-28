@@ -5,9 +5,9 @@
 #include <iostream>
 #include <string>
 #include <filesystem>
-#include "Chunk.h"
-#include "MapManager.h"
-#include "Block/Block.h"
+#include "MapManager/Chunk/Chunk.h"
+#include "MapManager/MapManager.h"
+#include "MapManager/Chunk/Block/Block.h"
 
 
 

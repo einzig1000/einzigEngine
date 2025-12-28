@@ -1,8 +1,8 @@
-#include "Chunk.h"
-#include "Block/Block.h"
+#include "MapManager/Chunk/Chunk.h"
+#include "MapManager/Chunk/Block/Block.h"
 #include "Utilities/JsonManager.h"
-#include "Block/BlockConfig.h"
-#include "Block/BlockDurability.h"
+#include "MapManager/Chunk/Block/BlockConfig.h"
+#include "MapManager/Chunk/Block/BlockDurability.h"
 
 namespace
 {

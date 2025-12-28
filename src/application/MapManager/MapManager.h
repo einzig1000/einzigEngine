@@ -1,10 +1,10 @@
 #pragma once
 #include <string>
 #include "Game.h"
-#include "DropItem.h"
+#include "MapManager/DropItem/DropItem.h"
 #include <queue>
 #include <unordered_set>
-#include "PerlinNoise.h"
+#include "Utilities/PerlinNoise.h"
 
 class Block;
 class Chunk;
@@ -55,11 +55,12 @@ public:
 	Chunk* TryGetChunk(const Vector2int& chunkPos) const;
 	// チャンク取得、なければスケジュールに登録して生成
 	Chunk* GetOrCreateChunk(const Vector2int& chunkPos);
-private:
 	// 欲しいチャンクが存在しなければスケジュールに登録
 	void EnsureChunkScheduled(const Vector2int& chunkPos);
 	// スケジュールに登録されたチャンクを1Fに1つ生成
 	void ProcessChunkGeneration();
+
+private:
 
 	// マップファイルパス
 	std::string mapFilePath_;
@@ -76,11 +77,6 @@ private:
 	std::unordered_set<Vector2int, Vector2intHash> chunkScheduled_;
 	// 既に作成されたチャンク集合
 	std::unordered_set<Vector2int, Vector2intHash> chunkCreated_;
-
-	// 現在ターゲットにしているブロック
-	Block* targetBlock_ = nullptr;
-	// 1フレーム前にターゲットにしていたブロック
-	Block* preTargetBlock_ = nullptr;
 
 	// パラメータ
 	int drawRadius_ = 6;    // 描画半径（チャンク単位）

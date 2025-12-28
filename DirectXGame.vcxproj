@@ -159,24 +159,26 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="BaseCharactor.cpp" />
-    <ClCompile Include="CameraController.cpp" />
-    <ClCompile Include="Chunk.cpp" />
-    <ClCompile Include="src\application\Block\BlockConfig.cpp" />
+    <ClCompile Include="src\application\Charactor\BaseCharactor.cpp" />
+    <ClCompile Include="src\application\Camera\CameraController.cpp" />
+    <ClCompile Include="src\application\MapManager\Chunk\Chunk.cpp" />
+    <ClCompile Include="src\application\UIManager\ScreenMode\InventoryScreen\InventoryScreen.cpp" />
+    <ClCompile Include="src\application\UIManager\ScreenMode\PlayingScreen\PlayingScreen.cpp" />
+    <ClCompile Include="src\application\MapManager\Chunk\Block\BlockConfig.cpp" />
     <ClCompile Include="src\engine\ImGuiManager\ImGuiManager.cpp" />
-    <ClCompile Include="src\application\Block\BlockDurability.cpp" />
-    <ClCompile Include="src\application\DropItem.cpp" />
+    <ClCompile Include="src\application\MapManager\Chunk\Block\BlockDurability.cpp" />
+    <ClCompile Include="src\application\MapManager\DropItem\DropItem.cpp" />
     <ClCompile Include="src\application\Itemslot.cpp" />
-    <ClCompile Include="src\application\Block\Block.cpp" />
-    <ClCompile Include="src\application\MapManager.cpp" />
-    <ClCompile Include="src\application\PerlinNoise.cpp" />
-    <ClCompile Include="src\application\Player.cpp" />
+    <ClCompile Include="src\application\MapManager\Chunk\Block\Block.cpp" />
+    <ClCompile Include="src\application\MapManager\MapManager.cpp" />
+    <ClCompile Include="src\engine\Utilities\PerlinNoise.cpp" />
+    <ClCompile Include="src\application\Charactor\Player\Player.cpp" />
     <ClCompile Include="src\application\ResourceLoder\ResourceID.cpp" />
     <ClCompile Include="src\engine\Camera\Camera.cpp" />
     <ClCompile Include="src\engine\Camera\CameraManager.cpp" />
     <ClCompile Include="src\engine\FixFPS\FixFPS.cpp" />
-    <ClCompile Include="src\application\Phase\BattlePhase\BattlePhase.cpp" />
-    <ClCompile Include="src\application\Phase\GameScenePhase\GameScenePhase.cpp" />
+    <ClCompile Include="src\application\GameManager\Phase\BattlePhase\BattlePhase.cpp" />
+    <ClCompile Include="src\application\GameManager\Phase\GameScenePhase\GameScenePhase.cpp" />
     <ClCompile Include="src\application\GameManager\GameManager.cpp" />
     <ClCompile Include="src\engine\definition\definition.cpp" />
     <ClCompile Include="src\engine\DirectX\CommandContextManager.cpp">
@@ -231,31 +233,35 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="src\engine\Window\WindowManager.cpp" />
     <ClCompile Include="src\engine\Utilities\JsonManager.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="src\application\Phase\PhaseParent\PhaseParent.cpp" />
-    <ClCompile Include="src\application\Phase\TestPhase\TestPhase.cpp" />
-    <ClCompile Include="src\application\Phase\TitlePhase\TitlePhase.cpp" />
+    <ClCompile Include="src\application\GameManager\Phase\PhaseParent\PhaseParent.cpp" />
+    <ClCompile Include="src\application\GameManager\Phase\TestPhase\TestPhase.cpp" />
+    <ClCompile Include="src\application\GameManager\Phase\TitlePhase\TitlePhase.cpp" />
     <ClCompile Include="src\engine\DrawSystem\RenderData\RenderData.cpp" />
     <ClCompile Include="src\engine\DirectX\SrvManager.cpp" />
+    <ClCompile Include="src\application\UIManager\UIManager.cpp" />
+    <ClCompile Include="src\application\UIManager\ScreenMode\UIScreen.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="BaseCharactor.h" />
-    <ClInclude Include="CameraController.h" />
-    <ClInclude Include="Chunk.h" />
-    <ClInclude Include="src\application\Block\BlockConfig.h" />
+    <ClInclude Include="src\application\Charactor\BaseCharactor.h" />
+    <ClInclude Include="src\application\Camera\CameraController.h" />
+    <ClInclude Include="src\application\MapManager\Chunk\Chunk.h" />
+    <ClInclude Include="src\application\UIManager\ScreenMode\InventoryScreen\InventoryScreen.h" />
+    <ClInclude Include="src\application\UIManager\ScreenMode\PlayingScreen\PlayingScreen.h" />
+    <ClInclude Include="src\application\MapManager\Chunk\Block\BlockConfig.h" />
     <ClInclude Include="src\engine\ImGuiManager\ImGuiManager.h" />
-    <ClInclude Include="src\application\Block\BlockDurability.h" />
-    <ClInclude Include="src\application\DropItem.h" />
+    <ClInclude Include="src\application\MapManager\Chunk\Block\BlockDurability.h" />
+    <ClInclude Include="src\application\MapManager\DropItem\DropItem.h" />
     <ClInclude Include="src\application\Itemslot.h" />
-    <ClInclude Include="src\application\Block\Block.h" />
-    <ClInclude Include="src\application\MapManager.h" />
-    <ClInclude Include="src\application\PerlinNoise.h" />
-    <ClInclude Include="src\application\Player.h" />
+    <ClInclude Include="src\application\MapManager\Chunk\Block\Block.h" />
+    <ClInclude Include="src\application\MapManager\MapManager.h" />
+    <ClInclude Include="src\engine\Utilities\PerlinNoise.h" />
+    <ClInclude Include="src\application\Charactor\Player\Player.h" />
     <ClInclude Include="src\application\ResourceLoder\ResourceID.h" />
     <ClInclude Include="src\engine\Camera\Camera.h" />
     <ClInclude Include="src\engine\Camera\CameraManager.h" />
     <ClInclude Include="src\engine\FixFPS\FixFPS.h" />
-    <ClInclude Include="src\application\Phase\BattlePhase\BattlePhase.h" />
-    <ClInclude Include="src\application\Phase\GameScenePhase\GameScenePhase.h" />
+    <ClInclude Include="src\application\GameManager\Phase\BattlePhase\BattlePhase.h" />
+    <ClInclude Include="src\application\GameManager\Phase\GameScenePhase\GameScenePhase.h" />
     <ClInclude Include="src\application\GameManager\GameManager.h" />
     <ClInclude Include="src\engine\definition\definition.h" />
     <ClInclude Include="src\engine\DirectX\CommandContextManager.h" />
@@ -281,12 +287,14 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="src\engine\Utilities\Easings.h" />
     <ClInclude Include="src\engine\Utilities\functions.h" />
     <ClInclude Include="src\engine\Window\WindowManager.h" />
-    <ClInclude Include="src\application\Phase\PhaseParent\PhaseParent.h" />
-    <ClInclude Include="src\application\Phase\TestPhase\TestPhase.h" />
-    <ClInclude Include="src\application\Phase\TitlePhase\TitlePhase.h" />
+    <ClInclude Include="src\application\GameManager\Phase\PhaseParent\PhaseParent.h" />
+    <ClInclude Include="src\application\GameManager\Phase\TestPhase\TestPhase.h" />
+    <ClInclude Include="src\application\GameManager\Phase\TitlePhase\TitlePhase.h" />
     <ClInclude Include="src\engine\DrawSystem\RenderData\RenderData.h" />
     <ClInclude Include="src\engine\Utilities\JsonManager.h" />
     <ClInclude Include="src\engine\DirectX\SrvManager.h" />
+    <ClInclude Include="src\application\UIManager\UIManager.h" />
+    <ClInclude Include="src\application\UIManager\ScreenMode\UIScreen.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
