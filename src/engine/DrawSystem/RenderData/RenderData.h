@@ -392,8 +392,6 @@ public:
 	//// リストからブロックを削除
 	void RemoveBlock(Vector3int index);
 
-    // 非アクティブなブロックの削除
-	void RemoveInactiveBlocks();
 
     // ID
     BlockID name;

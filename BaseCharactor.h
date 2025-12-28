@@ -22,6 +22,8 @@ public:
 	virtual void Jump();
 	// ターゲットブロック破壊
 	virtual void BreakTargetBlock();
+	// ブロック設置
+	virtual void SetNewBlock(BlockID id);
 	// 移動後のめりこみ修正
 	virtual void ResolveMapCollision();
 
@@ -37,11 +39,11 @@ public:
 protected:
 
 	MapManager* mapManager_ = nullptr;
-	std::optional<lookAtBlock*> targetBlock_;	// ターゲットにしているブロック
-	std::optional<lookAtBlock*> preTargetBlock_;// 前フレームでターゲットにしていたブロック
+	std::optional<lookAtBlock> targetBlock_;	// ターゲットにしているブロック
+	std::optional<lookAtBlock> preTargetBlock_;// 前フレームでターゲットにしていたブロック
 
 
 	float jumpPower_ = 0.1491f;	// ジャンプ力
-	int32_t breakPower_ = 1;	// ブロック破壊力
+	float breakPower_ = 1;	// ブロック破壊力
 };
 

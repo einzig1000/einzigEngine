@@ -25,9 +25,9 @@
 #define WIDTH 1280
 #define HEIGHT 720
 #define eps 1e-6f
-#define CHUNK_X 6
+#define CHUNK_X 8
 #define CHUNK_Y 24
-#define CHUNK_Z 6
+#define CHUNK_Z 8
 #define BLOCK_SIZE 1.0f
 #define PLAYER_SPEED 0.1f
 
@@ -57,8 +57,12 @@ std::string EnumToString(BlockID id);
 // ブロックごとの情報
 struct Blockinfo
 {
+	// ブロックID
     BlockID type;
-    int32_t durability;
+	// 耐久値
+    float durability;
+	// 透過ブロックかどうか
+	bool isTransparent = false;
 };
 
 // ゲームのフェーズ
@@ -1129,10 +1133,10 @@ std::string EnumToString(DirectionXY e);
 enum class DirectionXZ
 {
     None = -1,
-    Left = 0,
-    Right = 1,
-    Back = 2,
-    Front = 3,
+	Left = 0,       // X-
+	Right = 1,      // X+
+	Back = 2,       // Z-
+	Front = 3,      // Z+
 };
 std::string EnumToString(DirectionXZ e);
 

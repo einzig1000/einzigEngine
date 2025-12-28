@@ -66,7 +66,7 @@ void MapManager::LoadMap(const std::string& mapFilePath)
 		if (!chunk) continue;
 		for (int dir = 0; dir < 4; ++dir)
 		{
-			chunk->SetNeighborChunk(dir, nullptr);
+			chunk->SetNeighborChunk(static_cast<DirectionXZ>(dir), nullptr);
 		}
 	}
 	// chunks 全解放&clear
@@ -175,6 +175,21 @@ void MapManager::EnsureChunkScheduled(const Vector2int& chunkPos)
 	}
 }
 
+		//// Jsonから読み取り座標だけ設定されていた場合(chunksに存在しているがデータがない場合)はデータを生成
+		//if (HasChunk(pos))
+		//{
+		//	chunk = TryGetChunk(pos);
+		//	chunk->CreateChunkData(noiseParam_, pos);
+		//}
+		//// 完全に新規の場合
+		//else
+		//{
+		//	chunk = new Chunk();
+		//	chunk->CreateChunkData(noiseParam_, pos);
+		//	chunks[pos] = chunk;
+		//}
+		// Jsonから読み取り座標だけ設定されていた場合(chunksに存在しているがデータがない場合)はデータを生成
+
 // スケジュールに登録されたチャンクを1つ生成
 void MapManager::ProcessChunkGeneration()
 {
@@ -186,45 +201,39 @@ void MapManager::ProcessChunkGeneration()
 		chunkGenQueue_.pop();
 		chunkScheduled_.erase(pos);
 
-		// Jsonから読み取り座標だけ設定されていた場合(chunksに存在しているがデータがない場合)はデータを生成
-		if (HasChunk(pos))
-		{
-			Chunk* chunk = TryGetChunk(pos);
-			if (chunk && chunk->loadResult)
-			{
-				// データ生成
-				chunk->CreateChunkData(noiseParam_, pos);
-				// 隣接チャンクのポインタ更新
-				Chunk* neighbor[4] = {
-					TryGetChunk(Vector2int(pos.x + 1, pos.y)), // +X
-					TryGetChunk(Vector2int(pos.x - 1, pos.y)), // -X
-					TryGetChunk(Vector2int(pos.x, pos.y + 1)), // +Z
-					TryGetChunk(Vector2int(pos.x, pos.y - 1))  // -Z
-				};
+		Chunk* chunk = HasChunk(pos) ? TryGetChunk(pos) : new Chunk();
+		chunk->CreateChunkData(noiseParam_, pos);
+		chunks[pos] = chunk;
 
-				for (int dir = 0; dir < 4; ++dir)
-				{
-					if (neighbor[dir])
-					{
-						chunk->SetNeighborChunk(dir, neighbor[dir]);
-						// 隣接チャンクにも自分をセット
-						int oppositeDir = (dir % 2 == 0) ? dir + 1 : dir - 1;
-						neighbor[dir]->SetNeighborChunk(oppositeDir, chunk);
-					}
-				}
-			}
-			else
+		// 隣接チャンク設定
+		static constexpr Vector2int dirOffsets[4] = 
 			{
-				assert(false && "既に存在しているチャンクにデータが存在しません。");
-			}
-		}
-		// 完全に新規の場合
-		else
+			Vector2int(-1, 0),	// Left
+			Vector2int(1, 0),	// Right
+			Vector2int(0, -1),	// Back
+			Vector2int(0, 1)	// Front
+		};
+
+		static constexpr DirectionXZ opposite[4] =
 		{
-			// チャンク生成
-			Chunk* chunk = new Chunk();
-			chunk->CreateChunkData(noiseParam_, pos);
-			chunks[pos] = chunk;
+			DirectionXZ::Right,	// Left  の反対
+			DirectionXZ::Left,	// Right の反対
+			DirectionXZ::Front,	// Back  の反対
+			DirectionXZ::Back	// Front の反対
+		};
+
+		for (int dir = 0; dir < 4; ++dir)
+		{
+			Chunk* neighbor = TryGetChunk(pos + dirOffsets[dir]);
+
+			// 自分→隣（隣が無ければnullptrでOK）
+			chunk->SetNeighborChunk(static_cast<DirectionXZ>(dir), neighbor);
+
+			// 隣→自分（隣がある時だけ）
+			if (neighbor)
+			{
+				neighbor->SetNeighborChunk(opposite[dir], chunk);
+			}
 		}
 
 		// 生成済み集合に登録
@@ -545,6 +554,7 @@ void MapManager::DrawImGui()
 	ImGui::End();
 }
 
+// 指定位置のブロックを破壊
 void MapManager::DestroyBlockAt(const Vector2int& chunkPos, const Vector3int& localIndex)
 {
 	Chunk* chunk = TryGetChunk(chunkPos);
@@ -553,9 +563,108 @@ void MapManager::DestroyBlockAt(const Vector2int& chunkPos, const Vector3int& lo
 	chunk->DestroyBlock(localIndex);
 }
 
-std::optional<lookAtBlock*> MapManager::IntersectRayBlock(const Ray& ray)
+// 指定位置にブロックを設置
+bool MapManager::SetBlockAt(const lookAtBlock& lab, const BlockID id)
 {
-	lookAtBlock* result = new lookAtBlock();
+	// Air ブロックならreturn
+	if (id == BlockID::Air) return false;
+	// 向きが不明ならreturn
+	if (lab.face == AABBFace::NONE) return false;
+
+	Vector3int offset = Vector3int(0, 0, 0);
+
+	switch (lab.face)
+	{
+	case AABBFace::LEFT:
+		offset.x = -1;
+		break;
+	case AABBFace::RIGHT:
+		offset.x = 1;
+		break;
+	case AABBFace::BOTTOM:
+		offset.y = -1;
+		break;
+	case AABBFace::TOP:
+		offset.y = 1;
+		break;
+	case AABBFace::BACK:
+		offset.z = -1;
+		break;
+	case AABBFace::FRONT:
+		offset.z = 1;
+		break;
+	default:
+		return false;
+		break;
+	}
+
+	Vector2int chunkPos = lab.chunkIndex;
+	Vector3int localIndex = lab.localIndex + offset;
+
+	// チャンク跨ぎ対応
+	if (localIndex.x < 0)
+	{
+		chunkPos.x -= 1;
+		localIndex.x += CHUNK_X;
+	}
+	else if (localIndex.x >= CHUNK_X)
+	{
+		chunkPos.x += 1;
+		localIndex.x -= CHUNK_X;
+	}
+	if (localIndex.z < 0)
+	{
+		chunkPos.y -= 1;
+		localIndex.z += CHUNK_Z;
+	}
+	else if (localIndex.z >= CHUNK_Z)
+	{
+		chunkPos.y += 1;
+		localIndex.z -= CHUNK_Z;
+	}
+
+	return SetBlockAt(chunkPos, localIndex, id);
+}
+
+bool MapManager::SetBlockAt(const Vector2int& chunkPos, const Vector3int& localIndex, const BlockID id)
+{
+	// Air ブロックは設置できない(おけるわけがない笑)
+	if (id == BlockID::Air) return false;
+
+	// 設置するチャンクが存在しないなら設置できない(非存在なわけがない笑)
+	Chunk* chunk = TryGetChunk(chunkPos);
+	if (!chunk) return false;
+
+	// チャンク外のブロックを指してたら設置できない(指してるわけがない笑)
+	if (localIndex.x < 0 || localIndex.x >= CHUNK_X ||
+		localIndex.y < 0 || localIndex.y >= CHUNK_Y ||
+		localIndex.z < 0 || localIndex.z >= CHUNK_Z)
+	{
+		return false;
+	}
+
+	Block* targetBlock = chunk->blocks[localIndex.x][localIndex.y][localIndex.z].get();
+	// 指定位置にブロックインスタンスが存在しないなら設置できない(存在しないわけがない笑)
+	if (!targetBlock) return false;
+	// 指定位置に既にブロックが存在しているなら設置できない(存在しているわけがない笑)
+	if (targetBlock->GetBlockID() != BlockID::Air) return false;
+
+	// ブロック設置
+	chunk->SetBlock(localIndex, id);
+
+	// 露出状態更新
+	chunk->SetExposedAroundBlocks(localIndex);
+
+	return true;
+}
+bool MapManager::SetBlockAt(const Vector3& position, const BlockID id)
+{
+	return SetBlockAt(ChunkIndexByPosition(position), BlockIndexByPosition(position), id);
+}
+
+std::optional<lookAtBlock> MapManager::IntersectRayBlock(const Ray& ray)
+{
+	lookAtBlock result;
 
 	const Vector3 rayStart = ray.origin;
 	const Vector3 dir = ray.diff;
@@ -649,15 +758,15 @@ std::optional<lookAtBlock*> MapManager::IntersectRayBlock(const Ray& ray)
 				0 <= local.z && local.z < CHUNK_Z)
 			{
 				Block* b = chunk->blocks[local.x][local.y][local.z].get();
-				if (b && b->GetBlockID() != BlockID::Air && b->isActive_)
+				if (b && b->GetBlockID() != BlockID::Air)
 				{
 					Vector3 blockWorldPos = b->aabb_.center();
 
-					result->block = b;
-					result->chunkIndex = chunkPos;
-					result->localIndex = local;
-					result->face = enterFace;
-					result->distance = Vector3(blockWorldPos - rayStart).LengthSq();
+					result.block = b;
+					result.chunkIndex = chunkPos;
+					result.localIndex = local;
+					result.face = enterFace;
+					result.distance = Vector3(blockWorldPos - rayStart).LengthSq();
 
 					return result;
 				}
@@ -750,9 +859,9 @@ bool MapManager::GetIsActive(const Vector2int& chunkPos, const Vector3int& index
 	Chunk* chunk = TryGetChunk(chunkPos);
 	if (chunk)
 	{
-		if (chunk->blocks[index.x][index.y][index.z])
+		if (chunk->blocks[index.x][index.y][index.z]->blockID != BlockID::Air)
 		{
-			return chunk->blocks[index.x][index.y][index.z]->isActive_;
+			return true;
 		}
 	}
 	return false;

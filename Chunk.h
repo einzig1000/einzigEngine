@@ -6,6 +6,15 @@
 class Block;
 class BlockConfig;
 
+//enum class DirectionXZ
+//{
+//	None = -1,
+//	Left = 0,
+//	Right = 1,
+//	Back = 2,
+//	Front = 3,
+//};
+
 class Chunk
 {
 public:
@@ -19,24 +28,24 @@ public:
 	void GenerateOres(const NoiseParameter& param);	// 鉱石を生成
 	void GenerateTrees(const NoiseParameter& param);// 木を生成
 
-	void SetNeighborChunk(int direction, Chunk* neighbor);
-	bool IsNeighborExist(int direction);
+	void SetNeighborChunk(DirectionXZ direction, Chunk* neighbor);
+	bool IsNeighborExist(DirectionXZ direction);
 	void Update();
 	void Draw();
 
-	// ブロック取得  自チャンク＋隣接チャンク対応 (隣接チャンクは隣接しているブロックのみ)
-	Block* GetBlock(const Vector3int& localIndex);
+	// ブロック取得  自チャンク+隣接チャンク対応
+	Block* GetBlock(const Vector3int& index);
 
 	// AABB取得  全チャンク対応
 	AABB GetAABB(const Vector3int& index);
 
-	// 座標取得  
+	// 座標取得  全チャンク対応
 	Vector3 LocalCenter(const Vector3int& index) const;
 
-	// ブロック設置(置換)
-	void SetBlockLocal(const Vector3int& index, const BlockID id);
+	// ブロック設置(置換)  自チャンクのみ対応
+	void SetBlock(const Vector3int& localIndex, const BlockID id);
 
-	// ブロック破壊
+	// ブロック破壊		   自チャンクのみ対応
 	void DestroyBlock(const Vector3int& localIndex);
 
 	// blockPositionsの再構築
@@ -45,12 +54,25 @@ public:
 	// インスタンスを作成する
 	void CreateInstance();
 
-	// 表面に露出しているブロックを判定
-	void SetExposedBlocks();
 
-	// localIndexの周り６ブロックの露出状態を更新
-	void UpdateExposedAround(const Vector3int& localIndex);
+	/// [localIndexのブロック]が露出状態を判定　自チャンクのみ対応
+	bool ComputeExposed(const Vector3int& localIndex);
 
+	/// [localIndexのブロック]の露出状態を更新　自チャンクのみ対応
+	void RefreshExposeAt(const Vector3int& localIndex);
+
+
+	/// [チャンク内の全ロック]       の露出状態を更新
+	/// ↳ チャンク生成時
+	void SetExposedAllBlocks();
+
+	/// [localIndexの周り６ブロック] の露出状態を更新
+	/// ↳ ブロック設置・破壊時
+	void SetExposedAroundBlocks(const Vector3int& localIndex);
+
+	/// [隣接チャンクの境界ブロック] の露出状態を更新
+	/// ↳ 隣接チャンクが設定時
+	void SetExposedNeighborBlocks(const DirectionXZ direction);
 
 	// Jsonから読み込まれていたか(初めての生成かどうか)
 	// true : 既にマップのセーブデータに存在していたチャンク
@@ -67,8 +89,8 @@ public:
 	// ブロックごとの描画データ管理マップ		
 	std::map<BlockID, std::unique_ptr<RenderData_Block>> blockData_;
 
-
-	Chunk* neighbors[4] = { nullptr, nullptr, nullptr, nullptr }; // 0:+X,1:-X,2:+Z,3:-Z
+	std::unordered_map<DirectionXZ, Chunk*> neighbors;
+	//Chunk* neighbors[4] = { nullptr, nullptr, nullptr, nullptr }; // 0:+X,1:-X,2:+Z,3:-Z
 
 	BlockConfig* blockConfig_;
 };

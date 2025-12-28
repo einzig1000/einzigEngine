@@ -5,17 +5,17 @@ class BlockDurability
 {
 public:
 	void Update();
-	void DecreaseDurability(int power);
+	void DecreaseDurability(float power);
 	void SetIsCollisionRay(bool* isCollisionRay) { isCollisionRay_ = isCollisionRay; }
 
-	void SetMaxDurability(int maxDurability);
+	void SetMaxDurability(float maxDurability);
 	bool GetIsDestroy() const { return isDestroy_; }
 	uint32_t GetBreakStage() const;
 
 private:
-	int32_t nowDurability_ = 0;
-	int32_t maxDurability_ = 60;
-	int32_t destroyFrame_ = 0; 
+	float nowDurability_ = 0;
+	float maxDurability_ = 60;
+	float destroyFrame_ = 0;
 
 	
 	bool isBeingDestroyed_ = false;	// 破壊中か

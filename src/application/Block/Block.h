@@ -40,8 +40,8 @@ public:
 	// 耐久値
 	BlockDurability* durability_;
 
-	// アクティブか
-	bool isActive_ = false;
 	// 表面に露出しているか
 	bool isExposed_ = false;
+	// 半透明ブロックか
+	bool isTransparent_ = false;
 };

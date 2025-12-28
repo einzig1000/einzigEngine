@@ -16,30 +16,33 @@ void BlockDurability::Update()
 	isBeingDestroyed_ = false;
 }
 
-void BlockDurability::DecreaseDurability(int power)
+void BlockDurability::DecreaseDurability(float power)
 {
+	// 掘る速度がFPSに依存しないようにする
+	float deltaTime = Game::Time::GetDeltaTime();
+	deltaTime *= 60.0f; // 60FPS基準に補正
 	// 耐久値減少
-	nowDurability_ -= power;
+	nowDurability_ -= power * deltaTime;
 	// 破壊中
 	isBeingDestroyed_ = true;
 	// 破壊フレーム数増加
 	destroyFrame_++;
 	// 耐久値が0以下なら
-	if (nowDurability_ <= 0)
+	if (nowDurability_ <= 0.0f)
 	{
 		// 耐久値0
-		nowDurability_ = 0;
+		nowDurability_ = 0.0f;
 		// 破壊済みフラグ
 		isDestroy_ = true;
 	}
 }
 
-void BlockDurability::SetMaxDurability(int maxDurability)
+void BlockDurability::SetMaxDurability(float maxDurability)
 {
 	maxDurability_ = maxDurability;
 	nowDurability_ = maxDurability_;
 
-	if (nowDurability_ <= 0)
+	if (nowDurability_ <= 0.0f)
 	{
 		isDestroy_ = true;
 	}

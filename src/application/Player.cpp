@@ -66,6 +66,12 @@ void Player::Update()
 		BreakTargetBlock();
 	}
 
+	// ブロック設置
+	if (Game::Input::Mouse::IsJustPressed(1))
+	{
+		SetNewBlock(BlockID::Dirt);
+	}
+
 	Itemslot_->Update();
 }
 

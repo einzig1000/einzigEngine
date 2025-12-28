@@ -61,6 +61,7 @@ Chunk::~Chunk()
 	blockConfig_ = nullptr;
 }
 
+// チャンクデータ生成
 void Chunk::CreateChunkData(const NoiseParameter& param, const Vector2int & chunkPos)
 {
 	this->chunkPos = chunkPos;
@@ -118,7 +119,7 @@ void Chunk::CreateChunkData(const NoiseParameter& param, const Vector2int & chun
 	//}
 
 
-	SetExposedBlocks();
+	SetExposedAllBlocks();
 }
 
 // Jsonから読み込まれたデータを元にチャンクデータを生成
@@ -192,7 +193,7 @@ void Chunk::CreateChunkDataNewly(const NoiseParameter & param, const Vector2int 
 				else if (y < height)				 id = BlockID::Lawn;
 				else								 id = BlockID::Air;
 
-				SetBlockLocal(Vector3int(x, y, z), id);
+				SetBlock(Vector3int(x, y, z), id);
 			}
 		}
 	}
@@ -201,6 +202,7 @@ void Chunk::CreateChunkDataNewly(const NoiseParameter & param, const Vector2int 
 	GenerateTrees(param);
 }
 
+// 鉱石生成
 void Chunk::GenerateOres(const NoiseParameter& param)
 {
 	// chunkごと固定の乱数（同じseed＆chunkPosなら必ず同じ鉱脈）
@@ -239,7 +241,7 @@ void Chunk::GenerateOres(const NoiseParameter& param)
 					// Stone のみ置換（Bedrock/Dirt/Lawnは壊さない）
 					if (blocks[x][y][z]->GetBlockID() == BlockID::Stone)
 					{
-						SetBlockLocal(Vector3int(x, y, z), oreId);
+						SetBlock(Vector3int(x, y, z), oreId);
 					}
 
 					// 次へ（ランダムウォーク）
@@ -270,10 +272,12 @@ void Chunk::GenerateOres(const NoiseParameter& param)
 		param.diamondMaxY);
 }
 
+// 木生成
 void Chunk::GenerateTrees(const NoiseParameter& param)
 {
 	std::mt19937 rng(MakeChunkSeed(param.seed ^ 0xA53A9C1Du, chunkPos));
 
+	// 指定座標のLawnの一番上のY座標を取得
 	auto FindSurfaceY_Lawn = [&](int x, int z) -> int
 		{
 			for (int y = CHUNK_Y - 1; y >= 0; --y)
@@ -283,6 +287,7 @@ void Chunk::GenerateTrees(const NoiseParameter& param)
 			return -1;
 		};
 
+	// 指定位置に幹を立てられるか
 	auto CanPlaceTrunk = [&](int x, int y0, int z, int height) -> bool
 		{
 			if (y0 < 0 || y0 + height >= CHUNK_Y) return false;
@@ -290,6 +295,18 @@ void Chunk::GenerateTrees(const NoiseParameter& param)
 			{
 				if (blocks[x][y][z]->GetBlockID() != BlockID::Air) return false;
 			}
+			return true;
+		};
+
+	// 指定位置に幹を生成した場合葉がチャンク内に収まるか
+	auto CanPlaceLeaves = [&](int x, int z, int trunkTopY, int leafRadius) -> bool
+		{
+			if (trunkTopY - leafRadius < 0) return false;
+			if (trunkTopY + leafRadius >= CHUNK_Y) return false;
+			if (x - leafRadius < 0) return false;
+			if (x + leafRadius >= CHUNK_X) return false;
+			if (z - leafRadius < 0) return false;
+			if (z + leafRadius >= CHUNK_Z) return false;
 			return true;
 		};
 
@@ -305,19 +322,22 @@ void Chunk::GenerateTrees(const NoiseParameter& param)
 			const int trunkY0 = groundY + 1;
 			const int trunkH = RandRange(rng, param.treeHeightMin, param.treeHeightMax);
 
-			// チャンク内に収まる木だけ作る（跨ぎは後回し）
+			// 葉半径
+			const int leafRadius = RandRange(rng, param.leafRadiusMin, param.leafRadiusMax);
+			const int leafCenterY = trunkY0 + trunkH - 1;
+
+			// チャンク内に収まる木だけ作る
 			if (!CanPlaceTrunk(x, trunkY0, z, trunkH)) continue;
+			if (!CanPlaceLeaves(x, z, leafCenterY, leafRadius)) continue;
+			if (!CanPlaceLeaves(x, z, trunkY0 + trunkH - 1, param.leafRadiusMax)) continue;
 
 			// 幹
 			for (int y = trunkY0; y < trunkY0 + trunkH; ++y)
 			{
-				SetBlockLocal(Vector3int(x, y, z), BlockID::Wood);
+				SetBlock(Vector3int(x, y, z), BlockID::Wood);
 			}
 
 			// 葉（幹先端に球っぽく）
-			const int leafRadius = RandRange(rng, param.leafRadiusMin, param.leafRadiusMax);
-			const int leafCenterY = trunkY0 + trunkH - 1;
-
 			for (int ly = leafCenterY - leafRadius; ly <= leafCenterY + leafRadius; ++ly)
 			{
 				if (ly < 0 || ly >= CHUNK_Y) continue;
@@ -340,7 +360,7 @@ void Chunk::GenerateTrees(const NoiseParameter& param)
 						// 空気だけ葉にする（地形と幹を潰さない）
 						if (blocks[lx][ly][lz]->GetBlockID() == BlockID::Air)
 						{
-							SetBlockLocal(Vector3int(lx, ly, lz), BlockID::Leaf);
+							SetBlock(Vector3int(lx, ly, lz), BlockID::Leaf);
 						}
 					}
 				}
@@ -350,19 +370,104 @@ void Chunk::GenerateTrees(const NoiseParameter& param)
 }
 
 
-void Chunk::SetNeighborChunk(int direction, Chunk* neighbor)
+void Chunk::SetNeighborChunk(DirectionXZ direction, Chunk* neighbor)
 {
-	if (direction < 0 || direction >= 4) return;
+	if (direction == DirectionXZ::None) return;
 	neighbors[direction] = neighbor;
+	if (neighbors[direction])
+	{
+		SetExposedNeighborBlocks(direction);
+	}
 }
 
-bool Chunk::IsNeighborExist(int direction)
+bool Chunk::IsNeighborExist(DirectionXZ direction)
 {
 	return neighbors[direction] != nullptr;
 }
 
+// localIndexのブロックの露出状態を判定
+bool Chunk::ComputeExposed(const Vector3int& localIndex)
+{
+	// 範囲外（この関数は「自チャンク座標」前提）
+	if (localIndex.x < 0 || localIndex.x >= CHUNK_X ||
+		localIndex.y < 0 || localIndex.y >= CHUNK_Y ||
+		localIndex.z < 0 || localIndex.z >= CHUNK_Z)
+	{
+		return false;
+	}
+
+	Block* self = blocks[localIndex.x][localIndex.y][localIndex.z].get();
+	if (!self) return false;
+	if (self->GetBlockID() == BlockID::Air) return false;
+
+	// 6方向のオフセット
+	static const int dx[6] = { -1, 1, 0, 0, 0, 0 };
+	static const int dz[6] = { 0, 0, 0, 0, -1, 1 };
+	static const int dy[6] = { 0, 0, -1, 1, 0, 0 };
+
+	for (int i = 0; i < 6; i++)
+	{
+		Vector3int neighborIndex(localIndex.x + dx[i], localIndex.y + dy[i], localIndex.z + dz[i]);
+		Block* neighborBlock = GetBlock(neighborIndex);
+
+		// 隣接ブロックが存在しない(チャンクがまだ生成されていない)なら不透明ブロックとして扱う
+		if (!neighborBlock) continue;
+		
+		// 隣接ブロックがAirか透明ブロック(葉、ガラス)なら露出している
+		if (neighborBlock->GetBlockID() == BlockID::Air ||
+			neighborBlock->isTransparent_)
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+// localIndexのブロックの露出状態を更新
+void Chunk::RefreshExposeAt(const Vector3int& localIndex)
+{
+	// チャンク外
+	if (localIndex.x < 0 || localIndex.x >= CHUNK_X ||
+		localIndex.y < 0 || localIndex.y >= CHUNK_Y ||
+		localIndex.z < 0 || localIndex.z >= CHUNK_Z)
+	{
+		return;
+	}
+
+	Block* b = blocks[localIndex.x][localIndex.y][localIndex.z].get();
+	if (!b) return;
+
+	// Air/非アクティブは「露出なし」で確定
+	if (b->GetBlockID() == BlockID::Air)
+	{
+		if (b->isExposed_)
+		{
+			b->isExposed_ = false;
+			b->instanceIndex_ = 0;
+		}
+		return;
+	}
+
+	const bool newExposed = ComputeExposed(localIndex);
+	const bool oldExposed = b->isExposed_;
+	if (newExposed == oldExposed) return;
+
+	b->isExposed_ = newExposed;
+
+	if (newExposed)
+	{
+		b->instanceIndex_ = blockData_[b->GetBlockID()]->AddNewBlock(b->position_, localIndex);
+	}
+	else
+	{
+		blockData_[b->GetBlockID()]->RemoveBlock(localIndex);
+		b->instanceIndex_ = 0;
+	}
+}
+
 // チャンク内の全てのブロックの露出状態を更新
-void Chunk::SetExposedBlocks()
+void Chunk::SetExposedAllBlocks()
 {
 	for (int x = 0; x < CHUNK_X; x++)
 	{
@@ -370,145 +475,117 @@ void Chunk::SetExposedBlocks()
 		{
 			for (int z = 0; z < CHUNK_Z; z++)
 			{
-				// ブロックのIDを取得
-				BlockID id = blocks[x][y][z]->GetBlockID();
-
-
-				// Air は露出していても描画しない
-				if (id == BlockID::Air)
-				{
-					blocks[x][y][z]->isExposed_ = false;
-					continue;
-				}
-
-				bool exposed = false;
-
-				// 6方向のオフセット
-				static const int dx[6] = { -1, 1, 0, 0, 0, 0 };
-				static const int dz[6] = { 0, 0, 0, 0, -1, 1 };
-				static const int dy[6] = { 0, 0, -1, 1, 0, 0 };
-
-				for (int i = 0; i < 6; i++)
-				{
-					Vector3int neighborIndex(x + dx[i], y + dy[i], z + dz[i]);
-
-					Block* neighborBlock = GetBlock(neighborIndex);
-
-					// 隣接ブロックが存在しない(チャンクがまだ生成されていない)なら露出している
-					if (!neighborBlock)
-					{
-						continue;
-					}
-
-					// 隣接ブロックがAirかGlassなら露出している
-					if (neighborBlock->GetBlockID() == BlockID::Air ||
-						neighborBlock->GetBlockID() == BlockID::Glass)
-					{
-						exposed = true;
-						break;
-					}
-				}
-
-				const bool wasExposed = blocks[x][y][z]->isExposed_;
-				blocks[x][y][z]->isExposed_ = exposed;
-
-				if (blocks[x][y][z]->isExposed_ && !wasExposed)
-				{
-					// ブロックの座標を順番に設定
-					blocks[x][y][z]->instanceIndex_ =
-						blockData_[id]->AddNewBlock(
-							blocks[x][y][z]->position_,
-							Vector3int(x, y, z)
-						);
-				}
+				RefreshExposeAt(Vector3int(x, y, z));
 			}
 		}
 	}
 }
 
 // localIndexの周り６ブロックの露出状態を更新
-void Chunk::UpdateExposedAround(const Vector3int& localIndex)
+void Chunk::SetExposedAroundBlocks(const Vector3int& localIndex)
 {
-	// 指定座標がチャンク境界を跨ぐ場合、対象チャンクとローカル座標へ変換する
-	auto TryResolveToChunkLocal = [&](int x, int y, int z, Chunk*& outChunk, Vector3int& outLocal) -> bool
-		{
-			outChunk = this;
-			outLocal = Vector3int(x, y, z);
+	Chunk* targetChunk = nullptr;
 
-			// yは跨がない想定
-			if (y < 0 || y >= CHUNK_Y) return false;
+	// 6方向のオフセット
+	static const int dx[7] = { 0, -1, 1, 0, 0, 0, 0 };
+	static const int dz[7] = { 0, 0, 0, 0, 0, -1, 1 };
+	static const int dy[7] = { 0, 0, 0, -1, 1, 0, 0 };
 
-			// 自チャンク内
-			if (0 <= x && x < CHUNK_X && 0 <= z && z < CHUNK_Z)
-			{
-				return true;
-			}
-
-			// X方向に跨ぐ
-			if (x < 0)
-			{
-				outChunk = neighbors[1]; // -X
-				if (!outChunk) return false;
-				outLocal.x = CHUNK_X - 1;
-				return (0 <= z && z < CHUNK_Z);
-			}
-			if (x >= CHUNK_X)
-			{
-				outChunk = neighbors[0]; // +X
-				if (!outChunk) return false;
-				outLocal.x = 0;
-				return (0 <= z && z < CHUNK_Z);
-			}
-
-			// Z方向に跨ぐ
-			if (z < 0)
-			{
-				outChunk = neighbors[3]; // -Z
-				if (!outChunk) return false;
-				outLocal.z = CHUNK_Z - 1;
-				return (0 <= x && x < CHUNK_X);
-			}
-			if (z >= CHUNK_Z)
-			{
-				outChunk = neighbors[2]; // +Z
-				if (!outChunk) return false;
-				outLocal.z = 0;
-				return (0 <= x && x < CHUNK_X);
-			}
-
-			return false;
-		};
-
-
-
-	static const int dx[6] = { -1, 1, 0, 0, 0, 0 };
-	static const int dy[6] = { 0, 0, -1, 1, 0, 0 };
-	static const int dz[6] = { 0, 0, 0, 0, -1, 1 };
-
-	for (int i = 0; i < 6; ++i)
+	// 6方向ブロックを更新
+	for (int i = 0; i < 7; ++i)
 	{
-		const int wx = localIndex.x + dx[i];
-		const int wy = localIndex.y + dy[i];
-		const int wz = localIndex.z + dz[i];
+		Vector3int index(localIndex.x + dx[i], localIndex.y + dy[i], localIndex.z + dz[i]);
 
-		Chunk* targetChunk = nullptr;
-		Vector3int targetLocal;
-		if (!TryResolveToChunkLocal(wx, wy, wz, targetChunk, targetLocal)) continue;
+		if (index.y < 0 || index.y >= CHUNK_Y) continue;
 
-		Block* nb = targetChunk->blocks[targetLocal.x][targetLocal.y][targetLocal.z].get();
-		if (!nb) continue;
-		if (!nb->isActive_) continue;
-		if (nb->GetBlockID() == BlockID::Air) continue;
-
-		// 「隣にAirがある」ので露出確定：破壊の場合は基本的に近傍は露出する方向にしか変化しない
-		if (!nb->isExposed_)
+		if (index.x < 0)
 		{
-			nb->isExposed_ = true;
-
-			// 露出した瞬間だけインスタンスを作る（描画データは targetChunk 側の blockData_ を使う）
-			const BlockID id = nb->GetBlockID();
-			nb->instanceIndex_ = targetChunk->blockData_[id]->AddNewBlock(nb->position_, targetLocal);
+			targetChunk = neighbors[DirectionXZ::Left];
+			if (!targetChunk) continue;
+			index.x += CHUNK_X; // -1 -> CHUNK_X-1
 		}
+		else if (index.x >= CHUNK_X)
+		{
+			targetChunk = neighbors[DirectionXZ::Right];
+			if (!targetChunk) continue;
+			index.x -= CHUNK_X; // CHUNK_X -> 0
+		}
+		else if (index.z < 0)
+		{
+			targetChunk = neighbors[DirectionXZ::Back];
+			if (!targetChunk) continue;
+			index.z += CHUNK_Z; // -1 -> CHUNK_Z-1
+		}
+		else if (index.z >= CHUNK_Z)
+		{
+			targetChunk = neighbors[DirectionXZ::Front];
+			if (!targetChunk) continue;
+			index.z -= CHUNK_Z; // CHUNK_Z -> 0
+		}
+		else targetChunk = this;
+
+		targetChunk->RefreshExposeAt(index);
+	}
+}
+
+// チャンク境界を跨いだ近傍ブロックの露出状態を更新
+void Chunk::SetExposedNeighborBlocks(const DirectionXZ direction)
+{
+	Chunk* neighborChunk = neighbors[direction];
+	if (!neighborChunk) return;
+
+	switch (direction)
+	{
+	case DirectionXZ::Left: // -X
+		for (int y = 0; y < CHUNK_Y; ++y)
+		{
+			for (int z = 0; z < CHUNK_Z; ++z)
+			{
+				neighborChunk->RefreshExposeAt(Vector3int(CHUNK_X - 1, y, z));
+				neighborChunk->RefreshExposeAt(Vector3int(CHUNK_X - 2, y, z));
+				this->RefreshExposeAt(Vector3int(0, y, z));	
+				this->RefreshExposeAt(Vector3int(1, y, z));
+			}
+		}
+		break;
+	case DirectionXZ::Right: // +X
+		for (int y = 0; y < CHUNK_Y; ++y)
+		{
+			for (int z = 0; z < CHUNK_Z; ++z)
+			{
+				neighborChunk->RefreshExposeAt(Vector3int(0, y, z));
+				neighborChunk->RefreshExposeAt(Vector3int(1, y, z));
+				this->RefreshExposeAt(Vector3int(CHUNK_X - 1, y, z));
+				this->RefreshExposeAt(Vector3int(CHUNK_X - 2, y, z));
+			}
+		}
+		break;
+	case DirectionXZ::Back: // -Z
+		for (int y = 0; y < CHUNK_Y; ++y)
+		{
+			for (int x = 0; x < CHUNK_X; ++x)
+			{
+				neighborChunk->RefreshExposeAt(Vector3int(x, y, CHUNK_Z - 1));
+				neighborChunk->RefreshExposeAt(Vector3int(x, y, CHUNK_Z - 2));
+				this->RefreshExposeAt(Vector3int(x, y, 0));
+				this->RefreshExposeAt(Vector3int(x, y, 1));
+			}
+		}
+		break;
+	case DirectionXZ::Front: // +Z
+		for (int y = 0; y < CHUNK_Y; ++y)
+		{
+			for (int x = 0; x < CHUNK_X; ++x)
+			{
+				neighborChunk->RefreshExposeAt(Vector3int(x, y, 0));
+				neighborChunk->RefreshExposeAt(Vector3int(x, y, 1));
+				this->RefreshExposeAt(Vector3int(x, y, CHUNK_Z - 1));
+				this->RefreshExposeAt(Vector3int(x, y, CHUNK_Z - 2));
+			}
+		}
+		break;
+	default:
+		break;
 	}
 }
 
@@ -548,55 +625,55 @@ void Chunk::Draw()
 }
 
 // チャンクを跨いだブロックも取得できる
-Block* Chunk::GetBlock(const Vector3int& localIndex) 
+Block* Chunk::GetBlock(const Vector3int& index)
 {
 	// 存在しないブロック
-	if (localIndex.y < 0 || localIndex.y >= CHUNK_Y) return nullptr;
+	if (index.y < 0 || index.y >= CHUNK_Y) return nullptr;
 
 	// チャンク内
-	if (0 <= localIndex.x && localIndex.x < CHUNK_X &&
-		0 <= localIndex.y && localIndex.y < CHUNK_Y &&
-		0 <= localIndex.z && localIndex.z < CHUNK_Z)
+	if (0 <= index.x && index.x < CHUNK_X &&
+		0 <= index.y && index.y < CHUNK_Y &&
+		0 <= index.z && index.z < CHUNK_Z)
 	{
-		return blocks[localIndex.x][localIndex.y][localIndex.z].get();
+		return blocks[index.x][index.y][index.z].get();
 	}
 
-	// チャンク外かつX,Z両方方向に跨いでいる場合はめんどくさいから実装しない
-	const bool xOut = (localIndex.x < 0 || localIndex.x >= CHUNK_X);
-	const bool zOut = (localIndex.z < 0 || localIndex.z >= CHUNK_Z);
+	// チャンク外かつX,Z両方方向に跨いでいる場チャンクは持っていない
+	const bool xOut = (index.x < 0 || index.x >= CHUNK_X);
+	const bool zOut = (index.z < 0 || index.z >= CHUNK_Z);
 	if (xOut && zOut) return nullptr;
 
-	Vector3int neighborLocal = localIndex;
+	Vector3int neighborLocal = index;
 
-	// X方向に跨ぐ
-	if (localIndex.x < 0)
+	// X方向に跨ぐ && Z方向には跨いでいない
+	if (index.x < 0 && !zOut)
 	{
-		Chunk* nb = neighbors[1]; // -X
+		Chunk* nb = neighbors[DirectionXZ::Left]; // -X
 		if (!nb) return nullptr;
-		neighborLocal.x = CHUNK_X - 1;
+		neighborLocal.x = neighborLocal.x + CHUNK_X;
 		return nb->blocks[neighborLocal.x][neighborLocal.y][neighborLocal.z].get();
 	}
-	if (localIndex.x >= CHUNK_X)
+	if (index.x >= CHUNK_X && !zOut)
 	{
-		Chunk* nb = neighbors[0]; // +X
+		Chunk* nb = neighbors[DirectionXZ::Right]; // +X
 		if (!nb) return nullptr;
-		neighborLocal.x = 0;
+		neighborLocal.x = neighborLocal.x - CHUNK_X;
 		return nb->blocks[neighborLocal.x][neighborLocal.y][neighborLocal.z].get();
 	}
 
-	// Z方向に跨ぐ
-	if (localIndex.z < 0)
+	// Z方向に跨ぐ && X方向には跨いでいない
+	if (index.z < 0 && !xOut)
 	{
-		Chunk* nb = neighbors[3]; // -Z
+		Chunk* nb = neighbors[DirectionXZ::Back]; // -Z
 		if (!nb) return nullptr;
-		neighborLocal.z = CHUNK_Z - 1;
+		neighborLocal.z = neighborLocal.z + CHUNK_Z;
 		return nb->blocks[neighborLocal.x][neighborLocal.y][neighborLocal.z].get();
 	}
-	if (localIndex.z >= CHUNK_Z)
+	if (index.z >= CHUNK_Z && !xOut)
 	{
-		Chunk* nb = neighbors[2]; // +Z
+		Chunk* nb = neighbors[DirectionXZ::Front]; // +Z
 		if (!nb) return nullptr;
-		neighborLocal.z = 0;
+		neighborLocal.z = neighborLocal.z - CHUNK_Z;
 		return nb->blocks[neighborLocal.x][neighborLocal.y][neighborLocal.z].get();
 	}
 
@@ -633,26 +710,26 @@ Vector3 Chunk::LocalCenter(const Vector3int& index) const
 	return Vector3(cx, cy, cz);
 }
 
-void Chunk::SetBlockLocal(const Vector3int& index, const BlockID id)
+void Chunk::SetBlock(const Vector3int& localIndex, const BlockID id)
 {
-	const BlockID oldId = blocks[index.x][index.y][index.z]->GetBlockID();
+	const BlockID oldId = blocks[localIndex.x][localIndex.y][localIndex.z]->GetBlockID();
 	if (oldId == id) return;
 
 	// blockPositions更新
 	if (oldId != BlockID::Air)
 	{
 		auto& v = blockPositions[oldId];
-		v.erase(std::remove(v.begin(), v.end(), index), v.end());
+		v.erase(std::remove(v.begin(), v.end(), localIndex), v.end());
 	}
 
 	// ブロック更新
-	blocks[index.x][index.y][index.z]->SetBlockType(blockConfig_->GetBlockInfo(id));
-	blocks[index.x][index.y][index.z]->SetBlockPosition(LocalCenter(index));
+	blocks[localIndex.x][localIndex.y][localIndex.z]->SetBlockType(blockConfig_->GetBlockInfo(id));
+	blocks[localIndex.x][localIndex.y][localIndex.z]->SetBlockPosition(LocalCenter(localIndex));
 
 	// blockPositions 更新（Airは記録しない）
 	if (id != BlockID::Air)
 	{
-		blockPositions[id].emplace_back(index);
+		blockPositions[id].emplace_back(localIndex);
 	}
 }
 
@@ -662,10 +739,10 @@ void Chunk::DestroyBlock(const Vector3int& localIndex)
 	if (!block) return;
 
 	const BlockID preBlockID = block->GetBlockID();
-	if (!block->isActive_ || preBlockID == BlockID::Air) return;
+	if (preBlockID == BlockID::Air) return;
 
 	// ブロックをAirに置換（blockPositionsの整合もここで取る）
-	SetBlockLocal(localIndex, BlockID::Air);
+	SetBlock(localIndex, BlockID::Air);
 
 	// ブロック側の状態フラグ
 	block->isExposed_ = false;
@@ -674,7 +751,7 @@ void Chunk::DestroyBlock(const Vector3int& localIndex)
 	blockData_[preBlockID]->RemoveBlock(localIndex);
 
 	// 周囲の露出判定更新
-	UpdateExposedAround(localIndex);
+	SetExposedAroundBlocks(localIndex);
 }
 
 void Chunk::RebuildBlockPositions()

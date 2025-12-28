@@ -2044,36 +2044,6 @@ void RenderData_Block::RemoveBlock(Vector3int index)
 	}
 }
 
-// 非アクティブなブロックをリストから削除(未実装)
-void RenderData_Block::RemoveInactiveBlocks()
-{
-	//size_t writeIndex = 0;
-	//
-	//for (size_t readIndex = 0; readIndex < capacity; ++readIndex)
-	//{
-	//	if (isActive_[readIndex])
-	//	{
-	//		if (writeIndex != readIndex)
-	//		{
-	//			// アクティブなパーティクルを前方に詰める
-	//			scale_[writeIndex] = scale_[readIndex];
-	//			rotate_[writeIndex] = rotate_[readIndex];
-	//			translate_[writeIndex] = translate_[readIndex];
-	//			isActive_[writeIndex] = isActive_[readIndex];
-	//			// ワールド行列・WVP行列も詰める
-	//			instancingData_[writeIndex] = instancingData_[readIndex];
-	//		}
-	//		writeIndex++;
-	//	}
-	//}
-	//for (size_t i = writeIndex; i < capacity; ++i)
-	//{
-	//	isActive_[i] = false;
-	//}
-	//
-	//
-	//currentSum = uint32_t(writeIndex);
-}
 
 void RenderData_Block::Draw()
 {

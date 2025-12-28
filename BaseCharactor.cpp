@@ -137,22 +137,30 @@ void BaseCharactor::Move(const Vector3& direction, float speed)
 
 void BaseCharactor::BreakTargetBlock()
 {
-	if (targetBlock_.has_value())
-	{
-		lookAtBlock* lab = targetBlock_.value();
-		if (lab != nullptr)
-		{
-			Block* block = lab->block;
-			if (block != nullptr)
-			{
-				block->durability_->DecreaseDurability(breakPower_);
+	if (!targetBlock_.has_value()) return;
 
-				// 破壊されていたら非アクティブ化
-				if (block->durability_->GetIsDestroy())
-				{
-					mapManager_->DestroyBlockAt(lab->chunkIndex, lab->localIndex);
-				}
-			}
-		}
+	lookAtBlock lab = targetBlock_.value();
+	Block* block = lab.block;
+	if (!block) return;
+
+	block->durability_->DecreaseDurability(breakPower_);
+
+	// 破壊されていたら非アクティブ化
+	if (block->durability_->GetIsDestroy())
+	{
+		mapManager_->DestroyBlockAt(lab.chunkIndex, lab.localIndex);
 	}
+}
+
+void BaseCharactor::SetNewBlock(BlockID id)
+{
+	if (!targetBlock_.has_value()) return;
+
+	lookAtBlock lab = targetBlock_.value();
+
+	// 当たった面情報が無いなら置けない
+	if (lab.face == AABBFace::NONE) return;
+
+	// MapManagerから設置処理を呼び出す
+	mapManager_->SetBlockAt(lab, id);
 }

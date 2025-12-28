@@ -31,9 +31,13 @@ public:
 
 	// ブロック破壊
 	void DestroyBlockAt(const Vector2int& chunkPos, const Vector3int& localIndex);
+	// ブロック設置
+	bool SetBlockAt(const lookAtBlock& lab, const BlockID id);
+	bool SetBlockAt(const Vector2int& chunkPos, const Vector3int& localIndex, const BlockID id);
+	bool SetBlockAt(const Vector3& position, const BlockID id);
 
 	// レイと衝突しているブロックを返す
-	std::optional<lookAtBlock*> IntersectRayBlock(const Ray& ray);
+	std::optional<lookAtBlock> IntersectRayBlock(const Ray& ray);
 
 	AABB GetAABB(const Vector2int& chunkPos, const Vector3int& index);
 	AABB GetAABB(const Vector3& position);

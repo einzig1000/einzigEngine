@@ -5,7 +5,6 @@
 Block::Block()
 {
 	durability_ = new BlockDurability();
-	isActive_ = false;
 }
 
 Block::~Block()
@@ -21,9 +20,8 @@ void Block::Initialize()
 void Block::SetBlockType(Blockinfo info)
 {
 	blockID = info.type;
+	isTransparent_ = info.isTransparent;
 	durability_->SetMaxDurability(info.durability);
-	if (blockID != BlockID::Air)isActive_ = true;
-	else isActive_ = false;
 }
 
 void Block::SetBlockPosition(const Vector3& position)
