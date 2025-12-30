@@ -5,6 +5,7 @@
 class Player;
 class MapManager;
 class CameraController;
+class UIManager;
 
 class GameScenePhase :
 	public PhaseParent
@@ -30,5 +31,8 @@ private:
 
 	// マップ
 	std::unique_ptr<MapManager> map_;
+
+	// UIマネージャー
+	std::unique_ptr<UIManager> uiManager_;
 
 };

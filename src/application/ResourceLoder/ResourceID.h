@@ -34,6 +34,16 @@ enum class TextureID
 	MAX,
 };
 
+enum class UITextureID
+{
+	None,
+
+	Inventory,
+
+
+	MAX,
+};
+
 class ResourceID
 {
 public:
@@ -55,11 +65,17 @@ public:
 		return modelIDs_[static_cast<size_t>(id)];
 	}
 
+	static uint32_t GetTextureID(UITextureID id)
+	{
+		return UITextureIDs_[static_cast<size_t>(id)];
+	}
+
 private:
 
 	static std::vector<int> blockTextureIDs_;
 	static std::vector<int> modelIDs_;
 	static std::vector<int> TextureIDs_;
+	static std::vector<int> UITextureIDs_;
 
 
 	static inline const std::unordered_map<TextureID, std::string> textureFilePaths_ =

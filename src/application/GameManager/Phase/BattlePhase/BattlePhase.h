@@ -1,5 +1,5 @@
 #pragma once
-#include "Phase/PhaseParent/PhaseParent.h"
+#include "GameManager/Phase/PhaseParent/PhaseParent.h"
 
 
 class BattlePhase

@@ -1,4 +1,4 @@
-#include "TestPhase.h"
+#include "GameManager/Phase/TestPhase/TestPhase.h"
 
 TestPhase::TestPhase()
 {

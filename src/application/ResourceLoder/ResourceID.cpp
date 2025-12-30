@@ -4,6 +4,7 @@
 std::vector<int> ResourceID::blockTextureIDs_;
 std::vector<int> ResourceID::modelIDs_;
 std::vector<int> ResourceID::TextureIDs_;
+std::vector<int> ResourceID::UITextureIDs_;
 
 void ResourceID::reload()
 {
@@ -97,6 +98,17 @@ void ResourceID::reload()
 
 
 #pragma endregion
+
+#pragma region UIテクスチャ読み込み
+
+	UITextureIDs_.resize(static_cast<size_t>(UITextureID::MAX));
+	tmp = -1;
+	UITextureIDs_[size_t(UITextureID::None)] = tmp;
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/UI/inventory.png");
+	UITextureIDs_[size_t(UITextureID::Inventory)] = tmp;
+
+#pragma endregion
+
 
 	std::vector<std::string> breakBlockFilePaths =
 	{

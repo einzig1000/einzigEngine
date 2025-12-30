@@ -80,6 +80,9 @@ std::string EnumToString(PHASE e);
 // UIモード
 enum class UIMode
 {
+	None,
+    // 非表示
+	Hidden,
 	// プレイ中　(手持ちアイテムのみ表示)
 	Playing,
 	// インベントリ表示中

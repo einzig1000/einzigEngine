@@ -2,11 +2,14 @@
 #include "Game.h"
 
 class Player;
+class MapManager;
 
 class CameraController
 {
 public:
-	CameraController(Player* player);
+	CameraController();
+	void SetPlayer(Player* player) { player_ = player; }
+	void SetMapManager(MapManager* mapManager) { mapManager_ = mapManager; }
 	void Update();
 
 	CameraMode_FirstPerson_ThirdPerson cameraMode_;
@@ -24,5 +27,11 @@ public:
 
 	// プレイヤー
 	Player* player_ = nullptr;
+	// マップマネージャー
+	MapManager* mapManager_ = nullptr;
+
+
+	// カメラがブロック表面に当たった時、めり込まないよう少し手前に出す量
+	float cameraPadding_ = 0.15f;
 };
 
