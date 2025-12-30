@@ -36,8 +36,15 @@ public:
 	bool SetBlockAt(const Vector2int& chunkPos, const Vector3int& localIndex, const BlockID id);
 	bool SetBlockAt(const Vector3& position, const BlockID id);
 
-	// レイと衝突しているブロックを返す
-	std::optional<lookAtBlock> IntersectRayBlock(const Ray& ray);
+	// SweepAABB
+	bool SweepAABB(const AABB& aabb, const Vector3& delta, Vector3& outCorrectedDelta);
+	// 指定位置に固体ブロックがあるか
+	bool isSolidAt(const Vector3& position);
+
+	// レイとブロックの交差判定（衝突ブロックを返す）
+	std::optional<lookAtBlock> GetBlockByCrossedRay(const Ray& ray, const float maxDistance);
+	// レイとブロックの交差判定（衝突座標を返す）
+	std::optional<Vector3> GetPositionByCrossedRay(const Ray& ray);
 
 	AABB GetAABB(const Vector2int& chunkPos, const Vector3int& index);
 	AABB GetAABB(const Vector3& position);
@@ -59,6 +66,7 @@ public:
 	void EnsureChunkScheduled(const Vector2int& chunkPos);
 	// スケジュールに登録されたチャンクを1Fに1つ生成
 	void ProcessChunkGeneration();
+
 
 private:
 
@@ -83,6 +91,5 @@ private:
 	int updateRadius_ = 2;   // 更新半径（チャンク単位）
 	NoiseParameter noiseParam_;
 
-	std::optional<Vector3> IntersectRayBlock(const Ray& ray, const std::vector<VertexData>& vertices, const AABB& aabb);
 };
 

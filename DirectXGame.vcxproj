@@ -159,6 +159,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\Inventory\Inventory.cpp" />
     <ClCompile Include="src\application\Charactor\BaseCharactor.cpp" />
     <ClCompile Include="src\application\Camera\CameraController.cpp" />
     <ClCompile Include="src\application\MapManager\Chunk\Chunk.cpp" />
@@ -240,8 +241,10 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="src\engine\DirectX\SrvManager.cpp" />
     <ClCompile Include="src\application\UIManager\UIManager.cpp" />
     <ClCompile Include="src\application\UIManager\ScreenMode\UIScreen.cpp" />
+    <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\UIElement.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\Inventory\Inventory.h" />
     <ClInclude Include="src\application\Charactor\BaseCharactor.h" />
     <ClInclude Include="src\application\Camera\CameraController.h" />
     <ClInclude Include="src\application\MapManager\Chunk\Chunk.h" />
@@ -295,6 +298,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="src\engine\DirectX\SrvManager.h" />
     <ClInclude Include="src\application\UIManager\UIManager.h" />
     <ClInclude Include="src\application\UIManager\ScreenMode\UIScreen.h" />
+    <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\UIElement.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

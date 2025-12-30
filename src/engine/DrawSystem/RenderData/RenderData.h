@@ -20,6 +20,25 @@ public:
     // 全オブジェクトの描画範囲内判定,前フレーム情報保存
     void Update5();
 
+	// Update〇では分かり難いので、以下で新規命名
+
+	// SRTにVelocity, Accelerationを反映させる
+	void UpdateTransformsPhysics();
+    // ↳acceleration→velocity の積分だけ行う
+    void UpdateVelocitiesPhysics();
+    // ↳位置(translate.value) に移動量(delta)を適用する
+    void ApplyTranslationDelta(const Vector3& delta);
+	// 現状のSRTからローカルマトリックスを作成する
+	void UpdateLocalMatrix();
+	// 現状のSRTからワールドマトリックスを作成する
+	void UpdateWorldMatrix();
+	// 現状のSRTからAABBを作成する
+	void UpdateAABB();
+	// 現状のAABBから描画範囲内判定を行う
+	void UpdateInPicture();
+	// 現状のSRTを前フレームSRTとして保存する
+	void SavePreTransforms();
+
     std::optional<std::string> name;
     VectorDynamics scale = { Vector3(1.0f,1.0f,1.0f), Vector3(0.0f,0.0f,0.0f), Vector3(0.0f,0.0f,0.0f) };
     VectorDynamics rotate = { Vector3(0.0f,0.0f,0.0f), Vector3(0.0f,0.0f,0.0f), Vector3(0.0f,0.0f,0.0f) };

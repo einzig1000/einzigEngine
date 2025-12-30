@@ -135,22 +135,28 @@ void Engine::UpdateTransforms()
 	// オブジェクト更新
 	std::vector<Object3D> objects = dxManager_->GetResourceManager()->GetModelManager()->GetModelList();
 
-	for (auto& rd : modelList)
-	{
-		rd->Update2();
-	}
-	for (auto& rd : modelList)
-	{
-		rd->Update3();
-	}
-	for (auto& rd : modelList)
-	{
-		rd->Update4();
-	}
-	for (auto& rd : modelList)
-	{
-		rd->Update5();
-	}
+	//for (auto& rd : modelList)
+	//{
+	//	//rd->Update1();
+	//}
+	//for (auto& rd : modelList)
+	//{
+	//	//rd->Update2();
+	//}
+	//for (auto& rd : modelList)
+	//{
+	//	// 座標更新,衝突ペア・深度の保存
+	//	//rd->Update3();
+	//}
+	//for (auto& rd : modelList)
+	//{
+	//	// 衝突時の更新、それに伴う座標修正など
+	//	//rd->Update4();
+	//}
+	//for (auto& rd : modelList)
+	//{
+	//	//rd->Update5();
+	//}
 
 #pragma endregion
 

@@ -196,6 +196,9 @@
     <Filter Include="engine\Utilities\PerlinNoise">
       <UniqueIdentifier>{313938a3-c0d2-4b3c-89d1-88f4efa161c6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="application\GameManeger\UIManager\UIScreen\UIElement\Inventory">
+      <UniqueIdentifier>{a4a5843c-d22b-42e1-9803-e66ff74c7e6e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -360,6 +363,12 @@
     <ClCompile Include="src\engine\Utilities\PerlinNoise.cpp">
       <Filter>engine\Utilities\PerlinNoise</Filter>
     </ClCompile>
+    <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\UIElement.cpp">
+      <Filter>application\GameManeger\UIManager\UIScreen\UIElement</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\Inventory\Inventory.cpp">
+      <Filter>application\GameManeger\UIManager\UIScreen\UIElement\Inventory</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\engine\DirectX\CommandContextManager.h">
@@ -520,6 +529,12 @@
     </ClInclude>
     <ClInclude Include="src\engine\Utilities\PerlinNoise.h">
       <Filter>engine\Utilities\PerlinNoise</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\UIElement.h">
+      <Filter>application\GameManeger\UIManager\UIScreen\UIElement</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\Inventory\Inventory.h">
+      <Filter>application\GameManeger\UIManager\UIScreen\UIElement\Inventory</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

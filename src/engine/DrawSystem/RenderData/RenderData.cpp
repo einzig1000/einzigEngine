@@ -95,7 +95,6 @@ void RenderData_Model::LookAtFront(float roll)
 void RenderData_Model::Draw()
 {
 	Engine::Instance().AddModelDrawList(this);
-	Update1();
 }
 
 void RenderData_Model::DrawAABB()
@@ -503,6 +502,110 @@ void RenderData_Model::Update5()
 
 #pragma endregion
 
+}
+
+
+
+// acceleration→velocity の積分のみ
+void RenderData_Model::UpdateVelocitiesPhysics()
+{
+	// デルタタイム取得
+	float deltaTime = Engine::Instance().GetDeltaTime();
+	deltaTime *= 60.0f; // 60FPS基準に変換
+
+	this->translate.velocity += this->translate.acceleration * deltaTime;
+	this->rotate.velocity += this->rotate.acceleration * deltaTime;
+	this->scale.velocity += this->scale.acceleration * deltaTime;
+}
+
+// 位置に移動量(delta) を適用する（Sweep後の補正deltaを入れる想定）
+void RenderData_Model::ApplyTranslationDelta(const Vector3& delta)
+{
+	this->translate.value += delta;
+}
+
+// SRTにVelocity, Accelerationを反映させる
+void RenderData_Model::UpdateTransformsPhysics()
+{
+	// デルタタイム取得
+	float deltaTime = Engine::Instance().GetDeltaTime();
+	deltaTime *= 60.0f; // 60FPS基準に変換
+
+	// 1) 速度を更新
+	UpdateVelocitiesPhysics();
+
+	// 2) 位置に反映（旧仕様では velocity*dt をそのまま適用）
+	ApplyTranslationDelta(this->translate.velocity * deltaTime);
+
+	// 3) 回転・スケールは旧仕様通り
+	this->rotate.value += this->rotate.velocity * deltaTime;
+	this->scale.value += this->scale.velocity * deltaTime;
+}
+
+// 現状のSRTからローカルマトリックスを作成する
+void RenderData_Model::UpdateLocalMatrix()
+{
+	XMVECTOR scaleVec = XMVectorSet(this->scale.value.x, this->scale.value.y, this->scale.value.z, 0.0f);
+	XMVECTOR translateVec = XMVectorSet(this->translate.value.x, this->translate.value.y, this->translate.value.z, 0.0f);
+	XMVECTOR rotEuler = XMVectorSet(this->rotate.value.x, this->rotate.value.y, this->rotate.value.z, 0.0f);
+	// 1) スケール
+	XMMATRIX S = XMMatrixScalingFromVector(scaleVec);
+	// 2) 回転（オイラー→クォータニオン→行列）
+	XMVECTOR quatEuler = XMQuaternionRotationRollPitchYawFromVector(rotEuler);
+	XMMATRIX R = XMMatrixRotationQuaternion(quatEuler);
+	// 3) 平行移動
+	XMMATRIX T = XMMatrixTranslationFromVector(translateVec);
+	// 4) 合成: S → R → T
+	XMMATRIX world = S * R * T;
+	// 5) 結果を transforms.World に格納
+	XMFLOAT4X4 tmp;
+	DirectX::XMStoreFloat4x4(&tmp, world);
+	for (int i = 0; i < 4; ++i)
+		for (int j = 0; j < 4; ++j)
+			this->localWorldMatrix.m[i][j] = tmp.m[i][j];
+}
+
+// 現状のSRTからワールドマトリックスを作成する
+void RenderData_Model::UpdateWorldMatrix()
+{
+	// 階層を含めた最終ワールド行列を取得
+	this->worldMatrix = this->SetWorldMatrix();
+
+	// ワールド座標取得
+	this->worldPos = Vector3(
+		this->worldMatrix.m[3][0],
+		this->worldMatrix.m[3][1],
+		this->worldMatrix.m[3][2]
+	);
+}
+
+void RenderData_Model::UpdateAABB()
+{
+	this->aabbs = Engine::Instance().CreateAABB(this);
+}
+
+// 現状のAABBから描画範囲内判定を行う
+void RenderData_Model::UpdateInPicture()
+{
+	bool inFrustum = false;
+	for (const auto& aabb : this->aabbs)
+	{
+		if (Game::Camera::InCamera(aabb))
+		{
+			inFrustum = true;
+			break;
+		}
+	}
+	this->inPicture = inFrustum;
+}
+
+// 現状のSRTを前フレームSRTとして保存する
+void RenderData_Model::SavePreTransforms()
+{
+	this->preScale = this->scale;
+	this->preTranslate = this->translate;
+	this->preRotate = this->rotate;
+	this->preAABB = this->aabbs;
 }
 
 //std::optional<CollisionInf> RenderData_Model::isCollisionAABBInf(RenderData_Model& target) const

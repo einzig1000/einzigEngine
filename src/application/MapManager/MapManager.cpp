@@ -9,6 +9,92 @@
 #include "MapManager/Chunk/Block/BlockDurability.h"
 #include "MapManager/Chunk/Chunk.h"
 
+
+// AABBの各種補助 いずれstruct AABBに移す
+namespace
+{
+	static float ClampFloat(float v, float a, float b) { return my_max(a, my_min(v, b)); }
+
+	static float GetAABBSizeX(const AABB& a) { return a.max.x - a.min.x; }
+	static float GetAABBSizeY(const AABB& a) { return a.max.y - a.min.y; }
+	static float GetAABBSizeZ(const AABB& a) { return a.max.z - a.min.z; }
+
+	// 進行方向に応じて、AABBの「面上のサンプル点」を3x3で作る（簡易）
+	static void MakeFaceSamplePoints_X(const AABB& aabb, float xFace, Vector3 outPts[9])
+	{
+		const float inset = 0.02f;
+		const float y0 = aabb.min.y + inset;
+		const float y1 = (aabb.min.y + aabb.max.y) * 0.5f;
+		const float y2 = aabb.max.y - inset;
+
+		const float z0 = aabb.min.z + inset;
+		const float z1 = (aabb.min.z + aabb.max.z) * 0.5f;
+		const float z2 = aabb.max.z - inset;
+
+		outPts[0] = { xFace, y0, z0 };
+		outPts[1] = { xFace, y0, z1 };
+		outPts[2] = { xFace, y0, z2 };
+		outPts[3] = { xFace, y1, z0 };
+		outPts[4] = { xFace, y1, z1 };
+		outPts[5] = { xFace, y1, z2 };
+		outPts[6] = { xFace, y2, z0 };
+		outPts[7] = { xFace, y2, z1 };
+		outPts[8] = { xFace, y2, z2 };
+	}
+
+	static void MakeFaceSamplePoints_Y(const AABB& aabb, float yFace, Vector3 outPts[9])
+	{
+		const float inset = 0.02f;
+		const float x0 = aabb.min.x + inset;
+		const float x1 = (aabb.min.x + aabb.max.x) * 0.5f;
+		const float x2 = aabb.max.x - inset;
+
+		const float z0 = aabb.min.z + inset;
+		const float z1 = (aabb.min.z + aabb.max.z) * 0.5f;
+		const float z2 = aabb.max.z - inset;
+
+		outPts[0] = { x0, yFace, z0 };
+		outPts[1] = { x1, yFace, z0 };
+		outPts[2] = { x2, yFace, z0 };
+		outPts[3] = { x0, yFace, z1 };
+		outPts[4] = { x1, yFace, z1 };
+		outPts[5] = { x2, yFace, z1 };
+		outPts[6] = { x0, yFace, z2 };
+		outPts[7] = { x1, yFace, z2 };
+		outPts[8] = { x2, yFace, z2 };
+	}
+
+	static void MakeFaceSamplePoints_Z(const AABB& aabb, float zFace, Vector3 outPts[9])
+	{
+		const float inset = 0.02f;
+		const float x0 = aabb.min.x + inset;
+		const float x1 = (aabb.min.x + aabb.max.x) * 0.5f;
+		const float x2 = aabb.max.x - inset;
+
+		const float y0 = aabb.min.y + inset;
+		const float y1 = (aabb.min.y + aabb.max.y) * 0.5f;
+		const float y2 = aabb.max.y - inset;
+
+		outPts[0] = { x0, y0, zFace };
+		outPts[1] = { x1, y0, zFace };
+		outPts[2] = { x2, y0, zFace };
+		outPts[3] = { x0, y1, zFace };
+		outPts[4] = { x1, y1, zFace };
+		outPts[5] = { x2, y1, zFace };
+		outPts[6] = { x0, y2, zFace };
+		outPts[7] = { x1, y2, zFace };
+		outPts[8] = { x2, y2, zFace };
+	}
+
+	// AABBをdeltaだけ平行移動
+	static AABB TranslateAABB(const AABB& a, const Vector3& d)
+	{
+		return { a.min + d, a.max + d };
+	}
+}
+
+
+
 MapManager::MapManager(Player* player)
 {
 	// プレイヤー参照保存
@@ -662,13 +748,237 @@ bool MapManager::SetBlockAt(const Vector3& position, const BlockID id)
 	return SetBlockAt(ChunkIndexByPosition(position), BlockIndexByPosition(position), id);
 }
 
-std::optional<lookAtBlock> MapManager::IntersectRayBlock(const Ray& ray)
+bool MapManager::SweepAABB(const AABB& aabb, const Vector3& delta, Vector3& outCorrectedDelta)
+{
+	outCorrectedDelta = delta;
+
+	const float maxStep = 19.0f;
+
+	// ===== X =====
+	if (std::abs(outCorrectedDelta.x) > 1e-6f)
+	{
+		const float dx = ClampFloat(outCorrectedDelta.x, -maxStep, maxStep);
+		AABB cur = aabb;
+
+		const float faceX = (dx > 0.0f) ? cur.max.x : cur.min.x;
+		Vector3 samples[9];
+		MakeFaceSamplePoints_X(cur, faceX, samples);
+
+		float allowed = dx;
+
+		for (const Vector3& p : samples)
+		{
+			Ray r;
+			r.origin = p;
+			r.diff = { (dx > 0.0f) ? 1.0f : -1.0f, 0.0f, 0.0f };
+
+			auto hit = GetBlockByCrossedRay(r, std::abs(allowed));
+			if (!hit.has_value()) continue;
+
+			// hit.distance は LengthSq() 系で入っているのでsqrtする
+			const float hitDist = hit->distance;
+
+			// 進みたい距離より手前で当たっているなら、その手前まで
+			if (hitDist < std::abs(allowed))
+			{
+				// 少し手前で止める（めり込み防止）
+				const float skin = 0.01f;
+				float newAllowed = (hitDist - skin);
+				if (newAllowed < 0.0f) newAllowed = 0.0f;
+				allowed = (dx > 0.0f) ? newAllowed : -newAllowed;
+			}
+		}
+
+		outCorrectedDelta.x = allowed;
+	}
+
+	// ===== Y =====
+	{
+		// X適用後のAABBでYを処理
+		AABB cur = TranslateAABB(aabb, { outCorrectedDelta.x, 0.0f, 0.0f });
+
+		if (std::abs(outCorrectedDelta.y) > 1e-6f)
+		{
+			const float dy = ClampFloat(outCorrectedDelta.y, -maxStep, maxStep);
+			const float faceY = (dy > 0.0f) ? cur.max.y : cur.min.y;
+
+			Vector3 samples[9];
+			MakeFaceSamplePoints_Y(cur, faceY, samples);
+
+			float allowed = dy;
+
+			for (const Vector3& p : samples)
+			{
+				Ray r;
+				r.origin = p;
+				r.diff = { 0.0f, (dy > 0.0f) ? 1.0f : -1.0f, 0.0f };
+
+				auto hit = GetBlockByCrossedRay(r, std::abs(allowed));
+				if (!hit.has_value()) continue;
+
+				const float hitDist = hit->distance;
+
+				if (hitDist < std::abs(allowed))
+				{
+					const float skin = 0.01f;
+					float newAllowed = (hitDist - skin);
+					if (newAllowed < 0.0f) newAllowed = 0.0f;
+					allowed = (dy > 0.0f) ? newAllowed : -newAllowed;
+				}
+			}
+
+			outCorrectedDelta.y = allowed;
+		}
+	}
+
+	// ===== Z =====
+	{
+		AABB cur = TranslateAABB(aabb, { outCorrectedDelta.x, outCorrectedDelta.y, 0.0f });
+
+		if (std::abs(outCorrectedDelta.z) > 1e-6f)
+		{
+			const float dz = ClampFloat(outCorrectedDelta.z, -maxStep, maxStep);
+			const float faceZ = (dz > 0.0f) ? cur.max.z : cur.min.z;
+
+			Vector3 samples[9];
+			MakeFaceSamplePoints_Z(cur, faceZ, samples);
+
+			float allowed = dz;
+
+			for (const Vector3& p : samples)
+			{
+				Ray r;
+				r.origin = p;
+				r.diff = { 0.0f, 0.0f, (dz > 0.0f) ? 1.0f : -1.0f };
+
+				auto hit = GetBlockByCrossedRay(r, std::abs(allowed));
+				if (!hit.has_value()) continue;
+
+				const float hitDist = hit->distance;
+
+				if (hitDist < std::abs(allowed))
+				{
+					const float skin = 0.01f;
+					float newAllowed = (hitDist - skin);
+					if (newAllowed < 0.0f) newAllowed = 0.0f;
+					allowed = (dz > 0.0f) ? newAllowed : -newAllowed;
+				}
+			}
+
+			outCorrectedDelta.z = allowed;
+		}
+	}
+
+	// 何かしら縮んだなら衝突があった扱い
+	const bool hitSomething =
+		(outCorrectedDelta.x != delta.x) ||
+		(outCorrectedDelta.y != delta.y) ||
+		(outCorrectedDelta.z != delta.z);
+
+	return hitSomething;
+}
+bool MapManager::isSolidAt(const Vector3& position)
+{
+	Vector2int chunkPos = ChunkIndexByPosition(position);
+	Vector3int index = BlockIndexByPosition(position);
+	Chunk* chunk = TryGetChunk(chunkPos);
+	if (chunk)
+	{
+		Block* block = chunk->blocks[index.x][index.y][index.z].get();
+		if (block && block->GetBlockID() != BlockID::Air)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+AABB MapManager::GetAABB(const Vector2int& chunkPos, const Vector3int& index)
+{
+	// チャンクのワールド原点
+	float chunkWorldX = chunkPos.x * CHUNK_X * BLOCK_SIZE;
+	float chunkWorldZ = chunkPos.y * CHUNK_Z * BLOCK_SIZE;
+
+	// ブロックのワールド座標
+	float worldX = chunkWorldX + index.x * BLOCK_SIZE;
+	float worldY = index.y * BLOCK_SIZE;
+	float worldZ = chunkWorldZ + index.z * BLOCK_SIZE;
+
+	Vector3 mint(worldX, worldY, worldZ);
+	Vector3 maxt(worldX + BLOCK_SIZE, worldY + BLOCK_SIZE, worldZ + BLOCK_SIZE);
+
+	return AABB(mint, maxt);
+}
+AABB MapManager::GetAABB(const Vector3& position)
+{
+	Vector2int chunkPos = ChunkIndexByPosition(position);
+	Vector3int index = BlockIndexByPosition(position);
+	return GetAABB(chunkPos, index);
+}
+bool MapManager::GetIsActive(const Vector2int& chunkPos, const Vector3int& index)
+{
+	Chunk* chunk = TryGetChunk(chunkPos);
+	if (chunk)
+	{
+		if (chunk->blocks[index.x][index.y][index.z]->blockID != BlockID::Air)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+bool MapManager::GetIsActive(const Vector3& position)
+{
+	Vector2int chunkPos = ChunkIndexByPosition(position);
+	Vector3int index = BlockIndexByPosition(position);
+	return GetIsActive(chunkPos, index);
+}
+
+// position が今どのチャンクに属しているか  例：position=(34, 0, 50) -> chunkIndex=(1, 2)
+Vector2int MapManager::ChunkIndexByPosition(const Vector3& position)
+{
+	int bx = static_cast<int>(std::floor(position.x / BLOCK_SIZE));
+	int bz = static_cast<int>(std::floor(position.z / BLOCK_SIZE));
+
+	Vector2int chunk;
+	chunk.x = static_cast<int>(std::floor((float)bx / CHUNK_X));
+	chunk.y = static_cast<int>(std::floor((float)bz / CHUNK_Z));
+	return chunk;
+}
+
+int LocalMod(int a, int n)
+{
+	return (a % n + n) % n;
+}
+
+// position が今チャンク内どのブロックに属しているか(どんな時も0～CHUNK_SIZE-1の範囲に収まる)  例：position=(34, 0, 50) -> localIndex=(2, 0, 2)
+Vector3int MapManager::BlockIndexByPosition(const Vector3& position)
+{
+	// ① ワールド座標 → 世界ブロック座標
+	int bx = static_cast<int>(std::floor(position.x / BLOCK_SIZE));
+	int by = static_cast<int>(std::floor(position.y / BLOCK_SIZE));
+	int bz = static_cast<int>(std::floor(position.z / BLOCK_SIZE));
+
+	// ② チャンク内インデックスへ正規化（数学的 mod）
+	Vector3int local;
+	local.x = LocalMod(bx, CHUNK_X);
+	local.y = LocalMod(by, CHUNK_Y);
+	local.z = LocalMod(bz, CHUNK_Z);
+
+	local.y = std::clamp(local.y, 0, CHUNK_Y - 1);
+
+	return local;
+}
+
+
+// レイとブロックの交差判定（衝突ブロックを返す）
+std::optional<lookAtBlock> MapManager::GetBlockByCrossedRay(const Ray& ray, const float maxDistance)
 {
 	lookAtBlock result;
 
 	const Vector3 rayStart = ray.origin;
 	const Vector3 dir = ray.diff;
-	const float rayLen = 20.0f;
+	const float rayLen = maxDistance;
 	const Vector3 rayEnd = ray.origin + ray.diff * rayLen;
 
 	auto WorldBlockIndexByPosition = [](const Vector3& p) -> Vector3int
@@ -760,14 +1070,32 @@ std::optional<lookAtBlock> MapManager::IntersectRayBlock(const Ray& ray)
 				Block* b = chunk->blocks[local.x][local.y][local.z].get();
 				if (b && b->GetBlockID() != BlockID::Air)
 				{
-					Vector3 blockWorldPos = b->aabb_.center();
+					const AABB& aabb = b->aabb_;
 
 					result.block = b;
 					result.chunkIndex = chunkPos;
 					result.localIndex = local;
 					result.face = enterFace;
-					result.distance = Vector3(blockWorldPos - rayStart).LengthSq();
 
+					// 「ブロック中心まで」ではなく「侵入面まで」の距離を返す
+					// 今回のSweepは軸レイ(±1,0,0等)なのでこの計算でOK
+					float dist = 0.0f;
+
+					switch (enterFace)
+					{
+					case AABBFace::LEFT:   dist = std::abs(aabb.min.x - rayStart.x); break;
+					case AABBFace::RIGHT:  dist = std::abs(aabb.max.x - rayStart.x); break;
+					case AABBFace::BOTTOM: dist = std::abs(aabb.min.y - rayStart.y); break;
+					case AABBFace::TOP:    dist = std::abs(aabb.max.y - rayStart.y); break;
+					case AABBFace::BACK:   dist = std::abs(aabb.min.z - rayStart.z); break;
+					case AABBFace::FRONT:  dist = std::abs(aabb.max.z - rayStart.z); break;
+					default:
+						// startが既にブロック内などのケース
+						dist = 0.0f;
+						break;
+					}
+
+					result.distance = dist;
 					return result;
 				}
 			}
@@ -832,114 +1160,73 @@ std::optional<lookAtBlock> MapManager::IntersectRayBlock(const Ray& ray)
 	return std::nullopt;
 }
 
-AABB MapManager::GetAABB(const Vector2int& chunkPos, const Vector3int& index)
+// レイとブロックの交差判定（衝突座標を返す）
+std::optional<Vector3> MapManager::GetPositionByCrossedRay(const Ray& ray)
 {
-	// チャンクのワールド原点
-	float chunkWorldX = chunkPos.x * CHUNK_X * BLOCK_SIZE;
-	float chunkWorldZ = chunkPos.y * CHUNK_Z * BLOCK_SIZE;
+	AABB aabb = GetAABB(ray.origin);
 
-	// ブロックのワールド座標
-	float worldX = chunkWorldX + index.x * BLOCK_SIZE;
-	float worldY = index.y * BLOCK_SIZE;
-	float worldZ = chunkWorldZ + index.z * BLOCK_SIZE;
-
-	Vector3 mint(worldX, worldY, worldZ);
-	Vector3 maxt(worldX + BLOCK_SIZE, worldY + BLOCK_SIZE, worldZ + BLOCK_SIZE);
-
-	return AABB(mint, maxt);
-}
-AABB MapManager::GetAABB(const Vector3& position)
-{
-	Vector2int chunkPos = ChunkIndexByPosition(position);
-	Vector3int index = BlockIndexByPosition(position);
-	return GetAABB(chunkPos, index);
-}
-bool MapManager::GetIsActive(const Vector2int& chunkPos, const Vector3int& index)
-{
-	Chunk* chunk = TryGetChunk(chunkPos);
-	if (chunk)
-	{
-		if (chunk->blocks[index.x][index.y][index.z]->blockID != BlockID::Air)
-		{
-			return true;
-		}
-	}
-	return false;
-}
-bool MapManager::GetIsActive(const Vector3& position)
-{
-	Vector2int chunkPos = ChunkIndexByPosition(position);
-	Vector3int index = BlockIndexByPosition(position);
-	return GetIsActive(chunkPos, index);
-}
-
-// position が今どのチャンクに属しているか  例：position=(34, 0, 50) -> chunkIndex=(1, 2)
-Vector2int MapManager::ChunkIndexByPosition(const Vector3& position)
-{
-	int bx = static_cast<int>(std::floor(position.x / BLOCK_SIZE));
-	int bz = static_cast<int>(std::floor(position.z / BLOCK_SIZE));
-
-	Vector2int chunk;
-	chunk.x = static_cast<int>(std::floor((float)bx / CHUNK_X));
-	chunk.y = static_cast<int>(std::floor((float)bz / CHUNK_Z));
-	return chunk;
-}
-
-int LocalMod(int a, int n)
-{
-	return (a % n + n) % n;
-}
-
-// position が今チャンク内どのブロックに属しているか(どんな時も0～CHUNK_SIZE-1の範囲に収まる)  例：position=(34, 0, 50) -> localIndex=(2, 0, 2)
-Vector3int MapManager::BlockIndexByPosition(const Vector3& position)
-{
-	// ① ワールド座標 → 世界ブロック座標
-	int bx = static_cast<int>(std::floor(position.x / BLOCK_SIZE));
-	int by = static_cast<int>(std::floor(position.y / BLOCK_SIZE));
-	int bz = static_cast<int>(std::floor(position.z / BLOCK_SIZE));
-
-	// ② チャンク内インデックスへ正規化（数学的 mod）
-	Vector3int local;
-	local.x = LocalMod(bx, CHUNK_X);
-	local.y = LocalMod(by, CHUNK_Y);
-	local.z = LocalMod(bz, CHUNK_Z);
-
-	return local;
-}
-
-
-std::optional<Vector3> MapManager::IntersectRayBlock(const Ray& ray, const std::vector<VertexData>& vertices, const AABB& aabb)
-{
 	// まずAABBで大まかに判定
 	if (!IsCollision(ray, aabb))
 	{
 		return std::nullopt;
 	}
 
-
 	// AABBに当たっていた場合のみ、三角形ごとに詳細判定 最近衝突点を返す
 	std::optional<Vector3> closestPoint = std::nullopt;
 	float closestDist = std::numeric_limits<float>::infinity();
-	for (size_t i = 0; i + 2 < vertices.size(); i += 3)
-	{
-		Triangle t;
-		// 三角形の頂点をワールド座標に変換
-		t.vertices[0] = Vector3(
-			vertices[i].position.x,
-			vertices[i].position.y,
-			vertices[i].position.z
-		);
-		t.vertices[1] = Vector3(
-			vertices[i + 1].position.x,
-			vertices[i + 1].position.y,
-			vertices[i + 1].position.z
-		);
-		t.vertices[2] = Vector3(
-			vertices[i + 2].position.x,
-			vertices[i + 2].position.y,
-			vertices[i + 2].position.z
-		);
 
+	// AABBの各面を構成する三角形を取得
+	Triangle triangles[12];
+	triangles[0] = Triangle{
+		Vector3{aabb.min.x, aabb.min.y, aabb.min.z},
+		Vector3{aabb.max.x, aabb.min.y, aabb.min.z},
+		Vector3{aabb.max.x, aabb.max.y, aabb.min.z}};
+	triangles[1] = Triangle{
+		Vector3{aabb.min.x, aabb.min.y, aabb.min.z},
+		Vector3{aabb.max.x, aabb.max.y, aabb.min.z},
+		Vector3{aabb.min.x, aabb.max.y, aabb.min.z}};
+	triangles[2] = Triangle{
+		Vector3{aabb.min.x, aabb.min.y, aabb.max.z},
+		Vector3{aabb.max.x, aabb.max.y, aabb.max.z},
+		Vector3{aabb.max.x, aabb.min.y, aabb.max.z}};
+	triangles[3] = Triangle{
+		Vector3{aabb.min.x, aabb.min.y, aabb.max.z},
+		Vector3{aabb.min.x, aabb.max.y, aabb.max.z},
+		Vector3{aabb.max.x, aabb.max.y, aabb.max.z}};
+	triangles[4] = Triangle{
+		Vector3{aabb.min.x, aabb.min.y, aabb.min.z},
+		Vector3{aabb.min.x, aabb.min.y, aabb.max.z},
+		Vector3{aabb.min.x, aabb.max.y, aabb.max.z}};
+	triangles[5] = Triangle{
+		Vector3{aabb.min.x, aabb.min.y, aabb.min.z},
+		Vector3{aabb.min.x, aabb.max.y, aabb.max.z},
+		Vector3{aabb.min.x, aabb.max.y, aabb.min.z}};
+	triangles[6] = Triangle{
+		Vector3{aabb.max.x, aabb.min.y, aabb.min.z},
+		Vector3{aabb.max.x, aabb.max.y, aabb.min.z},
+		Vector3{aabb.max.x, aabb.max.y, aabb.max.z}};
+	triangles[7] = Triangle{
+		Vector3{aabb.max.x, aabb.min.y, aabb.min.z},
+		Vector3{aabb.max.x, aabb.max.y, aabb.max.z},
+		Vector3{aabb.max.x, aabb.min.y, aabb.max.z}};
+	triangles[8] = Triangle{
+		Vector3{aabb.min.x, aabb.min.y, aabb.min.z},
+		Vector3{aabb.max.x, aabb.min.y, aabb.min.z},
+		Vector3{aabb.max.x, aabb.min.y, aabb.max.z}};
+	triangles[9] = Triangle{
+		Vector3{aabb.min.x, aabb.min.y, aabb.min.z},
+		Vector3{aabb.max.x, aabb.min.y, aabb.max.z},
+		Vector3{aabb.min.x, aabb.min.y, aabb.max.z}};
+	triangles[10] = Triangle{
+		Vector3{aabb.min.x, aabb.max.y, aabb.min.z},
+		Vector3{aabb.max.x, aabb.max.y, aabb.max.z},
+		Vector3{aabb.max.x, aabb.max.y, aabb.min.z}};
+	triangles[11] = Triangle{
+		Vector3{aabb.min.x, aabb.max.y, aabb.min.z},
+		Vector3{aabb.min.x, aabb.max.y, aabb.max.z},
+		Vector3{aabb.max.x, aabb.max.y, aabb.max.z}};
+	for (const Triangle& t : triangles)
+	{
 		std::optional<Vector3> pos = IntersectRayTriangle(ray, t);
 		if (pos != std::nullopt)
 		{
@@ -952,5 +1239,6 @@ std::optional<Vector3> MapManager::IntersectRayBlock(const Ray& ray, const std::
 			}
 		}
 	}
+
 	return closestPoint;
 }

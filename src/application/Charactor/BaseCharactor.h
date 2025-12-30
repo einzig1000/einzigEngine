@@ -27,6 +27,9 @@ public:
 	// 移動後のめりこみ修正
 	virtual void ResolveMapCollision();
 
+	// 物理演算と衝突判定のステップ
+	virtual void StepPhysicsAndCollision();
+
 	// 見ているブロックをtargetBlock_にセットする
 	virtual void SetTargetBlock();
 	// 取得した視線レイをセットする
@@ -36,14 +39,19 @@ public:
 
 	RenderData_Model data_;		// データ
 	Ray viewRay_;				// 視線レイ
+	float maxDistance = 5.0f;	// 視線範囲
 protected:
 
 	MapManager* mapManager_ = nullptr;
 	std::optional<lookAtBlock> targetBlock_;	// ターゲットにしているブロック
 	std::optional<lookAtBlock> preTargetBlock_;// 前フレームでターゲットにしていたブロック
 
+	
 
 	float jumpPower_ = 0.1491f;	// ジャンプ力
 	float breakPower_ = 1;	// ブロック破壊力
+
+
+	bool isGrounded_ = false;
 };
 
