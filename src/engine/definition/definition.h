@@ -35,6 +35,7 @@
 
 
 
+
 enum class BlockID
 {
     Air,
@@ -647,11 +648,19 @@ struct AABB
     Vector3 min;
     Vector3 max;
 
+    // 中心座標
     Vector3 center()const;
+	// 移動　※自身が変化する※
+	void Move(const Vector3& move);
     // min,maxが入れ替わる可能性があれば毎フレーム飛び出したい
     void Fix();
-
+	// 衝突している時は深度ベクトルを返す. 衝突していない時は(0,0,0)を返す
     Vector3 GetCollisionDepth(const AABB& other)const;
+
+    AABB operator+(const Vector3& rhs) const
+    {
+        return AABB{ min + rhs, max + rhs };
+	}
 };
 
 // 線分

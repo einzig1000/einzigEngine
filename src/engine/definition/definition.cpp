@@ -383,6 +383,12 @@ Vector3 AABB::center()const
     };
 }
 
+void AABB::Move(const Vector3& move)
+{
+    this->min = this->min + move;
+	this->max = this->max + move;
+}
+
 void AABB::Fix()
 {
     AABB aabb = *this;

@@ -3,8 +3,8 @@
 
 DropItem::DropItem(Player* player, Vector3int indec, Vector3 pos, int model, int tex)
 {
-	Item.model = model;
-	Item.texture = tex;
+	Item.SetModel(model);
+	Item.SetTexture(tex);
 	Item.scale.value = Vector3(0.2f, 0.2f, 0.2f);
 	InitPos = pos;
 	index = indec;

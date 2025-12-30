@@ -608,6 +608,20 @@ void RenderData_Model::SavePreTransforms()
 	this->preAABB = this->aabbs;
 }
 
+void RenderData_Model::SetModel(int32_t modelHandle)
+{
+	// モデルハンドルをセット
+	model = modelHandle;
+	// AABBを生成
+	aabbs = Engine::Instance().CreateAABB(this);
+}
+
+void RenderData_Model::SetTexture(int32_t textureHandle)
+{
+	// テクスチャハンドルをセット
+	texture = textureHandle;
+}
+
 //std::optional<CollisionInf> RenderData_Model::isCollisionAABBInf(RenderData_Model& target) const
 //{
 //	CollisionInf result;

@@ -4,6 +4,7 @@
 
 class Player;
 class MapManager;
+class MapWorldCollider;
 class CameraController;
 class UIManager;
 
@@ -31,6 +32,9 @@ private:
 
 	// マップ
 	std::unique_ptr<MapManager> map_;
+
+	// マップワールドコライダー
+	std::unique_ptr<MapWorldCollider> worldCollider_;
 
 	// UIマネージャー
 	std::unique_ptr<UIManager> uiManager_;

@@ -199,6 +199,9 @@
     <Filter Include="application\GameManeger\UIManager\UIScreen\UIElement\Inventory">
       <UniqueIdentifier>{a4a5843c-d22b-42e1-9803-e66ff74c7e6e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="engine\PhysicsSystem">
+      <UniqueIdentifier>{4dd9de1b-4f1e-49e0-9f35-a9b3c4e8f69d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -369,6 +372,15 @@
     <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\Inventory\Inventory.cpp">
       <Filter>application\GameManeger\UIManager\UIScreen\UIElement\Inventory</Filter>
     </ClCompile>
+    <ClCompile Include="src\engine\Physics\PhysicsSystem.cpp">
+      <Filter>engine\PhysicsSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\Physics\IWorldCollider.cpp">
+      <Filter>engine\PhysicsSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\MapManager\MapWorldCollider.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\engine\DirectX\CommandContextManager.h">
@@ -535,6 +547,15 @@
     </ClInclude>
     <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\Inventory\Inventory.h">
       <Filter>application\GameManeger\UIManager\UIScreen\UIElement\Inventory</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\Physics\PhysicsSystem.h">
+      <Filter>engine\PhysicsSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\Physics\IWorldCollider.h">
+      <Filter>engine\PhysicsSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\MapManager\MapWorldCollider.h">
+      <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

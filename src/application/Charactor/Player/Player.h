@@ -39,5 +39,8 @@ public:
 
 	// 所持アイテム
 	Itemslot* Itemslot_;
+
+private:
+
 };
 

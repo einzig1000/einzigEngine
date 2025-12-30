@@ -223,14 +223,12 @@ void DrawSystem::DrawAllModel()
 		if (drawCallIndex_ >= kMaxDrawCallPerFrame_)continue;
 
 		// モデルの検索
-		const Object3D* obj = dxManager_->GetResourceManager()->GetModelManager()->GetModelData(renderData->model);
+		const Object3D* obj = dxManager_->GetResourceManager()->GetModelManager()->GetModelData(renderData->GetModel());
 		if (!obj)continue;
 
 		// テクスチャの検索
-		const TextureData* tex = dxManager_->GetResourceManager()->GetTextureManager()->GetTextureData(renderData->texture);
+		const TextureData* tex = dxManager_->GetResourceManager()->GetTextureManager()->GetTextureData(renderData->GetTexture());
 		if (!tex)continue;
-		const TextureData* tex2 = dxManager_->GetResourceManager()->GetTextureManager()->GetTextureData(renderData->additionalTexture);
-		if (!tex2)continue;
 
 		// ルートシグネチャを設定
 		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootSignature(dxManager_->GetPipelineStateManager()->GetRootSignature());

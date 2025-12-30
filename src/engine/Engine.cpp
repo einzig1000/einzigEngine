@@ -14,10 +14,11 @@
 #include "DrawSystem/DrawSystem.h"
 #include "Camera/CameraManager.h"
 #include "imGuiManager/ImGuiManager.h"
+#include "Physics/PhysicsSystem.h"
 
 #include <DirectXMath.h>
 #include <filesystem>
-#include "Charactor/Player/Player.h"
+//#include "Charactor/Player/Player.h"
 using namespace DirectX;
 
 
@@ -60,6 +61,10 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 	{
 		imguiManager_ = new ImGuiManager();
 		imguiManager_->Initialize(dxManager_, windowManager_);
+	}
+	if (!physicsSystem_)
+	{
+		physicsSystem_ = new PhysicsSystem();
 	}
 
 	windowManager_->AttachMouseController(inputManager_->GetMouseController());
@@ -181,7 +186,7 @@ void Engine::UpdateTransforms()
 			// 最近接衝突点を取得
 			std::optional<Vector3> colPos = IntersectRayModel(
 				mouseRay,
-				objects[rd->model].modelData.vertices, rd
+				objects[rd->GetModel()].modelData.vertices, rd
 			);
 			// 衝突していたらリストに登録
 			if (colPos)
@@ -209,7 +214,6 @@ void Engine::UpdateParticles()
 {
 	// パーティクル更新
 	RenderData_Particle::UpdateAllParticles();
-	//RenderData_Block::UpdateAllBlock();
 }
 void Engine::UpdateCamera()
 {
@@ -241,7 +245,7 @@ void Engine::UpdateDebugInfo()
 	{
 		ToggleCamera();
 	}
-	if (Game::Input::Key::IsJustPressed(DIK_F12))
+	if (Game::Input::Key::IsJustPressed(DIK_F11))
 	{
 		ToggleFullscreen();
 	}
@@ -258,15 +262,23 @@ void Engine::UpdateDebugInfo()
 		ImGui::Text("F12 : Toggle Fullscreen");
 		ImGui::Text("DeltaTime: %.3f ms", dxManager_->GetFixFPS()->GetDeltaTime() * 1000.0f);
 		ImGui::Text("FPS: %.1f ", dxManager_->GetFixFPS()->GetAverageFPS());
+		ImGui::Text("ImGui FPS: %.1f ", ImGui::GetIO().Framerate);
 		ImGui::End();
 	}
 }
 void Engine::EndFrame()
 {
-	// 座標更新
-	UpdateTransforms();
 
-	// パーティクル更新
+	// 入力終了処理
+	inputManager_->EndFrame();
+
+	// 物理更新
+	physicsSystem_->Step();
+
+	/// 座標更新
+	//UpdateTransforms();
+
+	/// パーティクル更新
 	//UpdateParticles();
 
 	// 描画実行
@@ -275,9 +287,6 @@ void Engine::EndFrame()
 	// ImGui描画
 	imguiManager_->EndFrame();
 	imguiManager_->Draw();
-
-	// インプット系終了処理
-	inputManager_->EndFrame();
 
 	// DirectX終了処理
 	dxManager_->EndFrame();
@@ -312,6 +321,8 @@ void Engine::Finalize()
 	inputManager_ = nullptr;
 	delete imguiManager_;
 	imguiManager_ = nullptr;
+	delete physicsSystem_;
+	physicsSystem_ = nullptr;
 
 	// COMの終了処理
 	CoUninitialize();
@@ -626,6 +637,27 @@ void Engine::SetTimeScale(float scale)
 }
 
 
+// 物理制御
+void Engine::SetIWorldCollider(IWorldCollider* world)
+{
+	physicsSystem_->SetIWorldCollider(world);
+}
+
+void Engine::RegisterDynamic(RenderData_Model* model)
+{
+	physicsSystem_->RegisterDynamic(model);
+}
+
+void Engine::UnregisterDynamic(RenderData_Model* model)
+{
+	physicsSystem_->UnregisterDynamic(model);
+}
+
+void Engine::ClearDynamicAll()
+{
+	physicsSystem_->ClearDynamics();
+}
+
 // ウィンドウ操作
 void Engine::ToggleFullscreen()
 {
@@ -644,12 +676,12 @@ void Engine::ToggleFullscreen()
 // CreateLocalAABBでつくったAABBに座標を適応させる（当たり判定の毎フレーム更新用）
 std::vector<AABB>  Engine::CreateAABB(RenderData_Model* data)
 {
-	if (data->model < 0 || data->model >= (int)dxManager_->GetResourceManager()->GetModelManager()->GetModelCount())
+	if (data->GetModel() < 0 || data->GetModel() >= (int)dxManager_->GetResourceManager()->GetModelManager()->GetModelCount())
 	{
 		return {};
 	}
 	Matrix4x4 worldMatrix = data->GetWorldMatrix();
-	Object3D& obj = dxManager_->GetResourceManager()->GetModelManager()->GetModelList()[data->model];
+	Object3D& obj = dxManager_->GetResourceManager()->GetModelManager()->GetModelList()[data->GetModel()];
 	std::vector<AABB> result;
 
 	for (const auto& localAABB : obj.aabb)

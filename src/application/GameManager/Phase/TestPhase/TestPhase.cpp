@@ -41,47 +41,47 @@ TestPhase::TestPhase()
 	line2_ = std::make_unique<RenderData_Line>();
 	line3_ = std::make_unique<RenderData_Line>();
 
-	ground_->model = model1;
-	ground_->texture = tex1;
+	ground_->SetModel(model1);
+	ground_->SetTexture(tex1);
 	ground_->name = "ground";
 	ground_->mass = 1001.0f;
 	ground_->scale.value = { 10.0f,1.0f,10.0f };
 
-	wall1_->model = model1;
-	wall1_->texture = tex1;
+	wall1_->SetModel(model1);
+	wall1_->SetTexture(tex1);
 	wall1_->name = "wall1";
 	wall1_->scale.value = { 0.5f,2.0f,10.0f };
 	wall1_->translate.value = { -5.0f,0.5f,0.0f };
 	wall1_->mass = 1000.0f;
-	wall2_->model = model1;
-	wall2_->texture = tex1;
+	wall2_->SetModel(model1);
+	wall2_->SetTexture(tex1);
 	wall2_->name = "wall2";
 	wall2_->scale.value = { 0.5f,2.0f,10.0f };
 	wall2_->translate.value = { 5.0f,0.5f,0.0f };
 	wall2_->mass = 1000.0f;
-	wall3_->model = model1;
-	wall3_->texture = tex1;
+	wall3_->SetModel(model1);
+	wall3_->SetTexture(tex1);
 	wall3_->name = "wall3";
 	wall3_->scale.value = { 10.0f,2.0f,0.5f };
 	wall3_->translate.value = { 0.0f,0.5f,-5.0f };
 	wall3_->mass = 1000.0f;
-	wall4_->model = model1;
-	wall4_->texture = tex1;
+	wall4_->SetModel(model1);
+	wall4_->SetTexture(tex1);
 	wall4_->name = "wall4";
 	wall4_->scale.value = { 10.0f,2.0f,0.5f };
 	wall4_->translate.value = { 0.0f,0.5f,5.0f };
 	wall4_->mass = 1000.0f;
 
-	shoulder_->model = model4;
-	shoulder_->texture = tex2;
+	shoulder_->SetModel(model4);
+	shoulder_->SetTexture(tex2);
 	shoulder_->name = "shoulder";
 	shoulder_->translate.value.y = 0.0f;
-	elbow_->model = model4;
-	elbow_->texture = tex2;
+	elbow_->SetModel(model4);
+	elbow_->SetTexture(tex2);
 	elbow_->name = "elbow";
 	elbow_->translate.value.y = 3.0f;
-	hand_->model = model4;
-	hand_->texture = tex2;
+	hand_->SetModel(model4);
+	hand_->SetTexture(tex2);
 	hand_->name = "hand";
 	hand_->translate.value.y = 6.0f;
 
@@ -94,8 +94,8 @@ TestPhase::TestPhase()
 	rect_->pos3 = { -1.0f,1.0f,0.0f };
 	rect_->pos4 = { -1.0f,-1.0f,0.0f };
 
-	player_->model = model4;
-	player_->texture = tex3;
+	player_->SetModel(model4);
+	player_->SetTexture(tex3);
 	player_->name = "player";
 	player_->translate.value = { 0.0f,2.0f,0.0f };
 	player_->translate.acceleration = { 0.0f,-0.2f,0.0f };

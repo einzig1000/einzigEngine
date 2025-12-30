@@ -400,8 +400,8 @@ bool JsonManager::SaveToJson(RenderData_Model& data, const std::string& path)
         json j;
         if (data.name.has_value()) j["name"] = *data.name;
         j["filePath"] = data.filePath;
-        j["texture"] = data.texture;
-        j["model"] = data.model;
+		j["texture"] = data.GetTexture();
+		j["model"] = data.GetModel();
 
 
         // scale

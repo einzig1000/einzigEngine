@@ -24,11 +24,7 @@ public:
 	virtual void BreakTargetBlock();
 	// ブロック設置
 	virtual void SetNewBlock(BlockID id);
-	// 移動後のめりこみ修正
-	virtual void ResolveMapCollision();
 
-	// 物理演算と衝突判定のステップ
-	virtual void StepPhysicsAndCollision();
 
 	// 見ているブロックをtargetBlock_にセットする
 	virtual void SetTargetBlock();

@@ -39,6 +39,14 @@ public:
 	// 現状のSRTを前フレームSRTとして保存する
 	void SavePreTransforms();
 
+    // モデル
+	void SetModel(int32_t modelHandle);
+	int32_t GetModel() const { return model; }
+	// テクスチャ
+	void SetTexture(int32_t textureHandle);
+	int32_t GetTexture() const { return texture; }
+
+
     std::optional<std::string> name;
     VectorDynamics scale = { Vector3(1.0f,1.0f,1.0f), Vector3(0.0f,0.0f,0.0f), Vector3(0.0f,0.0f,0.0f) };
     VectorDynamics rotate = { Vector3(0.0f,0.0f,0.0f), Vector3(0.0f,0.0f,0.0f), Vector3(0.0f,0.0f,0.0f) };
@@ -51,11 +59,6 @@ public:
     Transforms uvTransform;
     // 色
     Vector4 color = { 0xFF, 0xFF, 0xFF, 0xFF };
-    // 3Dモデル
-    int32_t model = -1;
-    // テクスチャ
-    int32_t texture = -1;
-	int32_t additionalTexture = -1;
     // 描画オプション
     DrawOptions options;
     // 衝突判定用AABB
@@ -97,6 +100,10 @@ public:
     static std::vector<RenderData_Model*> renderModels;
 
 private:
+    // 3Dモデル
+    int32_t model = -1;
+    // テクスチャ
+    int32_t texture = -1;
     // 今フレームでS/R/Tに変化があったか
     bool movedThisFrame = true;
 

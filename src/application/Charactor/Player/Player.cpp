@@ -5,8 +5,8 @@
 Player::Player()
 {
 	// プレイヤーデータ初期化
-	data_.model = ResourceID::GetModelID(ModelID::Cube);
-	data_.texture = ResourceID::GetTextureID(TextureID::UVChecker);
+	data_.SetModel(ResourceID::GetModelID(ModelID::Cube));
+	data_.SetTexture(ResourceID::GetTextureID(TextureID::UVChecker));
 	data_.color.w = 0;
 	data_.name = "Player";
 
@@ -32,7 +32,7 @@ void Player::Initialize()
 	data_.translate.value = Vector3(0.0f, 20.0f, 0.0f);
 	data_.translate.velocity = Vector3(0.0f, -0.0f, 0.0f);
 	data_.translate.acceleration = Vector3(0.0f, GRAVITY, 0.0f);
-	data_.scale.value = Vector3(0.6f, 2.0f, 0.6f);
+	data_.scale.value = Vector3(0.6f, 1.8f, 0.6f);
 	data_.rotate.value = Vector3(0.0f, 0.0f, 0.0f);
 }
 
@@ -50,9 +50,6 @@ void Player::Update()
 	UpdateDush();
 	UpdateMove();
 	UpdateJump();
-
-	// 移動後のめりこみ修正
-	ResolveMapCollision();
 
 	// 移動後の視線レイ更新
 	UpdateViewRay();
@@ -78,12 +75,15 @@ void Player::Update()
 void Player::Draw()
 {
 	data_.Draw();
+	data_.DrawAABB();
 	reticle_.Draw();
 	Itemslot_->Draw();
 }
 
 void Player::DrawImGui()
-{}
+{
+
+}
 
 void Player::UpdateViewRay()
 {
@@ -131,7 +131,7 @@ void Player::UpdateMove()
 	if (Game::Input::Key::IsHeld(DIK_D)) input.x -= 1.0f;
 
 	// 移動方向ベクトル
-	Vector3 moveDir;
+	Vector3 moveDir = Vector3(0.0f, 0.0f, 0.0f);
 
 	if (input.x != 0.0f || input.y != 0.0f)
 	{
@@ -153,15 +153,8 @@ void Player::UpdateMove()
 		);
 
 		moveDir.Normalize();
-
-		Move(moveDir, speed_);
 	}
-	else
-	{
-		moveDir = Vector3(0.0f, 0.0f, 0.0f);
-
-		Move(moveDir, speed_);
-	}
+	Move(moveDir, speed_);
 }
 
 void Player::UpdateJump()

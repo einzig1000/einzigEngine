@@ -1,13 +1,13 @@
 #include "MapManager/MapManager.h"
+#include "MapManager/Chunk/Chunk.h"
+#include "MapManager/Chunk/Block/Block.h"
+#include "MapManager/Chunk/Block/BlockDurability.h"
 #include <fstream>
 #include <sstream>
-#include "MapManager/Chunk/Block/Block.h"
 #include "Charactor/Player/Player.h"
 #include "Utilities/PerlinNoise.h"
 #include "Engine.h"
 #include "Itemslot.h"
-#include "MapManager/Chunk/Block/BlockDurability.h"
-#include "MapManager/Chunk/Chunk.h"
 
 
 // AABBの各種補助 いずれstruct AABBに移す
@@ -85,12 +85,11 @@ namespace
 		outPts[7] = { x1, y2, zFace };
 		outPts[8] = { x2, y2, zFace };
 	}
+}
 
-	// AABBをdeltaだけ平行移動
-	static AABB TranslateAABB(const AABB& a, const Vector3& d)
-	{
-		return { a.min + d, a.max + d };
-	}
+int LocalMod(int a, int n)
+{
+	return (a % n + n) % n;
 }
 
 
@@ -261,21 +260,6 @@ void MapManager::EnsureChunkScheduled(const Vector2int& chunkPos)
 	}
 }
 
-		//// Jsonから読み取り座標だけ設定されていた場合(chunksに存在しているがデータがない場合)はデータを生成
-		//if (HasChunk(pos))
-		//{
-		//	chunk = TryGetChunk(pos);
-		//	chunk->CreateChunkData(noiseParam_, pos);
-		//}
-		//// 完全に新規の場合
-		//else
-		//{
-		//	chunk = new Chunk();
-		//	chunk->CreateChunkData(noiseParam_, pos);
-		//	chunks[pos] = chunk;
-		//}
-		// Jsonから読み取り座標だけ設定されていた場合(chunksに存在しているがデータがない場合)はデータを生成
-
 // スケジュールに登録されたチャンクを1つ生成
 void MapManager::ProcessChunkGeneration()
 {
@@ -359,256 +343,6 @@ void MapManager::Update()
 		}
 	}
 }
-
-//void MapManager::UpDataPlayerRayCollision()
-//{
-//	// まず全ブロックの isCollisionRay を戻す…は重いので、最低限「前回当たったブロックだけ戻す」等が望ましい。
-//	// ここでは要件外なので省略。
-//
-//	// プレイヤー視点のレイ
-//	const Vector3 rayStart = player_->viewLine_.origin;
-//	const Vector3 rayEnd = player_->viewLine_.end;
-//
-//	Vector3 dir = (rayEnd - rayStart);
-//	const float rayLen = dir.Length();
-//	if (rayLen <= 1e-6f) return;
-//	dir /= rayLen; // normalize
-//
-//	// ブロック座標（ワールドブロック座標）へ
-//	auto WorldBlockIndexByPosition = [](const Vector3& p) -> Vector3int
-//		{
-//			return Vector3int(
-//				int(std::floor(p.x / BLOCK_SIZE)),
-//				int(std::floor(p.y / BLOCK_SIZE)),
-//				int(std::floor(p.z / BLOCK_SIZE))
-//			);
-//		};
-//
-//	auto WorldChunkIndexFromWorldBlock = [](const Vector3int& wb) -> Vector2int
-//		{
-//			Vector2int cp;
-//			cp.x = int(std::floor(float(wb.x) / float(CHUNK_X)));
-//			cp.y = int(std::floor(float(wb.z) / float(CHUNK_Z)));
-//			return cp;
-//		};
-//
-//	auto LocalMod = [](int a, int n) -> int { return (a % n + n) % n; };
-//
-//	auto LocalIndexFromWorldBlock = [&](const Vector3int& wb) -> Vector3int
-//		{
-//			return Vector3int(
-//				LocalMod(wb.x, CHUNK_X),
-//				LocalMod(wb.y, CHUNK_Y),
-//				LocalMod(wb.z, CHUNK_Z)
-//			);
-//		};
-//
-//	auto Sign = [](float v) -> int { return (v > 0.0f) - (v < 0.0f); };
-//
-//	// 現在のワールドブロックインデックス
-//	Vector3int currentWB = WorldBlockIndexByPosition(rayStart);
-//	const Vector3int endWB = WorldBlockIndexByPosition(rayEnd);
-//
-//	// step（dir==0 の軸は 0）
-//	const int stepX = Sign(dir.x);
-//	const int stepY = Sign(dir.y);
-//	const int stepZ = Sign(dir.z);
-//
-//	// deltaDist（dir==0 は INF 扱い）
-//	const float INF = std::numeric_limits<float>::infinity();
-//	const float deltaDistX = (std::abs(dir.x) < 1e-6f) ? INF : std::abs(BLOCK_SIZE / dir.x);
-//	const float deltaDistY = (std::abs(dir.y) < 1e-6f) ? INF : std::abs(BLOCK_SIZE / dir.y);
-//	const float deltaDistZ = (std::abs(dir.z) < 1e-6f) ? INF : std::abs(BLOCK_SIZE / dir.z);
-//
-//	// sideDist（次の境界までの距離 t）
-//	auto NextBoundaryT = [](float origin, float dir, int cell, int step) -> float
-//		{
-//			// cell = floor(origin/BLOCK_SIZE) のブロック座標
-//			if (step > 0)
-//			{
-//				const float next = (float(cell) + 1.0f) * BLOCK_SIZE;
-//				return (next - origin) / dir;
-//			}
-//			else
-//			{
-//				const float next = float(cell) * BLOCK_SIZE;
-//				return (next - origin) / dir;
-//			}
-//		};
-//
-//	float sideDistX = (stepX == 0) ? INF : NextBoundaryT(rayStart.x, dir.x, currentWB.x, stepX);
-//	float sideDistY = (stepY == 0) ? INF : NextBoundaryT(rayStart.y, dir.y, currentWB.y, stepY);
-//	float sideDistZ = (stepZ == 0) ? INF : NextBoundaryT(rayStart.z, dir.z, currentWB.z, stepZ);
-//
-//	// 最大ステップ（安全）
-//	const int maxSteps = 2048;
-//
-//	// 直前に跨いだ面（＝ currentWB に入った面）
-//	AABBFace enterFace = AABBFace::NONE;
-//
-//	for (int i = 0; i < maxSteps; ++i)
-//	{
-//		// currentWB -> chunk/local
-//		const Vector2int chunkPos = WorldChunkIndexFromWorldBlock(currentWB);
-//		const Vector3int local = LocalIndexFromWorldBlock(currentWB);
-//
-//		Chunk* chunk = TryGetChunk(chunkPos);
-//		if (chunk)
-//		{
-//			// local.y は縦制限があるので範囲チェック
-//			if (0 <= local.x && local.x < CHUNK_X &&
-//				0 <= local.y && local.y < CHUNK_Y &&
-//				0 <= local.z && local.z < CHUNK_Z)
-//			{
-//				Block* b = chunk->blocks[local.x][local.y][local.z].get();
-//				if (b && b->GetBlockID() != BlockID::Air && b->isActive_)
-//				{
-//					// 衝突したブロックにフラグを立てる
-//					b->isCollisionRay = true;
-//
-//					// 衝突面（「このブロックに入ってきた面」＝直前ステップの軸で決まる）
-//					b->direction = enterFace;
-//
-//					return;
-//				}
-//			}
-//		}
-//
-//		// 終点ブロックまで到達したら終了
-//		if (currentWB == endWB) return;
-//
-//		// 次に跨ぐ境界（最小のsideDist）を選ぶ
-//		if (sideDistX < sideDistY)
-//		{
-//			if (sideDistX < sideDistZ)
-//			{
-//				// X方向へ進む
-//				currentWB.x += stepX;
-//
-//				// X方向に進む場合、入ってきた面は stepX の反対側
-//				// stepX=+1 なら “LEFT面から入る”、stepX=-1 なら “RIGHT面から入る”
-//				enterFace = (stepX > 0) ? AABBFace::LEFT : AABBFace::RIGHT;
-//
-//				sideDistX += deltaDistX;
-//			}
-//			else
-//			{
-//				// Z方向へ進む
-//				currentWB.z += stepZ;
-//
-//				// stepZ=+1 なら “BACK面から入る”、stepZ=-1 なら “FRONT面から入る”
-//				enterFace = (stepZ > 0) ? AABBFace::BACK : AABBFace::FRONT;
-//
-//				sideDistZ += deltaDistZ;
-//			}
-//		}
-//		else
-//		{
-//			if (sideDistY < sideDistZ)
-//			{
-//				// Y方向へ進む
-//				currentWB.y += stepY;
-//
-//				// stepY=+1 なら “BOTTOM面から入る”、stepY=-1 なら “TOP面から入る”
-//				enterFace = (stepY > 0) ? AABBFace::BOTTOM : AABBFace::TOP;
-//
-//				sideDistY += deltaDistY;
-//			}
-//			else
-//			{
-//				// Z方向へ進む
-//				currentWB.z += stepZ;
-//
-//				enterFace = (stepZ > 0) ? AABBFace::BACK : AABBFace::FRONT;
-//
-//				sideDistZ += deltaDistZ;
-//			}
-//		}
-//
-//		// 伸びすぎ防止：レイ長を超えたら終了（tの近似として最小sideDistを使う）
-//		const float tApprox = my_min(sideDistX, my_min(sideDistY, sideDistZ));
-//		if (tApprox > rayLen) return;
-//	}
-//}
-
-//void MapManager::UpDataPlayerRayCollision()
-//{
-//	// プレイヤー視点のインデックス
-//	Vector3 rayStart = player_->viewLine_.origin;
-//	Vector3 rayEnd = player_->viewLine_.end;
-//	Vector3 dir = (rayEnd - rayStart).Normalized();
-//
-//	// 現在のインデックス
-//	Vector3int currentIdx = IndexByPosition(rayStart);
-//	// 最終目的地のインデックス
-//	Vector3int endIdx = IndexByPosition(rayEnd);
-//
-//	// 各軸に進む方向 (1 または -1)
-//	int stepX = (dir.x > 0) ? 1 : -1;
-//	int stepY = (dir.y > 0) ? 1 : -1;
-//	int stepZ = (dir.z > 0) ? 1 : -1;
-//
-//	// 次の境界線までの距離を算出するための準備
-//	// deltaDist: その軸方向にブロック1つ分進むのに必要なレイの長さ
-//	float deltaDistX = std::abs(BLOCK_SIZE / dir.x);
-//	float deltaDistY = std::abs(BLOCK_SIZE / dir.y);
-//	float deltaDistZ = std::abs(BLOCK_SIZE / dir.z);
-//
-//	// sideDist: 現在地から「次の境界線」までのレイの長さ
-//	Vector3 blockPos = PositionByIndex(currentIdx); // ブロックの中心（または最小角）
-//	float sideDistX = (stepX > 0) ? (blockPos.x + BLOCK_SIZE - rayStart.x) : (rayStart.x - blockPos.x);
-//	float sideDistY = (stepY > 0) ? (blockPos.y + BLOCK_SIZE - rayStart.y) : (rayStart.y - blockPos.y);
-//	float sideDistZ = (stepZ > 0) ? (blockPos.z + BLOCK_SIZE - rayStart.z) : (rayStart.z - blockPos.z);
-//
-//	sideDistX = (dir.x != 0) ? sideDistX / std::abs(dir.x) : FLT_MAX;
-//	sideDistY = (dir.y != 0) ? sideDistY / std::abs(dir.y) : FLT_MAX;
-//	sideDistZ = (dir.z != 0) ? sideDistZ / std::abs(dir.z) : FLT_MAX;
-//
-//	// 最大ループ回数（安全のため。レイの長さに応じて調整）
-//	int maxSteps = 100;
-//
-//	for (int i = 0; i < maxSteps; i++)
-//	{
-//		// 衝突判定
-//		if (block_[currentIdx.x][currentIdx.y][currentIdx.z]->GetBlockID() != BlockID::Air)
-//		{
-//			block_[currentIdx.x][currentIdx.y][currentIdx.z]->isCollisionRay = true;
-//			return; // 衝突したら終了
-//		}
-//
-//		// ゴールに到達したら終了
-//		if (currentIdx == endIdx) break;
-//
-//		// 最も近い境界線（X, Y, Zのどれか）を跨ぐ
-//		if (sideDistX < sideDistY)
-//		{
-//			if (sideDistX < sideDistZ)
-//			{
-//				sideDistX += deltaDistX;
-//				currentIdx.x += stepX;
-//				//block_[currentIdx.x][currentIdx.y][currentIdx.z]->direction =
-//			}
-//			else
-//			{
-//				sideDistZ += deltaDistZ;
-//				currentIdx.z += stepZ;
-//			}
-//		}
-//		else
-//		{
-//			if (sideDistY < sideDistZ)
-//			{
-//				sideDistY += deltaDistY;
-//				currentIdx.y += stepY;
-//			}
-//			else
-//			{
-//				sideDistZ += deltaDistZ;
-//				currentIdx.z += stepZ;
-//			}
-//		}
-//	}
-//}
 
 void MapManager::Draw()
 {
@@ -711,7 +445,6 @@ bool MapManager::SetBlockAt(const lookAtBlock& lab, const BlockID id)
 
 	return SetBlockAt(chunkPos, localIndex, id);
 }
-
 bool MapManager::SetBlockAt(const Vector2int& chunkPos, const Vector3int& localIndex, const BlockID id)
 {
 	// Air ブロックは設置できない(おけるわけがない笑)
@@ -748,136 +481,152 @@ bool MapManager::SetBlockAt(const Vector3& position, const BlockID id)
 	return SetBlockAt(ChunkIndexByPosition(position), BlockIndexByPosition(position), id);
 }
 
-bool MapManager::SweepAABB(const AABB& aabb, const Vector3& delta, Vector3& outCorrectedDelta)
+bool MapManager::SweepAABB(const AABB& aabb, const Vector3& delta, Vector3& outCorrectedDelta) const
 {
 	outCorrectedDelta = delta;
 
-	const float maxStep = 19.0f;
+	// めり込み防止のスキン
+	const float skin = 0.001f;
 
-	// ===== X =====
-	if (std::abs(outCorrectedDelta.x) > 1e-6f)
-	{
-		const float dx = ClampFloat(outCorrectedDelta.x, -maxStep, maxStep);
-		AABB cur = aabb;
-
-		const float faceX = (dx > 0.0f) ? cur.max.x : cur.min.x;
-		Vector3 samples[9];
-		MakeFaceSamplePoints_X(cur, faceX, samples);
-
-		float allowed = dx;
-
-		for (const Vector3& p : samples)
+	// 与えられたAABBが重なり得るブロックを走査する
+	auto AnySolidOverlap = [&](const AABB& test) -> bool
 		{
-			Ray r;
-			r.origin = p;
-			r.diff = { (dx > 0.0f) ? 1.0f : -1.0f, 0.0f, 0.0f };
+			// AABBの覆うワールドブロック範囲（min/maxは「セルインデックス」）
+			const Vector3int minBlockIndex = WorldBlockIndexByPosition(test.min);
+			const Vector3int maxBlockIndex = WorldBlockIndexByPosition(test.max - Vector3{ 1e-6f, 1e-6f, 1e-6f });
 
-			auto hit = GetBlockByCrossedRay(r, std::abs(allowed));
-			if (!hit.has_value()) continue;
-
-			// hit.distance は LengthSq() 系で入っているのでsqrtする
-			const float hitDist = hit->distance;
-
-			// 進みたい距離より手前で当たっているなら、その手前まで
-			if (hitDist < std::abs(allowed))
-			{
-				// 少し手前で止める（めり込み防止）
-				const float skin = 0.01f;
-				float newAllowed = (hitDist - skin);
-				if (newAllowed < 0.0f) newAllowed = 0.0f;
-				allowed = (dx > 0.0f) ? newAllowed : -newAllowed;
-			}
-		}
-
-		outCorrectedDelta.x = allowed;
-	}
-
-	// ===== Y =====
-	{
-		// X適用後のAABBでYを処理
-		AABB cur = TranslateAABB(aabb, { outCorrectedDelta.x, 0.0f, 0.0f });
-
-		if (std::abs(outCorrectedDelta.y) > 1e-6f)
-		{
-			const float dy = ClampFloat(outCorrectedDelta.y, -maxStep, maxStep);
-			const float faceY = (dy > 0.0f) ? cur.max.y : cur.min.y;
-
-			Vector3 samples[9];
-			MakeFaceSamplePoints_Y(cur, faceY, samples);
-
-			float allowed = dy;
-
-			for (const Vector3& p : samples)
-			{
-				Ray r;
-				r.origin = p;
-				r.diff = { 0.0f, (dy > 0.0f) ? 1.0f : -1.0f, 0.0f };
-
-				auto hit = GetBlockByCrossedRay(r, std::abs(allowed));
-				if (!hit.has_value()) continue;
-
-				const float hitDist = hit->distance;
-
-				if (hitDist < std::abs(allowed))
+			// floor_div（負数対応の床除算）
+			auto FloorDiv = [](int a, int n) -> int
 				{
-					const float skin = 0.01f;
-					float newAllowed = (hitDist - skin);
-					if (newAllowed < 0.0f) newAllowed = 0.0f;
-					allowed = (dy > 0.0f) ? newAllowed : -newAllowed;
+					// n > 0 前提
+					int q = a / n;
+					int r = a % n;
+					if (r != 0 && ((r > 0) != (n > 0)) != (a > 0)) {} // unused guard
+					// C++の / は0方向丸めなので、負数で割り切れないときだけ1引く
+					if (r != 0 && ((a < 0) ^ (n < 0))) --q;
+					return q;
+				};
+
+			for (int by = minBlockIndex.y; by <= maxBlockIndex.y; ++by)
+			{
+				// Y軸はワールド境界でクリップ
+				if (by < 0 || by >= CHUNK_Y) continue;
+				const int localY = by;
+
+				for (int bz = minBlockIndex.z; bz <= maxBlockIndex.z; ++bz)
+				{
+					const int chunkZ = FloorDiv(bz, CHUNK_Z);
+					const int localZ = LocalMod(bz, CHUNK_Z);
+
+					for (int bx = minBlockIndex.x; bx <= maxBlockIndex.x; ++bx)
+					{
+						const int chunkX = FloorDiv(bx, CHUNK_X);
+						const int localX = LocalMod(bx, CHUNK_X);
+
+						const Vector2int chunkPos{ chunkX, chunkZ };
+						Chunk* c = TryGetChunk(chunkPos);
+						if (!c) continue;
+
+						Block* b = c->blocks[localX][localY][localZ].get();
+						if (!b) continue;
+						if (b->GetBlockID() == BlockID::Air) continue;
+
+						// ブロックAABBと実際に重なっているか
+						if (IsOverLap(test, b->aabb_))
+						{
+							return true;
+						}
+					}
+				}
+			}
+			return false;
+		};
+
+	// 「指定軸だけ」動かして、めり込むならその軸の移動量を詰める
+	auto ResolveAxis = [&](float& dAxis, int axis) -> bool
+		{
+			if (std::abs(dAxis) < 1e-6f) return false;
+
+			const float sign = (dAxis >= 0.0f) ? 1.0f : -1.0f;
+			const float dist = std::abs(dAxis);
+
+			bool hit = false;
+
+			// 二分探索で「当たらない最大距離」を探す（0..dist）
+			float lo = 0.0f;
+			float hi = dist;
+
+			auto MakeMove = [&](float signedAmount) -> Vector3
+				{
+					Vector3 move{ 0,0,0 };
+					if (axis == 0) move.x = signedAmount;
+					if (axis == 1) move.y = signedAmount;
+					if (axis == 2) move.z = signedAmount;
+					return move;
+				};
+
+			// dist動かしても当たらないなら終了
+			{
+				const Vector3 move = MakeMove(sign * dist);
+				Vector3 testMove = outCorrectedDelta + move;
+				const AABB test = aabb + testMove;
+				if (!AnySolidOverlap(test)) return false;
+			}
+
+			// 当たるので探索
+			for (int i = 0; i < 16; ++i)
+			{
+				const float mid = (lo + hi) * 0.5f;
+				const Vector3 move = MakeMove(sign * mid);
+				Vector3 testMove = outCorrectedDelta + move;
+				const AABB test = aabb + testMove;
+
+				if (AnySolidOverlap(test))
+				{
+					hi = mid;
+					hit = true;
+				}
+				else
+				{
+					lo = mid;
 				}
 			}
 
-			outCorrectedDelta.y = allowed;
-		}
-	}
+			// skin分だけ手前で止める（距離側で引く）
+			float allowedDist = lo - skin;
+			if (allowedDist < 0.0f) allowedDist = 0.0f;
 
-	// ===== Z =====
+			dAxis = sign * allowedDist;
+			return hit;
+		};
+
+	bool hitAny = false;
+
+	// X
 	{
-		AABB cur = TranslateAABB(aabb, { outCorrectedDelta.x, outCorrectedDelta.y, 0.0f });
-
-		if (std::abs(outCorrectedDelta.z) > 1e-6f)
-		{
-			const float dz = ClampFloat(outCorrectedDelta.z, -maxStep, maxStep);
-			const float faceZ = (dz > 0.0f) ? cur.max.z : cur.min.z;
-
-			Vector3 samples[9];
-			MakeFaceSamplePoints_Z(cur, faceZ, samples);
-
-			float allowed = dz;
-
-			for (const Vector3& p : samples)
-			{
-				Ray r;
-				r.origin = p;
-				r.diff = { 0.0f, 0.0f, (dz > 0.0f) ? 1.0f : -1.0f };
-
-				auto hit = GetBlockByCrossedRay(r, std::abs(allowed));
-				if (!hit.has_value()) continue;
-
-				const float hitDist = hit->distance;
-
-				if (hitDist < std::abs(allowed))
-				{
-					const float skin = 0.01f;
-					float newAllowed = (hitDist - skin);
-					if (newAllowed < 0.0f) newAllowed = 0.0f;
-					allowed = (dz > 0.0f) ? newAllowed : -newAllowed;
-				}
-			}
-
-			outCorrectedDelta.z = allowed;
-		}
+		float dx = outCorrectedDelta.x;
+		if (ResolveAxis(dx, 0)) hitAny = true;
+		outCorrectedDelta.x = dx;
 	}
 
-	// 何かしら縮んだなら衝突があった扱い
-	const bool hitSomething =
-		(outCorrectedDelta.x != delta.x) ||
-		(outCorrectedDelta.y != delta.y) ||
-		(outCorrectedDelta.z != delta.z);
+	// Z
+	{
+		float dz = outCorrectedDelta.z;
+		if (ResolveAxis(dz, 2)) hitAny = true;
+		outCorrectedDelta.z = dz;
+	}
 
-	return hitSomething;
+	// Y
+	{
+		float dy = outCorrectedDelta.y;
+		if (ResolveAxis(dy, 1)) hitAny = true;
+		outCorrectedDelta.y = dy;
+	}
+
+
+	return hitAny;
 }
-bool MapManager::isSolidAt(const Vector3& position)
+bool MapManager::isSolidAt(const Vector3& position) const 
 {
 	Vector2int chunkPos = ChunkIndexByPosition(position);
 	Vector3int index = BlockIndexByPosition(position);
@@ -893,7 +642,7 @@ bool MapManager::isSolidAt(const Vector3& position)
 	return false;
 }
 
-AABB MapManager::GetAABB(const Vector2int& chunkPos, const Vector3int& index)
+AABB MapManager::GetAABB(const Vector2int& chunkPos, const Vector3int& index) const
 {
 	// チャンクのワールド原点
 	float chunkWorldX = chunkPos.x * CHUNK_X * BLOCK_SIZE;
@@ -909,13 +658,13 @@ AABB MapManager::GetAABB(const Vector2int& chunkPos, const Vector3int& index)
 
 	return AABB(mint, maxt);
 }
-AABB MapManager::GetAABB(const Vector3& position)
+AABB MapManager::GetAABB(const Vector3& position) const
 {
 	Vector2int chunkPos = ChunkIndexByPosition(position);
 	Vector3int index = BlockIndexByPosition(position);
 	return GetAABB(chunkPos, index);
 }
-bool MapManager::GetIsActive(const Vector2int& chunkPos, const Vector3int& index)
+bool MapManager::GetIsActive(const Vector2int& chunkPos, const Vector3int& index) const
 {
 	Chunk* chunk = TryGetChunk(chunkPos);
 	if (chunk)
@@ -927,7 +676,7 @@ bool MapManager::GetIsActive(const Vector2int& chunkPos, const Vector3int& index
 	}
 	return false;
 }
-bool MapManager::GetIsActive(const Vector3& position)
+bool MapManager::GetIsActive(const Vector3& position) const
 {
 	Vector2int chunkPos = ChunkIndexByPosition(position);
 	Vector3int index = BlockIndexByPosition(position);
@@ -935,7 +684,7 @@ bool MapManager::GetIsActive(const Vector3& position)
 }
 
 // position が今どのチャンクに属しているか  例：position=(34, 0, 50) -> chunkIndex=(1, 2)
-Vector2int MapManager::ChunkIndexByPosition(const Vector3& position)
+Vector2int MapManager::ChunkIndexByPosition(const Vector3& position) const
 {
 	int bx = static_cast<int>(std::floor(position.x / BLOCK_SIZE));
 	int bz = static_cast<int>(std::floor(position.z / BLOCK_SIZE));
@@ -946,33 +695,34 @@ Vector2int MapManager::ChunkIndexByPosition(const Vector3& position)
 	return chunk;
 }
 
-int LocalMod(int a, int n)
-{
-	return (a % n + n) % n;
-}
-
 // position が今チャンク内どのブロックに属しているか(どんな時も0～CHUNK_SIZE-1の範囲に収まる)  例：position=(34, 0, 50) -> localIndex=(2, 0, 2)
-Vector3int MapManager::BlockIndexByPosition(const Vector3& position)
+Vector3int MapManager::BlockIndexByPosition(const Vector3& position) const
 {
 	// ① ワールド座標 → 世界ブロック座標
-	int bx = static_cast<int>(std::floor(position.x / BLOCK_SIZE));
-	int by = static_cast<int>(std::floor(position.y / BLOCK_SIZE));
-	int bz = static_cast<int>(std::floor(position.z / BLOCK_SIZE));
+	Vector3int wb = WorldBlockIndexByPosition(position);
 
 	// ② チャンク内インデックスへ正規化（数学的 mod）
 	Vector3int local;
-	local.x = LocalMod(bx, CHUNK_X);
-	local.y = LocalMod(by, CHUNK_Y);
-	local.z = LocalMod(bz, CHUNK_Z);
+	local.x = LocalMod(wb.x, CHUNK_X);
+	local.y = LocalMod(wb.y, CHUNK_Y);
+	local.z = LocalMod(wb.z, CHUNK_Z);
 
 	local.y = std::clamp(local.y, 0, CHUNK_Y - 1);
 
 	return local;
 }
 
+Vector3int MapManager::WorldBlockIndexByPosition(const Vector3& position) const
+{
+	int bx = static_cast<int>(std::floor(position.x / BLOCK_SIZE));
+	int by = static_cast<int>(std::floor(position.y / BLOCK_SIZE));
+	int bz = static_cast<int>(std::floor(position.z / BLOCK_SIZE));
+	return Vector3int(bx, by, bz);
+}
+
 
 // レイとブロックの交差判定（衝突ブロックを返す）
-std::optional<lookAtBlock> MapManager::GetBlockByCrossedRay(const Ray& ray, const float maxDistance)
+std::optional<lookAtBlock> MapManager::GetBlockByCrossedRay(const Ray& ray, const float maxDistance) const
 {
 	lookAtBlock result;
 
@@ -1161,7 +911,7 @@ std::optional<lookAtBlock> MapManager::GetBlockByCrossedRay(const Ray& ray, cons
 }
 
 // レイとブロックの交差判定（衝突座標を返す）
-std::optional<Vector3> MapManager::GetPositionByCrossedRay(const Ray& ray)
+std::optional<Vector3> MapManager::GetPositionByCrossedRay(const Ray& ray) const
 {
 	AABB aabb = GetAABB(ray.origin);
 

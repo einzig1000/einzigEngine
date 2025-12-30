@@ -3,18 +3,22 @@
 #include "Charactor/Player/Player.h"
 #include "Camera/CameraController.h"
 #include "UIManager/UIManager.h"
+#include "Physics/IWorldCollider.h"
+#include "MapManager/MapWorldCollider.h"
 #include <fstream>
 
 GameScenePhase::GameScenePhase()
 {
 	// プレイヤー生成
 	player_ = std::make_unique<Player>();
-	// マップマネージャー生成
-	map_ = std::make_unique<MapManager>(player_.get());
 	// カメラコントローラー生成
 	cameraController_ = std::make_unique<CameraController>();
 	// UIマネージャー生成
 	uiManager_ = std::make_unique<UIManager>(player_.get());
+	// マップマネージャー生成
+	map_ = std::make_unique<MapManager>(player_.get());
+	// マップワールドコライダー生成
+	worldCollider_ = std::make_unique<MapWorldCollider>(map_.get());
 
 	// カメラコントローラーにプレイヤーとマップマネージャーをセット
 	cameraController_->SetPlayer(player_.get());
@@ -22,6 +26,14 @@ GameScenePhase::GameScenePhase()
 
 	// プレイヤーにマップマネージャーをセット
 	player_->SetMapManager(map_.get());
+
+	// 物理システムにワールドコライダーをセット
+	Game::Physics::SetIWorldCollider(worldCollider_.get());
+	Game::Physics::ClearDynamicAll();
+
+	// プレイヤーの物理演算有効化
+	Game::Physics::RegisterDynamic(&player_->data_);
+
 
 	map_->LoadMap("resources/Map/map.json");
 }

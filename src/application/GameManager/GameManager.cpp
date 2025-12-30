@@ -6,7 +6,7 @@
 
 GameManager::GameManager()
 {
-	currentPhase_ = CreatePhase(PHASE::Phase_GameScene);
+	currentPhase_ = CreatePhase(PHASE::Phase_Title);
 	currentPhase_->Initialize();
 }
 

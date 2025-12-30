@@ -9,8 +9,10 @@
 #include "DrawSystem/RenderData/RenderData.h"
 #include "ResourceLoder/ResourceID.h"
 #include "ImGuiManager/ImGuiManager.h"
-
 #include <algorithm>
+
+class IWorldCollider;
+
 
 class Game
 {
@@ -384,7 +386,7 @@ public:
 		{
 			return start + (end - start) * t;
 		}
-	
+
 		static float RandFloat(float min, float max, int decimalPlaces)
 		{
 			return RandomFloat(min, max, decimalPlaces);
@@ -469,6 +471,30 @@ public:
 		/// タイムスケール設定　タイムスケールとは時間の進み具合を調整する値。1.0が通常速度、0.5が半分の速度、2.0が2倍の速度になる。
 		/// </summary>
 		static void SetTimeScale(float scale);
+	};
+
+	class Physics
+	{
+	public:
+		/// <summary>
+		/// WorldColliderの設定
+		/// </summary>
+		static void SetIWorldCollider(IWorldCollider* worldCollider);
+
+		/// <summary>
+		/// RenderData_Modelの物理演算有効化
+		/// </summary>
+		static void RegisterDynamic(RenderData_Model* model);
+
+		/// <summary>
+		/// RenderData_Modelの物理演算無効化
+		/// </summary>
+		static void UnregisterDynamic(RenderData_Model* model);
+		
+		/// <summary>
+		/// 登録されている全てのRenderData_Modelの物理演算無効化
+		/// </summary>
+		static void ClearDynamicAll();
 	};
 
 private:

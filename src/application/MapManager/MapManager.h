@@ -5,6 +5,7 @@
 #include <queue>
 #include <unordered_set>
 #include "Utilities/PerlinNoise.h"
+#include "engine/Physics/IWorldCollider.h"
 
 class Block;
 class Chunk;
@@ -37,21 +38,23 @@ public:
 	bool SetBlockAt(const Vector3& position, const BlockID id);
 
 	// SweepAABB
-	bool SweepAABB(const AABB& aabb, const Vector3& delta, Vector3& outCorrectedDelta);
+	bool SweepAABB(const AABB& aabb, const Vector3& delta, Vector3& outCorrectedDelta) const;
 	// 指定位置に固体ブロックがあるか
-	bool isSolidAt(const Vector3& position);
+	bool isSolidAt(const Vector3& position) const;
 
 	// レイとブロックの交差判定（衝突ブロックを返す）
-	std::optional<lookAtBlock> GetBlockByCrossedRay(const Ray& ray, const float maxDistance);
+	std::optional<lookAtBlock> GetBlockByCrossedRay(const Ray& ray, const float maxDistance) const;
 	// レイとブロックの交差判定（衝突座標を返す）
-	std::optional<Vector3> GetPositionByCrossedRay(const Ray& ray);
+	std::optional<Vector3> GetPositionByCrossedRay(const Ray& ray) const;
 
-	AABB GetAABB(const Vector2int& chunkPos, const Vector3int& index);
-	AABB GetAABB(const Vector3& position);
-	bool GetIsActive(const Vector2int& chunkPos, const Vector3int& index);
-	bool GetIsActive(const Vector3& position);
-	Vector2int ChunkIndexByPosition(const Vector3& position);		// ワールド座標 → chunksのキーインデックス座標
-	Vector3int BlockIndexByPosition(const Vector3& position);		// ワールド座標 → ブロックインデックス座標
+	AABB GetAABB(const Vector2int& chunkPos, const Vector3int& index) const;
+	AABB GetAABB(const Vector3& position) const;
+	bool GetIsActive(const Vector2int& chunkPos, const Vector3int& index) const;
+	bool GetIsActive(const Vector3& position) const;
+	Vector2int ChunkIndexByPosition(const Vector3& position) const;		// ワールド座標 → chunksのキーインデックス座標
+	Vector3int BlockIndexByPosition(const Vector3& position) const;		// ワールド座標 → ブロックインデックス座標
+	// ワールド座標からワールドブロックインデックス
+	Vector3int WorldBlockIndexByPosition(const Vector3& position) const;
 
 	// マップデータ
 	std::unordered_map<Vector2int, Chunk*, Vector2intHash> chunks;

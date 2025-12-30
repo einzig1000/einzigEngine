@@ -312,3 +312,37 @@ void Game::Time::SetTimeScale(float scale)
 {
 	Engine::Instance().SetTimeScale(scale);
 }
+
+// マップ設定
+void Game::Physics::SetIWorldCollider(IWorldCollider* worldCollider)
+{
+	Engine::Instance().SetIWorldCollider(worldCollider);
+}
+
+// マップと衝突する動的オブジェクトの登録
+void Game::Physics::RegisterDynamic(RenderData_Model* model)
+{
+	Engine::Instance().RegisterDynamic(model);
+}
+
+// マップと衝突する動的オブジェクトの登録解除
+void Game::Physics::UnregisterDynamic(RenderData_Model* model)
+{
+	Engine::Instance().UnregisterDynamic(model);
+}
+
+// 全ての動的オブジェクトの登録解除
+void Game::Physics::ClearDynamicAll()
+{
+	Engine::Instance().ClearDynamicAll();
+}
+
+//void Game::Physics::SetGravity(Vector3 gravity)
+//{
+//	Engine::Instance().SetGravity(gravity);
+//}
+//
+//Vector3 Game::Physics::GetGravity()
+//{
+//	return Engine::Instance().GetGravity();
+//}

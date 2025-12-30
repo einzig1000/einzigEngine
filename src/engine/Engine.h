@@ -13,6 +13,8 @@ class DrawSystem;
 class Input;
 class CameraManager;
 class ImGuiManager;
+class PhysicsSystem;
+class IWorldCollider;
 
 class RenderData_Model;
 class RenderData_Triangle;
@@ -131,12 +133,23 @@ public:
 	float GetFrameRate();			// フレームレート取得
 	void SetTimeScale(float scale);	// タイムスケール設定
 
+	// 物理制御
+
+	// 全てのRenderData_Modelの物理演算無効化
+	void ClearDynamicAll();
+	// RenderData_Modelの物理演算無効化
+	void UnregisterDynamic(RenderData_Model* model);
+	// RenderData_Modelの物理演算有効化
+	void RegisterDynamic(RenderData_Model* model);
+	// WorldColliderの設定
+	void SetIWorldCollider(IWorldCollider* worldCollider);
+
 
 	// フルスクリーン切り替え
 	void ToggleFullscreen();
 
 	// AABBの作成
-	std::vector<AABB>  CreateAABB(RenderData_Model* data);
+	std::vector<AABB> CreateAABB(RenderData_Model* data);
 
 	// プリミティブモードの設定
 	void toggleWireframeMode();
@@ -147,6 +160,8 @@ public:
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateConstantBufferResource(size_t sizeInBytes);
 
 	DirectXManager* GetDirectXManager() { return dxManager_; }
+
+	PhysicsSystem* GetPhysicsSystem() { return physicsSystem_; }
 
 
 	const std::vector<Object3D> GetAllObject3D();
@@ -172,4 +187,6 @@ private:
 	CameraManager* cameraManager_ = nullptr;
 	// ImGui
 	ImGuiManager* imguiManager_ = nullptr;
+	// 物理演算
+	PhysicsSystem* physicsSystem_ = nullptr;
 };
