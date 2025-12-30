@@ -87,6 +87,77 @@ namespace
 	}
 }
 
+namespace
+{
+	struct SolidBlockAABB
+	{
+		AABB aabb;
+	};
+
+	// 負数対応の床除算
+	static int FloorDivInt(int a, int n)
+	{
+		int q = a / n;
+		int r = a % n;
+		if (r != 0 && ((a < 0) ^ (n < 0))) --q;
+		return q;
+	}
+
+	// test AABBが覆う範囲の「固体ブロックAABB」を列挙
+	template<class Fn>
+	static void ForEachSolidBlockAABB_OverlappingRange(
+		const MapManager* self,
+		const AABB& test,
+		Fn&& fn)
+	{
+		const Vector3int minWB = self->WorldBlockIndexByPosition(test.min);
+		const Vector3int maxWB = self->WorldBlockIndexByPosition(test.max - Vector3{ 1e-6f, 1e-6f, 1e-6f });
+
+		for (int by = minWB.y; by <= maxWB.y; ++by)
+		{
+			if (by < 0 || by >= CHUNK_Y) continue;
+			const int localY = by;
+
+			for (int bz = minWB.z; bz <= maxWB.z; ++bz)
+			{
+				const int chunkZ = FloorDivInt(bz, CHUNK_Z);
+				const int localZ = LocalMod(bz, CHUNK_Z);
+
+				for (int bx = minWB.x; bx <= maxWB.x; ++bx)
+				{
+					const int chunkX = FloorDivInt(bx, CHUNK_X);
+					const int localX = LocalMod(bx, CHUNK_X);
+
+					const Vector2int chunkPos{ chunkX, chunkZ };
+					Chunk* c = self->TryGetChunk(chunkPos);
+					if (!c) continue;
+
+					Block* b = c->blocks[localX][localY][localZ].get();
+					if (!b) continue;
+					if (b->GetBlockID() == BlockID::Air) continue;
+
+					fn(b->aabb_);
+				}
+			}
+		}
+	}
+
+	static bool AnySolidOverlap_Map(
+		const MapManager* self,
+		const AABB& test)
+	{
+		bool hit = false;
+		ForEachSolidBlockAABB_OverlappingRange(self, test, [&](const AABB& block)
+			{
+				if (IsOverLap(test, block))
+				{
+					hit = true;
+				}
+			});
+		return hit;
+	}
+}
+
 int LocalMod(int a, int n)
 {
 	return (a % n + n) % n;
