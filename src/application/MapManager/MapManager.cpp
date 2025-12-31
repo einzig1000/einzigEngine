@@ -11,6 +11,12 @@
 
 
 // AABBの各種補助 いずれstruct AABBに移す
+
+int LocalMod(int a, int n)
+{
+	return (a % n + n) % n;
+}
+
 namespace
 {
 	static float ClampFloat(float v, float a, float b) { return my_max(a, my_min(v, b)); }
@@ -89,6 +95,78 @@ namespace
 
 namespace
 {
+	struct SweepHit
+	{
+		bool hit = false;
+		float t = 1.0f;            // 0..1
+		Vector3 normal{ 0,0,0 };   // 当たった面法線（簡易）
+	};
+
+	static SweepHit SweptAABBvsAABB(const AABB& moving, const Vector3& delta, const AABB& block)
+	{
+		// delta を 0..1 のパラメータで扱う
+		const float INF = std::numeric_limits<float>::infinity();
+
+		auto Axis = [&](float minA, float maxA, float minB, float maxB, float v, float& tEnter, float& tExit, float& nOut)
+			{
+				if (std::abs(v) < 1e-8f)
+				{
+					// 動かない軸：開始時に重なってなければ永遠に当たらない
+					if (maxA <= minB || minA >= maxB) { tEnter = INF; tExit = -INF; return; }
+					// 重なっているなら制約なし
+					return;
+				}
+
+				const float invV = 1.0f / v;
+				float t1 = (minB - maxA) * invV;
+				float t2 = (maxB - minA) * invV;
+
+				float n = 0.0f;
+				// t1 が entry 側
+				if (t1 > t2) { std::swap(t1, t2); n = (v > 0) ? -1.0f : +1.0f; }
+				else { n = (v > 0) ? -1.0f : +1.0f; }
+
+				// entryの法線は「entryで跨ぐ側」だが、簡易に vの符号で決める
+				// （厳密にするなら、entry側(t1)が採用された軸の法線にする）
+				// ここでは nOut は後段で「採用軸」に上書きするので仮でOK
+				nOut = n;
+
+				tEnter = t1;
+				tExit = t2;
+			};
+
+		float tEnterX = -INF, tExitX = INF; float nx = 0;
+		float tEnterY = -INF, tExitY = INF; float ny = 0;
+		float tEnterZ = -INF, tExitZ = INF; float nz = 0;
+
+		Axis(moving.min.x, moving.max.x, block.min.x, block.max.x, delta.x, tEnterX, tExitX, nx);
+		Axis(moving.min.y, moving.max.y, block.min.y, block.max.y, delta.y, tEnterY, tExitY, ny);
+		Axis(moving.min.z, moving.max.z, block.min.z, block.max.z, delta.z, tEnterZ, tExitZ, nz);
+
+		float tEnter = my_max(tEnterX, my_max(tEnterY, tEnterZ));
+		float tExit = my_min(tExitX, my_min(tExitY, tExitZ));
+
+		SweepHit out;
+
+		// 交差条件
+		if (tEnter > tExit) return out;
+		if (tExit < 0.0f) return out;     // 過去に当たった
+		if (tEnter > 1.0f) return out;    // 移動範囲外
+
+		out.hit = true;
+		out.t = std::clamp(tEnter, 0.0f, 1.0f);
+
+		// 採用軸の法線（tEnterが最大だった軸）
+		if (tEnter == tEnterX) out.normal = Vector3{ nx, 0, 0 };
+		else if (tEnter == tEnterY) out.normal = Vector3{ 0, ny, 0 };
+		else out.normal = Vector3{ 0, 0, nz };
+
+		return out;
+	}
+}
+
+namespace
+{
 	struct SolidBlockAABB
 	{
 		AABB aabb;
@@ -157,12 +235,6 @@ namespace
 		return hit;
 	}
 }
-
-int LocalMod(int a, int n)
-{
-	return (a % n + n) % n;
-}
-
 
 
 MapManager::MapManager(Player* player)
@@ -552,6 +624,7 @@ bool MapManager::SetBlockAt(const Vector3& position, const BlockID id)
 	return SetBlockAt(ChunkIndexByPosition(position), BlockIndexByPosition(position), id);
 }
 
+// 初期
 bool MapManager::SweepAABB(const AABB& aabb, const Vector3& delta, Vector3& outCorrectedDelta) const
 {
 	outCorrectedDelta = delta;
@@ -697,6 +770,346 @@ bool MapManager::SweepAABB(const AABB& aabb, const Vector3& delta, Vector3& outC
 
 	return hitAny;
 }
+// 1) depenetration（先に「微妙な重なり」を毎フレ解消してから軸解決）
+bool MapManager::SweepAABB_DepentrationFirst(const AABB& aabb, const Vector3& delta, Vector3& outCorrectedDelta) const
+{
+	outCorrectedDelta = delta;
+	const float skin = 0.001f;
+
+	// 0) depenetration（今フレーム開始時点の微小めり込みを解消）
+	//    ※ここでは「最小押し戻しベクトル」を厳密に求めず、接触してるブロックの深度を足し合わせて小さく押し戻す。
+	{
+		AABB cur = aabb;
+		const int iters = 4;            // 少なすぎると残る / 多すぎると重い
+		const float maxPush = 0.05f;    // 1フレで押し戻し過ぎない安全弁
+
+		for (int iter = 0; iter < iters; ++iter)
+		{
+			Vector3 push(0, 0, 0);
+			bool overlapped = false;
+
+			ForEachSolidBlockAABB_OverlappingRange(this, cur, [&](const AABB& block)
+				{
+					if (!IsOverLap(cur, block)) return;
+
+					overlapped = true;
+					// AABB::GetCollisionDepth は「衝突している時は深度ベクトル」を返す前提
+					// ※方向は実装依存なので、center比較で符号を付け直す
+					Vector3 depth = cur.GetCollisionDepth(block);
+
+					const Vector3 cC = cur.center();
+					const Vector3 cB = block.center();
+
+					// 最浅軸を選んでその軸だけ押す（順番依存を減らす）
+					float pen = depth.x;
+					int axis = 0;
+					if (depth.y < pen) { pen = depth.y; axis = 1; }
+					if (depth.z < pen) { pen = depth.z; axis = 2; }
+
+					Vector3 localPush(0, 0, 0);
+					if (axis == 0) localPush.x = (cC.x < cB.x) ? -pen : +pen;
+					if (axis == 1) localPush.y = (cC.y < cB.y) ? -pen : +pen;
+					if (axis == 2) localPush.z = (cC.z < cB.z) ? -pen : +pen;
+
+					// skin分だけ余裕を取る
+					localPush *= 1.0f + skin;
+
+					push += localPush;
+				});
+
+			if (!overlapped) break;
+
+			// 押し戻し過ぎない
+			push.x = std::clamp(push.x, -maxPush, +maxPush);
+			push.y = std::clamp(push.y, -maxPush, +maxPush);
+			push.z = std::clamp(push.z, -maxPush, +maxPush);
+
+			// 押し戻し
+			cur = cur + push;
+
+			// 実際の移動デルタ側にも反映（開始位置がズレた分だけ、deltaを補正する）
+			outCorrectedDelta -= push;
+		}
+	}
+
+	// 1) あなたの既存方式（軸ごとの二分探索）をそのまま呼ぶ形で書く
+	auto ResolveAxis = [&](float& dAxis, int axis) -> bool
+		{
+			if (std::abs(dAxis) < 1e-6f) return false;
+
+			const float sign = (dAxis >= 0.0f) ? 1.0f : -1.0f;
+			const float dist = std::abs(dAxis);
+
+			float lo = 0.0f;
+			float hi = dist;
+
+			auto MakeMove = [&](float signedAmount) -> Vector3
+				{
+					Vector3 move{ 0,0,0 };
+					if (axis == 0) move.x = signedAmount;
+					if (axis == 1) move.y = signedAmount;
+					if (axis == 2) move.z = signedAmount;
+					return move;
+				};
+
+			// dist動かしても当たらないならOK
+			{
+				const AABB test = aabb + (outCorrectedDelta + MakeMove(sign * dist));
+				if (!AnySolidOverlap_Map(this, test)) return false;
+			}
+
+			// 当たるので探索
+			for (int i = 0; i < 16; ++i)
+			{
+				const float mid = (lo + hi) * 0.5f;
+				const AABB test = aabb + (outCorrectedDelta + MakeMove(sign * mid));
+				if (AnySolidOverlap_Map(this, test)) hi = mid;
+				else lo = mid;
+			}
+
+			float allowedDist = lo - skin;
+			if (allowedDist < 0.0f) allowedDist = 0.0f;
+
+			dAxis = sign * allowedDist;
+			return true;
+		};
+
+	bool hitAny = false;
+
+	// 推奨順：X→Z→Y（あなたの「直った順」）
+	{
+		float dx = outCorrectedDelta.x;
+		if (ResolveAxis(dx, 0)) hitAny = true;
+		outCorrectedDelta.x = dx;
+	}
+	{
+		float dz = outCorrectedDelta.z;
+		if (ResolveAxis(dz, 2)) hitAny = true;
+		outCorrectedDelta.z = dz;
+	}
+	{
+		float dy = outCorrectedDelta.y;
+		if (ResolveAxis(dy, 1)) hitAny = true;
+		outCorrectedDelta.y = dy;
+	}
+
+	return hitAny;
+}
+// 2) 真正のSweep（TOI: time of impact）寄せ（「一番早く当たる面」を探して進める）
+bool MapManager::SweepAABB_TOI(const AABB& aabb, const Vector3& delta, Vector3& outCorrectedDelta) const
+{
+	outCorrectedDelta = delta;
+
+	const float skin = 0.001f;
+
+	// 開始時点でめり込んでるなら、TOIは破綻するので軽く押し戻す（最小限）
+	if (AnySolidOverlap_Map(this, aabb))
+	{
+		outCorrectedDelta = Vector3{ 0,0,0 };
+		return true;
+	}
+
+	// 探索対象は「移動AABBを含む範囲」＝ swept broadphase AABB
+	AABB broad = aabb;
+	broad = broad + delta; // 端点含む（AABB::operator+ がmin/maxを両方動かす前提）
+	// ※本当は min/maxを吸収する broadphase を作るべきだが、ここでは簡易に「終点AABBも見る」方向
+
+	SweepHit best;
+	best.t = 1.0f;
+
+	ForEachSolidBlockAABB_OverlappingRange(this, broad, [&](const AABB& block)
+		{
+			SweepHit h = SweptAABBvsAABB(aabb, delta, block);
+			if (!h.hit) return;
+			if (h.t < best.t)
+			{
+				best = h;
+			}
+		});
+
+	if (!best.hit) return false;
+
+	// 当たる直前まで移動（skin分引く）
+	const float tMove = my_max(0.0f, best.t - (skin / (delta.Length() + 1e-6f)));
+	outCorrectedDelta = delta * tMove;
+	return true;
+}
+// 3) がっつりMTV方式（重なっているブロックとの“最小押し戻しベクトル”を計算して解消）
+bool MapManager::SweepAABB_MTV(const AABB& aabb, const Vector3& delta, Vector3& outCorrectedDelta) const
+{
+	outCorrectedDelta = delta;
+	const float skin = 0.001f;
+
+	// まず通常の移動を仮適用して、終点でめり込むならMTVで押し戻す方式にする
+	AABB moved = aabb + delta;
+
+	// ① 終点がめり込んでないならそのままOK
+	if (!AnySolidOverlap_Map(this, moved))
+	{
+		return false;
+	}
+
+	// ② めり込むので「終点での押し戻し」で corrected delta を作る（押し戻した分だけdeltaを短く）
+	Vector3 totalPush(0, 0, 0);
+
+	const int iters = 8;
+	for (int iter = 0; iter < iters; ++iter)
+	{
+		bool overlapped = false;
+
+		Vector3 bestPush(0, 0, 0);
+		float bestMag = std::numeric_limits<float>::infinity();
+
+		ForEachSolidBlockAABB_OverlappingRange(this, moved, [&](const AABB& block)
+			{
+				if (!IsOverLap(moved, block)) return;
+				overlapped = true;
+
+				const Vector3 depth = moved.GetCollisionDepth(block);
+
+				// 最浅軸を選ぶ
+				float pen = depth.x;
+				int axis = 0;
+				if (depth.y < pen) { pen = depth.y; axis = 1; }
+				if (depth.z < pen) { pen = depth.z; axis = 2; }
+
+				const Vector3 cM = moved.center();
+				const Vector3 cB = block.center();
+
+				Vector3 push(0, 0, 0);
+				if (axis == 0) push.x = (cM.x < cB.x) ? -(pen + skin) : +(pen + skin);
+				if (axis == 1) push.y = (cM.y < cB.y) ? -(pen + skin) : +(pen + skin);
+				if (axis == 2) push.z = (cM.z < cB.z) ? -(pen + skin) : +(pen + skin);
+
+				const float mag = std::abs((axis == 0) ? push.x : (axis == 1) ? push.y : push.z);
+				if (mag < bestMag)
+				{
+					bestMag = mag;
+					bestPush = push;
+				}
+			});
+
+		if (!overlapped) break;
+
+		// 最小押し戻し1発を適用
+		moved = moved + bestPush;
+		totalPush += bestPush;
+	}
+
+	// corrected = delta + totalPush（押し戻し方向は“めり込み解消”なので、deltaから見ると逆方向に戻ることが多い）
+	outCorrectedDelta = delta + totalPush;
+	return true;
+}
+// 4) サンプル点方式（面上の 3x3 サンプル点で押し戻し方向を決める）
+bool MapManager::SweepAABB_SamplePoints(const AABB& aabb, const Vector3& delta, Vector3& outCorrectedDelta) const
+{
+	outCorrectedDelta = delta;
+	const float skin = 0.001f;
+
+	// まずは「予定移動」を適用したAABBを作って、めり込みがあるなら押し戻し
+	AABB moved = aabb + delta;
+
+	if (!AnySolidOverlap_Map(this, moved)) return false;
+
+	auto PointInsideAnySolid = [&](const Vector3& p) -> bool
+		{
+			// 点を含むブロックを1個見る（高速）
+			// ※ブロック座標変換は MapManager に既にある
+			const Vector3int wb = WorldBlockIndexByPosition(p);
+			if (wb.y < 0 || wb.y >= CHUNK_Y) return false;
+
+			const int cx = FloorDivInt(wb.x, CHUNK_X);
+			const int cz = FloorDivInt(wb.z, CHUNK_Z);
+			const int lx = LocalMod(wb.x, CHUNK_X);
+			const int lz = LocalMod(wb.z, CHUNK_Z);
+
+			Chunk* c = TryGetChunk(Vector2int{ cx, cz });
+			if (!c) return false;
+
+			Block* b = c->blocks[lx][wb.y][lz].get();
+			if (!b) return false;
+			if (b->GetBlockID() == BlockID::Air) return false;
+
+			// 点がブロックAABB内か
+			const AABB& ba = b->aabb_;
+			return (ba.min.x <= p.x && p.x <= ba.max.x &&
+				ba.min.y <= p.y && p.y <= ba.max.y &&
+				ba.min.z <= p.z && p.z <= ba.max.z);
+		};
+
+	// 押し戻す方向は「移動方向の逆」から始めて、サンプル点の侵入が減る方向を探す
+	// ここでは簡易に「X/Zの押し戻しを優先して、最後にY」を試す
+	Vector3 corrected = delta;
+
+	auto TryPushAxis = [&](int axis, float sign) -> bool
+		{
+			// sign: +1 なら +軸へ押す
+			const float step = 0.01f;      // 押し戻し刻み（粗いほど軽いが貫通しやすい）
+			const int maxSteps = 20;
+
+			for (int i = 0; i < maxSteps; ++i)
+			{
+				Vector3 push(0, 0, 0);
+				if (axis == 0) push.x = sign * step;
+				if (axis == 1) push.y = sign * step;
+				if (axis == 2) push.z = sign * step;
+
+				AABB test = moved + push;
+
+				// 動いてる方向の面をサンプル（押し戻し方向と逆側の面を見るのがコツ）
+				Vector3 pts[9];
+				if (axis == 0)
+				{
+					const float faceX = (sign > 0) ? test.max.x : test.min.x;
+					MakeFaceSamplePoints_X(test, faceX, pts);
+				}
+				else if (axis == 1)
+				{
+					const float faceY = (sign > 0) ? test.max.y : test.min.y;
+					MakeFaceSamplePoints_Y(test, faceY, pts);
+				}
+				else
+				{
+					const float faceZ = (sign > 0) ? test.max.z : test.min.z;
+					MakeFaceSamplePoints_Z(test, faceZ, pts);
+				}
+
+				int insideCount = 0;
+				for (int k = 0; k < 9; ++k)
+				{
+					if (PointInsideAnySolid(pts[k])) insideCount++;
+				}
+
+				// サンプル点が全部外に出たら「その方向で押し戻せた」とみなす
+				if (insideCount == 0 && !AnySolidOverlap_Map(this, test))
+				{
+					// skin分追加
+					Vector3 extra(0, 0, 0);
+					if (axis == 0) extra.x = sign * skin;
+					if (axis == 1) extra.y = sign * skin;
+					if (axis == 2) extra.z = sign * skin;
+
+					moved = test + extra;
+					corrected += (push + extra);
+					return true;
+				}
+
+				// まだダメなら押し戻しを積み増し
+				moved = test;
+				corrected += push;
+			}
+			return false;
+		};
+
+	// 押し込んでるときに落下が止まりやすいので、X/Z優先→最後にY
+	if (delta.x != 0.0f) TryPushAxis(0, (delta.x > 0) ? -1.0f : +1.0f);
+	if (delta.z != 0.0f) TryPushAxis(2, (delta.z > 0) ? -1.0f : +1.0f);
+	if (delta.y != 0.0f) TryPushAxis(1, (delta.y > 0) ? -1.0f : +1.0f);
+
+	outCorrectedDelta = corrected;
+	return true;
+}
+
 bool MapManager::isSolidAt(const Vector3& position) const 
 {
 	Vector2int chunkPos = ChunkIndexByPosition(position);
