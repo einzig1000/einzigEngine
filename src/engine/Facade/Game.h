@@ -347,13 +347,22 @@ public:
 		/// </summary>
 		static void StopCameraShake();
 
-
 		/// <summary>
 		/// 描画範囲内にAABBがあるか
 		/// </summary>
 		/// <param name="aabb">検索対象のAABB</param>
 		/// <returns>結果</returns>
 		static bool InCamera(const AABB& aabb);
+
+		/// <summary>
+		/// カメラコントロールの有効無効設定
+		/// </summary>
+		static void SetEnableControl(bool enable);
+
+		/// <summary>
+		/// カメラ切り替え
+		/// </summary>
+		static void SetCurrentCamera(const std::string name);
 	};
 
 	class Utilitie

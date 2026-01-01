@@ -1,0 +1,47 @@
+#pragma once
+#include "Game.h"
+
+class Player;
+class Item;
+class MapManager;
+
+class DropItem
+{
+public:
+	DropItem(Player* player);
+	void SetMapManager(MapManager* mapManager) { mapManager_ = mapManager; }
+	void SetItem(ItemID id, Vector3 pos);
+	void Update();
+	void Draw();
+
+
+private:
+
+	std::unique_ptr<RenderData_Model> renderData_;
+
+	// モデル・テクスチャデータ
+	std::unique_ptr<Item> item_;
+	// フレーム
+	uint32_t frame_;
+
+	float targetY_ = 0.0f;
+	float velocityY_ = 0.0f;
+	float accelerationY_ = GRAVITY;
+
+	// 初期位置
+	Vector3 InitPos_;
+	// Y軸オフセット(sin揺れ用)
+	float offsetYForSin_ = 0.0f;
+	// Y軸オフセット(足元ブロックにめり込まないようにする用);
+	float offsetYForGround_ = 0.0f;
+	// インデックス
+	int index_;
+	// 破棄フラグ
+	bool isDestroy_;
+
+
+	// 借り物
+	Player* player_;
+	MapManager* mapManager_;
+};
+

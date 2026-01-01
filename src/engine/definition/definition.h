@@ -33,14 +33,60 @@
 
 #define GRAVITY -0.006f
 
+enum class CharactorID
+{
+    Player,
+	Zombie,
+    
+    MAX,
+};
+
+// 全てのアイテムID
+enum class ItemID
+{
+    None,
+
+	木の剣,
+	石の剣,
+	鉄の剣,
+	ダイヤの剣,
+
+	木のツルハシ,
+	石のツルハシ,
+	鉄のツルハシ,
+	ダイヤのツルハシ,
+
+	木の斧,
+	石の斧,
+	鉄の斧,
+	ダイヤの斧,
+
+    葉ブロック,
+    木ブロック,
+    芝ブロック,
+    土ブロック,
+	石ブロック,
+	鉄ブロック,      // 鉱石状態
+	金ブロック,      // 鉱石状態
+	ダイヤブロック,  // 鉱石状態
+
+	鉄インゴット,
+	金インゴット,
+	ダイヤモンド,
+
+    ビーコン,
+
+    MAX,
+};
 
 
-
+// 全てのブロックID
 enum class BlockID
 {
     Air,
     Stone,	// 石
 	Iron,   // 鉄
+	Gold,	// 金
 	Diamond,// ダイヤ
 	Bedrock,// 岩盤
     Glass,	// ガラス

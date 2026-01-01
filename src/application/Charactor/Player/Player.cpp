@@ -1,6 +1,7 @@
 #include "Charactor/Player/Player.h"
 #include "Window/WindowManager.h"
 #include "Itemslot.h"
+#include "UIManager/UIManager.h"
 
 Player::Player()
 {
@@ -46,28 +47,53 @@ void Player::Update()
 	}
 
 
-	// 移動更新
-	UpdateDush();
-	UpdateMove();
-	UpdateJump();
+	UIMode currentMode = uiManager_->GetCurrentUIMode();
+	bool enableControl = false;
 
-	// 移動後の視線レイ更新
-	UpdateViewRay();
-
-	// ターゲットブロック取得
-	SetTargetBlock();
-
-	// ブロック破壊
-	if (Game::Input::Mouse::IsHeld(0))
+	// プレイ中または非表示時のみ操作可能
+	if (currentMode == UIMode::Playing || currentMode == UIMode::Hidden)
 	{
-		BreakTargetBlock();
+		enableControl = true;
 	}
 
-	// ブロック設置
-	if (Game::Input::Mouse::IsJustPressed(1))
+	if (enableControl)
 	{
-		SetNewBlock(BlockID::Dirt);
+		// 移動更新
+		UpdateDush();
+		UpdateMove();
+		UpdateJump();
+
+		// 移動後の視線レイ更新
+		UpdateViewRay();
+
+		// ターゲットブロック取得
+		SetTargetBlock();
+
+		// ブロック破壊
+		if (Game::Input::Mouse::IsHeld(0))
+		{
+			BreakTargetBlock();
+		}
+
+		// ブロック設置
+		if (Game::Input::Mouse::IsJustPressed(1))
+		{
+			SetNewBlock(BlockID::Dirt);
+		}
 	}
+	else
+	{
+		// 落下処理
+		Move(Vector3(0.0f, 0.0f, 0.0f), speed_);
+
+		// 移動後の視線レイ更新
+		UpdateViewRay();
+
+		// ターゲットブロック取得
+		SetTargetBlock();
+	}
+
+
 
 	Itemslot_->Update();
 }
@@ -75,14 +101,17 @@ void Player::Update()
 void Player::Draw()
 {
 	data_.Draw();
-	data_.DrawAABB();
 	reticle_.Draw();
 	Itemslot_->Draw();
 }
 
 void Player::DrawImGui()
 {
-
+	ImGui::Begin("Player Info");
+	ImGui::Text("Position: (%.2f, %.2f, %.2f)", data_.translate.value.x, data_.translate.value.y, data_.translate.value.z);
+	ImGui::Text("View Origin: (%.2f, %.2f, %.2f)", viewRay_.origin.x, viewRay_.origin.y, viewRay_.origin.z);
+	ImGui::Text("AABB Center: (%.2f, %.2f, %.2f)", data_.aabbs[0].center().x, data_.aabbs[0].center().y, data_.aabbs[0].center().z);
+	ImGui::End();
 }
 
 void Player::UpdateViewRay()

@@ -1,7 +1,6 @@
 #pragma once
 #include <string>
 #include "Game.h"
-#include "MapManager/DropItem/DropItem.h"
 #include <queue>
 #include <unordered_set>
 #include "Utilities/PerlinNoise.h"
@@ -11,6 +10,7 @@ class Block;
 class Chunk;
 class Player;
 class BlockConfig;
+class DropItemManager;
 
 class MapManager
 {
@@ -89,7 +89,7 @@ private:
 	Player* player_;
 
 	// ドロップアイテム管理
-	std::vector<DropItem*> dropItems_;
+	DropItemManager* dropItemManager_;
 
 	// このキューに入っているチャンクを順次生成していく
 	std::queue<Vector2int> chunkGenQueue_;		

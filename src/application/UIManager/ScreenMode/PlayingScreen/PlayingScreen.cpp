@@ -17,6 +17,9 @@ void PlayingScreen::Initialize()
 	{
 		element->Initialize();
 	}
+
+	// カーソル操作無効化
+	Game::Input::Mouse::ShowCursor(false);
 }
 
 void PlayingScreen::Update()

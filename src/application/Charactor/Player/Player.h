@@ -3,12 +3,14 @@
 #include "Charactor/BaseCharactor.h"
 
 class Itemslot;
+class UIManager;
 
 class Player : public BaseCharactor
 {
 public:
 	Player();
 	~Player();
+	void SetUIManager(UIManager* uiManager) { uiManager_ = uiManager; }
 
 	void Initialize() override;
 	void Update() override;
@@ -41,6 +43,7 @@ public:
 	Itemslot* Itemslot_;
 
 private:
+	UIManager* uiManager_ = nullptr;
 
 };
 

@@ -48,7 +48,7 @@ Chunk::Chunk()
 		blockData_[BlockID(i)] = std::make_unique<RenderData_Block>(BlockID(i));
 		blockData_[BlockID(i)]->texture = ResourceID::GetTextureID(BlockID(i));
 		blockData_[BlockID(i)]->breakTexture = ResourceID::GetTextureID(TextureID::BreakBlock_Array);
-		blockData_[BlockID(i)]->model = ResourceID::GetModelID(ModelID::Cube);
+		blockData_[BlockID(i)]->model = ResourceID::GetModelID(BlockID(i));
 
 		blockData_[BlockID(i)]->currentDrawSum = 0;
 		blockData_[BlockID(i)]->currentSum = 0;

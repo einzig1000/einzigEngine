@@ -18,6 +18,9 @@ void InventoryScreen::Initialize()
 	{
 		element->Initialize();
 	}
+
+	// カーソル操作有効化
+	Game::Input::Mouse::ShowCursor(true);
 }
 
 void InventoryScreen::Update()

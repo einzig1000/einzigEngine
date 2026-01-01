@@ -190,9 +190,6 @@
     <Filter Include="application\GameManeger\UIManager\UIScreen\PlayingScreen">
       <UniqueIdentifier>{ba423f92-ea59-4dfd-9c66-1b748e1340c7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="application\GameManeger\Map\DropItem">
-      <UniqueIdentifier>{dbf079b1-300b-4849-979f-d718265501b7}</UniqueIdentifier>
-    </Filter>
     <Filter Include="engine\Utilities\PerlinNoise">
       <UniqueIdentifier>{313938a3-c0d2-4b3c-89d1-88f4efa161c6}</UniqueIdentifier>
     </Filter>
@@ -201,6 +198,15 @@
     </Filter>
     <Filter Include="engine\PhysicsSystem">
       <UniqueIdentifier>{4dd9de1b-4f1e-49e0-9f35-a9b3c4e8f69d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManeger\Item">
+      <UniqueIdentifier>{c6a0b0da-2ff0-43fa-adc9-007833710f26}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManeger\Item\HaveItem">
+      <UniqueIdentifier>{30ac8278-a596-4c95-9702-b01431d8f28f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManeger\Item\DropItem">
+      <UniqueIdentifier>{dbf079b1-300b-4849-979f-d718265501b7}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -321,8 +327,8 @@
     <ClCompile Include="src\application\Charactor\Player\Player.cpp">
       <Filter>application\GameManeger\Charactor\Player</Filter>
     </ClCompile>
-    <ClCompile Include="src\application\MapManager\DropItem\DropItem.cpp">
-      <Filter>application\GameManeger\Map\DropItem</Filter>
+    <ClCompile Include="src\application\Item\DropItem\DropItem.cpp">
+      <Filter>application\GameManeger\Item\DropItem</Filter>
     </ClCompile>
     <ClCompile Include="src\application\Itemslot.cpp">
       <Filter>application\GameManeger\Itemslot</Filter>
@@ -380,6 +386,15 @@
     </ClCompile>
     <ClCompile Include="src\application\MapManager\MapWorldCollider.cpp">
       <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\Item\Item.cpp">
+      <Filter>application\GameManeger\Item</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\Item\HaveItem\HaveItem.cpp">
+      <Filter>application\GameManeger\Item\HaveItem</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\Item\DropItem\DropItemManager.cpp">
+      <Filter>application\GameManeger\Item\DropItem</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -497,8 +512,8 @@
     <ClInclude Include="src\application\Charactor\Player\Player.h">
       <Filter>application\GameManeger\Charactor\Player</Filter>
     </ClInclude>
-    <ClInclude Include="src\application\MapManager\DropItem\DropItem.h">
-      <Filter>application\GameManeger\Map\DropItem</Filter>
+    <ClInclude Include="src\application\Item\DropItem\DropItem.h">
+      <Filter>application\GameManeger\Item\DropItem</Filter>
     </ClInclude>
     <ClInclude Include="src\application\Itemslot.h">
       <Filter>application\GameManeger\Itemslot</Filter>
@@ -556,6 +571,15 @@
     </ClInclude>
     <ClInclude Include="src\application\MapManager\MapWorldCollider.h">
       <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\Item\Item.h">
+      <Filter>application\GameManeger\Item</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\Item\HaveItem\HaveItem.h">
+      <Filter>application\GameManeger\Item\HaveItem</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\Item\DropItem\DropItemManager.h">
+      <Filter>application\GameManeger\Item\DropItem</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

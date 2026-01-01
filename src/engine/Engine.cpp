@@ -614,6 +614,11 @@ void Engine::StopCameraShake()
 	cameraManager_->StopShake();
 }
 
+void Engine::SetEnableCameraControl(bool enable)
+{
+	cameraManager_->SetEnableControl(enable);
+}
+
 
 // 時間制御
 float Engine::GetDeltaTime()

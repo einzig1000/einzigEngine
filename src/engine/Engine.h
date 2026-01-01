@@ -125,6 +125,7 @@ public:
 	void SetCameraMode(CameraMode_ORBIT_FPS mode);
 	void ToggleCamera();
 	void StopCameraShake();
+	void SetEnableCameraControl(bool enable);
 	CameraManager* GetCameraManager() { return cameraManager_; }
 
 	// 時間制御

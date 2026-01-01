@@ -13,7 +13,7 @@ UIManager::~UIManager()
 
 void UIManager::Initialize()
 {
-	currentScreen_ = new PlayingScreen();
+	CreateScreen(UIMode::Playing);
 }
 
 void UIManager::Update()
@@ -44,6 +44,8 @@ void UIManager::DrawImGui()
 
 void UIManager::CreateScreen(UIMode mode)
 {
+	currentUIMode_ = mode;
+
 	// 画面破棄
 	delete currentScreen_;
 	currentScreen_ = nullptr;

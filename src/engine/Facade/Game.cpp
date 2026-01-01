@@ -234,6 +234,15 @@ bool Game::Camera::InCamera(const AABB& aabb)
 	return Engine::Instance().InFrustum(aabb);
 }
 
+void Game::Camera::SetEnableControl(bool enable)
+{
+	Engine::Instance().SetEnableCameraControl(enable);
+}
+
+void Game::Camera::SetCurrentCamera(const std::string name)
+{
+}
+
 
 Vector3 Game::Camera::Getter::GetCenter(const std::string name)
 {

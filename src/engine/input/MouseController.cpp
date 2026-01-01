@@ -104,8 +104,7 @@ uint32_t MouseController::HoldFrames(int i)
 // マウスカーソルの表示・非表示切り替え
 void MouseController::ToggleMouseCursorVisible()
 {
-    isVisible_ = !isVisible_;
-    if (isVisible_)
+    if (!isVisible_)
     {
         // カーソルを表示
         ShowCursor(TRUE);
@@ -120,48 +119,61 @@ void MouseController::ToggleMouseCursorVisible()
 // マウスカーソルの表示・非表示設定
 void MouseController::ShowCursor(bool visible)
 {
+	isVisible_ = visible;
     if (visible)
     {
         // カウンタが負になるまで表示側へ（1024敗）
         while (::ShowCursor(TRUE) < 0) {}
-
-        // クリップ解除
-        ::ClipCursor(nullptr);
-
-		// カーソルをウィンドウ中央に移動
-        int screenX = WindowManager::winWidth_ / 2;
-        int screenY = WindowManager::winHeight_ / 2;
-        SetCursorPos(screenX, screenY);
     }
     else
     {
         // カウンタが負になるまで非表示側へ
         while (::ShowCursor(FALSE) >= 0) {}
-
-        // クライアント領域にカーソルを閉じ込める
-        RECT rc;
-        ::GetClientRect(hwnd_, &rc);
-        // クライアント座標をスクリーン座標に変換
-        POINT tl{ rc.left, rc.top }, br{ rc.right, rc.bottom };
-        ::ClientToScreen(hwnd_, &tl);
-        ::ClientToScreen(hwnd_, &br);
-        RECT clip{ tl.x, tl.y, br.x, br.y };
-        ::ClipCursor(&clip);
     }
 }
 
 // マウスポジション取得
 void MouseController::UpdatePosition()
 {
+
+    // ゲームウィンドウが非アクティブならロックしない
+    const bool isAppFocused = (::GetForegroundWindow() == hwnd_);
+
+	ImGui::Begin("Mouse Position");
+	// 非表示 && ウィンドウアクティブ時は画面中央にロック
+    if (!isVisible_ && isAppFocused)
+    {
+        RECT rc{};
+        ::GetClientRect(hwnd_, &rc);
+
+        POINT center{};
+        center.x = (rc.left + rc.right) / 2;
+        center.y = (rc.top + rc.bottom) / 2;
+
+        // クライアント座標 -> スクリーン座標へ変換してから SetCursorPos
+        ::ClientToScreen(hwnd_, &center);
+        ::SetCursorPos(center.x, center.y);
+
+        // position_ はクライアント座標で保持している前提なので、ここはクライアント中心値にする
+        position_ = Vector2{ float((rc.left + rc.right) / 2), float((rc.top + rc.bottom) / 2) };
+
+        ImGui::Text("Cursor Locked to Center");
+        ImGui::End();
+        return;
+	}
+
     // hwnd: ゲームウィンドウのハンドル（WindowManagerなどから取得）
     POINT mousePosScreen;
-    GetCursorPos(&mousePosScreen); // 画面座標で取得
+    ::GetCursorPos(&mousePosScreen); // 画面座標で取得
 
     // クライアント座標（ウィンドウ左上基準）に変換
-    ScreenToClient(hwnd_, &mousePosScreen);
+    ::ScreenToClient(hwnd_, &mousePosScreen);
 
     // mousePosScreen.x, mousePosScreen.y がウィンドウ内のマウス座標
     position_ = Vector2{ float(mousePosScreen.x),float(mousePosScreen.y) };
+
+    ImGui::Text("Cursor UnLocked");
+    ImGui::End();
 }
 
 // マウスレイ取得

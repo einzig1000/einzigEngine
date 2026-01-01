@@ -35,9 +35,8 @@ public:
 	// 視錐台内にAABBがあるか 中心に近いほど1.0、遠いほど0.0を返す
 	float InFrustum_Lod(const AABB& aabb);
     
-
-    // 操作可能か
-    bool enableControl_;
+	// 操作可能か設定
+	void SetEnableControl(bool enable) { enableControl_ = enable; }
 
 	void SetCameraMode(CameraMode_ORBIT_FPS mode) { cameraMode_ = mode; }
 
@@ -46,6 +45,9 @@ public:
 
 private:
     CameraMode_ORBIT_FPS cameraMode_ = CameraMode_ORBIT_FPS::ORBIT;
+
+    // 操作可能か
+    bool enableControl_;
 
 	void Updata_Orbit();
 	void Update_FPS();

@@ -50,32 +50,67 @@ public:
 
 	static void reload();
 
-	static uint32_t GetTextureID(TextureID id)
+	// その他
+	static int32_t GetTextureID(TextureID id)
 	{
 		return TextureIDs_[static_cast<size_t>(id)];
 	}
-
-	static uint32_t GetTextureID(BlockID id)
+	static int32_t GetModelID(ModelID id)
 	{
-		return blockTextureIDs_[static_cast<size_t>(id)];
+		return ModelIDs_[static_cast<size_t>(id)];
 	}
 
-	static uint32_t GetModelID(ModelID id)
+	// ブロック関連
+	static int32_t GetTextureID(BlockID id)
 	{
-		return modelIDs_[static_cast<size_t>(id)];
+		return BlockTextureIDs_[static_cast<size_t>(id)];
+	}
+	static int32_t GetModelID(BlockID id)
+	{
+		return BlockModelIDs_[static_cast<size_t>(id)];
 	}
 
-	static uint32_t GetTextureID(UITextureID id)
+	// UIテクスチャID取得
+	static int32_t GetTextureID(UITextureID id)
 	{
 		return UITextureIDs_[static_cast<size_t>(id)];
 	}
 
+	// アイテム関連
+	static int32_t Get3DTextureID(ItemID id)
+	{
+		return ItemModelTextureIDs_[static_cast<size_t>(id)];
+	}
+	static int32_t Get2DTextureID(ItemID id)
+	{
+		return ItemIconTextureIDs_[static_cast<size_t>(id)];
+	}
+	static int32_t GetModelID(ItemID id)
+	{
+		return ItemModelIDs_[static_cast<size_t>(id)];
+	}
+
+
 private:
 
-	static std::vector<int> blockTextureIDs_;
-	static std::vector<int> modelIDs_;
-	static std::vector<int> TextureIDs_;
+	// 全てのアイテムのテクスチャID配列（インベントリとかに表示するアイコン）
+	static std::vector<int> ItemIconTextureIDs_;
+	// 全てのアイテムのテクスチャID配列（モデルとして描画する用）
+	static std::vector<int> ItemModelTextureIDs_;
+	// 全てのアイテムのモデルID配列
+	static std::vector<int> ItemModelIDs_;
+
+	// ブロックテクスチャのみの配列
+	static std::vector<int> BlockTextureIDs_;
+	// ブロックモデルのみの配列
+	static std::vector<int> BlockModelIDs_;
+
+	// UIテクスチャID配列
 	static std::vector<int> UITextureIDs_;
+	// その他のテクスチャID配列
+	static std::vector<int> TextureIDs_;
+	// その他のモデルID配列
+	static std::vector<int> ModelIDs_;
 
 
 	static inline const std::unordered_map<TextureID, std::string> textureFilePaths_ =

@@ -7,10 +7,10 @@ TestPhase::TestPhase()
 	int32_t tex3 = ResourceID::GetTextureID(TextureID::Circle);
 	int32_t tex4 = ResourceID::GetTextureID(TextureID::white1x1);
 
-	int32_t model1 = ResourceID::GetModelID(ModelID::Cube);
-	int32_t model2 = ResourceID::GetModelID(ModelID::Corn);
-	int32_t model3 = ResourceID::GetModelID(ModelID::Plane);
-	int32_t model4 = ResourceID::GetModelID(ModelID::Sphere);
+	int32_t model1 = ResourceID::GetModelID(ItemID::ダイヤのツルハシ);
+	int32_t model2 = ResourceID::GetModelID(ItemID::ダイヤの剣);
+	int32_t model3 = ResourceID::GetModelID(ItemID::ダイヤの斧);
+	int32_t model4 = ResourceID::GetModelID(ItemID::金インゴット);
 
 	audio1 = Game::Resource::LoadAudio("resources/Prototypes/audio/BGM/InGame.mp3");
 	audio2 = Game::Resource::LoadAudio("resources/Prototypes/audio/SE/バトル用/氷魔法1.mp3");

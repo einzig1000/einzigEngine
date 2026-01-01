@@ -39,7 +39,7 @@ public:
 	// 現状のSRTを前フレームSRTとして保存する
 	void SavePreTransforms();
 
-    // モデル
+    // モデル設定
 	void SetModel(int32_t modelHandle);
 	int32_t GetModel() const { return model; }
 	// テクスチャ

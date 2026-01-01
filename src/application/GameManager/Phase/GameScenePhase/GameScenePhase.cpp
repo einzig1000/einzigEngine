@@ -23,9 +23,11 @@ GameScenePhase::GameScenePhase()
 	// カメラコントローラーにプレイヤーとマップマネージャーをセット
 	cameraController_->SetPlayer(player_.get());
 	cameraController_->SetMapManager(map_.get());
+	cameraController_->SetUIManager(uiManager_.get());
 
 	// プレイヤーにマップマネージャーをセット
 	player_->SetMapManager(map_.get());
+	player_->SetUIManager(uiManager_.get());
 
 	// 物理システムにワールドコライダーをセット
 	Game::Physics::SetIWorldCollider(worldCollider_.get());
@@ -65,10 +67,6 @@ void GameScenePhase::Update()
 	// カメラ更新
 	cameraController_->Update();
 
-	if (Game::Input::Key::IsJustPressed(DIK_R))
-	{
-		Game::Input::Mouse::ToggleMouseCursorVisible();
-	}
 }
 
 

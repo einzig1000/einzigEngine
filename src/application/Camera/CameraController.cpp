@@ -1,6 +1,7 @@
 #include "CameraController.h"
 #include "Charactor/Player/Player.h"
 #include "MapManager/MapManager.h"
+#include "UiManager/UiManager.h"
 
 namespace
 {
@@ -23,19 +24,17 @@ CameraController::CameraController()
 {
 	// カメラ操作可能に設定
 	enableControl = true;
-
+	
 	// 初期カメラモードは三人称後方視点
 	cameraMode_ = CameraMode_FirstPerson_ThirdPerson::FirstPerson;
 }
 
 void CameraController::Update()
 {
-	mousedelta = Game::Input::Mouse::GetPositionDelta();
+	UIMode uiMode = uiManager_->GetCurrentUIMode();
 
-	if (Game::Input::Key::IsJustPressed(DIK_R))
-	{
-		enableControl = !enableControl;
-	}
+
+	mousedelta = Game::Input::Mouse::GetPositionDelta();
 
 	// カメラモード切り替え
 	if (Game::Input::Key::IsJustPressed(DIK_F5))
@@ -59,10 +58,14 @@ void CameraController::Update()
 	if (enableControl)
 	{
 		// マウス移動量に応じてカメラ回転
-		cameraRot.x += mousedelta.y * mouseSensitivity_;
-		cameraRot.y += mousedelta.x * mouseSensitivity_;
-		float harfPi = 3.14159f / 2.0f;
-		cameraRot.x = std::clamp<float>(cameraRot.x, -harfPi, harfPi);
+		if (uiMode == UIMode::Playing ||
+			uiMode == UIMode::Hidden)
+		{
+			cameraRot.x += mousedelta.y * mouseSensitivity_;
+			cameraRot.y += mousedelta.x * mouseSensitivity_;
+			float harfPi = 3.14159f / 2.0f;
+			cameraRot.x = std::clamp<float>(cameraRot.x, -harfPi, harfPi);
+		}
 
 		// カメラ位置計算
 		const Vector3 target = player_->viewRay_.origin;
@@ -103,9 +106,8 @@ void CameraController::Update()
 		cameraPos = desirePos;
 
 		// 一人称は通常めり込み防止不要（目の位置を壁に入れないのは別問題）
-		if (mapManager_ &&
-			(cameraMode_ == CameraMode_FirstPerson_ThirdPerson::ThirdPerson_Back ||
-				cameraMode_ == CameraMode_FirstPerson_ThirdPerson::ThirdPerson_Front))
+		if (cameraMode_ == CameraMode_FirstPerson_ThirdPerson::ThirdPerson_Back ||
+			cameraMode_ == CameraMode_FirstPerson_ThirdPerson::ThirdPerson_Front)
 		{
 			Vector3 toCam = desirePos - target;
 			const float desiredDist = toCam.Length();
@@ -153,10 +155,15 @@ void CameraController::Update()
 				}
 			}
 		}
+		else if (cameraMode_ == CameraMode_FirstPerson_ThirdPerson::FirstPerson)
+		{
+			if (mapManager_->isSolidAt(cameraPos))
+			{
+				int i = 0;
+			}
+		}
 	}
 	
-	mapManager_->GetPositionByCrossedRay(player_->viewRay_);
-
 	Game::Camera::MoveCameraCenter(cameraPos, 0, EaseType::LINEAR);
 	Game::Camera::MoveCameraRotate(cameraRot, 3, EaseType::LINEAR);
 }

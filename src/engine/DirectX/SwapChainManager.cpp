@@ -4,6 +4,7 @@
 #include <Windows.h> 
 
 SwapChainManager::SwapChainManager(ID3D12Device* device, ID3D12CommandQueue* commandQueue, HWND hwnd)
+	: device_(device)
 {
     InitializeSwapChainInternal(device, commandQueue, hwnd);
     InitializeRenderTargetView(device);
@@ -71,7 +72,17 @@ void SwapChainManager::InitializeRenderTargetView(ID3D12Device* device)
 
 void SwapChainManager::Present()
 {
-    swapChain->Present(1, 0);
+	HRESULT hr = swapChain->Present(1, 0);
+    // FAILED(hr) の場合に device->GetDeviceRemovedReason() をログ出し
+    if (FAILED(hr))
+    {
+        const HRESULT removed = device_->GetDeviceRemovedReason();
+
+        Log("SwapChainManager::Present failed. hr=0x%08X, GetDeviceRemovedReason=0x%08X",
+            static_cast<unsigned int>(hr),
+            static_cast<unsigned int>(removed));
+
+	}
 }
 
 void SwapChainManager::UpdateBackBufferIndex()

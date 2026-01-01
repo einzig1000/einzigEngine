@@ -16,7 +16,10 @@ public:
 
 	void CreateScreen(UIMode mode);
 
+	UIMode GetCurrentUIMode() const { return currentUIMode_; }
+
 private:
+	UIMode currentUIMode_ = UIMode::None;
 	UIScreen* currentScreen_ = nullptr;
 	Player* player_ = nullptr;
 };

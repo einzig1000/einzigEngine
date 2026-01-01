@@ -240,7 +240,6 @@ void Camera::Updata_Orbit()
 
 #pragma region カメラ手動操作
 
-
     if (enableControl_)
     {
 	    // マウス移動量取得

@@ -2,6 +2,7 @@
 #include "MapManager/Chunk/Chunk.h"
 #include "MapManager/Chunk/Block/Block.h"
 #include "MapManager/Chunk/Block/BlockDurability.h"
+#include "Item/DropItem/DropItemManager.h"
 #include <fstream>
 #include <sstream>
 #include "Charactor/Player/Player.h"
@@ -241,6 +242,8 @@ MapManager::MapManager(Player* player)
 {
 	// プレイヤー参照保存
 	player_ = player;
+
+	dropItemManager_ = new DropItemManager();
 }
 
 MapManager::~MapManager()
@@ -252,11 +255,7 @@ MapManager::~MapManager()
 		pair.second = nullptr;
 	}
 
-	for (auto& item : dropItems_)
-	{
-		delete item;
-		item = nullptr;
-	}
+	delete dropItemManager_;
 }
 
 void MapManager::Initialize()
@@ -491,7 +490,7 @@ void MapManager::Draw()
 {
 	Vector2int playerIndex = ChunkIndexByPosition(player_->data_.translate.value);
 
-	// プレイヤーから周囲のみ描画（既存チャンクのみ）
+	// プレイヤー周囲描画
 	for (int32_t dx = -drawRadius_; dx <= drawRadius_; ++dx)
 	{
 		for (int32_t dz = -drawRadius_; dz <= drawRadius_; ++dz)
@@ -503,10 +502,8 @@ void MapManager::Draw()
 		}
 	}
 
-	for (auto& item : dropItems_)
-	{
-		item->Draw();
-	}
+	// ドロップアイテム描画
+	dropItems_->Draw();
 }
 
 void MapManager::DrawImGui()
