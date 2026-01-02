@@ -623,7 +623,14 @@ void Engine::SetEnableCameraControl(bool enable)
 // 時間制御
 float Engine::GetDeltaTime()
 {
-	return dxManager_->GetFixFPS()->GetDeltaTime();
+	float dt = dxManager_->GetFixFPS()->GetDeltaTime();
+
+	// alt-tab / ウィンドウドラッグ等で巨大dtが出るのを防ぐ
+	constexpr float kMaxDt = 0.1f; // 100ms
+	if (dt < 0.0f) dt = 0.0f;
+	if (dt > kMaxDt) dt = kMaxDt;
+
+	return dt;
 }
 
 uint32_t Engine::GetElapsedTime()

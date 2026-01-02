@@ -1,8 +1,8 @@
 #pragma once
 #include "Game.h"
+#include "Item/Item.h"
 
 class Player;
-class Item;
 class MapManager;
 
 class DropItem
@@ -15,6 +15,7 @@ public:
 	void Update();
 	void Draw();
 
+	bool IsDestroy() const { return isDestroy_; }
 
 private:
 
@@ -35,10 +36,10 @@ private:
 	float offsetYForSin_ = 0.0f;
 	// Y軸オフセット(足元ブロックにめり込まないようにする用);
 	float offsetYForGround_ = 0.0f;
-	// インデックス
-	int index_;
 	// 破棄フラグ
 	bool isDestroy_;
+	// 描画フラグ
+	bool isDraw_;
 
 
 	// 借り物

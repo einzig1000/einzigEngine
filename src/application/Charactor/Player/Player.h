@@ -23,7 +23,7 @@ public:
 	void UpdateJump();		// ジャンプ更新
 
 	// アイテムスロットにアイテムを追加
-	void AddItemToItemslot(int itemID);
+	void AddItemToItemslot(ItemID itemID);
 
 	// 速度
 	float speed_ = 0.15f;

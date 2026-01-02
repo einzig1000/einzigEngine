@@ -195,7 +195,7 @@ void Player::UpdateJump()
 	}
 }
 
-void Player::AddItemToItemslot(int itemID)
+void Player::AddItemToItemslot(ItemID itemID)
 {
-	Itemslot_->AddItemToItemslot(itemID);
+	//Itemslot_->AddItemToItemslot(itemID);
 }

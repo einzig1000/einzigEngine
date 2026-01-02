@@ -8,7 +8,7 @@ BlockConfig::BlockConfig()
 	blockInfoMap_[BlockID::Stone] = { BlockID::Stone, 60.0f, false };
 	blockInfoMap_[BlockID::Iron] = { BlockID::Iron, 800.0f, false };
 	blockInfoMap_[BlockID::Diamond] = { BlockID::Diamond, 1200.0f, false };
-	blockInfoMap_[BlockID::Bedrock] = { BlockID::Bedrock, -1.0f, false };
+	blockInfoMap_[BlockID::Bedrock] = { BlockID::Bedrock, std::numeric_limits<float>::infinity(), false };
 	blockInfoMap_[BlockID::Dirt] = { BlockID::Dirt, 300.0f, false };
 	blockInfoMap_[BlockID::Lawn] = { BlockID::Lawn, 300.0f, false };
 	blockInfoMap_[BlockID::Glass] = { BlockID::Glass, 100.0f, true };

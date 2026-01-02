@@ -1,33 +1,59 @@
-#include "DropItemManager.h"
-#include "Item/DropItem/DropItem.h"
+#include "Item/DropItem/DropItemManager.h"
 
 DropItemManager::DropItemManager(){}
 
 void DropItemManager::AddItem(ItemID id, Vector3 pos)
 {
-	//items_.emplace_back(new DropItem(player_));
-	//items_.back()->SetItem(id, pos);
-
-	DropItem* newItem = new DropItem();
+	auto newItem = std::make_unique<DropItem>();
 	newItem->SetMapManager(mapManager_);
 	newItem->SetPlayer(player_);
 	newItem->SetItem(id, pos);
-	items_.emplace_back(newItem);
+
+
+	// 空きスロットを探す
+	for (size_t i = 0; i < itemActiveFlags_.size(); ++i)
+	{
+		if (!itemActiveFlags_[i])
+		{
+			items_[i] = std::move(newItem);
+			itemActiveFlags_[i] = true;
+			return;
+		}
+	}
+
+	// 空きがなかったので新規追加
+	items_.push_back(std::move(newItem));
+	itemActiveFlags_.push_back(true);
+
 }
 
 void DropItemManager::Update()
 {
-	for (auto& item : items_)
+	for (size_t i = 0; i < items_.size(); ++i)
 	{
-		item->Update();
+		if (itemActiveFlags_[i] && items_[i])
+		{
+			items_[i]->Update();
+
+			if (items_[i]->IsDestroy())
+			{
+				items_[i].reset();
+				itemActiveFlags_[i] = false;
+			}
+		}
 	}
+
 }
 
 void DropItemManager::Draw()
 {
-	for (auto& item : items_)
+	for (size_t i = 0; i < items_.size(); ++i)
 	{
-		item->Draw();
+		if (itemActiveFlags_[i] && items_[i])
+		{
+			items_[i]->Draw();
+		}
 	}
+
 }
 

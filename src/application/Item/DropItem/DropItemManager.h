@@ -1,8 +1,10 @@
 #pragma once
 #include "definition/definition.h"
+#include "Item/DropItem/DropItem.h"
+#include <vector>
+#include <memory>
 
 class Player;
-class DropItem;
 class MapManager;
 
 class DropItemManager
@@ -16,10 +18,11 @@ public:
 	void Draw();
 
 	// ドロップアイテム配列
-	std::vector<DropItem*> items_;
+	std::vector<std::unique_ptr<DropItem>> items_;
 
 
 private:
+	std::vector<bool> itemActiveFlags_;
 
 	Player* player_;
 
