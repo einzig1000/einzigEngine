@@ -14,6 +14,12 @@ void BaseCharactor::SetTargetBlock()
 }
 
 
+void BaseCharactor::AddItem(ItemID id)
+{
+	haveItem_->AddItem(id);
+}
+
+
 void BaseCharactor::SetMapManager(MapManager* mapManager)
 {
 	mapManager_ = mapManager;

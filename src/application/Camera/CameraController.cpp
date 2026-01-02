@@ -164,6 +164,7 @@ void CameraController::Update()
 		}
 	}
 	
+	Game::Camera::MoveCameraDistance(0.0f, 0, EaseType::LINEAR);
 	Game::Camera::MoveCameraCenter(cameraPos, 0, EaseType::LINEAR);
 	Game::Camera::MoveCameraRotate(cameraRot, 3, EaseType::LINEAR);
 }

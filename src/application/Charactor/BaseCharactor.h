@@ -1,6 +1,7 @@
 #pragma once
 #include "Game.h"
 #include "definition/definition.h"
+#include "Item/HaveItem/HaveItem.h"
 
 class MapManager;
 class Block;
@@ -12,6 +13,7 @@ public:
 
 	virtual void Initialize() = 0;
 	virtual void SetMapManager(MapManager* mapManager);
+	virtual void SetHaveItem() { haveItem_ = std::make_unique<HaveItem>(); }
 	virtual void Update() = 0;
 	virtual void Draw() = 0;
 	virtual void DrawImGui() = 0;
@@ -32,11 +34,18 @@ public:
 	virtual void SetViewRay(Ray ray) { viewRay_ = ray; }
 
 
+	// アイテム獲得
+	virtual void AddItem(ItemID id);
+
+
 
 	RenderData_Model data_;		// データ
 	Ray viewRay_;				// 視線レイ
 	float maxDistance = 5.0f;	// 視線範囲
+
 protected:
+
+	std::unique_ptr<HaveItem> haveItem_; // 所持アイテム管理
 
 	MapManager* mapManager_ = nullptr;
 	std::optional<lookAtBlock> targetBlock_;	// ターゲットにしているブロック

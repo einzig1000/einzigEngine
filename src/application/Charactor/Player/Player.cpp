@@ -23,6 +23,8 @@ Player::Player()
 	breakPower_ = 10;
 
 	Itemslot_ = new Itemslot();
+
+	SetHaveItem();
 }
 
 Player::~Player()
