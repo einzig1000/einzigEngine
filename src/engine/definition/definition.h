@@ -61,6 +61,7 @@ enum class ItemID
 	鉄の斧,
 	ダイヤの斧,
 
+	ガラスブロック,
     葉ブロック,
     木ブロック,
     芝ブロック,
@@ -69,6 +70,7 @@ enum class ItemID
 	鉄ブロック,      // 鉱石状態
 	金ブロック,      // 鉱石状態
 	ダイヤブロック,  // 鉱石状態
+	岩盤ブロック,
 
 	鉄インゴット,
 	金インゴット,
@@ -100,6 +102,9 @@ enum class BlockID
     MAX,
 };
 std::string EnumToString(BlockID id);
+
+// BlockID -> ItemID 変換
+ItemID BlockIdToDropItemId(BlockID id);
 
 // ブロックごとの情報
 struct Blockinfo

@@ -8,8 +8,9 @@ class MapManager;
 class DropItem
 {
 public:
-	DropItem(Player* player);
+	DropItem();
 	void SetMapManager(MapManager* mapManager) { mapManager_ = mapManager; }
+	void SetPlayer(Player* player) { player_ = player; }
 	void SetItem(ItemID id, Vector3 pos);
 	void Update();
 	void Draw();

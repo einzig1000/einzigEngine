@@ -59,7 +59,6 @@ void ResourceID::reload()
 	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/Lawn.png");
 	ItemIconTextureIDs_[size_t(ItemID::芝ブロック)] = tmp;
 	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/dirt.png");
-		
 	ItemIconTextureIDs_[size_t(ItemID::土ブロック)] = tmp;
 	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/stone.png");
 	ItemIconTextureIDs_[size_t(ItemID::石ブロック)] = tmp;
@@ -69,6 +68,8 @@ void ResourceID::reload()
 	ItemIconTextureIDs_[size_t(ItemID::金ブロック)] = tmp;
 	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/diamond.png");
 	ItemIconTextureIDs_[size_t(ItemID::ダイヤブロック)] = tmp;
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/bedrock.png");
+	ItemIconTextureIDs_[size_t(ItemID::岩盤ブロック)] = tmp;
 
 	tmp = Game::Resource::LoadTexture("resources/Minecraft/item/ingot/iron.png");
 	ItemIconTextureIDs_[size_t(ItemID::鉄インゴット)] = tmp;
@@ -118,6 +119,7 @@ void ResourceID::reload()
 	ItemModelIDs_[size_t(ItemID::鉄ブロック)] = tmp;
 	ItemModelIDs_[size_t(ItemID::金ブロック)] = tmp;
 	ItemModelIDs_[size_t(ItemID::ダイヤブロック)] = tmp;
+	ItemModelIDs_[size_t(ItemID::岩盤ブロック)] = tmp;
 
 	tmp = Game::Resource::LoadModel("resources/Minecraft/item/ingot/", "ingot.obj");
 	ItemModelIDs_[size_t(ItemID::鉄インゴット)] = tmp;
@@ -173,6 +175,8 @@ void ResourceID::reload()
 	ItemModelTextureIDs_[size_t(ItemID::金ブロック)] = tmp;
 	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/diamond.png");
 	ItemModelTextureIDs_[size_t(ItemID::ダイヤブロック)] = tmp;
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/bedrock.png");
+	ItemModelTextureIDs_[size_t(ItemID::岩盤ブロック)] = tmp;
 
 	tmp = Game::Resource::LoadTexture("resources/Minecraft/item/ingot/iron.png");
 	ItemModelTextureIDs_[size_t(ItemID::鉄インゴット)] = tmp;
@@ -181,7 +185,7 @@ void ResourceID::reload()
 	tmp = Game::Resource::LoadTexture("resources/Minecraft/item/diamond/diamond.png");
 	ItemModelTextureIDs_[size_t(ItemID::ダイヤモンド)] = tmp;
 
-	tmp = Game::Resource::LoadTexture("resources/Minecraft/block/beacon/beacon.png");
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/blocks/beacon.png");
 	ItemModelTextureIDs_[size_t(ItemID::ビーコン)] = tmp;
 
 #pragma endregion
@@ -264,19 +268,19 @@ void ResourceID::reload()
 
 #pragma region モデル読み込み
 
-	ItemModelIDs_.resize(static_cast<size_t>(ModelID::MAX));
+	ModelIDs_.resize(static_cast<size_t>(ModelID::MAX));
 
 	tmp = -1;
-	ItemModelIDs_[size_t(ModelID::None)] = tmp;
+	ModelIDs_[size_t(ModelID::None)] = tmp;
 
 	tmp = Game::Resource::LoadModel("resources/Prototypes/model/", "cube.obj");
-	ItemModelIDs_[size_t(ModelID::Cube)] = tmp;
+	ModelIDs_[size_t(ModelID::Cube)] = tmp;
 	tmp = Game::Resource::LoadModel("resources/Prototypes/model/", "plane.obj");
-	ItemModelIDs_[size_t(ModelID::Plane)] = tmp;
+	ModelIDs_[size_t(ModelID::Plane)] = tmp;
 	tmp = Game::Resource::LoadModel("resources/Prototypes/model/", "corn.obj");
-	ItemModelIDs_[size_t(ModelID::Corn)] = tmp;
+	ModelIDs_[size_t(ModelID::Corn)] = tmp;
 	tmp = Game::Resource::LoadModel("resources/Prototypes/model/", "sphere.obj");
-	ItemModelIDs_[size_t(ModelID::Sphere)] = tmp;
+	ModelIDs_[size_t(ModelID::Sphere)] = tmp;
 
 #pragma endregion
 

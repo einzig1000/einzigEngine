@@ -244,6 +244,8 @@ MapManager::MapManager(Player* player)
 	player_ = player;
 
 	dropItemManager_ = new DropItemManager();
+	dropItemManager_->SetMapManager(this);
+	dropItemManager_->SetPlayer(player);
 }
 
 MapManager::~MapManager()
@@ -456,13 +458,11 @@ void MapManager::ProcessChunkGeneration()
 
 void MapManager::Update()
 {
-	//UpDataPlayerRayCollision();
-
+	// デバッグ用：マップロード/セーブ
 	if (Game::Input::Key::IsJustPressed(DIK_0))
 	{
 		LoadMap(mapFilePath_);
 	}
-
 	if (Game::Input::Key::IsJustPressed(DIK_1))
 	{
 		SaveMap(mapFilePath_);
@@ -471,10 +471,8 @@ void MapManager::Update()
 	// 生成を段階的に実行
 	ProcessChunkGeneration();
 
-	// プレイヤー視点のインデックス
+	// プレイヤー周囲更新
 	Vector2int playerIndex = ChunkIndexByPosition(player_->data_.translate.value);
-
-	// 既存チャンクのみ更新
 	for (int32_t dx = -updateRadius_; dx <= updateRadius_; ++dx)
 	{
 		for (int32_t dz = -updateRadius_; dz <= updateRadius_; ++dz)
@@ -484,13 +482,15 @@ void MapManager::Update()
 			if (chunk) { chunk->Update(); }
 		}
 	}
+
+	// ドロップアイテム更新
+	dropItemManager_->Update();
 }
 
 void MapManager::Draw()
 {
-	Vector2int playerIndex = ChunkIndexByPosition(player_->data_.translate.value);
-
 	// プレイヤー周囲描画
+	Vector2int playerIndex = ChunkIndexByPosition(player_->data_.translate.value);
 	for (int32_t dx = -drawRadius_; dx <= drawRadius_; ++dx)
 	{
 		for (int32_t dz = -drawRadius_; dz <= drawRadius_; ++dz)
@@ -503,7 +503,7 @@ void MapManager::Draw()
 	}
 
 	// ドロップアイテム描画
-	dropItems_->Draw();
+	dropItemManager_->Draw();
 }
 
 void MapManager::DrawImGui()
@@ -517,10 +517,28 @@ void MapManager::DrawImGui()
 // 指定位置のブロックを破壊
 void MapManager::DestroyBlockAt(const Vector2int& chunkPos, const Vector3int& localIndex)
 {
+	// 破壊するチャンクを取得
 	Chunk* chunk = TryGetChunk(chunkPos);
 	if (!chunk) return;
 
+	// 破壊するブロックを取得
+	Block* targetBlock = chunk->blocks[localIndex.x][localIndex.y][localIndex.z].get();
+	if (!targetBlock) return;
+
+	// 破壊するブロックのIDを取得
+	const BlockID destroyedId = targetBlock->GetBlockID();
+	if (destroyedId == BlockID::Air) return;
+
+	// ドロップ位置を決める
+	Vector3 dropPos = GetAABB(chunkPos, localIndex).center();
+	dropPos.x += Game::Math::RandFloat(-0.3f, 0.3f, 2);
+	dropPos.z += Game::Math::RandFloat(-0.3f, 0.3f, 2);
+
+	// ブロック破壊
 	chunk->DestroyBlock(localIndex);
+
+	// ドロップアイテム生成
+	dropItemManager_->AddItem(BlockIdToDropItemId(destroyedId), dropPos);
 }
 
 // 指定位置にブロックを設置

@@ -3,11 +3,14 @@
 
 class Player;
 class DropItem;
+class MapManager;
 
 class DropItemManager
 {
 public:
-	DropItemManager(Player* player);
+	DropItemManager();
+	void SetMapManager(MapManager* mapManager) { mapManager_ = mapManager; }
+	void SetPlayer(Player* player) { player_ = player; }
 	void AddItem(ItemID id, Vector3 pos);
 	void Update();
 	void Draw();
@@ -15,5 +18,11 @@ public:
 	// ドロップアイテム配列
 	std::vector<DropItem*> items_;
 
+
+private:
+
 	Player* player_;
+
+	MapManager* mapManager_;
+
 };
