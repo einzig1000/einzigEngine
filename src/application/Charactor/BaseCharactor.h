@@ -4,6 +4,7 @@
 #include "Item/HaveItem/HaveItem.h"
 
 class MapManager;
+class UIManager;
 class Block;
 
 class BaseCharactor
@@ -13,6 +14,7 @@ public:
 
 	virtual void Initialize() = 0;
 	virtual void SetMapManager(MapManager* mapManager);
+	virtual void SetUIManager(UIManager* uiManager);
 	virtual void SetHaveItem() { haveItem_ = std::make_unique<HaveItem>(); }
 	virtual void Update() = 0;
 	virtual void Draw() = 0;
@@ -51,6 +53,7 @@ protected:
 	std::optional<lookAtBlock> targetBlock_;	// ターゲットにしているブロック
 	std::optional<lookAtBlock> preTargetBlock_;// 前フレームでターゲットにしていたブロック
 
+	UIManager* uiManager_ = nullptr;
 	
 
 	float jumpPower_ = 0.1491f;	// ジャンプ力

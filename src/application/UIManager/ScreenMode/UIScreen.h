@@ -4,6 +4,7 @@
 #include "Game.h"
 
 class UIElement;
+class Player;
 
 class UIScreen
 {
@@ -19,8 +20,13 @@ public:
 
 	virtual UIMode GetNextUIMode() const { return nextUIMode_; }
 
+	// プレイヤーセット
+	void SetPlayer(Player* player) { player_ = player; }
+
 protected:
-	UIMode nextUIMode_;
+	UIMode nextUIMode_ = UIMode::None;
 	std::vector<std::unique_ptr<UIElement>> uiElements_;
+
+	Player* player_ = nullptr;
 };
 

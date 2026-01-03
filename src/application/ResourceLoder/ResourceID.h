@@ -40,6 +40,8 @@ enum class UITextureID
 
 	Inventory,
 
+	Hotbar,
+	Hotbar_Selected,
 
 	MAX,
 };

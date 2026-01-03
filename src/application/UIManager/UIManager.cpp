@@ -3,17 +3,27 @@
 #include "UIManager/ScreenMode/InventoryScreen/InventoryScreen.h"
 
 UIManager::UIManager(Player* player)
-{}
+	: player_(player)
+{
+	playingScreen_ = new PlayingScreen();
+	playingScreen_->SetPlayer(player_);
+
+	inventoryScreen_ = new InventoryScreen();
+	inventoryScreen_->SetPlayer(player_);
+}
 
 UIManager::~UIManager()
 {
-	delete currentScreen_;
-	currentScreen_ = nullptr;
+	delete playingScreen_;
+	playingScreen_ = nullptr;
+
+	delete inventoryScreen_;
+	inventoryScreen_ = nullptr;
 }
 
 void UIManager::Initialize()
 {
-	CreateScreen(UIMode::Playing);
+	ChangeScreen(UIMode::Playing);
 }
 
 void UIManager::Update()
@@ -26,7 +36,7 @@ void UIManager::Update()
 		if (nextMode != UIMode::None)
 		{
 			// 新画面生成
-			CreateScreen(nextMode);
+			ChangeScreen(nextMode);
 		}
 	}
 }
@@ -42,30 +52,29 @@ void UIManager::Draw()
 void UIManager::DrawImGui()
 {}
 
-void UIManager::CreateScreen(UIMode mode)
+void UIManager::ChangeScreen(UIMode mode)
 {
-	currentUIMode_ = mode;
+	// 現在の画面破棄
+	if (currentScreen_)
+	{
+		currentScreen_ = nullptr;
+	}
 
-	// 画面破棄
-	delete currentScreen_;
-	currentScreen_ = nullptr;
-	// 新画面生成
-
+	// 新しい画面生成
 	switch (mode)
 	{
-	case UIMode::Hidden:
-		break;
 	case UIMode::Playing:
-		currentScreen_ = new PlayingScreen();
+		currentScreen_ = playingScreen_;
 		break;
 	case UIMode::Inventory:
-		currentScreen_ = new InventoryScreen();
-		break;
-	case UIMode::Pause:
+		currentScreen_ = inventoryScreen_;
 		break;
 	default:
+		currentScreen_ = nullptr;
 		break;
 	}
+
+	currentUIMode_ = mode;
 
 	if (currentScreen_)
 	{

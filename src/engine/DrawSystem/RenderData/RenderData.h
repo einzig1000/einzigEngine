@@ -166,7 +166,7 @@ public:
     // 色
     uint32_t color = 0xFFFFFFFF;
     // テクスチャ
-    uint32_t texture = 0;
+    uint32_t texture = -1;
     // 描画オプション
     DrawOptions options;
     // 画像切り取り左上
@@ -361,7 +361,7 @@ public:
 	std::vector<VectorDynamics> scale_;
 	std::vector<VectorDynamics> rotate_;
 	std::vector<VectorDynamics> translate_;
-    std::vector<uint32_t> lifeCount_;
+    std::vector<int32_t> lifeCount_;
 	std::vector<bool> isActive_;
 
 private:

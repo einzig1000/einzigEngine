@@ -85,7 +85,7 @@ void DropItem::Update()
 		isDestroy_ = true;
 	}
 
-	// プレイヤーに近づいたら取得
+	// プレイヤーに近づいたらdata_.translate.valueに近づいた後取得
 	Vector3 dist = player_->data_.translate.value - renderData_->translate.value;
 	if (dist.LengthSq() < 1.0f && frame_ > 60)
 	{

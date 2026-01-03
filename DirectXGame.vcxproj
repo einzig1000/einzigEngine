@@ -159,6 +159,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\Hotbar\Hotbar.cpp" />
     <ClCompile Include="src\application\Item\DropItem\DropItemManager.cpp" />
     <ClCompile Include="src\application\Item\Item.cpp" />
     <ClCompile Include="src\application\Item\HaveItem\HaveItem.cpp" />
@@ -250,6 +251,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="src\engine\Physics\IWorldCollider.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\Hotbar\Hotbar.h" />
     <ClInclude Include="src\application\Item\DropItem\DropItemManager.h" />
     <ClInclude Include="src\application\Item\Item.h" />
     <ClInclude Include="src\application\Item\HaveItem\HaveItem.h" />

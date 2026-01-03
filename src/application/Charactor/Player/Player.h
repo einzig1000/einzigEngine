@@ -10,11 +10,12 @@ class Player : public BaseCharactor
 public:
 	Player();
 	~Player();
-	void SetUIManager(UIManager* uiManager) { uiManager_ = uiManager; }
 
 	void Initialize() override;
 	void Update() override;
 	void Draw() override;
+	void DrawInventory();
+	void DrawHotbar();
 	void DrawImGui() override;
 
 	void UpdateViewRay();	// 視線レイ更新
@@ -40,10 +41,9 @@ public:
 
 
 	// 所持アイテム
-	Itemslot* Itemslot_;
+	//Itemslot* Itemslot_;
 
 private:
-	UIManager* uiManager_ = nullptr;
-
+	UIMode currentMode_ = UIMode::None;
 };
 

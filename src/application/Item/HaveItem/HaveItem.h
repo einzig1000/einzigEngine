@@ -2,7 +2,7 @@
 #include "definition/definition.h"
 #include <array>
 #include "Item/Item.h"
-
+#include "Game.h"
 
 class HaveItem
 {
@@ -11,13 +11,24 @@ public:
 	~HaveItem();
 	// アイテム獲得
 	void AddItem(ItemID id);
-	// 所持アイテム数取得
-	int GetHaveItemCount(ItemID id) const;
+
+	void UpdateInventry();
+	void UpdateHotbar();
+
+	void DrawInventory();
+	void DrawHotbar();
 
 private:
-	// 9x4のアイテム所持配列　1つのアイテムにつき最大64個まで所持可能
 	std::array<std::array<InventorySlot, 9>, 4> inventory_;
+	std::array<std::array<Vector3, 9>, 4> baseInventoryPositions_;
+	std::array<InventorySlot, 9> hotbar_;
 
-	Vector2int offset_ = { 0,0 }; // インベントリ内ポジションオフセット
+
+	// 今掴んでるインデックス
+	Vector2int grabbedIndex_ = { -1, -1 };
+	bool grabbed_ = false;
+
+	// 今カーソルが乗ってるインデックス
+	Vector2int hoverIndex_ = { -1, -1 };
 };
 

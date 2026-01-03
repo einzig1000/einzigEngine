@@ -208,6 +208,9 @@
     <Filter Include="application\GameManeger\Item\DropItem">
       <UniqueIdentifier>{dbf079b1-300b-4849-979f-d718265501b7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="application\GameManeger\UIManager\UIScreen\UIElement\Hotbar">
+      <UniqueIdentifier>{39268ca7-7519-48e9-bf11-ca596956e61f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -396,6 +399,9 @@
     <ClCompile Include="src\application\Item\DropItem\DropItemManager.cpp">
       <Filter>application\GameManeger\Item\DropItem</Filter>
     </ClCompile>
+    <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\Hotbar\Hotbar.cpp">
+      <Filter>application\GameManeger\UIManager\UIScreen\UIElement\Hotbar</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\engine\DirectX\CommandContextManager.h">
@@ -580,6 +586,9 @@
     </ClInclude>
     <ClInclude Include="src\application\Item\DropItem\DropItemManager.h">
       <Filter>application\GameManeger\Item\DropItem</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\Hotbar\Hotbar.h">
+      <Filter>application\GameManeger\UIManager\UIScreen\UIElement\Hotbar</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

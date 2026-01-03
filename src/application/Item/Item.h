@@ -1,15 +1,6 @@
 #pragma once
 #include "Game.h"
 
-
-struct InventorySlot
-{
-	Item item;     // アイテムそのもの
-	uint8_t count; // 所持数（0〜64）
-	Vector2int position; // スロット位置
-};
-
-
 class Item
 {
 public:
@@ -32,3 +23,11 @@ private:
 
 };
 
+
+
+struct InventorySlot
+{
+	std::unique_ptr<Item> item;
+	uint8_t count = 0;
+	std::unique_ptr<RenderData_Sprite> renderDataSprite;
+};

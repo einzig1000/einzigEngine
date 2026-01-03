@@ -98,6 +98,9 @@ bool Engine::ProcessMessage()
 }
 void Engine::BeginFrame()
 {
+	// GPU同期
+	dxManager_->GetSynchronizationManager()->WaitForGPU();
+
 	// DirectXを更新
 	dxManager_->BeginFrame();
 
@@ -268,7 +271,6 @@ void Engine::UpdateDebugInfo()
 }
 void Engine::EndFrame()
 {
-
 	// 入力終了処理
 	inputManager_->EndFrame();
 
@@ -290,9 +292,6 @@ void Engine::EndFrame()
 
 	// DirectX終了処理
 	dxManager_->EndFrame();
-
-	// GPU同期
-	dxManager_->GetSynchronizationManager()->WaitForGPU();
 
 	// アプリケーション終了
 	if (Game::Input::Key::IsJustPressed(DIK_ESCAPE))
@@ -765,7 +764,17 @@ Microsoft::WRL::ComPtr<ID3D12Resource> Engine::CreateBufferResource(size_t sizeI
 		IID_PPV_ARGS(&pResource) // ID3D12Resourceポインタを取得
 	);
 
-	assert(SUCCEEDED(hr));
+
+	if (FAILED(hr) || !pResource)
+	{
+		const HRESULT removed = dxManager_->GetDevice()->GetDeviceRemovedReason();
+		Log("CreateCommittedResource failed. size=%zu hr=0x%08X removed=0x%08X",
+			sizeInBytes,
+			static_cast<unsigned>(hr),
+			static_cast<unsigned>(removed));
+		return nullptr;
+	}
+
 	pResource->SetName(L"CreateBufferResource()");
 
 	return pResource;

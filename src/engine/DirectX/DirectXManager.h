@@ -49,7 +49,4 @@ private:
 
     ResourceManager* resourceManager_;
     FixFPS* fixFPS_;
-
-    D3D12_RESOURCE_BARRIER barrier = {};
-
 };

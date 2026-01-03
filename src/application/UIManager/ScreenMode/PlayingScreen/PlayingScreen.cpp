@@ -1,8 +1,11 @@
 #include "UIManager/ScreenMode/PlayingScreen/PlayingScreen.h"
-#include "UIManager/ScreenMode/UIElement/UIElement.h"
+#include "UIManager/ScreenMode/UIElement/Hotbar/Hotbar.h"
+#include "Charactor/Player/Player.h"
 
 PlayingScreen::PlayingScreen()
 {
+	// uiElements_[0] : Hotbar
+	uiElements_.emplace_back(std::make_unique<Hotbar>());
 }
 
 PlayingScreen::~PlayingScreen()
@@ -37,8 +40,8 @@ void PlayingScreen::Update()
 
 void PlayingScreen::Draw()
 {
-	for (const auto& element : uiElements_)
-	{
-		element->Draw();
-	}
+	uiElements_[0]->Draw();		// Hotbar
+
+	player_->DrawHotbar();		// Hotbarアイコン描画
+
 }

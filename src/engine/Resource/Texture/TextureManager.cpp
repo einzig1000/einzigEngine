@@ -68,7 +68,7 @@ TextureData* TextureManager::GetTextureData(int32_t textureID)
 {
     if (textureID < 0)
     {
-        return &textures_[0];
+        return nullptr;
 	}
 
     if (textureID < textures_.size())

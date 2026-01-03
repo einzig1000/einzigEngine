@@ -22,8 +22,6 @@ Player::Player()
 
 	breakPower_ = 10;
 
-	Itemslot_ = new Itemslot();
-
 	SetHaveItem();
 }
 
@@ -49,16 +47,10 @@ void Player::Update()
 	}
 
 
-	UIMode currentMode = uiManager_->GetCurrentUIMode();
-	bool enableControl = false;
+	currentMode_ = uiManager_->GetCurrentUIMode();
 
 	// プレイ中または非表示時のみ操作可能
-	if (currentMode == UIMode::Playing || currentMode == UIMode::Hidden)
-	{
-		enableControl = true;
-	}
-
-	if (enableControl)
+	if (currentMode_ == UIMode::Playing || currentMode_ == UIMode::Hidden)
 	{
 		// 移動更新
 		UpdateDush();
@@ -94,17 +86,24 @@ void Player::Update()
 		// ターゲットブロック取得
 		SetTargetBlock();
 	}
-
-
-
-	Itemslot_->Update();
 }
 
 void Player::Draw()
 {
 	data_.Draw();
 	reticle_.Draw();
-	Itemslot_->Draw();
+}
+
+void Player::DrawInventory()
+{
+	haveItem_->UpdateInventry();
+	haveItem_->DrawInventory();
+}
+
+void Player::DrawHotbar()
+{
+	haveItem_->UpdateHotbar();
+	haveItem_->DrawHotbar();
 }
 
 void Player::DrawImGui()
@@ -199,5 +198,5 @@ void Player::UpdateJump()
 
 void Player::AddItemToItemslot(ItemID itemID)
 {
-	//Itemslot_->AddItemToItemslot(itemID);
+	haveItem_->AddItem(itemID);
 }

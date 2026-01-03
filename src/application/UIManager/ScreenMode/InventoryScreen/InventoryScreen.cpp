@@ -1,9 +1,13 @@
 #include "UIManager/ScreenMode/InventoryScreen/InventoryScreen.h"
 #include "UIManager/ScreenMode/UIElement/Inventory/Inventory.h"
+#include "UIManager/ScreenMode/UIElement/Hotbar/Hotbar.h"
+#include "Charactor/Player/Player.h"
 
 InventoryScreen::InventoryScreen()
 {
-	// uiElements_[0] : Inventry
+	// uiElements_[0] : Hotbar
+	uiElements_.emplace_back(std::make_unique<Hotbar>());
+	// uiElements_[1] : Inventry
 	uiElements_.emplace_back(std::make_unique<Inventory>());
 }
 
@@ -39,8 +43,11 @@ void InventoryScreen::Update()
 
 void InventoryScreen::Draw()
 {
-	for (const auto& element : uiElements_)
-	{
-		element->Draw();
-	}
+	uiElements_[0]->Draw();		// Hotbar
+
+	player_->DrawHotbar();		// Hotbarアイコン描画
+
+	uiElements_[1]->Draw();		// Inventory
+
+	player_->DrawInventory();	// Inventoryアイコン描画
 }

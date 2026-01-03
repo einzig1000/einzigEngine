@@ -3,6 +3,8 @@
 
 class Player;
 class UIScreen;
+class PlayingScreen;
+class InventoryScreen;
 
 class UIManager
 {
@@ -14,13 +16,18 @@ public:
 	void Draw();
 	void DrawImGui();
 
-	void CreateScreen(UIMode mode);
+	void ChangeScreen(UIMode mode);
 
 	UIMode GetCurrentUIMode() const { return currentUIMode_; }
 
 private:
 	UIMode currentUIMode_ = UIMode::None;
+
 	UIScreen* currentScreen_ = nullptr;
+
+	PlayingScreen* playingScreen_ = nullptr;
+	InventoryScreen* inventoryScreen_ = nullptr;
+
 	Player* player_ = nullptr;
 };
 

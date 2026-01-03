@@ -460,7 +460,7 @@ ItemID BlockIdToDropItemId(BlockID id)
     case BlockID::Diamond: return ItemID::ダイヤモンド;
 
     case BlockID::Dirt:    return ItemID::土ブロック;
-    case BlockID::Lawn:    return ItemID::芝ブロック;
+    case BlockID::Lawn:    return ItemID::土ブロック;
     case BlockID::Wood:    return ItemID::木ブロック;
     case BlockID::Leaf:    return ItemID::葉ブロック;
     case BlockID::Bedrock: return ItemID::岩盤ブロック;
