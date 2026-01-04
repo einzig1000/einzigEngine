@@ -2,6 +2,62 @@
 #include "Item/HaveItem/HaveItem.h"
 #include "Item/CraftRecipe/CraftRecipe.h"
 
+static Rect GetCraftRect(const std::array<std::array<ItemID, 3>, 3>& craft)
+{
+    Rect r;
+    r.minX = r.minY = 3;
+    r.maxX = r.maxY = -1;
+    r.empty = true;
+
+    for (int y = 0; y < 3; ++y)
+    {
+        for (int x = 0; x < 3; ++x)
+        {
+            if (craft[y][x] != ItemID::None)
+            {
+                r.empty = false;
+                r.minX = my_min(r.minX, x);
+                r.minY = my_min(r.minY, y);
+                r.maxX = my_max(r.maxX, x);
+                r.maxY = my_max(r.maxY, y);
+            }
+        }
+    }
+    return r;
+}
+
+static bool MatchPatternRect(
+    const std::array<std::array<ItemID, 3>, 3>& craft,
+    const std::array<std::array<ItemID, 3>, 3>& pattern,
+    const Vector2int& pMin,
+    const Vector2int& pMax,
+    const Rect& cRect)
+{
+    int pw = pMax.x - pMin.x + 1;
+    int ph = pMax.y - pMin.y + 1;
+    int cw = cRect.maxX - cRect.minX + 1;
+    int ch = cRect.maxY - cRect.minY + 1;
+
+    if (pw != cw || ph != ch)
+        return false;
+
+    for (int dy = 0; dy < ph; ++dy)
+    {
+        for (int dx = 0; dx < pw; ++dx)
+        {
+            ItemID p = pattern[pMin.y + dy][pMin.x + dx];
+            ItemID c = craft[cRect.minY + dy][cRect.minX + dx];
+
+            if (p != c)
+                return false;
+        }
+    }
+
+    return true;
+}
+
+
+
 HaveItem::HaveItem()
 {
     // インベントリ基準位置
@@ -71,6 +127,32 @@ HaveItem::HaveItem()
             slot.counter[1]->texture = -1;
         }
     }
+    for (int y = 0; y < 3; ++y)
+    {
+        for (int x = 0; x < 3; ++x)
+        {
+            baseCraftPositions3x3_[y][x] = Vector3{
+                static_cast<float>(640.0f + x * 72),
+                static_cast<float>(241.0f - y * 72),
+                0.0f };
+
+            auto& slot = craftArea3x3_[y][x];
+            slot.item.Initialize(ItemID::None);
+            slot.count = 0;
+            slot.icon = std::make_unique<RenderData_Sprite>();
+            slot.icon->anchor = Anchor::Center;
+            slot.icon->transforms.translate = baseCraftPositions3x3_[y][x];
+            slot.icon->texture = -1;
+            slot.counter[0] = std::make_unique<RenderData_Sprite>();
+			slot.counter[0]->anchor = Anchor::Center;
+			slot.counter[0]->transforms.translate = baseCraftPositions3x3_[y][x] + Vector3{ 16.0f, 16.0f, 0.0f };
+			slot.counter[0]->texture = -1;
+			slot.counter[1] = std::make_unique<RenderData_Sprite>();
+			slot.counter[1]->anchor = Anchor::Center;
+			slot.counter[1]->transforms.translate = baseCraftPositions3x3_[y][x] + Vector3{ 32.0f, 16.0f, 0.0f };
+            slot.counter[1]->texture = -1;
+        }
+	}
 
 	// クラフト結果欄位置
     craftResultPosition_ = Vector3{ 928.0f, 173.0f, 0.0f };
@@ -157,10 +239,43 @@ HaveItem::HaveItem()
     hand_.counter[1] = std::make_unique<RenderData_Sprite>();
     hand_.counter[1]->anchor = Anchor::Center;
     hand_.counter[1]->texture = -1;
+
+
+    // ホットバー選択枠
+    hotbarSelector_.texture = ResourceID::GetUITextureID(UITextureID::Hotbar_Selected);
+    hotbarSelector_.anchor = Anchor::Center;
+    hotbarSelector_.transforms.scale = Vector3(1.0f, 1.0f, 1.0f);
+    hotbarSelector_.transforms.translate = Vector3(640.0f, 670.0f, 0.0f);
 }
 
 HaveItem::~HaveItem()
 {}
+
+ItemID HaveItem::GetCurrentSelectedItemID() const
+{
+	// ホットバーの選択中スロットを取得
+	return hotbar_[hotbarSelectedIndex_].item.GetID();
+}
+
+void HaveItem::RemoveCurrentSelectedItem(int count)
+{
+    // ホットバーの選択中スロットを取得
+    auto& slot = hotbar_[hotbarSelectedIndex_];
+    // アイテム数を減らす
+    if (slot.count >= count)
+    {
+        slot.count -= count;
+    }
+    else
+    {
+        slot.count = 0;
+    }
+    // 空になったらクリア
+    if (slot.count == 0)
+    {
+        slot.Clear();
+	}
+}
 
 // アイテム獲得（インベントリに追加）
 void HaveItem::AddItem(ItemID id)
@@ -236,15 +351,16 @@ void HaveItem::UpdateInventry()
 
     UpdateCounters();
     SyncHotbar();
-
-
 }
 
 void HaveItem::UpdateHotbar()
 {
+	UpdateHotbarInput();
     UpdateCounters();
     SyncHotbar();
 }
+
+
 
 void HaveItem::DrawInventory()
 {
@@ -262,15 +378,33 @@ void HaveItem::DrawInventory()
     }
 
     // クラフト欄
-    for (int y = 0; y < 2; ++y)
+    if (craftMode3x3_)
     {
-        for (int x = 0; x < 2; ++x)
+        for (int y = 0; y < 3; ++y)
         {
-            auto& slot = craftArea_[y][x];
-            slot.icon->transforms.translate = baseCraftPositions_[y][x];
-            slot.icon->Draw();
-            slot.counter[0]->Draw();
-            slot.counter[1]->Draw();
+            for (int x = 0; x < 3; ++x)
+            {
+                auto& slot = craftArea3x3_[y][x];
+                slot.icon->transforms.translate = baseCraftPositions3x3_[y][x];
+                slot.icon->Draw();
+                slot.counter[0]->Draw();
+                slot.counter[1]->Draw();
+            }
+		}
+
+    }
+    else
+    {
+        for (int y = 0; y < 2; ++y)
+        {
+            for (int x = 0; x < 2; ++x)
+            {
+                auto& slot = craftArea_[y][x];
+                slot.icon->transforms.translate = baseCraftPositions_[y][x];
+                slot.icon->Draw();
+                slot.counter[0]->Draw();
+                slot.counter[1]->Draw();
+            }
         }
     }
 
@@ -342,11 +476,11 @@ void HaveItem::DrawInventory()
             slot->counter[1]->Draw();
         }
     }
-
 }
 
 void HaveItem::DrawHotbar()
 {
+	// ホットバー
     for (int x = 0; x < 9; ++x)
     {
         auto& slot = hotbar_[x];
@@ -354,12 +488,49 @@ void HaveItem::DrawHotbar()
         slot.counter[0]->Draw();
         slot.counter[1]->Draw();
     }
+	// 選択枠描画
+	hotbarSelector_.Draw();
 }
+
 
 void HaveItem::UpdateHoverIndex()
 {
     Vector2 mousePos = Game::Input::Mouse::GetPosition();
     hoverSlot_ = { SlotArea::None, -1, -1 };
+
+    // クラフト欄
+    if (craftMode3x3_)
+    {
+        for (int y = 0; y < 3; ++y)
+        {
+            for (int x = 0; x < 3; ++x)
+            {
+                Vector3 pos = baseCraftPositions3x3_[y][x];
+                if (mousePos.x >= pos.x - 32 && mousePos.x <= pos.x + 32 &&
+                    mousePos.y >= pos.y - 32 && mousePos.y <= pos.y + 32)
+                {
+                    hoverSlot_ = { SlotArea::Craft, x, y };
+                    return;
+                }
+            }
+        }
+	}
+    else
+    {
+        for (int y = 0; y < 2; ++y)
+        {
+            for (int x = 0; x < 2; ++x)
+            {
+                Vector3 pos = baseCraftPositions_[y][x];
+                if (mousePos.x >= pos.x - 32 && mousePos.x <= pos.x + 32 &&
+                    mousePos.y >= pos.y - 32 && mousePos.y <= pos.y + 32)
+                {
+                    hoverSlot_ = { SlotArea::Craft, x, y };
+                    return;
+                }
+            }
+        }
+    }
 
     // インベントリ
     for (int y = 0; y < 4; ++y)
@@ -371,20 +542,6 @@ void HaveItem::UpdateHoverIndex()
                 mousePos.y >= pos.y - 32 && mousePos.y <= pos.y + 32)
             {
                 hoverSlot_ = { SlotArea::Inventory, x, y };
-            }
-        }
-    }
-
-    // クラフト欄
-    for (int y = 0; y < 2; ++y)
-    {
-        for (int x = 0; x < 2; ++x)
-        {
-            Vector3 pos = baseCraftPositions_[y][x];
-            if (mousePos.x >= pos.x - 32 && mousePos.x <= pos.x + 32 &&
-                mousePos.y >= pos.y - 32 && mousePos.y <= pos.y + 32)
-            {
-                hoverSlot_ = { SlotArea::Craft, x, y };
             }
         }
     }
@@ -463,34 +620,112 @@ void HaveItem::UpdateLeftClick()
     // クラフト結果欄クリック → 素材消費
     if (hoverSlot_.area == SlotArea::Result)
     {
-        if (hand_.IsEmpty() && !craftResultSlot_.IsEmpty())
+        bool shift = Game::Input::Key::IsHeld(DIK_LSHIFT) || Game::Input::Key::IsHeld(DIK_RSHIFT);
+
+        // 結果が空なら何もしない
+        if (craftResultSlot_.IsEmpty())
         {
-            // 結果を手に持つ
-            hand_.item = craftResultSlot_.item;
-            hand_.count = craftResultSlot_.count;
-            hand_.icon->texture = craftResultSlot_.icon->texture;
-
-            // 素材を1つずつ消費
-            for (int y = 0; y < 2; ++y)
-            {
-                for (int x = 0; x < 2; ++x)
-                {
-                    if (!craftArea_[y][x].IsEmpty())
-                    {
-                        craftArea_[y][x].count--;
-                        if (craftArea_[y][x].count == 0)
-                            craftArea_[y][x].Clear();
-                    }
-                }
-            }
-
-            // 再判定
-            CheckCraftRecipe();
+            isDoubleClickPending_ = false;
             return;
         }
 
-        // 手に何か持っている → 結果欄には置けない
-        return;
+        if (shift)
+        {
+            // Shiftクリック → 作れるだけインベントリに送る
+            while (true)
+            {
+                // 素材消費（2×2 or 3×3）
+                if (craftMode3x3_)
+                {
+                    for (int y = 0; y < 3; ++y)
+                    {
+                        for (int x = 0; x < 3; ++x)
+                        {
+                            if (!craftArea3x3_[y][x].IsEmpty())
+                            {
+                                craftArea3x3_[y][x].count--;
+                                if (craftArea3x3_[y][x].count == 0)
+                                    craftArea3x3_[y][x].Clear();
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    for (int y = 0; y < 2; ++y)
+                    {
+                        for (int x = 0; x < 2; ++x)
+                        {
+                            if (!craftArea_[y][x].IsEmpty())
+                            {
+                                craftArea_[y][x].count--;
+                                if (craftArea_[y][x].count == 0)
+                                    craftArea_[y][x].Clear();
+                            }
+                        }
+                    }
+                }
+
+
+                // 結果をインベントリに送る（AddItem を resultCount 回）
+                for (int i = 0; i < craftResultSlot_.count; ++i)
+                {
+                    AddItem(craftResultSlot_.item.GetID());
+                }
+
+                // 再判定
+                CheckCraftRecipe();
+                if (craftResultSlot_.IsEmpty())
+                    break;
+            }
+
+            return;
+        }
+        else
+        {
+            // 通常クリック（今の処理）: 手に持つ & 素材を1回分消費
+            if (hand_.IsEmpty())
+            {
+                hand_.item = craftResultSlot_.item;
+                hand_.count = craftResultSlot_.count;
+                hand_.icon->texture = craftResultSlot_.icon->texture;
+
+                if (craftMode3x3_)
+                {
+                    for (int y = 0; y < 3; ++y)
+                    {
+                        for (int x = 0; x < 3; ++x)
+                        {
+                            if (!craftArea3x3_[y][x].IsEmpty())
+                            {
+                                craftArea3x3_[y][x].count--;
+                                if (craftArea3x3_[y][x].count == 0)
+                                    craftArea3x3_[y][x].Clear();
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    for (int y = 0; y < 2; ++y)
+                    {
+                        for (int x = 0; x < 2; ++x)
+                        {
+                            if (!craftArea_[y][x].IsEmpty())
+                            {
+                                craftArea_[y][x].count--;
+                                if (craftArea_[y][x].count == 0)
+                                    craftArea_[y][x].Clear();
+                            }
+                        }
+                    }
+                }
+
+                CheckCraftRecipe();
+            }
+            return;
+        }
+
     }
 
     // ダブルクリック処理
@@ -550,7 +785,10 @@ void HaveItem::UpdateLeftClick()
 
 
         collectFrom2D(inventory_);
-        collectFrom2D(craftArea_);
+        if (craftMode3x3_)collectFrom2D(craftArea3x3_);
+        else collectFrom2D(craftArea_);
+
+
 
         for (int i = 0; i < 4; ++i)
         {
@@ -757,7 +995,7 @@ NORMAL_LEFT_CLICK:
         // 手に持っているアイテムが防具でなければ置けない
         if (!hand_.IsEmpty())
         {
-            if (GetItemJunle(hand_.item.GetID()) == ItemJunle::Head)return;
+            if (GetItemJunle(hand_.item.GetID()) != ItemJunle::Head)return;
         }
     }
     else if (hoverSlot_.area == SlotArea::Body)
@@ -765,7 +1003,7 @@ NORMAL_LEFT_CLICK:
         // 手に持っているアイテムが防具でなければ置けない
         if (!hand_.IsEmpty())
         {
-            if (GetItemJunle(hand_.item.GetID()) == ItemJunle::Body) return;
+            if (GetItemJunle(hand_.item.GetID()) != ItemJunle::Body) return;
         }
     }
     else if (hoverSlot_.area == SlotArea::Leg)
@@ -773,7 +1011,7 @@ NORMAL_LEFT_CLICK:
         // 手に持っているアイテムが防具でなければ置けない
         if (!hand_.IsEmpty())
         {
-            if (GetItemJunle(hand_.item.GetID()) == ItemJunle::Leg)return;
+            if (GetItemJunle(hand_.item.GetID()) != ItemJunle::Leg)return;
         }
     }
     else if (hoverSlot_.area == SlotArea::Boots)
@@ -781,7 +1019,7 @@ NORMAL_LEFT_CLICK:
         // 手に持っているアイテムが防具でなければ置けない
         if (!hand_.IsEmpty())
         {
-            if (GetItemJunle(hand_.item.GetID()) == ItemJunle::Boots) return;
+            if (GetItemJunle(hand_.item.GetID()) != ItemJunle::Boots) return;
         }
     }
 
@@ -927,57 +1165,113 @@ void HaveItem::UpdateDrag()
             int perSlot = my_max(1, hand_.count / total);
 
             for (auto& ref : dragSlots_)
+            {
                 dragPreview_.push_back({ ref, perSlot });
+            }
         }
     }
 
-    // ドラッグ終了 → 分配実行
+    // ドラッグ終了
     if (isDragging_ && leftJustReleased)
     {
-        if (!hand_.IsEmpty() && !dragSlots_.empty())
+        isDragging_ = false;
+
+        int total = int(dragSlots_.size());
+        int perSlot = my_max(1, hand_.count / total);
+
+        for (auto& ref : dragSlots_)
         {
-            int total = int(dragSlots_.size());
-            int perSlot = my_max(1, hand_.count / total);
+            InventorySlot* slot = GetSlot(ref);
+            if (!slot) continue;
 
-            for (auto& ref : dragSlots_)
+            if (slot->IsEmpty())
             {
-                if (hand_.count == 0) break;
-
-                InventorySlot* slot = GetSlot(ref);
-                if (!slot) continue;
-
-                if (slot->IsEmpty())
-                {
-                    slot->item = hand_.item;
-                    slot->icon->texture = hand_.icon->texture;
-                    int put = std::min<int>(perSlot, hand_.count);
-                    slot->count = put;
-                    hand_.count -= put;
-                }
-                else if (slot->item.GetID() == hand_.item.GetID())
-                {
-                    int able = slot->item.GetAbleStackCount();
-                    int canPut = able - slot->count;
-                    if (canPut > 0)
-                    {
-                        int put = std::min<int>(perSlot, std::min<int>(canPut, hand_.count));
-                        slot->count += put;
-                        hand_.count -= put;
-                    }
-                }
+                slot->item = hand_.item;
+                slot->count = perSlot;
+                slot->icon->texture = hand_.icon->texture;
+            }
+            else if (slot->item.GetID() == hand_.item.GetID())
+            {
+                int able = slot->item.GetAbleStackCount();
+                int canPut = able - slot->count;
+                int put = my_min(canPut, perSlot);
+                slot->count += put;
             }
 
-            if (hand_.count == 0)
+            hand_.count -= perSlot;
+            if (hand_.count <= 0)
+            {
                 hand_.Clear();
+                break;
+            }
         }
 
-        isDragging_ = false;
         dragSlots_.clear();
         dragPreview_.clear();
+
+        CheckCraftRecipe();
+    }
+}
+
+void HaveItem::UpdateHotbarInput()
+{
+    int mouseWheel = Game::Input::Mouse::GetWheel();
+    if (mouseWheel > 0)
+    {
+        hotbarSelectedIndex_--;
+        if (hotbarSelectedIndex_ < 0)
+        {
+            hotbarSelectedIndex_ = 8;
+        }
+    }
+    else if (mouseWheel < 0)
+    {
+        hotbarSelectedIndex_++;
+        if (hotbarSelectedIndex_ > 8)
+        {
+            hotbarSelectedIndex_ = 0;
+        }
     }
 
-	// クラフト結果再判定
-	CheckCraftRecipe();
+    if (Game::Input::Key::IsJustPressed(DIK_1))
+    {
+        hotbarSelectedIndex_ = 0;
+    }
+    else if (Game::Input::Key::IsJustPressed(DIK_2))
+    {
+        hotbarSelectedIndex_ = 1;
+    }
+    else if (Game::Input::Key::IsJustPressed(DIK_3))
+    {
+        hotbarSelectedIndex_ = 2;
+    }
+    else if (Game::Input::Key::IsJustPressed(DIK_4))
+    {
+        hotbarSelectedIndex_ = 3;
+    }
+    else if (Game::Input::Key::IsJustPressed(DIK_5))
+    {
+        hotbarSelectedIndex_ = 4;
+    }
+    else if (Game::Input::Key::IsJustPressed(DIK_6))
+    {
+        hotbarSelectedIndex_ = 5;
+    }
+    else if (Game::Input::Key::IsJustPressed(DIK_7))
+    {
+        hotbarSelectedIndex_ = 6;
+    }
+    else if (Game::Input::Key::IsJustPressed(DIK_8))
+    {
+        hotbarSelectedIndex_ = 7;
+    }
+    else if (Game::Input::Key::IsJustPressed(DIK_9))
+    {
+        hotbarSelectedIndex_ = 8;
+    }
+
+    // 選択枠位置更新
+    hotbarSelector_.transforms.translate.x = 320.0f + hotbarSelectedIndex_ * 80.0f;
 }
 
 void HaveItem::UpdateCounters()
@@ -1017,9 +1311,18 @@ void HaveItem::UpdateCounters()
             updateSlot(inventory_[y][x], baseInventoryPositions_[y][x]);
 
     // クラフト欄
-    for (int y = 0; y < 2; ++y)
-        for (int x = 0; x < 2; ++x)
-            updateSlot(craftArea_[y][x], baseCraftPositions_[y][x]);
+    if (craftMode3x3_)
+    {
+        for (int y = 0; y < 3; ++y)
+            for (int x = 0; x < 3; ++x)
+                updateSlot(craftArea3x3_[y][x], baseCraftPositions3x3_[y][x]);
+    }
+    else
+    {
+        for (int y = 0; y < 2; ++y)
+            for (int x = 0; x < 2; ++x)
+                updateSlot(craftArea_[y][x], baseCraftPositions_[y][x]);
+    }
 
     // クラフト結果欄
     updateSlot(craftResultSlot_, craftResultPosition_);
@@ -1059,8 +1362,16 @@ InventorySlot* HaveItem::GetSlot(const SlotRef& ref)
             return &inventory_[ref.y][ref.x];
         break;
     case SlotArea::Craft:
-        if (ref.y >= 0 && ref.y < 2 && ref.x >= 0 && ref.x < 2)
-            return &craftArea_[ref.y][ref.x];
+        if (craftMode3x3_)
+        {
+            if (ref.y >= 0 && ref.y < 3 && ref.x >= 0 && ref.x < 3)
+                return &craftArea3x3_[ref.y][ref.x];
+        }
+        else
+        {
+            if (ref.y >= 0 && ref.y < 2 && ref.x >= 0 && ref.x < 2)
+                return &craftArea_[ref.y][ref.x];
+		}
         break;
     case SlotArea::Head:
         if (ref.area == SlotArea::Head)
@@ -1093,7 +1404,14 @@ Vector3 HaveItem::GetSlotBasePos(const SlotRef& ref)
     case SlotArea::Inventory:
         return baseInventoryPositions_[ref.y][ref.x];
     case SlotArea::Craft:
-        return baseCraftPositions_[ref.y][ref.x];
+        if (craftMode3x3_)
+        {
+            return baseCraftPositions3x3_[ref.y][ref.x];
+        }
+        else
+        {
+            return baseCraftPositions_[ref.y][ref.x];
+		}
 	case SlotArea::Head:
 		return baseEquipPositions_[0];
 	case SlotArea::Body:
@@ -1126,70 +1444,101 @@ std::array<std::array<ItemID, 3>, 3> HaveItem::GetCraftMatrix()
 {
     std::array<std::array<ItemID, 3>, 3> mat{};
 
-    for (int y = 0; y < 2; ++y)
+    if (craftMode3x3_)
     {
-        for (int x = 0; x < 2; ++x)
+        // 3x3モード
+        for (int y = 0; y < 3; ++y)
         {
-			mat[y][x] = ItemID::None;
-            mat[y][x] = craftArea_[y][x].item.GetID();
+            for (int x = 0; x < 3; ++x)
+            {
+                mat[y][x] = craftArea3x3_[y][x].item.GetID();
+            }
+        }
+    }
+    else
+    {
+        for (int y = 0; y < 2; ++y)
+        {
+            for (int x = 0; x < 2; ++x)
+            {
+                mat[y][x] = craftArea_[y][x].item.GetID();
+            }
         }
     }
 
     return mat;
 }
 
-bool MatchPatternAt(
-    const std::array<std::array<ItemID, 3>, 3>& craft,
+// pattern の最小矩形を求める
+void GetBoundingBox(
     const std::array<std::array<ItemID, 3>, 3>& pattern,
-    int offsetY,
-    int offsetX)
+    int& minY, int& maxY, int& minX, int& maxX)
 {
+    minY = 3; maxY = -1;
+    minX = 3; maxX = -1;
+
     for (int y = 0; y < 3; ++y)
     {
         for (int x = 0; x < 3; ++x)
         {
-            ItemID p = pattern[y][x];
-            if (p == ItemID::None)
-                continue; // 空は無視
+            if (pattern[y][x] != ItemID::None)
+            {
+                minY = my_min(minY, y);
+                maxY = my_max(maxY, y);
+                minX = my_min(minX, x);
+                maxX = my_max(maxX, x);
+            }
+        }
+    }
+}
 
+bool MatchPatternAt(
+    const std::array<std::array<ItemID, 3>, 3>& craft,
+    const std::array<std::array<ItemID, 3>, 3>& pattern,
+    const Vector2int& min,
+    const Vector2int& max,
+    int offsetY,
+    int offsetX)
+{
+    for (int y = min.y; y <= max.y; ++y)
+    {
+        for (int x = min.x; x <= max.x; ++x)
+        {
             int cy = y + offsetY;
             int cx = x + offsetX;
 
-            // はみ出し → 不一致
             if (cy < 0 || cy >= 3 || cx < 0 || cx >= 3)
                 return false;
 
-            if (craft[cy][cx] != p)
+            if (craft[cy][cx] != pattern[y][x])
                 return false;
         }
     }
+
     return true;
 }
+
 
 
 void HaveItem::CheckCraftRecipe()
 {
     auto craft = GetCraftMatrix();
+    Rect cRect = GetCraftRect(craft);
 
-	std::vector<CraftRecipe> emptyPatterns = CraftRecipeList::GetRecipeList();
-
-	// 全レシピをチェック
-    for (auto& recipe : emptyPatterns)
+    if (cRect.empty)
     {
-		// 複数パターン対応
+        SetCraftResult(ItemID::None, 0);
+        return;
+    }
+
+    for (auto& recipe : CraftRecipeList::GetRecipeList())
+    {
         for (auto& pattern : recipe.pattern)
         {
-            // 3×3 の中で pattern をスライドさせて一致するか調べる
-            for (int oy = 0; oy <= 3 - 1; ++oy)
+            if (MatchPatternRect(craft, pattern, recipe.min, recipe.max, cRect))
             {
-                for (int ox = 0; ox <= 3 - 1; ++ox)
-                {
-                    if (MatchPatternAt(craft, pattern, oy, ox))
-                    {
-                        SetCraftResult(recipe.resultID, recipe.resultCount);
-                        return;
-                    }
-                }
+                SetCraftResult(recipe.resultID, recipe.resultCount);
+                return;
             }
         }
     }

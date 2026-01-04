@@ -5,6 +5,8 @@ class Player;
 class UIScreen;
 class PlayingScreen;
 class InventoryScreen;
+class CraftScreen;
+
 
 class UIManager
 {
@@ -27,6 +29,7 @@ private:
 
 	PlayingScreen* playingScreen_ = nullptr;
 	InventoryScreen* inventoryScreen_ = nullptr;
+	CraftScreen* craftingScreen_ = nullptr;
 
 	Player* player_ = nullptr;
 };

@@ -549,6 +549,28 @@ ItemID BlockIDToItemID(BlockID id)
 
 }
 
+BlockID ItemIDToBlockID(ItemID id)
+{
+    switch (id)
+    {
+    case ItemID::作業台ブロック: return BlockID::craftTable; break;
+    case ItemID::ガラスブロック: return BlockID::Glass; break;
+    case ItemID::葉ブロック:     return BlockID::Leaf; break;
+    case ItemID::原木ブロック:    return BlockID::Log; break;
+    case ItemID::木材ブロック:    return BlockID::Planks; break;
+    case ItemID::芝ブロック:     return BlockID::Lawn; break;
+    case ItemID::土ブロック:     return BlockID::Dirt; break;
+    case ItemID::石ブロック:     return BlockID::Stone; break;
+    case ItemID::鉄ブロック:     return BlockID::Iron; break;
+    case ItemID::金ブロック:     return BlockID::Gold; break;
+    case ItemID::ダイヤブロック: return BlockID::Diamond; break;
+    case ItemID::岩盤ブロック:   return BlockID::Bedrock; break;
+    case ItemID::ビーコン:      return BlockID::Air; break;
+    case ItemID::MAX:           return BlockID::Air; break;
+    default: return BlockID::Air; break;
+    }
+}
+
 std::string EnumToString(PHASE e)
 {
     switch (e)

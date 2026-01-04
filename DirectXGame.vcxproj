@@ -159,6 +159,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\Craft\Craft.cpp" />
+    <ClCompile Include="src\application\UIManager\ScreenMode\CraftScreen\CraftScreen.cpp" />
     <ClCompile Include="src\application\Item\CraftRecipe\CraftRecipe.cpp" />
     <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\Hotbar\Hotbar.cpp" />
     <ClCompile Include="src\application\Item\DropItem\DropItemManager.cpp" />
@@ -251,6 +253,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="src\engine\Physics\IWorldCollider.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\Craft\Craft.h" />
+    <ClInclude Include="src\application\UIManager\ScreenMode\CraftScreen\CraftScreen.h" />
     <ClInclude Include="src\application\Item\CraftRecipe\CraftRecipe.h" />
     <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\Hotbar\Hotbar.h" />
     <ClInclude Include="src\application\Item\DropItem\DropItemManager.h" />

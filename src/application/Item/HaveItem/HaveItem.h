@@ -71,13 +71,19 @@ public:
     HaveItem();
     ~HaveItem();
 
+    ItemID GetCurrentSelectedItemID() const;
+    void RemoveCurrentSelectedItem(int count);
+
     void AddItem(ItemID id);
 
     void UpdateInventry();
     void UpdateHotbar();
 
+
     void DrawInventory();
     void DrawHotbar();
+
+	bool craftMode3x3_ = false;
 
 private:
     // インベントリ情報
@@ -89,8 +95,8 @@ private:
     std::array<std::array<Vector3, 2>, 2> baseCraftPositions_;
 
     // クラフト欄情報（3x3）
-    //std::array<std::array<InventorySlot, 3>, 3> craftArea3x3_;
-    //std::array<std::array<Vector3, 3>, 3> baseCraftPositions3x3_;
+    std::array<std::array<InventorySlot, 3>, 3> craftArea3x3_;
+    std::array<std::array<Vector3, 3>, 3> baseCraftPositions3x3_;
 
 	// クラフト結果欄
     InventorySlot craftResultSlot_;
@@ -118,12 +124,16 @@ private:
     std::vector<SlotRef> dragSlots_;
     std::vector<std::pair<SlotRef, int>> dragPreview_;
 
+	// ホットバー選択インデックス
+	RenderData_Sprite hotbarSelector_;
+	int hotbarSelectedIndex_ = 0;
 
     // 入力処理
     void UpdateHoverIndex();
     void UpdateLeftClick();
     void UpdateRightClick();
     void UpdateDrag();
+	void UpdateHotbarInput();
 
     // 共通処理
     void UpdateCounters();

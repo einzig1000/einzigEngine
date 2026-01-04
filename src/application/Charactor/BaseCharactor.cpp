@@ -3,6 +3,7 @@
 #include "MapManager/Chunk/Chunk.h"
 #include "MapManager/Chunk/Block/Block.h"
 #include "MapManager/Chunk/Block/BlockDurability.h"
+#include "UIManager/UIManager.h"
 
 // 見ているブロックをtargetBlock_にセットする
 void BaseCharactor::SetTargetBlock()
@@ -70,9 +71,20 @@ void BaseCharactor::SetNewBlock(BlockID id)
 
 	lookAtBlock lab = targetBlock_.value();
 
+	if (lab.block->blockInfo_.isExtraAction)
+	{
+		uiManager_->ChangeScreen(UIMode::Crafting);
+		// 特殊ブロックの上に置けない
+		return;
+	}
+
 	// 当たった面情報が無いなら置けない
 	if (lab.face == AABBFace::NONE) return;
 
+
 	// MapManagerから設置処理を呼び出す
 	mapManager_->SetBlockAt(lab, id);
+
+	// アイテムを1つ消費
+	haveItem_->RemoveCurrentSelectedItem(1);
 }

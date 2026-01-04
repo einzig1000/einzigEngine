@@ -71,7 +71,7 @@ void Player::Update()
 		// ブロック設置
 		if (Game::Input::Mouse::IsJustPressed(1))
 		{
-			SetNewBlock(BlockID::Dirt);
+			SetNewBlock(ItemIDToBlockID(haveItem_->GetCurrentSelectedItemID()));
 		}
 	}
 	else
@@ -85,12 +85,32 @@ void Player::Update()
 		// ターゲットブロック取得
 		SetTargetBlock();
 	}
+
+	if (currentMode_ == UIMode::Crafting)
+	{
+		haveItem_->craftMode3x3_ = true;
+	}
+	if (currentMode_ != UIMode::Inventory)
+	{
+		haveItem_->craftMode3x3_ = false;
+	}
 }
 
 void Player::Draw()
 {
 	data_.Draw();
 	reticle_.Draw();
+}
+
+void Player::DrawCrafting()
+{
+	// インベントリのアイコンを動かせる
+	haveItem_->UpdateInventry();
+	// インベントリのアイコン描画
+	haveItem_->DrawInventory();
+
+	// ホットバーのアイコン描画
+	haveItem_->DrawHotbar();
 }
 
 void Player::DrawInventory()

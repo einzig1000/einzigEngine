@@ -1,6 +1,8 @@
 #include "UIManager/UIManager.h"
 #include "UIManager/ScreenMode/PlayingScreen/PlayingScreen.h"
 #include "UIManager/ScreenMode/InventoryScreen/InventoryScreen.h"
+#include "UIManager/ScreenMode/CraftScreen/CraftScreen.h"
+
 
 UIManager::UIManager(Player* player)
 	: player_(player)
@@ -10,6 +12,9 @@ UIManager::UIManager(Player* player)
 
 	inventoryScreen_ = new InventoryScreen();
 	inventoryScreen_->SetPlayer(player_);
+
+	craftingScreen_ = new CraftScreen();
+	craftingScreen_->SetPlayer(player_);
 }
 
 UIManager::~UIManager()
@@ -19,6 +24,9 @@ UIManager::~UIManager()
 
 	delete inventoryScreen_;
 	inventoryScreen_ = nullptr;
+
+	delete craftingScreen_;
+	craftingScreen_ = nullptr;
 }
 
 void UIManager::Initialize()
@@ -68,6 +76,9 @@ void UIManager::ChangeScreen(UIMode mode)
 		break;
 	case UIMode::Inventory:
 		currentScreen_ = inventoryScreen_;
+		break;
+	case UIMode::Crafting:
+		currentScreen_ = craftingScreen_;
 		break;
 	default:
 		currentScreen_ = nullptr;

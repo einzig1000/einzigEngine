@@ -148,6 +148,8 @@ std::string EnumToString(BlockID id);
 ItemID BlockIdToDropItemId(BlockID id);
 // BlockID -> ItemIDの純粋変換
 ItemID BlockIDToItemID(BlockID id);
+// ItemID -> BlockIDの純粋変換
+BlockID ItemIDToBlockID(ItemID id);
 // アイテムIDからジャンルを取得
 ItemJunle GetItemJunle(ItemID id);
 
@@ -158,7 +160,7 @@ struct Blockinfo
 	BlockID type = BlockID::Air;
     // アイテムジャンル
 	ItemJunle junle = ItemJunle::None;
-	// 右クリックされたときに特殊な動作をするかどうか(trueならこのブロックがtargetBlockの時に右クリックしても設置動作をしない)
+    // 右クリックされたとき特殊な動作をするかどうか(作業台は右クリックでUIを開く)
 	bool isExtraAction = false;
 	// 耐久値
 	float durability = 1.0f;
@@ -188,6 +190,8 @@ enum class UIMode
 	Playing,
 	// インベントリ表示中
 	Inventory,
+	// クラフト画面
+	Crafting,
     // ポーズ画面
 	Pause
 };
@@ -1338,4 +1342,11 @@ struct lookAtBlock
 	Vector3int localIndex = { 0,0,0 };
     AABBFace face = AABBFace::NONE;
 	float distance = 0.0f;
+};
+
+struct Rect
+{
+    int minX, minY;
+    int maxX, maxY;
+    bool empty = true;
 };

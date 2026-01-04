@@ -142,9 +142,6 @@
     <Filter Include="application\GameManeger\Map">
       <UniqueIdentifier>{28f4b7c8-cecf-4edc-a2e3-2071fd41f5b6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="application\GameManeger\Itemslot">
-      <UniqueIdentifier>{ecf68cbe-9dbb-430c-a41d-ee450f3cf38a}</UniqueIdentifier>
-    </Filter>
     <Filter Include="engine\Facade">
       <UniqueIdentifier>{24c1e14d-3c15-48b9-9b53-6d5405a3ce02}</UniqueIdentifier>
     </Filter>
@@ -213,6 +210,9 @@
     </Filter>
     <Filter Include="application\GameManeger\Item\CraftRecipe">
       <UniqueIdentifier>{9a5ce3f6-a4d7-4ff5-9f07-090d10c6438a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManeger\UIManager\UIScreen\CraftScreen">
+      <UniqueIdentifier>{063f143d-28f9-4e2e-9e7a-3ee5a42e42f1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -405,6 +405,12 @@
     <ClCompile Include="src\application\Item\CraftRecipe\CraftRecipe.cpp">
       <Filter>application\GameManeger\Item\CraftRecipe</Filter>
     </ClCompile>
+    <ClCompile Include="src\application\UIManager\ScreenMode\CraftScreen\CraftScreen.cpp">
+      <Filter>application\GameManeger\UIManager\UIScreen\CraftScreen</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\Craft\Craft.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\engine\DirectX\CommandContextManager.h">
@@ -592,6 +598,12 @@
     </ClInclude>
     <ClInclude Include="src\application\Item\CraftRecipe\CraftRecipe.h">
       <Filter>application\GameManeger\Item\CraftRecipe</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\UIManager\ScreenMode\CraftScreen\CraftScreen.h">
+      <Filter>application\GameManeger\UIManager\UIScreen\CraftScreen</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\Craft\Craft.h">
+      <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

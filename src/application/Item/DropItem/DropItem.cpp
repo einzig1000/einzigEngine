@@ -9,7 +9,7 @@ DropItem::DropItem()
 	renderData_ = std::make_unique<RenderData_Model>();
 
 	renderData_->scale.value = Vector3(0.2f, 0.2f, 0.2f);
-
+	
 	player_ = nullptr;
 	mapManager_ = nullptr;
 	isDestroy_ = false;

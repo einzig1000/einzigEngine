@@ -14,6 +14,7 @@ public:
 	void Initialize() override;
 	void Update() override;
 	void Draw() override;
+	void DrawCrafting();
 	void DrawInventory();
 	void DrawHotbar();
 	void DrawImGui() override;

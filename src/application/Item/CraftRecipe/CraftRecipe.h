@@ -10,6 +10,9 @@ struct CraftRecipe
     // 結果
     ItemID resultID;
     int resultCount;
+
+    Vector2int min;
+    Vector2int max;
 };
 
 

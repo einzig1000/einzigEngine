@@ -191,7 +191,7 @@ void ResourceID::reload()
 
 
 	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/craftTable.png");
-	ItemIconTextureIDs_[size_t(ItemID::作業台ブロック)] = tmp;
+	ItemModelTextureIDs_[size_t(ItemID::作業台ブロック)] = tmp;
 	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/glass.png");
 	ItemModelTextureIDs_[size_t(ItemID::ガラスブロック)] = tmp;
 	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/Leaf.png");
