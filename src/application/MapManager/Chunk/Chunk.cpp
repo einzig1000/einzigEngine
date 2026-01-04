@@ -46,7 +46,7 @@ Chunk::Chunk()
 	for (int32_t i = 0; i < int32_t(BlockID::MAX); ++i)
 	{
 		blockData_[BlockID(i)] = std::make_unique<RenderData_Block>(BlockID(i));
-		blockData_[BlockID(i)]->texture = ResourceID::GetTextureID(BlockID(i));
+		blockData_[BlockID(i)]->texture = ResourceID::Get3DTextureID(BlockID(i));
 		blockData_[BlockID(i)]->breakTexture = ResourceID::GetTextureID(TextureID::BreakBlock_Array);
 		blockData_[BlockID(i)]->model = ResourceID::GetModelID(BlockID(i));
 
@@ -71,52 +71,6 @@ void Chunk::CreateChunkData(const NoiseParameter& param, const Vector2int & chun
 	if (loadResult)CreateChunkDataFromJson();
 	// 新規生成の場合
 	else CreateChunkDataNewly(param, chunkPos);
-
-	//else
-	//{
-	//	// チャンク内すべてのブロック生成 
-	//	for (int x = 0; x < CHUNK_X; ++x)
-	//	{
-	//		for (int z = 0; z < CHUNK_Z; ++z)
-	//		{
-	//			// ワールド座標でのブロックインデックス 
-	//			const int worldX = chunkPos.x * CHUNK_X + x; const int worldZ = chunkPos.y * CHUNK_Z + z;
-	//			// ワールド座標をノイズサンプル空間へスケールダウン（連続性が鍵）
-	//			const float sampleX = static_cast<float>(worldX) / param.scale;
-	//			const float sampleZ = static_cast<float>(worldZ) / param.scale;
-	//
-	//			// フラクタルノイズ（0..1）
-	//			float n = fractalPerlin(param.pn, sampleX, sampleZ, param.octaves, param.persistence);
-	//
-	//			// 高さへ変換（0..maxHeight-1）
-	//			int height = static_cast<int>(std::floor(n * float(param.height - 1) + 0.5f));
-	//			if (height < 0) height = 0;
-	//			if (height > param.height - 1) height = param.height - 1;
-	//
-	//			// 素材の割り当て
-	//			int dirtThickness = 3;
-	//			if (height - dirtThickness < 0) dirtThickness = height;
-	//
-	//			for (int y = 0; y < CHUNK_Y; ++y)
-	//			{
-	//				// ブロックID決定
-	//				BlockID id;
-	//				if (y < height - dirtThickness) id = BlockID::Stone;
-	//				else if (y < height - 1)       id = BlockID::Dirt;
-	//				else if (y < height)           id = BlockID::Lawn;
-	//				else                            id = BlockID::Air;
-	//				// ブロックのAABB取得
-	//				AABB aabb = GetAABB(Vector3int(x, y, z));
-	//				// ブロックの中心座標取得
-	//				Vector3 center = aabb.center();
-	//
-	//				blocks[x][y][z]->SetBlockType(blockConfig_->GetBlockInfo(id));
-	//				blocks[x][y][z]->SetBlockPosition(center);
-	//				blockPositions[id].emplace_back(x, y, z);
-	//			}
-	//		}
-	//	}
-	//}
 
 
 	SetExposedAllBlocks();
@@ -334,7 +288,7 @@ void Chunk::GenerateTrees(const NoiseParameter& param)
 			// 幹
 			for (int y = trunkY0; y < trunkY0 + trunkH; ++y)
 			{
-				SetBlock(Vector3int(x, y, z), BlockID::Wood);
+				SetBlock(Vector3int(x, y, z), BlockID::Log);
 			}
 
 			// 葉（幹先端に球っぽく）
@@ -415,7 +369,7 @@ bool Chunk::ComputeExposed(const Vector3int& localIndex)
 		
 		// 隣接ブロックがAirか透明ブロック(葉、ガラス)なら露出している
 		if (neighborBlock->GetBlockID() == BlockID::Air ||
-			neighborBlock->isTransparent_)
+			neighborBlock->blockInfo_.isTransparent)
 		{
 			return true;
 		}

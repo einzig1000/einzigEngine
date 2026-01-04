@@ -5,6 +5,7 @@
 #include <cmath>
 #include <cstdint>
 #include <numbers>
+#include <array>
 
 // Windows/DirectX
 #include <initguid.h>
@@ -61,9 +62,23 @@ enum class ItemID
 	鉄の斧,
 	ダイヤの斧,
 
+	鉄の頭,
+	鉄の胴,
+	鉄の脚,
+	鉄の靴,
+
+	ダイヤの頭,
+	ダイヤの胴,
+	ダイヤの脚,
+	ダイヤの靴,
+
+	作業台ブロック,
+	棒,            
+
 	ガラスブロック,
     葉ブロック,
-    木ブロック,
+    原木ブロック,
+    木材ブロック,    // *
     芝ブロック,
     土ブロック,
 	石ブロック,
@@ -81,38 +96,72 @@ enum class ItemID
     MAX,
 };
 
+enum class ItemJunle
+{
+    None,
+    // 武器
+    Weapon,
+	// 防具
+	Head,
+    Body,
+	Leg,
+	Boots,
+	// ツール
+    Tool,
+	// 木材系(オノで採掘速度アップ)
+	Wood,
+	// 鉱石系(ツルハシで採掘速度アップ)
+	Stone,
+	// 土系(シャベルで採掘速度アップ)
+	Dirt,
+    // 素材
+	Material,
+    MAX,
+};
+
 
 // 全てのブロックID
 enum class BlockID
 {
     Air,
     Stone,	// 石
-	Iron,   // 鉄
-	Gold,	// 金
-	Diamond,// ダイヤ
-	Bedrock,// 岩盤
+    Iron,   // 鉄
+    Gold,	// 金
+    Diamond,// ダイヤ
+    Bedrock,// 岩盤
     Glass,	// ガラス
-    Dirt,	// 草なし土
     Lawn,	// 草付き土
-    Wood,	// 木材
+	Log,    // 原木
+	Planks, // 木材
+    Dirt,	// 草なし土
+ 
     Leaf,	// 葉っぱ
 
+	craftTable, // 作業台
 
 
     MAX,
 };
 std::string EnumToString(BlockID id);
 
-// BlockID -> ItemID 変換
+// idからドロップするアイテムIDを取得
 ItemID BlockIdToDropItemId(BlockID id);
+// BlockID -> ItemIDの純粋変換
+ItemID BlockIDToItemID(BlockID id);
+// アイテムIDからジャンルを取得
+ItemJunle GetItemJunle(ItemID id);
 
 // ブロックごとの情報
 struct Blockinfo
 {
 	// ブロックID
-    BlockID type;
+	BlockID type = BlockID::Air;
+    // アイテムジャンル
+	ItemJunle junle = ItemJunle::None;
+	// 右クリックされたときに特殊な動作をするかどうか(trueならこのブロックがtargetBlockの時に右クリックしても設置動作をしない)
+	bool isExtraAction = false;
 	// 耐久値
-    float durability;
+	float durability = 1.0f;
 	// 透過ブロックかどうか
 	bool isTransparent = false;
 };

@@ -8,10 +8,6 @@ std::vector<int> ResourceID::ItemModelTextureIDs_;
 // 全てのアイテムのモデルID配列
 std::vector<int> ResourceID::ItemModelIDs_;
 
-// ブロックテクスチャのみの配列
-std::vector<int> ResourceID::BlockTextureIDs_;
-// ブロックモデルのみの配列
-std::vector<int> ResourceID::BlockModelIDs_;
 
 // UIテクスチャID配列
 std::vector<int> ResourceID::UITextureIDs_;
@@ -37,31 +33,51 @@ void ResourceID::reload()
 	tmp = -1;
 	ItemIconTextureIDs_[size_t(ItemID::None)] = tmp;
 
-	tmp = Game::Resource::LoadTexture("resources/Minecraft/tool/sword/sword.png");
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/Item/tool/sword/sword.png");
 	ItemIconTextureIDs_[size_t(ItemID::木の剣)] = tmp;
 	ItemIconTextureIDs_[size_t(ItemID::石の剣)] = tmp;
 	ItemIconTextureIDs_[size_t(ItemID::鉄の剣)] = tmp;
 	ItemIconTextureIDs_[size_t(ItemID::ダイヤの剣)] = tmp;
 
-	tmp = Game::Resource::LoadTexture("resources/Minecraft/tool/pickel/pickel.png");
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/Item/tool/pickel/pickel.png");
 	ItemIconTextureIDs_[size_t(ItemID::木のツルハシ)] = tmp;
 	ItemIconTextureIDs_[size_t(ItemID::石のツルハシ)] = tmp;
 	ItemIconTextureIDs_[size_t(ItemID::鉄のツルハシ)] = tmp;
 	ItemIconTextureIDs_[size_t(ItemID::ダイヤのツルハシ)] = tmp;
 
-	tmp = Game::Resource::LoadTexture("resources/Minecraft/tool/axe/axe.png");
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/Item/tool/axe/axe.png");
 	ItemIconTextureIDs_[size_t(ItemID::木の斧)] = tmp;
 	ItemIconTextureIDs_[size_t(ItemID::石の斧)] = tmp;
 	ItemIconTextureIDs_[size_t(ItemID::鉄の斧)] = tmp;
 	ItemIconTextureIDs_[size_t(ItemID::ダイヤの斧)] = tmp;
+
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/Item/armor/texture/ironHeadIcon.png");
+	ItemIconTextureIDs_[size_t(ItemID::鉄の頭)] = tmp;
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/Item/armor/texture/ironBodyIcon.png");
+	ItemIconTextureIDs_[size_t(ItemID::鉄の胴)] = tmp;
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/Item/armor/texture/ironLegIcon.png");
+	ItemIconTextureIDs_[size_t(ItemID::鉄の脚)] = tmp;
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/Item/armor/texture/ironFootIcon.png");
+	ItemIconTextureIDs_[size_t(ItemID::鉄の靴)] = tmp;
+
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/Item/armor/texture/diamondHeadIcon.png");
+	ItemIconTextureIDs_[size_t(ItemID::ダイヤの頭)] = tmp;
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/Item/armor/texture/diamondBodyIcon.png");
+	ItemIconTextureIDs_[size_t(ItemID::ダイヤの胴)] = tmp;
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/Item/armor/texture/diamondLegIcon.png");
+	ItemIconTextureIDs_[size_t(ItemID::ダイヤの脚)] = tmp;
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/Item/armor/texture/diamondFootIcon.png");
+	ItemIconTextureIDs_[size_t(ItemID::ダイヤの靴)] = tmp;
 
 
 	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/glassIcon.png");
 	ItemIconTextureIDs_[size_t(ItemID::ガラスブロック)] = tmp;
 	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/LeafIcon.png");
 	ItemIconTextureIDs_[size_t(ItemID::葉ブロック)] = tmp;
-	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/WoodIcon.png");
-	ItemIconTextureIDs_[size_t(ItemID::木ブロック)] = tmp;
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/LogIcon.png");
+	ItemIconTextureIDs_[size_t(ItemID::原木ブロック)] = tmp;
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/PlankIcon.png");
+	ItemIconTextureIDs_[size_t(ItemID::木材ブロック)] = tmp;
 	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/LawnIcon.png");
 	ItemIconTextureIDs_[size_t(ItemID::芝ブロック)] = tmp;
 	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/dirtIcon.png");
@@ -76,7 +92,12 @@ void ResourceID::reload()
 	ItemIconTextureIDs_[size_t(ItemID::ダイヤブロック)] = tmp;
 	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/bedrockIcon.png");
 	ItemIconTextureIDs_[size_t(ItemID::岩盤ブロック)] = tmp;
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/craftTableIcon.png");
+	ItemIconTextureIDs_[size_t(ItemID::作業台ブロック)] = tmp;
 
+
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/item/stick/stickIcon.png");
+	ItemIconTextureIDs_[size_t(ItemID::棒)] = tmp;
 	tmp = Game::Resource::LoadTexture("resources/Minecraft/item/ingot/ironIcon.png");
 	ItemIconTextureIDs_[size_t(ItemID::鉄インゴット)] = tmp;
 	tmp = Game::Resource::LoadTexture("resources/Minecraft/item/ingot/goldIcon.png");
@@ -98,27 +119,29 @@ void ResourceID::reload()
 	tmp = -1;
 	ItemModelIDs_[size_t(ItemID::None)] = tmp;
 
-	tmp = Game::Resource::LoadModel("resources/Minecraft/tool/sword/", "sword.obj");
+	tmp = Game::Resource::LoadModel("resources/Minecraft/Item/tool/sword/", "sword.obj");
 	ItemModelIDs_[size_t(ItemID::木の剣)] = tmp;
 	ItemModelIDs_[size_t(ItemID::石の剣)] = tmp;
 	ItemModelIDs_[size_t(ItemID::鉄の剣)] = tmp;
 	ItemModelIDs_[size_t(ItemID::ダイヤの剣)] = tmp;
 
-	tmp = Game::Resource::LoadModel("resources/Minecraft/tool/pickel/", "pickel.obj");
+	tmp = Game::Resource::LoadModel("resources/Minecraft/Item/tool/pickel/", "pickel.obj");
 	ItemModelIDs_[size_t(ItemID::木のツルハシ)] = tmp;
 	ItemModelIDs_[size_t(ItemID::石のツルハシ)] = tmp;
 	ItemModelIDs_[size_t(ItemID::鉄のツルハシ)] = tmp;
 	ItemModelIDs_[size_t(ItemID::ダイヤのツルハシ)] = tmp;
 
-	tmp = Game::Resource::LoadModel("resources/Minecraft/tool/axe/", "axe.obj");
+	tmp = Game::Resource::LoadModel("resources/Minecraft/Item/tool/axe/", "axe.obj");
 	ItemModelIDs_[size_t(ItemID::木の斧)] = tmp;
 	ItemModelIDs_[size_t(ItemID::石の斧)] = tmp;
 	ItemModelIDs_[size_t(ItemID::鉄の斧)] = tmp;
 	ItemModelIDs_[size_t(ItemID::ダイヤの斧)] = tmp;
 
 	tmp = Game::Resource::LoadModel("resources/Prototypes/model/", "cube.obj");
+	ItemModelIDs_[size_t(ItemID::ガラスブロック)] = tmp;
 	ItemModelIDs_[size_t(ItemID::葉ブロック)] = tmp;
-	ItemModelIDs_[size_t(ItemID::木ブロック)] = tmp;
+	ItemModelIDs_[size_t(ItemID::原木ブロック)] = tmp;
+	ItemModelIDs_[size_t(ItemID::木材ブロック)] = tmp;
 	ItemModelIDs_[size_t(ItemID::芝ブロック)] = tmp;
 	ItemModelIDs_[size_t(ItemID::土ブロック)] = tmp;
 	ItemModelIDs_[size_t(ItemID::石ブロック)] = tmp;
@@ -126,6 +149,7 @@ void ResourceID::reload()
 	ItemModelIDs_[size_t(ItemID::金ブロック)] = tmp;
 	ItemModelIDs_[size_t(ItemID::ダイヤブロック)] = tmp;
 	ItemModelIDs_[size_t(ItemID::岩盤ブロック)] = tmp;
+	ItemModelIDs_[size_t(ItemID::作業台ブロック)] = tmp;
 
 	tmp = Game::Resource::LoadModel("resources/Minecraft/item/ingot/", "ingot.obj");
 	ItemModelIDs_[size_t(ItemID::鉄インゴット)] = tmp;
@@ -147,30 +171,35 @@ void ResourceID::reload()
 	tmp = -1;
 	ItemModelTextureIDs_[size_t(ItemID::None)] = tmp;
 
-	tmp = Game::Resource::LoadTexture("resources/Minecraft/tool/sword/sword.png");
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/Item/tool/sword/sword.png");
 	ItemModelTextureIDs_[size_t(ItemID::木の剣)] = tmp;
 	ItemModelTextureIDs_[size_t(ItemID::石の剣)] = tmp;
 	ItemModelTextureIDs_[size_t(ItemID::鉄の剣)] = tmp;
 	ItemModelTextureIDs_[size_t(ItemID::ダイヤの剣)] = tmp;
 
-	tmp = Game::Resource::LoadTexture("resources/Minecraft/tool/pickel/pickel.png");
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/Item/tool/pickel/pickel.png");
 	ItemModelTextureIDs_[size_t(ItemID::木のツルハシ)] = tmp;
 	ItemModelTextureIDs_[size_t(ItemID::石のツルハシ)] = tmp;
 	ItemModelTextureIDs_[size_t(ItemID::鉄のツルハシ)] = tmp;
 	ItemModelTextureIDs_[size_t(ItemID::ダイヤのツルハシ)] = tmp;
 
-	tmp = Game::Resource::LoadTexture("resources/Minecraft/tool/axe/axe.png");
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/Item/tool/axe/axe.png");
 	ItemModelTextureIDs_[size_t(ItemID::木の斧)] = tmp;
 	ItemModelTextureIDs_[size_t(ItemID::石の斧)] = tmp;
 	ItemModelTextureIDs_[size_t(ItemID::鉄の斧)] = tmp;
 	ItemModelTextureIDs_[size_t(ItemID::ダイヤの斧)] = tmp;
 
+
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/craftTable.png");
+	ItemIconTextureIDs_[size_t(ItemID::作業台ブロック)] = tmp;
 	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/glass.png");
 	ItemModelTextureIDs_[size_t(ItemID::ガラスブロック)] = tmp;
 	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/Leaf.png");
 	ItemModelTextureIDs_[size_t(ItemID::葉ブロック)] = tmp;
-	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/Wood.png");
-	ItemModelTextureIDs_[size_t(ItemID::木ブロック)] = tmp;
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/Log.png");
+	ItemModelTextureIDs_[size_t(ItemID::原木ブロック)] = tmp;
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/Plank.png");
+	ItemModelTextureIDs_[size_t(ItemID::木材ブロック)] = tmp;
 	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/Lawn.png");
 	ItemModelTextureIDs_[size_t(ItemID::芝ブロック)] = tmp;
 	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/dirt.png");
@@ -186,6 +215,8 @@ void ResourceID::reload()
 	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/bedrock.png");
 	ItemModelTextureIDs_[size_t(ItemID::岩盤ブロック)] = tmp;
 
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/item/stick/stick.png");
+	ItemModelTextureIDs_[size_t(ItemID::棒)] = tmp;
 	tmp = Game::Resource::LoadTexture("resources/Minecraft/item/ingot/iron.png");
 	ItemModelTextureIDs_[size_t(ItemID::鉄インゴット)] = tmp;
 	tmp = Game::Resource::LoadTexture("resources/Minecraft/item/ingot/gold.png");
@@ -195,54 +226,6 @@ void ResourceID::reload()
 
 	tmp = Game::Resource::LoadTexture("resources/Minecraft/blocks/beacon.png");
 	ItemModelTextureIDs_[size_t(ItemID::ビーコン)] = tmp;
-
-#pragma endregion
-
-#pragma region ブロックテクスチャ読み込み
-
-	BlockTextureIDs_.resize(static_cast<size_t>(BlockID::MAX));
-
-	tmp = -1;
-	BlockTextureIDs_[size_t(BlockID::Air)] = tmp;
-	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/glass.png");
-	BlockTextureIDs_[size_t(BlockID::Glass)] = tmp;
-	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/Leaf.png");
-	BlockTextureIDs_[size_t(BlockID::Leaf)] = tmp;
-	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/Wood.png");
-	BlockTextureIDs_[size_t(BlockID::Wood)] = tmp;
-	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/Lawn.png");
-	BlockTextureIDs_[size_t(BlockID::Lawn)] = tmp;
-	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/dirt.png");
-	BlockTextureIDs_[size_t(BlockID::Dirt)] = tmp;
-	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/stone.png");
-	BlockTextureIDs_[size_t(BlockID::Stone)] = tmp;
-	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/iron.png");
-	BlockTextureIDs_[size_t(BlockID::Iron)] = tmp;
-	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/gold.png");
-	BlockTextureIDs_[size_t(BlockID::Gold)] = tmp;
-	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/diamond.png");
-	BlockTextureIDs_[size_t(BlockID::Diamond)] = tmp;
-	tmp = Game::Resource::LoadTexture("resources/Minecraft/Blocks/bedrock.png");
-	BlockTextureIDs_[size_t(BlockID::Bedrock)] = tmp;
-
-#pragma endregion
-
-#pragma region ブロックモデル読み込み
-	
-	BlockModelIDs_.resize(static_cast<size_t>(BlockID::MAX));
-
-	tmp = -1;
-	BlockModelIDs_[size_t(BlockID::Air)] = tmp;
-	tmp = Game::Resource::LoadModel("resources/Prototypes/model/", "cube.obj");
-	BlockModelIDs_[size_t(BlockID::Leaf)] = tmp;
-	BlockModelIDs_[size_t(BlockID::Wood)] = tmp;
-	BlockModelIDs_[size_t(BlockID::Lawn)] = tmp;
-	BlockModelIDs_[size_t(BlockID::Dirt)] = tmp;
-	BlockModelIDs_[size_t(BlockID::Stone)] = tmp;
-	BlockModelIDs_[size_t(BlockID::Iron)] = tmp;
-	BlockModelIDs_[size_t(BlockID::Gold)] = tmp;
-	BlockModelIDs_[size_t(BlockID::Diamond)] = tmp;
-	BlockModelIDs_[size_t(BlockID::Bedrock)] = tmp;
 
 #pragma endregion
 
@@ -264,15 +247,6 @@ void ResourceID::reload()
 
 	tmp = Game::Resource::LoadTexture("resources/Prototypes/texture/particle/circle.png");
 	TextureIDs_[size_t(TextureID::Circle)] = tmp;
-
-	tmp = Game::Resource::LoadTexture("resources/Minecraft/Title/start.png");
-	TextureIDs_[size_t(TextureID::TITLE_start)] = tmp;
-
-	tmp = Game::Resource::LoadTexture("resources/Minecraft/Title/option.png");
-	TextureIDs_[size_t(TextureID::TITLE_option)] = tmp;
-
-	tmp = Game::Resource::LoadTexture("resources/Minecraft/Item_slot.png");
-	TextureIDs_[size_t(TextureID::Item_slot)] = tmp;
 
 #pragma endregion
 
@@ -299,12 +273,20 @@ void ResourceID::reload()
 	UITextureIDs_.resize(static_cast<size_t>(UITextureID::MAX));
 	tmp = -1;
 	UITextureIDs_[size_t(UITextureID::None)] = tmp;
-	tmp = Game::Resource::LoadTexture("resources/Minecraft/UI/inventory.png");
-	UITextureIDs_[size_t(UITextureID::Inventory)] = tmp;
-	tmp = Game::Resource::LoadTexture("resources/Minecraft/UI/Hotbar.png");
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/UI/Inventory/Inventory2x2.png");
+	UITextureIDs_[size_t(UITextureID::Inventory2x2)] = tmp;
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/UI/Inventory/Inventory3x3.png");
+	UITextureIDs_[size_t(UITextureID::Inventory3x3)] = tmp;
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/UI/Inventory/Hotbar.png");
 	UITextureIDs_[size_t(UITextureID::Hotbar)] = tmp;
-	tmp = Game::Resource::LoadTexture("resources/Minecraft/UI/Hotbar_Selected.png");
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/UI/Inventory/Hotbar_Selected.png");
 	UITextureIDs_[size_t(UITextureID::Hotbar_Selected)] = tmp;
+
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/UI/Title/start.png");
+	UITextureIDs_[size_t(UITextureID::TITLE_start)] = tmp;
+
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/UI/Title/option.png");
+	UITextureIDs_[size_t(UITextureID::TITLE_option)] = tmp;
 
 #pragma endregion
 
@@ -322,12 +304,12 @@ void ResourceID::reload()
 
 	std::vector<std::string> breakBlockFilePaths =
 	{
-		"resources/Minecraft/breakBlock/breakBlock_0.png",
-		"resources/Minecraft/breakBlock/breakBlock_1.png",
-		"resources/Minecraft/breakBlock/breakBlock_2.png",
-		"resources/Minecraft/breakBlock/breakBlock_3.png",
-		"resources/Minecraft/breakBlock/breakBlock_4.png",
-		"resources/Minecraft/breakBlock/breakBlock_5.png",
+		"resources/Minecraft/Blocks/breakBlock/breakBlock_0.png",
+		"resources/Minecraft/Blocks/breakBlock/breakBlock_1.png",
+		"resources/Minecraft/Blocks/breakBlock/breakBlock_2.png",
+		"resources/Minecraft/Blocks/breakBlock/breakBlock_3.png",
+		"resources/Minecraft/Blocks/breakBlock/breakBlock_4.png",
+		"resources/Minecraft/Blocks/breakBlock/breakBlock_5.png",
 	};
 
 	tmp = Game::Resource::LoadTextureArray(breakBlockFilePaths);

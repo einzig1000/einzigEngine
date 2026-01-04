@@ -211,6 +211,9 @@
     <Filter Include="application\GameManeger\UIManager\UIScreen\UIElement\Hotbar">
       <UniqueIdentifier>{39268ca7-7519-48e9-bf11-ca596956e61f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="application\GameManeger\Item\CraftRecipe">
+      <UniqueIdentifier>{9a5ce3f6-a4d7-4ff5-9f07-090d10c6438a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -333,9 +336,6 @@
     <ClCompile Include="src\application\Item\DropItem\DropItem.cpp">
       <Filter>application\GameManeger\Item\DropItem</Filter>
     </ClCompile>
-    <ClCompile Include="src\application\Itemslot.cpp">
-      <Filter>application\GameManeger\Itemslot</Filter>
-    </ClCompile>
     <ClCompile Include="src\engine\Engine.cpp">
       <Filter>engine</Filter>
     </ClCompile>
@@ -401,6 +401,9 @@
     </ClCompile>
     <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\Hotbar\Hotbar.cpp">
       <Filter>application\GameManeger\UIManager\UIScreen\UIElement\Hotbar</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\Item\CraftRecipe\CraftRecipe.cpp">
+      <Filter>application\GameManeger\Item\CraftRecipe</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -521,9 +524,6 @@
     <ClInclude Include="src\application\Item\DropItem\DropItem.h">
       <Filter>application\GameManeger\Item\DropItem</Filter>
     </ClInclude>
-    <ClInclude Include="src\application\Itemslot.h">
-      <Filter>application\GameManeger\Itemslot</Filter>
-    </ClInclude>
     <ClInclude Include="src\engine\Engine.h">
       <Filter>engine</Filter>
     </ClInclude>
@@ -589,6 +589,9 @@
     </ClInclude>
     <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\Hotbar\Hotbar.h">
       <Filter>application\GameManeger\UIManager\UIScreen\UIElement\Hotbar</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\Item\CraftRecipe\CraftRecipe.h">
+      <Filter>application\GameManeger\Item\CraftRecipe</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

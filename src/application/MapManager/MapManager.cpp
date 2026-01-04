@@ -8,7 +8,6 @@
 #include "Charactor/Player/Player.h"
 #include "Utilities/PerlinNoise.h"
 #include "Engine.h"
-#include "Itemslot.h"
 
 
 // AABBの各種補助 いずれstruct AABBに移す
@@ -1168,7 +1167,7 @@ bool MapManager::GetIsActive(const Vector2int& chunkPos, const Vector3int& index
 	Chunk* chunk = TryGetChunk(chunkPos);
 	if (chunk)
 	{
-		if (chunk->blocks[index.x][index.y][index.z]->blockID != BlockID::Air)
+		if (chunk->blocks[index.x][index.y][index.z]->blockInfo_.type != BlockID::Air)
 		{
 			return true;
 		}

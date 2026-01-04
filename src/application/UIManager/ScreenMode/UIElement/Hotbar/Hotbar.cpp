@@ -4,14 +4,14 @@ Hotbar::Hotbar()
 {
 	// sprites_[0] : ホットバー
 	sprites_.emplace_back(std::make_unique<RenderData_Sprite>());
-	sprites_[0]->texture = ResourceID::GetTextureID(UITextureID::Hotbar);
+	sprites_[0]->texture = ResourceID::GetUITextureID(UITextureID::Hotbar);
 	sprites_[0]->anchor = Anchor::Center;
 	sprites_[0]->transforms.scale = Vector3(1.0f, 1.0f, 1.0f);
 	sprites_[0]->transforms.translate = Vector3(640.0f, 670.0f, 0.0f);
 
 	// sprites_[1] : ホットバー選択枠
 	sprites_.emplace_back(std::make_unique<RenderData_Sprite>());
-	sprites_[1]->texture = ResourceID::GetTextureID(UITextureID::Hotbar_Selected);
+	sprites_[1]->texture = ResourceID::GetUITextureID(UITextureID::Hotbar_Selected);
 	sprites_[1]->anchor = Anchor::Center;
 	sprites_[1]->transforms.scale = Vector3(1.0f, 1.0f, 1.0f);
 	sprites_[1]->transforms.translate = Vector3(640.0f, 670.0f, 0.0f);

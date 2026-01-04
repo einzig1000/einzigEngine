@@ -24,11 +24,6 @@ enum class TextureID
 	empty1x1,
 	Circle,
 
-	TITLE_start,
-	TITLE_option,
-
-	Item_slot,
-
 	BreakBlock_Array,
 
 	MAX,
@@ -38,10 +33,13 @@ enum class UITextureID
 {
 	None,
 
-	Inventory,
+	Inventory2x2,
+	Inventory3x3,
 
 	Hotbar,
 	Hotbar_Selected,
+	TITLE_start,
+	TITLE_option,
 
 	MAX,
 };
@@ -52,28 +50,9 @@ public:
 
 	static void reload();
 
-	// その他
-	static int32_t GetTextureID(TextureID id)
-	{
-		return TextureIDs_[static_cast<size_t>(id)];
-	}
-	static int32_t GetModelID(ModelID id)
-	{
-		return ModelIDs_[static_cast<size_t>(id)];
-	}
-
-	// ブロック関連
-	static int32_t GetTextureID(BlockID id)
-	{
-		return BlockTextureIDs_[static_cast<size_t>(id)];
-	}
-	static int32_t GetModelID(BlockID id)
-	{
-		return BlockModelIDs_[static_cast<size_t>(id)];
-	}
 
 	// UIテクスチャID取得
-	static int32_t GetTextureID(UITextureID id)
+	static int32_t GetUITextureID(UITextureID id)
 	{
 		return UITextureIDs_[static_cast<size_t>(id)];
 	}
@@ -88,7 +67,22 @@ public:
 		return NumberTextureIDs_[static_cast<size_t>(number)];
 	}
 
-	// アイテム関連
+	// アイテム
+	static int32_t Get2DTextureID(BlockID id)
+	{
+		ItemID ID = BlockIDToItemID(id);
+		return Get2DTextureID(ID);
+	}
+	static int32_t Get3DTextureID(BlockID id)
+	{
+		ItemID ID = BlockIDToItemID(id);
+		return Get3DTextureID(ID);
+	}
+	static int32_t GetModelID(BlockID id)
+	{
+		ItemID ID = BlockIDToItemID(id);
+		return GetModelID(ID);
+	}
 	static int32_t Get3DTextureID(ItemID id)
 	{
 		return ItemModelTextureIDs_[static_cast<size_t>(id)];
@@ -102,6 +96,16 @@ public:
 		return ItemModelIDs_[static_cast<size_t>(id)];
 	}
 
+	// その他
+	static int32_t GetTextureID(TextureID id)
+	{
+		return TextureIDs_[static_cast<size_t>(id)];
+	}
+	static int32_t GetModelID(ModelID id)
+	{
+		return ModelIDs_[static_cast<size_t>(id)];
+	}
+
 
 
 private:
@@ -112,11 +116,7 @@ private:
 	static std::vector<int> ItemModelTextureIDs_;
 	// 全てのアイテムのモデルID配列
 	static std::vector<int> ItemModelIDs_;
-
-	// ブロックテクスチャのみの配列
-	static std::vector<int> BlockTextureIDs_;
-	// ブロックモデルのみの配列
-	static std::vector<int> BlockModelIDs_;
+	
 
 	// UIテクスチャID配列
 	static std::vector<int> UITextureIDs_;
@@ -136,9 +136,6 @@ private:
 	{ TextureID::white1x1,     "resources/Prototypes/texture/white1x1.png" },
 	{ TextureID::empty1x1,     "resources/Prototypes/texture/empty1x1.png" },
 	{ TextureID::Circle,       "resources/Prototypes/texture/circle.png" },
-	{ TextureID::TITLE_start,  "resources/Minecraft/Title/start.png" },
-	{ TextureID::TITLE_option, "resources/Minecraft/Title/option.png" },
-	{ TextureID::Item_slot,    "resources/Minecraft/Item_slot.png" },
 	};
 
 	ResourceID() = delete;

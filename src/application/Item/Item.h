@@ -24,24 +24,3 @@ private:
 	int32_t ableStackCount_ = 64;
 
 };
-
-
-
-struct InventorySlot
-{
-	Item item;
-	uint8_t count = 0;
-	std::array<std::unique_ptr<RenderData_Sprite>, 2> counter;
-	std::unique_ptr<RenderData_Sprite> icon;
-};
-
-struct Hand
-{
-	Item item;
-	uint8_t count = 0;
-	std::array<std::unique_ptr<RenderData_Sprite>, 2> counter;
-	std::unique_ptr<RenderData_Sprite> icon;
-
-	bool IsEmpty() const { return item.GetID() == ItemID::None || count == 0; }
-	void Clear() { item.Initialize(ItemID::None); count = 0; icon->texture = -1; }
-};

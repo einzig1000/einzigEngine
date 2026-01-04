@@ -12,7 +12,7 @@ Inventory::Inventory()
 
 	// sprites_[1] : アイテムインベントリ
 	sprites_.emplace_back(std::make_unique<RenderData_Sprite>());
-	sprites_[1]->texture = ResourceID::GetTextureID(UITextureID::Inventory);
+	sprites_[1]->texture = ResourceID::GetUITextureID(UITextureID::Inventory2x2);
 	sprites_[1]->anchor = Anchor::Center;
 	sprites_[1]->transforms.scale = Vector3(1.0f, 1.0f, 1.0f);
 	sprites_[1]->transforms.translate = Vector3(640.0f, 325.0f, 0.0f);

@@ -159,6 +159,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\application\Item\CraftRecipe\CraftRecipe.cpp" />
     <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\Hotbar\Hotbar.cpp" />
     <ClCompile Include="src\application\Item\DropItem\DropItemManager.cpp" />
     <ClCompile Include="src\application\Item\Item.cpp" />
@@ -175,7 +176,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="src\engine\ImGuiManager\ImGuiManager.cpp" />
     <ClCompile Include="src\application\MapManager\Chunk\Block\BlockDurability.cpp" />
     <ClCompile Include="src\application\Item\DropItem\DropItem.cpp" />
-    <ClCompile Include="src\application\Itemslot.cpp" />
     <ClCompile Include="src\application\MapManager\Chunk\Block\Block.cpp" />
     <ClCompile Include="src\application\MapManager\MapManager.cpp" />
     <ClCompile Include="src\engine\Utilities\PerlinNoise.cpp" />
@@ -251,6 +251,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="src\engine\Physics\IWorldCollider.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\application\Item\CraftRecipe\CraftRecipe.h" />
     <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\Hotbar\Hotbar.h" />
     <ClInclude Include="src\application\Item\DropItem\DropItemManager.h" />
     <ClInclude Include="src\application\Item\Item.h" />
@@ -267,7 +268,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="src\engine\ImGuiManager\ImGuiManager.h" />
     <ClInclude Include="src\application\MapManager\Chunk\Block\BlockDurability.h" />
     <ClInclude Include="src\application\Item\DropItem\DropItem.h" />
-    <ClInclude Include="src\application\Itemslot.h" />
     <ClInclude Include="src\application\MapManager\Chunk\Block\Block.h" />
     <ClInclude Include="src\application\MapManager\MapManager.h" />
     <ClInclude Include="src\engine\Utilities\PerlinNoise.h" />

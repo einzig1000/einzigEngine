@@ -18,12 +18,11 @@ public:
 
 	// ブロックの種類設定
 	void SetBlockType(Blockinfo info);
-	BlockID blockID = BlockID::Air;
+	BlockID GetBlockID() const { return blockInfo_.type; };
 
 	// ブロックの位置設定
 	void SetBlockPosition(const Vector3& position);
 
-	BlockID GetBlockID() const { return blockID; };
 
 
 	// プレイヤーに見られている時、輝度に応じて色を更新
@@ -42,6 +41,6 @@ public:
 
 	// 表面に露出しているか
 	bool isExposed_ = false;
-	// 半透明ブロックか
-	bool isTransparent_ = false;
+
+	Blockinfo blockInfo_;
 };

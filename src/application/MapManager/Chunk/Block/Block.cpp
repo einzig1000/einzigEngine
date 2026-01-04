@@ -19,8 +19,7 @@ void Block::Initialize()
 
 void Block::SetBlockType(Blockinfo info)
 {
-	blockID = info.type;
-	isTransparent_ = info.isTransparent;
+	blockInfo_ = info;
 	durability_->SetMaxDurability(info.durability);
 }
 

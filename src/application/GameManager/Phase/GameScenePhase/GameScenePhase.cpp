@@ -5,6 +5,7 @@
 #include "UIManager/UIManager.h"
 #include "Physics/IWorldCollider.h"
 #include "MapManager/MapWorldCollider.h"
+#include "Item/CraftRecipe/CraftRecipe.h"
 #include <fstream>
 
 GameScenePhase::GameScenePhase()
@@ -38,6 +39,8 @@ GameScenePhase::GameScenePhase()
 
 
 	map_->LoadMap("resources/Map/map.json");
+
+	CraftRecipeList::InitializeRecipes();
 }
 
 GameScenePhase::~GameScenePhase() {}

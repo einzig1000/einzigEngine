@@ -2,18 +2,81 @@
 
 BlockConfig::BlockConfig()
 {
-	// ブロック情報初期化
-	//				BlockID			耐久値		透過ブロックか
-	blockInfoMap_[BlockID::Air] = { BlockID::Air, -1, true };
-	blockInfoMap_[BlockID::Stone] = { BlockID::Stone, 60.0f, false };
-	blockInfoMap_[BlockID::Iron] = { BlockID::Iron, 800.0f, false };
-	blockInfoMap_[BlockID::Diamond] = { BlockID::Diamond, 1200.0f, false };
-	blockInfoMap_[BlockID::Bedrock] = { BlockID::Bedrock, std::numeric_limits<float>::infinity(), false };
-	blockInfoMap_[BlockID::Dirt] = { BlockID::Dirt, 300.0f, false };
-	blockInfoMap_[BlockID::Lawn] = { BlockID::Lawn, 300.0f, false };
-	blockInfoMap_[BlockID::Glass] = { BlockID::Glass, 100.0f, true };
-	blockInfoMap_[BlockID::Wood] = { BlockID::Wood, 400.0f , false };
-	blockInfoMap_[BlockID::Leaf] = { BlockID::Leaf, 200.0f, true };
+	Blockinfo info;
+	info.type = BlockID::Air;		// ID:空気
+	info.durability = -1;			// 耐久値:壊せない
+	info.isTransparent = true;		// 透過ブロック:true
+	info.isExtraAction = false;		// 右クリック特殊動作:false
+	info.junle = ItemJunle::None;	// アイテムジャンル:なし
+
+	blockInfoMap_[BlockID::Air] = info;
+
+	info.type = BlockID::Stone;		// ID:石
+	info.durability = 600.0f;		// 耐久値:60
+	info.isTransparent = false;		// 透過ブロック:false
+	info.isExtraAction = false;		// 右クリック特殊動作:false
+	info.junle = ItemJunle::Stone;	// アイテムジャンル:鉱石系
+	blockInfoMap_[BlockID::Stone] = info;
+
+	info.type = BlockID::Iron;		// ID:鉄
+	info.durability = 800.0f;		// 耐久値:800
+	info.isTransparent = false;		// 透過ブロック:false
+	info.isExtraAction = false;		// 右クリック特殊動作:false
+	info.junle = ItemJunle::Stone;	// アイテムジャンル:鉱石系
+	blockInfoMap_[BlockID::Iron] = info;
+
+	info.type = BlockID::Diamond;	// ID:ダイヤ
+	info.durability = 1200.0f;		// 耐久値:1200
+	info.isTransparent = false;		// 透過ブロック:false
+	info.isExtraAction = false;		// 右クリック特殊動作:false
+	info.junle = ItemJunle::Stone;	// アイテムジャンル:鉱石系
+	blockInfoMap_[BlockID::Diamond] = info;
+
+	info.type = BlockID::Bedrock;	// ID:岩盤
+	info.durability = std::numeric_limits<float>::infinity(); // 耐久値:壊せない
+	info.isTransparent = false;		// 透過ブロック:false
+	info.isExtraAction = false;		// 右クリック特殊動作:false
+	info.junle = ItemJunle::None;	// アイテムジャンル:なし
+	blockInfoMap_[BlockID::Bedrock] = info;
+
+	info.type = BlockID::Dirt;		// ID:土
+	info.durability = 300.0f;		// 耐久値:300
+	info.isTransparent = false;		// 透過ブロック:false
+	info.isExtraAction = false;		// 右クリック特殊動作:false
+	info.junle = ItemJunle::Dirt;	// アイテムジャンル:土系
+	blockInfoMap_[BlockID::Dirt] = info;
+
+	info.type = BlockID::Lawn;		// ID:草付き土
+	blockInfoMap_[BlockID::Lawn] = info;
+
+	info.type = BlockID::Glass;		// ID:ガラス
+	info.durability = 100.0f;		// 耐久値:100
+	info.isTransparent = true;		// 透過ブロック:true
+	info.junle = ItemJunle::Stone;	// アイテムジャンル:鉱石系
+	blockInfoMap_[BlockID::Glass] = info;
+
+	info.type = BlockID::Log;		// ID:木材
+	info.durability = 400.0f;		// 耐久値:400
+	info.isTransparent = false;		// 透過ブロック:false
+	info.junle = ItemJunle::Wood;	// アイテムジャンル:木材系
+	blockInfoMap_[BlockID::Log] = info;
+
+	info.type = BlockID::Planks;	// ID:木材
+	info.durability = 300.0f;		// 耐久値:300
+	info.isTransparent = false;		// 透過ブロック:false
+	info.junle = ItemJunle::Wood;	// アイテムジャンル:木材系
+
+	info.type = BlockID::Leaf;		// ID:葉っぱ
+	info.durability = 200.0f;		// 耐久値:200
+	info.isTransparent = true;		// 透過ブロック:true
+	info.junle = ItemJunle::Wood;	// アイテムジャンル:木材系
+	blockInfoMap_[BlockID::Leaf] = info;
+
+	info.type = BlockID::craftTable;// ID:作業台
+	info.durability = 200.0f;		// 耐久値:400
+	info.isTransparent = false;		// 透過ブロック:false
+	info.junle = ItemJunle::Wood;	// アイテムジャンル:木材系
+	blockInfoMap_[BlockID::craftTable] = info;
 }
 
 Blockinfo BlockConfig::GetBlockInfo(BlockID id) const

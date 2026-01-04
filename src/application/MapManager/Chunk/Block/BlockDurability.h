@@ -23,6 +23,6 @@ private:
 	bool isJustDestroyed_ = false;	// 破壊された瞬間か
 
 	
-	bool* isCollisionRay_;			// 視線レイと衝突しているかポインタ
+	bool* isCollisionRay_ = nullptr;// 視線レイと衝突しているかポインタ
 };
 

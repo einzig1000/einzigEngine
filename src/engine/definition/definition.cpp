@@ -416,6 +416,63 @@ Vector3 AABB::GetCollisionDepth(const AABB& other)const
 #pragma endregion
 
 
+ItemJunle GetItemJunle(ItemID id)
+{
+    switch (id)
+    {
+    case ItemID::木の剣:			return ItemJunle::Weapon;   break;
+    case ItemID::石の剣:			return ItemJunle::Weapon;   break;
+    case ItemID::鉄の剣:			return ItemJunle::Weapon;   break;
+    case ItemID::ダイヤの剣:		return ItemJunle::Weapon;   break;
+
+    case ItemID::木のツルハシ:		return ItemJunle::Tool;     break;
+    case ItemID::石のツルハシ:		return ItemJunle::Tool;     break;
+    case ItemID::鉄のツルハシ:		return ItemJunle::Tool;     break;
+    case ItemID::ダイヤのツルハシ:	return ItemJunle::Tool;     break;
+
+    case ItemID::木の斧:			return ItemJunle::Tool;     break;
+    case ItemID::石の斧:			return ItemJunle::Tool;     break;
+    case ItemID::鉄の斧:			return ItemJunle::Tool;     break;
+    case ItemID::ダイヤの斧:		return ItemJunle::Tool;     break;
+
+    case ItemID::鉄の頭:            return ItemJunle::Head;    break;
+    case ItemID::鉄の胴:            return ItemJunle::Body;    break;
+    case ItemID::鉄の脚:            return ItemJunle::Leg;     break;
+    case ItemID::鉄の靴:            return ItemJunle::Boots;   break;
+
+    case ItemID::ダイヤの頭:        return ItemJunle::Head;    break;
+    case ItemID::ダイヤの胴:        return ItemJunle::Body;    break;
+    case ItemID::ダイヤの脚:        return ItemJunle::Leg;     break;
+    case ItemID::ダイヤの靴:        return ItemJunle::Boots;   break;
+
+    case ItemID::芝ブロック:		return ItemJunle::Dirt;    break;
+    case ItemID::土ブロック:		return ItemJunle::Dirt;    break;
+
+    case ItemID::葉ブロック:		return ItemJunle::Wood;    break;
+    case ItemID::原木ブロック:		return ItemJunle::Wood;    break;
+	case ItemID::木材ブロック:		return ItemJunle::Wood;    break;
+	case ItemID::作業台ブロック:	return ItemJunle::Wood;    break;
+
+    case ItemID::ガラスブロック:	return ItemJunle::Stone;    break;
+    case ItemID::石ブロック:		return ItemJunle::Stone;    break;
+    case ItemID::鉄ブロック:		return ItemJunle::Stone;    break;
+    case ItemID::金ブロック:		return ItemJunle::Stone;    break;
+    case ItemID::ダイヤブロック:	return ItemJunle::Stone;    break;
+
+    case ItemID::鉄インゴット:		return ItemJunle::Material; break;
+    case ItemID::金インゴット:		return ItemJunle::Material; break;
+    case ItemID::ダイヤモンド:		return ItemJunle::Material; break;
+	case ItemID::棒:     			return ItemJunle::Material; break;
+
+    case ItemID::岩盤ブロック:		return ItemJunle::None;    break;
+    case ItemID::ビーコン:			return ItemJunle::None;    break;
+
+    default:
+		return ItemJunle::None;
+        break;
+    }
+}
+
 std::string EnumToString(BlockID id)
 {
     switch (id)
@@ -435,8 +492,8 @@ std::string EnumToString(BlockID id)
     case BlockID::Lawn:
         return "Lawn";
         break;
-    case BlockID::Wood:
-        return "Wood";
+    case BlockID::Log:
+        return "Log";
         break;
     case BlockID::Leaf:
         return "Leaf";
@@ -452,22 +509,44 @@ ItemID BlockIdToDropItemId(BlockID id)
 {
     switch (id)
     {
-    case BlockID::Air:     return ItemID::None;
-
-    case BlockID::Stone:   return ItemID::石ブロック;
-    case BlockID::Iron:    return ItemID::鉄インゴット;
-    case BlockID::Gold:    return ItemID::金インゴット;
-    case BlockID::Diamond: return ItemID::ダイヤモンド;
-
-    case BlockID::Dirt:    return ItemID::土ブロック;
-    case BlockID::Lawn:    return ItemID::土ブロック;
-    case BlockID::Wood:    return ItemID::木ブロック;
-    case BlockID::Leaf:    return ItemID::葉ブロック;
-    case BlockID::Bedrock: return ItemID::岩盤ブロック;
-    case BlockID::Glass:   return ItemID::ガラスブロック;
+    case BlockID::Air:          return ItemID::None;
+    case BlockID::Stone:        return ItemID::石ブロック;
+    case BlockID::Iron:         return ItemID::鉄インゴット;
+    case BlockID::Gold:         return ItemID::金インゴット;
+    case BlockID::Diamond:      return ItemID::ダイヤモンド;
+    case BlockID::Dirt:         return ItemID::土ブロック;
+    case BlockID::Lawn:         return ItemID::土ブロック;
+    case BlockID::Log:          return ItemID::原木ブロック;
+    case BlockID::Leaf:         return ItemID::葉ブロック;
+    case BlockID::Bedrock:      return ItemID::岩盤ブロック;
+    case BlockID::Glass:        return ItemID::ガラスブロック;
+    case BlockID::craftTable:   return ItemID::作業台ブロック;
+	case BlockID::Planks:       return ItemID::木材ブロック;
 
     default:               return ItemID::None;
     }
+}
+
+ItemID BlockIDToItemID(BlockID id)
+{
+    switch (id)
+    {
+    case BlockID::Air:          return ItemID::None;
+    case BlockID::Stone:        return ItemID::石ブロック;
+    case BlockID::Iron:         return ItemID::鉄ブロック;
+    case BlockID::Gold:         return ItemID::金ブロック;
+    case BlockID::Diamond:      return ItemID::ダイヤブロック;
+    case BlockID::Dirt:         return ItemID::土ブロック;
+    case BlockID::Lawn:         return ItemID::芝ブロック;
+    case BlockID::Log:          return ItemID::原木ブロック;
+    case BlockID::Leaf:         return ItemID::葉ブロック;
+    case BlockID::Bedrock:      return ItemID::岩盤ブロック;
+    case BlockID::Glass:        return ItemID::ガラスブロック;
+    case BlockID::craftTable:   return ItemID::作業台ブロック;
+    case BlockID::Planks:       return ItemID::木材ブロック;
+    default:                       return ItemID::None;
+	}
+
 }
 
 std::string EnumToString(PHASE e)

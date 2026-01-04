@@ -16,13 +16,13 @@ void TitlePhase::Initialize()
 	currentState = TitlePhaseState::None;
 	nextState = TitlePhaseState::Title;
 
-	worldSelect->texture = ResourceID::GetTextureID(TextureID::TITLE_start);
+	worldSelect->texture = ResourceID::GetUITextureID(UITextureID::TITLE_start);
 	worldSelect->anchor = Anchor::Center;
 	worldSelect->name = "WorldSelectButton";
 	worldSelect->transforms.translate = { 640.0f,300.0f,0.0f };
 	worldSelect->color = 0x777777FF;
 
-	options->texture = ResourceID::GetTextureID(TextureID::TITLE_option);
+	options->texture = ResourceID::GetUITextureID(UITextureID::TITLE_option);
 	options->anchor = Anchor::Center;
 	options->name = "OptionsButton";
 	options->transforms.translate = { 640.0f,500.0f,0.0f };
