@@ -90,7 +90,7 @@ void Player::Update()
 	{
 		haveItem_->craftMode3x3_ = true;
 	}
-	if (currentMode_ != UIMode::Inventory)
+	if (currentMode_ == UIMode::Inventory)
 	{
 		haveItem_->craftMode3x3_ = false;
 	}
