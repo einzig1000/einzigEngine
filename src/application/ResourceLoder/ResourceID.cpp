@@ -21,6 +21,9 @@ std::vector<int> ResourceID::TextureIDs_;
 // その他のモデルID配列
 std::vector<int> ResourceID::ModelIDs_;
 
+// 数字
+std::vector<int> ResourceID::NumberTextureIDs_;
+
 void ResourceID::reload()
 {
 	int tmp = -1;
@@ -305,6 +308,17 @@ void ResourceID::reload()
 
 #pragma endregion
 
+#pragma region 数字テクスチャ読み込み
+
+	NumberTextureIDs_.resize(10);
+	for (int i = 0; i <= 9; ++i)
+	{
+		std::string path = "resources/Minecraft/UI/number/" + std::to_string(i) + ".png";
+		tmp = Game::Resource::LoadTexture(path);
+		NumberTextureIDs_[i] = tmp;
+	}
+
+#pragma endregion
 
 	std::vector<std::string> breakBlockFilePaths =
 	{

@@ -30,7 +30,7 @@ public:
 	SynchronizationManager* GetSynchronizationManager() const { return synchronizationManager; }
 
 	ResourceManager* GetResourceManager() const { return resourceManager_; }
-
+    
 	FixFPS* GetFixFPS() const { return fixFPS_; }
 
     void BeginFrame();

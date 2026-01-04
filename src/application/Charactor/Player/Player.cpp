@@ -96,13 +96,20 @@ void Player::Draw()
 
 void Player::DrawInventory()
 {
+	// インベントリのアイコンを動かせる
 	haveItem_->UpdateInventry();
+	// インベントリのアイコン描画
 	haveItem_->DrawInventory();
+
+	// ホットバーのアイコン描画
+	haveItem_->DrawHotbar();
 }
 
 void Player::DrawHotbar()
 {
+	// マウスホイールでホットバー選択
 	haveItem_->UpdateHotbar();
+	// ホットバーのアイコン描画
 	haveItem_->DrawHotbar();
 }
 

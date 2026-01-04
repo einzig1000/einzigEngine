@@ -39,10 +39,6 @@ public:
 	// レティクル
 	RenderData_Sprite reticle_;
 
-
-	// 所持アイテム
-	//Itemslot* Itemslot_;
-
 private:
 	UIMode currentMode_ = UIMode::None;
 };

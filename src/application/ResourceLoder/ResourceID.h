@@ -78,6 +78,16 @@ public:
 		return UITextureIDs_[static_cast<size_t>(id)];
 	}
 
+	// 数字
+	static int32_t GetNumberTextureID(int number)
+	{
+		if (number < 0 || number > 9)
+		{
+			return -1;
+		}
+		return NumberTextureIDs_[static_cast<size_t>(number)];
+	}
+
 	// アイテム関連
 	static int32_t Get3DTextureID(ItemID id)
 	{
@@ -91,6 +101,7 @@ public:
 	{
 		return ItemModelIDs_[static_cast<size_t>(id)];
 	}
+
 
 
 private:
@@ -109,11 +120,14 @@ private:
 
 	// UIテクスチャID配列
 	static std::vector<int> UITextureIDs_;
+
 	// その他のテクスチャID配列
 	static std::vector<int> TextureIDs_;
 	// その他のモデルID配列
 	static std::vector<int> ModelIDs_;
 
+	// 数字
+	static std::vector<int> NumberTextureIDs_;
 
 	static inline const std::unordered_map<TextureID, std::string> textureFilePaths_ =
 	{

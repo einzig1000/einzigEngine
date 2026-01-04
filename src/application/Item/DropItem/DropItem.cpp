@@ -13,17 +13,20 @@ DropItem::DropItem()
 	player_ = nullptr;
 	mapManager_ = nullptr;
 	isDestroy_ = false;
+
+
+	item_.Initialize(ItemID::None);
 }
 
 void DropItem::SetItem(ItemID id, Vector3 pos)
 {
-	item_ = std::make_unique<Item>(id);
+	item_.Initialize(id);
 	InitPos_ = pos;
 	offsetYForSin_ = 0.0f;
 	offsetYForGround_ = 0.3f;
 
-	renderData_->SetModel(item_->GetModelHandle());
-	renderData_->SetTexture(item_->GetTextureHandleForModel());
+	renderData_->SetModel(item_.GetModelHandle());
+	renderData_->SetTexture(item_.GetTextureHandleForModel());
 
 	renderData_->translate.value = pos;
 
@@ -87,10 +90,10 @@ void DropItem::Update()
 
 	// プレイヤーに近づいたらdata_.translate.valueに近づいた後取得
 	Vector3 dist = player_->data_.translate.value - renderData_->translate.value;
-	if (dist.LengthSq() < 1.0f && frame_ > 60)
+	if (dist.LengthSq() < 1.0f && frame_ > 30)
 	{
 		// プレイヤーにアイテムを渡す
-		player_->AddItemToItemslot(item_->GetID());
+		player_->AddItemToItemslot(item_.GetID());
 		isDestroy_ = true;
 	}
 }

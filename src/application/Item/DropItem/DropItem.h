@@ -22,7 +22,7 @@ private:
 	std::unique_ptr<RenderData_Model> renderData_;
 
 	// モデル・テクスチャデータ
-	std::unique_ptr<Item> item_;
+	Item item_;
 	// フレーム
 	uint32_t frame_;
 
