@@ -31,6 +31,7 @@ Engine& Engine::Instance()
 // 初期化用
 void Engine::Initialize(int width, int height, const std::wstring& title)
 {
+
 	// COM の初期化
 	HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
 	assert(SUCCEEDED(hr));
