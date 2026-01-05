@@ -11,6 +11,9 @@ class Chunk;
 class Player;
 class BlockConfig;
 class DropItemManager;
+class BaseCharactor;
+
+
 
 class MapManager
 {
@@ -51,9 +54,13 @@ public:
 
 	// 指定位置に固体ブロックがあるか
 	bool isSolidAt(const Vector3& position) const;
+	// 指定AABBにキャラがあるか
+	bool IsOverlappingAnyCharactor(const AABB& aabb) const;
 
 	// レイとブロックの交差判定（衝突ブロックを返す）
 	std::optional<lookAtBlock> GetBlockByCrossedRay(const Ray& ray, const float maxDistance) const;
+	// ブロック/キャラのうち最初に当たったものを返す
+	RayHitResult GetFirstHitByRay(const Ray& ray, float maxDistance, const BaseCharactor* ignore) const;
 	// レイとブロックの交差判定（衝突座標を返す）
 	std::optional<Vector3> GetPositionByCrossedRay(const Ray& ray) const;
 
@@ -80,8 +87,15 @@ public:
 	// スケジュールに登録されたチャンクを1Fに1つ生成
 	void ProcessChunkGeneration();
 
-
+	// キャラクター登録
+	void RegisterCharactor(BaseCharactor* c) { charactors_.push_back(c); }
+	void UnregisterCharactor(BaseCharactor* c) 
+	{ 
+		charactors_.erase(std::remove(charactors_.begin(), charactors_.end(), c), charactors_.end()); 
+	}
 private:
+	// キャラクター管理
+	std::vector<BaseCharactor*> charactors_;
 
 	// マップファイルパス
 	std::string mapFilePath_;

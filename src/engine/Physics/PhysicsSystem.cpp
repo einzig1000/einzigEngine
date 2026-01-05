@@ -62,5 +62,7 @@ void PhysicsSystem::Step()
         m->UpdateLocalMatrix();
         m->UpdateWorldMatrix();
         m->UpdateAABB();
+        m->UpdateInPicture();
+        m->SavePreTransforms();
     }
 }

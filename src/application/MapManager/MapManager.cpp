@@ -6,6 +6,7 @@
 #include <fstream>
 #include <sstream>
 #include "Charactor/Player/Player.h"
+#include "Charactor/BaseCharactor.h"
 #include "Utilities/PerlinNoise.h"
 #include "Engine.h"
 
@@ -90,6 +91,42 @@ namespace
 		outPts[6] = { x0, y2, zFace };
 		outPts[7] = { x1, y2, zFace };
 		outPts[8] = { x2, y2, zFace };
+	}
+}
+
+namespace
+{
+	// レイ vs AABB（スラブ法）：交差したら、最初に入る距離tを返す
+	static bool RayIntersectAABB_FirstT(const Ray& ray, const AABB& aabb, float& outT)
+	{
+		const float INF = std::numeric_limits<float>::infinity();
+		float tmin = 0.0f;
+		float tmax = INF;
+
+		auto Axis = [&](float origin, float dir, float minB, float maxB) -> bool
+			{
+				if (std::abs(dir) < 1e-6f)
+				{
+					// 平行：範囲外なら衝突なし
+					return (minB <= origin && origin <= maxB);
+				}
+
+				const float inv = 1.0f / dir;
+				float t1 = (minB - origin) * inv;
+				float t2 = (maxB - origin) * inv;
+				if (t1 > t2) std::swap(t1, t2);
+
+				tmin = my_max(tmin, t1);
+				tmax = my_min(tmax, t2);
+				return tmin <= tmax;
+			};
+
+		if (!Axis(ray.origin.x, ray.diff.x, aabb.min.x, aabb.max.x)) return false;
+		if (!Axis(ray.origin.y, ray.diff.y, aabb.min.y, aabb.max.y)) return false;
+		if (!Axis(ray.origin.z, ray.diff.z, aabb.min.z, aabb.max.z)) return false;
+
+		outT = tmin;
+		return true;
 	}
 }
 
@@ -245,6 +282,8 @@ MapManager::MapManager(Player* player)
 	dropItemManager_ = new DropItemManager();
 	dropItemManager_->SetMapManager(this);
 	dropItemManager_->SetPlayer(player);
+
+	RegisterCharactor(player_);
 }
 
 MapManager::~MapManager()
@@ -546,6 +585,42 @@ void MapManager::AddDropItemAt(const Vector3& position, ItemID id)
 }
 
 // 指定位置にブロックを設置
+bool MapManager::SetBlockAt(const Vector2int& chunkPos, const Vector3int& localIndex, const BlockID id)
+{
+	// Air ブロックは設置できない(おけるわけがない笑)
+	if (id == BlockID::Air) return false;
+
+	// 設置するチャンクが存在しないなら設置できない(非存在なわけがない笑)
+	Chunk* chunk = TryGetChunk(chunkPos);
+	if (!chunk) return false;
+
+	// チャンク外のブロックを指してたら設置できない(指してるわけがない笑)
+	if (localIndex.x < 0 || localIndex.x >= CHUNK_X ||
+		localIndex.y < 0 || localIndex.y >= CHUNK_Y ||
+		localIndex.z < 0 || localIndex.z >= CHUNK_Z)
+	{
+		return false;
+	}
+
+	// キャラクターと重なってたら設置できない
+	const AABB placeAabb = GetAABB(chunkPos, localIndex);
+	if (IsOverlappingAnyCharactor(placeAabb))
+		return false;
+
+	Block* targetBlock = chunk->blocks[localIndex.x][localIndex.y][localIndex.z].get();
+	// 指定位置にブロックインスタンスが存在しないなら設置できない(存在しないわけがない笑)
+	if (!targetBlock) return false;
+	// 指定位置に既にブロックが存在しているなら設置できない(存在しているわけがない笑)
+	if (targetBlock->GetBlockID() != BlockID::Air) return false;
+
+	// ブロック設置
+	chunk->SetBlock(localIndex, id);
+
+	// 露出状態更新
+	chunk->SetExposedAroundBlocks(localIndex);
+
+	return true;
+}
 bool MapManager::SetBlockAt(const lookAtBlock& lab, const BlockID id)
 {
 	// Air ブロックならreturn
@@ -606,37 +681,6 @@ bool MapManager::SetBlockAt(const lookAtBlock& lab, const BlockID id)
 	}
 
 	return SetBlockAt(chunkPos, localIndex, id);
-}
-bool MapManager::SetBlockAt(const Vector2int& chunkPos, const Vector3int& localIndex, const BlockID id)
-{
-	// Air ブロックは設置できない(おけるわけがない笑)
-	if (id == BlockID::Air) return false;
-
-	// 設置するチャンクが存在しないなら設置できない(非存在なわけがない笑)
-	Chunk* chunk = TryGetChunk(chunkPos);
-	if (!chunk) return false;
-
-	// チャンク外のブロックを指してたら設置できない(指してるわけがない笑)
-	if (localIndex.x < 0 || localIndex.x >= CHUNK_X ||
-		localIndex.y < 0 || localIndex.y >= CHUNK_Y ||
-		localIndex.z < 0 || localIndex.z >= CHUNK_Z)
-	{
-		return false;
-	}
-
-	Block* targetBlock = chunk->blocks[localIndex.x][localIndex.y][localIndex.z].get();
-	// 指定位置にブロックインスタンスが存在しないなら設置できない(存在しないわけがない笑)
-	if (!targetBlock) return false;
-	// 指定位置に既にブロックが存在しているなら設置できない(存在しているわけがない笑)
-	if (targetBlock->GetBlockID() != BlockID::Air) return false;
-
-	// ブロック設置
-	chunk->SetBlock(localIndex, id);
-
-	// 露出状態更新
-	chunk->SetExposedAroundBlocks(localIndex);
-
-	return true;
 }
 bool MapManager::SetBlockAt(const Vector3& position, const BlockID id)
 {
@@ -1145,6 +1189,18 @@ bool MapManager::isSolidAt(const Vector3& position) const
 	return false;
 }
 
+bool MapManager::IsOverlappingAnyCharactor(const AABB& aabb) const
+{
+	for (BaseCharactor* c : charactors_)
+	{
+		if (!c) continue;
+		const AABB& ca = c->data_.aabbs[0];
+		if (IsOverLap(aabb, ca))
+			return true;
+	}
+	return false;
+}
+
 AABB MapManager::GetAABB(const Vector2int& chunkPos, const Vector3int& index) const
 {
 	// チャンクのワールド原点
@@ -1413,6 +1469,57 @@ std::optional<lookAtBlock> MapManager::GetBlockByCrossedRay(const Ray& ray, cons
 	return std::nullopt;
 }
 
+RayHitResult MapManager::GetFirstHitByRay(const Ray& ray, float maxDistance, const BaseCharactor* ignore) const
+{
+	RayHitResult best{};
+
+	// 1) ブロック
+	if (auto b = GetBlockByCrossedRay(ray, maxDistance); b.has_value())
+	{
+		best.type = RayHitResult::Type::Block;
+		best.blockHit = b.value();
+		best.distance = b->distance;
+	}
+
+	// 2) キャラ（登録済みキャラのAABBと判定）
+	float bestCharDist = std::numeric_limits<float>::infinity();
+	BaseCharactor* bestChar = nullptr;
+
+	// ※ charactors_ を保持している前提（前の実装で追加）
+	for (BaseCharactor* c : charactors_)
+	{
+		if (!c) continue;
+		if (c == ignore) continue;
+
+		// 自分自身を除外したい場合は呼び出し側で ray.origin の所有者を渡す仕組みが必要。
+		// ここでは「Rayの原点がそのキャラAABB内なら無視」程度で回避する。
+		const AABB& ca = c->data_.aabbs[0];
+
+		float t = 0.0f;
+		if (!RayIntersectAABB_FirstT(ray, ca, t)) continue;
+		if (t < 0.0f) continue;
+
+		const float dist = t; // ray.diff が正規化されている前提。Player/Enemyでは Normalized() している。
+		if (dist <= maxDistance && dist < bestCharDist)
+		{
+			bestCharDist = dist;
+			bestChar = c;
+		}
+	}
+
+	if (bestChar)
+	{
+		// ブロックより手前ならキャラ優先
+		if (best.type == RayHitResult::Type::None || bestCharDist < best.distance)
+		{
+			best.type = RayHitResult::Type::Charactor;
+			best.charactor = bestChar;
+			best.distance = bestCharDist;
+		}
+	}
+
+	return best;
+}
 // レイとブロックの交差判定（衝突座標を返す）
 std::optional<Vector3> MapManager::GetPositionByCrossedRay(const Ray& ray) const
 {

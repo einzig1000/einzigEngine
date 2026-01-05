@@ -7,6 +7,7 @@ class MapManager;
 class MapWorldCollider;
 class CameraController;
 class UIManager;
+class EnemyManager;
 
 class GameScenePhase :
 	public PhaseParent
@@ -29,6 +30,9 @@ private:
 
 	// プレイヤー
 	std::unique_ptr<Player> player_;
+
+	// 敵マネージャー
+	std::unique_ptr<EnemyManager> enemyManager_;
 
 	// マップ
 	std::unique_ptr<MapManager> map_;

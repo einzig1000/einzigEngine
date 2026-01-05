@@ -20,12 +20,14 @@ public:
 	virtual void Draw() = 0;
 	virtual void DrawImGui() = 0;
 
+	virtual void TakeDamage(int32_t damage);
+
 	// 移動
 	virtual void Move(const Vector3& direction, float speed);
 	// ジャンプ
 	virtual void Jump();
 	// ターゲットブロック破壊
-	virtual void BreakTargetBlock();
+	virtual void UpdateLeftClick();
 	// ブロック設置
 	virtual void SetNewBlock(BlockID id);
 
@@ -48,12 +50,13 @@ public:
 	float maxDistance = 5.0f;	// 視線範囲
 
 protected:
+	void UpdateGrounded(); // 接地判定更新
 
 	std::unique_ptr<HaveItem> haveItem_; // 所持アイテム管理
 
 	MapManager* mapManager_ = nullptr;
-	std::optional<lookAtBlock> targetBlock_;	// ターゲットにしているブロック
-	std::optional<lookAtBlock> preTargetBlock_;// 前フレームでターゲットにしていたブロック
+	RayHitResult target_;	// ターゲットにしているブロック
+	RayHitResult preTarget_;	// 前フレームでターゲットにしていたブロック
 
 	UIManager* uiManager_ = nullptr;
 	
@@ -61,6 +64,10 @@ protected:
 	float jumpPower_ = 0.1491f;	// ジャンプ力
 	float breakPower_ = 1.0f;	// ブロック破壊力
 	float attackPower_ = 1.0f; // 攻撃力
+
+	int32_t HP_ = 20;			// 体力
+	int32_t maxHP_ = 20;		// 最大体力
+	int32_t defense_ = 0;		// 防御力
 
 
 	bool isGrounded_ = false;

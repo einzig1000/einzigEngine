@@ -32,7 +32,7 @@
 #define BLOCK_SIZE 1.0f
 #define PLAYER_SPEED 0.1f
 
-#define GRAVITY -0.006f
+#define GRAVITY -0.0061f
 
 enum class CharactorID
 {
@@ -1342,6 +1342,28 @@ struct lookAtBlock
 	Vector3int localIndex = { 0,0,0 };
     AABBFace face = AABBFace::NONE;
 	float distance = 0.0f;
+};
+
+class BaseCharactor;
+struct RayHitResult
+{
+    enum class Type
+    {
+        None,
+        Block,
+        Charactor
+    };
+
+    Type type = Type::None;
+
+    // type == Block のとき有効
+    lookAtBlock blockHit{};
+
+    // type == Charactor のとき有効
+    BaseCharactor* charactor = nullptr;
+
+    // 共通：レイ原点からの距離
+    float distance = 0.0f;
 };
 
 struct Rect

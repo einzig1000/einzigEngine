@@ -9,9 +9,9 @@
 void BaseCharactor::SetTargetBlock()
 {
 	// 前フレームの見ているブロック保存
-	preTargetBlock_ = targetBlock_;
+	preTarget_ = target_;
 	// 見ているブロック取得
-	targetBlock_ = mapManager_->GetBlockByCrossedRay(viewRay_, maxDistance);
+	target_ = mapManager_->GetFirstHitByRay(viewRay_, maxDistance, this);
 }
 
 
@@ -29,6 +29,51 @@ void BaseCharactor::UpdateAttackPower()
 	if (currentItemID == ItemID::ダイヤの剣)attackPower_ = 15.0f;
 }
 
+void BaseCharactor::UpdateGrounded()
+{
+	if (!mapManager_)
+	{
+		isGrounded_ = false;
+		return;
+	}
+
+	const Vector3 center = data_.aabbs[0].center();
+	const float halfHeight = data_.scale.value.y * 0.5f;
+
+	// 足元の少し下をサンプル
+	const float probe = 0.06f;
+	Vector3 foot = center;
+	foot.y = center.y - halfHeight - probe;
+
+	// 左右(4点)も見ると段差で安定する
+	const float r = data_.scale.value.x * 0.45f;
+	const Vector3 probes[5] =
+	{
+		foot,
+		foot + Vector3{ +r, 0, +r },
+		foot + Vector3{ -r, 0, +r },
+		foot + Vector3{ +r, 0, -r },
+		foot + Vector3{ -r, 0, -r },
+	};
+
+	bool grounded = false;
+	for (auto& p : probes)
+	{
+		if (mapManager_->isSolidAt(p))
+		{
+			grounded = true;
+			break;
+		}
+	}
+
+	isGrounded_ = grounded;
+
+	// 接地中は落下速度を止める（沈み防止）
+	if (isGrounded_ && data_.translate.velocity.y < 0.0f)
+	{
+		data_.translate.velocity.y = 0.0f;
+	}
+}
 
 void BaseCharactor::SetMapManager(MapManager* mapManager)
 {
@@ -43,11 +88,19 @@ void BaseCharactor::SetUIManager(UIManager* uiManager)
 void BaseCharactor::Jump()
 {
 	// 接地していないならジャンプ不可
-	//if (!isGrounded_) return;
+	if (!isGrounded_) return;
 
 	data_.translate.velocity.y = jumpPower_;
 	data_.translate.acceleration.y = GRAVITY; // ジャンプ後は重力を戻す
 	isGrounded_ = false;
+}
+
+void BaseCharactor::TakeDamage(int32_t damage)
+{
+	int32_t actualDamage = damage - defense_;
+	if (actualDamage < 1) actualDamage = 1;
+	HP_ -= actualDamage;
+	if (HP_ < 0) HP_ = 0;
 }
 
 void BaseCharactor::Move(const Vector3& direction, float speed)
@@ -57,47 +110,55 @@ void BaseCharactor::Move(const Vector3& direction, float speed)
 }
 
 
-void BaseCharactor::BreakTargetBlock()
+void BaseCharactor::UpdateLeftClick()
 {
-	if (!targetBlock_.has_value()) return;
-
-	lookAtBlock lab = targetBlock_.value();
-	Block* block = lab.block;
-	if (!block) return;
-
-	ItemID currentItemID = haveItem_->GetCurrentSelectedItemID();
-
-	breakPower_ = 1.0f;
-	// ツールのジャンルとブロックのジャンルが合っている場合
-	if (block->blockInfo_.junle == ItemJunle::Wood)
+	if (target_.type == RayHitResult::Type::Block)
 	{
-		if (currentItemID == ItemID::木の斧)breakPower_ = 2.0f;
-		if (currentItemID == ItemID::石の斧)breakPower_ = 3.0f;
-		if (currentItemID == ItemID::鉄の斧)breakPower_ = 4.0f;
-		if (currentItemID == ItemID::ダイヤの斧)breakPower_ = 15.0f;
+		lookAtBlock lab = target_.blockHit;
+		Block* block = lab.block;
+		if (!block) return;
+
+		ItemID currentItemID = haveItem_->GetCurrentSelectedItemID();
+
+		breakPower_ = 1.0f;
+		// ツールのジャンルとブロックのジャンルが合っている場合
+		if (block->blockInfo_.junle == ItemJunle::Wood)
+		{
+			if (currentItemID == ItemID::木の斧)breakPower_ = 2.0f;
+			if (currentItemID == ItemID::石の斧)breakPower_ = 3.0f;
+			if (currentItemID == ItemID::鉄の斧)breakPower_ = 4.0f;
+			if (currentItemID == ItemID::ダイヤの斧)breakPower_ = 15.0f;
+		}
+		else if (block->blockInfo_.junle == ItemJunle::Stone)
+		{
+			if (currentItemID == ItemID::木のツルハシ)breakPower_ = 2.0f;
+			if (currentItemID == ItemID::石のツルハシ)breakPower_ = 3.0f;
+			if (currentItemID == ItemID::鉄のツルハシ)breakPower_ = 4.0f;
+			if (currentItemID == ItemID::ダイヤのツルハシ)breakPower_ = 15.0f;
+		}
+
+		block->durability_->DecreaseDurability(breakPower_);
+
+		// 破壊されていたら非アクティブ化
+		if (block->durability_->GetIsDestroy())
+		{
+			mapManager_->DestroyBlockAt(lab.chunkIndex, lab.localIndex);
+		}
 	}
-	else if (block->blockInfo_.junle == ItemJunle::Stone)
+	else if (target_.type == RayHitResult::Type::Charactor)
 	{
-		if (currentItemID == ItemID::木のツルハシ)breakPower_ = 2.0f;
-		if (currentItemID == ItemID::石のツルハシ)breakPower_ = 3.0f;
-		if (currentItemID == ItemID::鉄のツルハシ)breakPower_ = 4.0f;
-		if (currentItemID == ItemID::ダイヤのツルハシ)breakPower_ = 15.0f;
-	}
-
-	block->durability_->DecreaseDurability(breakPower_);
-
-	// 破壊されていたら非アクティブ化
-	if (block->durability_->GetIsDestroy())
-	{
-		mapManager_->DestroyBlockAt(lab.chunkIndex, lab.localIndex);
+		BaseCharactor* targetCharactor = target_.charactor;
+		if (!targetCharactor) return;
+		targetCharactor->TakeDamage(int32_t(attackPower_));
 	}
 }
 
+
 void BaseCharactor::SetNewBlock(BlockID id)
 {
-	if (!targetBlock_.has_value()) return;
+	if (target_.type != RayHitResult::Type::Block) return;
 
-	lookAtBlock lab = targetBlock_.value();
+	lookAtBlock lab = target_.blockHit;
 
 	if (lab.block->blockInfo_.isExtraAction)
 	{

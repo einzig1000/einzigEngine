@@ -1,6 +1,7 @@
 #include "GameScenePhase.h"
 #include "MapManager/MapManager.h"
 #include "Charactor/Player/Player.h"
+#include "Charactor/Enemy/EnemyManager.h"
 #include "Camera/CameraController.h"
 #include "UIManager/UIManager.h"
 #include "Physics/IWorldCollider.h"
@@ -20,6 +21,8 @@ GameScenePhase::GameScenePhase()
 	map_ = std::make_unique<MapManager>(player_.get());
 	// マップワールドコライダー生成
 	worldCollider_ = std::make_unique<MapWorldCollider>(map_.get());
+	// 敵マネージャー生成
+	enemyManager_ = std::make_unique<EnemyManager>();
 
 	// カメラコントローラーにプレイヤーとマップマネージャーをセット
 	cameraController_->SetPlayer(player_.get());
@@ -29,6 +32,11 @@ GameScenePhase::GameScenePhase()
 	// プレイヤーにマップマネージャーをセット
 	player_->SetMapManager(map_.get());
 	player_->SetUIManager(uiManager_.get());
+
+	// 敵マネージャーにプレイヤーをセット
+	enemyManager_->SetPlayer(player_.get());
+	enemyManager_->SetMapManager(map_.get());
+	enemyManager_->SetUIManager(uiManager_.get());
 
 	// 物理システムにワールドコライダーをセット
 	Game::Physics::SetIWorldCollider(worldCollider_.get());
@@ -52,6 +60,7 @@ void GameScenePhase::Initialize()
 	map_->Initialize();
 	player_->Initialize();
 	uiManager_->Initialize();
+	enemyManager_->Initialize();
 
 
 	Game::Camera::SetCameraMode(CameraMode_ORBIT_FPS::FPS);
@@ -61,8 +70,15 @@ void GameScenePhase::Initialize()
 
 void GameScenePhase::Update()
 {
+	if (Game::Input::Key::IsJustPressed(DIK_F))
+	{
+		enemyManager_->AddNewEnemy(player_->data_.GetWorldPosition() + Vector3{0.0f,20.0f,0.0f});
+	}
+
 	// プレイヤー更新
 	player_->Update();
+	// 敵マネージャー更新
+	enemyManager_->Update();
 	// マップ更新
 	map_->Update();
 	// UI更新
@@ -79,6 +95,8 @@ void GameScenePhase::Draw()
 	map_->Draw();
 	// プレイヤー描画
 	player_->Draw();
+	// 敵描画
+	enemyManager_->Draw();
 	// UI描画
 	uiManager_->Draw();
 }
@@ -89,6 +107,8 @@ void GameScenePhase::DrawImGui()
 	map_->DrawImGui();
 	// プレイヤーImGui描画
 	player_->DrawImGui();
+	// 敵ImGui描画
+	enemyManager_->DrawImGui();
 	// UIImGui描画
 	uiManager_->DrawImGui();
 }

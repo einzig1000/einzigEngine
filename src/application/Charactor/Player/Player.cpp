@@ -70,16 +70,22 @@ void Player::Update()
 		// ターゲットブロック取得
 		SetTargetBlock();
 
-		// ブロック破壊
+		// 左クリック処理
 		if (Game::Input::Mouse::IsHeld(0))
 		{
-			BreakTargetBlock();
+			UpdateLeftClick();
 		}
 
 		// ブロック設置
 		if (Game::Input::Mouse::IsJustPressed(1))
 		{
 			SetNewBlock(ItemIDToBlockID(haveItem_->GetCurrentSelectedItemID()));
+		}
+
+		// アイテムポイ捨て
+		if (Game::Input::Key::IsJustPressed(DIK_Q))
+		{
+			haveItem_->DropCurrentSelectedItem(data_.aabbs[0].center());
 		}
 	}
 	else
@@ -102,6 +108,9 @@ void Player::Update()
 	{
 		haveItem_->craftMode3x3_ = false;
 	}
+
+	// 接地判定更新
+	UpdateGrounded();
 }
 
 void Player::Draw()
