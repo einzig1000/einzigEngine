@@ -47,7 +47,7 @@ public:
 
 	RenderData_Model data_;		// データ
 	Ray viewRay_;				// 視線レイ
-	float maxDistance = 5.0f;	// 視線範囲
+	float maxDistance = 6.0f;	// 視線範囲
 
 protected:
 	void UpdateGrounded(); // 接地判定更新
