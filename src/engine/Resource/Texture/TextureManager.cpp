@@ -68,7 +68,7 @@ TextureData* TextureManager::GetTextureData(int32_t textureID)
 {
     if (textureID < 0)
     {
-        return &textures_[0];
+        return nullptr;
 	}
 
     if (textureID < textures_.size())
@@ -81,6 +81,128 @@ TextureData* TextureManager::GetTextureData(int32_t textureID)
         Log("存在しないテクスチャIDです:%d", textureID);
         return nullptr;
     }
+}
+
+int32_t TextureManager::LoadTexture2DArray(const std::vector<std::string>& filePaths)
+{
+	// filePaths[0] を代表名として使う
+	std::string arrayName = filePaths[1] + "_Array";
+    auto exists = std::find_if(
+        textures_.begin(), textures_.end(),
+        [&arrayName](const TextureData& tex) { return tex.filePath == arrayName; }
+    );
+    if (exists != textures_.end())
+    {
+        return exists->number;
+    }
+
+    if (filePaths.empty())
+    {
+        Log("LoadTexture2DArray: filePaths is empty. name:%s", arrayName.c_str());
+        return -1;
+    }
+
+    // まず全画像を読み、同一条件チェック
+    std::vector<DirectX::ScratchImage> srcImages;
+    srcImages.resize(filePaths.size());
+
+    std::vector<DirectX::ScratchImage> srcMipImages;
+    srcMipImages.resize(filePaths.size());
+
+    DirectX::TexMetadata baseMeta{};
+
+    for (size_t i = 0; i < filePaths.size(); ++i)
+    {
+        std::wstring pathW = ConvertString(filePaths[i]);
+
+        HRESULT hr = DirectX::LoadFromWICFile(pathW.c_str(), DirectX::WIC_FLAGS_FORCE_SRGB, nullptr, srcImages[i]);
+        assert(SUCCEEDED(hr));
+
+        hr = DirectX::GenerateMipMaps(
+            srcImages[i].GetImages(),
+            srcImages[i].GetImageCount(),
+            srcImages[i].GetMetadata(),
+            DirectX::TEX_FILTER_SRGB,
+            0,
+            srcMipImages[i]);
+        assert(SUCCEEDED(hr));
+
+        const auto meta = srcMipImages[i].GetMetadata();
+        if (i == 0)
+        {
+            baseMeta = meta;
+            // Texture2DArray 前提なので arraySize=1 の画像であること
+            assert(baseMeta.arraySize == 1);
+        }
+        else
+        {
+            // サイズ/フォーマット/ミップ数を揃える（今回の前提）
+            assert(meta.width == baseMeta.width);
+            assert(meta.height == baseMeta.height);
+            assert(meta.format == baseMeta.format);
+            assert(meta.mipLevels == baseMeta.mipLevels);
+            assert(meta.dimension == baseMeta.dimension);
+            assert(meta.arraySize == 1);
+        }
+    }
+
+    // 各要素の先頭mip(0)の Image を配列として束ねる
+    std::vector<const DirectX::Image*> images;
+    images.reserve(filePaths.size());
+    for (size_t i = 0; i < filePaths.size(); ++i)
+    {
+        const DirectX::Image* img0 = srcMipImages[i].GetImage(0, 0, 0);
+        assert(img0);
+        images.push_back(img0);
+    }
+
+    // 2D配列イメージ(配列=6, mip=baseMeta.mipLevels)を作成
+    DirectX::ScratchImage arrayScratch;
+    HRESULT hr = arrayScratch.Initialize2D(baseMeta.format, baseMeta.width, baseMeta.height, filePaths.size(), baseMeta.mipLevels);
+    assert(SUCCEEDED(hr));
+
+    // mipごとに各sliceへコピー（DirectXTexのCopyRectangleで詰める）
+    for (size_t slice = 0; slice < filePaths.size(); ++slice)
+    {
+        for (size_t mip = 0; mip < baseMeta.mipLevels; ++mip)
+        {
+            const DirectX::Image* src = srcMipImages[slice].GetImage(mip, 0, 0);
+            DirectX::Image* dst = const_cast<DirectX::Image*>(arrayScratch.GetImage(mip, slice, 0));
+            assert(src && dst);
+
+            DirectX::Rect rect{};
+            rect.x = 0;
+            rect.y = 0;
+            rect.w = static_cast<LONG>(dst->width);
+            rect.h = static_cast<LONG>(dst->height);
+
+            hr = DirectX::CopyRectangle(*src, rect, *dst, DirectX::TEX_FILTER_DEFAULT, 0, 0);
+            assert(SUCCEEDED(hr));
+        }
+    }
+
+    // TextureDataとして登録
+    TextureData tex{};
+    tex.filePath = arrayName;
+    tex.number = static_cast<uint32_t>(textures_.size());
+    tex.mipImage = std::move(arrayScratch);
+    tex.metadata = tex.mipImage.GetMetadata(); // arraySize が filePaths.size() になる
+
+    // GPUリソース作成＆アップロード（既存関数を流用）
+    tex.textureResource = CreateTextureResource(device_, tex.metadata);
+    Microsoft::WRL::ComPtr<ID3D12Resource> tempIntermediateResource = UploadTextureData(tex.textureResource.Get(), tex.mipImage, device_, commandList_);
+    intermediateUploadResources_.push_back(tempIntermediateResource);
+
+    // Texture2DArray用のSRVを作る
+    SRVAllocation srvAllocation = descriptorHeap_->GetSrvManager()->CreateSRVforTextureArray(
+        tex.textureResource.Get(),
+        tex.metadata.format,
+        UINT(tex.metadata.mipLevels),
+        UINT(tex.metadata.arraySize));
+    tex.textureSrvHandleGPU = srvAllocation.gpu;
+
+    textures_.push_back(std::move(tex));
+    return tex.number;
 }
 
 void TextureManager::CreateTransparentTexture()

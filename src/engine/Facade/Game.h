@@ -9,8 +9,10 @@
 #include "DrawSystem/RenderData/RenderData.h"
 #include "ResourceLoder/ResourceID.h"
 #include "ImGuiManager/ImGuiManager.h"
-
 #include <algorithm>
+
+class IWorldCollider;
+
 
 class Game
 {
@@ -34,6 +36,13 @@ public:
 		/// <param name="filePath">例:"Resources/Prototypes/texture/uvChecker.png"</param>
 		/// <returns>テクスチャID</returns>
 		static uint32_t LoadTexture(const std::string& filePath);
+
+		/// <summary>
+		/// テクスチャ配列読み込み
+		/// </summary>
+		/// <param name="filePaths">例:{"Resources/Prototypes/texture/uvChecker1.png","Resources/Prototypes/texture/uvChecker2.png"}</param>
+		/// <returns>テクスチャID</returns>
+		static uint32_t LoadTextureArray(const std::vector<std::string>& filePaths);
 
 		/// <summary>
 		/// オーディオ読み個み
@@ -168,59 +177,69 @@ public:
 			/// <summary>
 			/// マウスのスクリーン座標位置取得
 			/// </summary>
-			/// <returns></returns>
-			static Vector2 GetMousePosition();
+			/// <returns>マウスのスクリーン座標</returns>
+			static Vector2 GetPosition();
+
+			/// <summary>
+			/// マウスのスクリーン座標位置変化量取得
+			/// </summary>
+			/// <returns>マウスのスクリーン座標位置変化量</returns>
+			static Vector2 GetPositionDelta();
 
 			/// <summary>
 			/// マウスのワールド座標位置取得
 			/// </summary>
-			/// <returns></returns>
-			static Vector3 GetMouseWorldPosition();
+			/// <returns>マウスのワールド座標</returns>
+			static Vector3 GetWorldPosition();
 
 			/// <summary>
 			/// マウスのワールド座標レイ取得
 			/// </summary>
 			/// <returns></returns>
-			static Ray GetMouseRay();
+			static Ray GetRay();
+
+			/// <summary>
+			/// マウスホイールの回転量取得
+			/// </summary>
+			/// <returns>マウスホイールの回転量</returns>
+			static int32_t GetWheel();
 
 			/// <summary>
 			/// マウスボタンの入力取得(現在押されているか)
 			/// </summary>
 			/// <param name="i">0 = 左クリック  1 = 右クリック  2 = ミドルボタン</param>
-			/// <returns></returns>
+			/// <returns>現在押されているか</returns>
 			static bool IsHeld(int i);
 
 			/// <summary>
 			/// マウスボタンの入力取得(押した瞬間)
 			/// </summary>
 			/// <param name="i">0 = 左クリック  1 = 右クリック  2 = ミドルボタン</param>
-			/// <returns></returns>
+			/// <returns>押した瞬間か</returns>
 			static bool IsJustPressed(int i);
 
 			/// <summary>
 			/// マウスボタンの入力取得(離した瞬間)
 			/// </summary>
 			/// <param name="i">0 = 左クリック  1 = 右クリック  2 = ミドルボタン</param>
-			/// <returns></returns>
+			/// <returns>離した瞬間か</returns>
 			static bool IsJustReleased(int i);
 
 			/// <summary>
 			/// マウスボタンの入力取得(押されてからの経過フレーム数)
 			/// </summary>
 			/// <param name="i">0 = 左クリック  1 = 右クリック  2 = ミドルボタン</param>
-			/// <returns></returns>
+			/// <returns>押されてからの経過フレーム数</returns>
 			static uint32_t HoldFrames(int i);
-
-			/// <summary>
-			/// マウスホイールの回転量取得
-			/// </summary>
-			static uint32_t GetMouseWheel();
 
 			// カーソルの表示・非表示切り替え
 			static void ToggleMouseCursorVisible();
 
 			// カーソルの表示・非表示設定
 			static void ShowCursor(bool visible);
+
+			// マウス感度設定
+			static void SetMouseSensitivity(float sensitivity);
 		};
 
 		class Key
@@ -282,7 +301,7 @@ public:
 			static float GetCurrentDistance();			// カメラ距離
 		};
 
-		static void SetCameraMode(CameraMode mode);
+		static void SetCameraMode(CameraMode_ORBIT_FPS mode);
 
 		/// <summary>
 		/// カメラの回転中心座標の移動
@@ -328,13 +347,22 @@ public:
 		/// </summary>
 		static void StopCameraShake();
 
-
 		/// <summary>
 		/// 描画範囲内にAABBがあるか
 		/// </summary>
 		/// <param name="aabb">検索対象のAABB</param>
 		/// <returns>結果</returns>
 		static bool InCamera(const AABB& aabb);
+
+		/// <summary>
+		/// カメラコントロールの有効無効設定
+		/// </summary>
+		static void SetEnableControl(bool enable);
+
+		/// <summary>
+		/// カメラ切り替え
+		/// </summary>
+		static void SetCurrentCamera(const std::string name);
 	};
 
 	class Utilitie
@@ -367,7 +395,7 @@ public:
 		{
 			return start + (end - start) * t;
 		}
-	
+
 		static float RandFloat(float min, float max, int decimalPlaces)
 		{
 			return RandomFloat(min, max, decimalPlaces);
@@ -429,6 +457,54 @@ public:
 		}
 	};
 
+	class Time
+	{
+	public:
+		/// <summary>
+		/// デルタタイム取得
+		/// </summary>
+		/// <returns>デルタタイム</returns>
+		static float GetDeltaTime();
+
+		/// <summary>
+		/// 起動からの経過時間取得
+		/// </summary>
+		static uint32_t GetElapsedTime();
+
+		/// <summary>
+		/// フレームレート取得
+		/// </summary>
+		static float GetFrameRate();
+
+		/// <summary>
+		/// タイムスケール設定　タイムスケールとは時間の進み具合を調整する値。1.0が通常速度、0.5が半分の速度、2.0が2倍の速度になる。
+		/// </summary>
+		static void SetTimeScale(float scale);
+	};
+
+	class Physics
+	{
+	public:
+		/// <summary>
+		/// WorldColliderの設定
+		/// </summary>
+		static void SetIWorldCollider(IWorldCollider* worldCollider);
+
+		/// <summary>
+		/// RenderData_Modelの物理演算有効化
+		/// </summary>
+		static void RegisterDynamic(RenderData_Model* model);
+
+		/// <summary>
+		/// RenderData_Modelの物理演算無効化
+		/// </summary>
+		static void UnregisterDynamic(RenderData_Model* model);
+		
+		/// <summary>
+		/// 登録されている全てのRenderData_Modelの物理演算無効化
+		/// </summary>
+		static void ClearDynamicAll();
+	};
 
 private:
 	Game() = delete;

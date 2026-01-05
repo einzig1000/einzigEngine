@@ -65,6 +65,7 @@ bool IsCollision(const Ray& r, const Plane& p);
 bool IsCollision(const Ray& r, const AABB& aabb);
 bool IsCollision(const Ray& r, const Triangle& t);
 bool IsCollision(const AABB& aabb1, const AABB& aabb2);
+bool IsOverLap(const AABB& aabb1, const AABB& aabb2);
 bool IsLooseCollision(const AABB& aabb1, const AABB& aabb2, float threshold = 0.1f);
 bool IsCollision(const AABB& aabb, const Sphere& s);
 bool IsCollision(const AABB& aabb, const Segment& s);

@@ -5,14 +5,14 @@
 SrvManager::SrvManager(ID3D12Device* device)
     :device_(device)
 {
-	// SRVスロット一つ分のサイズ取得
+    // SRVスロット一つ分のサイズ取得
     descriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-	// SRV用ディスクリプタヒープ作成
-    capacity_ = 512;
+    // SRV用ディスクリプタヒープ作成
+	capacity_ = 16384 * 8;
     nextIndex_ = 0;
     D3D12_DESCRIPTOR_HEAP_DESC DescriptorHeapDesc{};
-	DescriptorHeapDesc.NumDescriptors = capacity_;
+    DescriptorHeapDesc.NumDescriptors = capacity_;
     DescriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
     DescriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 
@@ -76,7 +76,23 @@ SRVAllocation SrvManager::CreateSRVforTexture(ID3D12Resource* resource, DXGI_FOR
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
     srvDesc.Texture2D.MipLevels = mipLevels;
-	return CreateSRV(resource, &srvDesc);
+    return CreateSRV(resource, &srvDesc);
+}
+
+SRVAllocation SrvManager::CreateSRVforTextureArray(ID3D12Resource* resource, DXGI_FORMAT format, UINT mipLevels, UINT arraySize)
+{
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+    srvDesc.Format = format;
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    srvDesc.Texture2DArray.MostDetailedMip = 0;
+    srvDesc.Texture2DArray.MipLevels = mipLevels;
+    srvDesc.Texture2DArray.FirstArraySlice = 0;
+    srvDesc.Texture2DArray.ArraySize = arraySize;
+    srvDesc.Texture2DArray.PlaneSlice = 0;
+    srvDesc.Texture2DArray.ResourceMinLODClamp = 0.0f;
+
+    return CreateSRV(resource, &srvDesc);
 }
 
 SRVAllocation SrvManager::CreateSRVforStructuredBuffer(ID3D12Resource* resource, UINT numElements, UINT structureByteStride)
@@ -86,10 +102,10 @@ SRVAllocation SrvManager::CreateSRVforStructuredBuffer(ID3D12Resource* resource,
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
     srvDesc.Buffer.FirstElement = 0;
-	srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+    srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
     srvDesc.Buffer.NumElements = numElements;
     srvDesc.Buffer.StructureByteStride = structureByteStride;
-	return CreateSRV(resource, &srvDesc);
+    return CreateSRV(resource, &srvDesc);
 }
 
 void SrvManager::CreateSRVforImGui(UINT bufferCount, D3D12_RENDER_TARGET_VIEW_DESC format)

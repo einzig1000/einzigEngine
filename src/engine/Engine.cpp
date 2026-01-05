@@ -14,10 +14,11 @@
 #include "DrawSystem/DrawSystem.h"
 #include "Camera/CameraManager.h"
 #include "imGuiManager/ImGuiManager.h"
+#include "Physics/PhysicsSystem.h"
 
 #include <DirectXMath.h>
 #include <filesystem>
-#include "Player.h"
+//#include "Charactor/Player/Player.h"
 using namespace DirectX;
 
 
@@ -62,6 +63,12 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 		imguiManager_ = new ImGuiManager();
 		imguiManager_->Initialize(dxManager_, windowManager_);
 	}
+	if (!physicsSystem_)
+	{
+		physicsSystem_ = new PhysicsSystem();
+	}
+
+	windowManager_->AttachMouseController(inputManager_->GetMouseController());
 
 
 	dxManager_->BeginFrame();
@@ -79,11 +86,11 @@ bool Engine::ProcessMessage()
 		{
 			return false;
 		}
-		if (msg.message == WM_MOUSEWHEEL)
-		{
-			// ホイールの回転量を加算　クリックはboolで回転量はintだからmessageを使う。らしい。なんで？
-			inputManager_->GetMouseController()->wheelDelta_ += GET_WHEEL_DELTA_WPARAM(msg.wParam);
-		}
+		//if (msg.message == WM_MOUSEWHEEL)
+		//{
+		//	// ホイールの回転量を加算　クリックはboolで回転量はintだからmessageを使う。らしい。なんで？
+		//	inputManager_->GetMouseController()->wheelDelta_ += GET_WHEEL_DELTA_WPARAM(msg.wParam);
+		//}
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
@@ -92,6 +99,9 @@ bool Engine::ProcessMessage()
 }
 void Engine::BeginFrame()
 {
+	// GPU同期
+	dxManager_->GetSynchronizationManager()->WaitForGPU();
+
 	// DirectXを更新
 	dxManager_->BeginFrame();
 
@@ -134,29 +144,35 @@ void Engine::UpdateTransforms()
 	// オブジェクト更新
 	std::vector<Object3D> objects = dxManager_->GetResourceManager()->GetModelManager()->GetModelList();
 
-	for (auto& rd : modelList)
-	{
-		rd->Update2();
-	}
-	for (auto& rd : modelList)
-	{
-		rd->Update3();
-	}
-	for (auto& rd : modelList)
-	{
-		rd->Update4();
-	}
-	for (auto& rd : modelList)
-	{
-		rd->Update5();
-	}
+	//for (auto& rd : modelList)
+	//{
+	//	//rd->Update1();
+	//}
+	//for (auto& rd : modelList)
+	//{
+	//	//rd->Update2();
+	//}
+	//for (auto& rd : modelList)
+	//{
+	//	// 座標更新,衝突ペア・深度の保存
+	//	//rd->Update3();
+	//}
+	//for (auto& rd : modelList)
+	//{
+	//	// 衝突時の更新、それに伴う座標修正など
+	//	//rd->Update4();
+	//}
+	//for (auto& rd : modelList)
+	//{
+	//	//rd->Update5();
+	//}
 
 #pragma endregion
 
 #pragma region マウスレイ衝突判定
 
 	// マウスレイ取得
-	Ray mouseRay = inputManager_->GetMouseController()->GetMouseRay();
+	Ray mouseRay = inputManager_->GetMouseController()->GetRay();
 
 	// モデルと衝突までの距離セット構造体
 	struct HitInfo { RenderData_Model* rdm; float distance; };
@@ -174,7 +190,7 @@ void Engine::UpdateTransforms()
 			// 最近接衝突点を取得
 			std::optional<Vector3> colPos = IntersectRayModel(
 				mouseRay,
-				objects[rd->model].modelData.vertices, rd
+				objects[rd->GetModel()].modelData.vertices, rd
 			);
 			// 衝突していたらリストに登録
 			if (colPos)
@@ -202,7 +218,6 @@ void Engine::UpdateParticles()
 {
 	// パーティクル更新
 	RenderData_Particle::UpdateAllParticles();
-	//RenderData_Block::UpdateAllBlock();
 }
 void Engine::UpdateCamera()
 {
@@ -234,7 +249,7 @@ void Engine::UpdateDebugInfo()
 	{
 		ToggleCamera();
 	}
-	if (Game::Input::Key::IsJustPressed(DIK_F12))
+	if (Game::Input::Key::IsJustPressed(DIK_F11))
 	{
 		ToggleFullscreen();
 	}
@@ -246,19 +261,27 @@ void Engine::UpdateDebugInfo()
 		ImGui::Begin("------debug info------");
 		ImGui::Text("ESC : Quit Application");
 		ImGui::Text("F1  : Hide Debug Info");
-		ImGui::Text("F3  : Toggle Camera Mode");
+		ImGui::Text("F3  : Toggle Camera Release or Debug");
+		ImGui::Text("F5  : Toggle Camera FirstPerson or ThirdPerson");
 		ImGui::Text("F12 : Toggle Fullscreen");
 		ImGui::Text("DeltaTime: %.3f ms", dxManager_->GetFixFPS()->GetDeltaTime() * 1000.0f);
 		ImGui::Text("FPS: %.1f ", dxManager_->GetFixFPS()->GetAverageFPS());
+		ImGui::Text("ImGui FPS: %.1f ", ImGui::GetIO().Framerate);
 		ImGui::End();
 	}
 }
 void Engine::EndFrame()
 {
-	// 座標更新
-	UpdateTransforms();
+	// 入力終了処理
+	inputManager_->EndFrame();
 
-	// パーティクル更新
+	// 物理更新
+	physicsSystem_->Step();
+
+	/// 座標更新
+	//UpdateTransforms();
+
+	/// パーティクル更新
 	//UpdateParticles();
 
 	// 描画実行
@@ -268,14 +291,8 @@ void Engine::EndFrame()
 	imguiManager_->EndFrame();
 	imguiManager_->Draw();
 
-	// インプット系終了処理
-	inputManager_->EndFrame();
-
 	// DirectX終了処理
 	dxManager_->EndFrame();
-
-	// GPU同期
-	dxManager_->GetSynchronizationManager()->WaitForGPU();
 
 	// アプリケーション終了
 	if (Game::Input::Key::IsJustPressed(DIK_ESCAPE))
@@ -304,6 +321,8 @@ void Engine::Finalize()
 	inputManager_ = nullptr;
 	delete imguiManager_;
 	imguiManager_ = nullptr;
+	delete physicsSystem_;
+	physicsSystem_ = nullptr;
 
 	// COMの終了処理
 	CoUninitialize();
@@ -313,6 +332,11 @@ void Engine::Finalize()
 uint32_t Engine::LoadTexture(const std::string& filePath)
 {
 	return dxManager_->GetResourceManager()->GetTextureManager()->LoadTexture(filePath);
+}
+
+uint32_t Engine::LoadTextureArray(const std::vector<std::string>& filePaths)
+{
+	return dxManager_->GetResourceManager()->GetTextureManager()->LoadTexture2DArray(filePaths);
 }
 
 uint32_t Engine::LoadModel(const std::string& directoryPath, const std::string& filename)
@@ -461,22 +485,27 @@ void Engine::ToggleLightMode(const LightMode mode)
 // 入力
 Vector2 Engine::GetMousePosition()
 {
-	return inputManager_->GetMouseController()->GetMousePosition();
+	return inputManager_->GetMouseController()->GetPosition();
+}
+
+Vector2 Engine::GetMousePositionDelta()
+{
+	return inputManager_->GetMouseController()->GetRawDelta();
 }
 
 Vector3 Engine::GetMouseWorldPosition()
 {
-	return inputManager_->GetMouseController()->GetMouseWorldPosition();
+	return inputManager_->GetMouseController()->GetWorldPosition();
 }
 
 Ray Engine::GetMouseRay()
 {
-	return inputManager_->GetMouseController()->GetMouseRay();
+	return inputManager_->GetMouseController()->GetRay();
 }
 
-uint32_t Engine::GetMouseWheel()
+int32_t Engine::GetMouseWheel()
 {
-	return inputManager_->GetMouseController()->wheelDelta_;
+	return inputManager_->GetMouseController()->GetWheelDelta();
 }
 
 bool Engine::IsMouseHeld(int i)
@@ -509,6 +538,10 @@ void Engine::SetMouseCursorVisible(bool visible)
 	inputManager_->GetMouseController()->ShowCursor(visible);
 }
 
+void Engine::SetMouseSensitivity(float sensitivity)
+{
+	inputManager_->GetMouseController()->SetSensitivity(sensitivity);
+}
 
 bool Engine::IsKeyHeld(BYTE key)
 {
@@ -566,7 +599,7 @@ bool Engine::IsCameraShaking()
 	return cameraManager_->IsShaking();
 }
 
-void Engine::SetCameraMode(CameraMode mode)
+void Engine::SetCameraMode(CameraMode_ORBIT_FPS mode)
 {
 	cameraManager_->SetCameraMode(mode); 
 }
@@ -579,6 +612,62 @@ void Engine::ToggleCamera()
 void Engine::StopCameraShake()
 {
 	cameraManager_->StopShake();
+}
+
+void Engine::SetEnableCameraControl(bool enable)
+{
+	cameraManager_->SetEnableControl(enable);
+}
+
+
+// 時間制御
+float Engine::GetDeltaTime()
+{
+	float dt = dxManager_->GetFixFPS()->GetDeltaTime();
+
+	// alt-tab / ウィンドウドラッグ等で巨大dtが出るのを防ぐ
+	constexpr float kMaxDt = 0.1f; // 100ms
+	if (dt < 0.0f) dt = 0.0f;
+	if (dt > kMaxDt) dt = kMaxDt;
+
+	return dt;
+}
+
+uint32_t Engine::GetElapsedTime()
+{
+	return dxManager_->GetFixFPS()->GetFrameCount();
+}
+
+float Engine::GetFrameRate()
+{
+	return dxManager_->GetFixFPS()->GetAverageFPS();
+}
+
+void Engine::SetTimeScale(float scale)
+{
+	dxManager_->GetFixFPS()->SetTimeScale(scale);
+}
+
+
+// 物理制御
+void Engine::SetIWorldCollider(IWorldCollider* world)
+{
+	physicsSystem_->SetIWorldCollider(world);
+}
+
+void Engine::RegisterDynamic(RenderData_Model* model)
+{
+	physicsSystem_->RegisterDynamic(model);
+}
+
+void Engine::UnregisterDynamic(RenderData_Model* model)
+{
+	physicsSystem_->UnregisterDynamic(model);
+}
+
+void Engine::ClearDynamicAll()
+{
+	physicsSystem_->ClearDynamics();
 }
 
 // ウィンドウ操作
@@ -599,12 +688,12 @@ void Engine::ToggleFullscreen()
 // CreateLocalAABBでつくったAABBに座標を適応させる（当たり判定の毎フレーム更新用）
 std::vector<AABB>  Engine::CreateAABB(RenderData_Model* data)
 {
-	if (data->model < 0 || data->model >= (int)dxManager_->GetResourceManager()->GetModelManager()->GetModelCount())
+	if (data->GetModel() < 0 || data->GetModel() >= (int)dxManager_->GetResourceManager()->GetModelManager()->GetModelCount())
 	{
 		return {};
 	}
 	Matrix4x4 worldMatrix = data->GetWorldMatrix();
-	Object3D& obj = dxManager_->GetResourceManager()->GetModelManager()->GetModelList()[data->model];
+	Object3D& obj = dxManager_->GetResourceManager()->GetModelManager()->GetModelList()[data->GetModel()];
 	std::vector<AABB> result;
 
 	for (const auto& localAABB : obj.aabb)
@@ -676,7 +765,17 @@ Microsoft::WRL::ComPtr<ID3D12Resource> Engine::CreateBufferResource(size_t sizeI
 		IID_PPV_ARGS(&pResource) // ID3D12Resourceポインタを取得
 	);
 
-	assert(SUCCEEDED(hr));
+
+	if (FAILED(hr) || !pResource)
+	{
+		const HRESULT removed = dxManager_->GetDevice()->GetDeviceRemovedReason();
+		Log("CreateCommittedResource failed. size=%zu hr=0x%08X removed=0x%08X",
+			sizeInBytes,
+			static_cast<unsigned>(hr),
+			static_cast<unsigned>(removed));
+		return nullptr;
+	}
+
 	pResource->SetName(L"CreateBufferResource()");
 
 	return pResource;

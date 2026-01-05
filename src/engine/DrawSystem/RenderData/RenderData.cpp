@@ -95,7 +95,6 @@ void RenderData_Model::LookAtFront(float roll)
 void RenderData_Model::Draw()
 {
 	Engine::Instance().AddModelDrawList(this);
-	Update1();
 }
 
 void RenderData_Model::DrawAABB()
@@ -291,13 +290,17 @@ void RenderData_Model::DrawImGui()
 // 全オブジェクトのSRT更新,それに伴うワールド行列更新
 void RenderData_Model::Update1()
 {
+	// デルタタイム取得
+	float deltaTime = Engine::Instance().GetDeltaTime();
+	deltaTime *= 60.0f; // 60FPS基準に変換
+
 	// S/R/Tの更新
-	this->translate.velocity += this->translate.acceleration;
-	this->translate.value += this->translate.velocity;
-	this->rotate.velocity += this->rotate.acceleration;
-	this->rotate.value += this->rotate.velocity;
-	this->scale.velocity += this->scale.acceleration;
-	this->scale.value += this->scale.velocity;
+	this->translate.velocity += this->translate.acceleration * deltaTime;
+	this->translate.value += this->translate.velocity * deltaTime;
+	this->rotate.velocity += this->rotate.acceleration * deltaTime;
+	this->rotate.value += this->rotate.velocity * deltaTime;
+	this->scale.velocity += this->scale.acceleration * deltaTime;
+	this->scale.value += this->scale.velocity * deltaTime;
 
 	// 今フレームでS/R/Tに変化があったか
 	this->movedThisFrame =
@@ -499,6 +502,124 @@ void RenderData_Model::Update5()
 
 #pragma endregion
 
+}
+
+
+
+// acceleration→velocity の積分のみ
+void RenderData_Model::UpdateVelocitiesPhysics()
+{
+	// デルタタイム取得
+	float deltaTime = Engine::Instance().GetDeltaTime();
+	deltaTime *= 60.0f; // 60FPS基準に変換
+
+	this->translate.velocity += this->translate.acceleration * deltaTime;
+	this->rotate.velocity += this->rotate.acceleration * deltaTime;
+	this->scale.velocity += this->scale.acceleration * deltaTime;
+}
+
+// 位置に移動量(delta) を適用する（Sweep後の補正deltaを入れる想定）
+void RenderData_Model::ApplyTranslationDelta(const Vector3& delta)
+{
+	this->translate.value += delta;
+}
+
+// SRTにVelocity, Accelerationを反映させる
+void RenderData_Model::UpdateTransformsPhysics()
+{
+	// デルタタイム取得
+	float deltaTime = Engine::Instance().GetDeltaTime();
+	deltaTime *= 60.0f; // 60FPS基準に変換
+
+	// 1) 速度を更新
+	UpdateVelocitiesPhysics();
+
+	// 2) 位置に反映（旧仕様では velocity*dt をそのまま適用）
+	ApplyTranslationDelta(this->translate.velocity * deltaTime);
+
+	// 3) 回転・スケールは旧仕様通り
+	this->rotate.value += this->rotate.velocity * deltaTime;
+	this->scale.value += this->scale.velocity * deltaTime;
+}
+
+// 現状のSRTからローカルマトリックスを作成する
+void RenderData_Model::UpdateLocalMatrix()
+{
+	XMVECTOR scaleVec = XMVectorSet(this->scale.value.x, this->scale.value.y, this->scale.value.z, 0.0f);
+	XMVECTOR translateVec = XMVectorSet(this->translate.value.x, this->translate.value.y, this->translate.value.z, 0.0f);
+	XMVECTOR rotEuler = XMVectorSet(this->rotate.value.x, this->rotate.value.y, this->rotate.value.z, 0.0f);
+	// 1) スケール
+	XMMATRIX S = XMMatrixScalingFromVector(scaleVec);
+	// 2) 回転（オイラー→クォータニオン→行列）
+	XMVECTOR quatEuler = XMQuaternionRotationRollPitchYawFromVector(rotEuler);
+	XMMATRIX R = XMMatrixRotationQuaternion(quatEuler);
+	// 3) 平行移動
+	XMMATRIX T = XMMatrixTranslationFromVector(translateVec);
+	// 4) 合成: S → R → T
+	XMMATRIX world = S * R * T;
+	// 5) 結果を transforms.World に格納
+	XMFLOAT4X4 tmp;
+	DirectX::XMStoreFloat4x4(&tmp, world);
+	for (int i = 0; i < 4; ++i)
+		for (int j = 0; j < 4; ++j)
+			this->localWorldMatrix.m[i][j] = tmp.m[i][j];
+}
+
+// 現状のSRTからワールドマトリックスを作成する
+void RenderData_Model::UpdateWorldMatrix()
+{
+	// 階層を含めた最終ワールド行列を取得
+	this->worldMatrix = this->SetWorldMatrix();
+
+	// ワールド座標取得
+	this->worldPos = Vector3(
+		this->worldMatrix.m[3][0],
+		this->worldMatrix.m[3][1],
+		this->worldMatrix.m[3][2]
+	);
+}
+
+void RenderData_Model::UpdateAABB()
+{
+	this->aabbs = Engine::Instance().CreateAABB(this);
+}
+
+// 現状のAABBから描画範囲内判定を行う
+void RenderData_Model::UpdateInPicture()
+{
+	bool inFrustum = false;
+	for (const auto& aabb : this->aabbs)
+	{
+		if (Game::Camera::InCamera(aabb))
+		{
+			inFrustum = true;
+			break;
+		}
+	}
+	this->inPicture = inFrustum;
+}
+
+// 現状のSRTを前フレームSRTとして保存する
+void RenderData_Model::SavePreTransforms()
+{
+	this->preScale = this->scale;
+	this->preTranslate = this->translate;
+	this->preRotate = this->rotate;
+	this->preAABB = this->aabbs;
+}
+
+void RenderData_Model::SetModel(int32_t modelHandle)
+{
+	// モデルハンドルをセット
+	model = modelHandle;
+	// AABBを生成
+	aabbs = Engine::Instance().CreateAABB(this);
+}
+
+void RenderData_Model::SetTexture(int32_t textureHandle)
+{
+	// テクスチャハンドルをセット
+	texture = textureHandle;
 }
 
 //std::optional<CollisionInf> RenderData_Model::isCollisionAABBInf(RenderData_Model& target) const
@@ -1878,40 +1999,66 @@ RenderData_Block::RenderData_Block(BlockID id)
 	renderBlocks.push_back(this);
 	this->ID = int(renderBlocks.size());
 
-	this->instancingResource_ =
-		Engine::Instance().CreateBufferResource(
-			sizeof(Matrix4x4) * this->capacity
-		);
-	this->instancingResource_->Map(0, nullptr, reinterpret_cast<void**>(&this->instancingData_));
-	for (size_t i = 0; i < this->capacity; ++i)
-	{
-		this->instancingData_[i] = Matrix4x4::MakeIdentity4x4();
-	}
-
-	this->srvAllocation_ = Engine::Instance().GetDirectXManager()->GetDescriptorHeapManager()->GetSrvManager()->CreateSRVforStructuredBuffer(
-		this->instancingResource_.Get(),
+	// ワールド行列バッファの作成
+	this->worldMatrixResource_ = Engine::Instance().CreateBufferResource(sizeof(Matrix4x4) * this->capacity);
+	this->worldMatrixResource_->Map(0, nullptr, reinterpret_cast<void**>(&this->worldMatrixData_));
+	this->worldMatrixSrvAllocation_ = Engine::Instance().GetDirectXManager()->GetDescriptorHeapManager()->GetSrvManager()->CreateSRVforStructuredBuffer(
+		this->worldMatrixResource_.Get(),
 		this->capacity,
 		sizeof(Matrix4x4));
 
+	// 色バッファの作成
+	this->colorResource_ = Engine::Instance().CreateBufferResource(sizeof(Vector4) * this->capacity);
+	this->colorResource_->Map(0, nullptr, reinterpret_cast<void**>(&this->colorData_));
+	this->colorSrvAllocation_ = Engine::Instance().GetDirectXManager()->GetDescriptorHeapManager()->GetSrvManager()->CreateSRVforStructuredBuffer(
+		this->colorResource_.Get(),
+		this->capacity,
+		sizeof(Vector4));
+
+	// テクスチャインデックスバッファの作成
+	this->breakLayerResource_ = Engine::Instance().CreateBufferResource(sizeof(uint32_t) * this->capacity);
+	this->breakLayerResource_->Map(0, nullptr, reinterpret_cast<void**>(&this->breakLayerData_));
+	this->breakLayerSrvAllocation_ = Engine::Instance().GetDirectXManager()->GetDescriptorHeapManager()->GetSrvManager()->CreateSRVforStructuredBuffer(
+		this->breakLayerResource_.Get(),
+		this->capacity,
+		sizeof(uint32_t));
+
+	// データ初期化(多分いらない)
+	for (size_t i = 0; i < this->capacity; ++i)
+	{
+		// ワールド行列初期化
+		this->worldMatrixData_[i] = Matrix4x4::MakeIdentity4x4(); 
+
+		// 色初期化
+		this->colorData_[i] = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+
+		// テクスチャインデックス初期化
+		this->breakLayerData_[i] = 0;
+	}
 
 	this->scale_.resize(capacity);
 	this->rotate_.resize(capacity);
 	this->translate_.resize(capacity);
 	this->indexes_.resize(capacity);
-	this->colors_.resize(capacity);
 	this->isActive_.resize(capacity, false);
 
 	name = id;
 }
 RenderData_Block::~RenderData_Block()
-{}
+{
+	auto it = std::find(renderBlocks.begin(), renderBlocks.end(), this);
+	if (it != renderBlocks.end())
+	{
+		renderBlocks.erase(it);
+	}
+}
 
 void RenderData_Block::UpdateAllBlock()
 {
-	for (size_t ID = 0; ID < renderBlocks.size(); ++ID)
-	{
-		renderBlocks[ID]->Update();
-	}
+	//for (size_t ID = 0; ID < renderBlocks.size(); ++ID)
+	//{
+	//	renderBlocks[ID]->Update();
+	//}
 }
 
 void RenderData_Block::Update()
@@ -1924,136 +2071,96 @@ void RenderData_Block::Update()
 }
 
 // ブロックの追加
-void RenderData_Block::AddNewBlock(Vector3 position, Vector3int index)
+uint32_t RenderData_Block::AddNewBlock(Vector3 position, Vector3int index)
 {
+	uint32_t slot = currentDrawSum;
+
 	Log("BlockID:%s", EnumToString(name));
 	Log("index:%d,%d,%d", index.x, index.y, index.z);
-	Log("currentSum:%d", currentSum);
-	// 空いているインデックスを探す
-	if (currentSum >= capacity)
+	Log("currentSum:%d", currentDrawSum);
+
+	// 空きスロットがあればそれを使う
+	if (!freeSlots_.empty())
 	{
-		Log("キャパオーバー");
-		return;
+		slot = freeSlots_.back();
+		freeSlots_.pop_back();
 	}
-	if (!isActive_[currentSum])
+	// 空きスロットがなければ末尾に追加
+	else
 	{
-
-		// 拡縮量の初期化
-		scale_[currentSum].value = Vector3(1.0f, 1.0f, 1.0f);
-		scale_[currentSum].velocity = Vector3(0.0f, 0.0f, 0.0f);
-		scale_[currentSum].acceleration = Vector3(0.0f, 0.0f, 0.0f);
-		Log("scale 成功");
-
-		// 回転量の初期化
-		rotate_[currentSum].value = Vector3(0.0f, 0.0f, 0.0f);
-		rotate_[currentSum].velocity = Vector3(0.0f, 0.0f, 0.0f);
-		rotate_[currentSum].acceleration = Vector3(0.0f, 0.0f, 0.0f);
-		Log("rotate_ 成功");
-
-		// 座標の初期化
-		translate_[currentSum].value = position;
-		translate_[currentSum].velocity = Vector3(0.0f, 0.0f, 0.0f);
-		translate_[currentSum].acceleration = Vector3(0.0f, 0.0f, 0.0f);
-		Log("translate_ 成功");
-
-		// ワールド行列の更新
-		instancingData_[currentSum]	= Matrix4x4::MakeAffineMatrix(
-				scale_[currentSum].value,
-				rotate_[currentSum].value,
-				translate_[currentSum].value);
-		Log("UpdateWorldMatrix 成功");
-
-		// インデックスの保存
-		indexes_[currentSum] = index;
-		Log("indexes_ 成功");
-
-		// アクティブ化
-		isActive_[currentSum] = true;
-		Log("isActive_ 成功");
-
-
-		currentSum++;
-		Log("currentSum++ 成功");
+		if (currentDrawSum >= capacity)
+		{
+			Log("キャパオーバー(あり得ないためこれが出る時は多分致命的なミスがある)");
+			return UINT32_MAX;
+		}
+		slot = currentDrawSum;
+		currentDrawSum++;
 	}
+	
+	// アクティブ化
+	isActive_[slot] = true;
+
+	// 拡縮量の初期化
+	scale_[slot].value = Vector3(1.0f, 1.0f, 1.0f);
+	scale_[slot].velocity = Vector3(0.0f, 0.0f, 0.0f);
+	scale_[slot].acceleration = Vector3(0.0f, 0.0f, 0.0f);
+
+	// 回転量の初期化
+	rotate_[slot].value = Vector3(0.0f, 0.0f, 0.0f);
+	rotate_[slot].velocity = Vector3(0.0f, 0.0f, 0.0f);
+	rotate_[slot].acceleration = Vector3(0.0f, 0.0f, 0.0f);
+
+	// 座標の初期化
+	translate_[slot].value = position;
+	translate_[slot].velocity = Vector3(0.0f, 0.0f, 0.0f);
+	translate_[slot].acceleration = Vector3(0.0f, 0.0f, 0.0f);
+
+	// ワールド行列の更新
+	worldMatrixData_[slot] = Matrix4x4::MakeAffineMatrix(
+		scale_[slot].value,
+		rotate_[slot].value,
+		translate_[slot].value);
+
+	// 色の初期化
+	colorData_[slot] = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+
+	// 破壊レイヤーの初期値
+	breakLayerData_[slot] = 0;
+
+	// インデックスの保存
+	indexes_[slot] = index;
+
+	// 追加したスロットを返す
+	return slot;
 }
 
+// ブロックの削除
 void RenderData_Block::RemoveBlock(Vector3int index)
 {
 	for (size_t i = 0; i < capacity; ++i)
 	{
 		if (isActive_[i] && indexes_[i] == index)
 		{
+			// 非アクティブ化
 			isActive_[i] = false;
+
+			// 見えない場所へ飛ばす（穴を描かせない）
+			worldMatrixData_[i] = Matrix4x4::MakeTranslateMatrix(Vector3(0.0f, -1000000.0f, 0.0f));
+
+			// 透明化
+			colorData_[i] = Vector4(0.0f, 0.0f, 0.0f, 0.0f);
+
+			// 破壊レイヤー初期化
+			breakLayerData_[i] = 0;
+
+			// 空きスロットとして設定
+			freeSlots_.push_back(static_cast<uint32_t>(i));
+
 			return;
 		}
 	}
 }
 
-// ワールド行列の更新
-void RenderData_Block::UpdateWorldMatrix()
-{
-	for (size_t i = 0; i < currentSum; ++i)
-	{
-		if (isActive_[i])
-		{
-			instancingData_[i]
-				= Matrix4x4::MakeAffineMatrix(
-					scale_[i].value,
-					rotate_[i].value,
-					translate_[i].value
-				);
-		}
-	}
-}
-
-
-// SRTの更新
-void RenderData_Block::UpdateTransforms()
-{
-	for (size_t i = 0; i < currentSum; ++i)
-	{
-		// スケールの更新
-		scale_[i].velocity += scale_[i].acceleration;
-		scale_[i].value += scale_[i].velocity;
-		// 回転の更新
-		rotate_[i].velocity += rotate_[i].acceleration;
-		rotate_[i].value += rotate_[i].velocity;
-		// 位置の更新
-		translate_[i].velocity += translate_[i].acceleration;
-		translate_[i].value += translate_[i].velocity;
-	}
-}
-
-// 非アクティブなブロックをリストから削除
-void RenderData_Block::RemoveInactiveBlocks()
-{
-	size_t writeIndex = 0;
-
-	for (size_t readIndex = 0; readIndex < capacity; ++readIndex)
-	{
-		if (isActive_[readIndex])
-		{
-			if (writeIndex != readIndex)
-			{
-				// アクティブなパーティクルを前方に詰める
-				scale_[writeIndex] = scale_[readIndex];
-				rotate_[writeIndex] = rotate_[readIndex];
-				translate_[writeIndex] = translate_[readIndex];
-				isActive_[writeIndex] = isActive_[readIndex];
-				// ワールド行列・WVP行列も詰める
-				instancingData_[writeIndex] = instancingData_[readIndex];
-			}
-			writeIndex++;
-		}
-	}
-	for (size_t i = writeIndex; i < capacity; ++i)
-	{
-		isActive_[i] = false;
-	}
-
-
-	currentSum = uint32_t(writeIndex);
-}
 
 void RenderData_Block::Draw()
 {
@@ -2062,18 +2169,6 @@ void RenderData_Block::Draw()
 
 void RenderData_Block::DrawImGui()
 {
-	//for (size_t i = 0; i < currentSum; ++i)
-	//{
-	//	std::string num = std::to_string(this->ID) + "." + std::to_string(i);
-	//	if (ImGui::TreeNode(("----------particle" + num + "-----------").c_str()))
-	//	{
-	//		ImGui::DragFloat3((num + "scale").c_str(), &transforms_[i].scale.x, 0.01f);
-	//		ImGui::DragFloat3((num + "rotate").c_str(), &transforms_[i].rotate.x, 0.01f);
-	//		ImGui::DragFloat3((num + "translate").c_str(), &transforms_[i].translate.x, 1.0f);
-	//		ImGui::TreePop();
-	//	}
-	//}
-
 	std::string str = EnumToString(this->name);
 
 	std::string num = ":" + std::to_string(this->ID);
@@ -2129,12 +2224,12 @@ void RenderData_Block::DrawImGui()
 	}
 	if (ImGui::TreeNode("----------color----------------"))
 	{
-		Vector4 preColor = ConvertUintToVector4(this->color);
-		float floatColor[4] = { preColor.x, preColor.y, preColor.z, preColor.w };
-		ImGui::ColorEdit4((num + "color").c_str(), floatColor, 1);
-		Vector4 vector4Color = { floatColor[0], floatColor[1], floatColor[2], floatColor[3] };
-		this->color = ConvertVector4ToUint(vector4Color);
-		ImGui::TreePop();
+		//Vector4 preColor = ConvertUintToVector4(this->color);
+		//float floatColor[4] = { preColor.x, preColor.y, preColor.z, preColor.w };
+		//ImGui::ColorEdit4((num + "color").c_str(), floatColor, 1);
+		//Vector4 vector4Color = { floatColor[0], floatColor[1], floatColor[2], floatColor[3] };
+		//this->color = ConvertVector4ToUint(vector4Color);
+		//ImGui::TreePop();
 	}
 	ImGui::SetNextItemOpen(true, ImGuiCond_Once);
 

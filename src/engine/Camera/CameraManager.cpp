@@ -6,12 +6,12 @@ CameraManager::CameraManager()
 {
 	Camera ReleaseCamera;
 	ReleaseCamera.name_ = "ReleaseCamera";
-	ReleaseCamera.enableControl_ = false;
+	ReleaseCamera.SetEnableControl(false);
 	camera_.push_back(ReleaseCamera);
 
 	Camera DebugCamera;
 	DebugCamera.name_ = "DebugCamera";
-	DebugCamera.enableControl_ = true;
+	DebugCamera.SetEnableControl(true);
 	camera_.push_back(DebugCamera);
 
 
@@ -25,7 +25,7 @@ void CameraManager::AddCamera(const std::string name, bool enableControl)
 {
 	Camera def;
 	def.name_ = name;
-	def.enableControl_ = enableControl;
+	def.SetEnableControl(enableControl);
 	camera_.push_back(def);
 }
 
@@ -67,6 +67,10 @@ void CameraManager::SetDistanceTarget(float Center, int spendFrame, EaseType eas
 	camera_[0].SetDistanceTarget(Center, spendFrame, easetype);
 }
 
+void CameraManager::SetEnableControl(bool enable)
+{
+	camera_[currentCameraID_].SetEnableControl(enable);
+}
 
 void CameraManager::StartShake(float intensity, float duration, float frequency)
 {
@@ -162,7 +166,7 @@ float CameraManager::GetCurrentDistance() const
 	return camera_[currentCameraID_].distance_;
 }
 
-void CameraManager::SetCameraMode(CameraMode mode)
+void CameraManager::SetCameraMode(CameraMode_ORBIT_FPS mode)
 {
 	camera_[currentCameraID_].SetCameraMode(mode);
 }

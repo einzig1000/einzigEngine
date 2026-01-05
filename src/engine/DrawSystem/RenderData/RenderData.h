@@ -20,6 +20,33 @@ public:
     // 全オブジェクトの描画範囲内判定,前フレーム情報保存
     void Update5();
 
+	// Update〇では分かり難いので、以下で新規命名
+
+	// SRTにVelocity, Accelerationを反映させる
+	void UpdateTransformsPhysics();
+    // ↳acceleration→velocity の積分だけ行う
+    void UpdateVelocitiesPhysics();
+    // ↳位置(translate.value) に移動量(delta)を適用する
+    void ApplyTranslationDelta(const Vector3& delta);
+	// 現状のSRTからローカルマトリックスを作成する
+	void UpdateLocalMatrix();
+	// 現状のSRTからワールドマトリックスを作成する
+	void UpdateWorldMatrix();
+	// 現状のSRTからAABBを作成する
+	void UpdateAABB();
+	// 現状のAABBから描画範囲内判定を行う
+	void UpdateInPicture();
+	// 現状のSRTを前フレームSRTとして保存する
+	void SavePreTransforms();
+
+    // モデル設定
+	void SetModel(int32_t modelHandle);
+	int32_t GetModel() const { return model; }
+	// テクスチャ
+	void SetTexture(int32_t textureHandle);
+	int32_t GetTexture() const { return texture; }
+
+
     std::optional<std::string> name;
     VectorDynamics scale = { Vector3(1.0f,1.0f,1.0f), Vector3(0.0f,0.0f,0.0f), Vector3(0.0f,0.0f,0.0f) };
     VectorDynamics rotate = { Vector3(0.0f,0.0f,0.0f), Vector3(0.0f,0.0f,0.0f), Vector3(0.0f,0.0f,0.0f) };
@@ -32,11 +59,6 @@ public:
     Transforms uvTransform;
     // 色
     Vector4 color = { 0xFF, 0xFF, 0xFF, 0xFF };
-    // 3Dモデル
-    int32_t model = -1;
-    // テクスチャ
-    int32_t texture = -1;
-	int32_t additionalTexture = -1;
     // 描画オプション
     DrawOptions options;
     // 衝突判定用AABB
@@ -78,6 +100,10 @@ public:
     static std::vector<RenderData_Model*> renderModels;
 
 private:
+    // 3Dモデル
+    int32_t model = -1;
+    // テクスチャ
+    int32_t texture = -1;
     // 今フレームでS/R/Tに変化があったか
     bool movedThisFrame = true;
 
@@ -140,7 +166,7 @@ public:
     // 色
     uint32_t color = 0xFFFFFFFF;
     // テクスチャ
-    uint32_t texture = 0;
+    uint32_t texture = -1;
     // 描画オプション
     DrawOptions options;
     // 画像切り取り左上
@@ -335,7 +361,7 @@ public:
 	std::vector<VectorDynamics> scale_;
 	std::vector<VectorDynamics> rotate_;
 	std::vector<VectorDynamics> translate_;
-    std::vector<uint32_t> lifeCount_;
+    std::vector<int32_t> lifeCount_;
 	std::vector<bool> isActive_;
 
 private:
@@ -379,8 +405,8 @@ class RenderData_Block
 {
 public:
 
-    // 新しいブロックを作るときはAddNewBlock()
-	// ブロックを壊すときはRemoveBlockFromList()
+    /// 新しいブロックを作るときはAddNewBlock()
+	/// ブロックを壊すときはRemoveBlockFromList() <- 未完成
 
     RenderData_Block(BlockID id);
     ~RenderData_Block();
@@ -388,12 +414,10 @@ public:
     void Update();
 
 	//// リストに新たなブロックを追加
-	void AddNewBlock(Vector3 position, Vector3int index);
+	uint32_t AddNewBlock(Vector3 position, Vector3int index);
 	//// リストからブロックを削除
 	void RemoveBlock(Vector3int index);
 
-    // 非アクティブなブロックの削除
-	void RemoveInactiveBlocks();
 
     // ID
     BlockID name;
@@ -405,48 +429,42 @@ public:
     /// リソース
     uint32_t model = 0;
     uint32_t texture = 0;
-	uint32_t additionalTexture = 0;
+	uint32_t breakTexture = 0;
 
-    /// オプション
-    BlendMode blendMode = BlendMode::kBlendModeAdd;
+	uint32_t capacity = CHUNK_X * CHUNK_Y * CHUNK_Z;    // 最大ブロック数
+	uint32_t currentSum = 0;        // チャンク内に存在するブロック数
+	uint32_t currentDrawSum = 0;    // チャンク内の描画されているブロック数
 
-    /// マテリアル
-    uint32_t color = 0xFFFFFFFF;
-    Matrix4x4 uvTransform;
 
-    // 破壊ステージ
-	uint32_t breakStage = 0;
+	// シェーダーに渡すブロックごとのデータ
+    Microsoft::WRL::ComPtr<ID3D12Resource> worldMatrixResource_;
+    Matrix4x4* worldMatrixData_ = nullptr;
+    SRVAllocation worldMatrixSrvAllocation_;
 
-    /// 現在存在するブロック数
-    uint32_t currentSum = 0;
+    Microsoft::WRL::ComPtr<ID3D12Resource> colorResource_;
+    Vector4* colorData_ = nullptr;
+    SRVAllocation colorSrvAllocation_;
 
-    uint32_t capacity = 4096;
-    Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource_;
-    Matrix4x4* instancingData_ = nullptr;
-    SRVAllocation srvAllocation_;
+    Microsoft::WRL::ComPtr<ID3D12Resource> breakLayerResource_;
+    uint32_t* breakLayerData_ = nullptr;
+    SRVAllocation breakLayerSrvAllocation_;
 
+	// シェーダーに渡さなくてもいいけどブロックごとに管理したいデータ
     std::vector<VectorDynamics> scale_;
     std::vector<VectorDynamics> rotate_;
     std::vector<VectorDynamics> translate_;
 	std::vector<Vector3int> indexes_;
-	std::vector<uint32_t> colors_;
-    std::vector<bool> isActive_;
+	std::vector<bool> isActive_;    // 描画されてるかとか関係なく、そのスロットが使われているかどうか
 
 private:
+	// 空きスロット管理
+    std::vector<uint32_t> freeSlots_;
 
+    // なににつかってるか忘れた
     int ID = 0;
-
-
-    //// ワールド行列・WVP行列の更新
-    void UpdateWorldMatrix();
-    //// 各パーティクルの変換行列更新
-    void UpdateTransforms();
 
     //// 死亡判定
     void CheckLife();
-
-    // ロードした結果
-    bool loadResult = false;
 
 	static std::vector<RenderData_Block*> renderBlocks;
 };

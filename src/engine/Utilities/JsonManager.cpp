@@ -5,6 +5,9 @@
 #include <iostream>
 #include <string>
 #include <filesystem>
+#include "MapManager/Chunk/Chunk.h"
+#include "MapManager/MapManager.h"
+#include "MapManager/Chunk/Block/Block.h"
 
 
 
@@ -397,8 +400,8 @@ bool JsonManager::SaveToJson(RenderData_Model& data, const std::string& path)
         json j;
         if (data.name.has_value()) j["name"] = *data.name;
         j["filePath"] = data.filePath;
-        j["texture"] = data.texture;
-        j["model"] = data.model;
+		j["texture"] = data.GetTexture();
+		j["model"] = data.GetModel();
 
 
         // scale
@@ -482,13 +485,159 @@ bool JsonManager::LoadFromJson(RenderData_Model& m, const std::string& path)
     return false;
 }
 
+bool JsonManager::SaveToJson(MapManager& data, const std::string& path)
+{
+    try
+    {
+        json root;
+        json mapData = json::array();
+
+        // 全チャンクをループ
+        for (const auto& [chunkPos, chunkPtr] : data.chunks)
+        {
+            Chunk& chunk = *chunkPtr;
+
+            // チャンクキー "[x][y]"
+            std::string chunkKey = "[" + std::to_string(chunk.chunkPos.x) + "][" + std::to_string(chunk.chunkPos.y) + "]";
+
+            json chunkEntry;          // { "[5][5]": [...] }
+            json blockList = json::array();  // BlockID1, BlockID2, ...
+
+            // BlockID ごとにまとめる
+            for (int32_t i = 1; i < int32_t(BlockID::MAX); ++i)
+            {
+                BlockID id = BlockID(i);
+                RenderData_Block* blockData = chunk.blockData_[id].get();
+                if (!blockData) continue;
+               
+                json blockEntry;  // { "BlockID1": [ {...}, {...} ] }
+                std::string blockKey = "BlockID" + std::to_string(i);
+
+                json positions = json::array();
+
+                for (const auto& pos : data.chunks[chunk.chunkPos]->blockPositions[id])
+                {
+                    json posObj;
+                    posObj["position"] = ToJson(pos);
+					positions.push_back(posObj);
+                }
+
+
+                //for (uint32_t idx = 0; idx < blockData->capacity; ++idx)
+                //{
+                //    if (blockData->isActive_[idx])
+                //    {
+                //        json posObj;
+                //        posObj["position"] = ToJson(blockData->indexes_[idx]);
+                //        positions.push_back(posObj);
+                //    }
+                //}
+
+                blockEntry[blockKey] = positions;
+                blockList.push_back(blockEntry);
+            }
+
+            chunkEntry[chunkKey] = blockList;
+            mapData.push_back(chunkEntry);
+        }
+
+        root["mapData"] = mapData;
+
+        // 保存
+        std::ofstream ofs(path);
+        ofs << root.dump(2);
+        return true;
+    }
+    catch (const std::exception& ex)
+    {
+        std::cerr << "SaveWholeMap exception: " << ex.what() << "\n";
+        return false;
+    }
+}
+
+bool JsonManager::LoadFromJson(MapManager& data, const std::string& path)
+{
+    try
+    {
+        std::ifstream ifs(path);
+        if (!ifs)
+        {
+            std::cerr << "Failed to open map file: " << path << "\n";
+            return false;
+        }
+
+        json root;
+        ifs >> root;
+
+        if (!root.contains("mapData"))
+        {
+            std::cerr << "Invalid map file: missing mapData\n";
+            return false;
+        }
+
+        for (const auto& chunkEntry : root["mapData"])
+        {
+            // chunkEntry は { "[x][y]": [...] } の形
+            for (auto it = chunkEntry.begin(); it != chunkEntry.end(); ++it)
+            {
+                std::string chunkKey = it.key(); // "[5][5]" など
+
+                // チャンク座標をパース
+				Vector2int chunkPos;
+				// "[5][5]" -> 5, 5
+				size_t firstBracketClose = chunkKey.find(']');
+				size_t secondBracketOpen = chunkKey.find('[', firstBracketClose);
+				chunkPos.x = std::stoi(chunkKey.substr(1, firstBracketClose - 1));
+				chunkPos.y = std::stoi(chunkKey.substr(secondBracketOpen + 1, chunkKey.find(']', secondBracketOpen) - secondBracketOpen - 1));
+
+				// チャンクを作成（まだブロックのインスタンスは作成しない）
+                Chunk* chunk = new Chunk();
+				chunk->loadResult = true;   // 読み込みフラグ
+				chunk->chunkPos = chunkPos; // チャンク座標設定
+
+                // BlockID の配列を取得
+                const json& blockList = it.value();
+
+                for (const auto& blockEntry : blockList)
+                {
+                    // blockEntry は { "BlockID1": [...] } の形
+                    for (auto bit = blockEntry.begin(); bit != blockEntry.end(); ++bit)
+                    {
+                        std::string blockKey = bit.key(); // "BlockID1"
+                        int blockID = std::stoi(blockKey.substr(7)); // "1" を取り出す
+
+                        const json& positions = bit.value();
+
+                        for (const auto& posObj : positions)
+                        {
+							Vector3int pos = ToVector3int(posObj["position"]);  // ブロック位置獲得
+
+							chunk->blockPositions[BlockID(blockID)].push_back(pos);
+                        }
+                    }
+                }
+
+				data.chunks[chunkPos] = chunk;
+            }
+        }
+
+
+        return true;
+    }
+    catch (const std::exception& ex)
+    {
+        std::cerr << "LoadWholeMap exception: " << ex.what() << "\n";
+        return false;
+    }
+
+}
+
 
 
 bool JsonManager::SaveToJson(const std::string& path, const std::string key, const int& data)
 {
     return false;
 }
-
 bool JsonManager::SaveToJson(const std::string& path, const std::string key, const float& data)
 {
     try
@@ -604,32 +753,26 @@ bool JsonManager::SaveToJson(const std::string& path, const std::string key, con
 
     return false;
 }
-
 bool JsonManager::SaveToJson(const std::string& path, const std::string key, const std::string& data)
 {
     return false;
 }
-
 bool JsonManager::SaveToJson(const std::string& path, const std::string key, const Vector2int& data)
 {
     return false;
 }
-
 bool JsonManager::SaveToJson(const std::string& path, const std::string key, const Vector2& data)
 {
     return false;
 }
-
 bool JsonManager::SaveToJson(const std::string& path, const std::string key, const Vector3& data)
 {
     return false;
 }
-
 bool JsonManager::SaveToJson(const std::string& path, const std::string key, const Vector4& data)
 {
     return false;
 }
-
 bool JsonManager::SaveToJson(const std::string& path, const std::string key, const AABB& data)
 {
     return false;
@@ -658,6 +801,10 @@ json JsonManager::ToJson(const Vector2& data)
 json JsonManager::ToJson(const Vector3& data)
 {
     return json::array({ data.x, data.y, data.z });
+}
+json JsonManager::ToJson(const Vector3int& data)
+{
+	return json::array({ data.x, data.y, data.z });
 }
 json JsonManager::ToJson(const Vector4& data)
 {
@@ -688,7 +835,6 @@ json JsonManager::ToJson(const Matrix4x4& data)
         });
 }
 
-
 int JsonManager::ToInt(const json& j)
 {
 	return j.get<int>();
@@ -715,6 +861,11 @@ Vector3 JsonManager::ToVector3(const json& j)
 {
     if (!j.is_array() || j.size() < 3) return Vector3{};
     return Vector3{ j[0].get<float>(), j[1].get<float>(), j[2].get<float>() };
+}
+Vector3int JsonManager::ToVector3int(const json& j)
+{
+    if (!j.is_array() || j.size() < 3) return Vector3int{};
+	return Vector3int{ j[0].get<int>(), j[1].get<int>(), j[2].get<int>() };
 }
 Vector4 JsonManager::ToVector4(const json& j)
 {

@@ -5,6 +5,7 @@
 #include <cmath>
 #include <cstdint>
 #include <numbers>
+#include <array>
 
 // Windows/DirectX
 #include <initguid.h>
@@ -25,39 +26,147 @@
 #define WIDTH 1280
 #define HEIGHT 720
 #define eps 1e-6f
-#define CHUNK_X 16
-#define CHUNK_Y 16
-#define CHUNK_Z 16
+#define CHUNK_X 8
+#define CHUNK_Y 24
+#define CHUNK_Z 8
 #define BLOCK_SIZE 1.0f
 #define PLAYER_SPEED 0.1f
 
-#define GRAVITY -0.005f
+#define GRAVITY -0.0061f
+
+enum class CharactorID
+{
+    Player,
+	Zombie,
+    
+    MAX,
+};
+
+// 全てのアイテムID
+enum class ItemID
+{
+    None,
+
+	木の剣,
+	石の剣,
+	鉄の剣,
+	ダイヤの剣,
+
+	木のツルハシ,
+	石のツルハシ,
+	鉄のツルハシ,
+	ダイヤのツルハシ,
+
+	木の斧,
+	石の斧,
+	鉄の斧,
+	ダイヤの斧,
+
+	鉄の頭,
+	鉄の胴,
+	鉄の脚,
+	鉄の靴,
+
+	ダイヤの頭,
+	ダイヤの胴,
+	ダイヤの脚,
+	ダイヤの靴,
+
+	作業台ブロック,
+	棒,            
+
+	ガラスブロック,
+    葉ブロック,
+    原木ブロック,
+    木材ブロック,    // *
+    芝ブロック,
+    土ブロック,
+	石ブロック,
+	鉄ブロック,      // 鉱石状態
+	金ブロック,      // 鉱石状態
+	ダイヤブロック,  // 鉱石状態
+	岩盤ブロック,
+
+	鉄インゴット,
+	金インゴット,
+	ダイヤモンド,
+
+    ビーコン,
+
+    MAX,
+};
+
+enum class ItemJunle
+{
+    None,
+	// 防具
+	Head,
+    Body,
+	Leg,
+	Boots,
+	// ツール
+	Axe,
+    Pickel,
+    Sword,
+	// 木材系(オノで採掘速度アップ)
+	Wood,
+	// 鉱石系(ツルハシで採掘速度アップ)
+	Stone,
+	// 土系(シャベルで採掘速度アップ)
+	Dirt,
+    // 素材
+	Material,
+    MAX,
+};
 
 
-
+// 全てのブロックID
 enum class BlockID
 {
     Air,
     Stone,	// 石
+    Iron,   // 鉄
+    Gold,	// 金
+    Diamond,// ダイヤ
+    Bedrock,// 岩盤
     Glass,	// ガラス
-    Dirt,	// 草なし土
     Lawn,	// 草付き土
-    Wood,	// 木材
+	Log,    // 原木
+	Planks, // 木材
+    Dirt,	// 草なし土
+ 
     Leaf,	// 葉っぱ
 
+	craftTable, // 作業台
 
 
     MAX,
 };
 std::string EnumToString(BlockID id);
 
+// idからドロップするアイテムIDを取得
+ItemID BlockIdToDropItemId(BlockID id);
+// BlockID -> ItemIDの純粋変換
+ItemID BlockIDToItemID(BlockID id);
+// ItemID -> BlockIDの純粋変換
+BlockID ItemIDToBlockID(ItemID id);
+// アイテムIDからジャンルを取得
+ItemJunle GetItemJunle(ItemID id);
 
+// ブロックごとの情報
 struct Blockinfo
 {
-    BlockID type;
-    int32_t durability;
+	// ブロックID
+	BlockID type = BlockID::Air;
+    // アイテムジャンル
+	ItemJunle junle = ItemJunle::None;
+    // 右クリックされたとき特殊な動作をするかどうか(作業台は右クリックでUIを開く)
+	bool isExtraAction = false;
+	// 耐久値
+	float durability = 1.0f;
+	// 透過ブロックかどうか
+	bool isTransparent = false;
 };
-
 
 // ゲームのフェーズ
 enum class PHASE
@@ -70,6 +179,22 @@ enum class PHASE
     Phase_GameClear,
 };
 std::string EnumToString(PHASE e);
+
+// UIモード
+enum class UIMode
+{
+	None,
+    // 非表示
+	Hidden,
+	// プレイ中　(手持ちアイテムのみ表示)
+	Playing,
+	// インベントリ表示中
+	Inventory,
+	// クラフト画面
+	Crafting,
+    // ポーズ画面
+	Pause
+};
 
 #pragma region 演算
 
@@ -146,6 +271,16 @@ struct Vector2int
             return y < rhs.y;
         }
         return x < rhs.x;
+    }
+};
+
+struct Vector2intHash
+{
+    std::size_t operator()(const Vector2int& v) const noexcept
+    {
+        uint64_t x = static_cast<uint64_t>(v.x);
+        uint64_t y = static_cast<uint64_t>(v.y);
+        return (x * 73856093) ^ (y * 19349663);
     }
 };
 
@@ -617,11 +752,19 @@ struct AABB
     Vector3 min;
     Vector3 max;
 
+    // 中心座標
     Vector3 center()const;
+	// 移動　※自身が変化する※
+	void Move(const Vector3& move);
     // min,maxが入れ替わる可能性があれば毎フレーム飛び出したい
     void Fix();
-
+	// 衝突している時は深度ベクトルを返す. 衝突していない時は(0,0,0)を返す
     Vector3 GetCollisionDepth(const AABB& other)const;
+
+    AABB operator+(const Vector3& rhs) const
+    {
+        return AABB{ min + rhs, max + rhs };
+	}
 };
 
 // 線分
@@ -630,7 +773,7 @@ struct Line
     // 始点
     Vector3 origin;
     // 終点
-    Vector3 diff;
+    Vector3 end;
 };
 
 // 半直線
@@ -1078,13 +1221,23 @@ struct ParticleMonoInfGPU
 
 #pragma region カメラ構造体
 
+enum class CameraMode_FirstPerson_ThirdPerson
+{
+    // 一人称視点
+    FirstPerson,
+    // 三人称後方視点
+    ThirdPerson_Back,
+    // 三人称前方視点
+    ThirdPerson_Front,
+};
 
-enum class CameraMode
+
+enum class CameraMode_ORBIT_FPS
 {
     ORBIT,
     FPS
 };
-std::string EnumToString(CameraMode e);
+std::string EnumToString(CameraMode_ORBIT_FPS e);
 
 #pragma endregion
 
@@ -1107,10 +1260,10 @@ std::string EnumToString(DirectionXY e);
 enum class DirectionXZ
 {
     None = -1,
-    Left = 0,
-    Right = 1,
-    Back = 2,
-    Front = 3,
+	Left = 0,       // X-
+	Right = 1,      // X+
+	Back = 2,       // Z-
+	Front = 3,      // Z+
 };
 std::string EnumToString(DirectionXZ e);
 
@@ -1144,7 +1297,7 @@ std::string EnumToString(DirectionXYZ e);
 
 #pragma endregion
 
-
+// GPU用カメラ構造体
 struct CameraForGPU
 {
     Vector3 worldPosition;
@@ -1179,4 +1332,43 @@ struct SRVAllocation
     uint32_t index = UINT32_MAX;
     D3D12_CPU_DESCRIPTOR_HANDLE cpu{};
     D3D12_GPU_DESCRIPTOR_HANDLE gpu{};
+};
+
+class Block;
+struct lookAtBlock
+{
+    Block* block = nullptr;
+	Vector2int chunkIndex = { 0,0 };
+	Vector3int localIndex = { 0,0,0 };
+    AABBFace face = AABBFace::NONE;
+	float distance = 0.0f;
+};
+
+class BaseCharactor;
+struct RayHitResult
+{
+    enum class Type
+    {
+        None,
+        Block,
+        Charactor
+    };
+
+    Type type = Type::None;
+
+    // type == Block のとき有効
+    lookAtBlock blockHit{};
+
+    // type == Charactor のとき有効
+    BaseCharactor* charactor = nullptr;
+
+    // 共通：レイ原点からの距離
+    float distance = 0.0f;
+};
+
+struct Rect
+{
+    int minX, minY;
+    int maxX, maxY;
+    bool empty = true;
 };

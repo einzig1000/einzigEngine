@@ -30,7 +30,7 @@ public:
 	SynchronizationManager* GetSynchronizationManager() const { return synchronizationManager; }
 
 	ResourceManager* GetResourceManager() const { return resourceManager_; }
-
+    
 	FixFPS* GetFixFPS() const { return fixFPS_; }
 
     void BeginFrame();
@@ -49,7 +49,4 @@ private:
 
     ResourceManager* resourceManager_;
     FixFPS* fixFPS_;
-
-    D3D12_RESOURCE_BARRIER barrier = {};
-
 };

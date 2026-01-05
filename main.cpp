@@ -19,6 +19,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		gm->Update();
 		// ↓描画処理ここから
 		gm->Draw();
+		// ↓ImGui描画処理ここから
+		gm->DrawImGui();
+
 		// フレームの終了
 		Engine::Instance().EndFrame();
 	}

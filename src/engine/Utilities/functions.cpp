@@ -306,6 +306,15 @@ bool IsCollision(const AABB& aabb1, const AABB& aabb2)
     return true;
 }
 
+bool IsOverLap(const AABB& aabb1, const AABB& aabb2)
+{
+    // 各軸で分離していれば衝突していない
+    if (aabb1.max.x <= aabb2.min.x || aabb1.min.x >= aabb2.max.x) return false;
+    if (aabb1.max.y <= aabb2.min.y || aabb1.min.y >= aabb2.max.y) return false;
+    if (aabb1.max.z <= aabb2.min.z || aabb1.min.z >= aabb2.max.z) return false;
+    // どの軸でも分離していなければ衝突
+	return true;
+}
 
 bool IsLooseCollision(const AABB& aabb1, const AABB& aabb2, float threshold)
 {

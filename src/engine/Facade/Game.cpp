@@ -14,6 +14,11 @@ uint32_t Game::Resource::LoadTexture(const std::string& filePath)
 	return Engine::Instance().LoadTexture(filePath);
 }
 
+uint32_t Game::Resource::LoadTextureArray(const std::vector<std::string>& filePaths)
+{
+	return Engine::Instance().LoadTextureArray(filePaths);
+}
+
 uint32_t Game::Resource::LoadAudio(const std::string& filePath)
 {
 	return Engine::Instance().LoadAudio(filePath);
@@ -107,17 +112,22 @@ void Game::Light::ToggleLightMode(const LightMode mode)
 }
 
 
-Vector2 Game::Input::Mouse::GetMousePosition()
+Vector2 Game::Input::Mouse::GetPosition()
 {
 	return Engine::Instance().GetMousePosition();
 }
 
-Vector3 Game::Input::Mouse::GetMouseWorldPosition()
+Vector2 Game::Input::Mouse::GetPositionDelta()
+{
+	return Engine::Instance().GetMousePositionDelta();
+}
+
+Vector3 Game::Input::Mouse::GetWorldPosition()
 {
 	return Engine::Instance().GetMouseWorldPosition();
 }
 
-Ray Game::Input::Mouse::GetMouseRay()
+Ray Game::Input::Mouse::GetRay()
 {
 	return Engine::Instance().GetMouseRay();
 }
@@ -142,7 +152,7 @@ uint32_t Game::Input::Mouse::HoldFrames(int i)
 	return Engine::Instance().MouseHoldFrames(i);
 }
 
-uint32_t Game::Input::Mouse::GetMouseWheel()
+int32_t Game::Input::Mouse::GetWheel()
 {
 	return Engine::Instance().GetMouseWheel();
 }
@@ -157,6 +167,10 @@ void Game::Input::Mouse::ShowCursor(bool visible)
 	Engine::Instance().SetMouseCursorVisible(visible);
 }
 
+void Game::Input::Mouse::SetMouseSensitivity(float sensitivity)
+{
+	Engine::Instance().SetMouseSensitivity(sensitivity);
+}
 
 bool Game::Input::Key::IsHeld(BYTE key)
 {
@@ -220,6 +234,15 @@ bool Game::Camera::InCamera(const AABB& aabb)
 	return Engine::Instance().InFrustum(aabb);
 }
 
+void Game::Camera::SetEnableControl(bool enable)
+{
+	Engine::Instance().SetEnableCameraControl(enable);
+}
+
+void Game::Camera::SetCurrentCamera(const std::string name)
+{
+}
+
 
 Vector3 Game::Camera::Getter::GetCenter(const std::string name)
 {
@@ -267,7 +290,7 @@ float Game::Camera::Getter::GetCurrentDistance()
 	return Engine::Instance().GetCameraManager()->GetCurrentDistance();
 }
 
-void Game::Camera::SetCameraMode(CameraMode mode)
+void Game::Camera::SetCameraMode(CameraMode_ORBIT_FPS mode)
 {
 	Engine::Instance().GetCameraManager()->SetCameraMode(mode);
 }
@@ -277,3 +300,58 @@ void Game::Utilitie::toggleWireframeMode()
 {
 	Engine::Instance().toggleWireframeMode();
 }
+
+
+float Game::Time::GetDeltaTime()
+{
+	return Engine::Instance().GetDeltaTime();
+}
+
+uint32_t Game::Time::GetElapsedTime()
+{
+	return Engine::Instance().GetElapsedTime();
+}
+
+float Game::Time::GetFrameRate()
+{
+	return Engine::Instance().GetFrameRate();
+}
+
+void Game::Time::SetTimeScale(float scale)
+{
+	Engine::Instance().SetTimeScale(scale);
+}
+
+// マップ設定
+void Game::Physics::SetIWorldCollider(IWorldCollider* worldCollider)
+{
+	Engine::Instance().SetIWorldCollider(worldCollider);
+}
+
+// マップと衝突する動的オブジェクトの登録
+void Game::Physics::RegisterDynamic(RenderData_Model* model)
+{
+	Engine::Instance().RegisterDynamic(model);
+}
+
+// マップと衝突する動的オブジェクトの登録解除
+void Game::Physics::UnregisterDynamic(RenderData_Model* model)
+{
+	Engine::Instance().UnregisterDynamic(model);
+}
+
+// 全ての動的オブジェクトの登録解除
+void Game::Physics::ClearDynamicAll()
+{
+	Engine::Instance().ClearDynamicAll();
+}
+
+//void Game::Physics::SetGravity(Vector3 gravity)
+//{
+//	Engine::Instance().SetGravity(gravity);
+//}
+//
+//Vector3 Game::Physics::GetGravity()
+//{
+//	return Engine::Instance().GetGravity();
+//}

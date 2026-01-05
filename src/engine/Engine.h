@@ -13,6 +13,8 @@ class DrawSystem;
 class Input;
 class CameraManager;
 class ImGuiManager;
+class PhysicsSystem;
+class IWorldCollider;
 
 class RenderData_Model;
 class RenderData_Triangle;
@@ -48,6 +50,7 @@ public:
 	// リソース
 	uint32_t LoadModel(const std::string& directoryPath, const std::string& filename);
 	uint32_t LoadTexture(const std::string& filePath);
+	uint32_t LoadTextureArray(const std::vector<std::string>& filePaths);
 	uint32_t LoadAudio(const std::string& filePath);
 	Object3D* GetModelData(uint32_t modelNumber);
 	TextureData* GetTextureData(uint32_t textureNumber);
@@ -89,15 +92,17 @@ public:
 
 	// マウス
 	Vector2 GetMousePosition();
+	Vector2 GetMousePositionDelta();
 	Vector3 GetMouseWorldPosition();
-	uint32_t GetMouseWheel();
+	int32_t GetMouseWheel();
 	Ray GetMouseRay();
-	bool IsMouseHeld(int i);// 今押しているか
-	bool IsMouseJustPressed(int i);// 押した瞬間（今フレームで押された）
-	bool IsMouseJustReleased(int i);// 離した瞬間（今フレームで離れた）
-	uint32_t MouseHoldFrames(int i);// 押されてからの経過フレーム数
-	void ToggleMouseCursorVisible();// マウスカーソルの表示非表示切り替え
+	bool IsMouseHeld(int i);			// 今押しているか
+	bool IsMouseJustPressed(int i);		// 押した瞬間（今フレームで押された）
+	bool IsMouseJustReleased(int i);	// 離した瞬間（今フレームで離れた）
+	uint32_t MouseHoldFrames(int i);	// 押されてからの経過フレーム数
+	void ToggleMouseCursorVisible();	// マウスカーソルの表示非表示切り替え
 	void SetMouseCursorVisible(bool visible);// マウスカーソルの表示非表示設定
+	void SetMouseSensitivity(float sensitivity); // マウス感度設定
 
 	// キーボード
 	bool IsKeyHeld(BYTE key);// 今押しているか
@@ -117,17 +122,35 @@ public:
 	void MoveCameraDistance(float target, int spendFrame, EaseType easetype);
 	void StartCameraShake(float intensity, float duration, float frequency = 25.0f);
 	bool IsCameraShaking();
-	void SetCameraMode(CameraMode mode);
+	void SetCameraMode(CameraMode_ORBIT_FPS mode);
 	void ToggleCamera();
 	void StopCameraShake();
+	void SetEnableCameraControl(bool enable);
 	CameraManager* GetCameraManager() { return cameraManager_; }
+
+	// 時間制御
+	float GetDeltaTime();			// デルタタイム取得
+	uint32_t GetElapsedTime();			// 起動からの経過時間取得
+	float GetFrameRate();			// フレームレート取得
+	void SetTimeScale(float scale);	// タイムスケール設定
+
+	// 物理制御
+
+	// 全てのRenderData_Modelの物理演算無効化
+	void ClearDynamicAll();
+	// RenderData_Modelの物理演算無効化
+	void UnregisterDynamic(RenderData_Model* model);
+	// RenderData_Modelの物理演算有効化
+	void RegisterDynamic(RenderData_Model* model);
+	// WorldColliderの設定
+	void SetIWorldCollider(IWorldCollider* worldCollider);
 
 
 	// フルスクリーン切り替え
 	void ToggleFullscreen();
 
 	// AABBの作成
-	std::vector<AABB>  CreateAABB(RenderData_Model* data);
+	std::vector<AABB> CreateAABB(RenderData_Model* data);
 
 	// プリミティブモードの設定
 	void toggleWireframeMode();
@@ -138,6 +161,8 @@ public:
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateConstantBufferResource(size_t sizeInBytes);
 
 	DirectXManager* GetDirectXManager() { return dxManager_; }
+
+	PhysicsSystem* GetPhysicsSystem() { return physicsSystem_; }
 
 
 	const std::vector<Object3D> GetAllObject3D();
@@ -163,4 +188,6 @@ private:
 	CameraManager* cameraManager_ = nullptr;
 	// ImGui
 	ImGuiManager* imguiManager_ = nullptr;
+	// 物理演算
+	PhysicsSystem* physicsSystem_ = nullptr;
 };

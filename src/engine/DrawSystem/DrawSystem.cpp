@@ -2,7 +2,7 @@
 #include "DirectX/DirectXManager.h"
 #include "Window/WindowManager.h"
 #include "Utilities/functions.h"
-#include "Block/Block.h"
+#include "MapManager/Chunk/Block/Block.h"
 
 DrawSystem::DrawSystem(DirectXManager* dxManager)
 	:dxManager_(dxManager)
@@ -115,34 +115,27 @@ void DrawSystem::Draw()
 
 	// パーティクル描画
 	DrawAllParticle();
-	Log("パーティクル描画完了");
 
 	// ブロック描画
 	DrawAllBlock();
-	Log("ブロック描画完了");
 
 	// モデル描画
 	DrawAllModel();
-	Log("モデル描画完了");
 
 	// 三角形描画
 	DrawAllTriangle();
-	Log("三角形描画完了");
 
 	// 矩形描画
 	DrawAllRect();
-	Log("矩形描画完了");
 
 	// スプライト描画
 	DrawAllSprite();
-	Log("スプライト描画完了");
 
 	// 形状を設定
 	dxManager_->GetCommandContextManager()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
 
 	// 線描画
 	DrawAllLine();
-	Log("ライン描画完了");
 }
 
 
@@ -223,14 +216,12 @@ void DrawSystem::DrawAllModel()
 		if (drawCallIndex_ >= kMaxDrawCallPerFrame_)continue;
 
 		// モデルの検索
-		const Object3D* obj = dxManager_->GetResourceManager()->GetModelManager()->GetModelData(renderData->model);
+		const Object3D* obj = dxManager_->GetResourceManager()->GetModelManager()->GetModelData(renderData->GetModel());
 		if (!obj)continue;
 
 		// テクスチャの検索
-		const TextureData* tex = dxManager_->GetResourceManager()->GetTextureManager()->GetTextureData(renderData->texture);
+		const TextureData* tex = dxManager_->GetResourceManager()->GetTextureManager()->GetTextureData(renderData->GetTexture());
 		if (!tex)continue;
-		const TextureData* tex2 = dxManager_->GetResourceManager()->GetTextureManager()->GetTextureData(renderData->additionalTexture);
-		if (!tex2)continue;
 
 		// ルートシグネチャを設定
 		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootSignature(dxManager_->GetPipelineStateManager()->GetRootSignature());
@@ -362,25 +353,26 @@ void DrawSystem::DrawAllTriangle()
 		uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(renderData->uvTransform.translate));
 		materialData_[drawCallIndex_]->uvTransform = uvTransformMatrix;
 
-		// 頂点リソース
-		VertexData* vData = nullptr;
-		HRESULT hr = vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vData));
-		if (FAILED(hr) || vData == nullptr) continue;
-		std::memcpy(vData + vertexDataUsed_, &vertexData_[vertexDataUsed_], sizeof(VertexData) * kSumVertex);
-		vertexResource_->Unmap(0, nullptr);
-
 		// 動的頂点バッファを確保
 		if (!EnsureDynamicVB(vertexDataUsed_ + kSumVertex)) continue;
-		memcpy(vertexMappedPtr_ + vertexDataUsed_, &vertexData_[vertexDataUsed_], sizeof(VertexData) * kSumVertex);
+		std::memcpy(vertexMappedPtr_ + vertexDataUsed_, &vertexData_[vertexDataUsed_], sizeof(VertexData) * kSumVertex);
 
 		// 頂点バッファビュー
 		D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
-		vertexBufferView.BufferLocation = vertexResource_->GetGPUVirtualAddress() + sizeof(VertexData) * (vertexDataUsed_);
-		vertexBufferView.SizeInBytes = sizeof(VertexData) * static_cast<UINT>(kSumVertex);
+		vertexBufferView.BufferLocation = vertexResource_->GetGPUVirtualAddress() + sizeof(VertexData) * static_cast<UINT>(vertexDataUsed_);
+		vertexBufferView.SizeInBytes = sizeof(VertexData) * kSumVertex;
 		vertexBufferView.StrideInBytes = sizeof(VertexData);
 
 
-		// RootSignatureを設定。
+		//// 頂点リソース
+		//VertexData* vData = nullptr;
+		//HRESULT hr = vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vData));
+		//if (FAILED(hr) || vData == nullptr) continue;
+		//std::memcpy(vData + vertexDataUsed_, &vertexData_[vertexDataUsed_], sizeof(VertexData) * kSumVertex);
+		//vertexResource_->Unmap(0, nullptr);
+
+
+		// 頂点バッファをバインド
 		dxManager_->GetCommandContextManager()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
 		// CBVを設定する マテリアル用のCBufferの場所を設定
 		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources_[drawCallIndex_]->GetGPUVirtualAddress());
@@ -483,23 +475,22 @@ void DrawSystem::DrawAllRect()
 		uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(renderData->uvTransform.translate));
 		materialData_[drawCallIndex_]->uvTransform = uvTransformMatrix;
 
-		// 頂点リソース
-		VertexData* vData = nullptr;
-		HRESULT hr = vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vData));
-		if (FAILED(hr) || vData == nullptr) continue;
-		std::memcpy(vData + vertexDataUsed_, &vertexData_[vertexDataUsed_], sizeof(VertexData) * kSumVertex);
-		vertexResource_->Unmap(0, nullptr);
-
 		// 動的頂点バッファを確保
-		if (!EnsureDynamicVB(vertexDataUsed_ + kSumVertex)) continue;
-		memcpy(vertexMappedPtr_ + vertexDataUsed_, &vertexData_[vertexDataUsed_], sizeof(VertexData) * kSumVertex);
+		if (!EnsureDynamicVB(vertexDataUsed_ + kSumVertex)) continue;        
+		std::memcpy(vertexMappedPtr_ + vertexDataUsed_, &vertexData_[vertexDataUsed_], sizeof(VertexData) * kSumVertex);
 
 		// 頂点バッファビュー
 		D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
-		vertexBufferView.BufferLocation = vertexResource_->GetGPUVirtualAddress() + sizeof(VertexData) * (vertexDataUsed_);
-		vertexBufferView.SizeInBytes = sizeof(VertexData) * static_cast<UINT>(kSumVertex);
+		vertexBufferView.BufferLocation = vertexResource_->GetGPUVirtualAddress() + sizeof(VertexData) * static_cast<UINT>(vertexDataUsed_);
+		vertexBufferView.SizeInBytes = sizeof(VertexData) * kSumVertex;
 		vertexBufferView.StrideInBytes = sizeof(VertexData);
 
+		//// 頂点リソース
+		//VertexData* vData = nullptr;
+		//HRESULT hr = vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vData));
+		//if (FAILED(hr) || vData == nullptr) continue;
+		//std::memcpy(vData + vertexDataUsed_, &vertexData_[vertexDataUsed_], sizeof(VertexData) * kSumVertex);
+		//vertexResource_->Unmap(0, nullptr);
 
 		// RootSignatureを設定。
 		dxManager_->GetCommandContextManager()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
@@ -824,7 +815,7 @@ void DrawSystem::DrawAllSprite()
 		bottom *= float(WindowManager::winHeight_) / 720.0f;
 
 		// マウス座標取得
-		Vector2 mousePos = Game::Input::Mouse::GetMousePosition();
+		Vector2 mousePos = Game::Input::Mouse::GetPosition();
 
 		// マウス座標は仮想座標へ変換してから衝突判定に使う。
 		float windowWidth = float(WindowManager::winWidth_);
@@ -1018,29 +1009,33 @@ void DrawSystem::DrawAllLine()
 		wvpData_[drawCallIndex_]->World = Matrix4x4::MakeIdentity4x4();
 		wvpData_[drawCallIndex_]->WVP = viewProjectionMatrix_;
 
-		// マテリアル定数バッファの更新
+		// マテリアル
 		Vector4 color = ConvertUintToVector4(renderData->color);
 		materialData_[drawCallIndex_]->color = color;
 		materialData_[drawCallIndex_]->shininess = 1.0f;
 		materialData_[drawCallIndex_]->uvTransform = Matrix4x4::MakeIdentity4x4(); // 線にUV変換いらない
 
-		// 頂点リソース
-		VertexData* vData = nullptr;
-		HRESULT hr = vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vData));
-		if (FAILED(hr) || vData == nullptr) continue;
-		std::memcpy(vData + vertexDataUsed_, &vertexData_[vertexDataUsed_], sizeof(VertexData) * kSumVertex);
-		vertexResource_->Unmap(0, nullptr);
-
 		// 動的頂点バッファを確保
-		if (!EnsureDynamicVB(vertexDataUsed_ + kSumVertex)) continue;
-		memcpy(vertexMappedPtr_ + vertexDataUsed_, &vertexData_[vertexDataUsed_], sizeof(VertexData) * kSumVertex);
+		if (!EnsureDynamicVB(vertexDataUsed_ + kSumVertex)) continue; 
+		// 永続Mapされた VB にコピー
+		std::memcpy(vertexMappedPtr_ + vertexDataUsed_, &vertexData_[vertexDataUsed_], sizeof(VertexData)* kSumVertex);
 
 		// 頂点バッファビュー
 		D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
-		vertexBufferView.BufferLocation = vertexResource_->GetGPUVirtualAddress() + sizeof(VertexData) * (vertexDataUsed_);
-		vertexBufferView.SizeInBytes = sizeof(VertexData) * static_cast<UINT>(kSumVertex);
+		vertexBufferView.BufferLocation = vertexResource_->GetGPUVirtualAddress() + sizeof(VertexData) * static_cast<UINT>(vertexDataUsed_);
+		vertexBufferView.SizeInBytes = sizeof(VertexData) * kSumVertex;
 		vertexBufferView.StrideInBytes = sizeof(VertexData);
 
+
+
+
+		//// 頂点リソース
+		//VertexData* vData = nullptr;
+		//HRESULT hr = vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vData));
+		//if (FAILED(hr) || vData == nullptr) continue;
+		//std::memcpy(vData + vertexDataUsed_, &vertexData_[vertexDataUsed_], sizeof(VertexData) * kSumVertex);
+		//vertexResource_->Unmap(0, nullptr);
+		
 		// RootSignatureを設定
 		dxManager_->GetCommandContextManager()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
 		// CBVを設定する マテリアル用のCBufferの場所を設定
@@ -1107,10 +1102,14 @@ void DrawSystem::DrawAllBlock()
 {
 	for (auto& renderData : blockDrawList_)
 	{
-		if (drawCallIndex_ >= kMaxDrawCallPerFrame_) return;
+		// 描画数０
+		if (renderData->currentDrawSum == 0) continue;
 
-		// インスタンス数 0
-		if (renderData->currentSum == 0) continue;
+		if (renderData->currentDrawSum > renderData->capacity)
+		{
+			assert(false); 
+			continue;
+		}
 
 		// モデルの検索
 		Object3D* obj = dxManager_->GetResourceManager()->GetModelManager()->GetModelData(renderData->model);
@@ -1119,7 +1118,7 @@ void DrawSystem::DrawAllBlock()
 		// テクスチャの検索
 		const TextureData* tex = dxManager_->GetResourceManager()->GetTextureManager()->GetTextureData(renderData->texture);
 		if (!tex) continue;
-		const TextureData* tex2 = dxManager_->GetResourceManager()->GetTextureManager()->GetTextureData(renderData->additionalTexture);
+		const TextureData* tex2 = dxManager_->GetResourceManager()->GetTextureManager()->GetTextureData(renderData->breakTexture);
 		if (!tex2) continue;
 
 		// RootSignatureとPSOを設定
@@ -1129,30 +1128,23 @@ void DrawSystem::DrawAllBlock()
 		// 頂点数の取得
 		const uint32_t kSumVertex = static_cast<uint32_t>(obj->modelData.vertices.size());
 
-		// マテリアルデータ
-		//materialData_[drawCallIndex_]->color = renderData->colors_[renderData->currentColorIndex_];
-		materialData_[drawCallIndex_]->color = Vector4{ 1.0f, 1.0f, 1.0f, 1.0f };
-		materialData_[drawCallIndex_]->shininess = 1.0f;
-		materialData_[drawCallIndex_]->uvTransform = Matrix4x4::MakeIdentity4x4();
-
 		// 頂点バッファをバインド（描画に使う頂点データを指定）
 		dxManager_->GetCommandContextManager()->GetCommandList()->IASetVertexBuffers(0, 1, &obj->vertexBufferView);
 
-		// ルートパラメータ0にマテリアル用定数バッファ（色・ライティング情報など）をバインド
-		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources_[drawCallIndex_]->GetGPUVirtualAddress());
+		// ルートパラメータ0にカラー配列をバインド
+		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(0, renderData->colorSrvAllocation_.gpu);
 		// ルートパラメータ1にワールド行列配列をバインド
-		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(1, renderData->srvAllocation_.gpu);
+		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(1, renderData->worldMatrixSrvAllocation_.gpu);
 		// ルートパラメータ2にテクスチャのSRV（シェーダリソースビュー）をバインド
 		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
 		// ルートパラメータ3に追加テクスチャのSRV（シェーダリソースビュー）をバインド
 		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(3, tex2->textureSrvHandleGPU);
-		// ルートパラメータ4にカメラViewProjection行列用定数バッファをバインド
-		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(4, viewProjectionResource_->GetGPUVirtualAddress());
+		// ルートパラメータ4に追加テクスチャ配列インデックスのSRVをバインド
+		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(4, renderData->breakLayerSrvAllocation_.gpu);
+		// ルートパラメータ5にカメラViewProjection行列用定数バッファをバインド
+		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(5, viewProjectionResource_->GetGPUVirtualAddress());
 
-
-		dxManager_->GetCommandContextManager()->GetCommandList()->DrawInstanced(kSumVertex, renderData->currentSum, 0, 0);
-
-		drawCallIndex_++;
+		dxManager_->GetCommandContextManager()->GetCommandList()->DrawInstanced(kSumVertex, renderData->currentDrawSum, 0, 0);
 	}
 }
 

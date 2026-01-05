@@ -55,6 +55,7 @@ void DirectXManager::BeginFrame()
     UINT backBufferIndex = swapChainManager->GetCurrentBackBufferIndex();
 
     // ResourceStateをPRESENTからRENDER_TARGETへ遷移
+    D3D12_RESOURCE_BARRIER barrier = {};
     barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
     barrier.Transition.pResource = swapChainManager->GetCurrentBackBufferResource();
     barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
@@ -83,6 +84,7 @@ void DirectXManager::BeginFrame()
 void DirectXManager::EndFrame()
 {
     // ResourceStateをRENDER_TARGETからPRESENTへ遷移
+    D3D12_RESOURCE_BARRIER barrier = {};
     barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
     barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
     barrier.Transition.pResource = swapChainManager->GetCurrentBackBufferResource();

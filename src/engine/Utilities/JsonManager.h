@@ -11,6 +11,9 @@ class RenderData_Sprite;
 class RenderData_Triangle;
 class RenderData_Line;
 class RenderData_Particle;
+class RenderData_Block;
+class Chunk;
+class MapManager;
 
 class JsonManager
 {
@@ -31,6 +34,8 @@ public:
 	static bool SaveToJson(RenderData_Sprite& data, const std::string& path);
 	static bool LoadFromJson(RenderData_Sprite& data, const std::string& path);
 
+	static bool SaveToJson(MapManager& data, const std::string& path);
+	static bool LoadFromJson(MapManager& data, const std::string& path);
 
 
 	static bool SaveToJson(const std::string& path, const std::string key, const int& data);
@@ -51,9 +56,10 @@ private:
 	static json ToJson(const int& data);
 	static json ToJson(const float& data);
 	static json ToJson(const std::string& data);
-	static json ToJson(const Vector2int& data);
 	static json ToJson(const Vector2& data);
+	static json ToJson(const Vector2int& data);
 	static json ToJson(const Vector3& data);
+	static json ToJson(const Vector3int& data);
 	static json ToJson(const Vector4& data);
 	static json ToJson(const AABB& data);
 	static json ToJson(const Matrix3x3& data);
@@ -62,9 +68,10 @@ private:
 	static int ToInt(const json& j);
 	static float ToFloat(const json& j);
 	static std::string ToString(const json& j);
-	static Vector2int ToVector2int(const json& j);
 	static Vector2 ToVector2(const json& j);
+	static Vector2int ToVector2int(const json& j);
 	static Vector3 ToVector3(const json& j);
+	static Vector3int ToVector3int(const json& j);
 	static Vector4 ToVector4(const json& j);
 	static AABB ToAABB(const json& j);
 	static Matrix3x3 ToMatrix3x3(const json& j);

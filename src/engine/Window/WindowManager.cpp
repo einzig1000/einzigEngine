@@ -1,5 +1,7 @@
 #include "Window/WindowManager.h"
 #include "ImGuiManager/ImGuiManager.h"
+#include "input/MouseController.h"
+#include <vector>
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 #pragma comment(lib, "winmm.lib")
 
@@ -9,26 +11,79 @@ uint32_t WindowManager::winHeight_;
 // ウィンドウプロシージャ(クリックした、×を押した等のイベントを処理する関数)
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
-    // Imgui用
-    if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam))
-    {
-        return true;
-    }
+    // ImGuiの入力を優先的に処理（UI操作中はゲーム側へイベントを流さない）
+    if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam)) { return TRUE; }
 
-    // メッセージに応じてゲーム固有の処理を行う
     switch (msg)
     {
-        // ウィンドウが破壊された
+    // マウスが動いた時
+    case WM_INPUT:
+    {
+        // Raw Inputから相対マウス移動を取得
+        UINT size = 0;
+        if (::GetRawInputData((HRAWINPUT)lparam, RID_INPUT, nullptr, &size, sizeof(RAWINPUTHEADER)) == 0 && size)
+        {
+            std::vector<BYTE> buf(size);
+            if (::GetRawInputData((HRAWINPUT)lparam, RID_INPUT, buf.data(), &size, sizeof(RAWINPUTHEADER)) == size)
+            {
+                RAWINPUT* ri = reinterpret_cast<RAWINPUT*>(buf.data());
+                if (ri->header.dwType == RIM_TYPEMOUSE)
+                {
+                    auto* mc = reinterpret_cast<MouseController*>(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
+                    if (mc)
+                    {
+						// 相対移動量をマウスコントローラに送る
+                        mc->OnRawMouseDelta(ri->data.mouse.lLastX, ri->data.mouse.lLastY);
+
+						// ホイール回転量をマウスコントローラに送る
+                        if (ri->data.mouse.usButtonFlags & RI_MOUSE_WHEEL)
+                        {
+                            int32_t wheelDelta = static_cast<SHORT>(ri->data.mouse.usButtonData);
+                            mc->OnMouseWheelDelta(wheelDelta);
+						}
+
+                    }
+                }
+            }
+        }
+        return 0;
+    }
+
+    // ウィンドウがフォーカス
+    case WM_ACTIVATE:
+    {
+        // アクティブ化
+        if (wparam != WA_INACTIVE)
+        {
+            // アクティブフラグを立てる
+            auto* wm = reinterpret_cast<WindowManager*>(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
+            if (wm)
+            {
+                wm->isActive_ = true;
+            }
+        }
+        // 非アクティブ化
+        else
+        {
+            // アクティブフラグを下ろす
+            auto* wm = reinterpret_cast<WindowManager*>(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
+            if (wm)
+            {
+                wm->isActive_ = false;
+            }
+        }
+		return 0;
+	}
+
+    // ウィンドウが破壊された時
     case WM_DESTROY:
-        // OSに対してアプリの終了を伝える
         PostQuitMessage(0);
         return 0;
     }
 
-    // 標準のメッセージ処理を行う
+    // 既定のメッセージ処理
     return DefWindowProc(hwnd, msg, wparam, lparam);
 }
-
 
 WindowManager::WindowManager(int width, int height, const std::wstring& title)
 {
@@ -54,6 +109,11 @@ WindowManager::~WindowManager()
     }
 }
 
+void WindowManager::AttachMouseController(MouseController* mc)
+{
+    ::SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(mc));
+}
+
 void WindowManager::RegisterWindowClass() {
     // ウィンドウクラス作成
     wc = {};
@@ -67,6 +127,16 @@ void WindowManager::RegisterWindowClass() {
     wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
     // ウィンドウクラスを登録する
     RegisterClass(&wc);
+}
+
+void WindowManager::RegisterMouseRawInput(HWND hwnd)
+{
+    RAWINPUTDEVICE rid{};
+    rid.usUsagePage = 0x01;     // Generic Desktop
+    rid.usUsage = 0x02;         // Mouse
+    rid.dwFlags = 0;            // 非アクティブでも受けるなら RIDEV_INPUTSINK
+    rid.hwndTarget = hwnd;
+    ::RegisterRawInputDevices(&rid, 1, sizeof(rid));
 }
 
 void WindowManager::CreateMainWindow(int width, int height, const std::wstring& title) 
@@ -91,8 +161,11 @@ void WindowManager::CreateMainWindow(int width, int height, const std::wstring& 
         nullptr					// オプション
     );
 
-
+	// ウィンドウ表示
     ShowWindow(hwnd, SW_SHOW);
+
+    // 
+    RegisterMouseRawInput(hwnd);
 }
 
 void WindowManager::SetFullscreen(bool enable)

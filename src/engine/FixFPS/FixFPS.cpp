@@ -62,4 +62,7 @@ void FixFPS::UpdateFixFPS()
 
 	// 前回時間を更新
     previousTime_ = currentTime;
+
+	// フレームカウント更新
+	frameCount_++;
 }

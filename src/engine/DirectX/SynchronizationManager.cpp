@@ -35,20 +35,28 @@ void SynchronizationManager::Signal(ID3D12CommandQueue* commandQueue)
 
 void SynchronizationManager::WaitForGPU()
 {
-    auto gpuFenceValue = fence->GetCompletedValue();
+    //auto gpuFenceValue = fence->GetCompletedValue();
+    //if (gpuFenceValue < fenceValue)
+    //{
+    //    HANDLE eventHandle = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+    //    if (eventHandle == nullptr)
+    //    {
+    //         エラー処理: イベントの作成に失敗した場合
+    //        Log("エラー: GPU待機用イベントの作成に失敗しました");
+    //        assert(false);
+    //        return;
+    //    }
+    //    HRESULT hr = fence->SetEventOnCompletion(fenceValue, eventHandle);
+    //    assert(SUCCEEDED(hr));
+    //    WaitForSingleObject(eventHandle, INFINITE);
+    //    CloseHandle(eventHandle);
+    //}
+
+    const UINT64 gpuFenceValue = fence->GetCompletedValue();
     if (gpuFenceValue < fenceValue)
     {
-        HANDLE eventHandle = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-        if (eventHandle == nullptr)
-        {
-            // エラー処理: イベントの作成に失敗した場合
-            Log("エラー: GPU待機用イベントの作成に失敗しました");
-            assert(false);
-            return;
-        }
-        HRESULT hr = fence->SetEventOnCompletion(fenceValue, eventHandle);
+        HRESULT hr = fence->SetEventOnCompletion(fenceValue, fenceEvent);
         assert(SUCCEEDED(hr));
-        WaitForSingleObject(eventHandle, INFINITE);
-        CloseHandle(eventHandle);
+        WaitForSingleObject(fenceEvent, INFINITE);
     }
 }

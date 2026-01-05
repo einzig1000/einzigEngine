@@ -21,7 +21,10 @@ public:
         const std::string& filePath
     );
     TextureData* GetTextureData(int32_t textureID);
-    
+
+    // 同サイズ/同フォーマット前提の Texture2DArray を作る
+    int32_t LoadTexture2DArray(const std::vector<std::string>& filePaths);
+
     void reloadAllTextures();
 
 	// テクスチャ数を取得

@@ -35,17 +35,19 @@ public:
 	// 視錐台内にAABBがあるか 中心に近いほど1.0、遠いほど0.0を返す
 	float InFrustum_Lod(const AABB& aabb);
     
+	// 操作可能か設定
+	void SetEnableControl(bool enable) { enableControl_ = enable; }
 
-    // 操作可能か
-    bool enableControl_;
-
-	void SetCameraMode(CameraMode mode) { cameraMode_ = mode; }
+	void SetCameraMode(CameraMode_ORBIT_FPS mode) { cameraMode_ = mode; }
 
 	// カメラ名
 	std::string name_;
 
 private:
-	CameraMode cameraMode_ = CameraMode::ORBIT;
+    CameraMode_ORBIT_FPS cameraMode_ = CameraMode_ORBIT_FPS::ORBIT;
+
+    // 操作可能か
+    bool enableControl_;
 
 	void Updata_Orbit();
 	void Update_FPS();
@@ -54,12 +56,11 @@ private:
     void MovingRotate();
     void MovingDistance();
 
+	Vector2 mouseDelta_;
+
     //////////////////////////////////////////////
     ///              カメラ回転                ///
     //////////////////////////////////////////////
-    Vector2 mousePosition_;
-    Vector2 preMousePosition_;
-    Vector2 mousePositionGap_;
     Vector3 preRotate_;
     // 演出による回転中
     EasingSetVector3 easeRotate_;
@@ -67,18 +68,13 @@ private:
     //////////////////////////////////////////////
     ///                回転中心                ///
     //////////////////////////////////////////////
-    bool pressMouse2_ = 0;
-    bool prePressMouse2_ = 0;
     Vector3 preCenter_;
-    Vector3 normalize_;
     // 演出による回転中心の変更中
     EasingSetVector3 easeCenter_;
 
     //////////////////////////////////////////////
     ///               カメラ距離               ///
     //////////////////////////////////////////////
-    bool pressMouse0_ = 0;
-    bool prePressMouse0_ = 0;
     int mouseWheel_ = 0;
     // 演出によるカメラ距離の変更中
     EasingSetVector3 easeDistance_;
