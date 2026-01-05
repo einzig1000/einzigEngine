@@ -20,6 +20,15 @@ void BaseCharactor::AddItem(ItemID id)
 	haveItem_->AddItem(id);
 }
 
+void BaseCharactor::UpdateAttackPower()
+{
+	ItemID currentItemID = haveItem_->GetCurrentSelectedItemID();
+	if (currentItemID == ItemID::木の剣)attackPower_ = 2.0f;
+	if (currentItemID == ItemID::石の剣)attackPower_ = 3.0f;
+	if (currentItemID == ItemID::鉄の剣)attackPower_ = 4.0f;
+	if (currentItemID == ItemID::ダイヤの剣)attackPower_ = 15.0f;
+}
+
 
 void BaseCharactor::SetMapManager(MapManager* mapManager)
 {
@@ -55,6 +64,25 @@ void BaseCharactor::BreakTargetBlock()
 	lookAtBlock lab = targetBlock_.value();
 	Block* block = lab.block;
 	if (!block) return;
+
+	ItemID currentItemID = haveItem_->GetCurrentSelectedItemID();
+
+	breakPower_ = 1.0f;
+	// ツールのジャンルとブロックのジャンルが合っている場合
+	if (block->blockInfo_.junle == ItemJunle::Wood)
+	{
+		if (currentItemID == ItemID::木の斧)breakPower_ = 2.0f;
+		if (currentItemID == ItemID::石の斧)breakPower_ = 3.0f;
+		if (currentItemID == ItemID::鉄の斧)breakPower_ = 4.0f;
+		if (currentItemID == ItemID::ダイヤの斧)breakPower_ = 15.0f;
+	}
+	else if (block->blockInfo_.junle == ItemJunle::Stone)
+	{
+		if (currentItemID == ItemID::木のツルハシ)breakPower_ = 2.0f;
+		if (currentItemID == ItemID::石のツルハシ)breakPower_ = 3.0f;
+		if (currentItemID == ItemID::鉄のツルハシ)breakPower_ = 4.0f;
+		if (currentItemID == ItemID::ダイヤのツルハシ)breakPower_ = 15.0f;
+	}
 
 	block->durability_->DecreaseDurability(breakPower_);
 

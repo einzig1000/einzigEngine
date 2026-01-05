@@ -33,22 +33,31 @@ void ResourceID::reload()
 	tmp = -1;
 	ItemIconTextureIDs_[size_t(ItemID::None)] = tmp;
 
-	tmp = Game::Resource::LoadTexture("resources/Minecraft/Item/tool/sword/sword.png");
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/Item/tool/sword/woodSwordIcon.png");
 	ItemIconTextureIDs_[size_t(ItemID::木の剣)] = tmp;
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/Item/tool/sword/ironSwordIcon.png");
 	ItemIconTextureIDs_[size_t(ItemID::石の剣)] = tmp;
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/Item/tool/sword/ironSwordIcon.png");
 	ItemIconTextureIDs_[size_t(ItemID::鉄の剣)] = tmp;
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/Item/tool/sword/diamondSwordIcon.png");
 	ItemIconTextureIDs_[size_t(ItemID::ダイヤの剣)] = tmp;
 
-	tmp = Game::Resource::LoadTexture("resources/Minecraft/Item/tool/pickel/pickel.png");
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/Item/tool/pickel/woodPickelIcon.png");
 	ItemIconTextureIDs_[size_t(ItemID::木のツルハシ)] = tmp;
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/Item/tool/pickel/stonePickelIcon.png");
 	ItemIconTextureIDs_[size_t(ItemID::石のツルハシ)] = tmp;
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/Item/tool/pickel/ironPickelIcon.png");
 	ItemIconTextureIDs_[size_t(ItemID::鉄のツルハシ)] = tmp;
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/Item/tool/pickel/diamondPickelIcon.png");
 	ItemIconTextureIDs_[size_t(ItemID::ダイヤのツルハシ)] = tmp;
 
-	tmp = Game::Resource::LoadTexture("resources/Minecraft/Item/tool/axe/axe.png");
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/Item/tool/axe/woodAxeIcon.png");
 	ItemIconTextureIDs_[size_t(ItemID::木の斧)] = tmp;
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/Item/tool/axe/stoneAxeIcon.png");
 	ItemIconTextureIDs_[size_t(ItemID::石の斧)] = tmp;
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/Item/tool/axe/ironAxeIcon.png");
 	ItemIconTextureIDs_[size_t(ItemID::鉄の斧)] = tmp;
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/Item/tool/axe/diamondAxeIcon.png");
 	ItemIconTextureIDs_[size_t(ItemID::ダイヤの斧)] = tmp;
 
 	tmp = Game::Resource::LoadTexture("resources/Minecraft/Item/armor/texture/ironHeadIcon.png");

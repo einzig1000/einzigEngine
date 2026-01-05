@@ -133,7 +133,7 @@ HaveItem::HaveItem()
         {
             baseCraftPositions3x3_[y][x] = Vector3{
                 static_cast<float>(640.0f + x * 72),
-                static_cast<float>(241.0f - y * 72),
+                static_cast<float>(236.0f - y * 72),
                 0.0f };
 
             auto& slot = craftArea3x3_[y][x];
@@ -1451,7 +1451,7 @@ std::array<std::array<ItemID, 3>, 3> HaveItem::GetCraftMatrix()
         {
             for (int x = 0; x < 3; ++x)
             {
-                mat[y][x] = craftArea3x3_[y][x].item.GetID();
+                mat[2 - y][x] = craftArea3x3_[y][x].item.GetID();
             }
         }
     }
@@ -1461,7 +1461,7 @@ std::array<std::array<ItemID, 3>, 3> HaveItem::GetCraftMatrix()
         {
             for (int x = 0; x < 2; ++x)
             {
-                mat[y][x] = craftArea_[y][x].item.GetID();
+                mat[1 - y][x] = craftArea_[y][x].item.GetID();
             }
         }
     }

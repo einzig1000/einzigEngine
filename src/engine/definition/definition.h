@@ -99,15 +99,15 @@ enum class ItemID
 enum class ItemJunle
 {
     None,
-    // 武器
-    Weapon,
 	// 防具
 	Head,
     Body,
 	Leg,
 	Boots,
 	// ツール
-    Tool,
+	Axe,
+    Pickel,
+    Sword,
 	// 木材系(オノで採掘速度アップ)
 	Wood,
 	// 鉱石系(ツルハシで採掘速度アップ)

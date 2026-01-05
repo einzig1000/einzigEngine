@@ -39,6 +39,8 @@ public:
 	// アイテム獲得
 	virtual void AddItem(ItemID id);
 
+	// 持ってるアイテムによって攻撃力更新
+	virtual void UpdateAttackPower();
 
 
 	RenderData_Model data_;		// データ
@@ -57,7 +59,8 @@ protected:
 	
 
 	float jumpPower_ = 0.1491f;	// ジャンプ力
-	float breakPower_ = 1;	// ブロック破壊力
+	float breakPower_ = 1.0f;	// ブロック破壊力
+	float attackPower_ = 1.0f; // 攻撃力
 
 
 	bool isGrounded_ = false;

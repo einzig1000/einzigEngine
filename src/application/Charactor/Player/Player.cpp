@@ -19,7 +19,7 @@ Player::Player()
 		0.0f
 	);
 
-	breakPower_ = 10;
+	breakPower_ = 1.0f;
 
 	SetHaveItem();
 }

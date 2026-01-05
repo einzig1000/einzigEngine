@@ -420,20 +420,20 @@ ItemJunle GetItemJunle(ItemID id)
 {
     switch (id)
     {
-    case ItemID::木の剣:			return ItemJunle::Weapon;   break;
-    case ItemID::石の剣:			return ItemJunle::Weapon;   break;
-    case ItemID::鉄の剣:			return ItemJunle::Weapon;   break;
-    case ItemID::ダイヤの剣:		return ItemJunle::Weapon;   break;
+    case ItemID::木の剣:			return ItemJunle::Sword;   break;
+    case ItemID::石の剣:			return ItemJunle::Sword;   break;
+    case ItemID::鉄の剣:			return ItemJunle::Sword;   break;
+    case ItemID::ダイヤの剣:		return ItemJunle::Sword;   break;
 
-    case ItemID::木のツルハシ:		return ItemJunle::Tool;     break;
-    case ItemID::石のツルハシ:		return ItemJunle::Tool;     break;
-    case ItemID::鉄のツルハシ:		return ItemJunle::Tool;     break;
-    case ItemID::ダイヤのツルハシ:	return ItemJunle::Tool;     break;
+    case ItemID::木のツルハシ:		return ItemJunle::Pickel;  break;
+    case ItemID::石のツルハシ:		return ItemJunle::Pickel;  break;
+    case ItemID::鉄のツルハシ:		return ItemJunle::Pickel;  break;
+    case ItemID::ダイヤのツルハシ:	return ItemJunle::Pickel;  break;
 
-    case ItemID::木の斧:			return ItemJunle::Tool;     break;
-    case ItemID::石の斧:			return ItemJunle::Tool;     break;
-    case ItemID::鉄の斧:			return ItemJunle::Tool;     break;
-    case ItemID::ダイヤの斧:		return ItemJunle::Tool;     break;
+    case ItemID::木の斧:			return ItemJunle::Axe;     break;
+    case ItemID::石の斧:			return ItemJunle::Axe;     break;
+    case ItemID::鉄の斧:			return ItemJunle::Axe;     break;
+    case ItemID::ダイヤの斧:		return ItemJunle::Axe;     break;
 
     case ItemID::鉄の頭:            return ItemJunle::Head;    break;
     case ItemID::鉄の胴:            return ItemJunle::Body;    break;
