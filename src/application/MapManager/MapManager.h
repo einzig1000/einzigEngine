@@ -32,6 +32,7 @@ public:
 
 	// ブロック破壊
 	void DestroyBlockAt(const Vector2int& chunkPos, const Vector3int& localIndex);
+	void AddDropItemAt(const Vector3& position, ItemID id);
 	// ブロック設置
 	bool SetBlockAt(const lookAtBlock& lab, const BlockID id);
 	bool SetBlockAt(const Vector2int& chunkPos, const Vector3int& localIndex, const BlockID id);

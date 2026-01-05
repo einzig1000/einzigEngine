@@ -6,13 +6,13 @@ struct CraftRecipe
 {
     // 3×3 のレシピ（None は空）
     std::vector<std::array<std::array<ItemID, 3>, 3>> pattern;
+    std::vector<Vector2int> mins;
+    std::vector<Vector2int> maxs;
 
     // 結果
     ItemID resultID;
     int resultCount;
 
-    Vector2int min;
-    Vector2int max;
 };
 
 

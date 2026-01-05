@@ -537,7 +537,12 @@ void MapManager::DestroyBlockAt(const Vector2int& chunkPos, const Vector3int& lo
 	chunk->DestroyBlock(localIndex);
 
 	// ドロップアイテム生成
-	dropItemManager_->AddItem(BlockIdToDropItemId(destroyedId), dropPos);
+	AddDropItemAt(dropPos, BlockIdToDropItemId(destroyedId));
+}
+
+void MapManager::AddDropItemAt(const Vector3& position, ItemID id)
+{
+	dropItemManager_->AddItem(id, position);
 }
 
 // 指定位置にブロックを設置

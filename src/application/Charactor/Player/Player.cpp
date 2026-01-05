@@ -22,6 +22,14 @@ Player::Player()
 	breakPower_ = 1.0f;
 
 	SetHaveItem();
+
+	AddItem(ItemID::作業台ブロック);
+	for (int i = 0; i < 64; ++i)
+	{
+		AddItem(ItemID::ダイヤモンド);
+		AddItem(ItemID::鉄インゴット);
+		AddItem(ItemID::棒);
+	}
 }
 
 Player::~Player()

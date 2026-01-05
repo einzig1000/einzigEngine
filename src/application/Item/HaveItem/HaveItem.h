@@ -65,20 +65,24 @@ struct Hand
     }
 };
 
+class MapManager;
+
 class HaveItem
 {
 public:
     HaveItem();
     ~HaveItem();
+	void SetMapManager(MapManager* mapManager) { mapManager_ = mapManager; }
 
     ItemID GetCurrentSelectedItemID() const;
     void RemoveCurrentSelectedItem(int count);
 
     void AddItem(ItemID id);
+	// 持っているアイテムをドロップアイテムとして出現させる
+	void DropCurrentSelectedItem(const Vector3& position);
 
     void UpdateInventry();
     void UpdateHotbar();
-
 
     void DrawInventory();
     void DrawHotbar();
@@ -147,4 +151,6 @@ private:
     std::array<std::array<ItemID, 3>, 3> GetCraftMatrix();
     void CheckCraftRecipe();
     void SetCraftResult(ItemID id, int count);
+
+	MapManager* mapManager_ = nullptr;
 };

@@ -1,6 +1,7 @@
 // HaveItem.cpp
 #include "Item/HaveItem/HaveItem.h"
 #include "Item/CraftRecipe/CraftRecipe.h"
+#include "MapManager/MapManager.h"
 
 static Rect GetCraftRect(const std::array<std::array<ItemID, 3>, 3>& craft)
 {
@@ -133,7 +134,7 @@ HaveItem::HaveItem()
         {
             baseCraftPositions3x3_[y][x] = Vector3{
                 static_cast<float>(640.0f + x * 72),
-                static_cast<float>(236.0f - y * 72),
+                static_cast<float>(248.0f - y * 72),
                 0.0f };
 
             auto& slot = craftArea3x3_[y][x];
@@ -309,6 +310,20 @@ void HaveItem::AddItem(ItemID id)
             }
         }
     }
+}
+
+void HaveItem::DropCurrentSelectedItem(const Vector3& position)
+{
+	// ハンドのアイテムをドロップ
+    if (!hand_.IsEmpty())
+    {
+        for (int i = 0; i < hand_.count; ++i)
+        {
+            mapManager_->AddDropItemAt(position, hand_.item.GetID());
+		}
+        hand_.Clear();
+        return;
+	}
 }
 
 void HaveItem::UpdateInventry()
@@ -736,11 +751,13 @@ void HaveItem::UpdateLeftClick()
         ItemID target = ItemID::None;
         int able = 0;
 
+		// 手にアイテムがある場合
         if (!hand_.IsEmpty())
         {
             target = hand_.item.GetID();
             able = hand_.item.GetAbleStackCount();
         }
+		// ダブルクリックしたスロットにアイテムがある場合
         else if (!slot->IsEmpty())
         {
             target = slot->item.GetID();
@@ -751,6 +768,7 @@ void HaveItem::UpdateLeftClick()
             hand_.icon->texture = slot->icon->texture;
             slot->Clear();
         }
+		// アイテムが無い場合は通常クリック扱い
         else
         {
             goto NORMAL_LEFT_CLICK;
@@ -1533,9 +1551,13 @@ void HaveItem::CheckCraftRecipe()
 
     for (auto& recipe : CraftRecipeList::GetRecipeList())
     {
-        for (auto& pattern : recipe.pattern)
+        for (size_t i = 0; i < recipe.pattern.size(); ++i)
         {
-            if (MatchPatternRect(craft, pattern, recipe.min, recipe.max, cRect))
+            const auto& pattern = recipe.pattern[i];
+            const auto& pMin = recipe.mins[i];
+            const auto& pMax = recipe.maxs[i];
+
+            if (MatchPatternRect(craft, pattern, pMin, pMax, cRect))
             {
                 SetCraftResult(recipe.resultID, recipe.resultCount);
                 return;
