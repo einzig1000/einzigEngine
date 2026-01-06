@@ -492,7 +492,11 @@ bool JsonManager::SaveToJson(MapManager& data, const std::string& path)
         json root;
         json mapData = json::array();
 
-        // 全チャンクをループ
+
+		// シードを保存
+		root["seed"] = data.GetSeed();
+
+		// 全ブロックをチャンクごとに保存
         for (const auto& [chunkPos, chunkPtr] : data.chunks)
         {
             Chunk& chunk = *chunkPtr;
@@ -540,7 +544,6 @@ bool JsonManager::SaveToJson(MapManager& data, const std::string& path)
             chunkEntry[chunkKey] = blockList;
             mapData.push_back(chunkEntry);
         }
-
         root["mapData"] = mapData;
 
         // 保存
@@ -575,6 +578,13 @@ bool JsonManager::LoadFromJson(MapManager& data, const std::string& path)
             return false;
         }
 
+		// シードを読み込み
+        if (root.contains("seed") && root["seed"].is_number_integer())
+        {
+			data.SetSeed(root["seed"].get<uint32_t>());
+		}
+
+		// mapData 配列をループ
         for (const auto& chunkEntry : root["mapData"])
         {
             // chunkEntry は { "[x][y]": [...] } の形

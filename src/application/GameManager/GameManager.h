@@ -22,5 +22,7 @@ private:
 
 	std::unique_ptr<PhaseParent> CreatePhase(PHASE phase);
 
+	PhaseContext phaseContext_;
+
 };
 

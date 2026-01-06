@@ -7,6 +7,7 @@
 GameManager::GameManager()
 {
 	currentPhase_ = CreatePhase(PHASE::Phase_Title);
+	currentPhase_->SetContext(&phaseContext_);
 	currentPhase_->Initialize();
 }
 
@@ -21,6 +22,7 @@ void GameManager::Update()
 	if (currentPhase_->GetNextPhase() != PHASE::Phase_None)
 	{
 		currentPhase_ = CreatePhase(currentPhase_->GetNextPhase());
+		currentPhase_->SetContext(&phaseContext_);
 		currentPhase_->Initialize();
 	}
 }

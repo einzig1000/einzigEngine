@@ -18,12 +18,15 @@ class BaseCharactor;
 class MapManager
 {
 public:
-	MapManager(Player* player);
+	MapManager();
+	void SetPlayer(Player* player);
 	~MapManager();
 
-	void LoadMap(const std::string& mapFilePath);
-	void SaveMap(const std::string& mapFilePath);
-	void CreateNewMap(uint32_t seed);
+	void LoadNameAndPathMap(const std::string& filePath);
+	void SaveNameAndPathMap(const std::string& filePath);
+	void LoadMap(const std::string& mapName);
+	void SaveMap();
+	void CreateNewMap(const std::string& mapName, uint32_t seed);
 
 	void Initialize();
 	void Update();
@@ -43,7 +46,7 @@ public:
 
 	// 0) 軸解決のみ
 	bool SweepAABB(const AABB& aabb, const Vector3& delta, Vector3& outCorrectedDelta) const;
-	// 1) depenetration（先に「微妙な重なり」を毎フレ解消してから軸解決）
+	// 1) defenestration（先に「微妙な重なり」を毎フレ解消してから軸解決）
 	bool SweepAABB_DepentrationFirst(const AABB& aabb, const Vector3& delta, Vector3& outCorrectedDelta) const;
 	// 2) 真正のSweep（TOI: time of impact）寄せ（「一番早く当たる面」を探して進める）
 	bool SweepAABB_TOI(const AABB& aabb, const Vector3& delta, Vector3& outCorrectedDelta) const;
@@ -93,12 +96,22 @@ public:
 	{ 
 		charactors_.erase(std::remove(charactors_.begin(), charactors_.end(), c), charactors_.end()); 
 	}
+
+	void SetSeed(uint32_t seed); 
+	uint32_t GetSeed() const { return noiseParam_.seed; }
+
+	// マップネーム->ファイルパスマップ
+	std::map<std::string, std::string> mapNameToFilePath_;
+
 private:
 	// キャラクター管理
 	std::vector<BaseCharactor*> charactors_;
 
 	// マップファイルパス
-	std::string mapFilePath_;
+	std::string currentMapFilePath_;
+	// マップネーム
+	std::string currentMapName_;
+
 
 	// プレイヤー参照
 	Player* player_;

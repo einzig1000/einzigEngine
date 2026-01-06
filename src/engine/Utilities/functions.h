@@ -55,6 +55,10 @@ Vector4 Transform(const Vector4& v, const Matrix4x4& m);
 
 
 
+// fontCutImagePos(描画したい文字)
+Vector2int fontCutImagePos(char c);
+
+
 #pragma region collision
 
 bool IsCollision(const Sphere& s1, const Sphere& s2);
