@@ -11,13 +11,14 @@ Player::Player()
 	data_.name = "Player";
 
 	// レティクル初期化
-	reticle_.texture = ResourceID::GetTextureID(TextureID::UVChecker);
-	reticle_.transforms.scale = Vector3(0.02f, 0.02f, 0.02f);
+	reticle_.texture = ResourceID::GetTextureID(TextureID::white1x1);
+	reticle_.transforms.scale = Vector3(5.0f, 5.0f, 5.0f);
 	reticle_.transforms.translate = Vector3(
 		WindowManager::winWidth_ / 2.0f,
 		WindowManager::winHeight_ / 2.0f,
 		0.0f
 	);
+	reticle_.color = 0x00000099;
 
 	breakPower_ = 1.0f;
 
