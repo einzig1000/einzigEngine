@@ -73,6 +73,54 @@ Vector4 Transform(const Vector4& v, const Matrix4x4& m)
     return result;
 }
 
+Vector2int fontCutImagePos(char c)
+{
+	/// SPACE = 32
+
+	/// '0' = 48
+    /// ～～～
+	/// '9' = 57
+	
+    /// 'A' = 65
+    /// ～～～
+	/// 'Z' = 90
+  
+	/// 'a' = 97
+	/// ～～～
+	/// 'z' = 122
+
+    int ascii = static_cast<int>(c);
+	int col = 10;// 1行の文字数
+    int cellWidth = 32; // 各セルの幅
+    int cellHeight = 32; // 各セルの高さ
+
+    Vector2int result;
+
+    if (ascii >= 48 && ascii <= 57) // '0' - '9'
+    {
+		int index = ascii - 48;
+        result.x = index * cellWidth;
+        result.y = 0;
+    }
+    else if (ascii >= 65 && ascii <= 90 || ascii >= 97 && ascii <= 122) // 'A' - 'Z' & 'a' - 'z'
+    {
+        int index = 0;
+        if (ascii >= 65 && ascii <= 90) index = ascii - 65;
+		if (ascii >= 97 && ascii <= 122) index = ascii - 97;
+		result.x = (index % col) * cellWidth;
+		result.y = (index / col + 1) * cellHeight;
+    }
+    else
+    {
+        // 対応していない文字の場合、デフォルト位置を返す（例: 0,0）
+        result.x = 128;
+        result.y = 192;
+	}
+
+	return result;
+
+}
+
 
 #pragma region collision
 

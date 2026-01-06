@@ -26,6 +26,10 @@ enum class TextureID
 
 	BreakBlock_Array,
 
+	// 文字テクスチャ
+	font_0,
+
+
 	MAX,
 };
 
@@ -38,8 +42,11 @@ enum class UITextureID
 
 	Hotbar,
 	Hotbar_Selected,
-	TITLE_start,
-	TITLE_option,
+
+	TITLE_logo,
+	TITLE_slot,
+	TITLE_newWorldUI,
+
 
 	MAX,
 };

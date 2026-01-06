@@ -6,6 +6,7 @@ TestPhase::TestPhase()
 	int32_t tex2 = ResourceID::GetTextureID(TextureID::monsterBall);
 	int32_t tex3 = ResourceID::GetTextureID(TextureID::Circle);
 	int32_t tex4 = ResourceID::GetTextureID(TextureID::white1x1);
+	int32_t tex5 = ResourceID::GetTextureID(TextureID::font_0);
 
 	int32_t model1 = ResourceID::GetModelID(ItemID::ダイヤのツルハシ);
 	int32_t model2 = ResourceID::GetModelID(ItemID::ダイヤの剣);
@@ -106,13 +107,18 @@ TestPhase::TestPhase()
 	player_->SetBlock(wall3_.get());
 	player_->SetBlock(wall4_.get());
 
-	sprite1_->texture = tex1;
+	sprite1_->texture = tex5;
 	sprite1_->transforms.scale = { 0.1f,0.1f };
+	sprite1_->anchor = Anchor::CenterLeft;
+	sprite1_->cutImageSize = Vector2int(32, 32);
+	sprite1_->cutImageLeftTop = fontCutImagePos('0');
+
 	sprite2_->texture = tex3;
 	sprite2_->transforms.scale = { 0.1f,0.1f };
 
 	triangle1_->texture = tex1;
 	triangle2_->texture = tex1;
+
 
 	line_->points.push_back(Vector3{ 10.0f,0.0f,0.0f });
 	line_->points.push_back(Vector3{ 0.0f,10.0f,0.0f });
@@ -173,34 +179,34 @@ void TestPhase::Update()
 
 void TestPhase::Draw()
 {
-	rect_->Draw();
-	
-	ground_->Draw();
-	ground_->DrawAABB();
-	wall1_->Draw();
-	wall2_->Draw();
-	wall3_->Draw();
-	wall4_->Draw();
+	//rect_->Draw();
+	//
+	//ground_->Draw();
+	//ground_->DrawAABB();
+	//wall1_->Draw();
+	//wall2_->Draw();
+	//wall3_->Draw();
+	//wall4_->Draw();
 
-	player_->Draw();
-	player_->DrawAABB();
+	//player_->Draw();
+	//player_->DrawAABB();
 
 	sprite1_->Draw();
-	sprite2_->Draw();
+	//sprite2_->Draw();
 
-	triangle1_->Draw();
-	triangle2_->Draw();
+	//triangle1_->Draw();
+	//triangle2_->Draw();
 
-	particle1_->Draw();
-	particle1_->DrawEmitter();
+	//particle1_->Draw();
+	//particle1_->DrawEmitter();
 
-	line_->Draw();
-	line2_->Draw();
-	line3_->Draw();
+	//line_->Draw();
+	//line2_->Draw();
+	//line3_->Draw();
 
-	shoulder_->Draw();
-	elbow_->Draw();
-	hand_->Draw();
+	//shoulder_->Draw();
+	//elbow_->Draw();
+	//hand_->Draw();
 }
 
 

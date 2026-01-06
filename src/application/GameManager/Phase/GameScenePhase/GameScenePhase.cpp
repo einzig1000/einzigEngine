@@ -1,11 +1,11 @@
 #include "GameScenePhase.h"
 #include "MapManager/MapManager.h"
+#include "MapManager/MapWorldCollider.h"
 #include "Charactor/Player/Player.h"
 #include "Charactor/Enemy/EnemyManager.h"
 #include "Camera/CameraController.h"
 #include "UIManager/UIManager.h"
 #include "Physics/IWorldCollider.h"
-#include "MapManager/MapWorldCollider.h"
 #include "Item/CraftRecipe/CraftRecipe.h"
 #include <fstream>
 
@@ -18,11 +18,16 @@ GameScenePhase::GameScenePhase()
 	// UIマネージャー生成
 	uiManager_ = std::make_unique<UIManager>(player_.get());
 	// マップマネージャー生成
-	map_ = std::make_unique<MapManager>(player_.get());
+	map_ = std::make_unique<MapManager>();
 	// マップワールドコライダー生成
 	worldCollider_ = std::make_unique<MapWorldCollider>(map_.get());
 	// 敵マネージャー生成
 	enemyManager_ = std::make_unique<EnemyManager>();
+
+	// マップマネージャーにプレイヤーをセット
+	map_->SetPlayer(player_.get());
+	// マップ名とパスのマップ読み込み
+	map_->LoadNameAndPathMap("resources/Minecraft/Maps/MapNameAndPath.csv");
 
 	// カメラコントローラーにプレイヤーとマップマネージャーをセット
 	cameraController_->SetPlayer(player_.get());
@@ -45,9 +50,6 @@ GameScenePhase::GameScenePhase()
 	// プレイヤーの物理演算有効化
 	Game::Physics::RegisterDynamic(&player_->data_);
 
-
-	map_->LoadMap("resources/Map/map.json");
-
 	CraftRecipeList::InitializeRecipes();
 }
 
@@ -62,6 +64,8 @@ void GameScenePhase::Initialize()
 	uiManager_->Initialize();
 	enemyManager_->Initialize();
 
+	if (context_->isNewGame) map_->CreateNewMap(context_->mapName, 12345);
+	else map_->LoadMap(context_->mapName);
 
 	Game::Camera::SetCameraMode(CameraMode_ORBIT_FPS::FPS);
 	Game::Input::Mouse::ShowCursor(false);
@@ -72,7 +76,12 @@ void GameScenePhase::Update()
 {
 	if (Game::Input::Key::IsJustPressed(DIK_F))
 	{
-		enemyManager_->AddNewEnemy(player_->data_.GetWorldPosition() + Vector3{0.0f,20.0f,0.0f});
+		enemyManager_->AddNewEnemy(player_->data_.GetWorldPosition() + Vector3{ 0.0f,20.0f,0.0f });
+	}
+
+	if (Game::Input::Key::IsJustPressed(DIK_L))
+	{
+		map_->SaveMap();
 	}
 
 	// プレイヤー更新

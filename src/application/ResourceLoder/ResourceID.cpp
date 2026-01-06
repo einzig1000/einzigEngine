@@ -257,6 +257,9 @@ void ResourceID::reload()
 	tmp = Game::Resource::LoadTexture("resources/Prototypes/texture/particle/circle.png");
 	TextureIDs_[size_t(TextureID::Circle)] = tmp;
 
+	tmp = Game::Resource::LoadTexture("resources/Prototypes/texture/font/font_0.png");
+	TextureIDs_[size_t(TextureID::font_0)] = tmp;
+
 #pragma endregion
 
 #pragma region モデル読み込み
@@ -291,11 +294,12 @@ void ResourceID::reload()
 	tmp = Game::Resource::LoadTexture("resources/Minecraft/UI/Inventory/Hotbar_Selected.png");
 	UITextureIDs_[size_t(UITextureID::Hotbar_Selected)] = tmp;
 
-	tmp = Game::Resource::LoadTexture("resources/Minecraft/UI/Title/start.png");
-	UITextureIDs_[size_t(UITextureID::TITLE_start)] = tmp;
-
-	tmp = Game::Resource::LoadTexture("resources/Minecraft/UI/Title/option.png");
-	UITextureIDs_[size_t(UITextureID::TITLE_option)] = tmp;
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/UI/Title/title.png");
+	UITextureIDs_[size_t(UITextureID::TITLE_logo)] = tmp;
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/UI/Title/slot.png");
+	UITextureIDs_[size_t(UITextureID::TITLE_slot)] = tmp;
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/UI/Title/NewWorldUI.png");
+	UITextureIDs_[size_t(UITextureID::TITLE_newWorldUI)] = tmp;
 
 #pragma endregion
 
@@ -304,7 +308,7 @@ void ResourceID::reload()
 	NumberTextureIDs_.resize(10);
 	for (int i = 0; i <= 9; ++i)
 	{
-		std::string path = "resources/Minecraft/UI/number/" + std::to_string(i) + ".png";
+		std::string path = "resources/Prototypes/texture/font/" + std::to_string(i) + ".png";
 		tmp = Game::Resource::LoadTexture(path);
 		NumberTextureIDs_[i] = tmp;
 	}

@@ -274,16 +274,19 @@ namespace
 }
 
 
-MapManager::MapManager(Player* player)
+MapManager::MapManager()
+{
+	dropItemManager_ = new DropItemManager();
+	dropItemManager_->SetMapManager(this);
+}
+
+void MapManager::SetPlayer(Player* player)
 {
 	// プレイヤー参照保存
 	player_ = player;
 
-	dropItemManager_ = new DropItemManager();
-	dropItemManager_->SetMapManager(this);
-	dropItemManager_->SetPlayer(player);
-
 	RegisterCharactor(player_);
+	dropItemManager_->SetPlayer(player);
 }
 
 MapManager::~MapManager()
@@ -300,10 +303,50 @@ MapManager::~MapManager()
 
 void MapManager::Initialize()
 {
-	CreateNewMap(123456);
+	//CreateNewMap(123456);
 }
 
-void MapManager::CreateNewMap(uint32_t seed)
+
+// マップ名とファイルパスの対応表読み込み/保存
+void MapManager::LoadNameAndPathMap(const std::string& filePath)
+{
+	std::string csvFilePath = filePath;
+	// CSVファイル存在確認
+	if (std::filesystem::exists(csvFilePath))
+	{
+		std::ifstream file(csvFilePath);
+		// 開けるか確認
+		if (!file.is_open()) return;
+
+		std::string line;
+		std::getline(file, line);
+
+		while (std::getline(file, line))
+		{
+			std::istringstream ss(line);
+			std::string name, path;
+			std::getline(ss, name, ',');
+			std::getline(ss, path, ',');
+			mapNameToFilePath_[name] = path;
+		}
+	}
+}
+void MapManager::SaveNameAndPathMap(const std::string& filePath)
+{
+	std::string csvFilePath = filePath;
+	std::ofstream file(csvFilePath);
+	// 開けるか確認
+	if (!file.is_open()) return;
+	// ヘッダー行
+	file << "MapName,FilePath\n";
+	for (const auto& [name, path] : mapNameToFilePath_)
+	{
+		file << name << "," << path << "\n";
+	}
+}
+
+// 新規マップ作成
+void MapManager::CreateNewMap(const std::string& mapName, uint32_t seed)
 {
 	// ノイズパラメータ設定
 	noiseParam_.seed = seed;			// 俗に言うシード値
@@ -313,19 +356,12 @@ void MapManager::CreateNewMap(uint32_t seed)
 	noiseParam_.height = CHUNK_Y;		// マップの高さ
 	noiseParam_.pn = PerlinNoise(seed);	// PerlinNoise インスタンス生成
 
-	//Vector2int playerIndex = ChunkIndexByPosition(player_->data_.translate.value);
-	//// プレイヤー周辺のチャンクを生成スケジュールに登録
-	//for (int dx = -20; dx <= 20; ++dx)
-	//{
-	//	for (int dz = -20; dz <= 20; ++dz)
-	//	{
-	//		Vector2int chunkPos = { playerIndex.x + dx, playerIndex.y + dz };
-	//		EnsureChunkScheduled(chunkPos);
-	//	}
-	//}
+	// mapNameToFilePath_ に新規マップ登録
+	mapNameToFilePath_[mapName] = "resources/Minecraft/Maps/" + mapName + ".json";
+	currentMapFilePath_ = "resources/Minecraft/Maps/" + mapName + ".json";
 }
-
-void MapManager::LoadMap(const std::string& mapFilePath)
+// マップ読み込み
+void MapManager::LoadMap(const std::string& mapName)
 {
 	// 相互参照を切る
 	for (auto& [pos, chunk] : chunks)
@@ -348,33 +384,31 @@ void MapManager::LoadMap(const std::string& mapFilePath)
 	{
 		chunkGenQueue_.pop();
 	}
-	// chunkScheduled_/chunkCreated_ をclear
+	// chunkScheduled_/chunkCreated_ を clear
 	chunkScheduled_.clear();
 	chunkCreated_.clear();
 
+	// マップネーム保存
+	currentMapName_ = mapName;
+	// mapNameからファイルパスを取得
+	currentMapFilePath_ = mapNameToFilePath_[currentMapName_];
 
-	mapFilePath_ = mapFilePath;
-
+	// JSONから読み込み
 	JsonManager json;
-	json.LoadFromJson(*this, mapFilePath);
+	json.LoadFromJson(*this, currentMapFilePath_);
 
-	//// ロード後プレイヤーが乗ってるチャンクを生成
-	//Vector2int playerIndex = ChunkIndexByPosition(player_->data_.translate.value);
-	//if (!(chunkCreated_.find(playerIndex) != chunkCreated_.end()))
-	//{
-	//	EnsureChunkScheduled(playerIndex);
-	//	ProcessChunkGeneration();
-	//}
-
-	player_->data_.translate.value.y = 500.0f;
+	player_->data_.translate.value.y = 20.0f;
 	player_->data_.translate.velocity.y = 0.0f;
-	player_->data_.translate.acceleration.y = 0.0f;
+	player_->data_.translate.acceleration.y = GRAVITY;
 }
-
-void MapManager::SaveMap(const std::string& mapFilePath)
+// マップ保存
+void MapManager::SaveMap()
 {
 	JsonManager json;
-	json.SaveToJson(*this, mapFilePath);
+	// JSONへ保存
+	json.SaveToJson(*this, currentMapFilePath_);
+
+	SaveNameAndPathMap("resources/Minecraft/Maps/MapNameAndPath.csv");
 }
 
 // チャンク有無確認
@@ -527,13 +561,14 @@ void MapManager::Update()
 
 void MapManager::Draw()
 {
+	Vector2int drawCenter = ChunkIndexByPosition(player_->data_.translate.value);
+
 	// プレイヤー周囲描画
-	Vector2int playerIndex = ChunkIndexByPosition(player_->data_.translate.value);
 	for (int32_t dx = -drawRadius_; dx <= drawRadius_; ++dx)
 	{
 		for (int32_t dz = -drawRadius_; dz <= drawRadius_; ++dz)
 		{
-			Vector2int chunkPos = Vector2int(playerIndex.x + dx, playerIndex.y + dz);
+			Vector2int chunkPos = Vector2int(drawCenter.x + dx, drawCenter.y + dz);
 			EnsureChunkScheduled(chunkPos);
 			Chunk* chunk = TryGetChunk(chunkPos);
 			if (chunk) { chunk->Draw(); }
