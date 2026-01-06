@@ -97,7 +97,7 @@ public:
 		charactors_.erase(std::remove(charactors_.begin(), charactors_.end(), c), charactors_.end()); 
 	}
 
-	void SetSeed(uint32_t seed) { noiseParam_.seed = seed; }
+	void SetSeed(uint32_t seed); 
 	uint32_t GetSeed() const { return noiseParam_.seed; }
 
 	// マップネーム->ファイルパスマップ

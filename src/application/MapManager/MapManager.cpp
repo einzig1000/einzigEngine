@@ -360,6 +360,17 @@ void MapManager::CreateNewMap(const std::string& mapName, uint32_t seed)
 	mapNameToFilePath_[mapName] = "resources/Minecraft/Maps/" + mapName + ".json";
 	currentMapFilePath_ = "resources/Minecraft/Maps/" + mapName + ".json";
 }
+void MapManager::SetSeed(uint32_t seed)
+{
+	// ノイズパラメータ設定
+	noiseParam_.seed = seed;			// 俗に言うシード値
+	noiseParam_.scale = 32.0f;			// 地形の粗さ（大きくすると緩やか）
+	noiseParam_.octaves = 4;			// 反復回数 (大きくすると細かい起伏が増える)
+	noiseParam_.persistence = 0.5f;		// 各オクターブの振幅減衰 (大きくすると細かい起伏が増える)
+	noiseParam_.height = CHUNK_Y;		// マップの高さ
+	noiseParam_.pn = PerlinNoise(seed);	// PerlinNoise インスタンス生成
+}
+
 // マップ読み込み
 void MapManager::LoadMap(const std::string& mapName)
 {

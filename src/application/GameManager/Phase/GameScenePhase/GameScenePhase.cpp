@@ -64,7 +64,7 @@ void GameScenePhase::Initialize()
 	uiManager_->Initialize();
 	enemyManager_->Initialize();
 
-	if (context_->isNewGame) map_->CreateNewMap(context_->mapName, 12345);
+	if (context_->isNewGame) map_->CreateNewMap(context_->mapName, context_->seed);
 	else map_->LoadMap(context_->mapName);
 
 	Game::Camera::SetCameraMode(CameraMode_ORBIT_FPS::FPS);

@@ -9,6 +9,7 @@ struct PhaseContext
 {
 	std::string mapName = "default";
 	bool isNewGame = false;
+	uint32_t seed = 0;
 };
 
 class PhaseParent

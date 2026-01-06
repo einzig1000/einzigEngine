@@ -68,7 +68,9 @@ void DirectXManager::BeginFrame()
     commandContextManager->GetCommandList()->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
 
     // クリア
-    float clearColor[] = { 0.1f,0.1f,0.1f,1.0f };
+  
+    //float clearColor[] = { 0.1f,0.1f,0.1f,1.0f };
+    float clearColor[] = { 0.396078f, 0.894117f, 1.0f, 1.0f };
     commandContextManager->GetCommandList()->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
     commandContextManager->GetCommandList()->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 

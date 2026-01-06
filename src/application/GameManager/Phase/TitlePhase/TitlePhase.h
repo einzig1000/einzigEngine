@@ -43,15 +43,17 @@ private:
 	// 新規ワールド名前シード入力
 	std::unique_ptr<RenderData_Sprite> NewWorldNameInputBox;
 	std::unique_ptr<RenderData_Sprite> nameInputBox;
-	std::array<std::unique_ptr<RenderData_Sprite>, 24> nameInputStr;
+	std::array<std::unique_ptr<RenderData_Sprite>, 16> nameInputStr;
 	std::unique_ptr<RenderData_Sprite> seedInputBox;
 	std::string newWorldName;
-	std::array<std::unique_ptr<RenderData_Sprite>, 16> seedInputStr;
-	unsigned long long newWorldSeed = 0;
+	std::array<std::unique_ptr<RenderData_Sprite>, 8> seedInputStr;
+	uint32_t newWorldSeed = 0;
 	std::unique_ptr<RenderData_Sprite> tentenLine;
-	float tentenPosY[2];
+	Vector2 tentenPos[2];
+	std::unique_ptr<RenderData_Sprite> CreateWorldDecideButton;
 
 	// ワールド選択ボタン群
+	std::vector<std::string> allWorldNames;
 	std::vector<std::unique_ptr<RenderData_Sprite>> EnterWorldButtons;
 	std::vector<std::vector<std::unique_ptr<RenderData_Sprite>>> EnterWorldStrs;
 

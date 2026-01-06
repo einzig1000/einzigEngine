@@ -31,7 +31,7 @@ struct NoiseParameter
 	float scale = 32.0f;        // 地形の粗さ（大きくすると緩やか）
     int octaves = 4;            // 反復回数 (大きくすると細かい起伏が増える)
     float persistence = 0.5f;   // 各オクターブの振幅減衰 (大きくすると細かい起伏が増える)
-    uint32_t seed = 12345;      // 俗に言うシード値
+	uint32_t seed = 12345;      // 俗に言うシード値
 	PerlinNoise pn;
 
 

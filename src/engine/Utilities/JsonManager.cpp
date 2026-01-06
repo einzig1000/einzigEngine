@@ -581,7 +581,7 @@ bool JsonManager::LoadFromJson(MapManager& data, const std::string& path)
 		// シードを読み込み
         if (root.contains("seed") && root["seed"].is_number_integer())
         {
-			data.SetSeed(root["seed"].get<int32_t>());
+			data.SetSeed(root["seed"].get<uint32_t>());
 		}
 
 		// mapData 配列をループ
