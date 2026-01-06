@@ -214,6 +214,9 @@
     <Filter Include="application\GameManeger\UIManager\UIScreen\CraftScreen">
       <UniqueIdentifier>{063f143d-28f9-4e2e-9e7a-3ee5a42e42f1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="application\GameManeger\Charactor\Enemy">
+      <UniqueIdentifier>{d82d499d-4b7a-4494-a0d1-66a863c1abba}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -411,11 +414,11 @@
     <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\Craft\Craft.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="src\application\Charactor\Enemy\Enemy.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="src\application\Charactor\Enemy\EnemyManager.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>application\GameManeger\Charactor\Enemy</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\Charactor\Enemy\Enemy.cpp">
+      <Filter>application\GameManeger\Charactor\Enemy</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -612,10 +615,10 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="src\application\Charactor\Enemy\Enemy.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>application\GameManeger\Charactor\Enemy</Filter>
     </ClInclude>
     <ClInclude Include="src\application\Charactor\Enemy\EnemyManager.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>application\GameManeger\Charactor\Enemy</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

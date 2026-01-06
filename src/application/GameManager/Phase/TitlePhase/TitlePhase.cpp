@@ -16,6 +16,9 @@ TitlePhase::TitlePhase()
 		strPart = std::make_unique<RenderData_Sprite>();
 	}
 
+	titleLogo = std::make_unique<RenderData_Sprite>();
+
+
 	// プレイヤー生成
 	player_ = std::make_unique<Player>();
 
@@ -44,12 +47,20 @@ void TitlePhase::Initialize()
 	currentState = TitlePhaseState::None;
 	nextState = TitlePhaseState::Title;
 
+	// ロゴ
+	{
+		titleLogo->texture = ResourceID::GetUITextureID(UITextureID::TITLE_logo);
+		titleLogo->anchor = Anchor::Center;
+		titleLogo->name = "TitleLogo";
+		titleLogo->transforms.translate = { 640.0f,160.0f,0.0f };
+	}
+
 	// スタートボタン
 	{
 		startButton->texture = ResourceID::GetUITextureID(UITextureID::TITLE_slot);
 		startButton->anchor = Anchor::Center;
 		startButton->name = "StartButton";
-		startButton->transforms.translate = { 640.0f,300.0f,0.0f };
+		startButton->transforms.translate = { 640.0f,500.0f,0.0f };
 		startButton->color = 0x777777FF;
 
 		char startText[] = { 'S','T','A','R','T' };
@@ -167,8 +178,8 @@ void TitlePhase::Initialize()
 		CreateWorldDecideButton->texture = ResourceID::GetUITextureID(UITextureID::TITLE_slot);
 		CreateWorldDecideButton->anchor = Anchor::Center;
 		CreateWorldDecideButton->name = "CreateWorldDecideButton";
-		CreateWorldDecideButton->transforms.translate = { 640.0f,500.0f,0.0f };
-		CreateWorldDecideButton->transforms.scale = { 0.5f,0.7f,1.0f };
+		CreateWorldDecideButton->transforms.translate = { 640.0f,540.0f,0.0f };
+		CreateWorldDecideButton->transforms.scale = { 0.2f,0.5f,1.0f };
 		CreateWorldDecideButton->color = 0x777777FF;
 
 		// シードスプライト群
@@ -700,7 +711,7 @@ void TitlePhase::Update()
 			// newWorldSeed の桁数
 			int32_t seedDigitCount = int32_t(std::to_string(newWorldSeed).length());
 
-			tentenLine->transforms.translate.x = seedInputBox->transforms.translate.x - (30.0f * 8.0f) / 2.0f + 20.0f * (seedDigitCount)+10.0f;
+			tentenLine->transforms.translate.x = seedInputBox->transforms.translate.x - (30.0f * 8.0f) / 2.0f + 30.0f * (seedDigitCount)+10.0f;
 
 			if (Game::Input::Key::IsJustPressed(DIK_BACKSPACE))
 			{
@@ -792,7 +803,10 @@ void TitlePhase::Draw()
 	}
 	case TitlePhaseState::Title:
 	{
+		titleLogo->Draw();
+		titleLogo->DrawImGui();
 		startButton->Draw();
+		startButton->DrawImGui();
 		for (auto& strPart : startStr)
 		{
 			strPart->Draw();

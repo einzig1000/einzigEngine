@@ -33,6 +33,11 @@ void Enemy::Initialize()
 
 void Enemy::Update()
 {
+	if (HP_ <= 0)
+	{
+		return;
+	}
+
 	currentMode_ = uiManager_->GetCurrentUIMode();
 
 	// プレイ中または非表示時のみ行動
@@ -54,11 +59,19 @@ void Enemy::Update()
 
 void Enemy::Draw()
 {
+	if (HP_ <= 0)
+	{
+		return;
+	}
 	data_.Draw();
 }
 
 void Enemy::DrawImGui()
 {
+	if (HP_ <= 0)
+	{
+		return;
+	}
 	data_.DrawImGui();
 }
 

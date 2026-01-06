@@ -32,6 +32,9 @@ private:
 
 	std::string stageFilePath_;
 
+	// ロゴ
+	std::unique_ptr<RenderData_Sprite> titleLogo;
+
 	// スタートボタン
 	std::unique_ptr<RenderData_Sprite> startButton;
 	std::array<std::unique_ptr<RenderData_Sprite>, 5> startStr;
