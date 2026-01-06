@@ -2,19 +2,15 @@
 #include "UIManager/ScreenMode/PlayingScreen/PlayingScreen.h"
 #include "UIManager/ScreenMode/InventoryScreen/InventoryScreen.h"
 #include "UIManager/ScreenMode/CraftScreen/CraftScreen.h"
+#include "UIManager/ScreenMode/PauseScreen/PauseScreen.h"
 
 
-UIManager::UIManager(Player* player)
-	: player_(player)
+UIManager::UIManager()
 {
 	playingScreen_ = new PlayingScreen();
-	playingScreen_->SetPlayer(player_);
-
 	inventoryScreen_ = new InventoryScreen();
-	inventoryScreen_->SetPlayer(player_);
-
 	craftingScreen_ = new CraftScreen();
-	craftingScreen_->SetPlayer(player_);
+	pauseScreen_ = new PauseScreen();
 }
 
 UIManager::~UIManager()
@@ -27,10 +23,25 @@ UIManager::~UIManager()
 
 	delete craftingScreen_;
 	craftingScreen_ = nullptr;
+
+	delete pauseScreen_;
+	pauseScreen_ = nullptr;
 }
 
 void UIManager::Initialize()
 {
+	playingScreen_->SetPlayer(player_);
+	playingScreen_->SetMapManager(mapManager_);
+
+	inventoryScreen_->SetPlayer(player_);
+	inventoryScreen_->SetMapManager(mapManager_);
+
+	craftingScreen_->SetPlayer(player_);
+	craftingScreen_->SetMapManager(mapManager_);
+
+	pauseScreen_->SetPlayer(player_);
+	pauseScreen_->SetMapManager(mapManager_);
+
 	ChangeScreen(UIMode::Playing);
 }
 
@@ -79,6 +90,9 @@ void UIManager::ChangeScreen(UIMode mode)
 		break;
 	case UIMode::Crafting:
 		currentScreen_ = craftingScreen_;
+		break;
+	case UIMode::Pause:
+		currentScreen_ = pauseScreen_;
 		break;
 	default:
 		currentScreen_ = nullptr;

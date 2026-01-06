@@ -12,6 +12,8 @@ enum class ModelID
 	Corn,
 	Sphere,
 
+	Pig,
+
 	MAX,
 };
 
@@ -48,6 +50,8 @@ enum class UITextureID
 	TITLE_slot,
 	TITLE_newWorldUI,
 
+	PAUSE_menu,
+	PAUSE_SaveButton,
 
 	MAX,
 };

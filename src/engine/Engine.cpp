@@ -293,13 +293,11 @@ void Engine::EndFrame()
 
 	// DirectX終了処理
 	dxManager_->EndFrame();
+}
 
-	// アプリケーション終了
-	if (Game::Input::Key::IsJustPressed(DIK_ESCAPE))
-	{
-		//Finalize();
-		windowManager_->Quit();
-	}
+void Engine::Quit()
+{
+	windowManager_->Quit();
 }
 
 // 終了処理

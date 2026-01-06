@@ -15,10 +15,10 @@ GameScenePhase::GameScenePhase()
 	player_ = std::make_unique<Player>();
 	// カメラコントローラー生成
 	cameraController_ = std::make_unique<CameraController>();
-	// UIマネージャー生成
-	uiManager_ = std::make_unique<UIManager>(player_.get());
 	// マップマネージャー生成
 	map_ = std::make_unique<MapManager>();
+	// UIマネージャー生成
+	uiManager_ = std::make_unique<UIManager>();
 	// マップワールドコライダー生成
 	worldCollider_ = std::make_unique<MapWorldCollider>(map_.get());
 	// 敵マネージャー生成
@@ -42,6 +42,10 @@ GameScenePhase::GameScenePhase()
 	enemyManager_->SetPlayer(player_.get());
 	enemyManager_->SetMapManager(map_.get());
 	enemyManager_->SetUIManager(uiManager_.get());
+
+	// UIマネージャーにプレイヤーとマップマネージャーをセット
+	uiManager_->SetPlayer(player_.get());
+	uiManager_->SetMapManager(map_.get());
 
 	// 物理システムにワールドコライダーをセット
 	Game::Physics::SetIWorldCollider(worldCollider_.get());
@@ -74,10 +78,10 @@ void GameScenePhase::Initialize()
 
 void GameScenePhase::Update()
 {
-	if (Game::Input::Key::IsJustPressed(DIK_F))
-	{
-		enemyManager_->AddNewEnemy(player_->data_.GetWorldPosition() + Vector3{ 0.0f,20.0f,0.0f });
-	}
+	//if (Game::Input::Key::IsJustPressed(DIK_F))
+	//{
+	//	enemyManager_->AddNewEnemy(player_->data_.GetWorldPosition() + Vector3{ 0.0f,20.0f,0.0f });
+	//}
 
 	if (Game::Input::Key::IsJustPressed(DIK_L))
 	{

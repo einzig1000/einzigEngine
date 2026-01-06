@@ -5,6 +5,7 @@
 
 class UIElement;
 class Player;
+class MapManager;
 
 class UIScreen
 {
@@ -22,11 +23,15 @@ public:
 
 	// プレイヤーセット
 	void SetPlayer(Player* player) { player_ = player; }
+	// マップマネージャーセット
+	void SetMapManager(MapManager* mapManager) { mapManager_ = mapManager; }
+
 
 protected:
 	UIMode nextUIMode_ = UIMode::None;
 	std::vector<std::unique_ptr<UIElement>> uiElements_;
 
 	Player* player_ = nullptr;
+	MapManager* mapManager_ = nullptr;
 };
 

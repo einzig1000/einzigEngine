@@ -6,8 +6,8 @@
 Enemy::Enemy(Vector3 spawnPos)
 {
 	// エネミーデータ初期化
-	data_.SetModel(ResourceID::GetModelID(ModelID::Cube));
-	data_.SetTexture(ResourceID::GetTextureID(TextureID::UVChecker));
+	data_.SetModel(ResourceID::GetModelID(ModelID::Pig));
+	data_.SetTexture(ResourceID::GetTextureID(TextureID::white1x1));
 	data_.name = "Enemy";
 
 	data_.translate.value = spawnPos;
@@ -35,6 +35,7 @@ void Enemy::Update()
 {
 	if (HP_ <= 0)
 	{
+		data_.translate.value.y = -1000.0f;
 		return;
 	}
 
@@ -55,6 +56,8 @@ void Enemy::Update()
 
 	// 接地判定更新
 	UpdateGrounded();
+
+	data_.color = Vector4{ 1.0f,1.0f,1.0f,1.0f };
 }
 
 void Enemy::Draw()

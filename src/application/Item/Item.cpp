@@ -28,6 +28,15 @@ void Item::Initialize(ItemID id)
 	case ItemID::鉄の斧:			ableStackCount_ = 1; break;
 	case ItemID::ダイヤの斧:		ableStackCount_ = 1; break;
 
+	case ItemID::鉄の頭:			ableStackCount_ = 1; break;
+	case ItemID::鉄の胴:			ableStackCount_ = 1; break;
+	case ItemID::鉄の脚:			ableStackCount_ = 1; break;
+	case ItemID::鉄の靴:			ableStackCount_ = 1; break;
+	case ItemID::ダイヤの頭:		ableStackCount_ = 1; break;
+	case ItemID::ダイヤの胴:		ableStackCount_ = 1; break;
+	case ItemID::ダイヤの脚:		ableStackCount_ = 1; break;
+	case ItemID::ダイヤの靴:		ableStackCount_ = 1; break;
+
 	case ItemID::ガラスブロック:	ableStackCount_ = 64; break;
 	case ItemID::葉ブロック:		ableStackCount_ = 64; break;
 	case ItemID::原木ブロック:		ableStackCount_ = 64; break;

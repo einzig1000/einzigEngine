@@ -101,6 +101,8 @@ void BaseCharactor::TakeDamage(int32_t damage)
 	if (actualDamage < 1) actualDamage = 1;
 	HP_ -= actualDamage;
 	if (HP_ < 0) HP_ = 0;
+
+	data_.color = { 1.0f, 0.0f, 0.0f, 1.0f }; // ダメージ受けたら赤くする
 }
 
 void BaseCharactor::Move(const Vector3& direction, float speed)

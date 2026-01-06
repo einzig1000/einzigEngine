@@ -260,8 +260,8 @@ ItemID HaveItem::GetCurrentSelectedItemID() const
 
 void HaveItem::RemoveCurrentSelectedItem(int count)
 {
-    // ホットバーの選択中スロットを取得
-    auto& slot = hotbar_[hotbarSelectedIndex_];
+	// ホットバーの選択中スロットを取得 hotbar_[hotbarSelectedIndex_] = inventory_
+	auto& slot = inventory_[0][hotbarSelectedIndex_];
     // アイテム数を減らす
     if (slot.count >= count)
     {
@@ -1044,6 +1044,7 @@ NORMAL_LEFT_CLICK:
     // 通常左クリック（全エリア共通）
     if (hand_.IsEmpty())
     {
+		// 手に何も持っていない → スロットから持つ
         if (!slot->IsEmpty())
         {
             hand_.item = slot->item;
@@ -1054,7 +1055,8 @@ NORMAL_LEFT_CLICK:
     }
     else
     {
-        if (slot->IsEmpty())
+		// 手に何か持っている → スロットに置く
+		if (slot->IsEmpty())
         {
             slot->item = hand_.item;
             slot->count = hand_.count;

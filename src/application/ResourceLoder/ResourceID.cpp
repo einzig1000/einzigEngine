@@ -278,6 +278,9 @@ void ResourceID::reload()
 	tmp = Game::Resource::LoadModel("resources/Prototypes/model/", "sphere.obj");
 	ModelIDs_[size_t(ModelID::Sphere)] = tmp;
 
+	tmp = Game::Resource::LoadModel("resources/Prototypes/model/", "pig.obj");
+	ModelIDs_[size_t(ModelID::Pig)] = tmp;
+
 #pragma endregion
 
 #pragma region UIテクスチャ読み込み
@@ -300,6 +303,11 @@ void ResourceID::reload()
 	UITextureIDs_[size_t(UITextureID::TITLE_slot)] = tmp;
 	tmp = Game::Resource::LoadTexture("resources/Minecraft/UI/Title/NewWorldUI.png");
 	UITextureIDs_[size_t(UITextureID::TITLE_newWorldUI)] = tmp;
+
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/UI/Pause/pause_menu.png");
+	UITextureIDs_[size_t(UITextureID::PAUSE_menu)] = tmp;
+	tmp = Game::Resource::LoadTexture("resources/Minecraft/UI/Pause/SaveButton.png");
+	UITextureIDs_[size_t(UITextureID::PAUSE_SaveButton)] = tmp;
 
 #pragma endregion
 

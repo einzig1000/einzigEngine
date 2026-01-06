@@ -6,12 +6,15 @@ class UIScreen;
 class PlayingScreen;
 class InventoryScreen;
 class CraftScreen;
-
+class PauseScreen;
+class MapManager;
 
 class UIManager
 {
 public:
-	UIManager(Player* player);
+	UIManager();
+	void SetPlayer(Player* player) { player_ = player; }
+	void SetMapManager(MapManager* mapManager) { mapManager_ = mapManager; }
 	~UIManager();
 	void Initialize();
 	void Update();
@@ -30,7 +33,9 @@ private:
 	PlayingScreen* playingScreen_ = nullptr;
 	InventoryScreen* inventoryScreen_ = nullptr;
 	CraftScreen* craftingScreen_ = nullptr;
+	PauseScreen* pauseScreen_ = nullptr;
 
 	Player* player_ = nullptr;
+	MapManager* mapManager_ = nullptr;
 };
 

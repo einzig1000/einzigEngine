@@ -217,6 +217,9 @@
     <Filter Include="application\GameManeger\Charactor\Enemy">
       <UniqueIdentifier>{d82d499d-4b7a-4494-a0d1-66a863c1abba}</UniqueIdentifier>
     </Filter>
+    <Filter Include="application\GameManeger\UIManager\UIScreen\PauseScreen">
+      <UniqueIdentifier>{be480839-6e46-411f-809f-c6c6447cda98}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -420,6 +423,12 @@
     <ClCompile Include="src\application\Charactor\Enemy\Enemy.cpp">
       <Filter>application\GameManeger\Charactor\Enemy</Filter>
     </ClCompile>
+    <ClCompile Include="src\application\UIManager\ScreenMode\PauseScreen\PauseScreen.cpp">
+      <Filter>application\GameManeger\UIManager\UIScreen\PauseScreen</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\Pause\Pause.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\engine\DirectX\CommandContextManager.h">
@@ -619,6 +628,12 @@
     </ClInclude>
     <ClInclude Include="src\application\Charactor\Enemy\EnemyManager.h">
       <Filter>application\GameManeger\Charactor\Enemy</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\UIManager\ScreenMode\PauseScreen\PauseScreen.h">
+      <Filter>application\GameManeger\UIManager\UIScreen\PauseScreen</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\Pause\Pause.h">
+      <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

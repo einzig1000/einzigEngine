@@ -506,6 +506,8 @@ public:
 		static void ClearDynamicAll();
 	};
 
+	static void quit();
+
 private:
 	Game() = delete;
 	~Game() = delete;

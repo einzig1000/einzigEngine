@@ -45,6 +45,7 @@ public:
 	void UpdateTransforms();
 	void UpdateParticles();
 	void EndFrame();
+	void Quit();
 	void Finalize();
 
 	// リソース

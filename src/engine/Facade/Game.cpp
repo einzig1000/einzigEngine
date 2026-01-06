@@ -355,3 +355,9 @@ void Game::Physics::ClearDynamicAll()
 //{
 //	return Engine::Instance().GetGravity();
 //}
+
+void Game::quit()
+{
+	Engine::Instance().Quit();
+}
+

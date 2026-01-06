@@ -27,6 +27,7 @@ private:
 	MapManager* mapManager_;
 	UIManager* uiManager_;
 
+	int32_t spawnTimer_ = 0;
 
 };
 

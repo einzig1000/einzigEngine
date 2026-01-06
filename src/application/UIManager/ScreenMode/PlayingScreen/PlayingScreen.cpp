@@ -36,6 +36,11 @@ void PlayingScreen::Update()
 	{
 		nextUIMode_ = UIMode::Inventory;
 	}
+
+	if (Game::Input::Key::IsJustPressed(DIK_ESCAPE))
+	{
+		nextUIMode_ = UIMode::Pause;
+	}
 }
 
 void PlayingScreen::Draw()
