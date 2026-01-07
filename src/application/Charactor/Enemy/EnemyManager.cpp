@@ -25,19 +25,19 @@ void EnemyManager::Update()
 	//if (spawnTimer_ % 420 == 0)
 	//{
 	//	// 敵スポーン
-
+	//
 	//	// 出現場所はプレイヤーの視線後ろ方向
 	//	Vector3 spawnPos = playerptr_->data_.translate.value;
 	//	Ray playerRay = playerptr_->viewRay_;
-
+	//
 	//	Vector3 backDir = playerRay.diff.Normalized() * -1.0f;
 	//	spawnPos += backDir * 10.0f;
-
+	//
 	//	while (mapManager_->isSolidAt(spawnPos))
 	//	{
 	//		spawnPos.y += 1.0f;
 	//	}
-
+	//
 	//	AddNewEnemy(spawnPos);
 	//}
 }
