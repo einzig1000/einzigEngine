@@ -150,7 +150,7 @@ float ToRadian(const float& angle);
 
 // ARGBをRGBA
 Vector4 ConvertARGBtoRGBA(const Vector4& argb);
-// int型のカラーをVector4型に
+// RGBAをARGB
 Vector4 ConvertUintToVector4(uint32_t color);
 uint32_t ConvertVector4ToUint(Vector4 color);
 

@@ -858,7 +858,7 @@ float RandomFloat(float min, float max, int decimalPlaces)
 
 #pragma endregion
 
-
+#pragma region Converter
 
 Vector4 ConvertUintToVector4(uint32_t color)
 {
@@ -878,17 +878,54 @@ uint32_t ConvertVector4ToUint(Vector4 color)
     return (r << 24) | (g << 16) | (b << 8) | a;
 }
 
+Vector4 ConvertARGBtoRGBA(const Vector4& argb)
+{
+    return { argb.y, argb.z, argb.w, argb.x };
+}
+
+// 文字列変換
+std::wstring ConvertString(const std::string& str)
+{
+    if (str.empty())
+    {
+        return std::wstring();
+    }
+
+
+    auto sizeNeeded = MultiByteToWideChar(CP_UTF8, 0, reinterpret_cast<const char*>(&str[0]), static_cast<int>(str.size()), NULL, 0);
+    if (sizeNeeded == 0)
+    {
+        return std::wstring();
+    }
+    std::wstring result(sizeNeeded, 0);
+    MultiByteToWideChar(CP_UTF8, 0, reinterpret_cast<const char*>(&str[0]), static_cast<int>(str.size()), &result[0], sizeNeeded);
+    return result;
+}
+
+// 文字列変換
+std::string ConvertString(const std::wstring& str)
+{
+    if (str.empty())
+    {
+        return std::string();
+    }
+
+    auto sizeNeeded = WideCharToMultiByte(CP_UTF8, 0, str.data(), static_cast<int>(str.size()), NULL, 0, NULL, NULL);
+    if (sizeNeeded == 0)
+    {
+        return std::string();
+    }
+    std::string result(sizeNeeded, 0);
+    WideCharToMultiByte(CP_UTF8, 0, str.data(), static_cast<int>(str.size()), result.data(), sizeNeeded, NULL, NULL);
+    return result;
+}
 
 float ToRadian(const float& angle)
 {
     return angle * (std::numbers::pi_v<float> / 180.0f);
 }
 
-// ARGBをRGBA
-Vector4 ConvertARGBtoRGBA(const Vector4& argb)
-{
-    return { argb.y, argb.z, argb.w, argb.x };
-}
+#pragma endregion
 
 void CreateSphere(VertexData* vertexData, uint32_t kSubdivision)
 {
@@ -957,43 +994,6 @@ void CreateSphere(VertexData* vertexData, uint32_t kSubdivision)
             }
         }
     }
-}
-
-// 文字列変換
-std::wstring ConvertString(const std::string& str)
-{
-    if (str.empty())
-    {
-        return std::wstring();
-    }
-
-
-    auto sizeNeeded = MultiByteToWideChar(CP_UTF8, 0, reinterpret_cast<const char*>(&str[0]), static_cast<int>(str.size()), NULL, 0);
-    if (sizeNeeded == 0)
-    {
-        return std::wstring();
-    }
-    std::wstring result(sizeNeeded, 0);
-    MultiByteToWideChar(CP_UTF8, 0, reinterpret_cast<const char*>(&str[0]), static_cast<int>(str.size()), &result[0], sizeNeeded);
-    return result;
-}
-
-// 文字列変換
-std::string ConvertString(const std::wstring& str)
-{
-    if (str.empty())
-    {
-        return std::string();
-    }
-
-    auto sizeNeeded = WideCharToMultiByte(CP_UTF8, 0, str.data(), static_cast<int>(str.size()), NULL, 0, NULL, NULL);
-    if (sizeNeeded == 0)
-    {
-        return std::string();
-    }
-    std::string result(sizeNeeded, 0);
-    WideCharToMultiByte(CP_UTF8, 0, str.data(), static_cast<int>(str.size()), result.data(), sizeNeeded, NULL, NULL);
-    return result;
 }
 
 

@@ -170,7 +170,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="src\application\Item\DropItem\DropItemManager.cpp" />
     <ClCompile Include="src\application\Item\Item.cpp" />
     <ClCompile Include="src\application\Item\HaveItem\HaveItem.cpp" />
-    <ClCompile Include="src\application\MapManager\MapWorldCollider.cpp" />
+    <ClCompile Include="src\engine\Physics\MapWorldCollider.cpp" />
     <ClCompile Include="src\engine\Physics\PhysicsSystem.cpp" />
     <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\Inventory\Inventory.cpp" />
     <ClCompile Include="src\application\Charactor\BaseCharactor.cpp" />
@@ -268,7 +268,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="src\application\Item\DropItem\DropItemManager.h" />
     <ClInclude Include="src\application\Item\Item.h" />
     <ClInclude Include="src\application\Item\HaveItem\HaveItem.h" />
-    <ClInclude Include="src\application\MapManager\MapWorldCollider.h" />
+    <ClInclude Include="src\engine\Physics\MapWorldCollider.h" />
     <ClInclude Include="src\engine\Physics\PhysicsSystem.h" />
     <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\Inventory\Inventory.h" />
     <ClInclude Include="src\application\Charactor\BaseCharactor.h" />

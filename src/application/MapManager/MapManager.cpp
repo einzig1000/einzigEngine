@@ -9,6 +9,7 @@
 #include "Charactor/BaseCharactor.h"
 #include "Utilities/PerlinNoise.h"
 #include "Engine.h"
+#include "MapWorldCollider.h"
 
 
 // AABBの各種補助 いずれstruct AABBに移す
@@ -1219,7 +1220,7 @@ bool MapManager::SweepAABB_SamplePoints(const AABB& aabb, const Vector3& delta, 
 	return true;
 }
 
-bool MapManager::isSolidAt(const Vector3& position) const 
+bool MapManager::isSolidAt(const Vector3& position) const
 {
 	Vector2int chunkPos = ChunkIndexByPosition(position);
 	Vector3int index = BlockIndexByPosition(position);

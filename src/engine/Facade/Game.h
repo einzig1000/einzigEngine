@@ -376,31 +376,49 @@ public:
 	{
 	public:
 		/// <summary>
-		/// イージングfloat版
+		/// イージング float
 		/// </summary>
-		static float Easing(float start, float end, float t, EaseType type)
+		/// <param name="start"> 初期値 </param>
+		/// <param name="end"> 終了値 </param>
+		/// <param name="easeType"> イージングタイプ </param>
+		/// <param name="t"> 0.0f～1.0f の補完値 </param>
+		/// <returns> イージング後の値 </returns>
+		static float EasingFloat(float start, float end, EaseType easeType, float t)
 		{
-			return Easings::EasingFloat(start, end, type, t);
+			return Easings::EasingFloat(start, end, easeType, t);
 		}
 
 		/// <summary>
-		/// イージングVector3版
+		/// イージング Vector3
 		/// </summary>
-		static Vector3 Easing(Vector3 start, Vector3 end, float t, EaseType type)
+		/// <param name="start"> 初期値 </param>
+		/// <param name="end"> 終了値 </param>
+		/// <param name="easeType"> イージングタイプ </param>
+		/// <param name="t"> 0.0f～1.0f の補完値 </param>
+		/// <returns> イージング後の値 </returns>
+		static Vector3 EasingVector3(Vector3 start, Vector3 end, EaseType easeType, float t)
 		{
-			return Easings::EasingVector3(start, end, type, t);
+			return Easings::EasingVector3(start, end, easeType, t);
 		}
 
-		static float Lerp(float start, float end, float t)
-		{
-			return start + (end - start) * t;
-		}
-
+		/// <summary>
+		/// 指定範囲の小数点付き乱数取得
+		/// </summary>
+		/// <param name="min"> 最小値 </param>
+		/// <param name="max"> 最大値 </param>
+		/// <param name="decimalPlaces"> 小数点以下の桁数 </param>
+		/// <returns> 乱数 </returns>
 		static float RandFloat(float min, float max, int decimalPlaces)
 		{
 			return RandomFloat(min, max, decimalPlaces);
 		}
 
+		/// <summary>
+		/// 指定範囲の整数乱数取得
+		/// </summary>
+		/// <param name="min"> 最小値 </param>
+		/// <param name="max"> 最大値 </param>
+		/// <returns> 乱数 </returns>
 		static int RandInt(int min, int max)
 		{
 			return RandomInt(min, max);
@@ -422,11 +440,21 @@ public:
 			return radian * (180.0f / std::numbers::pi_v<float>);
 		}
 
+		/// <summary>
+		/// uint32_tをVector4(0.0f～1.0f)に変換
+		/// </summary>
+		/// <param name="color"> RGBA </param>
+		/// <returns> Vector4 </returns>
 		static Vector4 UintToVector4(uint32_t color)
 		{
 			return ConvertUintToVector4(color);
 		}
 
+		/// <summary>
+		/// Vector4(0.0f～1.0f)をuint32_tに変換
+		/// </summary>
+		/// <param name="color"> Vector4 </param>
+		/// <returns> RGBA </returns>
 		static uint32_t Vector4ToUint(Vector4 color)
 		{
 			return ConvertVector4ToUint(color);

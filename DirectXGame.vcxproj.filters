@@ -393,7 +393,7 @@
     <ClCompile Include="src\engine\Physics\IWorldCollider.cpp">
       <Filter>engine\PhysicsSystem</Filter>
     </ClCompile>
-    <ClCompile Include="src\application\MapManager\MapWorldCollider.cpp">
+    <ClCompile Include="src\engine\Physics\MapWorldCollider.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="src\application\Item\Item.cpp">
@@ -599,7 +599,7 @@
     <ClInclude Include="src\engine\Physics\IWorldCollider.h">
       <Filter>engine\PhysicsSystem</Filter>
     </ClInclude>
-    <ClInclude Include="src\application\MapManager\MapWorldCollider.h">
+    <ClInclude Include="src\engine\Physics\MapWorldCollider.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="src\application\Item\Item.h">

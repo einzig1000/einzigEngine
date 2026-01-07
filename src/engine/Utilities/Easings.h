@@ -46,4 +46,6 @@ private:
 
 	static float CalculateEasedValue(float start, float end, EaseType easeType, float t);
 
+
+
 };
