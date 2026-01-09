@@ -296,7 +296,7 @@ void Game::Camera::SetCameraMode(CameraMode_ORBIT_FPS mode)
 }
 
 
-void Game::Utilitie::toggleWireframeMode()
+void Game::Utilities::toggleWireframeMode()
 {
 	Engine::Instance().toggleWireframeMode();
 }

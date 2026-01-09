@@ -365,7 +365,7 @@ public:
 		static void SetCurrentCamera(const std::string name);
 	};
 
-	class Utilitie
+	class Utilities
 	{
 		// プリミティブモードの設定
 		static void toggleWireframeMode();
