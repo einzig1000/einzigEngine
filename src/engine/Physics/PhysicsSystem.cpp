@@ -15,7 +15,7 @@ void PhysicsSystem::Step()
     for (RenderData_Model* m : dynamics_)
     {
         if (!m) continue;
-        if (m->aabbs.empty()) continue; // aabbs[0]を使う前提なら保険
+        if (m->aabbs.empty()) continue;
 
 		// 1) 速度に加速度を加算
         m->UpdateVelocitiesPhysics();
