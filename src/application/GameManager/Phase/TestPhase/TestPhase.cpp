@@ -512,6 +512,27 @@ void TestPhase::DrawImGui()
 	}
 	ImGui::End();
 
+	quaternion q0 = quaternion{ 2.0f,3.0f,4.0f,1.0f };
+	quaternion q1 = quaternion{ 1.0f,3.0f,5.0f,2.0f };
+	quaternion identity = quaternion::MakeIdentityQuaternion();
+	quaternion conj = quaternion::MakeConjugateQuaternion(q0);
+	quaternion inv = quaternion::Inverse(q0);
+	quaternion normal = quaternion::Normalize(q0);
+	quaternion mul1 = q0 * q1;
+	quaternion mul2 = q1 * q0;
+	float norm = quaternion::Norm(q0);
+	ImGui::Begin("Quaternion Test");
+	ImGui::Text("q1       : (%5.2f, %5.2f, %5.2f, %5.2f)", q0.x, q0.y, q0.z, q0.w);
+	ImGui::Text("q2       : (%5.2f, %5.2f, %5.2f, %5.2f)", q1.x, q1.y, q1.z, q1.w);
+	ImGui::Text("identity : (%5.2f, %5.2f, %5.2f, %5.2f)", identity.x, identity.y, identity.z, identity.w);
+	ImGui::Text("conj     : (%5.2f, %5.2f, %5.2f, %5.2f)", conj.x, conj.y, conj.z, conj.w);
+	ImGui::Text("inv      : (%5.2f, %5.2f, %5.2f, %5.2f)", inv.x, inv.y, inv.z, inv.w);
+	ImGui::Text("normal   : (%5.2f, %5.2f, %5.2f, %5.2f)", normal.x, normal.y, normal.z, normal.w);
+	ImGui::Text("mul1     : (%5.2f, %5.2f, %5.2f, %5.2f)", mul1.x, mul1.y, mul1.z, mul1.w);
+	ImGui::Text("mul2     : (%5.2f, %5.2f, %5.2f, %5.2f)", mul2.x, mul2.y, mul2.z, mul2.w);
+	ImGui::Text("norm     : %5.2f", norm);
+	ImGui::End();
+
 	ImGui::ShowDebugLogWindow();
 
 	//📐 レイアウト・カーソル操作
