@@ -369,6 +369,93 @@ Matrix4x4 Matrix4x4::MakeRotateAxisMatrix(const Vector3& axis, float radian)
 	return Return;
 }
 
+Matrix4x4 Matrix4x4::DirectionToDirectionMatrix(const Vector3& from, const Vector3& to)
+{
+    Vector3 fromNormalized = from.Normalized();
+    Vector3 toNormalized = to.Normalized();
+	float dot = fromNormalized.Dot(toNormalized);
+
+    // ほぼ同じ方向
+    if (dot > 1.0f - eps)
+    {
+        return MakeIdentity4x4();
+    }
+
+    // ほぼ逆方向
+    if (dot < -1.0f + eps)
+    {
+        // from に直交する任意のベクトル
+        Vector3 n;
+        if (std::abs(fromNormalized.x) > eps || std::abs(fromNormalized.y) > eps)
+        {
+            n = Vector3(fromNormalized.y, -fromNormalized.x, 0.0f);
+        }
+        else
+        {
+            n = Vector3(fromNormalized.z, 0.0f, -fromNormalized.x);
+        }
+
+        Vector3 axis = n.Normalized();
+        return MakeRotateAxisMatrix(axis, std::numbers::pi_v<float>);
+    }
+
+    Vector3 axis = fromNormalized.Cross(toNormalized);
+    float angle = std::acos(dot);
+
+    axis.Normalize();
+	return MakeRotateAxisMatrix(axis, angle);
+}
+
+
+#pragma endregion
+
+#pragma region Quaternion
+
+quaternion quaternion::MakeIdentityQuaternion()
+{
+	return quaternion(0.0f, 0.0f, 0.0f, 1.0f);
+}
+
+quaternion quaternion::MakeConjugateQuaternion(const quaternion& q)
+{
+	return quaternion(-q.x, -q.y, -q.z, q.w);
+}
+
+float quaternion::Norm(const quaternion& q)
+{
+	return std::sqrt(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
+}
+
+quaternion quaternion::Normalize(const quaternion& q)
+{
+    float norm = Norm(q);
+    if (std::abs(norm) > eps)
+    {
+        return quaternion(
+            q.x / std::sqrt(norm),
+            q.y / std::sqrt(norm),
+            q.z / std::sqrt(norm),
+            q.w / std::sqrt(norm)
+        );
+    }
+	return quaternion();
+}
+
+quaternion quaternion::Inverse(const quaternion& q)
+{
+    float norm = Norm(q);
+    if (std::abs(norm) > eps)
+    {
+        quaternion conjugate = MakeConjugateQuaternion(q);
+        return quaternion(
+            conjugate.x / norm,
+            conjugate.y / norm,
+            conjugate.z / norm,
+            conjugate.w / norm
+        );
+    }
+	return quaternion();
+}
 
 #pragma endregion
 

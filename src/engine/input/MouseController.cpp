@@ -10,7 +10,7 @@ MouseController::MouseController(HWND hwnd, CameraManager* cameraManager)
 {
     hwnd_ = hwnd;
     wheelDelta_ = 0;
-	isVisible_ = false;
+    isVisible_ = true;
 }
 
 void MouseController::Update()
@@ -140,6 +140,7 @@ void MouseController::UpdatePosition()
     const bool isAppFocused = (::GetForegroundWindow() == hwnd_);
 
 	ImGui::Begin("Mouse Position");
+
 	// 非表示 && ウィンドウアクティブ時は画面中央にロック
     if (!isVisible_ && isAppFocused)
     {

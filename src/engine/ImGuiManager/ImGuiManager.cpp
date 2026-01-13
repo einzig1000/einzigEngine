@@ -47,7 +47,7 @@ void ImGuiManager::Draw()
 	ImDrawData* draw_data = ImGui::GetDrawData();
 	if (draw_data != nullptr && draw_data->CmdListsCount > 0)
 	{
-		//ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), dxManager_->GetCommandContextManager()->GetCommandList());
+		ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), dxManager_->GetCommandContextManager()->GetCommandList());
 	}
 }
 
