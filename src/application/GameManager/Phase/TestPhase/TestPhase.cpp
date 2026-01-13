@@ -179,60 +179,60 @@ void TestPhase::Update()
 
 void TestPhase::Draw()
 {
-	//rect_->Draw();
-	//
-	//ground_->Draw();
-	//ground_->DrawAABB();
-	//wall1_->Draw();
-	//wall2_->Draw();
-	//wall3_->Draw();
-	//wall4_->Draw();
+	rect_->Draw();
+	
+	ground_->Draw();
+	ground_->DrawAABB();
+	wall1_->Draw();
+	wall2_->Draw();
+	wall3_->Draw();
+	wall4_->Draw();
 
-	//player_->Draw();
-	//player_->DrawAABB();
+	player_->Draw();
+	player_->DrawAABB();
 
 	sprite1_->Draw();
-	//sprite2_->Draw();
+	sprite2_->Draw();
 
-	//triangle1_->Draw();
-	//triangle2_->Draw();
+	triangle1_->Draw();
+	triangle2_->Draw();
 
-	//particle1_->Draw();
-	//particle1_->DrawEmitter();
+	particle1_->Draw();
+	particle1_->DrawEmitter();
 
-	//line_->Draw();
-	//line2_->Draw();
-	//line3_->Draw();
+	line_->Draw();
+	line2_->Draw();
+	line3_->Draw();
 
-	//shoulder_->Draw();
-	//elbow_->Draw();
-	//hand_->Draw();
+	shoulder_->Draw();
+	elbow_->Draw();
+	hand_->Draw();
 }
 
 
 void TestPhase::DrawImGui()
 {
-	rect_->DrawImGui();
-
-	ground_->DrawImGui();
-
-	player_->DrawImGui();
-	
-	sprite1_->DrawImGui();
-	sprite2_->DrawImGui();
-	
-	triangle1_->DrawImGui();
-	triangle2_->DrawImGui();
-	
-	particle1_->DrawImGui();
-	
-	line_->DrawImGui();
-	line2_->DrawImGui();
-	line3_->DrawImGui();
-	
-	shoulder_->DrawImGui();
-	elbow_->DrawImGui();
-	hand_->DrawImGui();
+	//rect_->DrawImGui();
+	//
+	//ground_->DrawImGui();
+	//
+	//player_->DrawImGui();
+	//
+	//sprite1_->DrawImGui();
+	//sprite2_->DrawImGui();
+	//
+	//triangle1_->DrawImGui();
+	//triangle2_->DrawImGui();
+	//
+	//particle1_->DrawImGui();
+	//
+	//line_->DrawImGui();
+	//line2_->DrawImGui();
+	//line3_->DrawImGui();
+	//
+	//shoulder_->DrawImGui();
+	//elbow_->DrawImGui();
+	//hand_->DrawImGui();
 
 	ImGui::Begin("TestPhase");
 
@@ -463,5 +463,99 @@ void TestPhase::DrawImGui()
 	}
 
 	ImGui::End();
+
+	Vector3 from0 = Vector3{ 1.0f,0.7f,0.5f }.Normalize();
+	Vector3 to0 = -from0;
+	Vector3 from1 = Vector3{ -0.6f,0.9f,0.2f }.Normalize();
+	Vector3 to1 = Vector3{ 0.4f,0.7f,-0.5f }.Normalize();
+	Matrix4x4 rotateMatrix0 = Matrix4x4::DirectionToDirectionMatrix(Vector3{ 1.0f,0.0f,0.0f }, Vector3{ -1.0f,0.0f,0.0f });
+	Matrix4x4 rotateMatrix1 = Matrix4x4::DirectionToDirectionMatrix(from0, to0);
+	Matrix4x4 rotateMatrix2 = Matrix4x4::DirectionToDirectionMatrix(from1, to1);
+
+	ImGui::Begin("DirectionToDirectionMatrix Test");
+	ImGui::Text("from0 : (%5.2f, %5.2f, %5.2f)", from0.x, from0.y, from0.z);
+	ImGui::Text("to0   : (%5.2f, %5.2f, %5.2f)", to0.x, to0.y, to0.z);
+	ImGui::Text("from1 : (%5.2f, %5.2f, %5.2f)", from1.x, from1.y, from1.z);
+	ImGui::Text("to1   : (%5.2f, %5.2f, %5.2f)", to1.x, to1.y, to1.z);
+	ImGui::Text("rotateMatrix0 :");
+	ImGui::NewLine();
+	for (int j = 0; j < 4; ++j)
+	{
+		for (int i = 0; i < 4; ++i)
+		{
+			ImGui::SameLine();
+			ImGui::Text("%6.3f ", rotateMatrix0.m[j][i]);
+		}
+		ImGui::NewLine();
+	}
+	ImGui::Text("rotateMatrix1 :");
+	ImGui::NewLine();
+	for (int j = 0; j < 4; ++j)
+	{
+		for (int i = 0; i < 4; ++i)
+		{
+			ImGui::SameLine();
+			ImGui::Text("%6.3f ", rotateMatrix1.m[j][i]);
+		}
+		ImGui::NewLine();
+	}
+	ImGui::Text("rotateMatrix2 :");
+	ImGui::NewLine();
+	for (int j = 0; j < 4; ++j)
+	{
+		for (int i = 0; i < 4; ++i)
+		{
+			ImGui::SameLine();
+			ImGui::Text("%6.3f ", rotateMatrix2.m[j][i]);
+		}
+		ImGui::NewLine();
+	}
+	ImGui::End();
+
+	ImGui::ShowDebugLogWindow();
+
+	//📐 レイアウト・カーソル操作
+	//	- NewLine() : 改行して次の行へ
+	//	- SameLine() : 同じ行に次の要素を配置
+	//	- Spacing() : 標準的な余白を挿入
+	//	- Separator() : 水平線を描画
+	//	- Dummy() : 指定サイズの空白を確保
+	//📝 テキスト関連
+	//	- Text() : テキスト表示
+	//	- BulletText() : 箇条書き風テキスト
+	//	- LabelText() : ラベル＋値の組み合わせ表示
+	//🎛 基本ウィジェット
+	//	- Button() : ボタン
+	//	- Checkbox() : チェックボックス
+	//	- RadioButton() : ラジオボタン
+	//	- ProgressBar() : 進捗バー
+	//	- Image() : 画像表示
+	//🎚 スライダー・入力
+	//	- SliderFloat() / SliderInt() : スライダーで数値入力
+	//	- DragFloat() / DragInt() : ドラッグ操作で数値入力
+	//	- InputText() : テキスト入力
+	//	- InputFloat() / InputInt() : 数値入力
+	//🎨 カラー関連
+	//	- ColorEdit3() / ColorEdit4() : RGB / RGBA カラー編集
+	//	- ColorPicker3() / ColorPicker4() : カラーピッカー
+	//📂 コンボ・リスト
+	//	- Combo() : ドロップダウン選択
+	//	- ListBox() : リスト選択
+	//	- Selectable() : 選択可能アイテム
+	//🌳 階層構造
+	//	- TreeNode() / TreePop() : ツリー表示
+	//	- CollapsingHeader() : 折り畳み可能なヘッダー
+	//🍴 メニュー・ポップアップ
+	//	- BeginMenu() / EndMenu() : メニュー
+	//	- OpenPopup() / BeginPopup() / EndPopup() : ポップアップ
+	//	- BeginTooltip() / EndTooltip() : ツールチップ
+	//📊 テーブル・カラム
+	//	- BeginTable() / EndTable() : テーブル表示
+	//	- TableNextRow() / TableNextColumn() : テーブル操作
+	//	- レガシー API : Columns()
+	//🔧 ユーティリティ
+	//	- IsItemHovered() : マウスが乗っているか判定
+	//	- IsItemActive() : アクティブ状態判定
+
 }
 

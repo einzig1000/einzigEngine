@@ -369,6 +369,43 @@ Matrix4x4 Matrix4x4::MakeRotateAxisMatrix(const Vector3& axis, float radian)
 	return Return;
 }
 
+Matrix4x4 Matrix4x4::DirectionToDirectionMatrix(const Vector3& from, const Vector3& to)
+{
+    Vector3 fromNormalized = from.Normalized();
+    Vector3 toNormalized = to.Normalized();
+	float dot = fromNormalized.Dot(toNormalized);
+
+    // ほぼ同じ方向
+    if (dot > 1.0f - eps)
+    {
+        return MakeIdentity4x4();
+    }
+
+    // ほぼ逆方向
+    if (dot < -1.0f + eps)
+    {
+        // from に直交する任意のベクトル
+        Vector3 n;
+        if (std::abs(fromNormalized.x) > eps || std::abs(fromNormalized.y) > eps)
+        {
+            n = Vector3(fromNormalized.y, -fromNormalized.x, 0.0f);
+        }
+        else
+        {
+            n = Vector3(fromNormalized.z, 0.0f, -fromNormalized.x);
+        }
+
+        Vector3 axis = n.Normalized();
+        return MakeRotateAxisMatrix(axis, std::numbers::pi_v<float>);
+    }
+
+    Vector3 axis = fromNormalized.Cross(toNormalized);
+    float angle = std::acos(dot);
+
+    axis.Normalize();
+	return MakeRotateAxisMatrix(axis, angle);
+}
+
 
 #pragma endregion
 

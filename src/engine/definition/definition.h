@@ -712,6 +712,8 @@ struct Matrix4x4
     static Matrix4x4 MakeViewPortMatrix(float left, float top, float width, float height, float minD, float maxD);
     // 任意軸回転行列
     static Matrix4x4 MakeRotateAxisMatrix(const Vector3& axis, float radian);
+    // ある方向からある方向に向ける回転行列
+	static Matrix4x4 DirectionToDirectionMatrix(const Vector3& from, const Vector3& to);
 };
 
 #pragma endregion
