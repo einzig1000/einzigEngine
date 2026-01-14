@@ -1,7 +1,7 @@
 #include "PhysicsSystem.h"
 #include "Game.h"
 
-void PhysicsSystem::UnregisterDynamic(RenderData_Model* model)
+void PhysicsSystem::UnregisterDynamic(IPhysicsBody* model)
 {
 	dynamics_.erase(std::remove(dynamics_.begin(), dynamics_.end(), model), dynamics_.end());
 }
@@ -12,10 +12,10 @@ void PhysicsSystem::Step()
 
 	float dt = Game::Time::GetDeltaTime() * 60.0f;
 
-    for (RenderData_Model* m : dynamics_)
+    for (IPhysicsBody* m : dynamics_)
     {
         if (!m) continue;
-        if (m->aabbs.empty()) continue;
+        if (m->GetAABBs().empty()) continue;
 
 		// 1) 速度に加速度を加算
         m->UpdateVelocitiesPhysics();
@@ -30,7 +30,7 @@ void PhysicsSystem::Step()
 
 		// 4) Sweep(correctedは固体にぶつかるまでの移動量)
         Vector3 corrected = delta;
-        world_->SweepAABB(m->aabbs[0], delta, corrected);
+        world_->SweepAABB(m->aabbs, delta, corrected);
 
         // 5) 位置反映
         m->ApplyTranslationDelta(corrected);

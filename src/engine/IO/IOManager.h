@@ -1,15 +1,15 @@
 #pragma once
-#include "input/GetHitKey.h"
-#include "input/GetPadState.h"
-#include "input/MouseController.h"
+#include "IO/GetHitKey.h"
+#include "IO/GetPadState.h"
+#include "IO/MouseController.h"
 #include <memory>
 
 class CameraManager;
 
-class Input
+class IOManager
 {
 public:
-    Input(HWND hwnd, CameraManager* cameraManager);
+    IOManager(HWND hwnd, CameraManager* cameraManager);
     void Update();
     void EndFrame();
 

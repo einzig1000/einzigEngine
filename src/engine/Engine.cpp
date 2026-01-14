@@ -5,7 +5,7 @@
 #include "Utilities/functions.h"
 #include <cstdint>
 
-#include "input/MouseController.h"
+#include "IO/MouseController.h"
 #include "Window/WindowManager.h"
 #include "DirectX/DirectXManager.h"
 #include "Facade/Game.h"

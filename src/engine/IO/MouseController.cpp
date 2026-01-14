@@ -1,4 +1,4 @@
-#include "input/MouseController.h"
+#include "IO/MouseController.h"
 #include "Utilities/functions.h"
 #include "Window/WindowManager.h"
 #include "Camera/CameraManager.h"

@@ -1,4 +1,4 @@
-#include "input/GetHitKey.h"
+#include "IO/GetHitKey.h"
 #include <cassert>
 
 GetHitKey::GetHitKey(HWND hwnd)

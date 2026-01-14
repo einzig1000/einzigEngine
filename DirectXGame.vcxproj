@@ -159,6 +159,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\engine\Physics\IPhysicsBody.cpp" />
     <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\Pause\Pause.cpp" />
     <ClCompile Include="src\application\UIManager\ScreenMode\PauseScreen\PauseScreen.cpp" />
     <ClCompile Include="src\application\Charactor\Enemy\EnemyManager.cpp" />
@@ -233,10 +234,10 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="src\engine\DrawSystem\DrawSystem.cpp" />
     <ClCompile Include="src\engine\Engine.cpp" />
     <ClCompile Include="src\engine\Facade\Game.cpp" />
-    <ClCompile Include="src\engine\input\GetHitKey.cpp" />
-    <ClCompile Include="src\engine\input\GetPadState.cpp" />
-    <ClCompile Include="src\engine\input\Input.cpp" />
-    <ClCompile Include="src\engine\input\MouseController.cpp" />
+    <ClCompile Include="src\engine\IO\GetHitKey.cpp" />
+    <ClCompile Include="src\engine\IO\GetPadState.cpp" />
+    <ClCompile Include="src\engine\IO\IOManager.cpp" />
+    <ClCompile Include="src\engine\IO\MouseController.cpp" />
     <ClCompile Include="src\engine\Resource\Audio\AudioManager.cpp" />
     <ClCompile Include="src\engine\Resource\Model\ModelManager.cpp" />
     <ClCompile Include="src\engine\Resource\ResourceManager.cpp" />
@@ -257,6 +258,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="src\engine\Physics\IWorldCollider.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\engine\Physics\IPhysicsBody.h" />
     <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\Pause\Pause.h" />
     <ClInclude Include="src\application\UIManager\ScreenMode\PauseScreen\PauseScreen.h" />
     <ClInclude Include="src\application\Charactor\Enemy\EnemyManager.h" />
@@ -304,10 +306,10 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="src\engine\DrawSystem\DrawSystem.h" />
     <ClInclude Include="src\engine\Engine.h" />
     <ClInclude Include="src\engine\Facade\Game.h" />
-    <ClInclude Include="src\engine\input\GetHitKey.h" />
-    <ClInclude Include="src\engine\input\GetPadState.h" />
-    <ClInclude Include="src\engine\input\Input.h" />
-    <ClInclude Include="src\engine\input\MouseController.h" />
+    <ClInclude Include="src\engine\IO\GetHitKey.h" />
+    <ClInclude Include="src\engine\IO\GetPadState.h" />
+    <ClInclude Include="src\engine\IO\IOManager.h" />
+    <ClInclude Include="src\engine\IO\MouseController.h" />
     <ClInclude Include="src\engine\Resource\Audio\AudioManager.h" />
     <ClInclude Include="src\engine\Resource\Model\ModelManager.h" />
     <ClInclude Include="src\engine\Resource\ResourceManager.h" />

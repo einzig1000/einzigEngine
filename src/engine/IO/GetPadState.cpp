@@ -1,4 +1,4 @@
-#include "input/GetPadState.h"
+#include "IO/GetPadState.h"
 #include <cstring>
 
 XINPUT_STATE GetPadState::state[4]{};

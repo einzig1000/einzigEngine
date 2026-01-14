@@ -28,18 +28,6 @@
     <Filter Include="engine\WindowManager">
       <UniqueIdentifier>{a6f0f6c9-5841-4611-a8f4-25d2974af7b1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\input">
-      <UniqueIdentifier>{debd2fd4-6801-480a-97ea-81cb1b63a910}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="engine\input\MouseController">
-      <UniqueIdentifier>{2dff2682-3b8b-491d-96a6-d1df4709d6a1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="engine\input\GetHitKey">
-      <UniqueIdentifier>{aa632014-e276-40cd-b8d2-109d728ee4ef}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="engine\input\GetPadState">
-      <UniqueIdentifier>{6cdbe87c-683b-4dee-b8c3-f22dd1b10c44}</UniqueIdentifier>
-    </Filter>
     <Filter Include="engine\imgui">
       <UniqueIdentifier>{de365176-a23e-4aa1-b692-75dc75ada7eb}</UniqueIdentifier>
     </Filter>
@@ -220,6 +208,18 @@
     <Filter Include="application\GameManeger\UIManager\UIScreen\PauseScreen">
       <UniqueIdentifier>{be480839-6e46-411f-809f-c6c6447cda98}</UniqueIdentifier>
     </Filter>
+    <Filter Include="engine\IO">
+      <UniqueIdentifier>{debd2fd4-6801-480a-97ea-81cb1b63a910}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\IO\MouseController">
+      <UniqueIdentifier>{2dff2682-3b8b-491d-96a6-d1df4709d6a1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\IO\GetHitKey">
+      <UniqueIdentifier>{aa632014-e276-40cd-b8d2-109d728ee4ef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\IO\GetPadState">
+      <UniqueIdentifier>{6cdbe87c-683b-4dee-b8c3-f22dd1b10c44}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -267,17 +267,17 @@
     <ClCompile Include="src\engine\Resource\ResourceManager.cpp">
       <Filter>engine\ResourceManager</Filter>
     </ClCompile>
-    <ClCompile Include="src\engine\input\GetHitKey.cpp">
-      <Filter>engine\input\GetHitKey</Filter>
+    <ClCompile Include="src\engine\IO\GetHitKey.cpp">
+      <Filter>engine\IO\GetHitKey</Filter>
     </ClCompile>
-    <ClCompile Include="src\engine\input\Input.cpp">
-      <Filter>engine\input</Filter>
+    <ClCompile Include="src\engine\IO\IOManager.cpp">
+      <Filter>engine\IO</Filter>
     </ClCompile>
-    <ClCompile Include="src\engine\input\MouseController.cpp">
-      <Filter>engine\input\MouseController</Filter>
+    <ClCompile Include="src\engine\IO\MouseController.cpp">
+      <Filter>engine\IO\MouseController</Filter>
     </ClCompile>
-    <ClCompile Include="src\engine\input\GetPadState.cpp">
-      <Filter>engine\input\GetPadState</Filter>
+    <ClCompile Include="src\engine\IO\GetPadState.cpp">
+      <Filter>engine\IO\GetPadState</Filter>
     </ClCompile>
     <ClCompile Include="src\engine\DrawSystem\DrawSystem.cpp">
       <Filter>engine\DrawSystem</Filter>
@@ -429,6 +429,9 @@
     <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\Pause\Pause.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="src\engine\Physics\IPhysicsBody.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\engine\DirectX\CommandContextManager.h">
@@ -473,17 +476,17 @@
     <ClInclude Include="src\engine\Resource\Texture\TextureManager.h">
       <Filter>engine\ResourceManager\TextureManager</Filter>
     </ClInclude>
-    <ClInclude Include="src\engine\input\Input.h">
-      <Filter>engine\input</Filter>
+    <ClInclude Include="src\engine\IO\IOManager.h">
+      <Filter>engine\IO</Filter>
     </ClInclude>
-    <ClInclude Include="src\engine\input\GetHitKey.h">
-      <Filter>engine\input\GetHitKey</Filter>
+    <ClInclude Include="src\engine\IO\GetHitKey.h">
+      <Filter>engine\IO\GetHitKey</Filter>
     </ClInclude>
-    <ClInclude Include="src\engine\input\GetPadState.h">
-      <Filter>engine\input\GetPadState</Filter>
+    <ClInclude Include="src\engine\IO\GetPadState.h">
+      <Filter>engine\IO\GetPadState</Filter>
     </ClInclude>
-    <ClInclude Include="src\engine\input\MouseController.h">
-      <Filter>engine\input\MouseController</Filter>
+    <ClInclude Include="src\engine\IO\MouseController.h">
+      <Filter>engine\IO\MouseController</Filter>
     </ClInclude>
     <ClInclude Include="src\engine\DrawSystem\DrawSystem.h">
       <Filter>engine\DrawSystem</Filter>
@@ -633,6 +636,9 @@
       <Filter>application\GameManeger\UIManager\UIScreen\PauseScreen</Filter>
     </ClInclude>
     <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\Pause\Pause.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\Physics\IPhysicsBody.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
