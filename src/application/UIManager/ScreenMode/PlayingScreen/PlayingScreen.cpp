@@ -1,6 +1,6 @@
 #include "UIManager/ScreenMode/PlayingScreen/PlayingScreen.h"
 #include "UIManager/ScreenMode/UIElement/Hotbar/Hotbar.h"
-#include "Charactor/Player/Player.h"
+#include "Character/Player/Player.h"
 
 PlayingScreen::PlayingScreen()
 {

@@ -1,5 +1,18 @@
-#include "PhysicsSystem.h"
+#include "Physics/PhysicsSystem.h"
 #include "Game.h"
+#include "Physics/IWorldCollider.h"
+#include "Physics/IPhysicsBody.h"
+#include "Physics/MapWorldCollider.h"
+
+PhysicsSystem::PhysicsSystem()
+{
+	world_ = std::make_unique<MapWorldCollider>();
+}
+
+void PhysicsSystem::AddWorldCollider(IWorldCollider* collider)
+{
+	world_->AddCollider(collider);
+}
 
 void PhysicsSystem::UnregisterDynamic(IPhysicsBody* model)
 {
@@ -19,7 +32,7 @@ void PhysicsSystem::Step()
 
 		// 1) 速度に加速度を加算
         m->UpdateVelocitiesPhysics();
-
+        
 		// 2) 理想移動量計算
         const Vector3 delta = m->translate.velocity * dt;
 

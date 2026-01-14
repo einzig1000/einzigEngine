@@ -1,15 +1,18 @@
 #pragma once
 #include <vector>
 #include "definition/definition.h"
-#include "Physics/IWorldCollider.h"
-#include "Physics/IPhysicsBody.h"
-#include "Physics/MapWorldCollider.h"
+#include "memory.h"
+class IWorldCollider;
+class IPhysicsBody;
+class MapWorldCollider;
 
 class PhysicsSystem
 {
 public:
-	// WorldColliderの設定
-    void SetIWorldCollider(MapWorldCollider* world) { world_ = world; }
+    PhysicsSystem();
+
+	// コライダーの追加
+	void AddWorldCollider(IWorldCollider* collider);
 
     /// IPhysicsBodyの物理演算有効化
     void RegisterDynamic(IPhysicsBody* model) { dynamics_.push_back(model); }
@@ -23,7 +26,7 @@ public:
     void Step();
 
 private:
-    const MapWorldCollider* world_ = nullptr;
+	std::unique_ptr<MapWorldCollider> world_;
     std::vector<IPhysicsBody*> dynamics_;
 };
 

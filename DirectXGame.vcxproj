@@ -159,11 +159,12 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\engine\Utilities\SimpleModelBody.cpp" />
     <ClCompile Include="src\engine\Physics\IPhysicsBody.cpp" />
     <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\Pause\Pause.cpp" />
     <ClCompile Include="src\application\UIManager\ScreenMode\PauseScreen\PauseScreen.cpp" />
-    <ClCompile Include="src\application\Charactor\Enemy\EnemyManager.cpp" />
-    <ClCompile Include="src\application\Charactor\Enemy\Enemy.cpp" />
+    <ClCompile Include="src\application\Character\Enemy\EnemyManager.cpp" />
+    <ClCompile Include="src\application\Character\Enemy\Enemy.cpp" />
     <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\Craft\Craft.cpp" />
     <ClCompile Include="src\application\UIManager\ScreenMode\CraftScreen\CraftScreen.cpp" />
     <ClCompile Include="src\application\Item\CraftRecipe\CraftRecipe.cpp" />
@@ -174,7 +175,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="src\engine\Physics\MapWorldCollider.cpp" />
     <ClCompile Include="src\engine\Physics\PhysicsSystem.cpp" />
     <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\Inventory\Inventory.cpp" />
-    <ClCompile Include="src\application\Charactor\BaseCharactor.cpp" />
+    <ClCompile Include="src\application\Character\BaseCharacter.cpp" />
     <ClCompile Include="src\application\Camera\CameraController.cpp" />
     <ClCompile Include="src\application\MapManager\Chunk\Chunk.cpp" />
     <ClCompile Include="src\application\UIManager\ScreenMode\InventoryScreen\InventoryScreen.cpp" />
@@ -186,7 +187,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="src\application\MapManager\Chunk\Block\Block.cpp" />
     <ClCompile Include="src\application\MapManager\MapManager.cpp" />
     <ClCompile Include="src\engine\Utilities\PerlinNoise.cpp" />
-    <ClCompile Include="src\application\Charactor\Player\Player.cpp" />
+    <ClCompile Include="src\application\Character\Player\Player.cpp" />
     <ClCompile Include="src\application\ResourceLoder\ResourceID.cpp" />
     <ClCompile Include="src\engine\Camera\Camera.cpp" />
     <ClCompile Include="src\engine\Camera\CameraManager.cpp" />
@@ -258,11 +259,12 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="src\engine\Physics\IWorldCollider.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\engine\Utilities\SimpleModelBody.h" />
     <ClInclude Include="src\engine\Physics\IPhysicsBody.h" />
     <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\Pause\Pause.h" />
     <ClInclude Include="src\application\UIManager\ScreenMode\PauseScreen\PauseScreen.h" />
-    <ClInclude Include="src\application\Charactor\Enemy\EnemyManager.h" />
-    <ClInclude Include="src\application\Charactor\Enemy\Enemy.h" />
+    <ClInclude Include="src\application\Character\Enemy\EnemyManager.h" />
+    <ClInclude Include="src\application\Character\Enemy\Enemy.h" />
     <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\Craft\Craft.h" />
     <ClInclude Include="src\application\UIManager\ScreenMode\CraftScreen\CraftScreen.h" />
     <ClInclude Include="src\application\Item\CraftRecipe\CraftRecipe.h" />
@@ -273,7 +275,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="src\engine\Physics\MapWorldCollider.h" />
     <ClInclude Include="src\engine\Physics\PhysicsSystem.h" />
     <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\Inventory\Inventory.h" />
-    <ClInclude Include="src\application\Charactor\BaseCharactor.h" />
+    <ClInclude Include="src\application\Character\BaseCharacter.h" />
     <ClInclude Include="src\application\Camera\CameraController.h" />
     <ClInclude Include="src\application\MapManager\Chunk\Chunk.h" />
     <ClInclude Include="src\application\UIManager\ScreenMode\InventoryScreen\InventoryScreen.h" />
@@ -285,7 +287,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="src\application\MapManager\Chunk\Block\Block.h" />
     <ClInclude Include="src\application\MapManager\MapManager.h" />
     <ClInclude Include="src\engine\Utilities\PerlinNoise.h" />
-    <ClInclude Include="src\application\Charactor\Player\Player.h" />
+    <ClInclude Include="src\application\Character\Player\Player.h" />
     <ClInclude Include="src\application\ResourceLoder\ResourceID.h" />
     <ClInclude Include="src\engine\Camera\Camera.h" />
     <ClInclude Include="src\engine\Camera\CameraManager.h" />

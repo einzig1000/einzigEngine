@@ -1,5 +1,6 @@
 #pragma once
 #include "Physics/IWorldCollider.h"
+#include "definition/definition.h"
 
 class IWorldCollider;
 
@@ -7,6 +8,10 @@ class MapWorldCollider
 {
 public:
     MapWorldCollider();
+
+	/// <summary>
+	/// コライダー追加
+	/// </summary>
 	void AddCollider(IWorldCollider* collider);
 
 	/// <summary>
@@ -16,7 +21,7 @@ public:
 	/// <param name="delta"> 移動量ベクトル </param>
 	/// <param name="outCorrectedDelta"> 補正後の移動量ベクトル </param>
 	/// <returns> 何かにヒットしたら true </returns>
-	bool SweepAABB(const AABB& aabb, const Vector3& delta, Vector3& outCorrectedDelta) const;
+	bool SweepAABB(std::span<const AABB> aabbs, const Vector3& delta, Vector3& outCorrectedDelta) const;
 
 	// その座標に固体(当たり判定があるか)を返す
 	bool isSolidAt(const Vector3& position) const;

@@ -18,7 +18,7 @@
 
 #include <DirectXMath.h>
 #include <filesystem>
-//#include "Charactor/Player/Player.h"
+//#include "Character/Player/Player.h"
 using namespace DirectX;
 
 
@@ -54,9 +54,9 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 	{
 		cameraManager_ = new CameraManager();
 	}
-	if (!inputManager_)
+	if (!ioManager_)
 	{
-		inputManager_ = new Input(windowManager_->GetHwnd(), cameraManager_);
+		ioManager_ = new IOManager(windowManager_->GetHwnd(), cameraManager_);
 	}
 	if (!imguiManager_)
 	{
@@ -68,7 +68,7 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 		physicsSystem_ = new PhysicsSystem();
 	}
 
-	windowManager_->AttachMouseController(inputManager_->GetMouseController());
+	windowManager_->AttachMouseController(ioManager_->GetMouseController());
 
 
 	dxManager_->BeginFrame();
@@ -89,7 +89,7 @@ bool Engine::ProcessMessage()
 		//if (msg.message == WM_MOUSEWHEEL)
 		//{
 		//	// ホイールの回転量を加算　クリックはboolで回転量はintだからmessageを使う。らしい。なんで？
-		//	inputManager_->GetMouseController()->wheelDelta_ += GET_WHEEL_DELTA_WPARAM(msg.wParam);
+		//	ioManager_->GetMouseController()->wheelDelta_ += GET_WHEEL_DELTA_WPARAM(msg.wParam);
 		//}
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
@@ -119,7 +119,7 @@ void Engine::BeginFrame()
 	UpdateDebugInfo();
 
 	// インプット系を更新
-	inputManager_->Update();
+	ioManager_->Update();
 }
 void Engine::UpdateTransforms()
 {
@@ -172,7 +172,7 @@ void Engine::UpdateTransforms()
 #pragma region マウスレイ衝突判定
 
 	// マウスレイ取得
-	Ray mouseRay = inputManager_->GetMouseController()->GetRay();
+	Ray mouseRay = ioManager_->GetMouseController()->GetRay();
 
 	// モデルと衝突までの距離セット構造体
 	struct HitInfo { RenderData_Model* rdm; float distance; };
@@ -273,7 +273,7 @@ void Engine::UpdateDebugInfo()
 void Engine::EndFrame()
 {
 	// 入力終了処理
-	inputManager_->EndFrame();
+	ioManager_->EndFrame();
 
 	// 物理更新
 	physicsSystem_->Step();
@@ -315,8 +315,8 @@ void Engine::Finalize()
 	drawSystem_ = nullptr;
 	delete cameraManager_;
 	cameraManager_ = nullptr;
-	delete inputManager_;
-	inputManager_ = nullptr;
+	delete ioManager_;
+	ioManager_ = nullptr;
 	delete imguiManager_;
 	imguiManager_ = nullptr;
 	delete physicsSystem_;
@@ -483,87 +483,87 @@ void Engine::ToggleLightMode(const LightMode mode)
 // 入力
 Vector2 Engine::GetMousePosition()
 {
-	return inputManager_->GetMouseController()->GetPosition();
+	return ioManager_->GetMouseController()->GetPosition();
 }
 
 Vector2 Engine::GetMousePositionDelta()
 {
-	return inputManager_->GetMouseController()->GetRawDelta();
+	return ioManager_->GetMouseController()->GetRawDelta();
 }
 
 Vector3 Engine::GetMouseWorldPosition()
 {
-	return inputManager_->GetMouseController()->GetWorldPosition();
+	return ioManager_->GetMouseController()->GetWorldPosition();
 }
 
 Ray Engine::GetMouseRay()
 {
-	return inputManager_->GetMouseController()->GetRay();
+	return ioManager_->GetMouseController()->GetRay();
 }
 
 int32_t Engine::GetMouseWheel()
 {
-	return inputManager_->GetMouseController()->GetWheelDelta();
+	return ioManager_->GetMouseController()->GetWheelDelta();
 }
 
 bool Engine::IsMouseHeld(int i)
 {
-	return inputManager_->GetMouseController()->IsHeld(i);
+	return ioManager_->GetMouseController()->IsHeld(i);
 }
 
 bool Engine::IsMouseJustPressed(int i)
 {
-	return inputManager_->GetMouseController()->IsJustPressed(i);
+	return ioManager_->GetMouseController()->IsJustPressed(i);
 }
 
 bool Engine::IsMouseJustReleased(int i)
 {
-	return inputManager_->GetMouseController()->IsJustReleased(i);
+	return ioManager_->GetMouseController()->IsJustReleased(i);
 }
 
 uint32_t Engine::MouseHoldFrames(int i)
 {
-	return inputManager_->GetMouseController()->HoldFrames(i);
+	return ioManager_->GetMouseController()->HoldFrames(i);
 }
 
 void Engine::ToggleMouseCursorVisible()
 {
-	inputManager_->GetMouseController()->ToggleMouseCursorVisible();
+	ioManager_->GetMouseController()->ToggleMouseCursorVisible();
 }
 
 void Engine::SetMouseCursorVisible(bool visible)
 {
-	inputManager_->GetMouseController()->ShowCursor(visible);
+	ioManager_->GetMouseController()->ShowCursor(visible);
 }
 
 void Engine::SetMouseSensitivity(float sensitivity)
 {
-	inputManager_->GetMouseController()->SetSensitivity(sensitivity);
+	ioManager_->GetMouseController()->SetSensitivity(sensitivity);
 }
 
 bool Engine::IsKeyHeld(BYTE key)
 {
-	return inputManager_->GetGetHitKey()->IsHeld(key);
+	return ioManager_->GetGetHitKey()->IsHeld(key);
 }
 
 bool Engine::IsKeyJustPressed(BYTE key)
 {
-	return inputManager_->GetGetHitKey()->IsJustPressed(key);
+	return ioManager_->GetGetHitKey()->IsJustPressed(key);
 }
 
 bool Engine::IsKeyJustReleased(BYTE key)
 {
-	return inputManager_->GetGetHitKey()->IsJustReleased(key);
+	return ioManager_->GetGetHitKey()->IsJustReleased(key);
 }
 
 uint32_t Engine::KeyHoldFrames(BYTE key)
 {
-	return inputManager_->GetGetHitKey()->HoldFrames(key);
+	return ioManager_->GetGetHitKey()->HoldFrames(key);
 }
 
 int Engine::TestTapLong(int n, BYTE key)
 {
-	return inputManager_->GetGetHitKey()->TestTapLong(n, key);
+	return ioManager_->GetGetHitKey()->TestTapLong(n, key);
 }
 
 // カメラ
@@ -653,12 +653,12 @@ void Engine::SetIWorldCollider(IWorldCollider* world)
 	physicsSystem_->SetIWorldCollider(world);
 }
 
-void Engine::RegisterDynamic(RenderData_Model* model)
+void Engine::RegisterDynamic(IPhysicsBody* model)
 {
 	physicsSystem_->RegisterDynamic(model);
 }
 
-void Engine::UnregisterDynamic(RenderData_Model* model)
+void Engine::UnregisterDynamic(IPhysicsBody* model)
 {
 	physicsSystem_->UnregisterDynamic(model);
 }

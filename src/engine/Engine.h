@@ -10,7 +10,7 @@
 class WindowManager;
 class DirectXManager;
 class DrawSystem;
-class Input;
+class IOManager;
 class CameraManager;
 class ImGuiManager;
 class PhysicsSystem;
@@ -137,12 +137,12 @@ public:
 
 	// 物理制御
 
-	// 全てのRenderData_Modelの物理演算無効化
+	// 全てのIPhysicsBodyの物理演算無効化
 	void ClearDynamicAll();
-	// RenderData_Modelの物理演算無効化
-	void UnregisterDynamic(RenderData_Model* model);
-	// RenderData_Modelの物理演算有効化
-	void RegisterDynamic(RenderData_Model* model);
+	// IPhysicsBodyの物理演算無効化
+	void UnregisterDynamic(IPhysicsBody* model);
+	// IPhysicsBodyの物理演算有効化
+	void RegisterDynamic(IPhysicsBody* model);
 	// WorldColliderの設定
 	void SetIWorldCollider(IWorldCollider* worldCollider);
 
@@ -184,7 +184,7 @@ private:
 	// 描画関連
 	DrawSystem* drawSystem_ = nullptr;
 	// 入力関連
-	Input* inputManager_ = nullptr;
+	IOManager* ioManager_ = nullptr;
 	// カメラ
 	CameraManager* cameraManager_ = nullptr;
 	// ImGui

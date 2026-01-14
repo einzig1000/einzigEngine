@@ -64,9 +64,6 @@
     <Filter Include="application">
       <UniqueIdentifier>{32561114-f9f1-4f0a-8e1e-73b39cad400b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="application\GameManeger">
-      <UniqueIdentifier>{be7b0085-0de3-4d37-bc83-670da58a57b2}</UniqueIdentifier>
-    </Filter>
     <Filter Include="engine\Shader">
       <UniqueIdentifier>{ba7941ee-22c3-46d9-992c-a964b12ce9d2}</UniqueIdentifier>
     </Filter>
@@ -91,24 +88,6 @@
     <Filter Include="engine\ResourceManager\TextureManager">
       <UniqueIdentifier>{5ac7ac8c-cfc8-4b8e-80bf-d8b5369d0613}</UniqueIdentifier>
     </Filter>
-    <Filter Include="application\GameManeger\Phase">
-      <UniqueIdentifier>{e81b7604-cb9c-4ea4-9294-38c65d0c2c9a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="application\GameManeger\Phase\BattlePhase">
-      <UniqueIdentifier>{4981549d-8a7a-45c3-af1b-6be7c79803f5}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="application\GameManeger\Phase\PhaseParent">
-      <UniqueIdentifier>{0e641bc6-709a-4dc4-b0e7-deb84efc8c1b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="application\GameManeger\Phase\TestPhase">
-      <UniqueIdentifier>{86bff4f6-f2b3-4425-a46e-802f7182bacd}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="application\GameManeger\Phase\TitlePhase">
-      <UniqueIdentifier>{194b88de-4e02-404e-8a08-59bdab644321}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="application\GameManeger\Phase\GameScenePhase">
-      <UniqueIdentifier>{187336b4-48e9-448a-a699-e7a55fb56ae1}</UniqueIdentifier>
-    </Filter>
     <Filter Include="engine\FixFPS">
       <UniqueIdentifier>{8ed84834-c43a-4dda-a3bf-3b95cd1b75fd}</UniqueIdentifier>
     </Filter>
@@ -127,9 +106,6 @@
     <Filter Include="engine\DirectXManager\SrvManager">
       <UniqueIdentifier>{09ce842d-ba2c-47b3-8c1a-fcc0da694c8b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="application\GameManeger\Map">
-      <UniqueIdentifier>{28f4b7c8-cecf-4edc-a2e3-2071fd41f5b6}</UniqueIdentifier>
-    </Filter>
     <Filter Include="engine\Facade">
       <UniqueIdentifier>{24c1e14d-3c15-48b9-9b53-6d5405a3ce02}</UniqueIdentifier>
     </Filter>
@@ -142,71 +118,11 @@
     <Filter Include="engine\DrawSystem\RenderDataClass">
       <UniqueIdentifier>{7d8d53d3-04c0-4caa-ac10-735e5054f1f5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="application\GameManeger\CameraController">
-      <UniqueIdentifier>{e3cb53ce-025d-48fe-8c9b-c99c3395bb59}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="application\GameManeger\Charactor">
-      <UniqueIdentifier>{2d9745b8-e424-4cfc-b609-c19145556b45}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="application\GameManeger\Charactor\Player">
-      <UniqueIdentifier>{6a027008-0c2c-4e83-a548-37aff76f8489}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="application\GameManeger\Charactor\BaseCharactor">
-      <UniqueIdentifier>{686134fb-a1b8-47f3-af73-021a2c7fa321}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="application\GameManeger\Map\Chunk">
-      <UniqueIdentifier>{35fdb512-caaa-4061-a301-e55e6a01029f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="application\GameManeger\Map\Chunk\Block">
-      <UniqueIdentifier>{1914304b-d65c-4d83-8e80-cd43ac14c5e2}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="application\GameManeger\UIManager">
-      <UniqueIdentifier>{4c2f64e3-7657-4b9d-b5b3-2ff37c2f8ab9}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="application\GameManeger\UIManager\UIScreen">
-      <UniqueIdentifier>{ca3c0f42-1edc-4113-8ad6-a20184b856a0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="application\GameManeger\UIManager\UIScreen\UIElement">
-      <UniqueIdentifier>{904e6f54-289b-4d46-8369-9c545a1e9df1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="application\GameManeger\UIManager\UIScreen\InventoryScreen">
-      <UniqueIdentifier>{5ff58466-0018-40f5-8fa0-8091a5ef559a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="application\GameManeger\UIManager\UIScreen\PlayingScreen">
-      <UniqueIdentifier>{ba423f92-ea59-4dfd-9c66-1b748e1340c7}</UniqueIdentifier>
-    </Filter>
     <Filter Include="engine\Utilities\PerlinNoise">
       <UniqueIdentifier>{313938a3-c0d2-4b3c-89d1-88f4efa161c6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="application\GameManeger\UIManager\UIScreen\UIElement\Inventory">
-      <UniqueIdentifier>{a4a5843c-d22b-42e1-9803-e66ff74c7e6e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="engine\PhysicsSystem">
       <UniqueIdentifier>{4dd9de1b-4f1e-49e0-9f35-a9b3c4e8f69d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="application\GameManeger\Item">
-      <UniqueIdentifier>{c6a0b0da-2ff0-43fa-adc9-007833710f26}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="application\GameManeger\Item\HaveItem">
-      <UniqueIdentifier>{30ac8278-a596-4c95-9702-b01431d8f28f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="application\GameManeger\Item\DropItem">
-      <UniqueIdentifier>{dbf079b1-300b-4849-979f-d718265501b7}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="application\GameManeger\UIManager\UIScreen\UIElement\Hotbar">
-      <UniqueIdentifier>{39268ca7-7519-48e9-bf11-ca596956e61f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="application\GameManeger\Item\CraftRecipe">
-      <UniqueIdentifier>{9a5ce3f6-a4d7-4ff5-9f07-090d10c6438a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="application\GameManeger\UIManager\UIScreen\CraftScreen">
-      <UniqueIdentifier>{063f143d-28f9-4e2e-9e7a-3ee5a42e42f1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="application\GameManeger\Charactor\Enemy">
-      <UniqueIdentifier>{d82d499d-4b7a-4494-a0d1-66a863c1abba}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="application\GameManeger\UIManager\UIScreen\PauseScreen">
-      <UniqueIdentifier>{be480839-6e46-411f-809f-c6c6447cda98}</UniqueIdentifier>
     </Filter>
     <Filter Include="engine\IO">
       <UniqueIdentifier>{debd2fd4-6801-480a-97ea-81cb1b63a910}</UniqueIdentifier>
@@ -219,6 +135,93 @@
     </Filter>
     <Filter Include="engine\IO\GetPadState">
       <UniqueIdentifier>{6cdbe87c-683b-4dee-b8c3-f22dd1b10c44}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManager">
+      <UniqueIdentifier>{be7b0085-0de3-4d37-bc83-670da58a57b2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManager\Phase">
+      <UniqueIdentifier>{e81b7604-cb9c-4ea4-9294-38c65d0c2c9a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManager\Phase\BattlePhase">
+      <UniqueIdentifier>{4981549d-8a7a-45c3-af1b-6be7c79803f5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManager\Phase\PhaseParent">
+      <UniqueIdentifier>{0e641bc6-709a-4dc4-b0e7-deb84efc8c1b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManager\Phase\TestPhase">
+      <UniqueIdentifier>{86bff4f6-f2b3-4425-a46e-802f7182bacd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManager\Phase\TitlePhase">
+      <UniqueIdentifier>{194b88de-4e02-404e-8a08-59bdab644321}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManager\Phase\GameScenePhase">
+      <UniqueIdentifier>{187336b4-48e9-448a-a699-e7a55fb56ae1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManager\Map">
+      <UniqueIdentifier>{28f4b7c8-cecf-4edc-a2e3-2071fd41f5b6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManager\Map\Chunk">
+      <UniqueIdentifier>{35fdb512-caaa-4061-a301-e55e6a01029f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManager\Map\Chunk\Block">
+      <UniqueIdentifier>{1914304b-d65c-4d83-8e80-cd43ac14c5e2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManager\CameraController">
+      <UniqueIdentifier>{e3cb53ce-025d-48fe-8c9b-c99c3395bb59}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManager\UIManager">
+      <UniqueIdentifier>{4c2f64e3-7657-4b9d-b5b3-2ff37c2f8ab9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManager\UIManager\UIScreen">
+      <UniqueIdentifier>{ca3c0f42-1edc-4113-8ad6-a20184b856a0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManager\UIManager\UIScreen\UIElement">
+      <UniqueIdentifier>{904e6f54-289b-4d46-8369-9c545a1e9df1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManager\UIManager\UIScreen\UIElement\Inventory">
+      <UniqueIdentifier>{a4a5843c-d22b-42e1-9803-e66ff74c7e6e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManager\UIManager\UIScreen\UIElement\Hotbar">
+      <UniqueIdentifier>{39268ca7-7519-48e9-bf11-ca596956e61f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManager\UIManager\UIScreen\UIElement\Pause">
+      <UniqueIdentifier>{fc76eb3a-8f90-4f4b-a724-72c837b162b5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManager\UIManager\UIScreen\InventoryScreen">
+      <UniqueIdentifier>{5ff58466-0018-40f5-8fa0-8091a5ef559a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManager\UIManager\UIScreen\PlayingScreen">
+      <UniqueIdentifier>{ba423f92-ea59-4dfd-9c66-1b748e1340c7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManager\UIManager\UIScreen\CraftScreen">
+      <UniqueIdentifier>{063f143d-28f9-4e2e-9e7a-3ee5a42e42f1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManager\UIManager\UIScreen\PauseScreen">
+      <UniqueIdentifier>{be480839-6e46-411f-809f-c6c6447cda98}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManager\Item">
+      <UniqueIdentifier>{c6a0b0da-2ff0-43fa-adc9-007833710f26}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManager\Item\HaveItem">
+      <UniqueIdentifier>{30ac8278-a596-4c95-9702-b01431d8f28f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManager\Item\DropItem">
+      <UniqueIdentifier>{dbf079b1-300b-4849-979f-d718265501b7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManager\Item\CraftRecipe">
+      <UniqueIdentifier>{9a5ce3f6-a4d7-4ff5-9f07-090d10c6438a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManager\Character">
+      <UniqueIdentifier>{2d9745b8-e424-4cfc-b609-c19145556b45}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManager\Character\Player">
+      <UniqueIdentifier>{6a027008-0c2c-4e83-a548-37aff76f8489}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManager\Character\BaseCharacter">
+      <UniqueIdentifier>{686134fb-a1b8-47f3-af73-021a2c7fa321}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\GameManager\Character\Enemy">
+      <UniqueIdentifier>{d82d499d-4b7a-4494-a0d1-66a863c1abba}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -253,7 +256,7 @@
       <Filter>engine\DirectXManager\ViewportScissorManager</Filter>
     </ClCompile>
     <ClCompile Include="src\application\GameManager\GameManager.cpp">
-      <Filter>application\GameManeger</Filter>
+      <Filter>application\GameManager</Filter>
     </ClCompile>
     <ClCompile Include="src\engine\Resource\Audio\AudioManager.cpp">
       <Filter>engine\ResourceManager\AudioManager</Filter>
@@ -298,19 +301,19 @@
       <Filter>engine\WindowManager</Filter>
     </ClCompile>
     <ClCompile Include="src\application\GameManager\Phase\BattlePhase\BattlePhase.cpp">
-      <Filter>application\GameManeger\Phase\BattlePhase</Filter>
+      <Filter>application\GameManager\Phase\BattlePhase</Filter>
     </ClCompile>
     <ClCompile Include="src\application\GameManager\Phase\PhaseParent\PhaseParent.cpp">
-      <Filter>application\GameManeger\Phase\PhaseParent</Filter>
+      <Filter>application\GameManager\Phase\PhaseParent</Filter>
     </ClCompile>
     <ClCompile Include="src\application\GameManager\Phase\TestPhase\TestPhase.cpp">
-      <Filter>application\GameManeger\Phase\TestPhase</Filter>
+      <Filter>application\GameManager\Phase\TestPhase</Filter>
     </ClCompile>
     <ClCompile Include="src\application\GameManager\Phase\TitlePhase\TitlePhase.cpp">
-      <Filter>application\GameManeger\Phase\TitlePhase</Filter>
+      <Filter>application\GameManager\Phase\TitlePhase</Filter>
     </ClCompile>
     <ClCompile Include="src\application\GameManager\Phase\GameScenePhase\GameScenePhase.cpp">
-      <Filter>application\GameManeger\Phase\GameScenePhase</Filter>
+      <Filter>application\GameManager\Phase\GameScenePhase</Filter>
     </ClCompile>
     <ClCompile Include="src\engine\DrawSystem\RenderData\RenderData.cpp">
       <Filter>engine\DrawSystem\RenderDataClass</Filter>
@@ -331,16 +334,16 @@
       <Filter>engine\DirectXManager\SrvManager</Filter>
     </ClCompile>
     <ClCompile Include="src\application\MapManager\Chunk\Block\Block.cpp">
-      <Filter>application\GameManeger\Map\Chunk\Block</Filter>
+      <Filter>application\GameManager\Map\Chunk\Block</Filter>
     </ClCompile>
     <ClCompile Include="src\application\MapManager\MapManager.cpp">
-      <Filter>application\GameManeger\Map</Filter>
+      <Filter>application\GameManager\Map</Filter>
     </ClCompile>
-    <ClCompile Include="src\application\Charactor\Player\Player.cpp">
-      <Filter>application\GameManeger\Charactor\Player</Filter>
+    <ClCompile Include="src\application\Character\Player\Player.cpp">
+      <Filter>application\GameManager\Character\Player</Filter>
     </ClCompile>
     <ClCompile Include="src\application\Item\DropItem\DropItem.cpp">
-      <Filter>application\GameManeger\Item\DropItem</Filter>
+      <Filter>application\GameManager\Item\DropItem</Filter>
     </ClCompile>
     <ClCompile Include="src\engine\Engine.cpp">
       <Filter>engine</Filter>
@@ -349,43 +352,43 @@
       <Filter>engine\imgui</Filter>
     </ClCompile>
     <ClCompile Include="src\application\MapManager\Chunk\Block\BlockDurability.cpp">
-      <Filter>application\GameManeger\Map\Chunk\Block</Filter>
+      <Filter>application\GameManager\Map\Chunk\Block</Filter>
     </ClCompile>
     <ClCompile Include="src\application\ResourceLoder\ResourceID.cpp">
       <Filter>application</Filter>
     </ClCompile>
     <ClCompile Include="src\application\Camera\CameraController.cpp">
-      <Filter>application\GameManeger\CameraController</Filter>
+      <Filter>application\GameManager\CameraController</Filter>
     </ClCompile>
     <ClCompile Include="src\application\MapManager\Chunk\Block\BlockConfig.cpp">
-      <Filter>application\GameManeger\Map\Chunk\Block</Filter>
+      <Filter>application\GameManager\Map\Chunk\Block</Filter>
     </ClCompile>
-    <ClCompile Include="src\application\Charactor\BaseCharactor.cpp">
-      <Filter>application\GameManeger\Charactor\BaseCharactor</Filter>
+    <ClCompile Include="src\application\Character\BaseCharacter.cpp">
+      <Filter>application\GameManager\Character\BaseCharacter</Filter>
     </ClCompile>
     <ClCompile Include="src\application\MapManager\Chunk\Chunk.cpp">
-      <Filter>application\GameManeger\Map\Chunk</Filter>
+      <Filter>application\GameManager\Map\Chunk</Filter>
     </ClCompile>
     <ClCompile Include="src\application\UIManager\UIManager.cpp">
-      <Filter>application\GameManeger\UIManager</Filter>
+      <Filter>application\GameManager\UIManager</Filter>
     </ClCompile>
     <ClCompile Include="src\application\UIManager\ScreenMode\UIScreen.cpp">
-      <Filter>application\GameManeger\UIManager\UIScreen</Filter>
+      <Filter>application\GameManager\UIManager\UIScreen</Filter>
     </ClCompile>
     <ClCompile Include="src\application\UIManager\ScreenMode\InventoryScreen\InventoryScreen.cpp">
-      <Filter>application\GameManeger\UIManager\UIScreen\InventoryScreen</Filter>
+      <Filter>application\GameManager\UIManager\UIScreen\InventoryScreen</Filter>
     </ClCompile>
     <ClCompile Include="src\application\UIManager\ScreenMode\PlayingScreen\PlayingScreen.cpp">
-      <Filter>application\GameManeger\UIManager\UIScreen\PlayingScreen</Filter>
+      <Filter>application\GameManager\UIManager\UIScreen\PlayingScreen</Filter>
     </ClCompile>
     <ClCompile Include="src\engine\Utilities\PerlinNoise.cpp">
       <Filter>engine\Utilities\PerlinNoise</Filter>
     </ClCompile>
     <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\UIElement.cpp">
-      <Filter>application\GameManeger\UIManager\UIScreen\UIElement</Filter>
+      <Filter>application\GameManager\UIManager\UIScreen\UIElement</Filter>
     </ClCompile>
     <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\Inventory\Inventory.cpp">
-      <Filter>application\GameManeger\UIManager\UIScreen\UIElement\Inventory</Filter>
+      <Filter>application\GameManager\UIManager\UIScreen\UIElement\Inventory</Filter>
     </ClCompile>
     <ClCompile Include="src\engine\Physics\PhysicsSystem.cpp">
       <Filter>engine\PhysicsSystem</Filter>
@@ -393,43 +396,46 @@
     <ClCompile Include="src\engine\Physics\IWorldCollider.cpp">
       <Filter>engine\PhysicsSystem</Filter>
     </ClCompile>
-    <ClCompile Include="src\engine\Physics\MapWorldCollider.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="src\application\Item\Item.cpp">
-      <Filter>application\GameManeger\Item</Filter>
+      <Filter>application\GameManager\Item</Filter>
     </ClCompile>
     <ClCompile Include="src\application\Item\HaveItem\HaveItem.cpp">
-      <Filter>application\GameManeger\Item\HaveItem</Filter>
+      <Filter>application\GameManager\Item\HaveItem</Filter>
     </ClCompile>
     <ClCompile Include="src\application\Item\DropItem\DropItemManager.cpp">
-      <Filter>application\GameManeger\Item\DropItem</Filter>
+      <Filter>application\GameManager\Item\DropItem</Filter>
     </ClCompile>
     <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\Hotbar\Hotbar.cpp">
-      <Filter>application\GameManeger\UIManager\UIScreen\UIElement\Hotbar</Filter>
+      <Filter>application\GameManager\UIManager\UIScreen\UIElement\Hotbar</Filter>
     </ClCompile>
     <ClCompile Include="src\application\Item\CraftRecipe\CraftRecipe.cpp">
-      <Filter>application\GameManeger\Item\CraftRecipe</Filter>
+      <Filter>application\GameManager\Item\CraftRecipe</Filter>
     </ClCompile>
     <ClCompile Include="src\application\UIManager\ScreenMode\CraftScreen\CraftScreen.cpp">
-      <Filter>application\GameManeger\UIManager\UIScreen\CraftScreen</Filter>
+      <Filter>application\GameManager\UIManager\UIScreen\CraftScreen</Filter>
     </ClCompile>
     <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\Craft\Craft.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="src\application\Charactor\Enemy\EnemyManager.cpp">
-      <Filter>application\GameManeger\Charactor\Enemy</Filter>
+    <ClCompile Include="src\application\Character\Enemy\EnemyManager.cpp">
+      <Filter>application\GameManager\Character\Enemy</Filter>
     </ClCompile>
-    <ClCompile Include="src\application\Charactor\Enemy\Enemy.cpp">
-      <Filter>application\GameManeger\Charactor\Enemy</Filter>
+    <ClCompile Include="src\application\Character\Enemy\Enemy.cpp">
+      <Filter>application\GameManager\Character\Enemy</Filter>
     </ClCompile>
     <ClCompile Include="src\application\UIManager\ScreenMode\PauseScreen\PauseScreen.cpp">
-      <Filter>application\GameManeger\UIManager\UIScreen\PauseScreen</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\Pause\Pause.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>application\GameManager\UIManager\UIScreen\PauseScreen</Filter>
     </ClCompile>
     <ClCompile Include="src\engine\Physics\IPhysicsBody.cpp">
+      <Filter>engine\PhysicsSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\Physics\MapWorldCollider.cpp">
+      <Filter>engine\PhysicsSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\Pause\Pause.cpp">
+      <Filter>application\GameManager\UIManager\UIScreen\UIElement\Pause</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\Utilities\SimpleModelBody.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
@@ -462,7 +468,7 @@
       <Filter>engine\DirectXManager\ViewportScissorManager</Filter>
     </ClInclude>
     <ClInclude Include="src\application\GameManager\GameManager.h">
-      <Filter>application\GameManeger</Filter>
+      <Filter>application\GameManager</Filter>
     </ClInclude>
     <ClInclude Include="src\engine\Resource\Audio\AudioManager.h">
       <Filter>engine\ResourceManager\AudioManager</Filter>
@@ -507,19 +513,19 @@
       <Filter>engine\WindowManager</Filter>
     </ClInclude>
     <ClInclude Include="src\application\GameManager\Phase\BattlePhase\BattlePhase.h">
-      <Filter>application\GameManeger\Phase\BattlePhase</Filter>
+      <Filter>application\GameManager\Phase\BattlePhase</Filter>
     </ClInclude>
     <ClInclude Include="src\application\GameManager\Phase\PhaseParent\PhaseParent.h">
-      <Filter>application\GameManeger\Phase\PhaseParent</Filter>
+      <Filter>application\GameManager\Phase\PhaseParent</Filter>
     </ClInclude>
     <ClInclude Include="src\application\GameManager\Phase\TestPhase\TestPhase.h">
-      <Filter>application\GameManeger\Phase\TestPhase</Filter>
+      <Filter>application\GameManager\Phase\TestPhase</Filter>
     </ClInclude>
     <ClInclude Include="src\application\GameManager\Phase\TitlePhase\TitlePhase.h">
-      <Filter>application\GameManeger\Phase\TitlePhase</Filter>
+      <Filter>application\GameManager\Phase\TitlePhase</Filter>
     </ClInclude>
     <ClInclude Include="src\application\GameManager\Phase\GameScenePhase\GameScenePhase.h">
-      <Filter>application\GameManeger\Phase\GameScenePhase</Filter>
+      <Filter>application\GameManager\Phase\GameScenePhase</Filter>
     </ClInclude>
     <ClInclude Include="src\engine\DrawSystem\RenderData\RenderData.h">
       <Filter>engine\DrawSystem\RenderDataClass</Filter>
@@ -540,16 +546,16 @@
       <Filter>engine\DirectXManager\SrvManager</Filter>
     </ClInclude>
     <ClInclude Include="src\application\MapManager\Chunk\Block\Block.h">
-      <Filter>application\GameManeger\Map\Chunk\Block</Filter>
+      <Filter>application\GameManager\Map\Chunk\Block</Filter>
     </ClInclude>
     <ClInclude Include="src\application\MapManager\MapManager.h">
-      <Filter>application\GameManeger\Map</Filter>
+      <Filter>application\GameManager\Map</Filter>
     </ClInclude>
-    <ClInclude Include="src\application\Charactor\Player\Player.h">
-      <Filter>application\GameManeger\Charactor\Player</Filter>
+    <ClInclude Include="src\application\Character\Player\Player.h">
+      <Filter>application\GameManager\Character\Player</Filter>
     </ClInclude>
     <ClInclude Include="src\application\Item\DropItem\DropItem.h">
-      <Filter>application\GameManeger\Item\DropItem</Filter>
+      <Filter>application\GameManager\Item\DropItem</Filter>
     </ClInclude>
     <ClInclude Include="src\engine\Engine.h">
       <Filter>engine</Filter>
@@ -558,43 +564,43 @@
       <Filter>engine\imgui</Filter>
     </ClInclude>
     <ClInclude Include="src\application\MapManager\Chunk\Block\BlockDurability.h">
-      <Filter>application\GameManeger\Map\Chunk\Block</Filter>
+      <Filter>application\GameManager\Map\Chunk\Block</Filter>
     </ClInclude>
     <ClInclude Include="src\application\ResourceLoder\ResourceID.h">
       <Filter>application</Filter>
     </ClInclude>
     <ClInclude Include="src\application\Camera\CameraController.h">
-      <Filter>application\GameManeger\CameraController</Filter>
+      <Filter>application\GameManager\CameraController</Filter>
     </ClInclude>
     <ClInclude Include="src\application\MapManager\Chunk\Block\BlockConfig.h">
-      <Filter>application\GameManeger\Map\Chunk\Block</Filter>
+      <Filter>application\GameManager\Map\Chunk\Block</Filter>
     </ClInclude>
-    <ClInclude Include="src\application\Charactor\BaseCharactor.h">
-      <Filter>application\GameManeger\Charactor\BaseCharactor</Filter>
+    <ClInclude Include="src\application\Character\BaseCharacter.h">
+      <Filter>application\GameManager\Character\BaseCharacter</Filter>
     </ClInclude>
     <ClInclude Include="src\application\MapManager\Chunk\Chunk.h">
-      <Filter>application\GameManeger\Map\Chunk</Filter>
+      <Filter>application\GameManager\Map\Chunk</Filter>
     </ClInclude>
     <ClInclude Include="src\application\UIManager\UIManager.h">
-      <Filter>application\GameManeger\UIManager</Filter>
+      <Filter>application\GameManager\UIManager</Filter>
     </ClInclude>
     <ClInclude Include="src\application\UIManager\ScreenMode\UIScreen.h">
-      <Filter>application\GameManeger\UIManager\UIScreen</Filter>
+      <Filter>application\GameManager\UIManager\UIScreen</Filter>
     </ClInclude>
     <ClInclude Include="src\application\UIManager\ScreenMode\InventoryScreen\InventoryScreen.h">
-      <Filter>application\GameManeger\UIManager\UIScreen\InventoryScreen</Filter>
+      <Filter>application\GameManager\UIManager\UIScreen\InventoryScreen</Filter>
     </ClInclude>
     <ClInclude Include="src\application\UIManager\ScreenMode\PlayingScreen\PlayingScreen.h">
-      <Filter>application\GameManeger\UIManager\UIScreen\PlayingScreen</Filter>
+      <Filter>application\GameManager\UIManager\UIScreen\PlayingScreen</Filter>
     </ClInclude>
     <ClInclude Include="src\engine\Utilities\PerlinNoise.h">
       <Filter>engine\Utilities\PerlinNoise</Filter>
     </ClInclude>
     <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\UIElement.h">
-      <Filter>application\GameManeger\UIManager\UIScreen\UIElement</Filter>
+      <Filter>application\GameManager\UIManager\UIScreen\UIElement</Filter>
     </ClInclude>
     <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\Inventory\Inventory.h">
-      <Filter>application\GameManeger\UIManager\UIScreen\UIElement\Inventory</Filter>
+      <Filter>application\GameManager\UIManager\UIScreen\UIElement\Inventory</Filter>
     </ClInclude>
     <ClInclude Include="src\engine\Physics\PhysicsSystem.h">
       <Filter>engine\PhysicsSystem</Filter>
@@ -602,43 +608,46 @@
     <ClInclude Include="src\engine\Physics\IWorldCollider.h">
       <Filter>engine\PhysicsSystem</Filter>
     </ClInclude>
-    <ClInclude Include="src\engine\Physics\MapWorldCollider.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="src\application\Item\Item.h">
-      <Filter>application\GameManeger\Item</Filter>
+      <Filter>application\GameManager\Item</Filter>
     </ClInclude>
     <ClInclude Include="src\application\Item\HaveItem\HaveItem.h">
-      <Filter>application\GameManeger\Item\HaveItem</Filter>
+      <Filter>application\GameManager\Item\HaveItem</Filter>
     </ClInclude>
     <ClInclude Include="src\application\Item\DropItem\DropItemManager.h">
-      <Filter>application\GameManeger\Item\DropItem</Filter>
+      <Filter>application\GameManager\Item\DropItem</Filter>
     </ClInclude>
     <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\Hotbar\Hotbar.h">
-      <Filter>application\GameManeger\UIManager\UIScreen\UIElement\Hotbar</Filter>
+      <Filter>application\GameManager\UIManager\UIScreen\UIElement\Hotbar</Filter>
     </ClInclude>
     <ClInclude Include="src\application\Item\CraftRecipe\CraftRecipe.h">
-      <Filter>application\GameManeger\Item\CraftRecipe</Filter>
+      <Filter>application\GameManager\Item\CraftRecipe</Filter>
     </ClInclude>
     <ClInclude Include="src\application\UIManager\ScreenMode\CraftScreen\CraftScreen.h">
-      <Filter>application\GameManeger\UIManager\UIScreen\CraftScreen</Filter>
+      <Filter>application\GameManager\UIManager\UIScreen\CraftScreen</Filter>
     </ClInclude>
     <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\Craft\Craft.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="src\application\Charactor\Enemy\Enemy.h">
-      <Filter>application\GameManeger\Charactor\Enemy</Filter>
+    <ClInclude Include="src\application\Character\Enemy\Enemy.h">
+      <Filter>application\GameManager\Character\Enemy</Filter>
     </ClInclude>
-    <ClInclude Include="src\application\Charactor\Enemy\EnemyManager.h">
-      <Filter>application\GameManeger\Charactor\Enemy</Filter>
+    <ClInclude Include="src\application\Character\Enemy\EnemyManager.h">
+      <Filter>application\GameManager\Character\Enemy</Filter>
     </ClInclude>
     <ClInclude Include="src\application\UIManager\ScreenMode\PauseScreen\PauseScreen.h">
-      <Filter>application\GameManeger\UIManager\UIScreen\PauseScreen</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\Pause\Pause.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>application\GameManager\UIManager\UIScreen\PauseScreen</Filter>
     </ClInclude>
     <ClInclude Include="src\engine\Physics\IPhysicsBody.h">
+      <Filter>engine\PhysicsSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\Physics\MapWorldCollider.h">
+      <Filter>engine\PhysicsSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\Pause\Pause.h">
+      <Filter>application\GameManager\UIManager\UIScreen\UIElement\Pause</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\Utilities\SimpleModelBody.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>

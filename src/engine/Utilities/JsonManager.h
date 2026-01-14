@@ -4,81 +4,160 @@
 #include <vector>
 #include <string>
 
-using json = nlohmann::json;
-
-class RenderData_Model;
-class RenderData_Sprite;
-class RenderData_Triangle;
-class RenderData_Line;
-class RenderData_Particle;
-class RenderData_Block;
-class Chunk;
-class MapManager;
-
 class JsonManager
 {
 public:
+	/// <summary>
+	/// dataMapにパラメータを追加する
+	/// </summary>
+	/// <typeparam name="T"> 値の型 </typeparam>
+	/// <param name="path"> ファイルパス </param>
+	/// <param name="key"> キー </param>
+	/// <param name="value"> 値 </param>
+	template<typename T>
+	static void AddParam(const std::string& path, const std::string& key, const T& value)
+	{
+		dataMap[path][key] = value;
+	}
 
-	static bool SaveToJson(RenderData_Particle& data, const std::string& path);
-	static bool LoadFromJson(RenderData_Particle& data, const std::string& path);
+	/// <summary>
+	/// dataMapからパラメータを取得する
+	/// </summary>
+	/// <typeparam name="T"> 値の型 </typeparam>
+	/// <param name="path"> ファイルパス </param>
+	/// <param name="key"> キー </param>
+	/// <param name="outValue"> 取得した値の出力先 </param>
+	/// <returns> 成否 </returns>
+	template<typename T>
+	static bool Load(const std::string& path, const std::string& key, T& outValue)
+	{
+		auto it = dataMap.find(path);
+		if (it == dataMap.end()) return false;
 
-	static bool SaveToJson(RenderData_Model& data, const std::string& path);
-	static bool LoadFromJson(RenderData_Model& data, const std::string& path);
+		if (!it->second.contains(key)) return false;
 
-	static bool SaveToJson(RenderData_Line& data, const std::string& path);
-	static bool LoadFromJson(RenderData_Line& data, const std::string& path);
+		outValue = it->second.at(key).get<T>();
+		return true;
+	}
 
-	static bool SaveToJson(RenderData_Triangle& data, const std::string& path);
-	static bool LoadFromJson(RenderData_Triangle& data, const std::string& path);
-
-	static bool SaveToJson(RenderData_Sprite& data, const std::string& path);
-	static bool LoadFromJson(RenderData_Sprite& data, const std::string& path);
-
-	static bool SaveToJson(MapManager& data, const std::string& path);
-	static bool LoadFromJson(MapManager& data, const std::string& path);
-
-
-	static bool SaveToJson(const std::string& path, const std::string key, const int& data);
-	static bool SaveToJson(const std::string& path, const std::string key, const float& data);
-	static bool SaveToJson(const std::string& path, const std::string key, const std::string& data);
-	static bool SaveToJson(const std::string& path, const std::string key, const Vector2int& data);
-	static bool SaveToJson(const std::string& path, const std::string key, const Vector2& data);
-	static bool SaveToJson(const std::string& path, const std::string key, const Vector3& data);
-	static bool SaveToJson(const std::string& path, const std::string key, const Vector4& data);
-	static bool SaveToJson(const std::string& path, const std::string key, const AABB& data);
-
-	static int LoadFromJson(const std::string& path, const std::string key);
+	// ファイルを読み込んで dataMap[path] に保存
+	static bool Load(const std::string& path);
+	// そのディレクトリの全てのファイルを読み込んで dataMap に保存
+	static void LoadAll(const std::string& directoryPath);
+	// dataMap[path] の内容をファイルに保存
+	static bool Save(const std::string& path);
+	// dataMap の全ての内容を対応するファイルに保存
+	static void SaveAll();
 
 private:
-
-	std::vector<json> jsons;
-
-	static json ToJson(const int& data);
-	static json ToJson(const float& data);
-	static json ToJson(const std::string& data);
-	static json ToJson(const Vector2& data);
-	static json ToJson(const Vector2int& data);
-	static json ToJson(const Vector3& data);
-	static json ToJson(const Vector3int& data);
-	static json ToJson(const Vector4& data);
-	static json ToJson(const AABB& data);
-	static json ToJson(const Matrix3x3& data);
-	static json ToJson(const Matrix4x4& data);
-
-	static int ToInt(const json& j);
-	static float ToFloat(const json& j);
-	static std::string ToString(const json& j);
-	static Vector2 ToVector2(const json& j);
-	static Vector2int ToVector2int(const json& j);
-	static Vector3 ToVector3(const json& j);
-	static Vector3int ToVector3int(const json& j);
-	static Vector4 ToVector4(const json& j);
-	static AABB ToAABB(const json& j);
-	static Matrix3x3 ToMatrix3x3(const json& j);
-	static Matrix4x4 ToMatrix4x4(const json& j);
-
-
-	static json SetJsonValue(const std::string& key, const float& data);
-	// str文字列をdelimiterで分割する
-	static std::vector<std::string> SplitString(const std::string& str, char delimiter);
+	static std::unordered_map<std::string, nlohmann::json> dataMap;
 };
+
+inline void to_json(nlohmann::json& j, const Vector2& v)
+{
+	j = nlohmann::json{ {"x", v.x}, {"y", v.y} };
+}
+inline void from_json(const nlohmann::json& j, Vector2& v)
+{
+	j.at("x").get_to(v.x);
+	j.at("y").get_to(v.y);
+}
+
+inline void to_json(nlohmann::json& j, const Vector2int& v)
+{
+	j = nlohmann::json{ {"x", v.x}, {"y", v.y} };
+}
+inline void from_json(const nlohmann::json& j, Vector2int& v)
+{
+	j.at("x").get_to(v.x);
+	j.at("y").get_to(v.y);
+}
+
+inline void to_json(nlohmann::json& j, const Vector3& v)
+{
+	j = nlohmann::json{ {"x", v.x}, {"y", v.y}, {"z", v.z} };
+}
+inline void from_json(const nlohmann::json& j, Vector3& v)
+{
+	j.at("x").get_to(v.x);
+	j.at("y").get_to(v.y);
+	j.at("z").get_to(v.z);
+}
+
+inline void to_json(nlohmann::json& j, const Vector3int& v)
+{
+	j = nlohmann::json{ {"x", v.x}, {"y", v.y}, {"z", v.z} };
+}
+inline void from_json(const nlohmann::json& j, Vector3int& v)
+{
+	j.at("x").get_to(v.x);
+	j.at("y").get_to(v.y);
+	j.at("z").get_to(v.z);
+}
+
+inline void to_json(nlohmann::json& j, const Vector4& v)
+{
+	j = nlohmann::json{ {"x", v.x}, {"y", v.y}, {"z", v.z}, {"w", v.w} };
+}
+inline void from_json(const nlohmann::json& j, Vector4& v)
+{
+	j.at("x").get_to(v.x);
+	j.at("y").get_to(v.y);
+	j.at("z").get_to(v.z);
+	j.at("w").get_to(v.w);
+}
+
+inline void to_json(nlohmann::json& j, const AABB& aabb)
+{
+	j = nlohmann::json{ {"min", aabb.min}, {"max", aabb.max} };
+}
+inline void from_json(const nlohmann::json& j, AABB& aabb)
+{
+	j.at("min").get_to(aabb.min);
+	j.at("max").get_to(aabb.max);
+}
+
+inline void to_json(nlohmann::json& j, const Matrix3x3& m)
+{
+	j = nlohmann::json{
+	{ "m", nlohmann::json::array() }
+	};
+
+	for (int i = 0; i < 3; ++i)
+	{
+		j["m"].push_back({ m.m[i][0], m.m[i][1], m.m[i][2] });
+	}
+
+}
+inline void from_json(const nlohmann::json& j, Matrix3x3& m)
+{
+	for (int i = 0; i < 3; ++i)
+	{
+		for (int k = 0; k < 3; ++k)
+		{
+			j.at("m").at(i).at(k).get_to(m.m[i][k]);
+		}
+	}
+}
+
+inline void to_json(nlohmann::json& j, const Matrix4x4& m)
+{
+	j = nlohmann::json{
+	{ "m", nlohmann::json::array() }
+	};
+
+	for (int i = 0; i < 4; ++i)
+	{
+		j["m"].push_back({ m.m[i][0], m.m[i][1], m.m[i][2], m.m[i][3] });
+	}
+}
+inline void from_json(const nlohmann::json& j, Matrix4x4& m)
+{
+	for (int i = 0; i < 4; ++i)
+	{
+		for (int k = 0; k < 4; ++k)
+		{
+			j.at("m").at(i).at(k).get_to(m.m[i][k]);
+		}
+	}
+}

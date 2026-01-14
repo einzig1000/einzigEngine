@@ -3,6 +3,10 @@
 #include <span>
 #include <vector>
 
+/// <summary>
+/// 物理演算対象インターフェース
+/// </summary>
+
 class IPhysicsBody
 {
 public:
