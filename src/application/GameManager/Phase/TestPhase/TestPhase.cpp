@@ -459,6 +459,57 @@ void TestPhase::DrawImGui()
 
 #pragma endregion
 
+#pragma region pad test
+
+		if (ImGui::BeginTabItem("pad Test"))
+		{
+			ImGui::Text("Connected Pad Sum: %d", Game::Input::Pad::GetConnectedPadNum());
+			for (int32_t padIndex = 0; padIndex < Game::Input::Pad::GetConnectedPadNum(); ++padIndex)
+			{
+				ImGui::Text("Pad %d Buttons:", padIndex);
+				ImGui::Text("------------------------------");
+				ImGui::Text("Pad Left  Stick: (%.2f, %.2f)", Game::Input::Pad::GetLeftStick(padIndex).x, Game::Input::Pad::GetLeftStick(padIndex).y);
+				ImGui::Text("Pad Right Stick: (%.2f, %.2f)", Game::Input::Pad::GetRightStick(padIndex).x, Game::Input::Pad::GetRightStick(padIndex).y);
+				ImGui::Text("Pad Left  Trigger: %.2f", Game::Input::Pad::GetLeftTrigger(padIndex));
+				ImGui::Text("Pad Right Trigger: %.2f", Game::Input::Pad::GetRightTrigger(padIndex));
+				ImGui::Text("Pad Buttons:");
+				ImGui::Text("A - %d-%d-%d : %d",
+					Game::Input::Pad::IsJustPressed(padIndex, PAD_A),
+					Game::Input::Pad::IsHeld(padIndex, PAD_A),
+					Game::Input::Pad::IsJustReleased(padIndex, PAD_A),
+					Game::Input::Pad::HoldFrames(padIndex, PAD_A));
+				ImGui::Text("B - %d-%d-%d : %d",
+					Game::Input::Pad::IsJustPressed(padIndex, PAD_B),
+					Game::Input::Pad::IsHeld(padIndex, PAD_B),
+					Game::Input::Pad::IsJustReleased(padIndex, PAD_B),
+					Game::Input::Pad::HoldFrames(padIndex, PAD_B));
+				ImGui::Text("X - %d-%d-%d : %d",
+					Game::Input::Pad::IsJustPressed(padIndex, PAD_X),
+					Game::Input::Pad::IsHeld(padIndex, PAD_X),
+					Game::Input::Pad::IsJustReleased(padIndex, PAD_X),
+					Game::Input::Pad::HoldFrames(padIndex, PAD_X));
+				ImGui::Text("Y - %d-%d-%d : %d",
+					Game::Input::Pad::IsJustPressed(padIndex, PAD_Y),
+					Game::Input::Pad::IsHeld(padIndex, PAD_Y),
+					Game::Input::Pad::IsJustReleased(padIndex, PAD_Y),
+					Game::Input::Pad::HoldFrames(padIndex, PAD_Y));
+				ImGui::Text("LB - %d-%d-%d : %d",
+					Game::Input::Pad::IsJustPressed(padIndex, PAD_LB),
+					Game::Input::Pad::IsHeld(padIndex, PAD_LB),
+					Game::Input::Pad::IsJustReleased(padIndex, PAD_LB),
+					Game::Input::Pad::HoldFrames(padIndex, PAD_LB));
+				ImGui::Text("RB - %d-%d-%d : %d",
+					Game::Input::Pad::IsJustPressed(padIndex, PAD_RB),
+					Game::Input::Pad::IsHeld(padIndex, PAD_RB),
+					Game::Input::Pad::IsJustReleased(padIndex, PAD_RB),
+					Game::Input::Pad::HoldFrames(padIndex, PAD_RB));
+			}
+
+			ImGui::EndTabItem();
+		}
+
+#pragma endregion
+
 		ImGui::EndTabBar();
 	}
 
