@@ -1,11 +1,17 @@
 #pragma once
+#include "memory.h"
 #include <vector>
 #include "definition/definition.h"
-#include "memory.h"
+
 class IWorldCollider;
 class IPhysicsBody;
 class MapWorldCollider;
 
+/// <summary>
+/// 物理演算システム
+/// </summary>
+///	毎フレームの全物理更新を行う最高指令部。
+/// 動的オブジェクト（IPhysicsBody）をまとめて持ち、静的ワールド（MapWorldCollider）に問い合わせながら移動を確定する。
 class PhysicsSystem
 {
 public:

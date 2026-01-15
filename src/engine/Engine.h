@@ -15,6 +15,7 @@ class CameraManager;
 class ImGuiManager;
 class PhysicsSystem;
 class IWorldCollider;
+class IPhysicsBody;
 
 class RenderData_Model;
 class RenderData_Triangle;

@@ -4,6 +4,11 @@
 #include "definition/definition.h"
 #include "Physics/IPhysicsBody.h"
 
+/// <summary>
+/// シンプル3Dモデル物理ボディ
+/// </summary>
+///「モデル・テクスチャ・座標」だけを持つ、最小の動的オブジェクト実装。
+/// IPhysicsBody を実装し、PhysicsSystem に登録できる。
 class SimpleModelBody : public IPhysicsBody
 {
 public:

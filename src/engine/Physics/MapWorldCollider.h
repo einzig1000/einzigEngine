@@ -1,9 +1,13 @@
 #pragma once
 #include "Physics/IWorldCollider.h"
 #include "definition/definition.h"
+#include <span>
 
 class IWorldCollider;
 
+/// <summary>
+/// 全静的コライダー(IWorldCollider)管理 + AABBスイープ
+/// </summary>
 class MapWorldCollider
 {
 public:

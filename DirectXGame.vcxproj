@@ -159,6 +159,9 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="externals\Shigemori\Binary\BinaryManager.cpp" />
+    <ClCompile Include="externals\Shigemori\Binary\Data\BinaryInput.cpp" />
+    <ClCompile Include="externals\Shigemori\Binary\Data\BinaryOutput.cpp" />
     <ClCompile Include="src\engine\Utilities\SimpleModelBody.cpp" />
     <ClCompile Include="src\engine\Physics\IPhysicsBody.cpp" />
     <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\Pause\Pause.cpp" />
@@ -259,6 +262,10 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="src\engine\Physics\IWorldCollider.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="externals\Shigemori\Binary\BinaryManager.h" />
+    <ClInclude Include="externals\Shigemori\Binary\Data\BinaryInput.h" />
+    <ClInclude Include="externals\Shigemori\Binary\Data\BinaryOutput.h" />
+    <ClInclude Include="externals\Shigemori\Binary\Data\Value.h" />
     <ClInclude Include="src\engine\Utilities\SimpleModelBody.h" />
     <ClInclude Include="src\engine\Physics\IPhysicsBody.h" />
     <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\Pause\Pause.h" />

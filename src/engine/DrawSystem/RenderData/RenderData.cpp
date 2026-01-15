@@ -274,7 +274,11 @@ void RenderData_Model::DrawImGui()
 		}
 		if (ImGui::Button("save"))
 		{
-			JsonManager::SaveToJson(*this, this->filePath);
+			//JsonManager::SaveToJson(*this, this->filePath);
+
+
+			JsonManager::AddParam<std::string>(this->filePath, "name", this->name ? *this->name : "");
+
 		}
 		ImGui::SameLine();
 		if (ImGui::Button("load"))

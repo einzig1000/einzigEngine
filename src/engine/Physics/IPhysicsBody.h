@@ -4,9 +4,10 @@
 #include <vector>
 
 /// <summary>
-/// 物理演算対象インターフェース
+/// 動的オブジェクト側：インターフェース
 /// </summary>
-
+/// プレイヤー / ゾンビ / 弾など「動く側」を、PhysicsSystem から同じ手順で扱えるようにするための共通窓口。
+/// PhysicsSystem は 具象クラス（RenderData_Model等）を知らず、IPhysicsBody の関数だけを呼ぶ。
 class IPhysicsBody
 {
 public:
