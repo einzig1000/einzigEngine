@@ -172,6 +172,7 @@ void Game::Input::Mouse::SetMouseSensitivity(float sensitivity)
 	Engine::Instance().SetMouseSensitivity(sensitivity);
 }
 
+
 bool Game::Input::Key::IsHeld(BYTE key)
 {
 	return Engine::Instance().IsKeyHeld(key);
@@ -196,6 +197,58 @@ int Game::Input::Key::TestTapLong(int n, BYTE key)
 {
 	return Engine::Instance().TestTapLong(n, key);
 }
+
+
+bool Game::Input::Pad::IsHeld(int padIndex, BYTE button)
+{
+	return Engine::Instance().IsPadHeld(padIndex, button);
+}
+
+bool Game::Input::Pad::IsJustPressed(int padIndex, BYTE button)
+{
+	return Engine::Instance().IsPadJustPressed(padIndex, button);
+}
+
+bool Game::Input::Pad::IsJustReleased(int padIndex, BYTE button)
+{
+	return Engine::Instance().IsPadJustReleased(padIndex, button);
+}
+
+uint32_t Game::Input::Pad::HoldFrames(int padIndex, BYTE button)
+{
+	return Engine::Instance().PadHoldFrames(padIndex, button);
+}
+
+Vector2 Game::Input::Pad::GetLeftStick(int padIndex)
+{
+	return Engine::Instance().GetLeftStick(padIndex);
+}
+
+Vector2 Game::Input::Pad::GetRightStick(int padIndex)
+{
+	return Engine::Instance().GetRightStick(padIndex);
+}
+
+float Game::Input::Pad::GetLeftTrigger(int padIndex)
+{
+	return Engine::Instance().GetLeftTrigger(padIndex);
+}
+
+float Game::Input::Pad::GetRightTrigger(int padIndex)
+{
+	return Engine::Instance().GetRightTrigger(padIndex);
+}
+
+void Game::Input::Pad::SetVibration(int padIndex, float leftMotor, float rightMotor)
+{
+	Engine::Instance().SetPadVibration(padIndex, leftMotor, rightMotor);
+}
+
+int32_t Game::Input::Pad::GetConnectedPadNum()
+{
+	return Engine::Instance().GetConnectedPadNum();
+}
+
 
 
 void Game::Camera::MoveCameraCenter(Vector3 target, int spendFrame, EaseType easetype)

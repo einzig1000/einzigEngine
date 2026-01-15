@@ -480,90 +480,119 @@ void Engine::ToggleLightMode(const LightMode mode)
 	drawSystem_->ToggleLightMode(mode);
 }
 
-// 入力
+// マウス
 Vector2 Engine::GetMousePosition()
 {
 	return inputManager_->GetMouseController()->GetPosition();
 }
-
 Vector2 Engine::GetMousePositionDelta()
 {
 	return inputManager_->GetMouseController()->GetRawDelta();
 }
-
 Vector3 Engine::GetMouseWorldPosition()
 {
 	return inputManager_->GetMouseController()->GetWorldPosition();
 }
-
 Ray Engine::GetMouseRay()
 {
 	return inputManager_->GetMouseController()->GetRay();
 }
-
 int32_t Engine::GetMouseWheel()
 {
 	return inputManager_->GetMouseController()->GetWheelDelta();
 }
-
 bool Engine::IsMouseHeld(int i)
 {
 	return inputManager_->GetMouseController()->IsHeld(i);
 }
-
 bool Engine::IsMouseJustPressed(int i)
 {
 	return inputManager_->GetMouseController()->IsJustPressed(i);
 }
-
 bool Engine::IsMouseJustReleased(int i)
 {
 	return inputManager_->GetMouseController()->IsJustReleased(i);
 }
-
 uint32_t Engine::MouseHoldFrames(int i)
 {
 	return inputManager_->GetMouseController()->HoldFrames(i);
 }
-
 void Engine::ToggleMouseCursorVisible()
 {
 	inputManager_->GetMouseController()->ToggleMouseCursorVisible();
 }
-
 void Engine::SetMouseCursorVisible(bool visible)
 {
 	inputManager_->GetMouseController()->ShowCursor(visible);
 }
-
 void Engine::SetMouseSensitivity(float sensitivity)
 {
 	inputManager_->GetMouseController()->SetSensitivity(sensitivity);
 }
 
+// キーボード
 bool Engine::IsKeyHeld(BYTE key)
 {
 	return inputManager_->GetGetHitKey()->IsHeld(key);
 }
-
 bool Engine::IsKeyJustPressed(BYTE key)
 {
 	return inputManager_->GetGetHitKey()->IsJustPressed(key);
 }
-
 bool Engine::IsKeyJustReleased(BYTE key)
 {
 	return inputManager_->GetGetHitKey()->IsJustReleased(key);
 }
-
 uint32_t Engine::KeyHoldFrames(BYTE key)
 {
 	return inputManager_->GetGetHitKey()->HoldFrames(key);
 }
-
 int Engine::TestTapLong(int n, BYTE key)
 {
 	return inputManager_->GetGetHitKey()->TestTapLong(n, key);
+}
+
+// ゲームパッド
+bool Engine::IsPadHeld(int padIndex, BYTE button)
+{
+	return inputManager_->GetGetPadState()->IsHeld(padIndex, button);
+}
+bool Engine::IsPadJustPressed(int padIndex, BYTE button)
+{
+	return inputManager_->GetGetPadState()->IsJustPressed(padIndex, button);
+}
+bool Engine::IsPadJustReleased(int padIndex, BYTE button)
+{
+	return inputManager_->GetGetPadState()->IsJustReleased(padIndex, button);
+}
+uint32_t Engine::PadHoldFrames(int padIndex, BYTE button)
+{
+	return inputManager_->GetGetPadState()->HoldFrames(padIndex, button);
+}
+Vector2 Engine::GetLeftStick(int padIndex)
+{
+	return inputManager_->GetGetPadState()->GetLeftStick(padIndex);
+}
+Vector2 Engine::GetRightStick(int padIndex)
+{
+	return inputManager_->GetGetPadState()->GetRightStick(padIndex);
+}
+float Engine::GetLeftTrigger(int padIndex)
+{
+	return inputManager_->GetGetPadState()->GetLeftTrigger(padIndex);
+}
+float Engine::GetRightTrigger(int padIndex)
+{
+	return inputManager_->GetGetPadState()->GetRightTrigger(padIndex);
+}
+void Engine::SetPadVibration(int padIndex, float leftMotor, float rightMotor)
+{
+	inputManager_->GetGetPadState()->SetVibration(padIndex, leftMotor, rightMotor);
+}
+
+int32_t Engine::GetConnectedPadNum()
+{
+	return inputManager_->GetGetPadState()->GetConnectedPadNum();
 }
 
 // カメラ

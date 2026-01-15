@@ -993,7 +993,15 @@ struct KeyState
     uint32_t lastHoldOnRelease = 0; // 直近のリリース時に押されていたフレーム数
 };
 
-struct mouseButtenState
+struct PadButtonState
+{
+    bool curr = false;           // 今フレームの押下状態
+    bool prev = false;           // 前フレームの押下状態
+    uint32_t holdFrames = 0;     // 長押しフレーム数
+	uint32_t lastHoldOnRelease = 0; // 直近のリリース時に押されていたフレーム数
+};
+
+struct mouseButtonState
 {
     bool curr = false;           // 今フレームの押下状態
     bool prev = false;           // 前フレームの押下状態

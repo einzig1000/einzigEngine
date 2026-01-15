@@ -12,7 +12,7 @@ public:
 
 	void UpdatePosition();		// マウスポジション更新
 	void UpdateRay();			// マウスレイ更新
-	void UpdateButtenState();	// マウスボタン状態更新
+	void UpdateButtonState();	// マウスボタン状態更新
 	void UpdateSensitivity();	// マウス感度の適用
 
 
@@ -44,9 +44,9 @@ private:
 	bool isVisible_;
 
 	// マウスボタン状態
-	mouseButtenState leftButton_;
-	mouseButtenState rightButton_;
-	mouseButtenState middleButton_;
+	mouseButtonState leftButton_;
+	mouseButtonState rightButton_;
+	mouseButtonState middleButton_;
 
 	// マウス移動量感度
 	float mouseSensitivity_ = 1.0f;

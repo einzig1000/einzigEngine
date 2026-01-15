@@ -45,7 +45,7 @@ public:
 		static uint32_t LoadTextureArray(const std::vector<std::string>& filePaths);
 
 		/// <summary>
-		/// オーディオ読み個み
+		/// オーディオ読み込み
 		/// </summary>
 		/// <param name="filePath">例:"Resources/Prototypes/audio/BGM/InGame.mp3"</param>
 		/// <returns></returns>
@@ -277,7 +277,76 @@ public:
 
 		class Pad
 		{
+		public:
 
+			/// <summary>
+			/// ゲームパッドの入力取得(現在押されているか)
+			/// </summary>
+			/// <param name="padIndex"> パッド番号(0～3) </param>
+			/// <param name="button"> ボタン番号(PAD_A～) </param>
+			static bool IsHeld(int padIndex, BYTE button);
+
+			/// <summary>
+			/// ゲームパッドの入力取得(押した瞬間)
+			/// </summary>
+			/// <param name="padIndex"> パッド番号(0～3) </param>
+			/// <param name="button"> ボタン番号(PAD_A～) </param>
+			static bool IsJustPressed(int padIndex, BYTE button);
+
+			/// <summary>
+			/// ゲームパッドの入力取得(離した瞬間)
+			/// </summary>
+			/// <param name="padIndex"> パッド番号(0～3) </param>
+			/// <param name="button"> ボタン番号(PAD_A～) </param>
+			static bool IsJustReleased(int padIndex, BYTE button);
+
+			/// <summary>
+			/// ゲームパッドの入力取得(押されてからの経過フレーム数)
+			/// </summary>
+			/// <param name="padIndex"> パッド番号(0～3) </param>
+			/// <param name="button"> ボタン番号(PAD_A～) </param>
+			static uint32_t HoldFrames(int padIndex, BYTE button);
+
+			/// <summary>
+			/// 左スティックの入力取得
+			/// </summary>
+			/// <param name="padIndex"> パッド番号(0～3) </param>
+			/// <returns> -1.0f ～ 1.0f </returns>
+			static Vector2 GetLeftStick(int padIndex);
+
+			/// <summary>
+			/// 右スティックの入力取得
+			/// </summary>
+			/// <param name="padIndex"> パッド番号(0～3) </param>
+			/// <returns> -1.0f ～ 1.0f </returns>
+			static Vector2 GetRightStick(int padIndex);
+
+			/// <summary>
+			/// 左トリガーの入力取得
+			/// </summary>
+			/// <param name="padIndex"> パッド番号(0～3) </param>
+			/// <returns> 0.0f ～ 1.0f </returns>
+			static float GetLeftTrigger(int padIndex);
+
+			/// <summary>
+			/// 右トリガーの入力取得
+			/// </summary>
+			/// <param name="padIndex"> パッド番号(0～3) </param>
+			/// <returns> 0.0f ～ 1.0f </returns>
+			static float GetRightTrigger(int padIndex);
+
+			/// <summary>
+			/// ゲームパッド振動設定
+			/// </summary>
+			/// <param name="padIndex"> パッド番号(0～3) </param>
+			/// <param name="leftMotor"> 左モーター強度(0.0f ～ 1.0f) </param>
+			/// <param name="rightMotor"> 右モーター強度(0.0f ～ 1.0f) </param>
+			static void SetVibration(int padIndex, float leftMotor, float rightMotor);
+
+			/// <summary>
+			/// 接続されているゲームパッドの数取得
+			/// </summary>
+			static int32_t GetConnectedPadNum();
 		};
 	};
 
