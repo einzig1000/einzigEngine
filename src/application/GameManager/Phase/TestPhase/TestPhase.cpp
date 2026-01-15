@@ -503,6 +503,46 @@ void TestPhase::DrawImGui()
 					Game::Input::Pad::IsHeld(padIndex, PAD_RB),
 					Game::Input::Pad::IsJustReleased(padIndex, PAD_RB),
 					Game::Input::Pad::HoldFrames(padIndex, PAD_RB));
+				ImGui::Text("Back - %d-%d-%d : %d",
+					Game::Input::Pad::IsJustPressed(padIndex, PAD_BACK),
+					Game::Input::Pad::IsHeld(padIndex, PAD_BACK),
+					Game::Input::Pad::IsJustReleased(padIndex, PAD_BACK),
+					Game::Input::Pad::HoldFrames(padIndex, PAD_BACK));
+				ImGui::Text("Start - %d-%d-%d : %d",
+					Game::Input::Pad::IsJustPressed(padIndex, PAD_START),
+					Game::Input::Pad::IsHeld(padIndex, PAD_START),
+					Game::Input::Pad::IsJustReleased(padIndex, PAD_START),
+					Game::Input::Pad::HoldFrames(padIndex, PAD_START));
+				ImGui::Text("LS - %d-%d-%d : %d",
+					Game::Input::Pad::IsJustPressed(padIndex, PAD_LS),
+					Game::Input::Pad::IsHeld(padIndex, PAD_LS),
+					Game::Input::Pad::IsJustReleased(padIndex, PAD_LS),
+					Game::Input::Pad::HoldFrames(padIndex, PAD_LS));
+				ImGui::Text("RS - %d-%d-%d : %d",
+					Game::Input::Pad::IsJustPressed(padIndex, PAD_RS),
+					Game::Input::Pad::IsHeld(padIndex, PAD_RS),
+					Game::Input::Pad::IsJustReleased(padIndex, PAD_RS),
+					Game::Input::Pad::HoldFrames(padIndex, PAD_RS));
+				ImGui::Text("DPad Up - %d-%d-%d : %d",
+					Game::Input::Pad::IsJustPressed(padIndex, PAD_UP),
+					Game::Input::Pad::IsHeld(padIndex, PAD_UP),
+					Game::Input::Pad::IsJustReleased(padIndex, PAD_UP),
+					Game::Input::Pad::HoldFrames(padIndex, PAD_UP));
+				ImGui::Text("DPad Down - %d-%d-%d : %d",
+					Game::Input::Pad::IsJustPressed(padIndex, PAD_DOWN),
+					Game::Input::Pad::IsHeld(padIndex, PAD_DOWN),
+					Game::Input::Pad::IsJustReleased(padIndex, PAD_DOWN),
+					Game::Input::Pad::HoldFrames(padIndex, PAD_DOWN));
+				ImGui::Text("DPad Left - %d-%d-%d : %d",
+					Game::Input::Pad::IsJustPressed(padIndex, PAD_LEFT),
+					Game::Input::Pad::IsHeld(padIndex, PAD_LEFT),
+					Game::Input::Pad::IsJustReleased(padIndex, PAD_LEFT),
+					Game::Input::Pad::HoldFrames(padIndex, PAD_LEFT));
+				ImGui::Text("DPad Right - %d-%d-%d : %d",
+					Game::Input::Pad::IsJustPressed(padIndex, PAD_RIGHT),
+					Game::Input::Pad::IsHeld(padIndex, PAD_RIGHT),
+					Game::Input::Pad::IsJustReleased(padIndex, PAD_RIGHT),
+					Game::Input::Pad::HoldFrames(padIndex, PAD_RIGHT));
 			}
 
 			ImGui::EndTabItem();
