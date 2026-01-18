@@ -21,39 +21,6 @@ PipelineStateManager::~PipelineStateManager()
     Log("デストラクタ実行成功 : PipelineStateManager");
 }
 
-ID3D12PipelineState* PipelineStateManager::GetPipelineState(BlendMode mode, D3D12_PRIMITIVE_TOPOLOGY_TYPE type) const
-{
-    if (type == D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE)
-    {
-        auto it = trianglePSOs.find(mode);
-        if (it != trianglePSOs.end())
-        {
-            return it->second.Get();
-        }
-    }
-    else if (type == D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE)
-    {
-        auto it = linePSOs.find(mode);
-        if (it != linePSOs.end())
-        {
-            return it->second.Get();
-        }
-    }
-    return nullptr;
-}
-
-ID3D12PipelineState* PipelineStateManager::GetParticlePipelineState(BlendMode mode) const
-{
-    auto it = particlePSOs.find(mode);
-    return (it != particlePSOs.end()) ? it->second.Get() : nullptr;
-}
-
-ID3D12PipelineState* PipelineStateManager::GetBlockPipelineState(BlendMode mode) const
-{
-    auto it = blockPSOs.find(mode);
-	return (it != blockPSOs.end()) ? it->second.Get() : nullptr;
-}
-
 void PipelineStateManager::InitializeDxc()
 {
     HRESULT hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils));
@@ -63,6 +30,29 @@ void PipelineStateManager::InitializeDxc()
     hr = dxcUtils->CreateDefaultIncludeHandler(&includeHandler);
     assert(SUCCEEDED(hr));
 }
+
+
+ID3D12PipelineState* PipelineStateManager::GetTrianglePipelineState(BlendMode mode) const
+{
+    auto it = trianglePSOs.find(mode);
+	return (it != trianglePSOs.end()) ? it->second.Get() : nullptr;
+}
+ID3D12PipelineState* PipelineStateManager::GetLinePipelineState(BlendMode mode) const
+{
+    auto it = linePSOs.find(mode);
+	return (it != linePSOs.end()) ? it->second.Get() : nullptr;
+}
+ID3D12PipelineState* PipelineStateManager::GetParticlePipelineState(BlendMode mode) const
+{
+    auto it = particlePSOs.find(mode);
+    return (it != particlePSOs.end()) ? it->second.Get() : nullptr;
+}
+ID3D12PipelineState* PipelineStateManager::GetBlockPipelineState(BlendMode mode) const
+{
+    auto it = blockPSOs.find(mode);
+	return (it != blockPSOs.end()) ? it->second.Get() : nullptr;
+}
+
 
 void PipelineStateManager::InitializeRootSignature(ID3D12Device* device)
 {
@@ -80,12 +70,6 @@ void PipelineStateManager::InitializeRootSignature_object(ID3D12Device* device)
     defaultTexture[0].NumDescriptors = 1;
     defaultTexture[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
     defaultTexture[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-
-    //D3D12_DESCRIPTOR_RANGE addTexture[1] = {};
-    //addTexture[0].BaseShaderRegister = 1; // t1 レジスタ
-    //addTexture[0].NumDescriptors = 1;
-    //addTexture[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-    //addTexture[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
 
     D3D12_ROOT_PARAMETER rootParameters[5]{};
@@ -105,12 +89,6 @@ void PipelineStateManager::InitializeRootSignature_object(ID3D12Device* device)
     rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; // PSからのみアクセス
     rootParameters[2].DescriptorTable.pDescriptorRanges = defaultTexture;
     rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(defaultTexture);
-
-    //// ルートパラメータ3: Texture (SRV) Descriptor Table (register t1)
-    //rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-    //rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; // PSからのみアクセス
-    //rootParameters[3].DescriptorTable.pDescriptorRanges = addTexture;
-    //rootParameters[3].DescriptorTable.NumDescriptorRanges = _countof(addTexture);
 
     // ルートパラメータ4: DirectionalLight (color, direction, intensity) (register b2)
     rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
@@ -153,7 +131,6 @@ void PipelineStateManager::InitializeRootSignature_object(ID3D12Device* device)
     hr = device->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature_object));
     assert(SUCCEEDED(hr));
 }
-
 void PipelineStateManager::InitializeRootSignature_particle(ID3D12Device * device)
 {
     HRESULT hr;
@@ -227,7 +204,6 @@ void PipelineStateManager::InitializeRootSignature_particle(ID3D12Device * devic
     hr = device->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature_particle));
     assert(SUCCEEDED(hr));
 }
-
 void PipelineStateManager::InitializeRootSignature_block(ID3D12Device* device)
 {
     HRESULT hr;

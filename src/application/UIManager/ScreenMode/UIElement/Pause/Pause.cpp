@@ -37,7 +37,7 @@ void Pause::Update()
 	if (sprites_[2]->isCollisionMouseRay)
 	{
 		sprites_[2]->color = 0xFFFFFFFF;
-		if (Game::Input::Mouse::IsJustPressed(0))
+		if (Game::IO::Mouse::IsJustPressed(0))
 		{
 			saveRequested_ = true;	
 		}

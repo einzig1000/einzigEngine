@@ -72,18 +72,18 @@ void GameScenePhase::Initialize()
 	else map_->LoadMap(context_->mapName);
 
 	Game::Camera::SetCameraMode(CameraMode_ORBIT_FPS::FPS);
-	Game::Input::Mouse::ShowCursor(false);
+	Game::IO::Mouse::ShowCursor(false);
 }
 
 
 void GameScenePhase::Update()
 {
-	//if (Game::Input::Key::IsJustPressed(DIK_F))
+	//if (Game::IO::Key::IsJustPressed(DIK_F))
 	//{
 	//	enemyManager_->AddNewEnemy(player_->data_.GetWorldPosition() + Vector3{ 0.0f,20.0f,0.0f });
 	//}
 
-	if (Game::Input::Key::IsJustPressed(DIK_L))
+	if (Game::IO::Key::IsJustPressed(DIK_L))
 	{
 		map_->SaveMap();
 	}

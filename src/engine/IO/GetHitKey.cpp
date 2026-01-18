@@ -96,14 +96,12 @@ bool GetHitKey::IsHeld(BYTE key)
 
 bool GetHitKey::IsJustPressed(BYTE key)
 {
-    const KeyState& ks = keys_[key];
-    return (!ks.prev && ks.curr);
+    return (!keys_[key].prev && keys_[key].curr);
 }
 
 bool GetHitKey::IsJustReleased(BYTE key)
 {
-    const KeyState& ks = keys_[key];
-    return (ks.prev && !ks.curr);
+    return (keys_[key].prev && !keys_[key].curr);
 }
 
 uint32_t GetHitKey::HoldFrames(BYTE key)

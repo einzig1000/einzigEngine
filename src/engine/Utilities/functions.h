@@ -154,7 +154,23 @@ Vector4 ConvertARGBtoRGBA(const Vector4& argb);
 Vector4 ConvertUintToVector4(uint32_t color);
 uint32_t ConvertVector4ToUint(Vector4 color);
 
+// 直交座標系を円柱座標系に変換
+Coordinate_cylindrical ConvertCartesianToCylindrical(const Vector3& cartesian);
 
+// 円柱座標系を直交座標系に変換
+Vector3 ConvertCylindricalToCartesian(const Coordinate_cylindrical& cylindrical);
+
+// 直交座標系を球座標系に変換
+Coordinate_spherical ConvertCartesianToSpherical(const Vector3& cartesian);
+
+// 球座標系を直交座標系に変換
+Vector3 ConvertSphericalToCartesian(const Coordinate_spherical& spherical);
+
+// 円柱座標系を球座標系に変換
+Coordinate_spherical ConvertCylindricalToSpherical(const Coordinate_cylindrical& cylindrical);
+
+// 球座標系を円柱座標系に変換
+Coordinate_cylindrical ConvertSphericalToCylindrical(const Coordinate_spherical& spherical);
 
 /// <summary>
 /// UTF-8 文字列をワイド文字列 (UTF-16) に変換する関数

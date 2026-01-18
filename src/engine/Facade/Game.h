@@ -45,7 +45,7 @@ public:
 		static uint32_t LoadTextureArray(const std::vector<std::string>& filePaths);
 
 		/// <summary>
-		/// オーディオ読み個み
+		/// オーディオ読み込み
 		/// </summary>
 		/// <param name="filePath">例:"Resources/Prototypes/audio/BGM/InGame.mp3"</param>
 		/// <returns></returns>
@@ -74,29 +74,43 @@ public:
 	class DebugDraw
 	{
 	public:
-
 		/// <summary>
 		/// ワイヤーフレーム球描画
 		/// </summary>
-		/// <param name="pos">ワールド座標</param>
-		/// <param name="radius">半径</param>
+		/// <param name="sphere">球</param>
 		/// <param name="color">色</param>
-		static void AddSphere(Vector3 pos, Vector3 radius, uint32_t color);
+		static void AddSphere(const Sphere& sphere, uint32_t color);
+
+		/// <summary>
+		/// ワイヤーフレーム楕円球描画
+		/// </summary>
+		/// <param name="sphere">楕円球</param>
+		/// <param name="color">色</param>
+		static void AddSphereXYZ(const SphereXYZ& sphere, uint32_t color);
+
+		/// <summary>
+		/// ワイヤーフレーム円柱描画
+		/// </summary>
+		/// <param name="cylinder">円柱</param>
+		/// <param name="color">色</param>
+		static void AddCylinder(const Cylinder& cylinder, uint32_t color);
 
 		/// <summary>
 		/// ワイヤーフレームAABB描画
 		/// </summary>
 		/// <param name="aabb">AABB</param>
 		/// <param name="color">色</param>
-		static void AddAABB(AABB aabb, uint32_t color);
+		static void AddAABB(const AABB& aabb, uint32_t color);
 
 		/// <summary>
-		/// ライン描画
+		/// ワイヤーフレーム線分描画
 		/// </summary>
-		/// <param name="start">ワールド始点</param>
-		/// <param name="end">ワールド終点</param>
+		/// <param name="start">線分開始座標</param>
+		/// <param name="end">線分終了座標</param>
 		/// <param name="color">色</param>
 		static void AddLine(Vector3 start, Vector3 end, uint32_t color);
+
+
 	};
 
 	class Audio
@@ -168,7 +182,7 @@ public:
 		static void SetLightIntensity(float intensity);
 	};
 
-	class Input
+	class IO
 	{
 	public:
 		class Mouse
@@ -277,7 +291,76 @@ public:
 
 		class Pad
 		{
+		public:
 
+			/// <summary>
+			/// ゲームパッドの入力取得(現在押されているか)
+			/// </summary>
+			/// <param name="padIndex"> パッド番号(0～3) </param>
+			/// <param name="button"> ボタン番号(PAD_A～) </param>
+			static bool IsHeld(int padIndex, BYTE button);
+
+			/// <summary>
+			/// ゲームパッドの入力取得(押した瞬間)
+			/// </summary>
+			/// <param name="padIndex"> パッド番号(0～3) </param>
+			/// <param name="button"> ボタン番号(PAD_A～) </param>
+			static bool IsJustPressed(int padIndex, BYTE button);
+
+			/// <summary>
+			/// ゲームパッドの入力取得(離した瞬間)
+			/// </summary>
+			/// <param name="padIndex"> パッド番号(0～3) </param>
+			/// <param name="button"> ボタン番号(PAD_A～) </param>
+			static bool IsJustReleased(int padIndex, BYTE button);
+
+			/// <summary>
+			/// ゲームパッドの入力取得(押されてからの経過フレーム数)
+			/// </summary>
+			/// <param name="padIndex"> パッド番号(0～3) </param>
+			/// <param name="button"> ボタン番号(PAD_A～) </param>
+			static uint32_t HoldFrames(int padIndex, BYTE button);
+
+			/// <summary>
+			/// 左スティックの入力取得
+			/// </summary>
+			/// <param name="padIndex"> パッド番号(0～3) </param>
+			/// <returns> -1.0f ～ 1.0f </returns>
+			static Vector2 GetLeftStick(int padIndex);
+
+			/// <summary>
+			/// 右スティックの入力取得
+			/// </summary>
+			/// <param name="padIndex"> パッド番号(0～3) </param>
+			/// <returns> -1.0f ～ 1.0f </returns>
+			static Vector2 GetRightStick(int padIndex);
+
+			/// <summary>
+			/// 左トリガーの入力取得
+			/// </summary>
+			/// <param name="padIndex"> パッド番号(0～3) </param>
+			/// <returns> 0.0f ～ 1.0f </returns>
+			static float GetLeftTrigger(int padIndex);
+
+			/// <summary>
+			/// 右トリガーの入力取得
+			/// </summary>
+			/// <param name="padIndex"> パッド番号(0～3) </param>
+			/// <returns> 0.0f ～ 1.0f </returns>
+			static float GetRightTrigger(int padIndex);
+
+			/// <summary>
+			/// ゲームパッド振動設定
+			/// </summary>
+			/// <param name="padIndex"> パッド番号(0～3) </param>
+			/// <param name="leftMotor"> 左モーター強度(0.0f ～ 1.0f) </param>
+			/// <param name="rightMotor"> 右モーター強度(0.0f ～ 1.0f) </param>
+			static void SetVibration(int padIndex, float leftMotor, float rightMotor);
+
+			/// <summary>
+			/// 接続されているゲームパッドの数取得
+			/// </summary>
+			static int32_t GetConnectedPadNum();
 		};
 	};
 

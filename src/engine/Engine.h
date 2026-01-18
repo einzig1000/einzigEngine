@@ -69,8 +69,10 @@ public:
 	void AddBlockDrawList(RenderData_Block* renderData);
 
 
-	void AddSphere(Vector3 pos, Vector3 radius, uint32_t color);
-	void AddAABB(AABB aabb, uint32_t color);
+	void AddSphere(const Sphere& sphere, uint32_t color);
+	void AddSphereXYZ(const SphereXYZ& sphere, uint32_t color);
+	void AddCylinder(const Cylinder& cylinder, uint32_t color);
+	void AddAABB(const AABB& aabb, uint32_t color);
 	void AddLine(Vector3 start, Vector3 end, uint32_t color);
 
 
@@ -113,9 +115,17 @@ public:
 	uint32_t KeyHoldFrames(BYTE key);// 押されてからの経過フレーム数
 	int TestTapLong(int n, BYTE key);// 0: なし  1:単押し  2:長押し(n = 長押し判定)
 
-	/// ゲームパッド
-	//PadState GetPadState();
-	//PadState GetPrePadState();
+	// ゲームパッド
+	bool IsPadHeld(int padIndex, BYTE button);			// 今押しているか
+	bool IsPadJustPressed(int padIndex, BYTE button);	// 押した瞬間（今フレームで押された）
+	bool IsPadJustReleased(int padIndex, BYTE button);	// 離した瞬間（今フレームで離れた）
+	uint32_t PadHoldFrames(int padIndex, BYTE button);	// 押されてからの経過フレーム数
+	Vector2 GetLeftStick(int padIndex);	// 左スティックの値取得
+	Vector2 GetRightStick(int padIndex);	// 右スティックの値取得
+	float GetLeftTrigger(int padIndex);// トリガーの値取得（0.0f ～ 1.0f）
+	float GetRightTrigger(int padIndex);// トリガーの値取得（0.0f ～ 1.0f）
+	void SetPadVibration(int padIndex, float leftMotor, float rightMotor);
+	int32_t GetConnectedPadNum(); // 接続されているパッドの数を取得
 
 	// カメラ
 	Vector3 GetCameraTranslate() const;

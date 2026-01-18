@@ -125,9 +125,9 @@ void Engine::UpdateTransforms()
 {
 	if (RenderData_Model::renderModels.size() == 0)return;
 
-	if (Game::Input::Key::IsHeld(DIK_RSHIFT))
+	if (Game::IO::Key::IsHeld(DIK_RSHIFT))
 	{
-		if (!Game::Input::Key::IsJustPressed(DIK_RIGHTARROW))
+		if (!Game::IO::Key::IsJustPressed(DIK_RIGHTARROW))
 		{
 			return;
 		}
@@ -225,9 +225,9 @@ void Engine::UpdateCamera()
 	cameraManager_->Update();
 
 	// 左シフト＋左クリックでカメラターゲットをオブジェクトに合わせる
-	if (Game::Input::Key::IsHeld(DIK_LSHIFT))
+	if (Game::IO::Key::IsHeld(DIK_LSHIFT))
 	{
-		if (Game::Input::Mouse::IsJustPressed(0))
+		if (Game::IO::Mouse::IsJustPressed(0))
 		{
 			for (auto& rd : RenderData_Model::renderModels)
 			{
@@ -241,15 +241,15 @@ void Engine::UpdateCamera()
 }
 void Engine::UpdateDebugInfo()
 {
-	if (Game::Input::Key::IsJustPressed(DIK_F1))
+	if (Game::IO::Key::IsJustPressed(DIK_F1))
 	{
 		isDebugInfo = !isDebugInfo;
 	}
-	if (Game::Input::Key::IsJustPressed(DIK_F3))
+	if (Game::IO::Key::IsJustPressed(DIK_F3))
 	{
 		ToggleCamera();
 	}
-	if (Game::Input::Key::IsJustPressed(DIK_F11))
+	if (Game::IO::Key::IsJustPressed(DIK_F11))
 	{
 		ToggleFullscreen();
 	}
@@ -294,7 +294,6 @@ void Engine::EndFrame()
 	// DirectX終了処理
 	dxManager_->EndFrame();
 }
-
 void Engine::Quit()
 {
 	windowManager_->Quit();
@@ -331,37 +330,30 @@ uint32_t Engine::LoadTexture(const std::string& filePath)
 {
 	return dxManager_->GetResourceManager()->GetTextureManager()->LoadTexture(filePath);
 }
-
 uint32_t Engine::LoadTextureArray(const std::vector<std::string>& filePaths)
 {
 	return dxManager_->GetResourceManager()->GetTextureManager()->LoadTexture2DArray(filePaths);
 }
-
 uint32_t Engine::LoadModel(const std::string& directoryPath, const std::string& filename)
 {
 	return dxManager_->GetResourceManager()->GetModelManager()->LoadModel(directoryPath, filename);
 }
-
 uint32_t Engine::LoadAudio(const std::string& filePath)
 {
 	return dxManager_->GetResourceManager()->GetAudioManager()->LoadAudio(filePath);
 }
-
 Object3D* Engine::GetModelData(uint32_t modelNumber)
 {
 	return dxManager_->GetResourceManager()->GetModelManager()->GetModelData(modelNumber);
 }
-
 TextureData* Engine::GetTextureData(uint32_t textureNumber)
 {
 	return dxManager_->GetResourceManager()->GetTextureManager()->GetTextureData(textureNumber);
 }
-
 size_t Engine::GetTextureCount()
 {
 	return dxManager_->GetResourceManager()->GetTextureManager()->GetTextureCount();
 }
-
 size_t Engine::GetModelCount()
 {
 	return dxManager_->GetResourceManager()->GetModelManager()->GetModelCount();
@@ -372,53 +364,50 @@ void Engine::AddModelDrawList(RenderData_Model* renderData)
 {
 	drawSystem_->AddModelDrawList(renderData);
 }
-
 void Engine::AddTriangleDrawList(RenderData_Triangle* renderData)
 {
 	drawSystem_->AddTriangleDrawList(renderData);
 }
-
 void Engine::AddRectDrawList(RenderData_Rect* renderData)
 {
 	drawSystem_->AddRectDrawList(renderData);
 }
-
 void Engine::AddSpriteDrawList(RenderData_Sprite* renderData)
 {
 	drawSystem_->AddSpriteDrawList(renderData);
 }
-
 void Engine::AddLineDrawList(RenderData_Line* renderData)
 {
 	drawSystem_->AddLineDrawList(renderData);
 }
-
 void Engine::AddParticleDrawList(RenderData_Particle* renderData)
 {
 	drawSystem_->AddParticleDrawList(renderData);
 }
-
 void Engine::AddBlockDrawList(RenderData_Block* renderData)
 {
 	drawSystem_->AddBlockDrawList(renderData);
 }
 
-
-
-
-void Engine::AddSphere(Vector3 pos, Vector3 radius, uint32_t color)
+void Engine::AddSphere(const Sphere& sphere, uint32_t color)
 {
-	if (isDebugInfo)drawSystem_->AddSphere(pos, radius, color);
+	drawSystem_->AddSphere(sphere, color);
 }
-
-void Engine::AddAABB(AABB aabb, uint32_t color)
+void Engine::AddSphereXYZ(const SphereXYZ& sphere, uint32_t color)
 {
-	if (isDebugInfo)drawSystem_->AddAABB(aabb, color);
+	drawSystem_->AddSphereXYZ(sphere, color);
 }
-
+void Engine::AddCylinder(const Cylinder& cylinder, uint32_t color)
+{
+	drawSystem_->AddCylinder(cylinder, color);
+}
+void Engine::AddAABB(const AABB& aabb, uint32_t color)
+{
+	drawSystem_->AddAABB(aabb, color);
+}
 void Engine::AddLine(Vector3 start, Vector3 end, uint32_t color)
 {
-	if (isDebugInfo)drawSystem_->AddLine(start, end, color);
+	drawSystem_->AddDebugLineList(start, end, color);
 }
 
 bool Engine::InFrustum(const AABB& aabb)
@@ -431,32 +420,26 @@ void Engine::PlayAudio(const uint32_t& audioId, bool loop)
 {
 	dxManager_->GetResourceManager()->GetAudioManager()->PlayAudio(audioId, loop);
 }
-
 void Engine::StopAudio(const uint32_t& audioId)
 {
 	dxManager_->GetResourceManager()->GetAudioManager()->StopAudio(audioId);
 }
-
 void Engine::SetAudioVolume(const uint32_t& audioId, float volume)
 {
 	dxManager_->GetResourceManager()->GetAudioManager()->SetVolume(audioId, volume);
 }
-
 void Engine::SetMasterVolume(float volume)
 {
 	dxManager_->GetResourceManager()->GetAudioManager()->SetMasterVolume(volume);
 }
-
 float Engine::GetVolume(const uint32_t& audioId)
 {
 	return dxManager_->GetResourceManager()->GetAudioManager()->GetVolume(audioId);
 }
-
 float Engine::GetMasterVolume()
 {
 	return dxManager_->GetResourceManager()->GetAudioManager()->GetMasterVolume();
 }
-
 bool Engine::IsAudioPlaying(const uint32_t& audioId)
 {
 	return dxManager_->GetResourceManager()->GetAudioManager()->IsAudioPlaying(audioId);
@@ -480,90 +463,118 @@ void Engine::ToggleLightMode(const LightMode mode)
 	drawSystem_->ToggleLightMode(mode);
 }
 
-// 入力
+// マウス
 Vector2 Engine::GetMousePosition()
 {
 	return ioManager_->GetMouseController()->GetPosition();
 }
-
 Vector2 Engine::GetMousePositionDelta()
 {
 	return ioManager_->GetMouseController()->GetRawDelta();
 }
-
 Vector3 Engine::GetMouseWorldPosition()
 {
 	return ioManager_->GetMouseController()->GetWorldPosition();
 }
-
 Ray Engine::GetMouseRay()
 {
 	return ioManager_->GetMouseController()->GetRay();
 }
-
 int32_t Engine::GetMouseWheel()
 {
 	return ioManager_->GetMouseController()->GetWheelDelta();
 }
-
 bool Engine::IsMouseHeld(int i)
 {
 	return ioManager_->GetMouseController()->IsHeld(i);
 }
-
 bool Engine::IsMouseJustPressed(int i)
 {
 	return ioManager_->GetMouseController()->IsJustPressed(i);
 }
-
 bool Engine::IsMouseJustReleased(int i)
 {
 	return ioManager_->GetMouseController()->IsJustReleased(i);
 }
-
 uint32_t Engine::MouseHoldFrames(int i)
 {
 	return ioManager_->GetMouseController()->HoldFrames(i);
 }
-
 void Engine::ToggleMouseCursorVisible()
 {
 	ioManager_->GetMouseController()->ToggleMouseCursorVisible();
 }
-
 void Engine::SetMouseCursorVisible(bool visible)
 {
 	ioManager_->GetMouseController()->ShowCursor(visible);
 }
-
 void Engine::SetMouseSensitivity(float sensitivity)
 {
 	ioManager_->GetMouseController()->SetSensitivity(sensitivity);
 }
 
+// キーボード
 bool Engine::IsKeyHeld(BYTE key)
 {
 	return ioManager_->GetGetHitKey()->IsHeld(key);
 }
-
 bool Engine::IsKeyJustPressed(BYTE key)
 {
 	return ioManager_->GetGetHitKey()->IsJustPressed(key);
 }
-
 bool Engine::IsKeyJustReleased(BYTE key)
 {
 	return ioManager_->GetGetHitKey()->IsJustReleased(key);
 }
-
 uint32_t Engine::KeyHoldFrames(BYTE key)
 {
 	return ioManager_->GetGetHitKey()->HoldFrames(key);
 }
-
 int Engine::TestTapLong(int n, BYTE key)
 {
 	return ioManager_->GetGetHitKey()->TestTapLong(n, key);
+}
+
+// ゲームパッド
+bool Engine::IsPadHeld(int padIndex, BYTE button)
+{
+	return inputManager_->GetGetPadState()->IsHeld(padIndex, button);
+}
+bool Engine::IsPadJustPressed(int padIndex, BYTE button)
+{
+	return inputManager_->GetGetPadState()->IsJustPressed(padIndex, button);
+}
+bool Engine::IsPadJustReleased(int padIndex, BYTE button)
+{
+	return inputManager_->GetGetPadState()->IsJustReleased(padIndex, button);
+}
+uint32_t Engine::PadHoldFrames(int padIndex, BYTE button)
+{
+	return inputManager_->GetGetPadState()->HoldFrames(padIndex, button);
+}
+Vector2 Engine::GetLeftStick(int padIndex)
+{
+	return inputManager_->GetGetPadState()->GetLeftStick(padIndex);
+}
+Vector2 Engine::GetRightStick(int padIndex)
+{
+	return inputManager_->GetGetPadState()->GetRightStick(padIndex);
+}
+float Engine::GetLeftTrigger(int padIndex)
+{
+	return inputManager_->GetGetPadState()->GetLeftTrigger(padIndex);
+}
+float Engine::GetRightTrigger(int padIndex)
+{
+	return inputManager_->GetGetPadState()->GetRightTrigger(padIndex);
+}
+void Engine::SetPadVibration(int padIndex, float leftMotor, float rightMotor)
+{
+	inputManager_->GetGetPadState()->SetVibration(padIndex, leftMotor, rightMotor);
+}
+int32_t Engine::GetConnectedPadNum()
+{
+	return inputManager_->GetGetPadState()->GetConnectedPadNum();
 }
 
 // カメラ
@@ -571,47 +582,38 @@ Vector3 Engine::GetCameraTranslate() const
 {
 	return cameraManager_->GetCurrentTranslate();
 }
-
 void Engine::MoveCameraCenter(Vector3 target, int spendFrame, EaseType easetype)
 {
 	cameraManager_->SetCenterTarget(target, spendFrame, easetype);
 }
-
 void Engine::MoveCameraRotate(Vector3 target, int spendFrame, EaseType easetype)
 {
 	cameraManager_->SetRotateTarget(target, spendFrame, easetype);
 }
-
 void Engine::MoveCameraDistance(float target, int spendFrame, EaseType easetype)
 {
 	cameraManager_->SetDistanceTarget(target, spendFrame, easetype);
 }
-
 void Engine::StartCameraShake(float intensity, float duration, float frequency)
 {
 	cameraManager_->StartShake(intensity, duration, frequency);
 }
-
 bool Engine::IsCameraShaking()
 {
 	return cameraManager_->IsShaking();
 }
-
 void Engine::SetCameraMode(CameraMode_ORBIT_FPS mode)
 {
 	cameraManager_->SetCameraMode(mode); 
 }
-
 void Engine::ToggleCamera()
 {
 	cameraManager_->ToggleCamera();
 }
-
 void Engine::StopCameraShake()
 {
 	cameraManager_->StopShake();
 }
-
 void Engine::SetEnableCameraControl(bool enable)
 {
 	cameraManager_->SetEnableControl(enable);
@@ -630,17 +632,14 @@ float Engine::GetDeltaTime()
 
 	return dt;
 }
-
 uint32_t Engine::GetElapsedTime()
 {
 	return dxManager_->GetFixFPS()->GetFrameCount();
 }
-
 float Engine::GetFrameRate()
 {
 	return dxManager_->GetFixFPS()->GetAverageFPS();
 }
-
 void Engine::SetTimeScale(float scale)
 {
 	dxManager_->GetFixFPS()->SetTimeScale(scale);
@@ -662,7 +661,6 @@ void Engine::UnregisterDynamic(IPhysicsBody* model)
 {
 	physicsSystem_->UnregisterDynamic(model);
 }
-
 void Engine::ClearDynamicAll()
 {
 	physicsSystem_->ClearDynamics();

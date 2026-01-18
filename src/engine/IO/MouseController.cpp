@@ -22,7 +22,7 @@ void MouseController::Update()
     UpdateRay();
 
     // マウスボタン状態取得
-    UpdateButtenState();
+    UpdateButtonState();
 
 	// マウス感度適用
 	UpdateSensitivity();
@@ -205,7 +205,7 @@ void MouseController::UpdateRay()
 }
 
 // マウスボタン状態取得
-void MouseController::UpdateButtenState()
+void MouseController::UpdateButtonState()
 {
     leftButton_.prev = leftButton_.curr;
 	rightButton_.prev = rightButton_.curr;

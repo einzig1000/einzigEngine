@@ -334,7 +334,7 @@ void HaveItem::UpdateInventry()
     UpdateDrag();        // 左ドラッグ分配（インベントリ）
 
     // 手のアイコンをマウスに追従
-    Vector2 mousePos = Game::Input::Mouse::GetPosition();
+    Vector2 mousePos = Game::IO::Mouse::GetPosition();
     if (!hand_.IsEmpty())
     {
         hand_.icon->transforms.translate = Vector3(mousePos.x, mousePos.y, 0);
@@ -510,7 +510,7 @@ void HaveItem::DrawHotbar()
 
 void HaveItem::UpdateHoverIndex()
 {
-    Vector2 mousePos = Game::Input::Mouse::GetPosition();
+    Vector2 mousePos = Game::IO::Mouse::GetPosition();
     hoverSlot_ = { SlotArea::None, -1, -1 };
 
     // クラフト欄
@@ -602,7 +602,7 @@ void HaveItem::UpdateHoverIndex()
 void HaveItem::UpdateLeftClick()
 {
     // ダブルクリック判定
-    if (Game::Input::Mouse::IsJustPressed(0))
+    if (Game::IO::Mouse::IsJustPressed(0))
     {
         int currentFrame = Game::Time::GetElapsedTime();
         if (!isDragging_)
@@ -615,7 +615,7 @@ void HaveItem::UpdateLeftClick()
 
 
     // 離した瞬間に処理
-    if (!Game::Input::Mouse::IsJustReleased(0))
+    if (!Game::IO::Mouse::IsJustReleased(0))
         return;
 
     // ドラッグ中は処理しない
@@ -635,7 +635,7 @@ void HaveItem::UpdateLeftClick()
     // クラフト結果欄クリック → 素材消費
     if (hoverSlot_.area == SlotArea::Result)
     {
-        bool shift = Game::Input::Key::IsHeld(DIK_LSHIFT) || Game::Input::Key::IsHeld(DIK_RSHIFT);
+        bool shift = Game::IO::Key::IsHeld(DIK_LSHIFT) || Game::IO::Key::IsHeld(DIK_RSHIFT);
 
         // 結果が空なら何もしない
         if (craftResultSlot_.IsEmpty())
@@ -835,7 +835,7 @@ void HaveItem::UpdateLeftClick()
 NORMAL_LEFT_CLICK:
 
     // Shiftクリック（インベントリのみ）
-    bool shift = Game::Input::Key::IsHeld(DIK_LSHIFT) || Game::Input::Key::IsHeld(DIK_RSHIFT);
+    bool shift = Game::IO::Key::IsHeld(DIK_LSHIFT) || Game::IO::Key::IsHeld(DIK_RSHIFT);
 
     // シフトクリックして移動させる場合の空きチェック
     SlotRef emptyCheckRef;
@@ -1094,7 +1094,7 @@ NORMAL_LEFT_CLICK:
 
 void HaveItem::UpdateRightClick()
 {
-    if (!Game::Input::Mouse::IsJustPressed(1))
+    if (!Game::IO::Mouse::IsJustPressed(1))
         return;
 
     InventorySlot* slot = GetSlot(hoverSlot_);
@@ -1147,9 +1147,9 @@ void HaveItem::UpdateRightClick()
 
 void HaveItem::UpdateDrag()
 {
-    bool leftDown = Game::Input::Mouse::IsHeld(0);
-    bool leftJustPressed = Game::Input::Mouse::IsJustPressed(0);
-    bool leftJustReleased = Game::Input::Mouse::IsJustReleased(0);
+    bool leftDown = Game::IO::Mouse::IsHeld(0);
+    bool leftJustPressed = Game::IO::Mouse::IsJustPressed(0);
+    bool leftJustReleased = Game::IO::Mouse::IsJustReleased(0);
 
     // ドラッグ開始（Inventory or Craft）
     if (leftJustPressed && !hand_.IsEmpty() &&
@@ -1235,7 +1235,7 @@ void HaveItem::UpdateDrag()
 
 void HaveItem::UpdateHotbarInput()
 {
-    int mouseWheel = Game::Input::Mouse::GetWheel();
+    int mouseWheel = Game::IO::Mouse::GetWheel();
     if (mouseWheel > 0)
     {
         hotbarSelectedIndex_--;
@@ -1253,39 +1253,39 @@ void HaveItem::UpdateHotbarInput()
         }
     }
 
-    if (Game::Input::Key::IsJustPressed(DIK_1))
+    if (Game::IO::Key::IsJustPressed(DIK_1))
     {
         hotbarSelectedIndex_ = 0;
     }
-    else if (Game::Input::Key::IsJustPressed(DIK_2))
+    else if (Game::IO::Key::IsJustPressed(DIK_2))
     {
         hotbarSelectedIndex_ = 1;
     }
-    else if (Game::Input::Key::IsJustPressed(DIK_3))
+    else if (Game::IO::Key::IsJustPressed(DIK_3))
     {
         hotbarSelectedIndex_ = 2;
     }
-    else if (Game::Input::Key::IsJustPressed(DIK_4))
+    else if (Game::IO::Key::IsJustPressed(DIK_4))
     {
         hotbarSelectedIndex_ = 3;
     }
-    else if (Game::Input::Key::IsJustPressed(DIK_5))
+    else if (Game::IO::Key::IsJustPressed(DIK_5))
     {
         hotbarSelectedIndex_ = 4;
     }
-    else if (Game::Input::Key::IsJustPressed(DIK_6))
+    else if (Game::IO::Key::IsJustPressed(DIK_6))
     {
         hotbarSelectedIndex_ = 5;
     }
-    else if (Game::Input::Key::IsJustPressed(DIK_7))
+    else if (Game::IO::Key::IsJustPressed(DIK_7))
     {
         hotbarSelectedIndex_ = 6;
     }
-    else if (Game::Input::Key::IsJustPressed(DIK_8))
+    else if (Game::IO::Key::IsJustPressed(DIK_8))
     {
         hotbarSelectedIndex_ = 7;
     }
-    else if (Game::Input::Key::IsJustPressed(DIK_9))
+    else if (Game::IO::Key::IsJustPressed(DIK_9))
     {
         hotbarSelectedIndex_ = 8;
     }

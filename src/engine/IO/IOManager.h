@@ -15,10 +15,9 @@ public:
 
     MouseController* GetMouseController() const { return mouseController_.get(); }
     GetHitKey* GetGetHitKey() const { return getHitKey_.get(); }
-
+    GetPadState* GetGetPadState() const { return getPadState_.get(); }
 
 private:
-    GetPadState* GetGetPadState() const { return getPadState_.get(); }
 
     std::unique_ptr<GetHitKey> getHitKey_;
     std::unique_ptr<GetPadState> getPadState_;

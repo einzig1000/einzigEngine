@@ -22,7 +22,7 @@ void CraftScreen::Initialize()
 		element->Initialize();
 	}
 	// カーソル操作有効化
-	Game::Input::Mouse::ShowCursor(true);
+	Game::IO::Mouse::ShowCursor(true);
 }
 
 void CraftScreen::Update()
@@ -32,8 +32,8 @@ void CraftScreen::Update()
 		element->Update();
 	}
 
-	if (Game::Input::Key::IsJustPressed(DIK_ESCAPE) ||
-		Game::Input::Key::IsJustPressed(DIK_E))
+	if (Game::IO::Key::IsJustPressed(DIK_ESCAPE) ||
+		Game::IO::Key::IsJustPressed(DIK_E))
 	{
 		nextUIMode_ = UIMode::Playing;
 	}

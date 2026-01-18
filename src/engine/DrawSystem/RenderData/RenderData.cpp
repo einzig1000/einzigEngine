@@ -1644,7 +1644,7 @@ void RenderData_Particle::DrawEmitter()
 {
 	if (emitterShape == PrimitiveType::Sphere)
 	{
-		Game::DebugDraw::AddSphere(emitterSphereXYZ.center, emitterSphereXYZ.radius, 0xFFFFFF22);
+		Game::DebugDraw::AddSphereXYZ(emitterSphereXYZ, 0xFFFFFF22);
 	}
 	else
 	{

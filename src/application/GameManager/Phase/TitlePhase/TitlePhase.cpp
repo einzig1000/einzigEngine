@@ -213,7 +213,7 @@ void TitlePhase::Initialize()
 		}
 	}
 
-	Game::Input::Mouse::ShowCursor(true);
+	Game::IO::Mouse::ShowCursor(true);
 	Game::Camera::MoveCameraCenter({ 0.0f, 15.0f, 0.0f }, 0, EaseType::LINEAR);
 	Game::Camera::MoveCameraDistance(0.1f, 0, EaseType::LINEAR);
 
@@ -254,7 +254,7 @@ void TitlePhase::Update()
 		if (startButton->isCollisionMouseRay)
 		{
 			startButton->color = 0xFFFFFFFF;
-			if (Game::Input::Mouse::IsJustPressed(0))
+			if (Game::IO::Mouse::IsJustPressed(0))
 			{
 				nextState = TitlePhaseState::WorldSelect;
 			}
@@ -273,7 +273,7 @@ void TitlePhase::Update()
 		if (CreateNewWorldButton->isCollisionMouseRay)
 		{
 			CreateNewWorldButton->color = 0xFFFFFFFF;
-			if (Game::Input::Mouse::IsJustPressed(0))
+			if (Game::IO::Mouse::IsJustPressed(0))
 			{
 				nextState = TitlePhaseState::CreateNewWorld;
 			}
@@ -288,7 +288,7 @@ void TitlePhase::Update()
 			if (EnterWorldButtons[worldIndex]->isCollisionMouseRay)
 			{
 				EnterWorldButtons[worldIndex]->color = 0xFFFFFFFF;
-				if (Game::Input::Mouse::IsJustPressed(0))
+				if (Game::IO::Mouse::IsJustPressed(0))
 				{
 					// ワールド選択処理
 					context_->isNewGame = false;
@@ -309,7 +309,7 @@ void TitlePhase::Update()
 		if (nameInputBox->isCollisionMouseRay)
 		{
 			nameInputBox->color = 0xFFFFFFFF;
-			if (Game::Input::Mouse::IsJustPressed(0))
+			if (Game::IO::Mouse::IsJustPressed(0))
 			{
 				tentenLine->transforms.translate.y = tentenPos[0].y;
 			}
@@ -322,7 +322,7 @@ void TitlePhase::Update()
 		if (seedInputBox->isCollisionMouseRay)
 		{
 			seedInputBox->color = 0xFFFFFFFF;
-			if (Game::Input::Mouse::IsJustPressed(0))
+			if (Game::IO::Mouse::IsJustPressed(0))
 			{
 				tentenLine->transforms.translate.y = tentenPos[1].y;
 			}
@@ -335,7 +335,7 @@ void TitlePhase::Update()
 		if (CreateWorldDecideButton->isCollisionMouseRay)
 		{
 			CreateWorldDecideButton->color = 0xFFFFFFFF;
-			if (Game::Input::Mouse::IsJustPressed(0))
+			if (Game::IO::Mouse::IsJustPressed(0))
 			{
 				// ワールド作成処理
 				if (newWorldName.length() > 0)
@@ -370,7 +370,7 @@ void TitlePhase::Update()
 
 			tentenLine->transforms.translate.x = nameInputBox->transforms.translate.x - (30.0f * 16.0f) / 2.0f + 30.0f * (nameDigitCount)+15.0f;
 
-			if (Game::Input::Key::IsJustPressed(DIK_BACKSPACE))
+			if (Game::IO::Key::IsJustPressed(DIK_BACKSPACE))
 			{
 				if (nameDigitCount > 0)
 				{
@@ -381,185 +381,185 @@ void TitlePhase::Update()
 
 			if (nameDigitCount < 16)
 			{
-				if (Game::Input::Key::IsJustPressed(DIK_0))
+				if (Game::IO::Key::IsJustPressed(DIK_0))
 				{
 					newWorldName.push_back('0');
 					nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('0');
 				}
-				else if (Game::Input::Key::IsJustPressed(DIK_1))
+				else if (Game::IO::Key::IsJustPressed(DIK_1))
 				{
 					newWorldName.push_back('1');
 					nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('1');
 				}
-				else if (Game::Input::Key::IsJustPressed(DIK_2))
+				else if (Game::IO::Key::IsJustPressed(DIK_2))
 				{
 					newWorldName.push_back('2');
 					nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('2');
 				}
-				else if (Game::Input::Key::IsJustPressed(DIK_3))
+				else if (Game::IO::Key::IsJustPressed(DIK_3))
 				{
 					newWorldName.push_back('3');
 					nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('3');
 				}
-				else if (Game::Input::Key::IsJustPressed(DIK_4))
+				else if (Game::IO::Key::IsJustPressed(DIK_4))
 				{
 					newWorldName.push_back('4');
 					nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('4');
 				}
-				else if (Game::Input::Key::IsJustPressed(DIK_5))
+				else if (Game::IO::Key::IsJustPressed(DIK_5))
 				{
 					newWorldName.push_back('5');
 					nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('5');
 				}
-				else if (Game::Input::Key::IsJustPressed(DIK_6))
+				else if (Game::IO::Key::IsJustPressed(DIK_6))
 				{
 					newWorldName.push_back('6');
 					nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('6');
 				}
-				else if (Game::Input::Key::IsJustPressed(DIK_7))
+				else if (Game::IO::Key::IsJustPressed(DIK_7))
 				{
 					newWorldName.push_back('7');
 					nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('7');
 				}
-				else if (Game::Input::Key::IsJustPressed(DIK_8))
+				else if (Game::IO::Key::IsJustPressed(DIK_8))
 				{
 					newWorldName.push_back('8');
 					nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('8');
 				}
-				else if (Game::Input::Key::IsJustPressed(DIK_9))
+				else if (Game::IO::Key::IsJustPressed(DIK_9))
 				{
 					newWorldName.push_back('9');
 					nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('9');
 				}
 
-				if (Game::Input::Key::IsHeld(DIK_LSHIFT))
+				if (Game::IO::Key::IsHeld(DIK_LSHIFT))
 				{
-					if (Game::Input::Key::IsJustPressed(DIK_A))
+					if (Game::IO::Key::IsJustPressed(DIK_A))
 					{
 						newWorldName.push_back('A');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('A');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_B))
+					else if (Game::IO::Key::IsJustPressed(DIK_B))
 					{
 						newWorldName.push_back('B');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('B');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_C))
+					else if (Game::IO::Key::IsJustPressed(DIK_C))
 					{
 						newWorldName.push_back('C');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('C');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_D))
+					else if (Game::IO::Key::IsJustPressed(DIK_D))
 					{
 						newWorldName.push_back('D');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('D');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_E))
+					else if (Game::IO::Key::IsJustPressed(DIK_E))
 					{
 						newWorldName.push_back('E');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('E');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_F))
+					else if (Game::IO::Key::IsJustPressed(DIK_F))
 					{
 						newWorldName.push_back('F');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('F');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_G))
+					else if (Game::IO::Key::IsJustPressed(DIK_G))
 					{
 						newWorldName.push_back('G');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('G');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_H))
+					else if (Game::IO::Key::IsJustPressed(DIK_H))
 					{
 						newWorldName.push_back('H');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('H');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_I))
+					else if (Game::IO::Key::IsJustPressed(DIK_I))
 					{
 						newWorldName.push_back('I');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('I');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_J))
+					else if (Game::IO::Key::IsJustPressed(DIK_J))
 					{
 						newWorldName.push_back('J');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('J');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_K))
+					else if (Game::IO::Key::IsJustPressed(DIK_K))
 					{
 						newWorldName.push_back('K');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('K');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_L))
+					else if (Game::IO::Key::IsJustPressed(DIK_L))
 					{
 						newWorldName.push_back('L');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('L');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_M))
+					else if (Game::IO::Key::IsJustPressed(DIK_M))
 					{
 						newWorldName.push_back('M');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('M');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_N))
+					else if (Game::IO::Key::IsJustPressed(DIK_N))
 					{
 						newWorldName.push_back('N');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('N');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_O))
+					else if (Game::IO::Key::IsJustPressed(DIK_O))
 					{
 						newWorldName.push_back('O');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('O');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_P))
+					else if (Game::IO::Key::IsJustPressed(DIK_P))
 					{
 						newWorldName.push_back('P');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('P');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_Q))
+					else if (Game::IO::Key::IsJustPressed(DIK_Q))
 					{
 						newWorldName.push_back('Q');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('Q');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_R))
+					else if (Game::IO::Key::IsJustPressed(DIK_R))
 					{
 						newWorldName.push_back('R');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('R');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_S))
+					else if (Game::IO::Key::IsJustPressed(DIK_S))
 					{
 						newWorldName.push_back('S');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('S');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_T))
+					else if (Game::IO::Key::IsJustPressed(DIK_T))
 					{
 						newWorldName.push_back('T');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('T');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_U))
+					else if (Game::IO::Key::IsJustPressed(DIK_U))
 					{
 						newWorldName.push_back('U');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('U');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_V))
+					else if (Game::IO::Key::IsJustPressed(DIK_V))
 					{
 						newWorldName.push_back('V');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('V');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_W))
+					else if (Game::IO::Key::IsJustPressed(DIK_W))
 					{
 						newWorldName.push_back('W');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('W');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_X))
+					else if (Game::IO::Key::IsJustPressed(DIK_X))
 					{
 						newWorldName.push_back('X');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('X');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_Y))
+					else if (Game::IO::Key::IsJustPressed(DIK_Y))
 					{
 						newWorldName.push_back('Y');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('Y');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_Z))
+					else if (Game::IO::Key::IsJustPressed(DIK_Z))
 					{
 						newWorldName.push_back('Z');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('Z');
@@ -567,139 +567,139 @@ void TitlePhase::Update()
 				}
 				else
 				{
-					if (Game::Input::Key::IsJustPressed(DIK_A))
+					if (Game::IO::Key::IsJustPressed(DIK_A))
 					{
 						newWorldName.push_back('a');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('a');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_B))
+					else if (Game::IO::Key::IsJustPressed(DIK_B))
 					{
 						newWorldName.push_back('b');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('b');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_C))
+					else if (Game::IO::Key::IsJustPressed(DIK_C))
 					{
 						newWorldName.push_back('c');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('c');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_D))
+					else if (Game::IO::Key::IsJustPressed(DIK_D))
 					{
 						newWorldName.push_back('d');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('d');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_E))
+					else if (Game::IO::Key::IsJustPressed(DIK_E))
 					{
 						newWorldName.push_back('e');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('e');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_F))
+					else if (Game::IO::Key::IsJustPressed(DIK_F))
 					{
 						newWorldName.push_back('f');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('f');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_G))
+					else if (Game::IO::Key::IsJustPressed(DIK_G))
 					{
 						newWorldName.push_back('g');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('g');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_H))
+					else if (Game::IO::Key::IsJustPressed(DIK_H))
 					{
 						newWorldName.push_back('h');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('h');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_I))
+					else if (Game::IO::Key::IsJustPressed(DIK_I))
 					{
 						newWorldName.push_back('i');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('i');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_J))
+					else if (Game::IO::Key::IsJustPressed(DIK_J))
 					{
 						newWorldName.push_back('j');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('j');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_K))
+					else if (Game::IO::Key::IsJustPressed(DIK_K))
 					{
 						newWorldName.push_back('k');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('k');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_L))
+					else if (Game::IO::Key::IsJustPressed(DIK_L))
 					{
 						newWorldName.push_back('l');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('l');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_M))
+					else if (Game::IO::Key::IsJustPressed(DIK_M))
 					{
 						newWorldName.push_back('m');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('m');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_N))
+					else if (Game::IO::Key::IsJustPressed(DIK_N))
 					{
 						newWorldName.push_back('n');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('n');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_O))
+					else if (Game::IO::Key::IsJustPressed(DIK_O))
 					{
 						newWorldName.push_back('o');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('o');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_P))
+					else if (Game::IO::Key::IsJustPressed(DIK_P))
 					{
 						newWorldName.push_back('p');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('p');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_Q))
+					else if (Game::IO::Key::IsJustPressed(DIK_Q))
 					{
 						newWorldName.push_back('q');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('q');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_R))
+					else if (Game::IO::Key::IsJustPressed(DIK_R))
 					{
 						newWorldName.push_back('r');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('r');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_S))
+					else if (Game::IO::Key::IsJustPressed(DIK_S))
 					{
 						newWorldName.push_back('s');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('s');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_T))
+					else if (Game::IO::Key::IsJustPressed(DIK_T))
 					{
 						newWorldName.push_back('t');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('t');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_U))
+					else if (Game::IO::Key::IsJustPressed(DIK_U))
 					{
 						newWorldName.push_back('u');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('u');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_V))
+					else if (Game::IO::Key::IsJustPressed(DIK_V))
 					{
 						newWorldName.push_back('v');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('v');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_W))
+					else if (Game::IO::Key::IsJustPressed(DIK_W))
 					{
 						newWorldName.push_back('w');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('w');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_X))
+					else if (Game::IO::Key::IsJustPressed(DIK_X))
 					{
 						newWorldName.push_back('x');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('x');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_Y))
+					else if (Game::IO::Key::IsJustPressed(DIK_Y))
 					{
 						newWorldName.push_back('y');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('y');
 					}
-					else if (Game::Input::Key::IsJustPressed(DIK_Z))
+					else if (Game::IO::Key::IsJustPressed(DIK_Z))
 					{
 						newWorldName.push_back('z');
 						nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos('z');
 					}
 				}
 
-				if (Game::Input::Key::IsJustPressed(DIK_SPACE))
+				if (Game::IO::Key::IsJustPressed(DIK_SPACE))
 				{
 					newWorldName.push_back(' ');
 					nameInputStr[nameDigitCount]->cutImageLeftTop = fontCutImagePos(' ');
@@ -713,7 +713,7 @@ void TitlePhase::Update()
 
 			tentenLine->transforms.translate.x = seedInputBox->transforms.translate.x - (30.0f * 8.0f) / 2.0f + 30.0f * (seedDigitCount)+10.0f;
 
-			if (Game::Input::Key::IsJustPressed(DIK_BACKSPACE))
+			if (Game::IO::Key::IsJustPressed(DIK_BACKSPACE))
 			{
 				newWorldSeed = newWorldSeed / 10;
 				seedInputStr[seedDigitCount - 1]->cutImageLeftTop = fontCutImagePos(' ');
@@ -721,52 +721,52 @@ void TitlePhase::Update()
 
 			if (seedDigitCount < 8)
 			{
-				if (Game::Input::Key::IsJustPressed(DIK_1))
+				if (Game::IO::Key::IsJustPressed(DIK_1))
 				{
 					newWorldSeed = newWorldSeed * 10 + 1;
 					seedInputStr[seedDigitCount]->cutImageLeftTop = fontCutImagePos('1');
 				}
-				else if (Game::Input::Key::IsJustPressed(DIK_2))
+				else if (Game::IO::Key::IsJustPressed(DIK_2))
 				{
 					newWorldSeed = newWorldSeed * 10 + 2;
 					seedInputStr[seedDigitCount]->cutImageLeftTop = fontCutImagePos('2');
 				}
-				else if (Game::Input::Key::IsJustPressed(DIK_3))
+				else if (Game::IO::Key::IsJustPressed(DIK_3))
 				{
 					newWorldSeed = newWorldSeed * 10 + 3;
 					seedInputStr[seedDigitCount]->cutImageLeftTop = fontCutImagePos('3');
 				}
-				else if (Game::Input::Key::IsJustPressed(DIK_4))
+				else if (Game::IO::Key::IsJustPressed(DIK_4))
 				{
 					newWorldSeed = newWorldSeed * 10 + 4;
 					seedInputStr[seedDigitCount]->cutImageLeftTop = fontCutImagePos('4');
 				}
-				else if (Game::Input::Key::IsJustPressed(DIK_5))
+				else if (Game::IO::Key::IsJustPressed(DIK_5))
 				{
 					newWorldSeed = newWorldSeed * 10 + 5;
 					seedInputStr[seedDigitCount]->cutImageLeftTop = fontCutImagePos('5');
 				}
-				else if (Game::Input::Key::IsJustPressed(DIK_6))
+				else if (Game::IO::Key::IsJustPressed(DIK_6))
 				{
 					newWorldSeed = newWorldSeed * 10 + 6;
 					seedInputStr[seedDigitCount]->cutImageLeftTop = fontCutImagePos('6');
 				}
-				else if (Game::Input::Key::IsJustPressed(DIK_7))
+				else if (Game::IO::Key::IsJustPressed(DIK_7))
 				{
 					newWorldSeed = newWorldSeed * 10 + 7;
 					seedInputStr[seedDigitCount]->cutImageLeftTop = fontCutImagePos('7');
 				}
-				else if (Game::Input::Key::IsJustPressed(DIK_8))
+				else if (Game::IO::Key::IsJustPressed(DIK_8))
 				{
 					newWorldSeed = newWorldSeed * 10 + 8;
 					seedInputStr[seedDigitCount]->cutImageLeftTop = fontCutImagePos('8');
 				}
-				else if (Game::Input::Key::IsJustPressed(DIK_9))
+				else if (Game::IO::Key::IsJustPressed(DIK_9))
 				{
 					newWorldSeed = newWorldSeed * 10 + 9;
 					seedInputStr[seedDigitCount]->cutImageLeftTop = fontCutImagePos('9');
 				}
-				else if (Game::Input::Key::IsJustPressed(DIK_0))
+				else if (Game::IO::Key::IsJustPressed(DIK_0))
 				{
 					newWorldSeed = newWorldSeed * 10 + 0;
 					seedInputStr[seedDigitCount]->cutImageLeftTop = fontCutImagePos('0');

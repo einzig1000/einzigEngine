@@ -98,7 +98,7 @@ void DrawSystem::Update()
 	// カメラデータの更新
 	cameraData_->worldPosition = Game::Camera::Getter::GetCurrentTranslate();
 
-	// ドローリストの初期化
+	// ドローリストの初期化	
 	modelDrawList_.clear();
 	triangleDrawList_.clear();
 	rectDrawList_.clear();
@@ -106,12 +106,15 @@ void DrawSystem::Update()
 	lineDrawList_.clear();
 	particleDrawList_.clear();
 	blockDrawList_.clear();
+	debugLineList_.clear();
 }
 
 void DrawSystem::Draw()
 {
-	// プリミティブトポロジ（描画する形状の種類：三角形リスト）を設定
+	// 形状を設定 (三角形)
 	dxManager_->GetCommandContextManager()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	// ルートシグネチャを設定
+	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootSignature(dxManager_->GetPipelineStateManager()->GetRootSignature());
 
 	// パーティクル描画
 	DrawAllParticle();
@@ -131,11 +134,16 @@ void DrawSystem::Draw()
 	// スプライト描画
 	DrawAllSprite();
 
-	// 形状を設定
+	// 形状を設定 (線)
 	dxManager_->GetCommandContextManager()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
+	// PSOを設定 (線)
+	dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetLinePipelineState(BlendMode::kBlendModeNormal));
 
 	// 線描画
 	DrawAllLine();
+
+	// デバッグ線描画
+	DrawAllDebugLine();
 }
 
 
@@ -167,14 +175,167 @@ void DrawSystem::AddBlockDrawList(RenderData_Block* renderData)
 {
 	blockDrawList_.emplace_back(renderData);
 }
+void DrawSystem::AddDebugLineList(const Vector3& start, const Vector3& end, uint32_t color)
+{
+	debugLineList_[color].push_back(start);
+	debugLineList_[color].push_back(end);
+}
+void DrawSystem::AddSphere(const Sphere& sphere, uint32_t color)
+{
+	SphereXYZ sphereXYZ;
+	sphereXYZ.center = sphere.center;
+	sphereXYZ.radius = { sphere.radius, sphere.radius, sphere.radius };
+	AddSphereXYZ(sphereXYZ, color);
+}
+void DrawSystem::AddSphereXYZ(const SphereXYZ& sphere, uint32_t color)
+{
+	uint32_t kSubdivision = 12;
+
+	const float kLonStep = float((2.0f * std::numbers::pi_v<float>) / kSubdivision);
+	const float kLatStep = float(std::numbers::pi_v<float> / kSubdivision);
+
+	// 経度方向のリング（縦の輪）
+	for (uint32_t lon = 0; lon < kSubdivision; ++lon)
+	{
+		float lonAngle = lon * kLonStep;
+
+		for (uint32_t lat = 0; lat < kSubdivision; ++lat)
+		{
+			float lat0 = -std::numbers::pi_v<float> / 2.0f + lat * kLatStep;
+			float lat1 = lat0 + kLatStep;
+
+			Vector3 p0{
+				sphere.radius.x * std::cos(lat0) * std::cos(lonAngle),
+				sphere.radius.y * std::sin(lat0),
+				sphere.radius.z * std::cos(lat0) * std::sin(lonAngle)
+			};
+
+			Vector3 p1{
+				sphere.radius.x * std::cos(lat1) * std::cos(lonAngle),
+				sphere.radius.y * std::sin(lat1),
+				sphere.radius.z * std::cos(lat1) * std::sin(lonAngle)
+			};
+
+			AddDebugLineList(p0 + sphere.center, p1 + sphere.center, color);
+		}
+	}
+
+	// 緯度方向のリング（横の輪）
+	for (uint32_t lat = 1; lat < kSubdivision; ++lat)
+	{
+		float latAngle = -std::numbers::pi_v<float> / 2.0f + lat * kLatStep;
+
+		for (uint32_t lon = 0; lon < kSubdivision; ++lon)
+		{
+			float lon0 = lon * kLonStep;
+			float lon1 = lon0 + kLonStep;
+
+			Vector3 p0{
+				sphere.radius.x * std::cos(latAngle) * std::cos(lon0),
+				sphere.radius.y * std::sin(latAngle),
+				sphere.radius.z * std::cos(latAngle) * std::sin(lon0)
+			};
+
+			Vector3 p1{
+				sphere.radius.x * std::cos(latAngle) * std::cos(lon1),
+				sphere.radius.y * std::sin(latAngle),
+				sphere.radius.z * std::cos(latAngle) * std::sin(lon1)
+			};
+
+			AddDebugLineList(p0 + sphere.center, p1 + sphere.center, color);
+		}
+	}
+}
+void DrawSystem::AddCylinder(const Cylinder& cylinder, uint32_t color)
+{
+	Vector3 axis = cylinder.topCenter - cylinder.bottomCenter;
+	const float height = axis.Length();
+	if (height <= 1e-6f)
+	{
+		// 高さゼロなら円として扱う
+		SphereXYZ s{};
+		s.center = cylinder.bottomCenter;
+		s.radius = { cylinder.radius, cylinder.radius, cylinder.radius };
+		AddSphereXYZ(s, color);
+		return;
+	}
+	axis = axis / height;
+
+	// 軸と平行でない適当なベクトル
+	Vector3 tmp = (std::abs(axis.y) < 0.99f) ? Vector3{ 0.0f, 1.0f, 0.0f } : Vector3{ 1.0f, 0.0f, 0.0f };
+	Vector3 u = axis.Cross(tmp).Normalized();
+	Vector3 v = axis.Cross(u).Normalized();
+
+	const uint32_t kSubdivision = 32;
+	const float kStep = float((2.0f * std::numbers::pi_v<float>) / kSubdivision);
+
+	// 上下の円周
+	auto addCircle = [&](const Vector3& center)
+		{
+			for (uint32_t i = 0; i < kSubdivision; ++i)
+			{
+				const float a0 = kStep * i;
+				const float a1 = kStep * (i + 1);
+
+				Vector3 p0 = center + (u * (cylinder.radius * std::cos(a0))) + (v * (cylinder.radius * std::sin(a0)));
+				Vector3 p1 = center + (u * (cylinder.radius * std::cos(a1))) + (v * (cylinder.radius * std::sin(a1)));
+				AddDebugLineList(p0, p1, color);
+			}
+		};
+
+	addCircle(cylinder.bottomCenter);
+	addCircle(cylinder.topCenter);
+
+	// 側面の縦線
+	const uint32_t kSideLines = 12;
+	for (uint32_t i = 0; i < kSideLines; ++i)
+	{
+		const float a = float((2.0f * std::numbers::pi_v<float>) * (float(i) / float(kSideLines)));
+		Vector3 rim = (u * (cylinder.radius * std::cos(a))) + (v * (cylinder.radius * std::sin(a)));
+
+		AddDebugLineList(cylinder.bottomCenter + rim, cylinder.topCenter + rim, color);
+	}
+}
+void DrawSystem::AddAABB(const AABB& aabb, uint32_t color)
+{
+	Vector3 p[8] = {
+	{ aabb.min.x, aabb.min.y, aabb.min.z }, // 0
+	{ aabb.max.x, aabb.min.y, aabb.min.z }, // 1
+	{ aabb.max.x, aabb.max.y, aabb.min.z }, // 2
+	{ aabb.min.x, aabb.max.y, aabb.min.z }, // 3
+	{ aabb.min.x, aabb.min.y, aabb.max.z }, // 4
+	{ aabb.max.x, aabb.min.y, aabb.max.z }, // 5
+	{ aabb.max.x, aabb.max.y, aabb.max.z }, // 6
+	{ aabb.min.x, aabb.max.y, aabb.max.z }, // 7
+	};
+
+	// 底面
+	AddDebugLineList(p[0], p[1], color);
+	AddDebugLineList(p[1], p[2], color);
+	AddDebugLineList(p[2], p[3], color);
+	AddDebugLineList(p[3], p[0], color);
+
+	// 上面
+	AddDebugLineList(p[4], p[5], color);
+	AddDebugLineList(p[5], p[6], color);
+	AddDebugLineList(p[6], p[7], color);
+	AddDebugLineList(p[7], p[4], color);
+
+	// 縦
+	AddDebugLineList(p[0], p[4], color);
+	AddDebugLineList(p[1], p[5], color);
+	AddDebugLineList(p[2], p[6], color);
+	AddDebugLineList(p[3], p[7], color);
+}
+
 
 void DrawSystem::DrawAllModel()
 {
-	// 描画順をソート
-	// 不透過オブジェクト→
-	// カメラから遠い透過オブジェクト→
-	// カメラから近い透過オブジェクト
-	// なおテクスチャによる透過はこの世に存在しないものとする
+	/// 描画順をソート
+	/// 不透過オブジェクト→
+	/// カメラから遠い透過オブジェクト→
+	/// カメラから近い透過オブジェクト
+	/// なおテクスチャによる透過はこの世に存在しないものとする
 	Vector3 cameraPos = Game::Camera::Getter::GetCurrentTranslate();
 
 	std::sort(modelDrawList_.begin(), modelDrawList_.end(),
@@ -224,13 +385,12 @@ void DrawSystem::DrawAllModel()
 		if (!tex)continue;
 
 		// ルートシグネチャを設定
-		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootSignature(dxManager_->GetPipelineStateManager()->GetRootSignature());
 		if (renderData->options.wireframe || wireframeMode_)
 			// ワイヤーフレーム用PSOを設定
-			dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetPipelineState(BlendMode::Wireframe, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
+			dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetTrianglePipelineState(BlendMode::Wireframe));
 		else
 			// Triangle用PSOを設定
-			dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetPipelineState(renderData->options.blendMode, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
+			dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetTrianglePipelineState(renderData->options.blendMode));
 
 		// 頂点数の取得
 		const uint32_t kSumVertex = static_cast<uint32_t>(obj->modelData.vertices.size());
@@ -268,16 +428,12 @@ void DrawSystem::DrawAllModel()
 
 		// 頂点バッファをバインド（描画に使う頂点データを指定）
 		dxManager_->GetCommandContextManager()->GetCommandList()->IASetVertexBuffers(0, 1, &obj->vertexBufferView);
-		//// プリミティブトポロジ（描画する形状の種類：三角形リスト）を設定
-		//dxManager_->GetCommandContextManager()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		// ルートパラメータ0にマテリアル用定数バッファ（色・ライティング情報など）をバインド
 		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources_[drawCallIndex_]->GetGPUVirtualAddress());
 		// ルートパラメータ1にWVP（ワールド・ビュー・プロジェクション）用定数バッファをバインド
 		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources_[drawCallIndex_]->GetGPUVirtualAddress());
 		// ルートパラメータ2にテクスチャのSRV（シェーダリソースビュー）をバインド
 		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
-		// ルートパラメータ2にテクスチャのSRV（シェーダリソースビュー）をバインド
-		//dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(3, tex2->textureSrvHandleGPU);
 		// ルートパラメータ3にライト用定数バッファをバインド
 		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(3, lightResources_[drawCallIndex_]->GetGPUVirtualAddress());
 		// ルートパラメータ4にスペキュラライト用定数バッファをバインド
@@ -299,15 +455,14 @@ void DrawSystem::DrawAllTriangle()
 		const TextureData* tex = dxManager_->GetResourceManager()->GetTextureManager()->GetTextureData(renderData->texture);
 		if (!tex) continue;
 
-		// RootSignatureとPSOを設定
-		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootSignature(dxManager_->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
+		// PSOを設定
 		if (renderData->options.wireframe || wireframeMode_)
 		{	// ワイヤーフレーム用PSOを設定
-			dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetPipelineState(BlendMode::Wireframe, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
+			dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetTrianglePipelineState(BlendMode::Wireframe));
 		}
 		else
 		{	// Triangle用PSOを設定
-			dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetPipelineState(renderData->options.blendMode, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
+			dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetTrianglePipelineState(renderData->options.blendMode));
 		}
 
 		// 頂点数の取得
@@ -363,15 +518,6 @@ void DrawSystem::DrawAllTriangle()
 		vertexBufferView.SizeInBytes = sizeof(VertexData) * kSumVertex;
 		vertexBufferView.StrideInBytes = sizeof(VertexData);
 
-
-		//// 頂点リソース
-		//VertexData* vData = nullptr;
-		//HRESULT hr = vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vData));
-		//if (FAILED(hr) || vData == nullptr) continue;
-		//std::memcpy(vData + vertexDataUsed_, &vertexData_[vertexDataUsed_], sizeof(VertexData) * kSumVertex);
-		//vertexResource_->Unmap(0, nullptr);
-
-
 		// 頂点バッファをバインド
 		dxManager_->GetCommandContextManager()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
 		// CBVを設定する マテリアル用のCBufferの場所を設定
@@ -402,15 +548,14 @@ void DrawSystem::DrawAllRect()
 		const TextureData* tex = dxManager_->GetResourceManager()->GetTextureManager()->GetTextureData(renderData->texture);
 		if (!tex) continue;
 
-		// RootSignatureとPSOを設定
-		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootSignature(dxManager_->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
+		// PSOを設定
 		if (renderData->options.wireframe || wireframeMode_)
 		{	// ワイヤーフレーム用PSOを設定
-			dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetPipelineState(BlendMode::Wireframe, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
+			dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetTrianglePipelineState(BlendMode::Wireframe));
 		}
 		else
 		{	// Triangle用PSOを設定
-			dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetPipelineState(renderData->options.blendMode, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
+			dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetTrianglePipelineState(renderData->options.blendMode));
 		}
 
 		// 頂点数の取得
@@ -485,13 +630,6 @@ void DrawSystem::DrawAllRect()
 		vertexBufferView.SizeInBytes = sizeof(VertexData) * kSumVertex;
 		vertexBufferView.StrideInBytes = sizeof(VertexData);
 
-		//// 頂点リソース
-		//VertexData* vData = nullptr;
-		//HRESULT hr = vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vData));
-		//if (FAILED(hr) || vData == nullptr) continue;
-		//std::memcpy(vData + vertexDataUsed_, &vertexData_[vertexDataUsed_], sizeof(VertexData) * kSumVertex);
-		//vertexResource_->Unmap(0, nullptr);
-
 		// RootSignatureを設定。
 		dxManager_->GetCommandContextManager()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
 		// CBVを設定する マテリアル用のCBufferの場所を設定
@@ -522,9 +660,8 @@ void DrawSystem::DrawAllSprite()
 		const TextureData* tex = dxManager_->GetResourceManager()->GetTextureManager()->GetTextureData(renderData->texture);
 		if (!tex) continue;
 
-		// RootSignatureとPSOを設定 - Triangle
-		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootSignature(dxManager_->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
-		dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetPipelineState(renderData->options.blendMode, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE)); // Triangle用PSOを設定
+		// PSOを設定
+		dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetTrianglePipelineState(renderData->options.blendMode)); // Triangle用PSOを設定
 
 		// 必要な頂点数
 		const uint32_t kSumVertex = 4;
@@ -815,7 +952,7 @@ void DrawSystem::DrawAllSprite()
 		bottom *= float(WindowManager::winHeight_) / 720.0f;
 
 		// マウス座標取得
-		Vector2 mousePos = Game::Input::Mouse::GetPosition();
+		Vector2 mousePos = Game::IO::Mouse::GetPosition();
 
 		// マウス座標は仮想座標へ変換してから衝突判定に使う。
 		float windowWidth = float(WindowManager::winWidth_);
@@ -864,10 +1001,6 @@ void DrawSystem::DrawAllLine()
 
 		// 2点未満
 		if (renderData->points.size() < 2) continue;
-
-		// RootSignatureとPSOを設定 - Line
-		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootSignature(dxManager_->GetPipelineStateManager()->GetRootSignature()); // 共通のルートシグネチャ
-		dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetPipelineState(BlendMode::kBlendModeNormal, D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE)); // Line用PSOを設定
 
 		// 指定された点
 		std::vector<Vector3> mainPoints;
@@ -991,7 +1124,6 @@ void DrawSystem::DrawAllLine()
 			out.push_back(points[i + 1]);
 		}
 
-
 		// 頂点数の取得
 		const uint32_t kSumVertex = static_cast<uint32_t>(out.size());
 		// 必要な頂点数分配列を拡張
@@ -1025,23 +1157,13 @@ void DrawSystem::DrawAllLine()
 		vertexBufferView.BufferLocation = vertexResource_->GetGPUVirtualAddress() + sizeof(VertexData) * static_cast<UINT>(vertexDataUsed_);
 		vertexBufferView.SizeInBytes = sizeof(VertexData) * kSumVertex;
 		vertexBufferView.StrideInBytes = sizeof(VertexData);
-
-
-
-
-		//// 頂点リソース
-		//VertexData* vData = nullptr;
-		//HRESULT hr = vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vData));
-		//if (FAILED(hr) || vData == nullptr) continue;
-		//std::memcpy(vData + vertexDataUsed_, &vertexData_[vertexDataUsed_], sizeof(VertexData) * kSumVertex);
-		//vertexResource_->Unmap(0, nullptr);
 		
 		// RootSignatureを設定
 		dxManager_->GetCommandContextManager()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
-		// CBVを設定する マテリアル用のCBufferの場所を設定
-		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources_[drawCallIndex_]->GetGPUVirtualAddress());// b1にバインド
-		// CBVを設定する wvp用のCBufferの場所を設定
-		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources_[drawCallIndex_]->GetGPUVirtualAddress()); // b0にバインド
+		// ルートパラメータ0にマテリアル用定数バッファ（色・ライティング情報など）をバインド
+		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources_[drawCallIndex_]->GetGPUVirtualAddress());
+		// ルートパラメータ1にWVP用定数バッファをバインド
+		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources_[drawCallIndex_]->GetGPUVirtualAddress());
 		// 描画コマンドの発行
 		dxManager_->GetCommandContextManager()->GetCommandList()->DrawInstanced(kSumVertex, 1, 0, 0);
 
@@ -1147,196 +1269,75 @@ void DrawSystem::DrawAllBlock()
 		dxManager_->GetCommandContextManager()->GetCommandList()->DrawInstanced(kSumVertex, renderData->currentDrawSum, 0, 0);
 	}
 }
-
-
-void DrawSystem::AddSphere(Vector3 pos, Vector3 radius, uint32_t color)
+void DrawSystem::DrawAllDebugLine()
 {
-	//RenderData_Line* Lon[10];
-	//RenderData_Line* Lat[10];
-
-	//for (int i = 0; i < 10; ++i)
-	//{
-	//	Lon[i]->color = color;
-	//	Lon[i]->kSubdivision = 10;
-	//	Lon[i]->lineType = LineType::Line;
-
-	//	Lat[i]->color = color;
-	//	Lat[i]->kSubdivision = 10;
-	//	Lat[i]->lineType = LineType::Line;
-	//}
-
-	//// 経度/緯度の分割数
-	//const uint32_t kSubdivision = 10;
-	//// 経度分割１つ分の角度
-	//const float kLonEvery = float((2 * std::numbers::pi_v<float>) / kSubdivision);
-	//// 緯度分割１つ分の角度
-	//const float kLatEvery = float(std::numbers::pi_v<float> / kSubdivision);
-
-	//float lat = 0.0f;
-	//float nextLat = 0.0f;
-	//float lon = 0.0f;
-	//float nextLon = 0.0f;
-
-	//// 緯度の方向に分割 -π/2 ～ π/2
-	//for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex)
-	//{
-	//	// 現在の緯度と次の緯度
-	//	lat = float(-std::numbers::pi_v<float> / 2.0f + latIndex * kLatEvery);
-	//	nextLat = float(-std::numbers::pi_v<float> / 2.0f + (latIndex + 1) * kLatEvery);
-
-	//	// 経度方向に分割 0 ～ 2π
-	//	for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex)
-	//	{
-	//		// 現在の経度と次の経度
-	//		lon = lonIndex * kLonEvery;
-	//		nextLon = (lonIndex + 1) * kLonEvery;
-
-	//		Lon[latIndex]->points.push_back({
-	//			pos.x + radius.x * std::cosf(lat) * std::cosf(lon),
-	//			pos.y + radius.y * std::sinf(lat),
-	//			pos.z + radius.z * std::cosf(lat) * std::sinf(lon),
-	//			});
-
-	//		Lon[latIndex]->points.push_back({
-	//			pos.x + radius.x * std::cosf(lat) * std::cosf(nextLon),
-	//			pos.y + radius.y * std::sinf(lat),
-	//			pos.z + radius.z * std::cosf(lat) * std::sinf(nextLon),
-	//			});
-
-	//		Lat[lonIndex]->points.push_back({
-	//			pos.x + radius.x * std::cosf(lat) * std::cosf(lon),
-	//			pos.y + radius.y * std::sinf(lat),
-	//			pos.z + radius.z * std::cosf(lat) * std::sinf(lon),
-	//			});
-
-	//		Lat[lonIndex]->points.push_back({
-	//			pos.x + radius.x * std::cosf(nextLat) * std::cosf(lon),
-	//			pos.y + radius.y * std::sinf(nextLat),
-	//			pos.z + radius.z * std::cosf(nextLat) * std::sinf(lon),
-	//			});
-	//	}
-	//}
-
-	//// 線を描画
-	//for (uint32_t i = 0; i < kSubdivision; ++i)
-	//{
-	//	AddLineDrawList(Lon[i]);
-	//	AddLineDrawList(Lat[i]);
-	//}
-}
-void DrawSystem::AddAABB(AABB aabb, uint32_t color)
-{
-	// 描画回数上限
-	if (drawCallIndex_ >= kMaxDrawCallPerFrame_) return;
-
-	// RootSignatureとPSOを設定（Line用）
-	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootSignature(
-		dxManager_->GetPipelineStateManager()->GetRootSignature());
-	dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(
-		dxManager_->GetPipelineStateManager()->GetPipelineState(BlendMode::kBlendModeNormal, D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE));
-
-	// 頂点は8個
-	Vector3 p[8] = {
-		{ aabb.min.x, aabb.min.y, aabb.min.z }, // 0
-		{ aabb.max.x, aabb.min.y, aabb.min.z }, // 1
-		{ aabb.max.x, aabb.max.y, aabb.min.z }, // 2
-		{ aabb.min.x, aabb.max.y, aabb.min.z }, // 3
-		{ aabb.min.x, aabb.min.y, aabb.max.z }, // 4
-		{ aabb.max.x, aabb.min.y, aabb.max.z }, // 5
-		{ aabb.max.x, aabb.max.y, aabb.max.z }, // 6
-		{ aabb.min.x, aabb.max.y, aabb.max.z }, // 7
-	};
-
-	// ラインの始点終点に分けると3 * 8個
-	const uint32_t kSumVertex = 24;
-
-	// 必要頂点数分確保
-	if (vertexDataUsed_ + kSumVertex > vertexData_.size())
+	// 色ごとに1回ずつ描画（＝色数がDrawCall数になる）
+	for (auto& [color, segments] : debugLineList_)
 	{
-		vertexData_.resize(vertexDataUsed_ + kSumVertex);
+		if (!segments.empty())
+		{
+			// 描画回数上限
+			if (drawCallIndex_ >= kMaxDrawCallPerFrame_) return;
+
+			// (start,end) のペア前提
+			if (segments.size() < 2 || (segments.size() % 2) != 0) return;
+
+			const uint32_t kSumVertex = static_cast<uint32_t>(segments.size());
+
+			// 必要頂点数分確保
+			if (vertexDataUsed_ + kSumVertex > vertexData_.size())
+			{
+				vertexData_.resize(vertexDataUsed_ + kSumVertex);
+			}
+
+			// 頂点詰め
+			for (uint32_t i = 0; i < kSumVertex; ++i)
+			{
+				vertexData_[vertexDataUsed_ + i].position = { segments[i].x, segments[i].y, segments[i].z, 1.0f };
+				vertexData_[vertexDataUsed_ + i].texcoord = { 0.0f, 0.0f };
+				vertexData_[vertexDataUsed_ + i].normal = { 0.0f, 0.0f, -1.0f };
+			}
+
+			// WVP
+			wvpData_[drawCallIndex_]->World = Matrix4x4::MakeIdentity4x4();
+			wvpData_[drawCallIndex_]->WVP = viewProjectionMatrix_;
+
+			// ライト
+			*lightData_[drawCallIndex_] = *directionalLightData_;
+
+			// マテリアル
+			materialData_[drawCallIndex_]->color = ConvertUintToVector4(color);
+			materialData_[drawCallIndex_]->shininess = 1.0f;
+			materialData_[drawCallIndex_]->uvTransform = Matrix4x4::MakeIdentity4x4();
+
+			// Upload（動的VB）
+			if (!EnsureDynamicVB(vertexDataUsed_ + kSumVertex)) return;
+			std::memcpy(vertexMappedPtr_ + vertexDataUsed_, &vertexData_[vertexDataUsed_], sizeof(VertexData) * kSumVertex);
+
+			// VBV
+			D3D12_VERTEX_BUFFER_VIEW vbv{};
+			vbv.BufferLocation = vertexResource_->GetGPUVirtualAddress() + sizeof(VertexData) * static_cast<UINT>(vertexDataUsed_);
+			vbv.SizeInBytes = sizeof(VertexData) * kSumVertex;
+			vbv.StrideInBytes = sizeof(VertexData);
+
+			// 頂点バッファをバインド
+			dxManager_->GetCommandContextManager()->GetCommandList()->IASetVertexBuffers(0, 1, &vbv);
+			// 形状を設定 (線)
+			dxManager_->GetCommandContextManager()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
+			// ルートパラメータ0にマテリアル用定数バッファ（色・ライティング情報など）をバインド
+			dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources_[drawCallIndex_]->GetGPUVirtualAddress());
+			// ルートパラメータ1にWVP（ワールド・ビュー・プロジェクション）用定数バッファをバインド
+			dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources_[drawCallIndex_]->GetGPUVirtualAddress());
+			// 描画コマンドの発行
+			dxManager_->GetCommandContextManager()->GetCommandList()->DrawInstanced(kSumVertex, 1, 0, 0);
+
+			// カウンタ更新
+			drawCallIndex_++;
+			vertexDataUsed_ += kSumVertex;
+		}
 	}
-
-	for (size_t i = 0; i < kSumVertex; ++i)
-	{
-		vertexData_[vertexDataUsed_ + i].texcoord = { 0.0f, 0.0f };
-		vertexData_[vertexDataUsed_ + i].normal = { 0.0f, 0.0f, -1.0f };
-	}
-
-	// 底面（z=min）
-	vertexData_[vertexDataUsed_ + 0].position = { p[0].x, p[0].y, p[0].z, 1.0f };
-	vertexData_[vertexDataUsed_ + 1].position = { p[1].x, p[1].y, p[1].z, 1.0f };
-	vertexData_[vertexDataUsed_ + 2].position = { p[1].x, p[1].y, p[1].z, 1.0f };
-	vertexData_[vertexDataUsed_ + 3].position = { p[2].x, p[2].y, p[2].z, 1.0f };
-	vertexData_[vertexDataUsed_ + 4].position = { p[2].x, p[2].y, p[2].z, 1.0f };
-	vertexData_[vertexDataUsed_ + 5].position = { p[3].x, p[3].y, p[3].z, 1.0f };
-	vertexData_[vertexDataUsed_ + 6].position = { p[3].x, p[3].y, p[3].z, 1.0f };
-	vertexData_[vertexDataUsed_ + 7].position = { p[0].x, p[0].y, p[0].z, 1.0f };
-
-	// 上面（z=max）
-	vertexData_[vertexDataUsed_ + 8].position = { p[4].x, p[4].y, p[4].z, 1.0f };
-	vertexData_[vertexDataUsed_ + 9].position = { p[5].x, p[5].y, p[5].z, 1.0f };
-	vertexData_[vertexDataUsed_ + 10].position = { p[5].x, p[5].y, p[5].z, 1.0f };
-	vertexData_[vertexDataUsed_ + 11].position = { p[6].x, p[6].y, p[6].z, 1.0f };
-	vertexData_[vertexDataUsed_ + 12].position = { p[6].x, p[6].y, p[6].z, 1.0f };
-	vertexData_[vertexDataUsed_ + 13].position = { p[7].x, p[7].y, p[7].z, 1.0f };
-	vertexData_[vertexDataUsed_ + 14].position = { p[7].x, p[7].y, p[7].z, 1.0f };
-	vertexData_[vertexDataUsed_ + 15].position = { p[4].x, p[4].y, p[4].z, 1.0f };
-
-	// 側面（縦）
-	vertexData_[vertexDataUsed_ + 16].position = { p[0].x, p[0].y, p[0].z, 1.0f };
-	vertexData_[vertexDataUsed_ + 17].position = { p[4].x, p[4].y, p[4].z, 1.0f };
-	vertexData_[vertexDataUsed_ + 18].position = { p[1].x, p[1].y, p[1].z, 1.0f };
-	vertexData_[vertexDataUsed_ + 19].position = { p[5].x, p[5].y, p[5].z, 1.0f };
-	vertexData_[vertexDataUsed_ + 20].position = { p[2].x, p[2].y, p[2].z, 1.0f };
-	vertexData_[vertexDataUsed_ + 21].position = { p[6].x, p[6].y, p[6].z, 1.0f };
-	vertexData_[vertexDataUsed_ + 22].position = { p[3].x, p[3].y, p[3].z, 1.0f };
-	vertexData_[vertexDataUsed_ + 23].position = { p[7].x, p[7].y, p[7].z, 1.0f };
-
-	// WVP
-	wvpData_[drawCallIndex_]->World = Matrix4x4::MakeIdentity4x4();
-	wvpData_[drawCallIndex_]->WVP = viewProjectionMatrix_;
-
-	// ライトの設定
-	*lightData_[drawCallIndex_] = *directionalLightData_;
-
-	// マテリアル（ラインはテクスチャ不要）
-	materialData_[drawCallIndex_]->color = ConvertUintToVector4(color);
-	materialData_[drawCallIndex_]->shininess = 1.0f;
-	materialData_[drawCallIndex_]->uvTransform = Matrix4x4::MakeIdentity4x4();
-
-	// Upload（動的VB）
-	if (!EnsureDynamicVB(vertexDataUsed_ + kSumVertex)) return;
-	std::memcpy(vertexMappedPtr_ + vertexDataUsed_, &vertexData_[vertexDataUsed_], sizeof(VertexData) * kSumVertex);
-
-	// VBVを作成
-	D3D12_VERTEX_BUFFER_VIEW vbv{};
-	vbv.BufferLocation = vertexResource_->GetGPUVirtualAddress() + sizeof(VertexData) * vertexDataUsed_;
-	vbv.SizeInBytes = sizeof(VertexData) * kSumVertex;
-	vbv.StrideInBytes = sizeof(VertexData);
-
-	// バインドと描画
-	auto* cmd = dxManager_->GetCommandContextManager()->GetCommandList();
-	cmd->IASetVertexBuffers(0, 1, &vbv);
-	cmd->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
-	cmd->SetGraphicsRootConstantBufferView(0, materialResources_[drawCallIndex_]->GetGPUVirtualAddress());
-	cmd->SetGraphicsRootConstantBufferView(1, wvpResources_[drawCallIndex_]->GetGPUVirtualAddress());
-	cmd->SetGraphicsRootConstantBufferView(3, lightResources_[drawCallIndex_]->GetGPUVirtualAddress());
-	cmd->DrawInstanced(kSumVertex, 1, 0, 0);
-
-	// カウンタ更新
-	drawCallIndex_++;
-	vertexDataUsed_ += kSumVertex;
 }
-void DrawSystem::AddLine(Vector3 start, Vector3 end, uint32_t color)
-{
-	//RenderData_Line* lineData = new RenderData_Line();
-	//lineData->color = color;
-	//lineData->kSubdivision = 1;
-	//lineData->lineType = LineType::Line;
-	//lineData->points.push_back(start);
-	//lineData->points.push_back(end);
-	//AddLineDrawList(lineData);
-}
+
 
 void DrawSystem::InitializeResource_Light()
 {
