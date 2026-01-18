@@ -3,7 +3,9 @@
 #include <cmath>
 #include "definition/definition.h"
 
-
+/// <summary>
+/// イージング関数クラス
+/// </summary>
 class Easings
 {
 public:

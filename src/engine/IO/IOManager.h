@@ -6,6 +6,9 @@
 
 class CameraManager;
 
+/// <summary>
+/// 入出力管理クラス
+/// </summary>
 class IOManager
 {
 public:

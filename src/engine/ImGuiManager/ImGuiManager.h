@@ -7,6 +7,9 @@
 class DirectXManager;
 class WindowManager;
 
+/// <summary>
+/// ImGui管理クラス
+/// </summary>
 class ImGuiManager
 {
 public:

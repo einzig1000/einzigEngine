@@ -4,6 +4,9 @@
 #include <vector>
 #include <string>
 
+/// <summary>
+/// JSON管理クラス
+/// </summary>
 class JsonManager
 {
 public:

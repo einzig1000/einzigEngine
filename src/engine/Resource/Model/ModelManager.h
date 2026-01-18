@@ -2,7 +2,9 @@
 #include "definition/definition.h"
 #include <sstream>
 
-
+/// <summary>
+/// モデル管理クラス
+/// </summary>
 class ModelManager
 {
 public:

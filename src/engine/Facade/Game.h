@@ -14,6 +14,9 @@
 class IWorldCollider;
 class IPhysicsBody;
 
+/// <summary>
+/// ファサードクラス
+/// </summary>
 class Game
 {
 public:

@@ -20,6 +20,9 @@
 #define PAD_RIGHT           0x0D
 #define PAD_BUTTON_MAX      0x0E
 
+/// <summary>
+/// パッド管理クラス
+/// </summary>
 class GetPadState
 {
 public:

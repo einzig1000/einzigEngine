@@ -1,6 +1,9 @@
 #pragma once
 #include <chrono>
 
+/// <summary>
+/// FPS制御クラス
+/// </summary>
 class FixFPS
 {
 public:

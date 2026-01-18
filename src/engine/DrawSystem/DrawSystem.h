@@ -4,6 +4,9 @@
 
 class DirectXManager;
 
+/// <summary>
+/// 描画管理クラス
+/// </summary>
 class DrawSystem
 {
 public:

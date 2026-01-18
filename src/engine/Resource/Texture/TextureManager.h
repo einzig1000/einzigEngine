@@ -8,6 +8,9 @@
 
 class DescriptorHeapManager;
 
+/// <summary>
+/// テクスチャ管理クラス
+/// </summary>
 class TextureManager
 {
 public:

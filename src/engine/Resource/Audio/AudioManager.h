@@ -36,6 +36,9 @@ public:
     STDMETHOD_(void, OnVoiceError)(void* pBufferContext, HRESULT Error) override {}
 };
 
+/// <summary>
+/// オーディオ管理クラス
+/// </summary>
 class AudioManager
 {
 public:
@@ -64,15 +67,6 @@ public:
 
 private:
     // オーディオデータとソースボイスを保持する構造体
-    //struct AudioEntry
-    //{
-    //    std::vector<BYTE> audioData;
-    //    UINT32 audioBytes;
-    //    WAVEFORMATEX wfx;
-    //    //Microsoft::WRL::ComPtr<IXAudio2SourceVoice> pSourceVoice;
-    //    IXAudio2SourceVoice* pSourceVoice;
-    //    XAUDIO2_BUFFER xAudioBuffer;
-    //};
     struct AudioEntry
     {
         std::vector<BYTE> audioData;

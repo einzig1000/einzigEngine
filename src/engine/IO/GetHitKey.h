@@ -8,6 +8,9 @@
 #pragma comment(lib,"dinput8.lib")
 #pragma comment(lib,"dxguid.lib")
 
+/// <summary>
+/// キーボード管理クラス
+/// </summary>
 class GetHitKey
 {
 public:

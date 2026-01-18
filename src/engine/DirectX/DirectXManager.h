@@ -16,6 +16,9 @@
 #include "IO/IOManager.h"
 #include <memory>
 
+/// <summary>
+/// DirectX管理クラス
+/// </summary>
 class DirectXManager
 {
 public:

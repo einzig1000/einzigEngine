@@ -3,8 +3,11 @@
 #include <string>           // std::wstring 用
 #include <mmsystem.h>
 
-class MouseController;  // 無念ながら前方宣言
+class MouseController;
 
+/// <summary>
+/// ウィンドウ管理クラス
+/// </summary>
 class WindowManager {
 public:
     WindowManager(int width, int height, const std::wstring& title);
@@ -50,7 +53,7 @@ private:
 
 	// ウィンドウクラス登録
     void RegisterWindowClass();
-    // 
+	// マウスの生入力登録
     void RegisterMouseRawInput(HWND hwnd);
 	// メインウィンドウ生成
     void CreateMainWindow(int width, int height, const std::wstring& title);

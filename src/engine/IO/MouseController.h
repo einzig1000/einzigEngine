@@ -3,6 +3,9 @@
 
 class CameraManager;
 
+/// <summary>
+/// マウス管理クラス
+/// </summary>
 class MouseController
 {
 public:

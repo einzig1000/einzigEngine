@@ -6,6 +6,9 @@
 #include "Resource/Model/ModelManager.h"
 #include <memory> 
 
+/// <summary>
+/// リソース管理クラス
+/// </summary>
 class ResourceManager
 {
 public:

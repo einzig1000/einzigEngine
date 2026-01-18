@@ -7,9 +7,9 @@
 #include <numeric>
 #include "definition/definition.h"
 
-
-
-// シンプルな PerlinNoise クラス（perm テーブル方式）
+/// <summary>
+/// パーリンノイズ生成クラス
+/// </summary>
 class PerlinNoise
 {
 public:
@@ -47,6 +47,12 @@ struct NoiseParameter
 	int diamondVeinSizeRand = 3;		// ±鉱脈サイズランダム幅
 	int diamondMinY = 1;				// 鉱脈生成最低Y座標
 	int diamondMaxY = CHUNK_Y / 3;		// 鉱脈生成最高Y座標
+
+	int goldVeinsPerChunk = 1;			// チャンクあたりの鉱脈数
+	int goldVeinSizeMean = 6;			// 平均鉱脈サイズ
+	int goldVeinSizeRand = 4;			// ±鉱脈サイズランダム幅
+	int goldMinY = 2;					// 鉱脈生成最低Y座標
+	int goldMaxY = CHUNK_Y / 2;			// 鉱脈生成最高Y座標
 
 	// ===== 木パラメータ =====
 	float treeChancePerColumn = 0.02f;	// 大きいほど木が増える
