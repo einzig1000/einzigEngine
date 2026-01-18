@@ -76,6 +76,11 @@ void Engine::BeginFrame()
 	// GPU同期
 	dxManager_->GetSynchronizationManager()->WaitForGPU();
 
+	if (Game::IO::Key::IsJustPressed(DIK_F12))
+	{
+		ToggleFullscreen();
+	}
+
 	// DirectXを更新
 	dxManager_->BeginFrame();
 
@@ -198,20 +203,20 @@ void Engine::UpdateCamera()
 	// カメラの更新
 	cameraManager_->Update();
 
-	// 左シフト＋左クリックでカメラターゲットをオブジェクトに合わせる
-	if (Game::IO::Key::IsHeld(DIK_LSHIFT))
-	{
-		if (Game::IO::Mouse::IsJustPressed(0))
-		{
-			for (auto& rd : RenderData_Model::renderModels)
-			{
-				if (rd->isCollisionMouseRay == 0)
-				{
-					cameraManager_->SetCenterTarget(rd->GetWorldPosition(), 0, EaseType::IN_BACK);
-				}
-			}
-		}
-	}
+	//// 左シフト＋左クリックでカメラターゲットをオブジェクトに合わせる
+	//if (Game::IO::Key::IsHeld(DIK_LSHIFT))
+	//{
+	//	if (Game::IO::Mouse::IsJustPressed(0))
+	//	{
+	//		for (auto& rd : RenderData_Model::renderModels)
+	//		{
+	//			if (rd->isCollisionMouseRay == 0)
+	//			{
+	//				cameraManager_->SetCenterTarget(rd->GetWorldPosition(), 0, EaseType::IN_BACK);
+	//			}
+	//		}
+	//	}
+	//}
 }
 void Engine::UpdateDebugInfo()
 {
@@ -222,10 +227,6 @@ void Engine::UpdateDebugInfo()
 	if (Game::IO::Key::IsJustPressed(DIK_F3))
 	{
 		ToggleCamera();
-	}
-	if (Game::IO::Key::IsJustPressed(DIK_F11))
-	{
-		ToggleFullscreen();
 	}
 
 	if (isDebugInfo)
