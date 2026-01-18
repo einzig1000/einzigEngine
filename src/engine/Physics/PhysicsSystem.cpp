@@ -9,6 +9,9 @@ PhysicsSystem::PhysicsSystem()
 	world_ = std::make_unique<MapWorldCollider>();
 }
 
+PhysicsSystem::~PhysicsSystem()
+{}
+
 void PhysicsSystem::AddWorldCollider(IWorldCollider* collider)
 {
 	world_->AddCollider(collider);

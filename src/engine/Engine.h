@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <wrl/client.h>
+#include <memory>
 #include "ResourceLoder/ResourceID.h"
 
 
@@ -138,7 +139,7 @@ public:
 	void ToggleCamera();
 	void StopCameraShake();
 	void SetEnableCameraControl(bool enable);
-	CameraManager* GetCameraManager() { return cameraManager_; }
+	CameraManager* GetCameraManager() { return cameraManager_.get(); }
 
 	// 時間制御
 	float GetDeltaTime();			// デルタタイム取得
@@ -151,11 +152,11 @@ public:
 	// 全てのIPhysicsBodyの物理演算無効化
 	void ClearDynamicAll();
 	// IPhysicsBodyの物理演算無効化
-	void UnregisterDynamic(IPhysicsBody* model);
+	void UnregisterDynamic(IPhysicsBody* b);
 	// IPhysicsBodyの物理演算有効化
-	void RegisterDynamic(IPhysicsBody* model);
+	void RegisterDynamic(IPhysicsBody* b);
 	// WorldColliderの設定
-	void SetIWorldCollider(IWorldCollider* worldCollider);
+	void AddWorldCollider(IWorldCollider* worldCollider);
 
 
 	// フルスクリーン切り替え
@@ -172,9 +173,8 @@ public:
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateConstantBufferResource(size_t sizeInBytes);
 
-	DirectXManager* GetDirectXManager() { return dxManager_; }
-
-	PhysicsSystem* GetPhysicsSystem() { return physicsSystem_; }
+	DirectXManager* GetDirectXManager() { return dxManager_.get(); }
+	PhysicsSystem* GetPhysicsSystem() { return physicsSystem_.get(); }
 
 
 	const std::vector<Object3D> GetAllObject3D();
@@ -189,17 +189,26 @@ private:
 	bool isDebugInfo = true;
 
 	// ウィンドウ関連
-	WindowManager* windowManager_ = nullptr;
+	std::unique_ptr<WindowManager> windowManager_;
 	// DirectX関連
-	DirectXManager* dxManager_ = nullptr;
+	std::unique_ptr<DirectXManager> dxManager_;
 	// 描画関連
-	DrawSystem* drawSystem_ = nullptr;
+	std::unique_ptr<DrawSystem> drawSystem_;
 	// 入力関連
-	IOManager* ioManager_ = nullptr;
+	std::unique_ptr<IOManager> ioManager_;
 	// カメラ
-	CameraManager* cameraManager_ = nullptr;
+	std::unique_ptr<CameraManager> cameraManager_;
 	// ImGui
-	ImGuiManager* imguiManager_ = nullptr;
+	std::unique_ptr<ImGuiManager> imguiManager_;
 	// 物理演算
-	PhysicsSystem* physicsSystem_ = nullptr;
+	std::unique_ptr<PhysicsSystem> physicsSystem_;
+
+	//WindowManager* windowManager_ = nullptr;
+	//DirectXManager* dxManager_ = nullptr;
+	//DrawSystem* drawSystem_ = nullptr;
+	//IOManager* ioManager_ = nullptr;
+	//CameraManager* cameraManager_ = nullptr;
+	//ImGuiManager* imguiManager_ = nullptr;
+	//PhysicsSystem* physicsSystem_ = nullptr;
+
 };

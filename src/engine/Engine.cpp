@@ -31,42 +31,21 @@ Engine& Engine::Instance()
 // 初期化用
 void Engine::Initialize(int width, int height, const std::wstring& title)
 {
-
 	// COM の初期化
 	HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
 	assert(SUCCEEDED(hr));
 	// 例外ハンドラの設定
 	SetUnhandledExceptionFilter(ExportDump);
 
-	if (!windowManager_)
-	{
-		windowManager_ = new  WindowManager(width, height, title);
-	}
-	if (!dxManager_)
-	{
-		dxManager_ = new DirectXManager(windowManager_->GetHwnd());
-	}
-	if (!drawSystem_)
-	{
-		drawSystem_ = new DrawSystem(dxManager_);
-	}
-	if (!cameraManager_)
-	{
-		cameraManager_ = new CameraManager();
-	}
-	if (!ioManager_)
-	{
-		ioManager_ = new IOManager(windowManager_->GetHwnd(), cameraManager_);
-	}
-	if (!imguiManager_)
-	{
-		imguiManager_ = new ImGuiManager();
-		imguiManager_->Initialize(dxManager_, windowManager_);
-	}
-	if (!physicsSystem_)
-	{
-		physicsSystem_ = new PhysicsSystem();
-	}
+	windowManager_ = std::make_unique<WindowManager>(width, height, title);
+	dxManager_ = std::make_unique<DirectXManager>(windowManager_->GetHwnd());
+	drawSystem_ = std::make_unique<DrawSystem>(dxManager_.get());
+	cameraManager_ = std::make_unique<CameraManager>();
+	ioManager_ = std::make_unique<IOManager>(windowManager_->GetHwnd(), cameraManager_.get());
+	imguiManager_ = std::make_unique<ImGuiManager>();
+	imguiManager_->Initialize(dxManager_.get(), windowManager_.get());
+	physicsSystem_ = std::make_unique<PhysicsSystem>();
+
 
 	windowManager_->AttachMouseController(ioManager_->GetMouseController());
 
@@ -86,11 +65,6 @@ bool Engine::ProcessMessage()
 		{
 			return false;
 		}
-		//if (msg.message == WM_MOUSEWHEEL)
-		//{
-		//	// ホイールの回転量を加算　クリックはboolで回転量はintだからmessageを使う。らしい。なんで？
-		//	ioManager_->GetMouseController()->wheelDelta_ += GET_WHEEL_DELTA_WPARAM(msg.wParam);
-		//}
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
@@ -304,22 +278,6 @@ void Engine::Finalize()
 {
 	// ImGuiの終了処理
 	imguiManager_->Finalize();
-
-	// 解放
-	delete windowManager_;
-	windowManager_ = nullptr;
-	delete dxManager_;
-	dxManager_ = nullptr;
-	delete drawSystem_;
-	drawSystem_ = nullptr;
-	delete cameraManager_;
-	cameraManager_ = nullptr;
-	delete ioManager_;
-	ioManager_ = nullptr;
-	delete imguiManager_;
-	imguiManager_ = nullptr;
-	delete physicsSystem_;
-	physicsSystem_ = nullptr;
 
 	// COMの終了処理
 	CoUninitialize();
@@ -538,43 +496,43 @@ int Engine::TestTapLong(int n, BYTE key)
 // ゲームパッド
 bool Engine::IsPadHeld(int padIndex, BYTE button)
 {
-	return inputManager_->GetGetPadState()->IsHeld(padIndex, button);
+	return ioManager_->GetGetPadState()->IsHeld(padIndex, button);
 }
 bool Engine::IsPadJustPressed(int padIndex, BYTE button)
 {
-	return inputManager_->GetGetPadState()->IsJustPressed(padIndex, button);
+	return ioManager_->GetGetPadState()->IsJustPressed(padIndex, button);
 }
 bool Engine::IsPadJustReleased(int padIndex, BYTE button)
 {
-	return inputManager_->GetGetPadState()->IsJustReleased(padIndex, button);
+	return ioManager_->GetGetPadState()->IsJustReleased(padIndex, button);
 }
 uint32_t Engine::PadHoldFrames(int padIndex, BYTE button)
 {
-	return inputManager_->GetGetPadState()->HoldFrames(padIndex, button);
+	return ioManager_->GetGetPadState()->HoldFrames(padIndex, button);
 }
 Vector2 Engine::GetLeftStick(int padIndex)
 {
-	return inputManager_->GetGetPadState()->GetLeftStick(padIndex);
+	return ioManager_->GetGetPadState()->GetLeftStick(padIndex);
 }
 Vector2 Engine::GetRightStick(int padIndex)
 {
-	return inputManager_->GetGetPadState()->GetRightStick(padIndex);
+	return ioManager_->GetGetPadState()->GetRightStick(padIndex);
 }
 float Engine::GetLeftTrigger(int padIndex)
 {
-	return inputManager_->GetGetPadState()->GetLeftTrigger(padIndex);
+	return ioManager_->GetGetPadState()->GetLeftTrigger(padIndex);
 }
 float Engine::GetRightTrigger(int padIndex)
 {
-	return inputManager_->GetGetPadState()->GetRightTrigger(padIndex);
+	return ioManager_->GetGetPadState()->GetRightTrigger(padIndex);
 }
 void Engine::SetPadVibration(int padIndex, float leftMotor, float rightMotor)
 {
-	inputManager_->GetGetPadState()->SetVibration(padIndex, leftMotor, rightMotor);
+	ioManager_->GetGetPadState()->SetVibration(padIndex, leftMotor, rightMotor);
 }
 int32_t Engine::GetConnectedPadNum()
 {
-	return inputManager_->GetGetPadState()->GetConnectedPadNum();
+	return ioManager_->GetGetPadState()->GetConnectedPadNum();
 }
 
 // カメラ
@@ -647,19 +605,19 @@ void Engine::SetTimeScale(float scale)
 
 
 // 物理制御
-void Engine::SetIWorldCollider(IWorldCollider* world)
+void Engine::AddWorldCollider(IWorldCollider* worldCollider)
 {
-	physicsSystem_->SetIWorldCollider(world);
+	physicsSystem_->AddWorldCollider(worldCollider);
 }
 
-void Engine::RegisterDynamic(IPhysicsBody* model)
+void Engine::RegisterDynamic(IPhysicsBody* b)
 {
-	physicsSystem_->RegisterDynamic(model);
+	physicsSystem_->RegisterDynamic(b);
 }
 
-void Engine::UnregisterDynamic(IPhysicsBody* model)
+void Engine::UnregisterDynamic(IPhysicsBody* b)
 {
-	physicsSystem_->UnregisterDynamic(model);
+	physicsSystem_->UnregisterDynamic(b);
 }
 void Engine::ClearDynamicAll()
 {

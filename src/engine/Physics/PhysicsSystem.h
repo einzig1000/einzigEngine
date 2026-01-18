@@ -1,5 +1,5 @@
 #pragma once
-#include "memory.h"
+#include <memory>
 #include <vector>
 #include "definition/definition.h"
 
@@ -16,6 +16,7 @@ class PhysicsSystem
 {
 public:
     PhysicsSystem();
+	~PhysicsSystem();
 
 	// コライダーの追加
 	void AddWorldCollider(IWorldCollider* collider);

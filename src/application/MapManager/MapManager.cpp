@@ -9,7 +9,6 @@
 #include "Character/BaseCharacter.h"
 #include "Utilities/PerlinNoise.h"
 #include "Engine.h"
-#include "MapWorldCollider.h"
 
 
 // AABBの各種補助 いずれstruct AABBに移す
@@ -406,8 +405,8 @@ void MapManager::LoadMap(const std::string& mapName)
 	currentMapFilePath_ = mapNameToFilePath_[currentMapName_];
 
 	// JSONから読み込み
-	JsonManager json;
-	json.LoadFromJson(*this, currentMapFilePath_);
+	//JsonManager json;
+	//json.LoadFromJson(*this, currentMapFilePath_);
 
 	player_->data_.translate.value.y = 20.0f;
 	player_->data_.translate.velocity.y = 0.0f;
@@ -416,9 +415,9 @@ void MapManager::LoadMap(const std::string& mapName)
 // マップ保存
 void MapManager::SaveMap()
 {
-	JsonManager json;
+	//JsonManager json;
 	// JSONへ保存
-	json.SaveToJson(*this, currentMapFilePath_);
+	//json.SaveToJson(*this, currentMapFilePath_);
 
 	SaveNameAndPathMap("resources/Minecraft/Maps/MapNameAndPath.csv");
 }

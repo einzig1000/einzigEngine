@@ -37,9 +37,6 @@ private:
 	// マップ
 	std::unique_ptr<MapManager> map_;
 
-	// マップワールドコライダー
-	std::unique_ptr<MapWorldCollider> worldCollider_;
-
 	// UIマネージャー
 	std::unique_ptr<UIManager> uiManager_;
 

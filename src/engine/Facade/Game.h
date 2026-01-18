@@ -12,7 +12,7 @@
 #include <algorithm>
 
 class IWorldCollider;
-
+class IPhysicsBody;
 
 class Game
 {
@@ -391,7 +391,7 @@ public:
 		/// </summary>
 		/// <param name="target">目標座標</param>
 		/// <param name="spendFrame">移動にかけるフレーム数</param>
-		/// <param name="easetype">移動補完イージングタイプ</param>
+		/// <param name="easeType">移動補完イージングタイプ</param>
 		static void MoveCameraCenter(Vector3 target, int spendFrame, EaseType easetype);
 
 		/// <summary>
@@ -399,7 +399,7 @@ public:
 		/// </summary>
 		/// <param name="target">目標回転量</param>
 		/// <param name="spendFrame">変更にかけるフレーム数</param>
-		/// <param name="easetype">変更補完イージングタイプ</param>
+		/// <param name="easeType">変更補完イージングタイプ</param>
 		static void MoveCameraRotate(Vector3 target, int spendFrame, EaseType easetype);
 
 		/// <summary>
@@ -407,7 +407,7 @@ public:
 		/// </summary>
 		/// <param name="target">目標ズーム量</param>
 		/// <param name="spendFrame">変更にかけるフレーム数</param>
-		/// <param name="easetype">変更補完イージングタイプ</param>
+		/// <param name="easeType">変更補完イージングタイプ</param>
 		static void MoveCameraDistance(float target, int spendFrame, EaseType easetype);
 
 
@@ -599,18 +599,18 @@ public:
 		/// <summary>
 		/// WorldColliderの設定
 		/// </summary>
-		static void SetIWorldCollider(IWorldCollider* worldCollider);
+		static void AddWorldCollider(IWorldCollider* worldCollider);
 
 		/// <summary>
 		/// RenderData_Modelの物理演算有効化
 		/// </summary>
-		static void RegisterDynamic(RenderData_Model* model);
+		static void RegisterDynamic(IPhysicsBody* b);
 
 		/// <summary>
 		/// RenderData_Modelの物理演算無効化
 		/// </summary>
-		static void UnregisterDynamic(RenderData_Model* model);
-		
+		static void UnregisterDynamic(IPhysicsBody* b);
+
 		/// <summary>
 		/// 登録されている全てのRenderData_Modelの物理演算無効化
 		/// </summary>

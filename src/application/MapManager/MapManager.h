@@ -15,7 +15,7 @@ class BaseCharacter;
 
 
 
-class MapManager
+class MapManager// : public IWorldCollider
 {
 public:
 	MapManager();

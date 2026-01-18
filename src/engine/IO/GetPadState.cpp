@@ -1,4 +1,5 @@
 #include "IO/GetPadState.h"
+#include <algorithm>
 #include <cstring>
 
 GetPadState::GetPadState()

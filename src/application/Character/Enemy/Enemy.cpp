@@ -22,7 +22,7 @@ Enemy::Enemy(Vector3 spawnPos)
 
 	SetHaveItem();
 
-	Game::Physics::RegisterDynamic(&data_);
+	//Game::Physics::RegisterDynamic(&data_);
 }
 
 Enemy::~Enemy()
