@@ -5,8 +5,8 @@
 #include "Item/DropItem/DropItemManager.h"
 #include <fstream>
 #include <sstream>
-#include "Charactor/Player/Player.h"
-#include "Charactor/BaseCharactor.h"
+#include "Character/Player/Player.h"
+#include "Character/BaseCharacter.h"
 #include "Utilities/PerlinNoise.h"
 #include "Engine.h"
 
@@ -285,7 +285,7 @@ void MapManager::SetPlayer(Player* player)
 	// プレイヤー参照保存
 	player_ = player;
 
-	RegisterCharactor(player_);
+	RegisterCharacter(player_);
 	dropItemManager_->SetPlayer(player);
 }
 
@@ -405,8 +405,8 @@ void MapManager::LoadMap(const std::string& mapName)
 	currentMapFilePath_ = mapNameToFilePath_[currentMapName_];
 
 	// JSONから読み込み
-	JsonManager json;
-	json.LoadFromJson(*this, currentMapFilePath_);
+	//JsonManager json;
+	//json.LoadFromJson(*this, currentMapFilePath_);
 
 	player_->data_.translate.value.y = 20.0f;
 	player_->data_.translate.velocity.y = 0.0f;
@@ -415,9 +415,9 @@ void MapManager::LoadMap(const std::string& mapName)
 // マップ保存
 void MapManager::SaveMap()
 {
-	JsonManager json;
+	//JsonManager json;
 	// JSONへ保存
-	json.SaveToJson(*this, currentMapFilePath_);
+	//json.SaveToJson(*this, currentMapFilePath_);
 
 	SaveNameAndPathMap("resources/Minecraft/Maps/MapNameAndPath.csv");
 }
@@ -650,7 +650,7 @@ bool MapManager::SetBlockAt(const Vector2int& chunkPos, const Vector3int& localI
 
 	// キャラクターと重なってたら設置できない
 	const AABB placeAabb = GetAABB(chunkPos, localIndex);
-	if (IsOverlappingAnyCharactor(placeAabb))
+	if (IsOverlappingAnyCharacter(placeAabb))
 		return false;
 
 	Block* targetBlock = chunk->blocks[localIndex.x][localIndex.y][localIndex.z].get();
@@ -1219,7 +1219,7 @@ bool MapManager::SweepAABB_SamplePoints(const AABB& aabb, const Vector3& delta, 
 	return true;
 }
 
-bool MapManager::isSolidAt(const Vector3& position) const 
+bool MapManager::isSolidAt(const Vector3& position) const
 {
 	Vector2int chunkPos = ChunkIndexByPosition(position);
 	Vector3int index = BlockIndexByPosition(position);
@@ -1235,9 +1235,9 @@ bool MapManager::isSolidAt(const Vector3& position) const
 	return false;
 }
 
-bool MapManager::IsOverlappingAnyCharactor(const AABB& aabb) const
+bool MapManager::IsOverlappingAnyCharacter(const AABB& aabb) const
 {
-	for (BaseCharactor* c : charactors_)
+	for (BaseCharacter* c : Characters_)
 	{
 		if (!c) continue;
 		const AABB& ca = c->data_.aabbs[0];
@@ -1515,7 +1515,7 @@ std::optional<lookAtBlock> MapManager::GetBlockByCrossedRay(const Ray& ray, cons
 	return std::nullopt;
 }
 
-RayHitResult MapManager::GetFirstHitByRay(const Ray& ray, float maxDistance, const BaseCharactor* ignore) const
+RayHitResult MapManager::GetFirstHitByRay(const Ray& ray, float maxDistance, const BaseCharacter* ignore) const
 {
 	RayHitResult best{};
 
@@ -1529,10 +1529,10 @@ RayHitResult MapManager::GetFirstHitByRay(const Ray& ray, float maxDistance, con
 
 	// 2) キャラ（登録済みキャラのAABBと判定）
 	float bestCharDist = std::numeric_limits<float>::infinity();
-	BaseCharactor* bestChar = nullptr;
+	BaseCharacter* bestChar = nullptr;
 
-	// ※ charactors_ を保持している前提（前の実装で追加）
-	for (BaseCharactor* c : charactors_)
+	// ※ Characters_ を保持している前提（前の実装で追加）
+	for (BaseCharacter* c : Characters_)
 	{
 		if (!c) continue;
 		if (c == ignore) continue;
@@ -1558,8 +1558,8 @@ RayHitResult MapManager::GetFirstHitByRay(const Ray& ray, float maxDistance, con
 		// ブロックより手前ならキャラ優先
 		if (best.type == RayHitResult::Type::None || bestCharDist < best.distance)
 		{
-			best.type = RayHitResult::Type::Charactor;
-			best.charactor = bestChar;
+			best.type = RayHitResult::Type::Character;
+			best.Character = bestChar;
 			best.distance = bestCharDist;
 		}
 	}

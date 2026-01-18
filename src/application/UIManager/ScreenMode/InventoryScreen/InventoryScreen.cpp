@@ -1,7 +1,7 @@
 #include "UIManager/ScreenMode/InventoryScreen/InventoryScreen.h"
 #include "UIManager/ScreenMode/UIElement/Inventory/Inventory.h"
 #include "UIManager/ScreenMode/UIElement/Hotbar/Hotbar.h"
-#include "Charactor/Player/Player.h"
+#include "Character/Player/Player.h"
 
 InventoryScreen::InventoryScreen()
 {

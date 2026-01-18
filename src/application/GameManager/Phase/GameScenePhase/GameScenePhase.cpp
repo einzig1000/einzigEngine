@@ -1,8 +1,7 @@
 #include "GameScenePhase.h"
 #include "MapManager/MapManager.h"
-#include "MapManager/MapWorldCollider.h"
-#include "Charactor/Player/Player.h"
-#include "Charactor/Enemy/EnemyManager.h"
+#include "Character/Player/Player.h"
+#include "Character/Enemy/EnemyManager.h"
 #include "Camera/CameraController.h"
 #include "UIManager/UIManager.h"
 #include "Physics/IWorldCollider.h"
@@ -19,8 +18,6 @@ GameScenePhase::GameScenePhase()
 	map_ = std::make_unique<MapManager>();
 	// UIマネージャー生成
 	uiManager_ = std::make_unique<UIManager>();
-	// マップワールドコライダー生成
-	worldCollider_ = std::make_unique<MapWorldCollider>(map_.get());
 	// 敵マネージャー生成
 	enemyManager_ = std::make_unique<EnemyManager>();
 
@@ -48,11 +45,11 @@ GameScenePhase::GameScenePhase()
 	uiManager_->SetMapManager(map_.get());
 
 	// 物理システムにワールドコライダーをセット
-	Game::Physics::SetIWorldCollider(worldCollider_.get());
-	Game::Physics::ClearDynamicAll();
+	//Game::Physics::AddWorldCollider(map_.get());
+	//Game::Physics::ClearDynamicAll();
 
 	// プレイヤーの物理演算有効化
-	Game::Physics::RegisterDynamic(&player_->data_);
+	//Game::Physics::RegisterDynamic(&player_->data_);
 
 	CraftRecipeList::InitializeRecipes();
 }

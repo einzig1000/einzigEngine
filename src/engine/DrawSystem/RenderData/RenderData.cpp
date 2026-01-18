@@ -274,12 +274,16 @@ void RenderData_Model::DrawImGui()
 		}
 		if (ImGui::Button("save"))
 		{
-			JsonManager::SaveToJson(*this, this->filePath);
+			//JsonManager::SaveToJson(*this, this->filePath);
+
+
+			JsonManager::AddParam<std::string>(this->filePath, "name", this->name ? *this->name : "");
+
 		}
 		ImGui::SameLine();
 		if (ImGui::Button("load"))
 		{
-			JsonManager::LoadFromJson(*this, this->filePath);
+			//JsonManager::LoadFromJson(*this, this->filePath);
 		}
 		ImGui::TreePop();
 	}
@@ -1890,12 +1894,12 @@ void RenderData_Particle::DrawImGui()
 		}
 		if (ImGui::Button("save"))
 		{
-			JsonManager::SaveToJson(*this, this->filePath);
+			//JsonManager::SaveToJson(*this, this->filePath);
 		}
 		ImGui::SameLine();
 		if (ImGui::Button("load"))
 		{
-			JsonManager::LoadFromJson(*this, this->filePath);
+			//JsonManager::LoadFromJson(*this, this->filePath);
 		}
 		ImGui::TreePop();
 	}

@@ -11,11 +11,11 @@ class Chunk;
 class Player;
 class BlockConfig;
 class DropItemManager;
-class BaseCharactor;
+class BaseCharacter;
 
 
 
-class MapManager
+class MapManager// : public IWorldCollider
 {
 public:
 	MapManager();
@@ -58,12 +58,12 @@ public:
 	// 指定位置に固体ブロックがあるか
 	bool isSolidAt(const Vector3& position) const;
 	// 指定AABBにキャラがあるか
-	bool IsOverlappingAnyCharactor(const AABB& aabb) const;
+	bool IsOverlappingAnyCharacter(const AABB& aabb) const;
 
 	// レイとブロックの交差判定（衝突ブロックを返す）
 	std::optional<lookAtBlock> GetBlockByCrossedRay(const Ray& ray, const float maxDistance) const;
 	// ブロック/キャラのうち最初に当たったものを返す
-	RayHitResult GetFirstHitByRay(const Ray& ray, float maxDistance, const BaseCharactor* ignore) const;
+	RayHitResult GetFirstHitByRay(const Ray& ray, float maxDistance, const BaseCharacter* ignore) const;
 	// レイとブロックの交差判定（衝突座標を返す）
 	std::optional<Vector3> GetPositionByCrossedRay(const Ray& ray) const;
 
@@ -91,10 +91,10 @@ public:
 	void ProcessChunkGeneration();
 
 	// キャラクター登録
-	void RegisterCharactor(BaseCharactor* c) { charactors_.push_back(c); }
-	void UnregisterCharactor(BaseCharactor* c) 
+	void RegisterCharacter(BaseCharacter* c) { Characters_.push_back(c); }
+	void UnregisterCharacter(BaseCharacter* c) 
 	{ 
-		charactors_.erase(std::remove(charactors_.begin(), charactors_.end(), c), charactors_.end()); 
+		Characters_.erase(std::remove(Characters_.begin(), Characters_.end(), c), Characters_.end()); 
 	}
 
 	void SetSeed(uint32_t seed); 
@@ -105,7 +105,7 @@ public:
 
 private:
 	// キャラクター管理
-	std::vector<BaseCharactor*> charactors_;
+	std::vector<BaseCharacter*> Characters_;
 
 	// マップファイルパス
 	std::string currentMapFilePath_;

@@ -1,6 +1,6 @@
 #include "TitlePhase.h"
 #include "MapManager/MapManager.h"
-#include "Charactor/Player/Player.h"
+#include "Character/Player/Player.h"
 
 
 TitlePhase::TitlePhase()

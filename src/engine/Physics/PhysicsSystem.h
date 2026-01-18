@@ -1,34 +1,40 @@
 #pragma once
+#include <memory>
 #include <vector>
 #include "definition/definition.h"
-#include "DrawSystem/RenderData/RenderData.h"
-#include "Physics/IWorldCollider.h"
+
+class IWorldCollider;
+class IPhysicsBody;
+class MapWorldCollider;
 
 /// <summary>
-/// WorldColliderが提供する当たり判定機能を用いて、
-/// RenderData_Modelの物理演算を行うシステム
+/// 物理演算システム
 /// </summary>
-
+///	毎フレームの全物理更新を行う最高指令部。
+/// 動的オブジェクト（IPhysicsBody）をまとめて持ち、静的ワールド（MapWorldCollider）に問い合わせながら移動を確定する。
 class PhysicsSystem
 {
 public:
-	// WorldColliderの設定
-    void SetIWorldCollider(IWorldCollider* world) { world_ = world; }
+    PhysicsSystem();
+	~PhysicsSystem();
 
-    /// RenderData_Modelの物理演算有効化
-    void RegisterDynamic(RenderData_Model* model) { dynamics_.push_back(model); }
+	// コライダーの追加
+	void AddWorldCollider(IWorldCollider* collider);
 
-    /// RenderData_Modelの物理演算無効化
-    void UnregisterDynamic(RenderData_Model* model);
+    /// IPhysicsBodyの物理演算有効化
+    void RegisterDynamic(IPhysicsBody* model) { dynamics_.push_back(model); }
 
-    /// 登録されている全てのRenderData_Modelの物理演算無効化
+    /// IPhysicsBodyの物理演算無効化
+    void UnregisterDynamic(IPhysicsBody* model);
+
+    /// 登録されている全てのIPhysicsBodyの物理演算無効化
     void ClearDynamics() { dynamics_.clear(); }
 
     void Step();
 
 private:
-    const IWorldCollider* world_ = nullptr;
-    std::vector<RenderData_Model*> dynamics_;
+	std::unique_ptr<MapWorldCollider> world_;
+    std::vector<IPhysicsBody*> dynamics_;
 };
 
  

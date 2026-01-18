@@ -9,7 +9,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 #endif
 
 	// ウィンドウ、DrectX初期化
-	Engine::Instance().Initialize(WIDTH, HEIGHT, L"LE2A_17_ヨコヤマ_タダノブ");
+	Engine::Instance().Initialize(WIDTH, HEIGHT, L"MyCraft Builders");
 	GameManager* gm = new GameManager();
 	while (Engine::Instance().ProcessMessage())
 	{
@@ -21,7 +21,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		gm->Draw();
 		// ↓ImGui描画処理ここから
 		gm->DrawImGui();
-
 		// フレームの終了
 		Engine::Instance().EndFrame();
 	}

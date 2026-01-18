@@ -1,7 +1,7 @@
 #include "UIManager/ScreenMode/CraftScreen/CraftScreen.h"
 #include "UIManager/ScreenMode/UIElement/Craft/Craft.h"
 #include "UIManager/ScreenMode/UIElement/Hotbar/Hotbar.h"
-#include "Charactor/Player/Player.h"
+#include "Character/Player/Player.h"
 
 CraftScreen::CraftScreen()
 {

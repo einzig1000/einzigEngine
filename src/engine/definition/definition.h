@@ -34,7 +34,7 @@
 
 #define GRAVITY -0.0061f
 
-enum class CharactorID
+enum class CharacterID
 {
     Player,
 	Zombie,
@@ -1415,14 +1415,14 @@ struct lookAtBlock
 	float distance = 0.0f;
 };
 
-class BaseCharactor;
+class BaseCharacter;
 struct RayHitResult
 {
     enum class Type
     {
         None,
         Block,
-        Charactor
+        Character
     };
 
     Type type = Type::None;
@@ -1430,8 +1430,8 @@ struct RayHitResult
     // type == Block のとき有効
     lookAtBlock blockHit{};
 
-    // type == Charactor のとき有効
-    BaseCharactor* charactor = nullptr;
+    // type == Character のとき有効
+    BaseCharacter* Character = nullptr;
 
     // 共通：レイ原点からの距離
     float distance = 0.0f;

@@ -297,7 +297,7 @@ float Game::Camera::Getter::GetCurrentDistance()
 }
 
 // その他ユーティリティ
-void Game::Utilitie::toggleWireframeMode()
+void Game::Utilities::toggleWireframeMode()
 {
 	Engine::Instance().toggleWireframeMode();
 }
@@ -321,21 +321,21 @@ void Game::Time::SetTimeScale(float scale)
 }
 
 // マップ設定
-void Game::Physics::SetIWorldCollider(IWorldCollider* worldCollider)
+void Game::Physics::AddWorldCollider(IWorldCollider* worldCollider)
 {
-	Engine::Instance().SetIWorldCollider(worldCollider);
+	Engine::Instance().AddWorldCollider(worldCollider);
 }
 
 // マップと衝突する動的オブジェクトの登録
-void Game::Physics::RegisterDynamic(RenderData_Model* model)
+void Game::Physics::RegisterDynamic(IPhysicsBody* b)
 {
-	Engine::Instance().RegisterDynamic(model);
+	Engine::Instance().RegisterDynamic(b);
 }
 
 // マップと衝突する動的オブジェクトの登録解除
-void Game::Physics::UnregisterDynamic(RenderData_Model* model)
+void Game::Physics::UnregisterDynamic(IPhysicsBody* b)
 {
-	Engine::Instance().UnregisterDynamic(model);
+	Engine::Instance().UnregisterDynamic(b);
 }
 
 // 全ての動的オブジェクトの登録解除

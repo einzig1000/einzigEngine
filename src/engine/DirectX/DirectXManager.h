@@ -13,7 +13,7 @@
 #include "FixFPS/FixFPS.h"
 
 #include "Resource/ResourceManager.h"
-#include "input/Input.h"
+#include "IO/IOManager.h"
 #include <memory>
 
 class DirectXManager

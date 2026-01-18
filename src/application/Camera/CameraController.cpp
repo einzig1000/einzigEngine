@@ -1,5 +1,5 @@
 #include "CameraController.h"
-#include "Charactor/Player/Player.h"
+#include "Character/Player/Player.h"
 #include "MapManager/MapManager.h"
 #include "UiManager/UiManager.h"
 
