@@ -44,6 +44,14 @@ private:
 	std::unique_ptr<RenderData_Line> line2_;
 	std::unique_ptr<RenderData_Line> line3_;
 
+	Sphere sphere1_;
+	SphereXYZ sphereXYZ1_;
+	Cylinder cylinder1_;
+	AABB aabb1_;
+
+	Coordinate_cylindrical cylindricalPos_;
+	Vector3 targetPos_;
+
 	float roll_ = 0.0f;
 
 	uint32_t audio1;

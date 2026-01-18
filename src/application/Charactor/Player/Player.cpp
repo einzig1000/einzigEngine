@@ -47,7 +47,7 @@ void Player::Initialize()
 
 void Player::Update()
 {
-	if (Game::Input::Key::IsJustPressed(DIK_X))
+	if (Game::IO::Key::IsJustPressed(DIK_X))
 	{
 		data_.translate.value.y = 100.0f;
 		data_.translate.velocity.y = 0.0f;
@@ -72,19 +72,19 @@ void Player::Update()
 		SetTargetBlock();
 
 		// 左クリック処理
-		if (Game::Input::Mouse::IsHeld(0))
+		if (Game::IO::Mouse::IsHeld(0))
 		{
 			UpdateLeftClick();
 		}
 
 		// ブロック設置
-		if (Game::Input::Mouse::IsJustPressed(1))
+		if (Game::IO::Mouse::IsJustPressed(1))
 		{
 			SetNewBlock(ItemIDToBlockID(haveItem_->GetCurrentSelectedItemID()));
 		}
 
 		// アイテムポイ捨て
-		if (Game::Input::Key::IsJustPressed(DIK_Q))
+		if (Game::IO::Key::IsJustPressed(DIK_Q))
 		{
 			haveItem_->DropCurrentSelectedItem(data_.aabbs[0].center());
 		}
@@ -173,7 +173,7 @@ void Player::UpdateViewRay()
 
 void Player::UpdateDush()
 {
-	if (Game::Input::Key::IsJustReleased(DIK_W))
+	if (Game::IO::Key::IsJustReleased(DIK_W))
 	{
 		speed_ = normalSpeed_;
 		if (wHeldFrames_ < 20)dashBufferTimer_ = 20;
@@ -181,13 +181,13 @@ void Player::UpdateDush()
 	if (dashBufferTimer_ > 0)
 	{
 		dashBufferTimer_--;
-		if (Game::Input::Key::IsJustPressed(DIK_W))
+		if (Game::IO::Key::IsJustPressed(DIK_W))
 		{
 			speed_ = dashSpeed_;
 		}
 	}
 
-	wHeldFrames_ = Game::Input::Key::HoldFrames(DIK_W);
+	wHeldFrames_ = Game::IO::Key::HoldFrames(DIK_W);
 }
 
 void Player::UpdateMove()
@@ -199,10 +199,10 @@ void Player::UpdateMove()
 	// 移動処理
 	Vector2 input(0.0f, 0.0f);
 
-	if (Game::Input::Key::IsHeld(DIK_W)) input.y += 1.0f;
-	if (Game::Input::Key::IsHeld(DIK_S)) input.y -= 1.0f;
-	if (Game::Input::Key::IsHeld(DIK_A)) input.x += 1.0f;
-	if (Game::Input::Key::IsHeld(DIK_D)) input.x -= 1.0f;
+	if (Game::IO::Key::IsHeld(DIK_W)) input.y += 1.0f;
+	if (Game::IO::Key::IsHeld(DIK_S)) input.y -= 1.0f;
+	if (Game::IO::Key::IsHeld(DIK_A)) input.x += 1.0f;
+	if (Game::IO::Key::IsHeld(DIK_D)) input.x -= 1.0f;
 
 	// 移動方向ベクトル
 	Vector3 moveDir = Vector3(0.0f, 0.0f, 0.0f);
@@ -234,7 +234,7 @@ void Player::UpdateMove()
 void Player::UpdateJump()
 {
 	// ジャンプ処置
-	if (Game::Input::Key::IsJustPressed(DIK_SPACE))
+	if (Game::IO::Key::IsJustPressed(DIK_SPACE))
 	{
 		Jump();
 	}

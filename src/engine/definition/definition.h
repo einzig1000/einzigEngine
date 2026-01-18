@@ -749,6 +749,26 @@ struct quaternion
 #pragma endregion
 
 
+#pragma region 座標系構造体
+
+// 円柱座標系
+struct Coordinate_cylindrical
+{
+    float radius = 1.0f;   // 半径
+    float theta = 0.0f;    // 角度(ラジアン)
+    float height = 0.0f;   // 高さ
+};
+
+// 球座標系
+struct Coordinate_spherical
+{
+    float radius = 1.0f;   // 半径
+    float theta = 0.0f;    // 方位角(ラジアン)
+    float phi = 0.0f;      // 仰角(ラジアン)
+};
+
+#pragma endregion
+
 #pragma region 幾何構造体
 
 // 球
@@ -763,6 +783,14 @@ struct SphereXYZ
 {
     Vector3 center;
     Vector3 radius = { 1.0f, 1.0f, 1.0f };
+};
+
+// 円柱
+struct Cylinder
+{
+    Vector3 topCenter;    // 上面中心座標
+    Vector3 bottomCenter; // 底面中心座標
+    float radius = 1.0f;  // 半径
 };
 
 // 平面
@@ -832,6 +860,8 @@ enum class PrimitiveType
     Sphere,
     // 楕円体
     SphereXYZ,
+	// 円柱
+	Cylinder,
     // 立方体
     AABB,
     // 四角形
@@ -1006,6 +1036,7 @@ struct mouseButtonState
     bool curr = false;           // 今フレームの押下状態
     bool prev = false;           // 前フレームの押下状態
     uint32_t holdFrames = 0;     // 長押しフレーム数
+    uint32_t lastHoldOnRelease = 0; // 直近のリリース時に押されていたフレーム数
 };
 
 #pragma endregion

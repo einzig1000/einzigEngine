@@ -34,10 +34,10 @@ void CameraController::Update()
 	UIMode uiMode = uiManager_->GetCurrentUIMode();
 
 
-	mousedelta = Game::Input::Mouse::GetPositionDelta();
+	mousedelta = Game::IO::Mouse::GetPositionDelta();
 
 	// カメラモード切り替え
-	if (Game::Input::Key::IsJustPressed(DIK_F5))
+	if (Game::IO::Key::IsJustPressed(DIK_F5))
 	{
 		switch (cameraMode_)
 		{

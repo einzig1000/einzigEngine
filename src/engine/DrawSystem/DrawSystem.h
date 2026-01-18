@@ -36,11 +36,16 @@ public:
 	void DrawAllParticle();
 	void AddBlockDrawList(RenderData_Block* renderData);
 	void DrawAllBlock();
+	void AddDebugLineList(const Vector3& start, const Vector3& end, uint32_t color);
+	void DrawAllDebugLine();
 
 
-	void AddSphere(Vector3 pos, Vector3 radius, uint32_t color);
-	void AddAABB(AABB aabb, uint32_t color);
-	void AddLine(Vector3 start, Vector3 end, uint32_t color);
+	void AddSphere(const Sphere& sphere, uint32_t color);
+	void AddSphereXYZ(const SphereXYZ& sphere, uint32_t color);
+	void AddCylinder(const Cylinder& cylinder, uint32_t color);
+	void AddAABB(const AABB& aabb, uint32_t color);
+
+
 
 	void SetLightColor(const Vector4 color) { directionalLightData_->color = color; }
 	void SetLightDirection(const Vector3 direction) { directionalLightData_->direction = direction.Normalized(); }
@@ -57,6 +62,7 @@ private:
 	std::vector<RenderData_Line*> lineDrawList_{};
 	std::vector<RenderData_Particle*> particleDrawList_{};
 	std::vector<RenderData_Block*> blockDrawList_{};
+	std::unordered_map<uint32_t, std::vector<Vector3>> debugLineList_{};
 
 	void InitializeResource_Light();
 	void InitializeResource_LightPerObject();

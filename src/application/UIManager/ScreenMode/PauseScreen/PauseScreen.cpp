@@ -20,7 +20,7 @@ void PauseScreen::Initialize()
 		element->Initialize();
 	}
 	// カーソル操作有効化
-	Game::Input::Mouse::ShowCursor(true);
+	Game::IO::Mouse::ShowCursor(true);
 }
 
 void PauseScreen::Update()
@@ -40,7 +40,7 @@ void PauseScreen::Update()
 		}
 	}
 
-	if (Game::Input::Key::IsJustPressed(DIK_ESCAPE))
+	if (Game::IO::Key::IsJustPressed(DIK_ESCAPE))
 	{
 		nextUIMode_ = UIMode::Playing;
 	}

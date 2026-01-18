@@ -138,6 +138,15 @@ TestPhase::TestPhase()
 	particle1_->texture = tex1;
 	particle1_->filePath = "resources/Prototypes/particle/aaa";
 
+	sphere1_.center = { 0.0f,0.0f,0.0f };
+	sphere1_.radius = 5.0f;
+	sphereXYZ1_.center = { 0.0f,0.0f,0.0f };
+	sphereXYZ1_.radius = { 5.0f,2.0f,3.0f };
+	cylinder1_.bottomCenter = { 0.0f,0.0f,0.0f };
+	cylinder1_.topCenter = { 0.0f,10.0f,0.0f };
+	cylinder1_.radius = 3.0f;
+	aabb1_.min = { -5.0f,0.0f,-5.0f };
+	aabb1_.max = { 5.0f,10.0f,5.0f };
 }
 
 
@@ -154,26 +163,29 @@ void TestPhase::Initialize()
 
 void TestPhase::Update()
 {
-	if (Game::Input::Key::IsHeld(DIK_A))
+	if (Game::IO::Key::IsHeld(DIK_A))
 	{
 		player_->translate.value.x -= 0.1f;
 	}
-	if (Game::Input::Key::IsHeld(DIK_D))
+	if (Game::IO::Key::IsHeld(DIK_D))
 	{
 		player_->translate.value.x += 0.1f;
 	}
-	if (Game::Input::Key::IsHeld(DIK_S))
+	if (Game::IO::Key::IsHeld(DIK_S))
 	{
 		player_->translate.value.z -= 0.1f;
 	}
-	if (Game::Input::Key::IsHeld(DIK_W))
+	if (Game::IO::Key::IsHeld(DIK_W))
 	{
 		player_->translate.value.z += 0.1f;
 	}
-	if (Game::Input::Key::IsJustPressed(DIK_SPACE))
+	if (Game::IO::Key::IsJustPressed(DIK_SPACE))
 	{
 		player_->translate.velocity.y += 2.5f;
 	}
+
+	targetPos_ = ConvertCylindricalToCartesian(cylindricalPos_);
+	sphere1_.center = targetPos_;
 }
 
 
@@ -207,6 +219,11 @@ void TestPhase::Draw()
 	shoulder_->Draw();
 	elbow_->Draw();
 	hand_->Draw();
+
+	Game::DebugDraw::AddSphere(sphere1_, 0x00FF00FF);
+	//Game::DebugDraw::AddSphereXYZ(sphereXYZ1_, 0x0000FFFF);
+	Game::DebugDraw::AddCylinder(cylinder1_, 0xFFFF00FF);
+	//Game::DebugDraw::AddAABB(aabb1_, 0xFF00FFFF);
 }
 
 
@@ -235,7 +252,6 @@ void TestPhase::DrawImGui()
 	//hand_->DrawImGui();
 
 	ImGui::Begin("TestPhase");
-
 	if (ImGui::BeginTabBar("Facade Test", ImGuiTabBarFlags_::ImGuiTabBarFlags_Reorderable))
 	{
 #pragma region audio test
@@ -376,28 +392,28 @@ void TestPhase::DrawImGui()
 
 		if (ImGui::BeginTabItem("mouse Test"))
 		{
-			ImGui::Text("Mouse Position: (%.1f, %.1f)", Game::Input::Mouse::GetPosition().x, Game::Input::Mouse::GetPosition().y);
-			ImGui::Text("Mouse World Position: (%.1f, %.1f, %.1f)", Game::Input::Mouse::GetWorldPosition().x, Game::Input::Mouse::GetWorldPosition().y, Game::Input::Mouse::GetWorldPosition().z);
-			ImGui::Text("Mouse Ray Origin: (%.1f, %.1f, %.1f)", Game::Input::Mouse::GetRay().origin.x, Game::Input::Mouse::GetRay().origin.y, Game::Input::Mouse::GetRay().origin.z);
-			ImGui::Text("Mouse Ray Diff  : (%.1f, %.1f, %.1f)", Game::Input::Mouse::GetRay().diff.x, Game::Input::Mouse::GetRay().diff.y, Game::Input::Mouse::GetRay().diff.z);
-			ImGui::Text("Mouse Wheel: %d", Game::Input::Mouse::GetWheel());
+			ImGui::Text("Mouse Position: (%.1f, %.1f)", Game::IO::Mouse::GetPosition().x, Game::IO::Mouse::GetPosition().y);
+			ImGui::Text("Mouse World Position: (%.1f, %.1f, %.1f)", Game::IO::Mouse::GetWorldPosition().x, Game::IO::Mouse::GetWorldPosition().y, Game::IO::Mouse::GetWorldPosition().z);
+			ImGui::Text("Mouse Ray Origin: (%.1f, %.1f, %.1f)", Game::IO::Mouse::GetRay().origin.x, Game::IO::Mouse::GetRay().origin.y, Game::IO::Mouse::GetRay().origin.z);
+			ImGui::Text("Mouse Ray Diff  : (%.1f, %.1f, %.1f)", Game::IO::Mouse::GetRay().diff.x, Game::IO::Mouse::GetRay().diff.y, Game::IO::Mouse::GetRay().diff.z);
+			ImGui::Text("Mouse Wheel: %d", Game::IO::Mouse::GetWheel());
 
 			ImGui::Text("Mouse Buttons:");
 			ImGui::Text("Left Button - %d-%d-%d : %d",
-				Game::Input::Mouse::IsJustPressed(0),
-				Game::Input::Mouse::IsHeld(0),
-				Game::Input::Mouse::IsJustReleased(0),
-				Game::Input::Mouse::HoldFrames(0));
+				Game::IO::Mouse::IsJustPressed(0),
+				Game::IO::Mouse::IsHeld(0),
+				Game::IO::Mouse::IsJustReleased(0),
+				Game::IO::Mouse::HoldFrames(0));
 			ImGui::Text("Right Button - %d-%d-%d : %d",
-				Game::Input::Mouse::IsJustPressed(1),
-				Game::Input::Mouse::IsHeld(1),
-				Game::Input::Mouse::IsJustReleased(1),
-				Game::Input::Mouse::HoldFrames(1));
+				Game::IO::Mouse::IsJustPressed(1),
+				Game::IO::Mouse::IsHeld(1),
+				Game::IO::Mouse::IsJustReleased(1),
+				Game::IO::Mouse::HoldFrames(1));
 			ImGui::Text("Middle Button - %d-%d-%d : %d",
-				Game::Input::Mouse::IsJustPressed(2),
-				Game::Input::Mouse::IsHeld(2),
-				Game::Input::Mouse::IsJustReleased(2),
-				Game::Input::Mouse::HoldFrames(2));
+				Game::IO::Mouse::IsJustPressed(2),
+				Game::IO::Mouse::IsHeld(2),
+				Game::IO::Mouse::IsJustReleased(2),
+				Game::IO::Mouse::HoldFrames(2));
 
 			ImGui::EndTabItem();
 		}
@@ -441,16 +457,16 @@ void TestPhase::DrawImGui()
 
 			for (const auto& k : kKeys)
 			{
-				if (Game::Input::Key::IsHeld(k.dik) ||
-					Game::Input::Key::IsJustPressed(k.dik) ||
-					Game::Input::Key::IsJustReleased(k.dik))
+				if (Game::IO::Key::IsHeld(k.dik) ||
+					Game::IO::Key::IsJustPressed(k.dik) ||
+					Game::IO::Key::IsJustReleased(k.dik))
 				{
 					ImGui::Text("%s : %d:%d:%d _ %d",
 						k.name,
-						Game::Input::Key::IsJustPressed(k.dik),
-						Game::Input::Key::IsHeld(k.dik),
-						Game::Input::Key::IsJustReleased(k.dik),
-						Game::Input::Key::HoldFrames(k.dik)
+						Game::IO::Key::IsJustPressed(k.dik),
+						Game::IO::Key::IsHeld(k.dik),
+						Game::IO::Key::IsJustReleased(k.dik),
+						Game::IO::Key::HoldFrames(k.dik)
 					);
 				}
 			}
@@ -463,86 +479,86 @@ void TestPhase::DrawImGui()
 
 		if (ImGui::BeginTabItem("pad Test"))
 		{
-			ImGui::Text("Connected Pad Sum: %d", Game::Input::Pad::GetConnectedPadNum());
-			for (int32_t padIndex = 0; padIndex < Game::Input::Pad::GetConnectedPadNum(); ++padIndex)
+			ImGui::Text("Connected Pad Sum: %d", Game::IO::Pad::GetConnectedPadNum());
+			for (int32_t padIndex = 0; padIndex < Game::IO::Pad::GetConnectedPadNum(); ++padIndex)
 			{
 				ImGui::Text("Pad %d Buttons:", padIndex);
 				ImGui::Text("------------------------------");
-				ImGui::Text("Pad Left  Stick: (%.2f, %.2f)", Game::Input::Pad::GetLeftStick(padIndex).x, Game::Input::Pad::GetLeftStick(padIndex).y);
-				ImGui::Text("Pad Right Stick: (%.2f, %.2f)", Game::Input::Pad::GetRightStick(padIndex).x, Game::Input::Pad::GetRightStick(padIndex).y);
-				ImGui::Text("Pad Left  Trigger: %.2f", Game::Input::Pad::GetLeftTrigger(padIndex));
-				ImGui::Text("Pad Right Trigger: %.2f", Game::Input::Pad::GetRightTrigger(padIndex));
+				ImGui::Text("Pad Left  Stick: (%.2f, %.2f)", Game::IO::Pad::GetLeftStick(padIndex).x, Game::IO::Pad::GetLeftStick(padIndex).y);
+				ImGui::Text("Pad Right Stick: (%.2f, %.2f)", Game::IO::Pad::GetRightStick(padIndex).x, Game::IO::Pad::GetRightStick(padIndex).y);
+				ImGui::Text("Pad Left  Trigger: %.2f", Game::IO::Pad::GetLeftTrigger(padIndex));
+				ImGui::Text("Pad Right Trigger: %.2f", Game::IO::Pad::GetRightTrigger(padIndex));
 				ImGui::Text("Pad Buttons:");
 				ImGui::Text("A - %d-%d-%d : %d",
-					Game::Input::Pad::IsJustPressed(padIndex, PAD_A),
-					Game::Input::Pad::IsHeld(padIndex, PAD_A),
-					Game::Input::Pad::IsJustReleased(padIndex, PAD_A),
-					Game::Input::Pad::HoldFrames(padIndex, PAD_A));
+					Game::IO::Pad::IsJustPressed(padIndex, PAD_A),
+					Game::IO::Pad::IsHeld(padIndex, PAD_A),
+					Game::IO::Pad::IsJustReleased(padIndex, PAD_A),
+					Game::IO::Pad::HoldFrames(padIndex, PAD_A));
 				ImGui::Text("B - %d-%d-%d : %d",
-					Game::Input::Pad::IsJustPressed(padIndex, PAD_B),
-					Game::Input::Pad::IsHeld(padIndex, PAD_B),
-					Game::Input::Pad::IsJustReleased(padIndex, PAD_B),
-					Game::Input::Pad::HoldFrames(padIndex, PAD_B));
+					Game::IO::Pad::IsJustPressed(padIndex, PAD_B),
+					Game::IO::Pad::IsHeld(padIndex, PAD_B),
+					Game::IO::Pad::IsJustReleased(padIndex, PAD_B),
+					Game::IO::Pad::HoldFrames(padIndex, PAD_B));
 				ImGui::Text("X - %d-%d-%d : %d",
-					Game::Input::Pad::IsJustPressed(padIndex, PAD_X),
-					Game::Input::Pad::IsHeld(padIndex, PAD_X),
-					Game::Input::Pad::IsJustReleased(padIndex, PAD_X),
-					Game::Input::Pad::HoldFrames(padIndex, PAD_X));
+					Game::IO::Pad::IsJustPressed(padIndex, PAD_X),
+					Game::IO::Pad::IsHeld(padIndex, PAD_X),
+					Game::IO::Pad::IsJustReleased(padIndex, PAD_X),
+					Game::IO::Pad::HoldFrames(padIndex, PAD_X));
 				ImGui::Text("Y - %d-%d-%d : %d",
-					Game::Input::Pad::IsJustPressed(padIndex, PAD_Y),
-					Game::Input::Pad::IsHeld(padIndex, PAD_Y),
-					Game::Input::Pad::IsJustReleased(padIndex, PAD_Y),
-					Game::Input::Pad::HoldFrames(padIndex, PAD_Y));
+					Game::IO::Pad::IsJustPressed(padIndex, PAD_Y),
+					Game::IO::Pad::IsHeld(padIndex, PAD_Y),
+					Game::IO::Pad::IsJustReleased(padIndex, PAD_Y),
+					Game::IO::Pad::HoldFrames(padIndex, PAD_Y));
 				ImGui::Text("LB - %d-%d-%d : %d",
-					Game::Input::Pad::IsJustPressed(padIndex, PAD_LB),
-					Game::Input::Pad::IsHeld(padIndex, PAD_LB),
-					Game::Input::Pad::IsJustReleased(padIndex, PAD_LB),
-					Game::Input::Pad::HoldFrames(padIndex, PAD_LB));
+					Game::IO::Pad::IsJustPressed(padIndex, PAD_LB),
+					Game::IO::Pad::IsHeld(padIndex, PAD_LB),
+					Game::IO::Pad::IsJustReleased(padIndex, PAD_LB),
+					Game::IO::Pad::HoldFrames(padIndex, PAD_LB));
 				ImGui::Text("RB - %d-%d-%d : %d",
-					Game::Input::Pad::IsJustPressed(padIndex, PAD_RB),
-					Game::Input::Pad::IsHeld(padIndex, PAD_RB),
-					Game::Input::Pad::IsJustReleased(padIndex, PAD_RB),
-					Game::Input::Pad::HoldFrames(padIndex, PAD_RB));
+					Game::IO::Pad::IsJustPressed(padIndex, PAD_RB),
+					Game::IO::Pad::IsHeld(padIndex, PAD_RB),
+					Game::IO::Pad::IsJustReleased(padIndex, PAD_RB),
+					Game::IO::Pad::HoldFrames(padIndex, PAD_RB));
 				ImGui::Text("Back - %d-%d-%d : %d",
-					Game::Input::Pad::IsJustPressed(padIndex, PAD_BACK),
-					Game::Input::Pad::IsHeld(padIndex, PAD_BACK),
-					Game::Input::Pad::IsJustReleased(padIndex, PAD_BACK),
-					Game::Input::Pad::HoldFrames(padIndex, PAD_BACK));
+					Game::IO::Pad::IsJustPressed(padIndex, PAD_BACK),
+					Game::IO::Pad::IsHeld(padIndex, PAD_BACK),
+					Game::IO::Pad::IsJustReleased(padIndex, PAD_BACK),
+					Game::IO::Pad::HoldFrames(padIndex, PAD_BACK));
 				ImGui::Text("Start - %d-%d-%d : %d",
-					Game::Input::Pad::IsJustPressed(padIndex, PAD_START),
-					Game::Input::Pad::IsHeld(padIndex, PAD_START),
-					Game::Input::Pad::IsJustReleased(padIndex, PAD_START),
-					Game::Input::Pad::HoldFrames(padIndex, PAD_START));
+					Game::IO::Pad::IsJustPressed(padIndex, PAD_START),
+					Game::IO::Pad::IsHeld(padIndex, PAD_START),
+					Game::IO::Pad::IsJustReleased(padIndex, PAD_START),
+					Game::IO::Pad::HoldFrames(padIndex, PAD_START));
 				ImGui::Text("LS - %d-%d-%d : %d",
-					Game::Input::Pad::IsJustPressed(padIndex, PAD_LS),
-					Game::Input::Pad::IsHeld(padIndex, PAD_LS),
-					Game::Input::Pad::IsJustReleased(padIndex, PAD_LS),
-					Game::Input::Pad::HoldFrames(padIndex, PAD_LS));
+					Game::IO::Pad::IsJustPressed(padIndex, PAD_LS),
+					Game::IO::Pad::IsHeld(padIndex, PAD_LS),
+					Game::IO::Pad::IsJustReleased(padIndex, PAD_LS),
+					Game::IO::Pad::HoldFrames(padIndex, PAD_LS));
 				ImGui::Text("RS - %d-%d-%d : %d",
-					Game::Input::Pad::IsJustPressed(padIndex, PAD_RS),
-					Game::Input::Pad::IsHeld(padIndex, PAD_RS),
-					Game::Input::Pad::IsJustReleased(padIndex, PAD_RS),
-					Game::Input::Pad::HoldFrames(padIndex, PAD_RS));
+					Game::IO::Pad::IsJustPressed(padIndex, PAD_RS),
+					Game::IO::Pad::IsHeld(padIndex, PAD_RS),
+					Game::IO::Pad::IsJustReleased(padIndex, PAD_RS),
+					Game::IO::Pad::HoldFrames(padIndex, PAD_RS));
 				ImGui::Text("DPad Up - %d-%d-%d : %d",
-					Game::Input::Pad::IsJustPressed(padIndex, PAD_UP),
-					Game::Input::Pad::IsHeld(padIndex, PAD_UP),
-					Game::Input::Pad::IsJustReleased(padIndex, PAD_UP),
-					Game::Input::Pad::HoldFrames(padIndex, PAD_UP));
+					Game::IO::Pad::IsJustPressed(padIndex, PAD_UP),
+					Game::IO::Pad::IsHeld(padIndex, PAD_UP),
+					Game::IO::Pad::IsJustReleased(padIndex, PAD_UP),
+					Game::IO::Pad::HoldFrames(padIndex, PAD_UP));
 				ImGui::Text("DPad Down - %d-%d-%d : %d",
-					Game::Input::Pad::IsJustPressed(padIndex, PAD_DOWN),
-					Game::Input::Pad::IsHeld(padIndex, PAD_DOWN),
-					Game::Input::Pad::IsJustReleased(padIndex, PAD_DOWN),
-					Game::Input::Pad::HoldFrames(padIndex, PAD_DOWN));
+					Game::IO::Pad::IsJustPressed(padIndex, PAD_DOWN),
+					Game::IO::Pad::IsHeld(padIndex, PAD_DOWN),
+					Game::IO::Pad::IsJustReleased(padIndex, PAD_DOWN),
+					Game::IO::Pad::HoldFrames(padIndex, PAD_DOWN));
 				ImGui::Text("DPad Left - %d-%d-%d : %d",
-					Game::Input::Pad::IsJustPressed(padIndex, PAD_LEFT),
-					Game::Input::Pad::IsHeld(padIndex, PAD_LEFT),
-					Game::Input::Pad::IsJustReleased(padIndex, PAD_LEFT),
-					Game::Input::Pad::HoldFrames(padIndex, PAD_LEFT));
+					Game::IO::Pad::IsJustPressed(padIndex, PAD_LEFT),
+					Game::IO::Pad::IsHeld(padIndex, PAD_LEFT),
+					Game::IO::Pad::IsJustReleased(padIndex, PAD_LEFT),
+					Game::IO::Pad::HoldFrames(padIndex, PAD_LEFT));
 				ImGui::Text("DPad Right - %d-%d-%d : %d",
-					Game::Input::Pad::IsJustPressed(padIndex, PAD_RIGHT),
-					Game::Input::Pad::IsHeld(padIndex, PAD_RIGHT),
-					Game::Input::Pad::IsJustReleased(padIndex, PAD_RIGHT),
-					Game::Input::Pad::HoldFrames(padIndex, PAD_RIGHT));
+					Game::IO::Pad::IsJustPressed(padIndex, PAD_RIGHT),
+					Game::IO::Pad::IsHeld(padIndex, PAD_RIGHT),
+					Game::IO::Pad::IsJustReleased(padIndex, PAD_RIGHT),
+					Game::IO::Pad::HoldFrames(padIndex, PAD_RIGHT));
 			}
 
 			ImGui::EndTabItem();
@@ -552,79 +568,25 @@ void TestPhase::DrawImGui()
 
 		ImGui::EndTabBar();
 	}
-
 	ImGui::End();
 
-	Vector3 from0 = Vector3{ 1.0f,0.7f,0.5f }.Normalize();
-	Vector3 to0 = -from0;
-	Vector3 from1 = Vector3{ -0.6f,0.9f,0.2f }.Normalize();
-	Vector3 to1 = Vector3{ 0.4f,0.7f,-0.5f }.Normalize();
-	Matrix4x4 rotateMatrix0 = Matrix4x4::DirectionToDirectionMatrix(Vector3{ 1.0f,0.0f,0.0f }, Vector3{ -1.0f,0.0f,0.0f });
-	Matrix4x4 rotateMatrix1 = Matrix4x4::DirectionToDirectionMatrix(from0, to0);
-	Matrix4x4 rotateMatrix2 = Matrix4x4::DirectionToDirectionMatrix(from1, to1);
-
-	ImGui::Begin("DirectionToDirectionMatrix Test");
-	ImGui::Text("from0 : (%5.2f, %5.2f, %5.2f)", from0.x, from0.y, from0.z);
-	ImGui::Text("to0   : (%5.2f, %5.2f, %5.2f)", to0.x, to0.y, to0.z);
-	ImGui::Text("from1 : (%5.2f, %5.2f, %5.2f)", from1.x, from1.y, from1.z);
-	ImGui::Text("to1   : (%5.2f, %5.2f, %5.2f)", to1.x, to1.y, to1.z);
-	ImGui::Text("rotateMatrix0 :");
-	ImGui::NewLine();
-	for (int j = 0; j < 4; ++j)
-	{
-		for (int i = 0; i < 4; ++i)
-		{
-			ImGui::SameLine();
-			ImGui::Text("%6.3f ", rotateMatrix0.m[j][i]);
-		}
-		ImGui::NewLine();
-	}
-	ImGui::Text("rotateMatrix1 :");
-	ImGui::NewLine();
-	for (int j = 0; j < 4; ++j)
-	{
-		for (int i = 0; i < 4; ++i)
-		{
-			ImGui::SameLine();
-			ImGui::Text("%6.3f ", rotateMatrix1.m[j][i]);
-		}
-		ImGui::NewLine();
-	}
-	ImGui::Text("rotateMatrix2 :");
-	ImGui::NewLine();
-	for (int j = 0; j < 4; ++j)
-	{
-		for (int i = 0; i < 4; ++i)
-		{
-			ImGui::SameLine();
-			ImGui::Text("%6.3f ", rotateMatrix2.m[j][i]);
-		}
-		ImGui::NewLine();
-	}
+	ImGui::Begin("CylindricalPos");
+	ImGui::DragFloat("radius", &cylindricalPos_.radius, 0.1f, 0.0f, 100.0f);
+	ImGui::DragFloat("theta", &cylindricalPos_.theta, 0.1f);
+	ImGui::DragFloat("height", &cylindricalPos_.height, 0.1f);
 	ImGui::End();
 
-	quaternion q0 = quaternion{ 2.0f,3.0f,4.0f,1.0f };
-	quaternion q1 = quaternion{ 1.0f,3.0f,5.0f,2.0f };
-	quaternion identity = quaternion::MakeIdentityQuaternion();
-	quaternion conj = quaternion::MakeConjugateQuaternion(q0);
-	quaternion inv = quaternion::Inverse(q0);
-	quaternion normal = quaternion::Normalize(q0);
-	quaternion mul1 = q0 * q1;
-	quaternion mul2 = q1 * q0;
-	float norm = quaternion::Norm(q0);
-	ImGui::Begin("Quaternion Test");
-	ImGui::Text("q1       : (%5.2f, %5.2f, %5.2f, %5.2f)", q0.x, q0.y, q0.z, q0.w);
-	ImGui::Text("q2       : (%5.2f, %5.2f, %5.2f, %5.2f)", q1.x, q1.y, q1.z, q1.w);
-	ImGui::Text("identity : (%5.2f, %5.2f, %5.2f, %5.2f)", identity.x, identity.y, identity.z, identity.w);
-	ImGui::Text("conj     : (%5.2f, %5.2f, %5.2f, %5.2f)", conj.x, conj.y, conj.z, conj.w);
-	ImGui::Text("inv      : (%5.2f, %5.2f, %5.2f, %5.2f)", inv.x, inv.y, inv.z, inv.w);
-	ImGui::Text("normal   : (%5.2f, %5.2f, %5.2f, %5.2f)", normal.x, normal.y, normal.z, normal.w);
-	ImGui::Text("mul1     : (%5.2f, %5.2f, %5.2f, %5.2f)", mul1.x, mul1.y, mul1.z, mul1.w);
-	ImGui::Text("mul2     : (%5.2f, %5.2f, %5.2f, %5.2f)", mul2.x, mul2.y, mul2.z, mul2.w);
-	ImGui::Text("norm     : %5.2f", norm);
+	ImGui::Begin("DebugShapeControl");
+	ImGui::DragFloat3("sphere center", &sphere1_.center.x, 0.1f);
+	ImGui::DragFloat("sphere radius", &sphere1_.radius, 0.1f, 0.1f, 100.0f);
+	ImGui::DragFloat3("sphereXYZ center", &sphereXYZ1_.center.x, 0.1f);
+	ImGui::DragFloat3("sphereXYZ radius", &sphereXYZ1_.radius.x, 0.1f, 0.1f, 100.0f);
+	ImGui::DragFloat3("cylinder bottomCenter", &cylinder1_.bottomCenter.x, 0.1f);
+	ImGui::DragFloat3("cylinder topCenter", &cylinder1_.topCenter.x, 0.1f);
+	ImGui::DragFloat("cylinder radius", &cylinder1_.radius, 0.1f, 0.1f, 100.0f);
+	ImGui::DragFloat3("aabb min", &aabb1_.min.x, 0.1f);
+	ImGui::DragFloat3("aabb max", &aabb1_.max.x, 0.1f);
 	ImGui::End();
-
-	ImGui::ShowDebugLogWindow();
 
 	//📐 レイアウト・カーソル操作
 	//	- NewLine() : 改行して次の行へ

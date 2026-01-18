@@ -879,6 +879,79 @@ uint32_t ConvertVector4ToUint(Vector4 color)
 }
 
 
+Coordinate_cylindrical ConvertCartesianToCylindrical(const Vector3& cartesian)
+{
+    Coordinate_cylindrical out{};
+    out.radius = std::sqrt(cartesian.x * cartesian.x + cartesian.z * cartesian.z);
+    out.theta = std::atan2(cartesian.z, cartesian.x); // [-pi, +pi]
+    out.height = cartesian.y;
+    return out;
+}
+Vector3 ConvertCylindricalToCartesian(const Coordinate_cylindrical& cylindrical)
+{
+    Vector3 out{};
+    out.x = cylindrical.radius * std::cos(cylindrical.theta);
+    out.z = cylindrical.radius * std::sin(cylindrical.theta);
+    out.y = cylindrical.height;
+    return out;
+}
+Coordinate_spherical ConvertCartesianToSpherical(const Vector3& cartesian)
+{
+    Coordinate_spherical out{};
+    out.radius = std::sqrt(
+        cartesian.x * cartesian.x +
+        cartesian.y * cartesian.y +
+        cartesian.z * cartesian.z);
+
+    // 原点は角度が定義できないので 0 扱い
+    if (out.radius <= 1e-8f)
+    {
+        out.theta = 0.0f;
+        out.phi = 0.0f;
+        return out;
+    }
+
+    // 方位角（XZ平面）
+    out.theta = std::atan2(cartesian.z, cartesian.x);
+
+    // 仰角（XZ平面から上。[-pi/2, +pi/2]）
+    float t = cartesian.y / out.radius;
+    t = std::clamp(t, -1.0f, 1.0f); // 浮動小数誤差対策
+    out.phi = std::asin(t);
+
+    return out;
+}
+Vector3 ConvertSphericalToCartesian(const Coordinate_spherical& spherical)
+{
+    Vector3 out{};
+
+    if (spherical.radius <= 1e-8f)
+    {
+        return out;
+    }
+
+    const float cosPhi = std::cos(spherical.phi);
+
+    out.x = spherical.radius * cosPhi * std::cos(spherical.theta);
+    out.z = spherical.radius * cosPhi * std::sin(spherical.theta);
+    out.y = spherical.radius * std::sin(spherical.phi);
+
+    return out;
+}
+Coordinate_spherical ConvertCylindricalToSpherical(const Coordinate_cylindrical& cylindrical)
+{
+    // 円柱 -> 直交 -> 球面（定義を混ぜないために経由変換が安全）
+    const Vector3 cart = ConvertCylindricalToCartesian(cylindrical);
+    return ConvertCartesianToSpherical(cart);
+}
+Coordinate_cylindrical ConvertSphericalToCylindrical(const Coordinate_spherical& spherical)
+{
+    // 球面 -> 直交 -> 円柱
+    const Vector3 cart = ConvertSphericalToCartesian(spherical);
+    return ConvertCartesianToCylindrical(cart);
+}
+
+
 float ToRadian(const float& angle)
 {
     return angle * (std::numbers::pi_v<float> / 180.0f);

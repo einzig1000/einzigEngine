@@ -74,29 +74,43 @@ public:
 	class DebugDraw
 	{
 	public:
-
 		/// <summary>
 		/// ワイヤーフレーム球描画
 		/// </summary>
-		/// <param name="pos">ワールド座標</param>
-		/// <param name="radius">半径</param>
+		/// <param name="sphere">球</param>
 		/// <param name="color">色</param>
-		static void AddSphere(Vector3 pos, Vector3 radius, uint32_t color);
+		static void AddSphere(const Sphere& sphere, uint32_t color);
+
+		/// <summary>
+		/// ワイヤーフレーム楕円球描画
+		/// </summary>
+		/// <param name="sphere">楕円球</param>
+		/// <param name="color">色</param>
+		static void AddSphereXYZ(const SphereXYZ& sphere, uint32_t color);
+
+		/// <summary>
+		/// ワイヤーフレーム円柱描画
+		/// </summary>
+		/// <param name="cylinder">円柱</param>
+		/// <param name="color">色</param>
+		static void AddCylinder(const Cylinder& cylinder, uint32_t color);
 
 		/// <summary>
 		/// ワイヤーフレームAABB描画
 		/// </summary>
 		/// <param name="aabb">AABB</param>
 		/// <param name="color">色</param>
-		static void AddAABB(AABB aabb, uint32_t color);
+		static void AddAABB(const AABB& aabb, uint32_t color);
 
 		/// <summary>
-		/// ライン描画
+		/// ワイヤーフレーム線分描画
 		/// </summary>
-		/// <param name="start">ワールド始点</param>
-		/// <param name="end">ワールド終点</param>
+		/// <param name="start">線分開始座標</param>
+		/// <param name="end">線分終了座標</param>
 		/// <param name="color">色</param>
 		static void AddLine(Vector3 start, Vector3 end, uint32_t color);
+
+
 	};
 
 	class Audio
@@ -168,7 +182,7 @@ public:
 		static void SetLightIntensity(float intensity);
 	};
 
-	class Input
+	class IO
 	{
 	public:
 		class Mouse

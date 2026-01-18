@@ -542,11 +542,11 @@ void MapManager::ProcessChunkGeneration()
 void MapManager::Update()
 {
 	// デバッグ用：マップロード/セーブ
-	//if (Game::Input::Key::IsJustPressed(DIK_0))
+	//if (Game::IO::Key::IsJustPressed(DIK_0))
 	//{
 	//	LoadMap(mapFilePath_);
 	//}
-	//if (Game::Input::Key::IsJustPressed(DIK_1))
+	//if (Game::IO::Key::IsJustPressed(DIK_1))
 	//{
 	//	SaveMap(mapFilePath_);
 	//}

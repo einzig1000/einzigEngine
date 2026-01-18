@@ -68,8 +68,10 @@ public:
 	void AddBlockDrawList(RenderData_Block* renderData);
 
 
-	void AddSphere(Vector3 pos, Vector3 radius, uint32_t color);
-	void AddAABB(AABB aabb, uint32_t color);
+	void AddSphere(const Sphere& sphere, uint32_t color);
+	void AddSphereXYZ(const SphereXYZ& sphere, uint32_t color);
+	void AddCylinder(const Cylinder& cylinder, uint32_t color);
+	void AddAABB(const AABB& aabb, uint32_t color);
 	void AddLine(Vector3 start, Vector3 end, uint32_t color);
 
 

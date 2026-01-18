@@ -243,23 +243,23 @@ void Camera::Updata_Orbit()
     if (enableControl_)
     {
 	    // マウス移動量取得
-	    mouseDelta_ = Game::Input::Mouse::GetPositionDelta();
+	    mouseDelta_ = Game::IO::Mouse::GetPositionDelta();
 	    // ホイール取得
-        mouseWheel_ = Game::Input::Mouse::GetWheel();
+        mouseWheel_ = Game::IO::Mouse::GetWheel();
 
 #pragma region カメラ回転
        
-        if (Game::Input::Mouse::IsHeld(2) && !Game::Input::Key::IsHeld(DIK_LSHIFT))
+        if (Game::IO::Mouse::IsHeld(2) && !Game::IO::Key::IsHeld(DIK_LSHIFT))
         {
-			transform_.rotate.x -= mouseDelta_.y / 100.0f;
-			transform_.rotate.y -= mouseDelta_.x / 100.0f;
+			transform_.rotate.x += mouseDelta_.y / 100.0f;
+			transform_.rotate.y += mouseDelta_.x / 100.0f;
         }
 
 #pragma endregion
 
 #pragma region 回転中心
 
-        if (Game::Input::Mouse::IsHeld(2) && Game::Input::Key::IsHeld(DIK_LSHIFT))
+        if (Game::IO::Mouse::IsHeld(2) && Game::IO::Key::IsHeld(DIK_LSHIFT))
         {
             // カメラの右方向と上方向を取得
             Matrix4x4 cameraRotateMatrix = Matrix4x4::MakeAffineMatrix(
@@ -377,11 +377,11 @@ void Camera::Update_FPS()
     if (enableControl_)
     {
         // マウス移動量取得
-        mouseDelta_ = Game::Input::Mouse::GetPositionDelta();
+        mouseDelta_ = Game::IO::Mouse::GetPositionDelta();
         // ホイール取得
-        mouseWheel_ = Game::Input::Mouse::GetWheel();
+        mouseWheel_ = Game::IO::Mouse::GetWheel();
 
-        if (Game::Input::Mouse::IsHeld(2) && !Game::Input::Key::IsHeld(DIK_LSHIFT))
+        if (Game::IO::Mouse::IsHeld(2) && !Game::IO::Key::IsHeld(DIK_LSHIFT))
         {
             transform_.rotate.x -= mouseDelta_.y / 100.0f;
             transform_.rotate.y -= mouseDelta_.x / 100.0f;

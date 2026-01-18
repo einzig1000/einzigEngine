@@ -22,7 +22,7 @@ void PlayingScreen::Initialize()
 	}
 
 	// カーソル操作無効化
-	Game::Input::Mouse::ShowCursor(false);
+	Game::IO::Mouse::ShowCursor(false);
 }
 
 void PlayingScreen::Update()
@@ -32,12 +32,12 @@ void PlayingScreen::Update()
 		element->Update();
 	}
 
-	if (Game::Input::Key::IsJustPressed(DIK_E))
+	if (Game::IO::Key::IsJustPressed(DIK_E))
 	{
 		nextUIMode_ = UIMode::Inventory;
 	}
 
-	if (Game::Input::Key::IsJustPressed(DIK_ESCAPE))
+	if (Game::IO::Key::IsJustPressed(DIK_ESCAPE))
 	{
 		nextUIMode_ = UIMode::Pause;
 	}
