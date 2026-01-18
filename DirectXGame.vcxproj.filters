@@ -223,6 +223,12 @@
     <Filter Include="application\GameManager\Character\Enemy">
       <UniqueIdentifier>{d82d499d-4b7a-4494-a0d1-66a863c1abba}</UniqueIdentifier>
     </Filter>
+    <Filter Include="application\GameManager\UIManager\UIScreen\UIElement\Craft">
+      <UniqueIdentifier>{70365fe4-d6e2-4c1e-a110-7bab04e1d84e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\Binary">
+      <UniqueIdentifier>{3a7d8a7a-aa52-4627-bd1d-7a8f58e124b6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -414,9 +420,6 @@
     <ClCompile Include="src\application\UIManager\ScreenMode\CraftScreen\CraftScreen.cpp">
       <Filter>application\GameManager\UIManager\UIScreen\CraftScreen</Filter>
     </ClCompile>
-    <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\Craft\Craft.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="src\application\Character\Enemy\EnemyManager.cpp">
       <Filter>application\GameManager\Character\Enemy</Filter>
     </ClCompile>
@@ -435,17 +438,20 @@
     <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\Pause\Pause.cpp">
       <Filter>application\GameManager\UIManager\UIScreen\UIElement\Pause</Filter>
     </ClCompile>
-    <ClCompile Include="src\engine\Utilities\SimpleModelBody.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\Craft\Craft.cpp">
+      <Filter>application\GameManager\UIManager\UIScreen\UIElement\Craft</Filter>
     </ClCompile>
     <ClCompile Include="externals\Shigemori\Binary\Data\BinaryInput.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="externals\Shigemori\Binary\Data\BinaryOutput.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>engine\Binary</Filter>
     </ClCompile>
     <ClCompile Include="externals\Shigemori\Binary\BinaryManager.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>engine\Binary</Filter>
+    </ClCompile>
+    <ClCompile Include="externals\Shigemori\Binary\Data\BinaryOutput.cpp">
+      <Filter>engine\Binary</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\Utilities\SimpleModelBody.cpp">
+      <Filter>engine\PhysicsSystem</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -635,9 +641,6 @@
     <ClInclude Include="src\application\UIManager\ScreenMode\CraftScreen\CraftScreen.h">
       <Filter>application\GameManager\UIManager\UIScreen\CraftScreen</Filter>
     </ClInclude>
-    <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\Craft\Craft.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="src\application\Character\Enemy\Enemy.h">
       <Filter>application\GameManager\Character\Enemy</Filter>
     </ClInclude>
@@ -656,20 +659,23 @@
     <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\Pause\Pause.h">
       <Filter>application\GameManager\UIManager\UIScreen\UIElement\Pause</Filter>
     </ClInclude>
-    <ClInclude Include="src\engine\Utilities\SimpleModelBody.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\Craft\Craft.h">
+      <Filter>application\GameManager\UIManager\UIScreen\UIElement\Craft</Filter>
     </ClInclude>
     <ClInclude Include="externals\Shigemori\Binary\Data\BinaryInput.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="externals\Shigemori\Binary\Data\BinaryOutput.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="externals\Shigemori\Binary\Data\Value.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>engine\Binary</Filter>
     </ClInclude>
     <ClInclude Include="externals\Shigemori\Binary\BinaryManager.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>engine\Binary</Filter>
+    </ClInclude>
+    <ClInclude Include="externals\Shigemori\Binary\Data\BinaryOutput.h">
+      <Filter>engine\Binary</Filter>
+    </ClInclude>
+    <ClInclude Include="externals\Shigemori\Binary\Data\Value.h">
+      <Filter>engine\Binary</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\Utilities\SimpleModelBody.h">
+      <Filter>engine\PhysicsSystem</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

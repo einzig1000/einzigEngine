@@ -3,7 +3,6 @@
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
-
 #ifdef _DEBUG
 	D3DResourceLeakChecker checker;
 #endif
