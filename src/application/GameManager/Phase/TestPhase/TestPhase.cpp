@@ -254,6 +254,33 @@ void TestPhase::DrawImGui()
 	ImGui::Begin("Facade Test");
 	if (ImGui::BeginTabBar("Facade Test", ImGuiTabBarFlags_::ImGuiTabBarFlags_Reorderable))
 	{
+#pragma region debugDraw test
+
+		if (ImGui::BeginTabItem("DebugDraw Test"))
+		{
+			ImGui::Text("GreenSphere");
+			ImGui::DragFloat3("sphere center", &sphere1_.center.x, 0.1f);
+			ImGui::DragFloat("sphere radius", &sphere1_.radius, 0.1f, 0.1f, 100.0f);
+			ImGui::Text("BlueSphereXYZ");
+			ImGui::DragFloat3("sphereXYZ center", &sphereXYZ1_.center.x, 0.1f);
+			ImGui::DragFloat3("sphereXYZ radius", &sphereXYZ1_.radius.x, 0.1f, 0.1f, 100.0f);
+			ImGui::Text("YellowCylinder");
+			ImGui::DragFloat3("cylinder bottomCenter", &cylinder1_.bottomCenter.x, 0.1f);
+			ImGui::DragFloat3("cylinder topCenter", &cylinder1_.topCenter.x, 0.1f);
+			ImGui::DragFloat("cylinder radius", &cylinder1_.radius, 0.1f, 0.1f, 100.0f);
+			ImGui::Text("PurpleAABB");
+			ImGui::DragFloat3("aabb min", &aabb1_.min.x, 0.1f);
+			ImGui::DragFloat3("aabb max", &aabb1_.max.x, 0.1f);
+			ImGui::Text("pos on cylindrical coord");
+			ImGui::DragFloat("radius", &cylindricalPos_.radius, 0.1f, 0.0f, 100.0f);
+			ImGui::DragFloat("theta", &cylindricalPos_.theta, 0.1f);
+			ImGui::DragFloat("height", &cylindricalPos_.height, 0.1f);
+
+			ImGui::EndTabItem();
+		}
+
+#pragma endregion
+
 #pragma region audio test
 
 		if (ImGui::BeginTabItem("Audio Test"))
@@ -577,48 +604,119 @@ void TestPhase::DrawImGui()
 	}
 	ImGui::End();
 
-	ImGui::Begin("CylindricalPos");
-	ImGui::DragFloat("radius", &cylindricalPos_.radius, 0.1f, 0.0f, 100.0f);
-	ImGui::DragFloat("theta", &cylindricalPos_.theta, 0.1f);
-	ImGui::DragFloat("height", &cylindricalPos_.height, 0.1f);
-	ImGui::End();
-
-	ImGui::Begin("DebugShapeControl");
-	ImGui::DragFloat3("sphere center", &sphere1_.center.x, 0.1f);
-	ImGui::DragFloat("sphere radius", &sphere1_.radius, 0.1f, 0.1f, 100.0f);
-	ImGui::DragFloat3("sphereXYZ center", &sphereXYZ1_.center.x, 0.1f);
-	ImGui::DragFloat3("sphereXYZ radius", &sphereXYZ1_.radius.x, 0.1f, 0.1f, 100.0f);
-	ImGui::DragFloat3("cylinder bottomCenter", &cylinder1_.bottomCenter.x, 0.1f);
-	ImGui::DragFloat3("cylinder topCenter", &cylinder1_.topCenter.x, 0.1f);
-	ImGui::DragFloat("cylinder radius", &cylinder1_.radius, 0.1f, 0.1f, 100.0f);
-	ImGui::DragFloat3("aabb min", &aabb1_.min.x, 0.1f);
-	ImGui::DragFloat3("aabb max", &aabb1_.max.x, 0.1f);
-	ImGui::End();
-
-
 	ImGui::Begin("QuaternionFunctionsTest");
-	static Quaternion rotation =
-		Quaternion::MakeRotateAxisAngleQuaternion(Vector3(1.0f, 0.4f, -0.2f).Normalize(), 0.45f);
-	static Matrix4x4 rotateMatrix = Quaternion::MakeRotateMatrix(rotation);
-	static Vector3 pointY = Vector3(2.1f, -0.9f, 1.3f);
-	static Vector3 rotateByQuaternion = Quaternion::RotateVector(pointY, rotation);
-	static Vector3 rotateByMatrix = Transform(pointY, rotateMatrix);
-	ImGui::Text("%5.2f, %5.2f, %5.2f %5.2f : rotation",
-		rotation.x, rotation.y, rotation.z, rotation.w);
-	ImGui::Text("rotateMatrix:\n");
-	ImGui::Text("%5.2f, %5.2f, %5.2f, %5.2f",
-		rotateMatrix.m[0][0], rotateMatrix.m[1][0], rotateMatrix.m[2][0], rotateMatrix.m[3][0]);
-	ImGui::Text("%5.2f, %5.2f, %5.2f, %5.2f",
-		rotateMatrix.m[0][1], rotateMatrix.m[1][1], rotateMatrix.m[2][1], rotateMatrix.m[3][1]);
-	ImGui::Text("%5.2f, %5.2f, %5.2f, %5.2f",
-		rotateMatrix.m[0][2], rotateMatrix.m[1][2], rotateMatrix.m[2][2], rotateMatrix.m[3][2]);
-	ImGui::Text("%5.2f, %5.2f, %5.2f, %5.2f",
-		rotateMatrix.m[0][3], rotateMatrix.m[1][3], rotateMatrix.m[2][3], rotateMatrix.m[3][3]);
-	ImGui::Text("%5.2f, %5.2f, %5.2f : rotateByQuaternion",
-		rotateByQuaternion.x, rotateByQuaternion.y, rotateByQuaternion.z);
-	ImGui::Text("%5.2f, %5.2f, %5.2f : rotateByMatrix",
-		rotateByMatrix.x, rotateByMatrix.y, rotateByMatrix.z);
+	if (ImGui::BeginTabBar("QuaternionFunctionsTest", ImGuiTabBarFlags_::ImGuiTabBarFlags_Reorderable))
+	{
+		if (ImGui::BeginTabItem("01-02"))
+		{
+			Vector3 from0 = Vector3{ 1.0f,0.7f,0.5f }.Normalize();
+			Vector3 to0 = -from0;
+			Vector3 from1 = Vector3{ -0.6f,0.9f,0.2f }.Normalize();
+			Vector3 to1 = Vector3{ 0.4f,0.7f,-0.5f }.Normalize();
+			Matrix4x4 rotateMatrix0 = Matrix4x4::DirectionToDirectionMatrix(Vector3{ 1.0f,0.0f,0.0f }, Vector3{ -1.0f,0.0f,0.0f });
+			Matrix4x4 rotateMatrix1 = Matrix4x4::DirectionToDirectionMatrix(from0, to0);
+			Matrix4x4 rotateMatrix2 = Matrix4x4::DirectionToDirectionMatrix(from1, to1);
+
+			ImGui::Text("from0 : (%5.2f, %5.2f, %5.2f)", from0.x, from0.y, from0.z);
+			ImGui::Text("to0   : (%5.2f, %5.2f, %5.2f)", to0.x, to0.y, to0.z);
+			ImGui::Text("from1 : (%5.2f, %5.2f, %5.2f)", from1.x, from1.y, from1.z);
+			ImGui::Text("to1   : (%5.2f, %5.2f, %5.2f)", to1.x, to1.y, to1.z);
+			ImGui::Text("rotateMatrix0 :");
+			ImGui::NewLine();
+			for (int j = 0; j < 4; ++j)
+			{
+				for (int i = 0; i < 4; ++i)
+				{
+					ImGui::SameLine();
+					ImGui::Text("%6.3f ", rotateMatrix0.m[j][i]);
+				}
+				ImGui::NewLine();
+			}
+			ImGui::Text("rotateMatrix1 :");
+			ImGui::NewLine();
+			for (int j = 0; j < 4; ++j)
+			{
+				for (int i = 0; i < 4; ++i)
+				{
+					ImGui::SameLine();
+					ImGui::Text("%6.3f ", rotateMatrix1.m[j][i]);
+				}
+				ImGui::NewLine();
+			}
+			ImGui::Text("rotateMatrix2 :");
+			ImGui::NewLine();
+			for (int j = 0; j < 4; ++j)
+			{
+				for (int i = 0; i < 4; ++i)
+				{
+					ImGui::SameLine();
+					ImGui::Text("%6.3f ", rotateMatrix2.m[j][i]);
+				}
+				ImGui::NewLine();
+			}
+			ImGui::EndTabItem();
+		}
+
+		if (ImGui::BeginTabItem("01-03"))
+		{
+			Quaternion q0 = Quaternion{ 2.0f,3.0f,4.0f,1.0f };
+			Quaternion q1 = Quaternion{ 1.0f,3.0f,5.0f,2.0f };
+			Quaternion identity = Quaternion::MakeIdentityQuaternion();
+			Quaternion conj = Quaternion::MakeConjugateQuaternion(q0);
+			Quaternion inv = Quaternion::Inverse(q0);
+			Quaternion normal = Quaternion::Normalize(q0);
+			Quaternion mul1 = q0 * q1;
+			Quaternion mul2 = q1 * q0;
+			float norm = Quaternion::Norm(q0);
+
+			ImGui::Text("q1       : (%5.2f, %5.2f, %5.2f, %5.2f)", q0.x, q0.y, q0.z, q0.w);
+			ImGui::Text("q2       : (%5.2f, %5.2f, %5.2f, %5.2f)", q1.x, q1.y, q1.z, q1.w);
+			ImGui::Text("identity : (%5.2f, %5.2f, %5.2f, %5.2f)", identity.x, identity.y, identity.z, identity.w);
+			ImGui::Text("conj     : (%5.2f, %5.2f, %5.2f, %5.2f)", conj.x, conj.y, conj.z, conj.w);
+			ImGui::Text("inv      : (%5.2f, %5.2f, %5.2f, %5.2f)", inv.x, inv.y, inv.z, inv.w);
+			ImGui::Text("normal   : (%5.2f, %5.2f, %5.2f, %5.2f)", normal.x, normal.y, normal.z, normal.w);
+			ImGui::Text("mul1     : (%5.2f, %5.2f, %5.2f, %5.2f)", mul1.x, mul1.y, mul1.z, mul1.w);
+			ImGui::Text("mul2     : (%5.2f, %5.2f, %5.2f, %5.2f)", mul2.x, mul2.y, mul2.z, mul2.w);
+			ImGui::Text("norm     : %5.2f", norm);
+
+			ImGui::EndTabItem();
+		}
+
+		if (ImGui::BeginTabItem("01-04"))
+		{
+			Quaternion rotation =
+				Quaternion::MakeRotateAxisAngleQuaternion(Vector3(1.0f, 0.4f, -0.2f).Normalize(), 0.45f);
+			Matrix4x4 rotateMatrix = Quaternion::MakeRotateMatrix(rotation);
+			Vector3 pointY = Vector3(2.1f, -0.9f, 1.3f);
+			Vector3 rotateByQuaternion = Quaternion::RotateVector(pointY, rotation);
+			Vector3 rotateByMatrix = Transform(pointY, rotateMatrix);
+
+			ImGui::Text("%5.2f, %5.2f, %5.2f %5.2f : rotation",
+				rotation.x, rotation.y, rotation.z, rotation.w);
+			ImGui::Text("rotateMatrix:\n");
+			ImGui::Text("%5.2f, %5.2f, %5.2f, %5.2f",
+				rotateMatrix.m[0][0], rotateMatrix.m[1][0], rotateMatrix.m[2][0], rotateMatrix.m[3][0]);
+			ImGui::Text("%5.2f, %5.2f, %5.2f, %5.2f",
+				rotateMatrix.m[0][1], rotateMatrix.m[1][1], rotateMatrix.m[2][1], rotateMatrix.m[3][1]);
+			ImGui::Text("%5.2f, %5.2f, %5.2f, %5.2f",
+				rotateMatrix.m[0][2], rotateMatrix.m[1][2], rotateMatrix.m[2][2], rotateMatrix.m[3][2]);
+			ImGui::Text("%5.2f, %5.2f, %5.2f, %5.2f",
+				rotateMatrix.m[0][3], rotateMatrix.m[1][3], rotateMatrix.m[2][3], rotateMatrix.m[3][3]);
+			ImGui::Text("%5.2f, %5.2f, %5.2f : rotateByQuaternion",
+				rotateByQuaternion.x, rotateByQuaternion.y, rotateByQuaternion.z);
+			ImGui::Text("%5.2f, %5.2f, %5.2f : rotateByMatrix",
+				rotateByMatrix.x, rotateByMatrix.y, rotateByMatrix.z);
+
+			ImGui::EndTabItem();
+		}
+
+		ImGui::EndTabBar();
+	}
 	ImGui::End();
+
+
+
+
 
 
 	// ImGui の主な関数一覧

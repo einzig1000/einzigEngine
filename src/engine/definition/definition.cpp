@@ -443,15 +443,15 @@ Quaternion Quaternion::Normalize(const Quaternion& q)
 
 Quaternion Quaternion::Inverse(const Quaternion& q)
 {
-    float norm = Norm(q);
-    if (std::abs(norm) > eps)
+    const float normSq = q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w;
+    if (std::abs(normSq) > eps)
     {
-        Quaternion conjugate = MakeConjugateQuaternion(q);
+        const Quaternion conjugate = MakeConjugateQuaternion(q);
         return Quaternion(
-            conjugate.x / norm,
-            conjugate.y / norm,
-            conjugate.z / norm,
-            conjugate.w / norm
+            conjugate.x / normSq,
+            conjugate.y / normSq,
+            conjugate.z / normSq,
+            conjugate.w / normSq
         );
     }
 	return Quaternion();
