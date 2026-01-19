@@ -186,7 +186,7 @@ private:
 	// カメラ更新
 	void UpdateCamera();
 	void UpdateDebugInfo();
-	bool isDebugInfo = true;
+	bool isDebugInfo_ = true;
 
 	// ウィンドウ関連
 	std::unique_ptr<WindowManager> windowManager_;
@@ -202,13 +202,4 @@ private:
 	std::unique_ptr<ImGuiManager> imguiManager_;
 	// 物理演算
 	std::unique_ptr<PhysicsSystem> physicsSystem_;
-
-	//WindowManager* windowManager_ = nullptr;
-	//DirectXManager* dxManager_ = nullptr;
-	//DrawSystem* drawSystem_ = nullptr;
-	//IOManager* ioManager_ = nullptr;
-	//CameraManager* cameraManager_ = nullptr;
-	//ImGuiManager* imguiManager_ = nullptr;
-	//PhysicsSystem* physicsSystem_ = nullptr;
-
 };

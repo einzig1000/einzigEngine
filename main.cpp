@@ -7,7 +7,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	D3DResourceLeakChecker checker;
 #endif
 
-	// ウィンドウ、DrectX初期化
+	// ウィンドウ、DirectX初期化
 	Engine::Instance().Initialize(WIDTH, HEIGHT, L"MyCraft Builders");
 	GameManager* gm = new GameManager();
 	while (Engine::Instance().ProcessMessage())

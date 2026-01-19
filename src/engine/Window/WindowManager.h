@@ -16,12 +16,12 @@ public:
     void AttachMouseController(MouseController* mc);
 
 	// ウィンドウハンドル取得
-    HWND GetHwnd() const { return hwnd; }
+    HWND GetHwnd() const { return hwnd_; }
 
 	// フルスクリーン制御
     void SetFullscreen(bool enable);
     void ToggleFullscreen();
-    bool IsFullscreen() const { return isFullscreen; }
+    bool IsFullscreen() const { return isFullscreen_; }
 
     void Quit();
 
@@ -33,15 +33,15 @@ public:
 	bool isActive_ = true;
 
 private:
-    HWND hwnd;
-    WNDCLASS wc;
+    HWND hwnd_;
+    WNDCLASS wc_;
 
 
     // フルスクリーン制御
-    bool isFullscreen = false;
-    DWORD windowedStyle = 0;
-    DWORD windowedExStyle = 0;
-    WINDOWPLACEMENT windowedPlacement{};
+    bool isFullscreen_ = false;
+    DWORD windowedStyle_ = 0;
+    DWORD windowedExStyle_ = 0;
+    WINDOWPLACEMENT windowedPlacement_{};
 
 	// フルスクリーン制御用関数
 	// フルスクリーンモードにする

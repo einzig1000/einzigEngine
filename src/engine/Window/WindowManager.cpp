@@ -97,36 +97,36 @@ WindowManager::WindowManager(int width, int height, const std::wstring& title)
 WindowManager::~WindowManager()
 {
     // フルスクリーン中なら復帰してから破棄
-    if (isFullscreen)
+    if (isFullscreen_)
     {
         ExitBorderlessFullscreen();
     }
-    // DestroyWindow の方が確実に破棄できます
-    if (hwnd)
+    // DestroyWindowでウィンドウ破壊
+    if (hwnd_)
     {
-        DestroyWindow(hwnd);
-        hwnd = nullptr;
+        DestroyWindow(hwnd_);
+        hwnd_ = nullptr;
     }
 }
 
 void WindowManager::AttachMouseController(MouseController* mc)
 {
-    ::SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(mc));
+    ::SetWindowLongPtr(hwnd_, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(mc));
 }
 
 void WindowManager::RegisterWindowClass() {
     // ウィンドウクラス作成
-    wc = {};
+    wc_ = {};
     // ウィンドウプロシージャ
-    wc.lpfnWndProc = WindowProc;
+    wc_.lpfnWndProc = WindowProc;
     // ウィンドウクラス名
-    wc.lpszClassName = L"CG2WindowClass";
+    wc_.lpszClassName = L"CG2WindowClass";
     // インスタンスハンドル
-    wc.hInstance = GetModuleHandle(nullptr);
+    wc_.hInstance = GetModuleHandle(nullptr);
     // カーソル
-    wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+    wc_.hCursor = LoadCursor(nullptr, IDC_ARROW);
     // ウィンドウクラスを登録する
-    RegisterClass(&wc);
+    RegisterClass(&wc_);
 }
 
 void WindowManager::RegisterMouseRawInput(HWND hwnd)
@@ -147,8 +147,8 @@ void WindowManager::CreateMainWindow(int width, int height, const std::wstring& 
     AdjustWindowRect(&wrc, WS_OVERLAPPEDWINDOW, false);
 
     // ウィンドウの生成
-    hwnd = CreateWindow(
-        wc.lpszClassName,		// 利用するウィンドウクラス名
+    hwnd_ = CreateWindow(
+        wc_.lpszClassName,		// 利用するウィンドウクラス名
         title.c_str(), 			// タイトルバーに表示する文字
         WS_OVERLAPPEDWINDOW,	// ウィンドウスタイルの選択
         CW_USEDEFAULT,			// 表示X座標
@@ -157,21 +157,21 @@ void WindowManager::CreateMainWindow(int width, int height, const std::wstring& 
         wrc.bottom - wrc.top,	// ウィンドウ縦幅
         nullptr,				// 親ウィンドウハンドル
         nullptr,				// メニューハンドル
-        wc.hInstance,			// インスタンスハンドル
+        wc_.hInstance,			// インスタンスハンドル
         nullptr					// オプション
     );
 
 	// ウィンドウ表示
-    ShowWindow(hwnd, SW_SHOW);
+    ShowWindow(hwnd_, SW_SHOW);
 
     // 
-    RegisterMouseRawInput(hwnd);
+    RegisterMouseRawInput(hwnd_);
 }
 
 void WindowManager::SetFullscreen(bool enable)
 {
 	// すでにその状態なら何もしない
-    if (enable == isFullscreen) return;
+    if (enable == isFullscreen_) return;
 	// フルスクリーン切り替え
     if (enable)
     {
@@ -188,7 +188,7 @@ void WindowManager::SetFullscreen(bool enable)
 
 void WindowManager::ToggleFullscreen()
 {
-    SetFullscreen(!isFullscreen);
+    SetFullscreen(!isFullscreen_);
 }
 
 void WindowManager::Quit()
@@ -199,26 +199,26 @@ void WindowManager::Quit()
 // isFullscreen = trueになる
 void WindowManager::EnterBorderlessFullscreen()
 {
-    if (!hwnd) return;
+    if (!hwnd_) return;
 
     // 現在のウィンドウ情報を保存
-    windowedStyle = static_cast<DWORD>(GetWindowLongPtr(hwnd, GWL_STYLE));
-    windowedExStyle = static_cast<DWORD>(GetWindowLongPtr(hwnd, GWL_EXSTYLE));
-    windowedPlacement.length = sizeof(WINDOWPLACEMENT);
-    GetWindowPlacement(hwnd, &windowedPlacement);
+    windowedStyle_ = static_cast<DWORD>(GetWindowLongPtr(hwnd_, GWL_STYLE));
+    windowedExStyle_ = static_cast<DWORD>(GetWindowLongPtr(hwnd_, GWL_EXSTYLE));
+    windowedPlacement_.length = sizeof(WINDOWPLACEMENT);
+    GetWindowPlacement(hwnd_, &windowedPlacement_);
 
     // 対象モニタのワークエリアではなくモニタ全体を使用
-    HMONITOR hMon = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+    HMONITOR hMon = MonitorFromWindow(hwnd_, MONITOR_DEFAULTTONEAREST);
     MONITORINFO mi{};
     mi.cbSize = sizeof(mi);
     GetMonitorInfo(hMon, &mi);
 
     // ボーダーレスにしてモニタ全体へフィット
-    SetWindowLongPtr(hwnd, GWL_STYLE, windowedStyle & ~(WS_OVERLAPPEDWINDOW));
-    SetWindowLongPtr(hwnd, GWL_EXSTYLE, windowedExStyle | WS_EX_APPWINDOW);
+    SetWindowLongPtr(hwnd_, GWL_STYLE, windowedStyle_ & ~(WS_OVERLAPPEDWINDOW));
+    SetWindowLongPtr(hwnd_, GWL_EXSTYLE, windowedExStyle_ | WS_EX_APPWINDOW);
 
     SetWindowPos(
-        hwnd,
+        hwnd_,
         HWND_TOP,
         mi.rcMonitor.left,
         mi.rcMonitor.top,
@@ -227,35 +227,35 @@ void WindowManager::EnterBorderlessFullscreen()
         SWP_NOOWNERZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW
     );
 
-    isFullscreen = true;
+    isFullscreen_ = true;
 }
 
 // isFullscreen = falseになる
 void WindowManager::ExitBorderlessFullscreen()
 {
-    if (!hwnd) return;
+    if (!hwnd_) return;
 
     // 元のスタイルへ戻す
-    SetWindowLongPtr(hwnd, GWL_STYLE, windowedStyle);
-    SetWindowLongPtr(hwnd, GWL_EXSTYLE, windowedExStyle);
+    SetWindowLongPtr(hwnd_, GWL_STYLE, windowedStyle_);
+    SetWindowLongPtr(hwnd_, GWL_EXSTYLE, windowedExStyle_);
 
     // ウィンドウ配置と枠を復元
-    SetWindowPlacement(hwnd, &windowedPlacement);
+    SetWindowPlacement(hwnd_, &windowedPlacement_);
     SetWindowPos(
-        hwnd,
+        hwnd_,
         nullptr,
         0, 0, 0, 0,
         SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW
     );
 
-    isFullscreen = false;
+    isFullscreen_ = false;
 }
 
 void WindowManager::UpdateClientSize()
 {
-    if (!hwnd) return;
+    if (!hwnd_) return;
     RECT rc{};
-    GetClientRect(hwnd, &rc);
+    GetClientRect(hwnd_, &rc);
     winWidth_ = static_cast<uint32_t>(rc.right - rc.left);
     winHeight_ = static_cast<uint32_t>(rc.bottom - rc.top);
 }

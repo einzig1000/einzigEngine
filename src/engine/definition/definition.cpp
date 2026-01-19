@@ -411,50 +411,98 @@ Matrix4x4 Matrix4x4::DirectionToDirectionMatrix(const Vector3& from, const Vecto
 
 #pragma region Quaternion
 
-quaternion quaternion::MakeIdentityQuaternion()
+Quaternion Quaternion::MakeIdentityQuaternion()
 {
-	return quaternion(0.0f, 0.0f, 0.0f, 1.0f);
+	return Quaternion(0.0f, 0.0f, 0.0f, 1.0f);
 }
 
-quaternion quaternion::MakeConjugateQuaternion(const quaternion& q)
+Quaternion Quaternion::MakeConjugateQuaternion(const Quaternion& q)
 {
-	return quaternion(-q.x, -q.y, -q.z, q.w);
+	return Quaternion(-q.x, -q.y, -q.z, q.w);
 }
 
-float quaternion::Norm(const quaternion& q)
+float Quaternion::Norm(const Quaternion& q)
 {
 	return std::sqrt(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
 }
 
-quaternion quaternion::Normalize(const quaternion& q)
+Quaternion Quaternion::Normalize(const Quaternion& q)
 {
     float norm = Norm(q);
     if (std::abs(norm) > eps)
     {
-        return quaternion(
-            q.x / std::sqrt(norm),
-            q.y / std::sqrt(norm),
-            q.z / std::sqrt(norm),
-            q.w / std::sqrt(norm)
+        return Quaternion(
+            q.x / norm,
+            q.y / norm,
+            q.z / norm,
+            q.w / norm
         );
     }
-	return quaternion();
+	return Quaternion();
 }
 
-quaternion quaternion::Inverse(const quaternion& q)
+Quaternion Quaternion::Inverse(const Quaternion& q)
 {
     float norm = Norm(q);
     if (std::abs(norm) > eps)
     {
-        quaternion conjugate = MakeConjugateQuaternion(q);
-        return quaternion(
+        Quaternion conjugate = MakeConjugateQuaternion(q);
+        return Quaternion(
             conjugate.x / norm,
             conjugate.y / norm,
             conjugate.z / norm,
             conjugate.w / norm
         );
     }
-	return quaternion();
+	return Quaternion();
+}
+
+Quaternion Quaternion::MakeRotateAxisAngleQuaternion(const Vector3& axis, float radian)
+{
+    Vector3 normAxis = axis.Normalized();
+    float halfRadian = radian / 2.0f;
+    float sinHalfRadian = std::sin(halfRadian);
+    return Quaternion(
+        normAxis.x * sinHalfRadian,
+        normAxis.y * sinHalfRadian,
+        normAxis.z * sinHalfRadian,
+        std::cos(halfRadian)
+	);
+}
+
+Vector3 Quaternion::RotateVector(const Vector3& v, const Quaternion& q)
+{
+    Quaternion vQuat(v.x, v.y, v.z, 0.0f);
+    Quaternion qConjugate = MakeConjugateQuaternion(q);
+    Quaternion resultQuat = q * vQuat * qConjugate;
+	return Vector3(resultQuat.x, resultQuat.y, resultQuat.z);
+}
+
+Matrix4x4 Quaternion::MakeRotateMatrix(const Quaternion& q)
+{
+    Matrix4x4 result = Matrix4x4::MakeIdentity4x4();
+    result.m[0][0] = 1.0f - 2.0f * (q.y * q.y + q.z * q.z);
+    result.m[0][1] = 2.0f * (q.x * q.y - q.z * q.w);
+    result.m[0][2] = 2.0f * (q.x * q.z + q.y * q.w);
+    result.m[1][0] = 2.0f * (q.x * q.y + q.z * q.w);
+    result.m[1][1] = 1.0f - 2.0f * (q.x * q.x + q.z * q.z);
+    result.m[1][2] = 2.0f * (q.y * q.z - q.x * q.w);
+    result.m[2][0] = 2.0f * (q.x * q.z - q.y * q.w);
+    result.m[2][1] = 2.0f * (q.y * q.z + q.x * q.w);
+    result.m[2][2] = 1.0f - 2.0f * (q.x * q.x + q.y * q.y);
+    return result;
+
+    //Matrix4x4 result = Matrix4x4::MakeIdentity4x4();
+	//result.m[0][0] = q.w * q.w + q.x * q.x - q.y * q.y - q.z * q.z;
+	//result.m[0][1] = 2.0f * (q.x * q.y - q.w * q.z);
+	//result.m[0][2] = 2.0f * (q.x * q.z + q.w * q.y);
+	//result.m[1][0] = 2.0f * (q.x * q.y + q.w * q.z);
+	//result.m[1][1] = q.w * q.w - q.x * q.x + q.y * q.y - q.z * q.z;
+	//result.m[1][2] = 2.0f * (q.y * q.z - q.w * q.x);
+	//result.m[2][0] = 2.0f * (q.x * q.z - q.w * q.y);
+	//result.m[2][1] = 2.0f * (q.y * q.z + q.w * q.x);
+	//result.m[2][2] = q.w * q.w - q.x * q.x - q.y * q.y + q.z * q.z;
+    //return result;
 }
 
 #pragma endregion

@@ -221,14 +221,14 @@ void Engine::UpdateDebugInfo()
 {
 	if (Game::IO::Key::IsJustPressed(DIK_F1))
 	{
-		isDebugInfo = !isDebugInfo;
+		isDebugInfo_ = !isDebugInfo_;
 	}
 	if (Game::IO::Key::IsJustPressed(DIK_F3))
 	{
 		ToggleCamera();
 	}
 
-	if (isDebugInfo)
+	if (isDebugInfo_)
 	{
 		cameraManager_->Draw();
 
@@ -263,7 +263,7 @@ void Engine::EndFrame()
 
 	// ImGui描画
 	imguiManager_->EndFrame();
-	imguiManager_->Draw();
+	if (isDebugInfo_)imguiManager_->Draw();
 
 	// DirectX終了処理
 	dxManager_->EndFrame();

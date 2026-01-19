@@ -139,7 +139,7 @@ TestPhase::TestPhase()
 	particle1_->filePath = "resources/Prototypes/particle/aaa";
 
 	sphere1_.center = { 0.0f,0.0f,0.0f };
-	sphere1_.radius = 5.0f;
+	sphere1_.radius = 1.0f;
 	sphereXYZ1_.center = { 0.0f,0.0f,0.0f };
 	sphereXYZ1_.radius = { 5.0f,2.0f,3.0f };
 	cylinder1_.bottomCenter = { 0.0f,0.0f,0.0f };
@@ -221,9 +221,9 @@ void TestPhase::Draw()
 	hand_->Draw();
 
 	Game::DebugDraw::AddSphere(sphere1_, 0x00FF00FF);
-	//Game::DebugDraw::AddSphereXYZ(sphereXYZ1_, 0x0000FFFF);
+	Game::DebugDraw::AddSphereXYZ(sphereXYZ1_, 0x0000FFFF);
 	Game::DebugDraw::AddCylinder(cylinder1_, 0xFFFF00FF);
-	//Game::DebugDraw::AddAABB(aabb1_, 0xFF00FFFF);
+	Game::DebugDraw::AddAABB(aabb1_, 0xFF00FFFF);
 }
 
 
@@ -251,7 +251,7 @@ void TestPhase::DrawImGui()
 	//elbow_->DrawImGui();
 	//hand_->DrawImGui();
 
-	ImGui::Begin("TestPhase");
+	ImGui::Begin("Facade Test");
 	if (ImGui::BeginTabBar("Facade Test", ImGuiTabBarFlags_::ImGuiTabBarFlags_Reorderable))
 	{
 #pragma region audio test
@@ -369,7 +369,7 @@ void TestPhase::DrawImGui()
 
 			static float intensity = 3.0f;
 			static float duration = 35.0f;
-			static float frequency = 25.0f;
+			static float frequency = 15.0f;
 			ImGui::DragFloat("camera shake intensity", &intensity, 0.1f);
 			ImGui::DragFloat("camera shake duration", &duration, 0.1f);
 			ImGui::DragFloat("camera shake frequency", &frequency, 0.1f);
@@ -559,6 +559,13 @@ void TestPhase::DrawImGui()
 					Game::IO::Pad::IsHeld(padIndex, PAD_RIGHT),
 					Game::IO::Pad::IsJustReleased(padIndex, PAD_RIGHT),
 					Game::IO::Pad::HoldFrames(padIndex, PAD_RIGHT));
+				ImGui::Button("vibrate");
+				static Vector2 vibrationAmount = { 0.5f,0.5f };
+				ImGui::DragFloat2("vibration amount", &vibrationAmount.x, 0.1f, 0.0f, 1.0f);
+				if (ImGui::IsItemClicked())
+				{
+					Game::IO::Pad::SetVibration(padIndex, vibrationAmount.x, vibrationAmount.y);
+				}
 			}
 
 			ImGui::EndTabItem();
@@ -588,6 +595,33 @@ void TestPhase::DrawImGui()
 	ImGui::DragFloat3("aabb max", &aabb1_.max.x, 0.1f);
 	ImGui::End();
 
+
+	ImGui::Begin("QuaternionFunctionsTest");
+	static Quaternion rotation =
+		Quaternion::MakeRotateAxisAngleQuaternion(Vector3(1.0f, 0.4f, -0.2f).Normalize(), 0.45f);
+	static Matrix4x4 rotateMatrix = Quaternion::MakeRotateMatrix(rotation);
+	static Vector3 pointY = Vector3(2.1f, -0.9f, 1.3f);
+	static Vector3 rotateByQuaternion = Quaternion::RotateVector(pointY, rotation);
+	static Vector3 rotateByMatrix = Transform(pointY, rotateMatrix);
+	ImGui::Text("%5.2f, %5.2f, %5.2f %5.2f : rotation",
+		rotation.x, rotation.y, rotation.z, rotation.w);
+	ImGui::Text("rotateMatrix:\n");
+	ImGui::Text("%5.2f, %5.2f, %5.2f, %5.2f",
+		rotateMatrix.m[0][0], rotateMatrix.m[1][0], rotateMatrix.m[2][0], rotateMatrix.m[3][0]);
+	ImGui::Text("%5.2f, %5.2f, %5.2f, %5.2f",
+		rotateMatrix.m[0][1], rotateMatrix.m[1][1], rotateMatrix.m[2][1], rotateMatrix.m[3][1]);
+	ImGui::Text("%5.2f, %5.2f, %5.2f, %5.2f",
+		rotateMatrix.m[0][2], rotateMatrix.m[1][2], rotateMatrix.m[2][2], rotateMatrix.m[3][2]);
+	ImGui::Text("%5.2f, %5.2f, %5.2f, %5.2f",
+		rotateMatrix.m[0][3], rotateMatrix.m[1][3], rotateMatrix.m[2][3], rotateMatrix.m[3][3]);
+	ImGui::Text("%5.2f, %5.2f, %5.2f : rotateByQuaternion",
+		rotateByQuaternion.x, rotateByQuaternion.y, rotateByQuaternion.z);
+	ImGui::Text("%5.2f, %5.2f, %5.2f : rotateByMatrix",
+		rotateByMatrix.x, rotateByMatrix.y, rotateByMatrix.z);
+	ImGui::End();
+
+
+	// ImGui の主な関数一覧
 	//📐 レイアウト・カーソル操作
 	//	- NewLine() : 改行して次の行へ
 	//	- SameLine() : 同じ行に次の要素を配置

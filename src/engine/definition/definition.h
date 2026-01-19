@@ -168,18 +168,6 @@ struct Blockinfo
 	bool isTransparent = false;
 };
 
-// ゲームのフェーズ
-enum class PHASE
-{
-    Phase_None,
-    Phase_Test,
-    Phase_Title,
-    Phase_GameScene,
-    Phase_StageSelect,
-    Phase_GameClear,
-};
-std::string EnumToString(PHASE e);
-
 // UIモード
 enum class UIMode
 {
@@ -195,6 +183,18 @@ enum class UIMode
     // ポーズ画面
 	Pause
 };
+
+// ゲームのフェーズ
+enum class PHASE
+{
+    Phase_None,
+    Phase_Test,
+    Phase_Title,
+    Phase_GameScene,
+    Phase_StageSelect,
+    Phase_GameClear,
+};
+std::string EnumToString(PHASE e);
 
 #pragma region 演算
 
@@ -716,34 +716,40 @@ struct Matrix4x4
 	static Matrix4x4 DirectionToDirectionMatrix(const Vector3& from, const Vector3& to);
 };
 
-struct quaternion
+struct Quaternion
 {
     float x = 0, y = 0, z = 0, w = 1;
 
-    quaternion operator*(const quaternion& rhs) const
+    Quaternion operator*(const Quaternion& rhs) const
     {
-        return quaternion{
+        return Quaternion{
             w * rhs.x + x * rhs.w + y * rhs.z - z * rhs.y,
             w * rhs.y - x * rhs.z + y * rhs.w + z * rhs.x,
             w * rhs.z + x * rhs.y - y * rhs.x + z * rhs.w,
             w * rhs.w - x * rhs.x - y * rhs.y - z * rhs.z
         };
     }
-    quaternion operator*(float scalar) const
+    Quaternion operator*(float scalar) const
     {
-        return quaternion{ x * scalar, y * scalar, z * scalar, w * scalar };
+        return Quaternion{ x * scalar, y * scalar, z * scalar, w * scalar };
 	}
 
-    // 単位quaternion
-    static quaternion MakeIdentityQuaternion();
-    // 共役quaternion
-	static quaternion MakeConjugateQuaternion(const quaternion& q);
-    // quaternionのnormを返す
-	static float Norm(const quaternion& q);
-    // 正規化したquaternion
-    static quaternion Normalize(const quaternion& q);
-    // 逆quaternion
-    static quaternion Inverse(const quaternion& q);
+    // 単位Quaternion
+    static Quaternion MakeIdentityQuaternion();
+    // 共役Quaternion
+	static Quaternion MakeConjugateQuaternion(const Quaternion& q);
+    // Quaternionのnormを返す
+	static float Norm(const Quaternion& q);
+    // 正規化したQuaternion
+    static Quaternion Normalize(const Quaternion& q);
+    // 逆Quaternion
+    static Quaternion Inverse(const Quaternion& q);
+	// 任意軸回転を表すQuaternion
+	static Quaternion MakeRotateAxisAngleQuaternion(const Vector3& axis, float radian);
+	// ベクトルをQuaternionで回転させた結果のベクトルを返す
+	static Vector3 RotateVector(const Vector3& v, const Quaternion& q);
+	// 単位Quaternionから回転行列を作成
+	static Matrix4x4 MakeRotateMatrix(const Quaternion& q);
 };
 
 #pragma endregion
@@ -768,6 +774,7 @@ struct Coordinate_spherical
 };
 
 #pragma endregion
+
 
 #pragma region 幾何構造体
 

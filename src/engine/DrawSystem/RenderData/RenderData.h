@@ -460,7 +460,6 @@ private:
 	// 空きスロット管理
     std::vector<uint32_t> freeSlots_;
 
-    // なににつかってるか忘れた
     int ID = 0;
 
     //// 死亡判定
