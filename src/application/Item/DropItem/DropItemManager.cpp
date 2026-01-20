@@ -2,6 +2,9 @@
 
 DropItemManager::DropItemManager(){}
 
+DropItemManager::~DropItemManager()
+{}
+
 void DropItemManager::AddItem(ItemID id, Vector3 pos)
 {
 	auto newItem = std::make_unique<DropItem>();

@@ -1,6 +1,7 @@
 #pragma once
 #include "definition/definition.h"
 #include "DrawSystem/RenderData/RenderData.h"
+#include <memory>
 
 class BlockDurability;
 
@@ -37,7 +38,7 @@ public:
 	uint32_t lightEmission_ = 14;
 
 	// 耐久値
-	BlockDurability* durability_;
+	std::unique_ptr<BlockDurability> durability_;
 
 	// 表面に露出しているか
 	bool isExposed_ = false;

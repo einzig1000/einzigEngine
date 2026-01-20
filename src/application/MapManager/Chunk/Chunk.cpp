@@ -40,7 +40,7 @@ namespace
 
 Chunk::Chunk()
 {
-	blockConfig_ = new BlockConfig();
+	blockConfig_ = std::make_unique<BlockConfig>();
 
 	// ブロックデータの初期化
 	for (int32_t i = 0; i < int32_t(BlockID::MAX); ++i)
@@ -57,8 +57,6 @@ Chunk::Chunk()
 
 Chunk::~Chunk()
 {
-	delete blockConfig_;
-	blockConfig_ = nullptr;
 }
 
 // チャンクデータ生成

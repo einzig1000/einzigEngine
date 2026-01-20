@@ -124,14 +124,14 @@ void BaseCharacter::UpdateLeftClick()
 
 		breakPower_ = 1.0f;
 		// ツールのジャンルとブロックのジャンルが合っている場合
-		if (block->blockInfo_.junle == ItemJunle::Wood)
+		if (block->blockInfo_.genre == ItemGenre::Wood)
 		{
 			if (currentItemID == ItemID::木の斧)breakPower_ = 2.0f;
 			if (currentItemID == ItemID::石の斧)breakPower_ = 3.0f;
 			if (currentItemID == ItemID::鉄の斧)breakPower_ = 4.0f;
 			if (currentItemID == ItemID::ダイヤの斧)breakPower_ = 15.0f;
 		}
-		else if (block->blockInfo_.junle == ItemJunle::Stone)
+		else if (block->blockInfo_.genre == ItemGenre::Stone)
 		{
 			if (currentItemID == ItemID::木のツルハシ)breakPower_ = 2.0f;
 			if (currentItemID == ItemID::石のツルハシ)breakPower_ = 3.0f;

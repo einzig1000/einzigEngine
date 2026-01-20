@@ -4,6 +4,9 @@
 class BlockDurability
 {
 public:
+	BlockDurability();
+	~BlockDurability();
+
 	void Update();
 	void DecreaseDurability(float power);
 	void SetIsCollisionRay(bool* isCollisionRay) { isCollisionRay_ = isCollisionRay; }

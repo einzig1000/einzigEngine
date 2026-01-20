@@ -13,7 +13,7 @@ public:
     ~SrvManager();
 
     ID3D12DescriptorHeap* GetSRVDescriptorHeap() const { return descriptorHeap.Get(); }
-    uint32_t GetdescriptorSizeSRV() const { return descriptorSize; }
+    uint32_t GetDescriptorSizeSRV() const { return descriptorSize; }
 
     // 空いてるスロットインデックスを取得しnextIndex_をインクリメント
     uint32_t Allocate();

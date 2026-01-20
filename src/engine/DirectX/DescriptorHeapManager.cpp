@@ -4,14 +4,12 @@
 
 DescriptorHeapManager::DescriptorHeapManager(ID3D12Device* device)
 {
-	srvManager_ = new SrvManager(device);
+    srvManager_ = std::make_unique<SrvManager>(device);
 
     Log("コンストラクタ実行成功 : DescriptorHeapManager");
 }
 
 DescriptorHeapManager::~DescriptorHeapManager()
 {
-	delete srvManager_;
-
     Log("デストラクタ実行成功 : DescriptorHeapManager");
 }

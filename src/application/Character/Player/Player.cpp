@@ -61,7 +61,7 @@ void Player::Update()
 	if (currentMode_ == UIMode::Playing || currentMode_ == UIMode::Hidden)
 	{
 		// 移動更新
-		UpdateDush();
+		UpdateDash();
 		UpdateMove();
 		UpdateJump();
 
@@ -123,7 +123,7 @@ void Player::Draw()
 void Player::DrawCrafting()
 {
 	// インベントリのアイコンを動かせる
-	haveItem_->UpdateInventry();
+	haveItem_->UpdateInventory();
 	// インベントリのアイコン描画
 	haveItem_->DrawInventory();
 
@@ -134,7 +134,7 @@ void Player::DrawCrafting()
 void Player::DrawInventory()
 {
 	// インベントリのアイコンを動かせる
-	haveItem_->UpdateInventry();
+	haveItem_->UpdateInventory();
 	// インベントリのアイコン描画
 	haveItem_->DrawInventory();
 
@@ -171,7 +171,7 @@ void Player::UpdateViewRay()
 	SetViewRay(viewRay_);
 }
 
-void Player::UpdateDush()
+void Player::UpdateDash()
 {
 	if (Game::IO::Key::IsJustReleased(DIK_W))
 	{

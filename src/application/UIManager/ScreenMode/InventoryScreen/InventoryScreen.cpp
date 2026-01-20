@@ -7,7 +7,7 @@ InventoryScreen::InventoryScreen()
 {
 	// uiElements_[0] : Hotbar
 	uiElements_.emplace_back(std::make_unique<Hotbar>());
-	// uiElements_[1] : Inventry
+	// uiElements_[1] : Inventory
 	uiElements_.emplace_back(std::make_unique<Inventory>());
 }
 

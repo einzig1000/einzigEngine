@@ -96,7 +96,7 @@ enum class ItemID
     MAX,
 };
 
-enum class ItemJunle
+enum class ItemGenre
 {
     None,
 	// 防具
@@ -151,7 +151,7 @@ ItemID BlockIDToItemID(BlockID id);
 // ItemID -> BlockIDの純粋変換
 BlockID ItemIDToBlockID(ItemID id);
 // アイテムIDからジャンルを取得
-ItemJunle GetItemJunle(ItemID id);
+ItemGenre GetItemGenre(ItemID id);
 
 // ブロックごとの情報
 struct Blockinfo
@@ -159,7 +159,7 @@ struct Blockinfo
 	// ブロックID
 	BlockID type = BlockID::Air;
     // アイテムジャンル
-	ItemJunle junle = ItemJunle::None;
+	ItemGenre genre = ItemGenre::None;
     // 右クリックされたとき特殊な動作をするかどうか(作業台は右クリックでUIを開く)
 	bool isExtraAction = false;
 	// 耐久値
@@ -181,7 +181,10 @@ enum class UIMode
 	// クラフト画面
 	Crafting,
     // ポーズ画面
-	Pause
+	Pause,
+
+
+    Max
 };
 
 // ゲームのフェーズ

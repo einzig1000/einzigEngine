@@ -7,26 +7,13 @@
 
 UIManager::UIManager()
 {
-	playingScreen_ = new PlayingScreen();
-	inventoryScreen_ = new InventoryScreen();
-	craftingScreen_ = new CraftScreen();
-	pauseScreen_ = new PauseScreen();
+	playingScreen_ = std::make_unique<PlayingScreen>();
+	inventoryScreen_ = std::make_unique<InventoryScreen>();
+	craftingScreen_ = std::make_unique<CraftScreen>();
+	pauseScreen_ = std::make_unique<PauseScreen>();
 }
 
-UIManager::~UIManager()
-{
-	delete playingScreen_;
-	playingScreen_ = nullptr;
-
-	delete inventoryScreen_;
-	inventoryScreen_ = nullptr;
-
-	delete craftingScreen_;
-	craftingScreen_ = nullptr;
-
-	delete pauseScreen_;
-	pauseScreen_ = nullptr;
-}
+UIManager::~UIManager(){}
 
 void UIManager::Initialize()
 {
@@ -83,16 +70,16 @@ void UIManager::ChangeScreen(UIMode mode)
 	switch (mode)
 	{
 	case UIMode::Playing:
-		currentScreen_ = playingScreen_;
+		currentScreen_ = playingScreen_.get();
 		break;
 	case UIMode::Inventory:
-		currentScreen_ = inventoryScreen_;
+		currentScreen_ = inventoryScreen_.get();
 		break;
 	case UIMode::Crafting:
-		currentScreen_ = craftingScreen_;
+		currentScreen_ = craftingScreen_.get();
 		break;
 	case UIMode::Pause:
-		currentScreen_ = pauseScreen_;
+		currentScreen_ = pauseScreen_.get();
 		break;
 	default:
 		currentScreen_ = nullptr;

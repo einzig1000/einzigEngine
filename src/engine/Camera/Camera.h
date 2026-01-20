@@ -49,7 +49,7 @@ private:
     // 操作可能か
     bool enableControl_;
 
-	void Updata_Orbit();
+	void Update_Orbit();
 	void Update_FPS();
 
     void MovingCenter();
@@ -57,6 +57,11 @@ private:
     void MovingDistance();
 
 	Vector2 mouseDelta_;
+
+	// 球面座標上の現在位置
+	Coordinate_spherical currentPosSpherical_;
+	// デカルト座標上の現在位置
+	Vector3 currentPosCartesian_;
 
     //////////////////////////////////////////////
     ///              カメラ回転                ///

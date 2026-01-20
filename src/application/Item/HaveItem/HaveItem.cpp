@@ -326,7 +326,7 @@ void HaveItem::DropCurrentSelectedItem(const Vector3& position)
 	}
 }
 
-void HaveItem::UpdateInventry()
+void HaveItem::UpdateInventory()
 {
     UpdateHoverIndex();
     UpdateLeftClick();   // 左クリック（通常・Shift・ダブルクリック）
@@ -904,7 +904,7 @@ NORMAL_LEFT_CLICK:
         if (slot->IsEmpty()) return;
 
         // 防具だったら装備欄に優先的に置く(今はなにももっていない)
-		if (GetItemJunle(slot->item.GetID()) == ItemJunle::Head)
+		if (GetItemGenre(slot->item.GetID()) == ItemGenre::Head)
         {
             auto& dst = equipArea_[0];
             if (dst.IsEmpty())
@@ -916,7 +916,7 @@ NORMAL_LEFT_CLICK:
                 return;
             }
         }
-        else if (GetItemJunle(slot->item.GetID()) == ItemJunle::Body)
+        else if (GetItemGenre(slot->item.GetID()) == ItemGenre::Body)
         {
             auto& dst = equipArea_[1];
             if (dst.IsEmpty())
@@ -928,7 +928,7 @@ NORMAL_LEFT_CLICK:
                 return;
             }
         }
-        else if (GetItemJunle(slot->item.GetID()) == ItemJunle::Leg)
+        else if (GetItemGenre(slot->item.GetID()) == ItemGenre::Leg)
         {
             auto& dst = equipArea_[2];
             if (dst.IsEmpty())
@@ -940,7 +940,7 @@ NORMAL_LEFT_CLICK:
                 return;
             }
         }
-        else if (GetItemJunle(slot->item.GetID()) == ItemJunle::Boots)
+        else if (GetItemGenre(slot->item.GetID()) == ItemGenre::Boots)
         {
             auto& dst = equipArea_[3];
             if (dst.IsEmpty())
@@ -1013,7 +1013,7 @@ NORMAL_LEFT_CLICK:
         // 手に持っているアイテムが防具でなければ置けない
         if (!hand_.IsEmpty())
         {
-            if (GetItemJunle(hand_.item.GetID()) != ItemJunle::Head)return;
+            if (GetItemGenre(hand_.item.GetID()) != ItemGenre::Head)return;
         }
     }
     else if (hoverSlot_.area == SlotArea::Body)
@@ -1021,7 +1021,7 @@ NORMAL_LEFT_CLICK:
         // 手に持っているアイテムが防具でなければ置けない
         if (!hand_.IsEmpty())
         {
-            if (GetItemJunle(hand_.item.GetID()) != ItemJunle::Body) return;
+            if (GetItemGenre(hand_.item.GetID()) != ItemGenre::Body) return;
         }
     }
     else if (hoverSlot_.area == SlotArea::Leg)
@@ -1029,7 +1029,7 @@ NORMAL_LEFT_CLICK:
         // 手に持っているアイテムが防具でなければ置けない
         if (!hand_.IsEmpty())
         {
-            if (GetItemJunle(hand_.item.GetID()) != ItemJunle::Leg)return;
+            if (GetItemGenre(hand_.item.GetID()) != ItemGenre::Leg)return;
         }
     }
     else if (hoverSlot_.area == SlotArea::Boots)
@@ -1037,7 +1037,7 @@ NORMAL_LEFT_CLICK:
         // 手に持っているアイテムが防具でなければ置けない
         if (!hand_.IsEmpty())
         {
-            if (GetItemJunle(hand_.item.GetID()) != ItemJunle::Boots) return;
+            if (GetItemGenre(hand_.item.GetID()) != ItemGenre::Boots) return;
         }
     }
 

@@ -1,6 +1,9 @@
 #include "MapManager/Chunk/Block/BlockDurability.h"
 #include "Game.h"
 
+BlockDurability::BlockDurability(){}
+BlockDurability::~BlockDurability(){}
+
 void BlockDurability::Update()
 {
 	// 破壊済みなら何もしない

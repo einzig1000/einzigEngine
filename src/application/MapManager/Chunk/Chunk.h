@@ -6,15 +6,6 @@
 class Block;
 class BlockConfig;
 
-//enum class DirectionXZ
-//{
-//	None = -1,
-//	Left = 0,
-//	Right = 1,
-//	Back = 2,
-//	Front = 3,
-//};
-
 class Chunk
 {
 public:
@@ -90,8 +81,7 @@ public:
 	std::map<BlockID, std::unique_ptr<RenderData_Block>> blockData_;
 
 	std::unordered_map<DirectionXZ, Chunk*> neighbors;
-	//Chunk* neighbors[4] = { nullptr, nullptr, nullptr, nullptr }; // 0:+X,1:-X,2:+Z,3:-Z
 
-	BlockConfig* blockConfig_;
+	std::unique_ptr< BlockConfig> blockConfig_;
 };
 
