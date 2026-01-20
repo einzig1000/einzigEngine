@@ -3,6 +3,7 @@
 #include "Game.h"
 #include <queue>
 #include <unordered_set>
+#include <memory>
 #include "Utilities/PerlinNoise.h"
 #include "engine/Physics/IWorldCollider.h"
 
@@ -77,7 +78,7 @@ public:
 	Vector3int WorldBlockIndexByPosition(const Vector3& position) const;
 
 	// マップデータ
-	std::unordered_map<Vector2int, Chunk*, Vector2intHash> chunks;
+	std::unordered_map<Vector2int, std::unique_ptr<Chunk>, Vector2intHash> chunks;
 	
 	// チャンク有無確認
 	bool HasChunk(const Vector2int& chunkPos) const;
@@ -117,7 +118,7 @@ private:
 	Player* player_;
 
 	// ドロップアイテム管理
-	DropItemManager* dropItemManager_;
+	std::unique_ptr<DropItemManager> dropItemManager_;
 
 	// このキューに入っているチャンクを順次生成していく
 	std::queue<Vector2int> chunkGenQueue_;		

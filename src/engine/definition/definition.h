@@ -181,7 +181,10 @@ enum class UIMode
 	// クラフト画面
 	Crafting,
     // ポーズ画面
-	Pause
+	Pause,
+
+
+    Max
 };
 
 // ゲームのフェーズ

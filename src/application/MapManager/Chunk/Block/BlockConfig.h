@@ -5,6 +5,7 @@ class BlockConfig
 {
 public:
 	BlockConfig();
+	~BlockConfig();
 
 	Blockinfo GetBlockInfo(BlockID id) const;
 

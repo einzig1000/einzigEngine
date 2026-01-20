@@ -4,13 +4,11 @@
 
 Block::Block()
 {
-	durability_ = new BlockDurability();
+	durability_ = std::make_unique<BlockDurability>();
 }
 
 Block::~Block()
 {
-	delete durability_;
-	durability_ = nullptr;
 }
 
 void Block::Initialize()

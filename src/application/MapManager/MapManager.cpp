@@ -276,7 +276,7 @@ namespace
 
 MapManager::MapManager()
 {
-	dropItemManager_ = new DropItemManager();
+	dropItemManager_ = std::make_unique<DropItemManager>();
 	dropItemManager_->SetMapManager(this);
 }
 
@@ -289,17 +289,7 @@ void MapManager::SetPlayer(Player* player)
 	dropItemManager_->SetPlayer(player);
 }
 
-MapManager::~MapManager()
-{
-	// チャンク解放
-	for (auto& pair : chunks)
-	{
-		delete pair.second;
-		pair.second = nullptr;
-	}
-
-	delete dropItemManager_;
-}
+MapManager::~MapManager(){}
 
 void MapManager::Initialize()
 {
@@ -386,8 +376,7 @@ void MapManager::LoadMap(const std::string& mapName)
 	// chunks 全解放&clear
 	for (auto& pair : chunks)
 	{
-		delete pair.second;
-		pair.second = nullptr;
+		pair.second.reset();
 	}
 	chunks.clear();
 	// chunkGenQueue_ を空に
@@ -432,8 +421,8 @@ bool MapManager::HasChunk(const Vector2int& chunkPos) const
 Chunk* MapManager::TryGetChunk(const Vector2int& chunkPos) const
 {
 	auto it = chunks.find(chunkPos);
-	if (it != chunks.end()) return it->second;
-	return nullptr;
+	if (it == chunks.end()) { return nullptr; }
+	return it->second.get();
 }
 
 // チャンク取得、なければスケジュールに登録して生成
@@ -498,9 +487,14 @@ void MapManager::ProcessChunkGeneration()
 		chunkGenQueue_.pop();
 		chunkScheduled_.erase(pos);
 
-		Chunk* chunk = HasChunk(pos) ? TryGetChunk(pos) : new Chunk();
+		bool exists = HasChunk(pos);
+		// 既にあるなら取得、ないなら新規生成
+		std::unique_ptr<Chunk> chunk = exists ? std::move(chunks[pos]) : std::make_unique<Chunk>();
+		// チャンクデータ生成
 		chunk->CreateChunkData(noiseParam_, pos);
-		chunks[pos] = chunk;
+		// チャンク登録
+		chunks[pos] = std::move(chunk);
+
 
 		// 隣接チャンク設定
 		static constexpr Vector2int dirOffsets[4] = 
@@ -529,7 +523,7 @@ void MapManager::ProcessChunkGeneration()
 			// 隣→自分（隣がある時だけ）
 			if (neighbor)
 			{
-				neighbor->SetNeighborChunk(opposite[dir], chunk);
+				neighbor->SetNeighborChunk(opposite[dir], chunk.get());
 			}
 		}
 

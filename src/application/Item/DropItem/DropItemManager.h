@@ -11,6 +11,8 @@ class DropItemManager
 {
 public:
 	DropItemManager();
+	~DropItemManager();
+
 	void SetMapManager(MapManager* mapManager) { mapManager_ = mapManager; }
 	void SetPlayer(Player* player) { player_ = player; }
 	void AddItem(ItemID id, Vector3 pos);

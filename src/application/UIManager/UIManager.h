@@ -1,5 +1,6 @@
 #pragma once
 #include "Game.h"
+#include <memory>
 
 class Player;
 class UIScreen;
@@ -30,10 +31,10 @@ private:
 
 	UIScreen* currentScreen_ = nullptr;
 
-	PlayingScreen* playingScreen_ = nullptr;
-	InventoryScreen* inventoryScreen_ = nullptr;
-	CraftScreen* craftingScreen_ = nullptr;
-	PauseScreen* pauseScreen_ = nullptr;
+	std::unique_ptr<PlayingScreen> playingScreen_ = nullptr;
+	std::unique_ptr<InventoryScreen> inventoryScreen_ = nullptr;
+	std::unique_ptr<CraftScreen> craftingScreen_ = nullptr;
+	std::unique_ptr<PauseScreen> pauseScreen_ = nullptr;
 
 	Player* player_ = nullptr;
 	MapManager* mapManager_ = nullptr;

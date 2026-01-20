@@ -30,7 +30,7 @@ void Camera::Update()
     switch (cameraMode_)
     {
     case CameraMode_ORBIT_FPS::ORBIT:
-        Updata_Orbit();
+        Update_Orbit();
         break;
     case CameraMode_ORBIT_FPS::FPS:
         Update_FPS();
@@ -221,7 +221,7 @@ float Camera::InFrustum_Lod(const AABB& aabb)
 	return 0.0f;
 }
 
-void Camera::Updata_Orbit()
+void Camera::Update_Orbit()
 {
 #pragma region カメラシェイク
 

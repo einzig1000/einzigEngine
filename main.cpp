@@ -9,7 +9,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 	// ウィンドウ、DirectX初期化
 	Engine::Instance().Initialize(WIDTH, HEIGHT, L"MyCraft Builders");
-	GameManager* gm = new GameManager();
+	std::unique_ptr<GameManager> gm = std::make_unique<GameManager>();
 	while (Engine::Instance().ProcessMessage())
 	{
 		// フレームの開始
@@ -23,7 +23,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		// フレームの終了
 		Engine::Instance().EndFrame();
 	}
-	delete gm;
 	Engine::Instance().Finalize();
 	return 0;
 }

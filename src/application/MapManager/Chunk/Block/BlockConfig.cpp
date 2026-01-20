@@ -89,6 +89,9 @@ BlockConfig::BlockConfig()
 	blockInfoMap_[BlockID::craftTable] = info;
 }
 
+BlockConfig::~BlockConfig()
+{}
+
 Blockinfo BlockConfig::GetBlockInfo(BlockID id) const
 {
 	return blockInfoMap_.at(id);
