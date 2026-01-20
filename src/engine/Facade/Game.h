@@ -7,7 +7,7 @@
 #include "Utilities/functions.h"
 #include "Utilities/JsonManager.h"
 #include "DrawSystem/RenderData/RenderData.h"
-#include "ResourceLoder/ResourceID.h"
+#include "ResourceLoader/ResourceID.h"
 #include "ImGuiManager/ImGuiManager.h"
 #include <algorithm>
 

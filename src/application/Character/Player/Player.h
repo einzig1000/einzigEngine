@@ -21,7 +21,7 @@ public:
 
 	void UpdateViewRay();	// 視線レイ更新
 	void UpdateMove();		// 移動更新
-	void UpdateDush();		// ダッシュ更新
+	void UpdateDash();		// ダッシュ更新
 	void UpdateJump();		// ジャンプ更新
 
 	// アイテムスロットにアイテムを追加

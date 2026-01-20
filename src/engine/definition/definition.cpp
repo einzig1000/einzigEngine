@@ -551,59 +551,59 @@ Vector3 AABB::GetCollisionDepth(const AABB& other)const
 #pragma endregion
 
 
-ItemJunle GetItemJunle(ItemID id)
+ItemGenre GetItemGenre(ItemID id)
 {
     switch (id)
     {
-    case ItemID::木の剣:			return ItemJunle::Sword;   break;
-    case ItemID::石の剣:			return ItemJunle::Sword;   break;
-    case ItemID::鉄の剣:			return ItemJunle::Sword;   break;
-    case ItemID::ダイヤの剣:		return ItemJunle::Sword;   break;
+    case ItemID::木の剣:			return ItemGenre::Sword;   break;
+    case ItemID::石の剣:			return ItemGenre::Sword;   break;
+    case ItemID::鉄の剣:			return ItemGenre::Sword;   break;
+    case ItemID::ダイヤの剣:		return ItemGenre::Sword;   break;
 
-    case ItemID::木のツルハシ:		return ItemJunle::Pickel;  break;
-    case ItemID::石のツルハシ:		return ItemJunle::Pickel;  break;
-    case ItemID::鉄のツルハシ:		return ItemJunle::Pickel;  break;
-    case ItemID::ダイヤのツルハシ:	return ItemJunle::Pickel;  break;
+    case ItemID::木のツルハシ:		return ItemGenre::Pickel;  break;
+    case ItemID::石のツルハシ:		return ItemGenre::Pickel;  break;
+    case ItemID::鉄のツルハシ:		return ItemGenre::Pickel;  break;
+    case ItemID::ダイヤのツルハシ:	return ItemGenre::Pickel;  break;
 
-    case ItemID::木の斧:			return ItemJunle::Axe;     break;
-    case ItemID::石の斧:			return ItemJunle::Axe;     break;
-    case ItemID::鉄の斧:			return ItemJunle::Axe;     break;
-    case ItemID::ダイヤの斧:		return ItemJunle::Axe;     break;
+    case ItemID::木の斧:			return ItemGenre::Axe;     break;
+    case ItemID::石の斧:			return ItemGenre::Axe;     break;
+    case ItemID::鉄の斧:			return ItemGenre::Axe;     break;
+    case ItemID::ダイヤの斧:		return ItemGenre::Axe;     break;
 
-    case ItemID::鉄の頭:            return ItemJunle::Head;    break;
-    case ItemID::鉄の胴:            return ItemJunle::Body;    break;
-    case ItemID::鉄の脚:            return ItemJunle::Leg;     break;
-    case ItemID::鉄の靴:            return ItemJunle::Boots;   break;
+    case ItemID::鉄の頭:            return ItemGenre::Head;    break;
+    case ItemID::鉄の胴:            return ItemGenre::Body;    break;
+    case ItemID::鉄の脚:            return ItemGenre::Leg;     break;
+    case ItemID::鉄の靴:            return ItemGenre::Boots;   break;
 
-    case ItemID::ダイヤの頭:        return ItemJunle::Head;    break;
-    case ItemID::ダイヤの胴:        return ItemJunle::Body;    break;
-    case ItemID::ダイヤの脚:        return ItemJunle::Leg;     break;
-    case ItemID::ダイヤの靴:        return ItemJunle::Boots;   break;
+    case ItemID::ダイヤの頭:        return ItemGenre::Head;    break;
+    case ItemID::ダイヤの胴:        return ItemGenre::Body;    break;
+    case ItemID::ダイヤの脚:        return ItemGenre::Leg;     break;
+    case ItemID::ダイヤの靴:        return ItemGenre::Boots;   break;
 
-    case ItemID::芝ブロック:		return ItemJunle::Dirt;    break;
-    case ItemID::土ブロック:		return ItemJunle::Dirt;    break;
+    case ItemID::芝ブロック:		return ItemGenre::Dirt;    break;
+    case ItemID::土ブロック:		return ItemGenre::Dirt;    break;
 
-    case ItemID::葉ブロック:		return ItemJunle::Wood;    break;
-    case ItemID::原木ブロック:		return ItemJunle::Wood;    break;
-	case ItemID::木材ブロック:		return ItemJunle::Wood;    break;
-	case ItemID::作業台ブロック:	return ItemJunle::Wood;    break;
+    case ItemID::葉ブロック:		return ItemGenre::Wood;    break;
+    case ItemID::原木ブロック:		return ItemGenre::Wood;    break;
+	case ItemID::木材ブロック:		return ItemGenre::Wood;    break;
+	case ItemID::作業台ブロック:	return ItemGenre::Wood;    break;
 
-    case ItemID::ガラスブロック:	return ItemJunle::Stone;    break;
-    case ItemID::石ブロック:		return ItemJunle::Stone;    break;
-    case ItemID::鉄ブロック:		return ItemJunle::Stone;    break;
-    case ItemID::金ブロック:		return ItemJunle::Stone;    break;
-    case ItemID::ダイヤブロック:	return ItemJunle::Stone;    break;
+    case ItemID::ガラスブロック:	return ItemGenre::Stone;    break;
+    case ItemID::石ブロック:		return ItemGenre::Stone;    break;
+    case ItemID::鉄ブロック:		return ItemGenre::Stone;    break;
+    case ItemID::金ブロック:		return ItemGenre::Stone;    break;
+    case ItemID::ダイヤブロック:	return ItemGenre::Stone;    break;
 
-    case ItemID::鉄インゴット:		return ItemJunle::Material; break;
-    case ItemID::金インゴット:		return ItemJunle::Material; break;
-    case ItemID::ダイヤモンド:		return ItemJunle::Material; break;
-	case ItemID::棒:     			return ItemJunle::Material; break;
+    case ItemID::鉄インゴット:		return ItemGenre::Material; break;
+    case ItemID::金インゴット:		return ItemGenre::Material; break;
+    case ItemID::ダイヤモンド:		return ItemGenre::Material; break;
+	case ItemID::棒:     			return ItemGenre::Material; break;
 
-    case ItemID::岩盤ブロック:		return ItemJunle::None;    break;
-    case ItemID::ビーコン:			return ItemJunle::None;    break;
+    case ItemID::岩盤ブロック:		return ItemGenre::None;    break;
+    case ItemID::ビーコン:			return ItemGenre::None;    break;
 
     default:
-		return ItemJunle::None;
+		return ItemGenre::None;
         break;
     }
 }

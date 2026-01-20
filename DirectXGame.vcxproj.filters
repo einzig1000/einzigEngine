@@ -345,7 +345,7 @@
     <ClCompile Include="src\application\MapManager\Chunk\Block\BlockDurability.cpp">
       <Filter>application\GameManager\Map\Chunk\Block</Filter>
     </ClCompile>
-    <ClCompile Include="src\application\ResourceLoder\ResourceID.cpp">
+    <ClCompile Include="src\application\ResourceLoader\ResourceID.cpp">
       <Filter>application</Filter>
     </ClCompile>
     <ClCompile Include="src\application\Camera\CameraController.cpp">
@@ -566,7 +566,7 @@
     <ClInclude Include="src\application\MapManager\Chunk\Block\BlockDurability.h">
       <Filter>application\GameManager\Map\Chunk\Block</Filter>
     </ClInclude>
-    <ClInclude Include="src\application\ResourceLoder\ResourceID.h">
+    <ClInclude Include="src\application\ResourceLoader\ResourceID.h">
       <Filter>application</Filter>
     </ClInclude>
     <ClInclude Include="src\application\Camera\CameraController.h">

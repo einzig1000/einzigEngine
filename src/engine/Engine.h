@@ -5,7 +5,7 @@
 #include <string>
 #include <wrl/client.h>
 #include <memory>
-#include "ResourceLoder/ResourceID.h"
+#include "ResourceLoader/ResourceID.h"
 
 
 class WindowManager;

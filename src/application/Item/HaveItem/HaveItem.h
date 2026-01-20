@@ -81,7 +81,7 @@ public:
 	// 持っているアイテムをドロップアイテムとして出現させる
 	void DropCurrentSelectedItem(const Vector3& position);
 
-    void UpdateInventry();
+    void UpdateInventory();
     void UpdateHotbar();
 
     void DrawInventory();

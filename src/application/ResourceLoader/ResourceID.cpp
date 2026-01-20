@@ -1,4 +1,4 @@
-#include "ResourceLoder/ResourceID.h"
+#include "ResourceLoader/ResourceID.h"
 #include "Game.h"
 
 // 全てのアイテムのテクスチャID配列（インベントリとかに表示するアイコン）
