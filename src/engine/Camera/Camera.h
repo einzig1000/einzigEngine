@@ -25,8 +25,6 @@ public:
     Vector3 GetShakeOffset() const;
 
 	// 情報取得
-    Vector3 center_;
-    float distance_;
     Transforms GetTransform() const { return transform_; }
 	Matrix4x4 GetViewProjectionMatrix() const { return viewProjectionMatrix; }
 
@@ -57,6 +55,7 @@ private:
     void MovingDistance();
 
 	Vector2 mouseDelta_;
+    int mouseWheel_ = 0;
 
 	// 球面座標上の現在位置
 	Coordinate_spherical currentPosSpherical_;
@@ -66,23 +65,17 @@ private:
     //////////////////////////////////////////////
     ///              カメラ回転                ///
     //////////////////////////////////////////////
-    Vector3 preRotate_;
-    // 演出による回転中
-    EasingSetVector3 easeRotate_;
+
 
     //////////////////////////////////////////////
     ///                回転中心                ///
     //////////////////////////////////////////////
-    Vector3 preCenter_;
-    // 演出による回転中心の変更中
-    EasingSetVector3 easeCenter_;
+
 
     //////////////////////////////////////////////
     ///               カメラ距離               ///
     //////////////////////////////////////////////
-    int mouseWheel_ = 0;
-    // 演出によるカメラ距離の変更中
-    EasingSetVector3 easeDistance_;
+
 
     //////////////////////////////////////////////
     ///             視錐台判定用              ///
@@ -94,18 +87,13 @@ private:
     //////////////////////////////////////////////
     ///              カメラシェイク            ///
     //////////////////////////////////////////////
-    bool shakeActive_ = false;
-    float shakeDuration_ = 0.0f;		// 揺れが続く時間
-    float shakeTime_ = 0.0f;			// 経過時間
-    float shakeIntensity_ = 0.0f;		// 初期振幅（揺れの強さ）
-    float shakeFrequency_ = 25.0f;		// 揺れる速さ
 
     Matrix4x4 viewportMatrix;
 
 	// ビュー行列関連データ
     Matrix4x4 viewMatrix_;
     Transforms transform_;
-    Matrix4x4 worldMatrix_;
+    //Matrix4x4 worldMatrix_;
 
     /// プロジェクション行列関連データ
     Matrix4x4 projectionMatrix_;
@@ -113,14 +101,6 @@ private:
     float aspect_;
     float nearZ_ = 0.01f;
 	float farZ_ = 100.0f;
-
-    // 画面中心のみカバーしたちいさプロジェクション行列関連データ
-	Matrix4x4 centerProjectionMatrix_;
-	float centerFovY_ = 0.3f;
-	float centerAspect_;
-	float centerNearZ_ = 0.01f;
-	float centerFarZ_ = 100.0f;
-
 
 	// ビュープロジェクション行列
     Matrix4x4 viewProjectionMatrix;

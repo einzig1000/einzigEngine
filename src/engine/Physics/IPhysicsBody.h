@@ -7,13 +7,13 @@
 /// 動的オブジェクト側：インターフェース
 /// </summary>
 /// プレイヤー / ゾンビ / 弾など「動く側」を、PhysicsSystem から同じ手順で扱えるようにするための共通窓口。
-/// PhysicsSystem は 具象クラス（RenderData_Model等）を知らず、IPhysicsBody の関数だけを呼ぶ。
+/// PhysicsSystem は 具象クラス（RenderData_Model等）を知らず、IPhysicsBody の関数だけを呼ぶ。[[
 class IPhysicsBody
 {
 public:
     virtual ~IPhysicsBody() = default;
 
-    // 衝突形状（AABB群）
+	// 衝突形状（自身のAABB）を取得
     virtual std::span<const AABB> GetAABBs() const = 0;
 
     // Sweep用：移動前状態でAABBを最新化

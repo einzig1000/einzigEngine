@@ -94,7 +94,7 @@ Vector3 CameraManager::GetCenter(const std::string name) const
 	{
 		if (cam.name_ == name)
 		{
-			return cam.center_;
+			//return cam.center_;
 		}
 	}
 
@@ -133,7 +133,7 @@ float CameraManager::GetDistance(const std::string name) const
 	{
 		if (cam.name_ == name)
 		{
-			return cam.distance_;
+			//return cam.distance_;
 		}
 	}
 
@@ -143,7 +143,8 @@ float CameraManager::GetDistance(const std::string name) const
 
 Vector3 CameraManager::GetCurrentCenter() const
 {
-	return camera_[currentCameraID_].center_;
+	//return camera_[currentCameraID_].center_;
+	return Vector3{};
 }
 
 Vector3 CameraManager::GetCurrentTranslate() const
@@ -163,7 +164,8 @@ Matrix4x4 CameraManager::GetCurrentViewProjectionMatrix() const
 
 float CameraManager::GetCurrentDistance() const
 {
-	return camera_[currentCameraID_].distance_;
+	//return camera_[currentCameraID_].distance_;
+	return 0.0f;
 }
 
 void CameraManager::SetCameraMode(CameraMode_ORBIT_FPS mode)

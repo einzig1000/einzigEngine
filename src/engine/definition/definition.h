@@ -1054,6 +1054,33 @@ struct mouseButtonState
 
 #pragma region 描画オプション構造体
 
+struct AtlasInfo
+{
+	// アトラスの列数(縦に伸ばすため1固定)
+    uint32_t atlasCols = 1;
+	// アトラスの行数
+    uint32_t atlasRows = 1;
+
+	// １面の幅(実際のブロックとパディングを含む)
+    uint32_t faceStrideX = 24;
+	// １面の高さ(実際のブロックとパディングを含む)
+    uint32_t faceStrideY = 24;
+
+	// 実際のブロックの幅
+    uint32_t innerSizeX = 16;
+    uint32_t innerSizeY = 16;
+
+	// パディングの幅
+    uint32_t padX = 4;
+    uint32_t padY = 4;
+
+    uint32_t facesPerBlock = 6;
+    uint32_t padding0 = 0;
+
+    Vector2 invAtlasSize = { 0.0f, 0.0f }; // 1/width, 1/height
+    Vector2 padding1 = { 0.0f, 0.0f };
+};
+
 enum class BlendMode
 {
     // ブレンドなし

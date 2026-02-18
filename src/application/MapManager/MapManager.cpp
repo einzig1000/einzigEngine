@@ -247,7 +247,7 @@ namespace
 					Chunk* c = self->TryGetChunk(chunkPos);
 					if (!c) continue;
 
-					Block* b = c->blocks[localX][localY][localZ].get();
+					Block* b = c->blocks_[localX][localY][localZ].get();
 					if (!b) continue;
 					if (b->GetBlockID() == BlockID::Air) continue;
 
@@ -600,58 +600,54 @@ void MapManager::DestroyBlockAt(const Vector2int& chunkPos, const Vector3int& lo
 	if (!chunk) return;
 
 	// 破壊するブロックを取得
-	Block* targetBlock = chunk->blocks[localIndex.x][localIndex.y][localIndex.z].get();
+	Block* targetBlock = chunk->blocks_[localIndex.x][localIndex.y][localIndex.z].get();
 	if (!targetBlock) return;
 
 	// 破壊するブロックのIDを取得
 	const BlockID destroyedId = targetBlock->GetBlockID();
 	if (destroyedId == BlockID::Air) return;
 
-	// ドロップ位置を決める
-	Vector3 dropPos = GetAABB(chunkPos, localIndex).center();
-	dropPos.x += Game::Math::RandFloat(-0.3f, 0.3f, 2);
-	dropPos.z += Game::Math::RandFloat(-0.3f, 0.3f, 2);
-
 	// ブロック破壊
 	chunk->DestroyBlock(localIndex);
 
+	// 露出状態更新
+	chunk->SetExposedAroundBlocks(localIndex);
+
 	// ドロップアイテム生成
-	AddDropItemAt(dropPos, BlockIdToDropItemId(destroyedId));
+	AddDropItemAt(targetBlock->position_, BlockIdToDropItemId(destroyedId));
 }
 
 void MapManager::AddDropItemAt(const Vector3& position, ItemID id)
 {
-	dropItemManager_->AddItem(id, position);
+	Vector3 dropPos = position;
+	dropPos.x += Game::Math::RandFloat(-0.3f, 0.3f, 2);
+	dropPos.z += Game::Math::RandFloat(-0.3f, 0.3f, 2);
+	dropItemManager_->AddItem(id, dropPos);
 }
 
 // 指定位置にブロックを設置
 bool MapManager::SetBlockAt(const Vector2int& chunkPos, const Vector3int& localIndex, const BlockID id)
 {
-	// Air ブロックは設置できない(おけるわけがない笑)
-	if (id == BlockID::Air) return false;
-
-	// 設置するチャンクが存在しないなら設置できない(非存在なわけがない笑)
+	// 設置するチャンクを取得
 	Chunk* chunk = TryGetChunk(chunkPos);
 	if (!chunk) return false;
 
-	// チャンク外のブロックを指してたら設置できない(指してるわけがない笑)
-	if (localIndex.x < 0 || localIndex.x >= CHUNK_X ||
-		localIndex.y < 0 || localIndex.y >= CHUNK_Y ||
-		localIndex.z < 0 || localIndex.z >= CHUNK_Z)
-	{
-		return false;
-	}
+	// 設置するブロック単位の空間を取得
+	Block* targetBlock = chunk->blocks_[localIndex.x][localIndex.y][localIndex.z].get();
+	if (!targetBlock) return false;
+
+	// Air ブロックは設置できない
+	if (id == BlockID::Air) return false;
+
+	// 指定位置に既にブロックが存在しているなら設置できない
+	if (targetBlock->GetBlockID() != BlockID::Air) return false;
 
 	// キャラクターと重なってたら設置できない
 	const AABB placeAabb = GetAABB(chunkPos, localIndex);
 	if (IsOverlappingAnyCharacter(placeAabb))
+	{
 		return false;
-
-	Block* targetBlock = chunk->blocks[localIndex.x][localIndex.y][localIndex.z].get();
-	// 指定位置にブロックインスタンスが存在しないなら設置できない(存在しないわけがない笑)
-	if (!targetBlock) return false;
-	// 指定位置に既にブロックが存在しているなら設置できない(存在しているわけがない笑)
-	if (targetBlock->GetBlockID() != BlockID::Air) return false;
+	}
 
 	// ブロック設置
 	chunk->SetBlock(localIndex, id);
@@ -774,7 +770,7 @@ bool MapManager::SweepAABB(const AABB& aabb, const Vector3& delta, Vector3& outC
 						Chunk* c = TryGetChunk(chunkPos);
 						if (!c) continue;
 
-						Block* b = c->blocks[localX][localY][localZ].get();
+						Block* b = c->blocks_[localX][localY][localZ].get();
 						if (!b) continue;
 						if (b->GetBlockID() == BlockID::Air) continue;
 
@@ -1129,7 +1125,7 @@ bool MapManager::SweepAABB_SamplePoints(const AABB& aabb, const Vector3& delta, 
 			Chunk* c = TryGetChunk(Vector2int{ cx, cz });
 			if (!c) return false;
 
-			Block* b = c->blocks[lx][wb.y][lz].get();
+			Block* b = c->blocks_[lx][wb.y][lz].get();
 			if (!b) return false;
 			if (b->GetBlockID() == BlockID::Air) return false;
 
@@ -1220,7 +1216,7 @@ bool MapManager::isSolidAt(const Vector3& position) const
 	Chunk* chunk = TryGetChunk(chunkPos);
 	if (chunk)
 	{
-		Block* block = chunk->blocks[index.x][index.y][index.z].get();
+		Block* block = chunk->blocks_[index.x][index.y][index.z].get();
 		if (block && block->GetBlockID() != BlockID::Air)
 		{
 			return true;
@@ -1268,7 +1264,7 @@ bool MapManager::GetIsActive(const Vector2int& chunkPos, const Vector3int& index
 	Chunk* chunk = TryGetChunk(chunkPos);
 	if (chunk)
 	{
-		if (chunk->blocks[index.x][index.y][index.z]->blockInfo_.type != BlockID::Air)
+		if (chunk->blocks_[index.x][index.y][index.z]->blockInfo_.type != BlockID::Air)
 		{
 			return true;
 		}
@@ -1416,7 +1412,7 @@ std::optional<lookAtBlock> MapManager::GetBlockByCrossedRay(const Ray& ray, cons
 				0 <= local.y && local.y < CHUNK_Y &&
 				0 <= local.z && local.z < CHUNK_Z)
 			{
-				Block* b = chunk->blocks[local.x][local.y][local.z].get();
+				Block* b = chunk->blocks_[local.x][local.y][local.z].get();
 				if (b && b->GetBlockID() != BlockID::Air)
 				{
 					const AABB& aabb = b->aabb_;

@@ -75,6 +75,8 @@ private:
 	void InitializeResource_WVPMatrix();
 	void InitializeResource_VertexBuffer();
 	void InitializeResource_IndexBuffer();
+	void InitializeResource_AtlasInfo();
+
 
 
 	// 動的頂点バッファの確保
@@ -132,6 +134,13 @@ private:
 	// 共有ライトデータの永続Mapポインタ
 	DirectionalLight* directionalLightData_ = nullptr;
 
+	// ブロックべ―ステクスチャアトラス情報
+	Microsoft::WRL::ComPtr<ID3D12Resource> baseAtlasInfoResource_ = nullptr;
+	AtlasInfo* baseAtlasInfoData_ = nullptr;
+
+	// ブロック破壊テクスチャアトラス情報
+	Microsoft::WRL::ComPtr<ID3D12Resource> breakAtlasInfoResource_ = nullptr;
+	AtlasInfo* breakAtlasInfoData_ = nullptr;
 
 	// 現フレームで描画されている頂点数(モデルは除く)
 	size_t vertexDataUsed_ = 0;
