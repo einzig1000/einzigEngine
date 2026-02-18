@@ -1998,46 +1998,47 @@ void RenderData_Rect::DrawImGui()
 
 #pragma region block
 
-RenderData_Block::RenderData_Block(BlockID id)
+RenderData_Block::RenderData_Block()
 {
 	renderBlocks.push_back(this);
 	this->ID = int(renderBlocks.size());
 
-	// ワールド行列バッファの作成
+
+	// ===== WorldMatrix =====
 	this->worldMatrixResource_ = Engine::Instance().CreateBufferResource(sizeof(Matrix4x4) * this->capacity);
 	this->worldMatrixResource_->Map(0, nullptr, reinterpret_cast<void**>(&this->worldMatrixData_));
-	this->worldMatrixSrvAllocation_ = Engine::Instance().GetDirectXManager()->GetDescriptorHeapManager()->GetSrvManager()->CreateSRVforStructuredBuffer(
-		this->worldMatrixResource_.Get(),
-		this->capacity,
-		sizeof(Matrix4x4));
+	this->worldMatrixSrvAllocation_ =
+		Engine::Instance().GetDirectXManager()->GetDescriptorHeapManager()->GetSrvManager()
+		->CreateSRVforStructuredBuffer(this->worldMatrixResource_.Get(), this->capacity, sizeof(Matrix4x4));
 
-	// 色バッファの作成
+	// ===== Color =====
 	this->colorResource_ = Engine::Instance().CreateBufferResource(sizeof(Vector4) * this->capacity);
 	this->colorResource_->Map(0, nullptr, reinterpret_cast<void**>(&this->colorData_));
-	this->colorSrvAllocation_ = Engine::Instance().GetDirectXManager()->GetDescriptorHeapManager()->GetSrvManager()->CreateSRVforStructuredBuffer(
-		this->colorResource_.Get(),
-		this->capacity,
-		sizeof(Vector4));
+	this->colorSrvAllocation_ =
+		Engine::Instance().GetDirectXManager()->GetDescriptorHeapManager()->GetSrvManager()
+		->CreateSRVforStructuredBuffer(this->colorResource_.Get(), this->capacity, sizeof(Vector4));
 
-	// テクスチャインデックスバッファの作成
-	this->breakLayerResource_ = Engine::Instance().CreateBufferResource(sizeof(uint32_t) * this->capacity);
-	this->breakLayerResource_->Map(0, nullptr, reinterpret_cast<void**>(&this->breakLayerData_));
-	this->breakLayerSrvAllocation_ = Engine::Instance().GetDirectXManager()->GetDescriptorHeapManager()->GetSrvManager()->CreateSRVforStructuredBuffer(
-		this->breakLayerResource_.Get(),
-		this->capacity,
-		sizeof(uint32_t));
+	// ===== BaseTile =====
+	this->baseTileResource_ = Engine::Instance().CreateBufferResource(sizeof(uint32_t) * this->capacity);
+	this->baseTileResource_->Map(0, nullptr, reinterpret_cast<void**>(&this->baseTileData_));
+	this->baseTileSrvAllocation_ =
+		Engine::Instance().GetDirectXManager()->GetDescriptorHeapManager()->GetSrvManager()
+		->CreateSRVforStructuredBuffer(this->baseTileResource_.Get(), this->capacity, sizeof(uint32_t));
 
-	// データ初期化(多分いらない)
-	for (size_t i = 0; i < this->capacity; ++i)
+	// ===== BreakTile =====
+	this->breakTileResource_ = Engine::Instance().CreateBufferResource(sizeof(uint32_t) * this->capacity);
+	this->breakTileResource_->Map(0, nullptr, reinterpret_cast<void**>(&this->breakTileData_));
+	this->breakTileSrvAllocation_ =
+		Engine::Instance().GetDirectXManager()->GetDescriptorHeapManager()->GetSrvManager()
+		->CreateSRVforStructuredBuffer(this->breakTileResource_.Get(), this->capacity, sizeof(uint32_t));
+
+	// 初期化
+	for (uint32_t i = 0; i < this->capacity; ++i)
 	{
-		// ワールド行列初期化
-		this->worldMatrixData_[i] = Matrix4x4::MakeIdentity4x4(); 
-
-		// 色初期化
-		this->colorData_[i] = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-
-		// テクスチャインデックス初期化
-		this->breakLayerData_[i] = 0;
+		worldMatrixData_[i] = Matrix4x4::MakeIdentity4x4();
+		colorData_[i] = Vector4(0.0f, 0.0f, 0.0f, 0.0f);
+		baseTileData_[i] = 0;
+		breakTileData_[i] = 0;
 	}
 
 	this->scale_.resize(capacity);
@@ -2045,8 +2046,6 @@ RenderData_Block::RenderData_Block(BlockID id)
 	this->translate_.resize(capacity);
 	this->indexes_.resize(capacity);
 	this->isActive_.resize(capacity, false);
-
-	name = id;
 }
 RenderData_Block::~RenderData_Block()
 {
@@ -2057,52 +2056,30 @@ RenderData_Block::~RenderData_Block()
 	}
 }
 
-void RenderData_Block::UpdateAllBlock()
-{
-	//for (size_t ID = 0; ID < renderBlocks.size(); ++ID)
-	//{
-	//	renderBlocks[ID]->Update();
-	//}
-}
-
-void RenderData_Block::Update()
-{
-	// 非アクティブなブロックをリストから削除
-	//RemoveInactiveBlocks();
-
-	// SRTの更新
-	//UpdateTransforms();
-}
-
 // ブロックの追加
-uint32_t RenderData_Block::AddNewBlock(Vector3 position, Vector3int index)
+uint32_t RenderData_Block::AddNewBlock(const Vector3& worldPos, const Vector3int& localIndex, uint32_t baseTile)
 {
-	uint32_t slot = currentDrawSum;
+	uint32_t slot = 0;
 
-	Log("BlockID:%s", EnumToString(name));
-	Log("index:%d,%d,%d", index.x, index.y, index.z);
-	Log("currentSum:%d", currentDrawSum);
-
-	// 空きスロットがあればそれを使う
 	if (!freeSlots_.empty())
 	{
 		slot = freeSlots_.back();
 		freeSlots_.pop_back();
 	}
-	// 空きスロットがなければ末尾に追加
 	else
 	{
 		if (currentDrawSum >= capacity)
 		{
-			Log("キャパオーバー(あり得ないためこれが出る時は多分致命的なミスがある)");
+			Log("RenderData_Block::AddNewBlock キャパオーバー");
 			return UINT32_MAX;
 		}
+
 		slot = currentDrawSum;
 		currentDrawSum++;
 	}
-	
-	// アクティブ化
+
 	isActive_[slot] = true;
+	indexes_[slot] = localIndex;
 
 	// 拡縮量の初期化
 	scale_[slot].value = Vector3(1.0f, 1.0f, 1.0f);
@@ -2115,11 +2092,11 @@ uint32_t RenderData_Block::AddNewBlock(Vector3 position, Vector3int index)
 	rotate_[slot].acceleration = Vector3(0.0f, 0.0f, 0.0f);
 
 	// 座標の初期化
-	translate_[slot].value = position;
+	translate_[slot].value = worldPos;
 	translate_[slot].velocity = Vector3(0.0f, 0.0f, 0.0f);
 	translate_[slot].acceleration = Vector3(0.0f, 0.0f, 0.0f);
 
-	// ワールド行列の更新
+	// ワールド行列の初期化
 	worldMatrixData_[slot] = Matrix4x4::MakeAffineMatrix(
 		scale_[slot].value,
 		rotate_[slot].value,
@@ -2128,43 +2105,48 @@ uint32_t RenderData_Block::AddNewBlock(Vector3 position, Vector3int index)
 	// 色の初期化
 	colorData_[slot] = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 
-	// 破壊レイヤーの初期値
-	breakLayerData_[slot] = 0;
+	// テクスチャの初期化
+	baseTileData_[slot] = baseTile;
+	breakTileData_[slot] = 0;
 
-	// インデックスの保存
-	indexes_[slot] = index;
-
-	// 追加したスロットを返す
 	return slot;
 }
 
-// ブロックの削除
-void RenderData_Block::RemoveBlock(Vector3int index)
+void RenderData_Block::RemoveBlock(uint32_t slot)
 {
-	for (size_t i = 0; i < capacity; ++i)
-	{
-		if (isActive_[i] && indexes_[i] == index)
-		{
-			// 非アクティブ化
-			isActive_[i] = false;
+	if (slot >= capacity) return;
+	if (!isActive_[slot]) return;
 
-			// 見えない場所へ飛ばす（穴を描かせない）
-			worldMatrixData_[i] = Matrix4x4::MakeTranslateMatrix(Vector3(0.0f, -1000000.0f, 0.0f));
+	isActive_[slot] = false;
 
-			// 透明化
-			colorData_[i] = Vector4(0.0f, 0.0f, 0.0f, 0.0f);
+	// 見えない場所に飛ばす
+	worldMatrixData_[slot] = Matrix4x4::MakeTranslateMatrix(Vector3(0.0f, -1000000.0f, 0.0f));
 
-			// 破壊レイヤー初期化
-			breakLayerData_[i] = 0;
+	// さらに透明化も行う徹底ぶり
+	colorData_[slot] = Vector4(0.0f, 0.0f, 0.0f, 0.0f);
 
-			// 空きスロットとして設定
-			freeSlots_.push_back(static_cast<uint32_t>(i));
+	// アトラスタイル初期化
+	baseTileData_[slot] = 0;
+	breakTileData_[slot] = 0;
 
-			return;
-		}
-	}
+	freeSlots_.push_back(slot);
 }
 
+void RenderData_Block::SetColor(uint32_t slot, const Vector4 & color)
+{
+	if (slot >= capacity) return;
+	if (!isActive_[slot]) return;
+
+	colorData_[slot] = color;
+}
+
+void RenderData_Block::SetBreakTile(uint32_t slot, uint32_t breakTile)
+{
+	if (slot >= capacity) return;
+	if (!isActive_[slot]) return;
+
+	breakTileData_[slot] = breakTile;
+}
 
 void RenderData_Block::Draw()
 {
@@ -2173,71 +2155,71 @@ void RenderData_Block::Draw()
 
 void RenderData_Block::DrawImGui()
 {
-	std::string str = EnumToString(this->name);
-
-	std::string num = ":" + std::to_string(this->ID);
-
-	ImGui::Begin(str.c_str());
-
-	ImGui::Text("capacity : %d", static_cast<int>(capacity));
-	ImGui::Text("currentSum : %d", static_cast<int>(currentSum));
-
-	if (ImGui::TreeNode("----------texture--------------"))
-	{
-		size_t textureCount = Game::Resource::GetTextureCount();
-
-		for (size_t i = 0; i < textureCount; ++i)
-		{
-			TextureData* texData = Game::Resource::GetTextureData(static_cast<uint32_t>(i));
-			if (texData)
-			{
-				ImGui::Image((ImTextureID)texData->textureSrvHandleGPU.ptr, ImVec2(32, 32));
-
-				// 6個並べたら改行
-				if ((i + 1) % 6 != 0 && i < textureCount - 1)
-				{
-					ImGui::SameLine();
-				}
-				if (ImGui::IsItemClicked())
-				{
-					this->texture = static_cast<uint32_t>(i);
-				}
-			}
-		}
-		ImGui::TreePop();
-	}
-	if (ImGui::TreeNode("----------model----------------"))
-	{
-		if (ImGui::Button("-"))this->model -= 1;
-
-		ImGui::SameLine();
-
-		// ラベルを非表示にするために "##" プレフィックスで ID を与える
-		std::string dragId = std::string("##model") + num;
-		ImGui::DragInt(dragId.c_str(), reinterpret_cast<int*>(&this->model));
-
-		ImGui::SameLine();
-
-		if (ImGui::Button("+"))this->model += 1;
-
-		// クランプ
-		if (this->model < 0) this->model = 0;
-		if (this->model > int(Game::Resource::GetModelCount() - 1)) this->model = int(Game::Resource::GetModelCount() - 1);
-
-		ImGui::TreePop();
-	}
-	if (ImGui::TreeNode("----------color----------------"))
-	{
-		//Vector4 preColor = ConvertUintToVector4(this->color);
-		//float floatColor[4] = { preColor.x, preColor.y, preColor.z, preColor.w };
-		//ImGui::ColorEdit4((num + "color").c_str(), floatColor, 1);
-		//Vector4 vector4Color = { floatColor[0], floatColor[1], floatColor[2], floatColor[3] };
-		//this->color = ConvertVector4ToUint(vector4Color);
-		//ImGui::TreePop();
-	}
-	ImGui::SetNextItemOpen(true, ImGuiCond_Once);
-
-	ImGui::End();
+//	std::string str = EnumToString(this->name);
+//
+//	std::string num = ":" + std::to_string(this->ID);
+//
+//	ImGui::Begin(str.c_str());
+//
+//	ImGui::Text("capacity : %d", static_cast<int>(capacity));
+//	ImGui::Text("currentSum : %d", static_cast<int>(currentSum));
+//
+//	if (ImGui::TreeNode("----------texture--------------"))
+//	{
+//		size_t textureCount = Game::Resource::GetTextureCount();
+//
+//		for (size_t i = 0; i < textureCount; ++i)
+//		{
+//			TextureData* texData = Game::Resource::GetTextureData(static_cast<uint32_t>(i));
+//			if (texData)
+//			{
+//				ImGui::Image((ImTextureID)texData->textureSrvHandleGPU.ptr, ImVec2(32, 32));
+//
+//				// 6個並べたら改行
+//				if ((i + 1) % 6 != 0 && i < textureCount - 1)
+//				{
+//					ImGui::SameLine();
+//				}
+//				if (ImGui::IsItemClicked())
+//				{
+//					this->texture = static_cast<uint32_t>(i);
+//				}
+//			}
+//		}
+//		ImGui::TreePop();
+//	}
+//	if (ImGui::TreeNode("----------model----------------"))
+//	{
+//		if (ImGui::Button("-"))this->model -= 1;
+//
+//		ImGui::SameLine();
+//
+//		// ラベルを非表示にするために "##" プレフィックスで ID を与える
+//		std::string dragId = std::string("##model") + num;
+//		ImGui::DragInt(dragId.c_str(), reinterpret_cast<int*>(&this->model));
+//
+//		ImGui::SameLine();
+//
+//		if (ImGui::Button("+"))this->model += 1;
+//
+//		// クランプ
+//		if (this->model < 0) this->model = 0;
+//		if (this->model > int(Game::Resource::GetModelCount() - 1)) this->model = int(Game::Resource::GetModelCount() - 1);
+//
+//		ImGui::TreePop();
+//	}
+//	if (ImGui::TreeNode("----------color----------------"))
+//	{
+//		//Vector4 preColor = ConvertUintToVector4(this->color);
+//		//float floatColor[4] = { preColor.x, preColor.y, preColor.z, preColor.w };
+//		//ImGui::ColorEdit4((num + "color").c_str(), floatColor, 1);
+//		//Vector4 vector4Color = { floatColor[0], floatColor[1], floatColor[2], floatColor[3] };
+//		//this->color = ConvertVector4ToUint(vector4Color);
+//		//ImGui::TreePop();
+//	}
+//	ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+//
+//	ImGui::End();
 }
 
 #pragma endregion

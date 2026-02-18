@@ -14,8 +14,8 @@ public:
 	// チャンク内の更新
 	void Update();
 
-	// インスタンシング描画の配列のインデックス
-	uint32_t instanceIndex_ = 0;
+	// RenderData_Blockのslot
+	int32_t dataSlot_ = 0;
 
 	// ブロックの種類設定
 	void SetBlockType(Blockinfo info);
@@ -23,8 +23,6 @@ public:
 
 	// ブロックの位置設定
 	void SetBlockPosition(const Vector3& position);
-
-
 
 	// プレイヤーに見られている時、輝度に応じて色を更新
 	void UpdateColor();
@@ -35,7 +33,7 @@ public:
 	AABB aabb_;
 
 	// 輝度
-	uint32_t lightEmission_ = 14;
+	int32_t lightEmission_ = 14;
 
 	// 耐久値
 	std::unique_ptr<BlockDurability> durability_;

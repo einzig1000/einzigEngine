@@ -26,6 +26,9 @@ DrawSystem::DrawSystem(DirectXManager* dxManager)
 	// カメラViewProjection行列リソース初期化	
 	InitializeResource_ViewProjectionMatrix();
 
+	// Block用 AtlasInfo リソース初期化
+	InitializeResource_AtlasInfo();
+
 	// 頂点バッファリソース初期化
 	InitializeResource_VertexBuffer();
 
@@ -119,9 +122,6 @@ void DrawSystem::Draw()
 	// パーティクル描画
 	DrawAllParticle();
 
-	// ブロック描画
-	DrawAllBlock();
-
 	// モデル描画
 	DrawAllModel();
 
@@ -134,9 +134,15 @@ void DrawSystem::Draw()
 	// スプライト描画
 	DrawAllSprite();
 
+	// ルートシグネチャを設定
+	dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootSignature(dxManager_->GetPipelineStateManager()->GetRootSignature_block());
+
+	// ブロック描画
+	DrawAllBlock();
+
 	// 形状を設定 (線)
 	dxManager_->GetCommandContextManager()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
-	// PSOを設定 (線)
+	// PSOを設定 (線はNormal固定)
 	dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetLinePipelineState(BlendMode::kBlendModeNormal));
 
 	// 線描画
@@ -1222,11 +1228,14 @@ void DrawSystem::DrawAllParticle()
 }
 void DrawSystem::DrawAllBlock()
 {
+	// PSOを設定(一旦normal固定)
+	dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetBlockPipelineState(BlendMode::kBlendModeNormal));
 	for (auto& renderData : blockDrawList_)
 	{
 		// 描画数０
 		if (renderData->currentDrawSum == 0) continue;
 
+		// 描画数オーバー(capacityは事前に確保しているインスタンス数の上限)
 		if (renderData->currentDrawSum > renderData->capacity)
 		{
 			assert(false); 
@@ -1243,9 +1252,15 @@ void DrawSystem::DrawAllBlock()
 		const TextureData* tex2 = dxManager_->GetResourceManager()->GetTextureManager()->GetTextureData(renderData->breakTexture);
 		if (!tex2) continue;
 
-		// RootSignatureとPSOを設定
-		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootSignature(dxManager_->GetPipelineStateManager()->GetRootSignature_block());
-		dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetBlockPipelineState(BlendMode::kBlendModeNormal));
+		if (baseAtlasInfoData_)
+		{
+			baseAtlasInfoData_->invAtlasSize = { 1.0f / float(tex->metadata.width), 1.0f / float(tex->metadata.height) };
+		}
+		if (breakAtlasInfoData_)
+		{
+			breakAtlasInfoData_->invAtlasSize = { 1.0f / float(tex2->metadata.width), 1.0f / float(tex2->metadata.height) };
+		}
+
 
 		// 頂点数の取得
 		const uint32_t kSumVertex = static_cast<uint32_t>(obj->modelData.vertices.size());
@@ -1253,18 +1268,25 @@ void DrawSystem::DrawAllBlock()
 		// 頂点バッファをバインド（描画に使う頂点データを指定）
 		dxManager_->GetCommandContextManager()->GetCommandList()->IASetVertexBuffers(0, 1, &obj->vertexBufferView);
 
-		// ルートパラメータ0にカラー配列をバインド
-		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(0, renderData->colorSrvAllocation_.gpu);
-		// ルートパラメータ1にワールド行列配列をバインド
-		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(1, renderData->worldMatrixSrvAllocation_.gpu);
-		// ルートパラメータ2にテクスチャのSRV（シェーダリソースビュー）をバインド
-		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
-		// ルートパラメータ3に追加テクスチャのSRV（シェーダリソースビュー）をバインド
-		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(3, tex2->textureSrvHandleGPU);
-		// ルートパラメータ4に追加テクスチャ配列インデックスのSRVをバインド
-		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(4, renderData->breakLayerSrvAllocation_.gpu);
-		// ルートパラメータ5にカメラViewProjection行列用定数バッファをバインド
-		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(5, viewProjectionResource_->GetGPUVirtualAddress());
+
+		// ルートパラメータ0にワールド行列配列をバインド
+		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(0, renderData->worldMatrixSrvAllocation_.gpu);
+		// ルートパラメータ1に破壊タイルのインデックス配列をバインド
+		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(1, renderData->breakTileSrvAllocation_.gpu);
+		// ルートパラメータ2にベースタイルのインデックス配列をバインド
+		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(2, renderData->baseTileSrvAllocation_.gpu);
+		// ルートパラメータ3にベーステクスチャをバインド
+		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(3, tex->textureSrvHandleGPU);
+		// ルートパラメータ4に破壊テクスチャをバインド
+		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(4, tex2->textureSrvHandleGPU);
+		// ルートパラメータ5にカラーをバインド
+		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(5, renderData->colorSrvAllocation_.gpu);
+		// ルートパラメータ6にカメラViewProjection行列用定数バッファをバインド
+		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(6, viewProjectionResource_->GetGPUVirtualAddress());
+		// ルートパラメータ7に破壊タイルのUV情報用定数バッファをバインド
+		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(7, breakAtlasInfoResource_->GetGPUVirtualAddress());
+		// ルートパラメータ8にベースタイルのUV情報用定数バッファをバインド
+		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(8, baseAtlasInfoResource_->GetGPUVirtualAddress());
 
 		dxManager_->GetCommandContextManager()->GetCommandList()->DrawInstanced(kSumVertex, renderData->currentDrawSum, 0, 0);
 	}
@@ -1429,6 +1451,42 @@ void DrawSystem::InitializeResource_IndexBuffer()
 	indexBufferView.SizeInBytes = sizeof(uint32_t) * 6;
 	// インデックスはuint32_tとする
 	indexBufferView.Format = DXGI_FORMAT_R32_UINT;
+}
+void DrawSystem::InitializeResource_AtlasInfo()
+{
+	breakAtlasInfoResource_ = CreateConstantBufferResource(dxManager_->GetDevice(), sizeof(AtlasInfo));
+	breakAtlasInfoData_ = nullptr;
+	HRESULT hr1 = breakAtlasInfoResource_->Map(0, nullptr, reinterpret_cast<void**>(&breakAtlasInfoData_));
+	assert(SUCCEEDED(hr1));
+
+	baseAtlasInfoResource_ = CreateConstantBufferResource(dxManager_->GetDevice(), sizeof(AtlasInfo));
+	baseAtlasInfoData_ = nullptr;
+	HRESULT hr2 = baseAtlasInfoResource_->Map(0, nullptr, reinterpret_cast<void**>(&baseAtlasInfoData_));
+	assert(SUCCEEDED(hr2));
+
+	// 一旦ここで設定
+	// 面単位pad: 1面=24x24, 1ブロック=6面
+	*baseAtlasInfoData_ = {};
+	baseAtlasInfoData_->atlasCols = 1;
+	baseAtlasInfoData_->atlasRows = 10; // 仮（実際のブロック種類数に合わせる）
+	baseAtlasInfoData_->faceStrideX = 24;
+	baseAtlasInfoData_->faceStrideY = 24;
+	baseAtlasInfoData_->innerSizeX = 16;
+	baseAtlasInfoData_->innerSizeY = 16;
+	baseAtlasInfoData_->padX = 4;
+	baseAtlasInfoData_->padY = 4;
+	baseAtlasInfoData_->facesPerBlock = 6;
+
+	*breakAtlasInfoData_ = {};
+	breakAtlasInfoData_->atlasCols = 1;
+	breakAtlasInfoData_->atlasRows = 0; // 仮
+	breakAtlasInfoData_->faceStrideX = 24;
+	breakAtlasInfoData_->faceStrideY = 24;
+	breakAtlasInfoData_->innerSizeX = 16;
+	breakAtlasInfoData_->innerSizeY = 16;
+	breakAtlasInfoData_->padX = 4;
+	breakAtlasInfoData_->padY = 4;
+	breakAtlasInfoData_->facesPerBlock = 6;
 }
 
 bool DrawSystem::EnsureDynamicVB(size_t requiredVertexCount)

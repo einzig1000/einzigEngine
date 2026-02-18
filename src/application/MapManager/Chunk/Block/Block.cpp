@@ -42,7 +42,7 @@ void Block::Update()
 
 void Block::UpdateColor()
 {
-	lightEmission_ = std::clamp(lightEmission_, 0u, 9u);
+	lightEmission_ = std::clamp(lightEmission_, 0, 9);
 
 	float emission = 1.0f * (float(lightEmission_) / 9.0f);
 

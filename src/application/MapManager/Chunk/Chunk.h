@@ -11,18 +11,21 @@ class Chunk
 public:
 	Chunk();
 	~Chunk();
+	void Update() const;
+	void Draw() const;
+	// インスタンスを作成する
+	void CreateInstance();
 
 	// チャンクデータ生成
-	void CreateChunkData(const NoiseParameter& param, const Vector2int& chunkPos);
+	void CreateChunkData(const NoiseParameter& param, const Vector2int& chunkIndex);
 	void CreateChunkDataFromJson();		// Jsonからチャンクデータを読み込み
-	void CreateChunkDataNewly(const NoiseParameter& param, const Vector2int& chunkPos);	// 新規生成チャンクデータ作成
+	void CreateChunkDataNewly(const NoiseParameter& param, const Vector2int& chunkIndex);	// 新規生成チャンクデータ作成
 	void GenerateOres(const NoiseParameter& param);	// 鉱石を生成
 	void GenerateTrees(const NoiseParameter& param);// 木を生成
 
+	// 隣接チャンクの設定
 	void SetNeighborChunk(DirectionXZ direction, Chunk* neighbor);
 	bool IsNeighborExist(DirectionXZ direction);
-	void Update();
-	void Draw();
 
 	// ブロック取得  自チャンク+隣接チャンク対応
 	Block* GetBlock(const Vector3int& index);
@@ -34,16 +37,13 @@ public:
 	Vector3 LocalCenter(const Vector3int& index) const;
 
 	// ブロック設置(置換)  自チャンクのみ対応
-	void SetBlock(const Vector3int& localIndex, const BlockID id);
+	void SetBlock(const Vector3int& localIndex, const BlockID id) const;
 
 	// ブロック破壊		   自チャンクのみ対応
 	void DestroyBlock(const Vector3int& localIndex);
 
 	// blockPositionsの再構築
 	void RebuildBlockPositions();
-
-	// インスタンスを作成する
-	void CreateInstance();
 
 
 	/// [localIndexのブロック]が露出状態を判定　自チャンクのみ対応
@@ -72,16 +72,16 @@ public:
 
 	
 	// チャンク座標
-	Vector2int chunkPos;
+	Vector2int chunkIndex_;
 	// ブロックごとの位置リスト
-	std::unordered_map<BlockID, std::vector<Vector3int>> blockPositions;
+	//std::unordered_map<BlockID, std::vector<Vector3int>> blockPositions_;
 	// ブロックデータ配列
-	std::unique_ptr<Block> blocks[CHUNK_X][CHUNK_Y][CHUNK_Z];
-	// ブロックごとの描画データ管理マップ		
-	std::map<BlockID, std::unique_ptr<RenderData_Block>> blockData_;
+	std::unique_ptr<Block> blocks_[CHUNK_X][CHUNK_Y][CHUNK_Z];
+	// チャンクの全ブロックを描画するデータ
+	std::unique_ptr<RenderData_Block> blockData_;
 
-	std::unordered_map<DirectionXZ, Chunk*> neighbors;
+	std::unordered_map<DirectionXZ, Chunk*> neighbors_;
 
-	std::unique_ptr< BlockConfig> blockConfig_;
+	std::unique_ptr<BlockConfig> blockConfig_;
 };
 

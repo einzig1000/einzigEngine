@@ -7,14 +7,16 @@ Camera::Camera()
     mouseDelta_ = { 0,0 };
     enableControl_ = true;
 
-    // カメラ
+    // 
     transform_.translate = { 0.0f, 0.0f, 0.0f };
     transform_.rotate = { 1.0f, 0.0f, 0.0f };
-    center_ = { 0.0f, 0.0f, 0.0f };
-    distance_ = 35.60f;
 
-    preCenter_ = center_;
-    preRotate_ = transform_.rotate;
+	// 球面座標上の現在位置
+    currentPosSpherical_.radius = 35.60f;
+	currentPosSpherical_.phi = 0.78f;
+	currentPosSpherical_.theta = 0.0f;
+	// デカルト座標上の現在位置
+	currentPosCartesian_ = ConvertSphericalToCartesian(currentPosSpherical_);
 
     fovY_ = 0.65f;
 
@@ -49,7 +51,9 @@ void Camera::Resize()
 
 void Camera::Draw()
 {
-    //Game::DebugDraw::AddSphere(center_, Vector3{ 0.2f,0.2f,0.2f }, 0xFFFF00FF);
+#ifdef DEBUG
+    Game::DebugDraw::AddSphere({ center_, 0.5f }, 0xFF0000FF);
+#endif // DEBUG
 }
 
 void Camera::DrawImGui()
@@ -58,10 +62,10 @@ void Camera::DrawImGui()
 
     ImGui::Text(name_.c_str());
 
-	std::string centerTag = tag + ".Center";
-    ImGui::DragFloat3(centerTag.c_str(), &center_.x, 0.01f);
-	ImGui::SameLine();
-	ImGui::Text("Center");
+	//std::string centerTag = tag + ".Center";
+	//ImGui::DragFloat3(centerTag.c_str(), &center_.x, 0.01f);
+	//ImGui::SameLine();
+	//ImGui::Text("Center");
 
 	std::string rotateTag = tag + ".Rotate";
     ImGui::DragFloat3(rotateTag.c_str(), &transform_.rotate.x, 0.01f);
@@ -69,7 +73,7 @@ void Camera::DrawImGui()
 	ImGui::Text("Rotate");
 
 	std::string distanceTag = tag + ".Distance";
-    ImGui::DragFloat(distanceTag.c_str(), &distance_, 0.1f);
+    ImGui::DragFloat(distanceTag.c_str(), &currentPosSpherical_.radius, 0.1f);
     ImGui::SameLine();
 	ImGui::Text("Distance");
 
@@ -223,123 +227,44 @@ float Camera::InFrustum_Lod(const AABB& aabb)
 
 void Camera::Update_Orbit()
 {
-#pragma region カメラシェイク
-
-    if (shakeActive_)
-    {
-        shakeTime_++;
-
-        if (shakeTime_ >= shakeDuration_)
-        {
-            shakeActive_ = false;
-            shakeTime_ = 0.0f;
-        }
-    }
+#pragma region 入力取得
+    
+    // マウス移動量取得
+    mouseDelta_ = Game::IO::Mouse::GetPositionDelta();
+    // マウスホイール取得
+	mouseWheel_ = Game::IO::Mouse::GetWheel();
 
 #pragma endregion
-
-#pragma region カメラ手動操作
-
-    if (enableControl_)
-    {
-	    // マウス移動量取得
-	    mouseDelta_ = Game::IO::Mouse::GetPositionDelta();
-	    // ホイール取得
-        mouseWheel_ = Game::IO::Mouse::GetWheel();
 
 #pragma region カメラ回転
-       
-        if (Game::IO::Mouse::IsHeld(2) && !Game::IO::Key::IsHeld(DIK_LSHIFT))
-        {
-			transform_.rotate.x += mouseDelta_.y / 100.0f;
-			transform_.rotate.y += mouseDelta_.x / 100.0f;
-        }
 
 #pragma endregion
 
-#pragma region 回転中心
-
-        if (Game::IO::Mouse::IsHeld(2) && Game::IO::Key::IsHeld(DIK_LSHIFT))
-        {
-            // カメラの右方向と上方向を取得
-            Matrix4x4 cameraRotateMatrix = Matrix4x4::MakeAffineMatrix(
-                { 1,1,1 },
-                transform_.rotate,
-                { 0,0,0 }
-            );
-            Vector3 cameraRight = {
-                cameraRotateMatrix.m[0][0],
-                cameraRotateMatrix.m[1][0],
-                cameraRotateMatrix.m[2][0]
-            };
-            Vector3 cameraUp = {
-                cameraRotateMatrix.m[0][1],
-                cameraRotateMatrix.m[1][1],
-                cameraRotateMatrix.m[2][1]
-            };
-			center_ = center_ - (cameraRight * (mouseDelta_.x / 100.0f)) + (cameraUp * (mouseDelta_.y / 100.0f));
-        }
+#pragma region カメラ中心移動
 
 #pragma endregion
 
-#pragma region カメラ距離
-
-        if (mouseWheel_ > 0)
-        {
-            distance_ -= float(mouseWheel_) / 100;
-        }
-        if (mouseWheel_ < 0)
-        {
-            distance_ -= float(mouseWheel_) / 100;
-        }
-
-#pragma endregion
-    }
+#pragma region カメラ距離移動
 
 #pragma endregion
 
-#pragma region カメラ演出処理
+#pragma region 座標変換
 
-    if (easeRotate_.easingFlag)
-    {
-        MovingRotate();
-    }
-    if (easeCenter_.easingFlag)
-    {
-        MovingCenter();
-    }
-    if (easeDistance_.easingFlag)
-    {
-        MovingDistance();
-    }
+	currentPosCartesian_ = ConvertSphericalToCartesian(currentPosSpherical_);
 
 #pragma endregion
 
 #pragma region カメラ行列計算
 
-
-    // カメラ初期値
-    Vector3 cameraLocalPos = { 0.0f, 0.0f, -distance_ };
-
-    // カメラに回転適用
-    Matrix4x4 cameraRotateMatrix = Matrix4x4::MakeAffineMatrix(
-        { 1,1,1 },
-        transform_.rotate,
-        { 0,0,0 }
-    );
-
-    // cameraLocalPos　に　回転適用したマトリックスを適用させる　＝　原点上で回転
-    Vector3 rotatedCameraPos = {
-        cameraLocalPos.x * cameraRotateMatrix.m[0][0] + cameraLocalPos.y * cameraRotateMatrix.m[1][0] + cameraLocalPos.z * cameraRotateMatrix.m[2][0],
-        cameraLocalPos.x * cameraRotateMatrix.m[0][1] + cameraLocalPos.y * cameraRotateMatrix.m[1][1] + cameraLocalPos.z * cameraRotateMatrix.m[2][1],
-        cameraLocalPos.x * cameraRotateMatrix.m[0][2] + cameraLocalPos.y * cameraRotateMatrix.m[1][2] + cameraLocalPos.z * cameraRotateMatrix.m[2][2]
-    };
-
-    // 原点上で回転したrotatedCameraPosに　cameraCenterを足せば中心がcameraCenterに変わる
-    transform_.translate = (center_ + rotatedCameraPos + GetShakeOffset());
+	// カメラの位置を設定
+    transform_.translate = (currentPosCartesian_ + GetShakeOffset());
+	// カメラの回転角度を設定
+    transform_.rotate.x = currentPosSpherical_.phi;
+    transform_.rotate.y = currentPosSpherical_.theta;
+	transform_.rotate.z = 0.0f;
 
     // カメラ行列を作成
-    worldMatrix_ = Matrix4x4::MakeAffineMatrix(
+    Matrix4x4 worldMatrix_ = Matrix4x4::MakeAffineMatrix(
         { 1,1,1 },
         transform_.rotate,
         transform_.translate
@@ -352,201 +277,56 @@ void Camera::Update_Orbit()
     viewProjectionMatrix = (viewMatrix_ * projectionMatrix_);
 
     CreateFrustumPlanes();
+
 #pragma endregion
 
 }
 
 void Camera::Update_FPS()
 {
-#pragma region カメラシェイク
-
-    if (shakeActive_)
-    {
-        shakeTime_++;
-        if (shakeTime_ >= shakeDuration_)
-        {
-            shakeActive_ = false;
-            shakeTime_ = 0.0f;
-        }
-	}
-
-#pragma endregion
-
-#pragma region カメラ手動操作
-
-    if (enableControl_)
-    {
-        // マウス移動量取得
-        mouseDelta_ = Game::IO::Mouse::GetPositionDelta();
-        // ホイール取得
-        mouseWheel_ = Game::IO::Mouse::GetWheel();
-
-        if (Game::IO::Mouse::IsHeld(2) && !Game::IO::Key::IsHeld(DIK_LSHIFT))
-        {
-            transform_.rotate.x -= mouseDelta_.y / 100.0f;
-            transform_.rotate.y -= mouseDelta_.x / 100.0f;
-        }
-	}
-
-#pragma endregion
-
-#pragma region カメラ演出処理
-
-    if (easeRotate_.easingFlag)
-    {
-        MovingRotate();
-    }
-    if (easeCenter_.easingFlag)
-    {
-        MovingCenter();
-    }
-
-#pragma endregion
-
-#pragma region カメラ行列計算
-
-    // 原点上で回転したrotatedCameraPosに　cameraCenterを足せば中心がcameraCenterに変わる
-    transform_.translate = (center_ + GetShakeOffset());
-    // カメラ行列を作成
-    worldMatrix_ = Matrix4x4::MakeAffineMatrix(
-        { 1,1,1 },
-        transform_.rotate,
-        transform_.translate
-    );
-    // ビュー行列を作成
-    viewMatrix_ = worldMatrix_.Inverse();
-    // ビュー行列とプロジェクション行列を掛け合わせた行列を作成
-    viewProjectionMatrix = (viewMatrix_ * projectionMatrix_);
-	CreateFrustumPlanes();
-
-#pragma endregion
-
 }
 
 // 実際に動かす
 void Camera::MovingCenter()
 {
-    if (easeCenter_.maxFrame == 0)
-    {
-        easeCenter_.flame = 1;
-        easeCenter_.maxFrame = 1;
-    }
-    float t = float(easeCenter_.flame) / float(easeCenter_.maxFrame);
-
-    center_ = Easings::EasingVector3(easeCenter_.start, easeCenter_.end, easeCenter_.easetype, t);
-    preCenter_ = center_;
-
-    easeCenter_.flame++;
-    if (easeCenter_.flame > easeCenter_.maxFrame)
-    {
-        easeCenter_.easingFlag = 0;
-    }
 }
 
 void Camera::MovingRotate()
 {
-    if (easeRotate_.maxFrame == 0)
-    {
-        easeRotate_.flame = 1;
-        easeRotate_.maxFrame = 1;
-    }
-    float t = float(easeRotate_.flame) / float(easeRotate_.maxFrame);
-
-    transform_.rotate = Easings::EasingVector3(easeRotate_.start, easeRotate_.end, easeRotate_.easetype, t);
-    preRotate_ = transform_.rotate;
-
-    easeRotate_.flame++;
-
-    if (easeRotate_.flame > easeRotate_.maxFrame)
-    {
-        easeRotate_.easingFlag = 0;
-    }
 }
 
 void Camera::MovingDistance()
 {
-    if (easeDistance_.maxFrame == 0)
-    {
-        easeDistance_.flame = 1;
-        easeDistance_.maxFrame = 1;
-    }
-    float t = float(easeDistance_.flame) / float(easeDistance_.maxFrame);
-
-    distance_ = Easings::EasingFloat(easeDistance_.start.x, easeDistance_.end.x, easeDistance_.easetype, t);
-
-    easeDistance_.flame++;
-
-    if (easeDistance_.flame > easeDistance_.maxFrame)
-    {
-        easeDistance_.easingFlag = 0;
-    }
 }
 
 // 動かす先の設定
 void Camera::SetCenterTarget(Vector3 target, int spendFrame, EaseType easetype)
 {
-    easeCenter_.start = center_;
-    easeCenter_.end = target;
-    easeCenter_.easingFlag = 1;
-    easeCenter_.flame = 0;
-    easeCenter_.maxFrame = spendFrame;
-    easeCenter_.easetype = easetype;
 };
 
 void Camera::SetRotateTarget(Vector3 target, int spendFrame, EaseType easetype)
 {
-    easeRotate_.start = transform_.rotate;
-    easeRotate_.end = target;
-    easeRotate_.easingFlag = 1;
-    easeRotate_.flame = 1;
-    easeRotate_.maxFrame = spendFrame;
-    easeRotate_.easetype = easetype;
 };
 
 void Camera::SetDistanceTarget(float target, int spendFrame, EaseType easetype)
 {
-    easeDistance_.start.x = distance_;
-    easeDistance_.end.x = target;
-    easeDistance_.easingFlag = 1;
-    easeDistance_.flame = 0;
-    easeDistance_.maxFrame = spendFrame;
-    easeDistance_.easetype = easetype;
 }
 
 // シェイク
 void Camera::StartShake(float intensity, float duration, float frequency)
 {
-    shakeActive_ = true;
-    shakeIntensity_ = intensity;
-    shakeDuration_ = duration;
-    shakeFrequency_ = frequency;
-    shakeTime_ = 0.0f;
 }
 
 bool Camera::IsShaking() const
 {
-    return shakeActive_;
+	return false;
 }
 
 void Camera::StopShake()
 {
-    shakeActive_ = false;
 }
 
 Vector3 Camera::GetShakeOffset() const
 {
-    if (!shakeActive_) return Vector3(0.0f, 0.0f, 0.0f);
-
-    // 正規化された時間 (0.0 から 1.0)
-    float t = shakeTime_ / shakeDuration_;
-
-    // 指数減衰 (時間とともに揺れが小さくなる)
-    float decay = std::exp(-3.0f * t);
-
-    // 揺れ計算（sin, cos の組み合わせで自然な揺れを作る）
-    float offsetX = std::sin(shakeTime_ * shakeFrequency_) * shakeIntensity_ * decay;
-    float offsetY = std::cos(shakeTime_ * shakeFrequency_ * 0.7f) * shakeIntensity_ * decay;
-    float offsetZ = std::sin(shakeTime_ * shakeFrequency_ * 1.3f) * shakeIntensity_ * decay * 0.5f; // Z軸は控えめ
-
-    return Vector3(offsetX, offsetY, offsetZ);
+	return Vector3{ 0.0f, 0.0f, 0.0f };
 }

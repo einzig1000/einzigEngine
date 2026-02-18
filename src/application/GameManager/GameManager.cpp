@@ -6,7 +6,7 @@
 
 GameManager::GameManager()
 {
-	currentPhase_ = CreatePhase(PHASE::Phase_Test);
+	currentPhase_ = CreatePhase(PHASE::Phase_Title);
 	currentPhase_->SetContext(&phaseContext_);
 	currentPhase_->Initialize();
 }

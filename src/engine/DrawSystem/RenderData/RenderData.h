@@ -401,26 +401,45 @@ private:
     static std::vector<RenderData_Particle*> renderParticles;
 };
 
+/// 新しいブロックを作るときはAddNewBlock()
+/// ブロックを壊すときはRemoveBlockFromList()
 class RenderData_Block
 {
 public:
-
-    /// 新しいブロックを作るときはAddNewBlock()
-	/// ブロックを壊すときはRemoveBlockFromList() <- 未完成
-
-    RenderData_Block(BlockID id);
+    RenderData_Block();
     ~RenderData_Block();
     static void UpdateAllBlock();
     void Update();
 
-	//// リストに新たなブロックを追加
-	uint32_t AddNewBlock(Vector3 position, Vector3int index);
-	//// リストからブロックを削除
-	void RemoveBlock(Vector3int index);
 
+    /// <summary>
+	/// リストに新たなブロックを追加する
+    /// </summary>
+    /// <param name="worldPos"> 世界基準の座標 </param>
+    /// <param name="localIndex"> チャンク内のローカルインデックス </param>
+    /// <param name="baseTile"> blockID->アトラスのタイル の関数をアプリケーション層で別途用意する </param>
+    /// <returns>slot(RemoveBlockで必要)</returns>
+    uint32_t AddNewBlock(const Vector3& worldPos, const Vector3int& localIndex, uint32_t baseTile);
 
-    // ID
-    BlockID name;
+    /// <summary>
+	/// リストからブロックを削除する
+    /// </summary>
+    /// <param name="slot"> AddNewBlockの返り値 </param>
+    void RemoveBlock(uint32_t slot);
+
+    /// <summary>
+	/// ブロックの色を変える
+    /// </summary>
+	/// <param name="slot"> AddNewBlockの返り値 </param>
+	/// <param name="color"> 変えたい色 </param>
+    void SetColor(uint32_t slot, const Vector4& color);
+
+    /// <summary>
+	/// ブロックの破壊レイヤーを変える
+    /// </summary>
+	/// <param name="slot"> AddNewBlockの返り値 </param>
+	/// <param name="breakTile"> 破壊レベル->アトラスのタイル の関数をアプリケーション層で別途用意する </param>
+    void SetBreakTile(uint32_t slot, uint32_t breakTile);
 
     void Draw();
     void DrawImGui();
@@ -435,8 +454,7 @@ public:
 	uint32_t currentSum = 0;        // チャンク内に存在するブロック数
 	uint32_t currentDrawSum = 0;    // チャンク内の描画されているブロック数
 
-
-	// シェーダーに渡すブロックごとのデータ
+    // GPUに渡すブロックごとに管理したいデータ（いずれ一つにまとめる）
     Microsoft::WRL::ComPtr<ID3D12Resource> worldMatrixResource_;
     Matrix4x4* worldMatrixData_ = nullptr;
     SRVAllocation worldMatrixSrvAllocation_;
@@ -445,25 +463,26 @@ public:
     Vector4* colorData_ = nullptr;
     SRVAllocation colorSrvAllocation_;
 
-    Microsoft::WRL::ComPtr<ID3D12Resource> breakLayerResource_;
-    uint32_t* breakLayerData_ = nullptr;
-    SRVAllocation breakLayerSrvAllocation_;
+    Microsoft::WRL::ComPtr<ID3D12Resource> baseTileResource_;
+    uint32_t* baseTileData_ = nullptr;
+    SRVAllocation baseTileSrvAllocation_;
 
-	// シェーダーに渡さなくてもいいけどブロックごとに管理したいデータ
+    Microsoft::WRL::ComPtr<ID3D12Resource> breakTileResource_;
+    uint32_t* breakTileData_ = nullptr;
+    SRVAllocation breakTileSrvAllocation_;
+
+	// CPU側で管理するブロックごとに管理したいデータ
     std::vector<VectorDynamics> scale_;
     std::vector<VectorDynamics> rotate_;
     std::vector<VectorDynamics> translate_;
 	std::vector<Vector3int> indexes_;
-	std::vector<bool> isActive_;    // 描画されてるかとか関係なく、そのスロットが使われているかどうか
+	std::vector<bool> isActive_;
 
 private:
 	// 空きスロット管理
     std::vector<uint32_t> freeSlots_;
 
     int ID = 0;
-
-    //// 死亡判定
-    void CheckLife();
 
 	static std::vector<RenderData_Block*> renderBlocks;
 };

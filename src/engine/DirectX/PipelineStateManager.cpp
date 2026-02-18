@@ -208,77 +208,96 @@ void PipelineStateManager::InitializeRootSignature_block(ID3D12Device* device)
 {
     HRESULT hr;
 
-    D3D12_DESCRIPTOR_RANGE defaultTexture[1] = {};
-    defaultTexture[0].BaseShaderRegister = 0; // t0
-    defaultTexture[0].NumDescriptors = 1;
-    defaultTexture[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-    defaultTexture[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-    
-    D3D12_DESCRIPTOR_RANGE addTexture[1] = {};
-    addTexture[0].BaseShaderRegister = 1; // t1
-    addTexture[0].NumDescriptors = 1;
-    addTexture[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-    addTexture[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-
     D3D12_DESCRIPTOR_RANGE worldMatrixRange[1] = {};
-    worldMatrixRange[0].BaseShaderRegister = 2; // t2
+    worldMatrixRange[0].BaseShaderRegister = 0; // t0
     worldMatrixRange[0].NumDescriptors = 1;
     worldMatrixRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
     worldMatrixRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
     worldMatrixRange[0].RegisterSpace = 0;
 
+    D3D12_DESCRIPTOR_RANGE breakTileIndexRange[1] = {};
+    breakTileIndexRange[0].BaseShaderRegister = 1; // t1
+    breakTileIndexRange[0].NumDescriptors = 1;
+    breakTileIndexRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    breakTileIndexRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+    D3D12_DESCRIPTOR_RANGE baseTileIndexRange[1] = {};
+    baseTileIndexRange[0].BaseShaderRegister = 2; // t2
+    baseTileIndexRange[0].NumDescriptors = 1;
+    baseTileIndexRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    baseTileIndexRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+    D3D12_DESCRIPTOR_RANGE defaultTexture[1] = {};
+    defaultTexture[0].BaseShaderRegister = 3; // t3
+    defaultTexture[0].NumDescriptors = 1;
+    defaultTexture[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    defaultTexture[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+    D3D12_DESCRIPTOR_RANGE breakTexture[1] = {};
+    breakTexture[0].BaseShaderRegister = 4; // t4
+    breakTexture[0].NumDescriptors = 1;
+    breakTexture[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    breakTexture[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
     D3D12_DESCRIPTOR_RANGE colorRange[1] = {};
-    colorRange[0].BaseShaderRegister = 3; // t3
+    colorRange[0].BaseShaderRegister = 5; // t5
     colorRange[0].NumDescriptors = 1;
     colorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
     colorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
     colorRange[0].RegisterSpace = 0;
 
-    D3D12_DESCRIPTOR_RANGE textureArrayIndexRange[1] = {};
-    textureArrayIndexRange[0].BaseShaderRegister = 4; // t4
-    textureArrayIndexRange[0].NumDescriptors = 1;
-    textureArrayIndexRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-    textureArrayIndexRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-    textureArrayIndexRange[0].RegisterSpace = 0;
+    D3D12_ROOT_PARAMETER rootParameters[9]{};
 
-
-
-    D3D12_ROOT_PARAMETER rootParameters[6]{};
-
-    // ルートパラメータ0(t3): Color 
+    // [0] t0: WorldMatrix (VS)
     rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-    rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL; // VS, PS 両方からアクセス可能
-	rootParameters[0].DescriptorTable.NumDescriptorRanges = _countof(colorRange);
-	rootParameters[0].DescriptorTable.pDescriptorRanges = colorRange;
-    
-    // ルートパラメータ1(t2): WorldMatrix [SRV]  
+    rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+    rootParameters[0].DescriptorTable.NumDescriptorRanges = _countof(worldMatrixRange);
+    rootParameters[0].DescriptorTable.pDescriptorRanges = worldMatrixRange;
+
+    // [1] t1: BreakTileIndex (VS)
     rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-    rootParameters[1].DescriptorTable.NumDescriptorRanges = _countof(worldMatrixRange);
-    rootParameters[1].DescriptorTable.pDescriptorRanges = worldMatrixRange;
+    rootParameters[1].DescriptorTable.NumDescriptorRanges = _countof(breakTileIndexRange);
+    rootParameters[1].DescriptorTable.pDescriptorRanges = breakTileIndexRange;
 
-    // ルートパラメータ2(t0): Texture [SRV]
+    // [2] t2: BaseTileIndex (VS)
     rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-    rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; // PSからのみアクセス
-    rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(defaultTexture);
-    rootParameters[2].DescriptorTable.pDescriptorRanges = defaultTexture;
+    rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+    rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(baseTileIndexRange);
+    rootParameters[2].DescriptorTable.pDescriptorRanges = baseTileIndexRange;
 
-    // ルートパラメータ3(t1): Texture [SRV]
+    // [3] t3: BaseTexture (PS)
     rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-    rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; // PSからのみアクセス
-    rootParameters[3].DescriptorTable.NumDescriptorRanges = _countof(addTexture);
-    rootParameters[3].DescriptorTable.pDescriptorRanges = addTexture;
+    rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+    rootParameters[3].DescriptorTable.NumDescriptorRanges = _countof(defaultTexture);
+    rootParameters[3].DescriptorTable.pDescriptorRanges = defaultTexture;
 
-    // ルートパラメータ3(t4): Break Layer Index (PS)
+    // [4] t4: BreakTexture (PS)
     rootParameters[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParameters[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-    rootParameters[4].DescriptorTable.NumDescriptorRanges = _countof(textureArrayIndexRange);
-    rootParameters[4].DescriptorTable.pDescriptorRanges = textureArrayIndexRange;
+    rootParameters[4].DescriptorTable.NumDescriptorRanges = _countof(breakTexture);
+    rootParameters[4].DescriptorTable.pDescriptorRanges = breakTexture;
 
-    // ルートパラメータ5(b1): ViewProjectionMatrix 
-    rootParameters[5].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	// [5] t5: Color (All)
+    rootParameters[5].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParameters[5].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-    rootParameters[5].Descriptor.ShaderRegister = 1;
+    rootParameters[5].DescriptorTable.NumDescriptorRanges = _countof(colorRange);
+    rootParameters[5].DescriptorTable.pDescriptorRanges = colorRange;
+
+	// [6] b0: ViewProjectionMatrix (All)
+    rootParameters[6].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+    rootParameters[6].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+    rootParameters[6].Descriptor.ShaderRegister = 0; // b0
+
+    // [7] b1: BreakAtlasInfo (VS)
+    rootParameters[7].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+    rootParameters[7].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+    rootParameters[7].Descriptor.ShaderRegister = 1; // b1
+
+    // [8] b2: BaseAtlasInfo (VS)
+    rootParameters[8].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+    rootParameters[8].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+    rootParameters[8].Descriptor.ShaderRegister = 2; // b2
 
 
     D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};
