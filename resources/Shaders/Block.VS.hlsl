@@ -17,34 +17,25 @@ ConstantBuffer<AtlasInfo> gBaseAtlasInfo : register(b2);
 // AtlasInfoから欲しいタイルのUVを計算する
 static float2 ComputeAtlasUV(float2 uvInInner01, uint tileIndex, AtlasInfo info)
 {
-    // ターゲットタイルの左上座標を取得
-	uint tileX = 0; // info.atlasCols=1固定なのでXは常に0
-	uint tileY = tileIndex; // タイル番号=行番号
+    uint tilesPerRow = max(1u, info.atlasCols);
 
+    uint tileX = tileIndex % tilesPerRow;
+    uint tileY = tileIndex / tilesPerRow;
 
-    //// uvPacked.x = faceId + u(0..1)
-    //float faceF = floor(uvPacked.x);
-    //uint faceId = (uint)faceF;
-    //float u = uvPacked.x - faceF;
-    //
-    //faceId = min(faceId, info.facesPerBlock - 1);
-    //float2 uv = saturate(float2(u, uvPacked.y));
-    //
-    //// ブロック行の左上px（行の高さ=faceStrideY）
-    //uint2 blockOriginPx = uint2(0, blockIndex * info.faceStrideY);
-    //
-    //// 面の左上px（面は横に並ぶ）
-    //uint2 faceOriginPx = blockOriginPx + uint2(faceId * info.faceStrideX, 0);
-    //
-    //// 有効領域(16x16)の左上（pad内側）
-    //uint2 innerOriginPx = faceOriginPx + uint2(info.padX, info.padY);
-    //
-    //float2 innerPx = float2(innerOriginPx) + uv * float2(info.innerSizeX, info.innerSizeY);
-    //
-    //// ピクセル中心
-    //innerPx += 0.5f;
-    //
-    //return innerPx * info.invAtlasSize;
+    // 1タイル(=1面)のUV上でのサイズ（24x24想定）
+    float2 strideUV = float2((float)info.faceStrideX, (float)info.faceStrideY) * info.invAtlasSize;
+
+    // タイル左上のUV
+    float2 tileOriginUV = float2((float)tileX, (float)tileY) * strideUV;
+
+    // タイル内の「実描画領域(16x16)」の開始位置（padding=4 なら (4,4) から）
+    float2 innerOffsetUV = float2((float)info.padX, (float)info.padY) * info.invAtlasSize;
+
+    // タイル内の「実描画領域(16x16)」の大きさ
+    float2 innerSizeUV = float2((float)info.innerSizeX, (float)info.innerSizeY) * info.invAtlasSize;
+
+    // 入力(0..1)を inner 領域へマップして、atlas全体のUVに変換
+    return tileOriginUV + innerOffsetUV + uvInInner01 * innerSizeUV;
 }
 
 VertexShaderOutput main(VertexShaderInput input, uint32_t instancedID : SV_InstanceID)

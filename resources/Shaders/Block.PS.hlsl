@@ -22,6 +22,6 @@ PixelShaderOutput main(VertexShaderOutput input)
 
     output.color = gColor0[input.instancedID] * blended;
 
-    if (output.color.a <= 1) discard;
+    if (output.color.a <= 0.001) discard;
     return output;
 }

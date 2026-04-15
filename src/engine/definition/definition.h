@@ -1276,8 +1276,8 @@ struct ParticleSRT
     Vector3 velocity;
     AABB randomRange_velocity;
     bool isRandom_acceleration = false; // trueならランダム生成
-    AABB randomRange_acceleration;
     Vector3 acceleration;
+    AABB randomRange_acceleration;
 };
 
 struct ParticleMaterial
