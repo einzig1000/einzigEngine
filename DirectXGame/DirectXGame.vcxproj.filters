@@ -225,7 +225,7 @@
     <ClCompile Include="src\engine\DirectX\DepthStencilManager.cpp">
       <Filter>engine\DirectXManager\DepthStencilManager</Filter>
     </ClCompile>
-    <ClCompile Include="src\engine\DirectX\DescriptorHeapManager.cpp">
+    <ClCompile Include="src\engine\DirectX\DescriptorHeapManager\DescriptorHeapManager.cpp">
       <Filter>engine\DirectXManager\DescriptorHeapManager</Filter>
     </ClCompile>
     <ClCompile Include="src\engine\DirectX\DeviceManager.cpp">
@@ -279,7 +279,7 @@
     <ClCompile Include="src\engine\Utilities\functions.cpp">
       <Filter>engine\Utilities\functions</Filter>
     </ClCompile>
-    <ClCompile Include="src\engine\Utilities\Easings.cpp">
+    <ClCompile Include="src\engine\Utilities\Easing\Easings.cpp">
       <Filter>engine\Utilities\Easings</Filter>
     </ClCompile>
     <ClCompile Include="src\engine\definition\definition.cpp">
@@ -312,7 +312,7 @@
     <ClCompile Include="src\engine\FixFPS\FixFPS.cpp">
       <Filter>engine\FixFPS</Filter>
     </ClCompile>
-    <ClCompile Include="src\engine\Utilities\JsonManager.cpp">
+    <ClCompile Include="src\engine\Utilities\Json\JsonManager.cpp">
       <Filter>engine\Utilities\Json</Filter>
     </ClCompile>
     <ClCompile Include="src\engine\Camera\CameraManager.cpp">
@@ -321,7 +321,7 @@
     <ClCompile Include="src\engine\Camera\Camera.cpp">
       <Filter>engine\Camera\Camera</Filter>
     </ClCompile>
-    <ClCompile Include="src\engine\DirectX\SrvManager.cpp">
+    <ClCompile Include="src\engine\DirectX\DescriptorHeapManager\CBV_SRV_UAV\CBV_SRV_UAVManager.cpp">
       <Filter>engine\DirectXManager\SrvManager</Filter>
     </ClCompile>
     <ClCompile Include="src\application\MapManager\Chunk\Block\Block.cpp">
@@ -438,6 +438,21 @@
     <ClCompile Include="src\engine\Utilities\SimpleModelBody.cpp">
       <Filter>engine\PhysicsSystem</Filter>
     </ClCompile>
+    <ClCompile Include="src\engine\DrawSystem\RenderData\RenderObject.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\DirectX\DescriptorHeapManager\RTV\RTVManager.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\DirectX\DescriptorHeapManager\DSV\DSVManager.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\Utilities\Logger\Logger.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\DirectX\FrameCbAllocator\FrameCbAllocator.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\engine\DirectX\CommandContextManager.h">
@@ -446,7 +461,7 @@
     <ClInclude Include="src\engine\DirectX\DepthStencilManager.h">
       <Filter>engine\DirectXManager\DepthStencilManager</Filter>
     </ClInclude>
-    <ClInclude Include="src\engine\DirectX\DescriptorHeapManager.h">
+    <ClInclude Include="src\engine\DirectX\DescriptorHeapManager\DescriptorHeapManager.h">
       <Filter>engine\DirectXManager\DescriptorHeapManager</Filter>
     </ClInclude>
     <ClInclude Include="src\engine\DirectX\DeviceManager.h">
@@ -497,7 +512,7 @@
     <ClInclude Include="src\engine\DrawSystem\DrawSystem.h">
       <Filter>engine\DrawSystem</Filter>
     </ClInclude>
-    <ClInclude Include="src\engine\Utilities\Easings.h">
+    <ClInclude Include="src\engine\Utilities\Easing\Easings.h">
       <Filter>engine\Utilities\Easings</Filter>
     </ClInclude>
     <ClInclude Include="src\engine\Utilities\functions.h">
@@ -533,7 +548,7 @@
     <ClInclude Include="src\engine\FixFPS\FixFPS.h">
       <Filter>engine\FixFPS</Filter>
     </ClInclude>
-    <ClInclude Include="src\engine\Utilities\JsonManager.h">
+    <ClInclude Include="src\engine\Utilities\Json\JsonManager.h">
       <Filter>engine\Utilities\Json</Filter>
     </ClInclude>
     <ClInclude Include="src\engine\Camera\CameraManager.h">
@@ -542,7 +557,7 @@
     <ClInclude Include="src\engine\Camera\Camera.h">
       <Filter>engine\Camera\Camera</Filter>
     </ClInclude>
-    <ClInclude Include="src\engine\DirectX\SrvManager.h">
+    <ClInclude Include="src\engine\DirectX\DescriptorHeapManager\CBV_SRV_UAV\CBV_SRV_UAVManager.h">
       <Filter>engine\DirectXManager\SrvManager</Filter>
     </ClInclude>
     <ClInclude Include="src\application\MapManager\Chunk\Block\Block.h">
@@ -661,6 +676,21 @@
     </ClInclude>
     <ClInclude Include="src\engine\Utilities\SimpleModelBody.h">
       <Filter>engine\PhysicsSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\DrawSystem\RenderData\RenderObject.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\DirectX\DescriptorHeapManager\RTV\RTVManager.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\DirectX\DescriptorHeapManager\DSV\DSVManager.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\Utilities\Logger\Logger.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\DirectX\FrameCbAllocator\FrameCbAllocator.h">
+      <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

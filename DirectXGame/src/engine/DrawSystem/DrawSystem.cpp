@@ -114,6 +114,12 @@ void DrawSystem::Update()
 
 void DrawSystem::Draw()
 {
+	/// RenderObjectリストをソート
+	① PSO
+	② トポロジ
+	③ ルートシグネチャ
+	④ テクスチャ（SRV）
+
 	// 形状を設定 (三角形)
 	dxManager_->GetCommandContextManager()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	// ルートシグネチャを設定

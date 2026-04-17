@@ -2,6 +2,8 @@
 #include "definition/definition.h"
 #include "Game.h"
 
+#include "engine/DrawSystem/RenderData/RenderObject.h"
+
 class DirectXManager;
 
 /// <summary>
@@ -66,6 +68,10 @@ private:
 	std::vector<RenderData_Particle*> particleDrawList_{};
 	std::vector<RenderData_Block*> blockDrawList_{};
 	std::unordered_map<uint32_t, std::vector<Vector3>> debugLineList_{};
+
+	std::vector<RenderObject*> renderObjects_{};
+
+
 
 	void InitializeResource_Light();
 	void InitializeResource_LightPerObject();
