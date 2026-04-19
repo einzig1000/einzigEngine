@@ -159,6 +159,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\engine\DirectX\View\Dx12ViewFactory.cpp" />
+    <ClCompile Include="src\engine\DirectX\Resource\Dx12ResourceFactory.cpp" />
     <ClCompile Include="src\engine\DirectX\FrameCbAllocator\FrameCbAllocator.cpp" />
     <ClCompile Include="src\engine\Utilities\Logger\Logger.cpp" />
     <ClCompile Include="src\engine\DirectX\DescriptorHeapManager\DSV\DSVManager.cpp" />
@@ -267,6 +269,9 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="src\engine\Physics\IWorldCollider.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\engine\DirectX\Pipeline\RenderPipelineTypes.h" />
+    <ClInclude Include="src\engine\DirectX\View\Dx12ViewFactory.h" />
+    <ClInclude Include="src\engine\DirectX\Resource\Dx12ResourceFactory.h" />
     <ClInclude Include="src\engine\DirectX\FrameCbAllocator\FrameCbAllocator.h" />
     <ClInclude Include="src\engine\Utilities\Logger\Logger.h" />
     <ClInclude Include="src\engine\DirectX\DescriptorHeapManager\DSV\DSVManager.h" />

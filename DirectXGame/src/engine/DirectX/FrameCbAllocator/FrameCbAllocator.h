@@ -22,8 +22,6 @@ public:
 	Allocation Allocate(size_t sizeBytes);
 
 private:
-	static constexpr size_t kAlignment = D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT; // 256
-
 	static size_t AlignUp(size_t value, size_t alignment)
 	{
 		return (value + (alignment - 1)) & ~(alignment - 1);

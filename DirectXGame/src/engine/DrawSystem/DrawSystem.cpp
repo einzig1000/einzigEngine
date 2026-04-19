@@ -7,6 +7,11 @@
 DrawSystem::DrawSystem(DirectXManager* dxManager)
 	:dxManager_(dxManager)
 {
+	for (uint32_t i = 0; i < kFramesInFlight_; ++i)
+	{
+		cbAllocators_[i].Initialize(dxManager_->GetDevice(), 8 * 1024 * 1024, L"FrameCBAllocator");
+	}
+
 	// 正射影行列
 	orthoProjectionMatrix_ = Matrix4x4::MakeOrthographicMatrix(
 		0.0f, 0.0f,
@@ -89,6 +94,9 @@ void DrawSystem::Update()
 	// 前フレームの不要VBを解放（EndFrame→Present→WaitForGPU 後）
 	vbHoldUntilSubmit_.clear();
 
+	// CBアロケータをリセット
+	cbAllocators_[GetFrameIndex()].Reset();
+
 	// 描画コールの初期化
 	drawCallIndex_ = 0;
 
@@ -118,7 +126,6 @@ void DrawSystem::Draw()
 	① PSO
 	② トポロジ
 	③ ルートシグネチャ
-	④ テクスチャ（SRV）
 
 	// 形状を設定 (三角形)
 	dxManager_->GetCommandContextManager()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -341,6 +348,51 @@ void DrawSystem::AddAABB(const AABB& aabb, uint32_t color)
 }
 
 
+void DrawSystem::DrawRenderObject(RenderObject* renderObject)
+{
+	auto* cmdList = dxManager_->GetCommandContextManager()->GetCommandList();
+	auto& cb = cbAllocators_[GetFrameIndex()];
+
+	// 1) RootSignature / PSO をセット（自動生成＆キャッシュ）
+	cmdList->SetGraphicsRootSignature(dxManager_->GetPipelineStateManager()->GetOrCreateRootSignature(renderObject->GetRootParams()).Get());
+	cmdList->SetPipelineState(dxManager_->GetPipelineStateManager()->GetOrCreateGraphicsPipelineState(renderObject->psoConfig_, renderObject->GetRootParams()).Get());
+
+	// 2) トポロジーをセット
+	cmdList->IASetPrimitiveTopology(renderObject->psoConfig_.topology);
+
+	// 3) RootParameterをセット
+	const auto& cpuStrage = renderObject->GetCpuStorage();
+	const auto& rootParams = renderObject->GetRootParams();
+
+	for (size_t i = 0; i < rootParams.size(); ++i)
+	{
+		const auto& param = rootParams[i];
+		const UINT rootSlot = static_cast<UINT>(i);
+
+		if (param.paramType == ParamType::CBV)
+		{
+			const auto alloc = cb.Allocate(param.sizeBytes);
+			std::memcpy(alloc.cpu, cpuStrage.data() + param.offsetBytes, param.sizeBytes);
+			cmdList->SetGraphicsRootConstantBufferView(rootSlot, alloc.gpu);
+		}
+		else if (param.paramType == ParamType::SRV)
+		{
+			cmdList->SetGraphicsRootDescriptorTable(rootSlot, param.srvGpuHandle);
+		}
+	}
+
+	// モデルの検索
+	const Object3D* obj = dxManager_->GetResourceManager()->GetModelManager()->GetModelData(renderObject->GetModel());
+	if (!obj) return;
+	// 頂点数の取得
+	const uint32_t kSumVertex = static_cast<uint32_t>(obj->modelData.vertices.size());
+	// 頂点バッファをバインド
+	cmdList->IASetVertexBuffers(0, 1, &obj->vertexBufferView);
+
+	// 描画
+	cmdList->DrawInstanced(kSumVertex, 1, 0, 0);
+}
+
 void DrawSystem::DrawAllModel()
 {
 	/// 描画順をソート
@@ -458,10 +510,13 @@ void DrawSystem::DrawAllModel()
 }
 void DrawSystem::DrawAllTriangle()
 {
+	// B方式：フレームCBアロケータ（Upload線形）から確保して RootCBV に直刺し
+	auto& cb = cbAllocators_[GetFrameIndex()];
+
 	for (auto& renderData : triangleDrawList_)
 	{
 		// 描画回数上限
-		if (drawCallIndex_ >= kMaxDrawCallPerFrame_)continue;
+		if (drawCallIndex_ >= kMaxDrawCallPerFrame_) continue;
 
 		// テクスチャの検索
 		const TextureData* tex = dxManager_->GetResourceManager()->GetTextureManager()->GetTextureData(renderData->texture);
@@ -469,12 +524,14 @@ void DrawSystem::DrawAllTriangle()
 
 		// PSOを設定
 		if (renderData->options.wireframe || wireframeMode_)
-		{	// ワイヤーフレーム用PSOを設定
-			dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetTrianglePipelineState(BlendMode::Wireframe));
+		{
+			dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(
+				dxManager_->GetPipelineStateManager()->GetTrianglePipelineState(BlendMode::Wireframe));
 		}
 		else
-		{	// Triangle用PSOを設定
-			dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetTrianglePipelineState(renderData->options.blendMode));
+		{
+			dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(
+				dxManager_->GetPipelineStateManager()->GetTrianglePipelineState(renderData->options.blendMode));
 		}
 
 		// 頂点数の取得
@@ -501,24 +558,24 @@ void DrawSystem::DrawAllTriangle()
 		vertexData_[vertexDataUsed_ + 2].normal = { 0.0f, 0.0f, -1.0f };
 
 		// WVP行列
-		Matrix4x4 world = Matrix4x4::MakeAffineMatrix(renderData->transforms.scale, renderData->transforms.rotate, renderData->transforms.translate);
-		Matrix4x4 wvpMatrix = world * viewProjectionMatrix_;
+		TransformationMatrix wvp{};
+		wvp.World = Matrix4x4::MakeAffineMatrix(renderData->transforms.scale, renderData->transforms.rotate, renderData->transforms.translate);
+		wvp.WVP = wvp.World * viewProjectionMatrix_;
 
-		wvpData_[drawCallIndex_]->World = world;
-		wvpData_[drawCallIndex_]->WVP = wvpMatrix;
-
-		// ライトの設定
-		*lightData_[drawCallIndex_] = *directionalLightData_;
+		// ライト（共有ライトをコピー）
+		DirectionalLight light{};
+		light = *directionalLightData_;
 
 		// マテリアル
-		Vector4 color = ConvertUintToVector4(renderData->color);
-		materialData_[drawCallIndex_]->color = color;
-		materialData_[drawCallIndex_]->shininess = 1.0f;
+		Material material{};
+		material.color = ConvertUintToVector4(renderData->color);
+		material.shininess = 1.0f;
+
 		Matrix4x4 uvTransformMatrix = Matrix4x4::MakeIdentity4x4();
 		uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeScaleMatrix(renderData->uvTransform.scale));
 		uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeRotateZMatrix(renderData->uvTransform.rotate.z));
 		uvTransformMatrix = (uvTransformMatrix * Matrix4x4::MakeTranslateMatrix(renderData->uvTransform.translate));
-		materialData_[drawCallIndex_]->uvTransform = uvTransformMatrix;
+		material.uvTransform = uvTransformMatrix;
 
 		// 動的頂点バッファを確保
 		if (!EnsureDynamicVB(vertexDataUsed_ + kSumVertex)) continue;
@@ -530,16 +587,27 @@ void DrawSystem::DrawAllTriangle()
 		vertexBufferView.SizeInBytes = sizeof(VertexData) * kSumVertex;
 		vertexBufferView.StrideInBytes = sizeof(VertexData);
 
-		// 頂点バッファをバインド
+		// ===== フレームCBアロケータから確保して RootCBV に刺す =====
+		const auto materialAlloc = cb.Allocate(sizeof(Material));
+		std::memcpy(materialAlloc.cpu, &material, sizeof(Material));
+
+		const auto wvpAlloc = cb.Allocate(sizeof(TransformationMatrix));
+		std::memcpy(wvpAlloc.cpu, &wvp, sizeof(TransformationMatrix));
+
+		const auto lightAlloc = cb.Allocate(sizeof(DirectionalLight));
+		std::memcpy(lightAlloc.cpu, &light, sizeof(DirectionalLight));
+
+
+		// 頂点バッファ
 		dxManager_->GetCommandContextManager()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
-		// CBVを設定する マテリアル用のCBufferの場所を設定
-		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResources_[drawCallIndex_]->GetGPUVirtualAddress());
-		// CBVを設定する wvp用のCBufferの場所を設定
-		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResources_[drawCallIndex_]->GetGPUVirtualAddress());
-		// SRVのDescriptorTableの先頭を設定。２はrootParameters[2]。
+		// マテリアル
+		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialAlloc.gpu);
+		// wvp
+		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpAlloc.gpu);
+		// テクスチャ
 		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootDescriptorTable(2, tex->textureSrvHandleGPU);
-		// CBVを設定する ディレクショナルライト用のCBufferの場所を設定
-		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(3, lightResources_[drawCallIndex_]->GetGPUVirtualAddress());
+		// ライト
+		dxManager_->GetCommandContextManager()->GetCommandList()->SetGraphicsRootConstantBufferView(3, lightAlloc.gpu);
 
 		// 描画
 		dxManager_->GetCommandContextManager()->GetCommandList()->DrawInstanced(3, 1, 0, 0);

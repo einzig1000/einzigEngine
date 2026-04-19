@@ -2,7 +2,8 @@
 #include "definition/definition.h"
 #include "Game.h"
 
-#include "engine/DrawSystem/RenderData/RenderObject.h"
+#include "DrawSystem/RenderData/RenderObject.h"
+#include "DirectX/FrameCbAllocator/FrameCbAllocator.h"
 
 class DirectXManager;
 
@@ -11,6 +12,16 @@ class DirectXManager;
 /// </summary>
 class DrawSystem
 {
+private:
+	static constexpr uint32_t kFramesInFlight_ = 2;
+	FrameCbAllocator cbAllocators_[kFramesInFlight_]{};
+
+	uint32_t GetFrameIndex() const
+	{
+		// BeginFrame() 後はここで最新が取れる
+		return dxManager_->GetSwapChain()->GetCurrentBackBufferIndex() % kFramesInFlight_;
+	}
+
 public:
 	DrawSystem(DirectXManager* dxManager);
 	~DrawSystem();
@@ -44,6 +55,9 @@ public:
 	void AddDebugLineList(const Vector3& start, const Vector3& end, uint32_t color);
 	void DrawAllDebugLine();
 
+
+	// テスト用の動作確認関数。
+	void DrawRenderObject(RenderObject* renderObject);
 
 	void AddSphere(const Sphere& sphere, uint32_t color);
 	void AddSphereXYZ(const SphereXYZ& sphere, uint32_t color);

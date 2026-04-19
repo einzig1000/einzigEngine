@@ -1,18 +1,25 @@
 #include "FrameCbAllocator.h"
 #include "Utilities/functions.h"
+#include "DirectX/Resource/Dx12ResourceFactory.h"
 #include <cassert>
 #include <cstring>
 
 void FrameCbAllocator::Initialize(ID3D12Device* device, size_t capacityBytes, const wchar_t* debugName)
 {
+	// デバイスが有効かチェック
 	assert(device);
-	capacity_ = AlignUp(capacityBytes, kAlignment);
 
-	resource_ = CreateBufferResource(device, capacity_);
+	// 256nに切り上げ
+	capacity_ = AlignUp(capacityBytes, 256);
+
+	// リソース作成
+	resource_ = Dx12ResourceFactory::CreateBufferResource(device, capacity_);
 	assert(resource_);
 
+	// デバッグネーム設定
 	resource_->SetName(debugName);
 
+	// リソースをCPUアドレス空間にマップ
 	mapped_ = nullptr;
 	HRESULT hr = resource_->Map(0, nullptr, reinterpret_cast<void**>(&mapped_));
 	assert(SUCCEEDED(hr));
@@ -29,11 +36,11 @@ void FrameCbAllocator::Reset()
 FrameCbAllocator::Allocation FrameCbAllocator::Allocate(size_t sizeBytes)
 {
 	assert(mapped_);
-	size_t alignedSize = AlignUp(sizeBytes, kAlignment);
+	size_t alignedSize = AlignUp(sizeBytes, 256);
 
-	size_t alignedOffset = AlignUp(offset_, kAlignment);
+	size_t alignedOffset = AlignUp(offset_, 256);
 	assert(alignedOffset + alignedSize <= capacity_);
-
+	
 	Allocation a{};
 	a.cpu = mapped_ + alignedOffset;
 	a.gpu = resource_->GetGPUVirtualAddress() + alignedOffset;

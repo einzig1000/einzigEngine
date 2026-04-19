@@ -1,701 +1,680 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="ソース ファイル">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    <Filter Include="externals">
+      <UniqueIdentifier>{ee611edb-4ab5-49fb-827a-684761b26392}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ヘッダー ファイル">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    <Filter Include="externals\DirectXTex">
+      <UniqueIdentifier>{e30b73e9-d871-4b81-8171-9a763df10a34}</UniqueIdentifier>
     </Filter>
-    <Filter Include="リソース ファイル">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    <Filter Include="externals\imgui">
+      <UniqueIdentifier>{7ee40e0b-6cdc-4944-9394-b235a8ad1400}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine">
-      <UniqueIdentifier>{3c73d613-c635-4919-a08d-bf6252a7fc44}</UniqueIdentifier>
+    <Filter Include="externals\nlohmann">
+      <UniqueIdentifier>{fc76b112-ec99-4074-ae26-39a169d24a3b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\Utilities">
-      <UniqueIdentifier>{25a66c38-75c8-4dae-8e78-1d7b5c01cf2e}</UniqueIdentifier>
+    <Filter Include="externals\Shigemori">
+      <UniqueIdentifier>{f3071f9f-28f0-4ed7-ab1d-ad699a65fe5b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\Utilities\Easings">
-      <UniqueIdentifier>{5ce197b2-ab89-4348-961a-ba97c01444f9}</UniqueIdentifier>
+    <Filter Include="externals\Shigemori\Binary">
+      <UniqueIdentifier>{ca58cf0e-eb29-4664-adeb-1e9693fefb58}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\Utilities\functions">
-      <UniqueIdentifier>{d4ba2a51-2d9b-4adf-b9e8-66fd5ef268cf}</UniqueIdentifier>
+    <Filter Include="externals\Shigemori\Binary\Data">
+      <UniqueIdentifier>{3a652a93-b501-49ab-abaa-7d4f3c485c7a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\WindowManager">
-      <UniqueIdentifier>{a6f0f6c9-5841-4611-a8f4-25d2974af7b1}</UniqueIdentifier>
+    <Filter Include="src">
+      <UniqueIdentifier>{eda85f61-a079-44db-92a7-aa6978f487bd}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\imgui">
-      <UniqueIdentifier>{de365176-a23e-4aa1-b692-75dc75ada7eb}</UniqueIdentifier>
+    <Filter Include="src\application">
+      <UniqueIdentifier>{d6efc79b-6f3c-409b-b63c-2655fc8dc3d2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\DirectXManager">
-      <UniqueIdentifier>{22ffd2e0-0bae-47c8-b104-4729f9332def}</UniqueIdentifier>
+    <Filter Include="src\application\Camera">
+      <UniqueIdentifier>{3a9426f8-0837-4013-b4b2-378a87d113b1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\DirectXManager\DeviceManager">
-      <UniqueIdentifier>{4ba5f70c-f353-4256-9a1e-edf4997f4439}</UniqueIdentifier>
+    <Filter Include="src\application\Character">
+      <UniqueIdentifier>{ab5d2ef5-a9cd-4127-b342-5b3c687c2875}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\DirectXManager\CommandContextManager">
-      <UniqueIdentifier>{54925815-6ffb-4240-be73-f394010b765b}</UniqueIdentifier>
+    <Filter Include="src\application\Character\Enemy">
+      <UniqueIdentifier>{de590e87-083a-4f89-938a-1af8ed4ca2a5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\DirectXManager\SwapChainManager">
-      <UniqueIdentifier>{56021724-6ea3-49c5-be4a-63c96ae01e72}</UniqueIdentifier>
+    <Filter Include="src\application\Character\Player">
+      <UniqueIdentifier>{75b711e0-a1fa-4ce2-ad61-daf7706f5dc3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\DirectXManager\DepthStencilManager">
-      <UniqueIdentifier>{d1b66a19-8be3-4ce5-81e5-1cc183c0b2d4}</UniqueIdentifier>
+    <Filter Include="src\application\GameManager">
+      <UniqueIdentifier>{e621586a-20a9-44e8-9256-5758618be24b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\DirectXManager\PipelineStateManager">
-      <UniqueIdentifier>{6dd3f47c-5319-43a0-bb64-8153594849a6}</UniqueIdentifier>
+    <Filter Include="src\application\GameManager\Phase">
+      <UniqueIdentifier>{10a5dc3b-b5ba-45b1-b24a-dea898d88ce2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\DirectXManager\DescriptorHeapManager">
-      <UniqueIdentifier>{3d34e5a9-1927-43e1-831c-2a1090e84234}</UniqueIdentifier>
+    <Filter Include="src\application\GameManager\Phase\BattlePhase">
+      <UniqueIdentifier>{cbfe1fff-2d2b-4408-9709-5a9cc2ea6fa4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\DirectXManager\SynchronizationManager">
-      <UniqueIdentifier>{fea8c078-7dcd-4f48-b566-efea0a565046}</UniqueIdentifier>
+    <Filter Include="src\application\GameManager\Phase\GameScenePhase">
+      <UniqueIdentifier>{085d64f8-4383-494b-9047-9aab89dd73da}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\DirectXManager\ViewportScissorManager">
-      <UniqueIdentifier>{ac55dbcf-ddc4-45ce-9371-582fc7ac92a3}</UniqueIdentifier>
+    <Filter Include="src\application\GameManager\Phase\PhaseParent">
+      <UniqueIdentifier>{a5825cef-b129-47ac-93ec-cf01f90df411}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\definition">
-      <UniqueIdentifier>{2d11e023-36d8-40a2-a5cd-ac9aef762785}</UniqueIdentifier>
+    <Filter Include="src\application\GameManager\Phase\TestPhase">
+      <UniqueIdentifier>{3c8d2f78-2927-4036-960a-a03d4fbef0f0}</UniqueIdentifier>
     </Filter>
-    <Filter Include="application">
-      <UniqueIdentifier>{32561114-f9f1-4f0a-8e1e-73b39cad400b}</UniqueIdentifier>
+    <Filter Include="src\application\GameManager\Phase\TitlePhase">
+      <UniqueIdentifier>{d1c9d628-a5cd-44f9-9e23-556a59a0a35f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\ResourceManager">
-      <UniqueIdentifier>{43c00ddd-45c1-4e1c-be41-8ad55ac6082e}</UniqueIdentifier>
+    <Filter Include="src\application\Item">
+      <UniqueIdentifier>{b6056455-ed9a-4c71-a286-4c55d720bb6f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\ResourceManager\AudioManager">
-      <UniqueIdentifier>{d6981e3b-9d2e-4acf-aaf3-0a1a631f2860}</UniqueIdentifier>
+    <Filter Include="src\application\Item\CraftRecipe">
+      <UniqueIdentifier>{c09c552c-3567-4ecb-beec-ae1686dcc4a7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\ResourceManager\ModelManager">
-      <UniqueIdentifier>{d4effc7f-c81e-44f4-90f2-167be6354b4c}</UniqueIdentifier>
+    <Filter Include="src\application\Item\DropItem">
+      <UniqueIdentifier>{8c35ccf5-9479-4019-acc6-42621424beac}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\ResourceManager\TextureManager">
-      <UniqueIdentifier>{5ac7ac8c-cfc8-4b8e-80bf-d8b5369d0613}</UniqueIdentifier>
+    <Filter Include="src\application\Item\HaveItem">
+      <UniqueIdentifier>{5a677b77-4e2d-4ee1-a9bc-885771f011ce}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\FixFPS">
-      <UniqueIdentifier>{8ed84834-c43a-4dda-a3bf-3b95cd1b75fd}</UniqueIdentifier>
+    <Filter Include="src\application\MapManager">
+      <UniqueIdentifier>{dbe4aa73-5ecf-402d-a739-ff588081559d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\Utilities\Json">
-      <UniqueIdentifier>{2c7c8756-3efa-42f1-99a8-61e1c4ba9f9f}</UniqueIdentifier>
+    <Filter Include="src\application\MapManager\Chunk">
+      <UniqueIdentifier>{2dfd1137-8b8d-4505-8d8d-8653512adbe5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\Camera">
-      <UniqueIdentifier>{8119ccfa-d6ad-4af0-83e5-034de74534f5}</UniqueIdentifier>
+    <Filter Include="src\application\MapManager\Chunk\Block">
+      <UniqueIdentifier>{333f446a-827d-4cfc-a9a6-b15460ff5707}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\Camera\CameraManager">
-      <UniqueIdentifier>{70066dff-cc45-4252-961b-65ce53332d25}</UniqueIdentifier>
+    <Filter Include="src\application\ResourceLoader">
+      <UniqueIdentifier>{f65b3a9d-b465-42ba-9deb-c4cbcdff0705}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\Camera\Camera">
-      <UniqueIdentifier>{ad6f796a-aea3-44b4-a3d3-e541536d2168}</UniqueIdentifier>
+    <Filter Include="src\application\UIManager">
+      <UniqueIdentifier>{d0e9a08a-14ad-49ff-9399-2cf7ae861edc}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\DirectXManager\SrvManager">
-      <UniqueIdentifier>{09ce842d-ba2c-47b3-8c1a-fcc0da694c8b}</UniqueIdentifier>
+    <Filter Include="src\application\UIManager\ScreenMode">
+      <UniqueIdentifier>{1be1ce68-d118-45db-a463-ee7ef6468dce}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\Facade">
-      <UniqueIdentifier>{24c1e14d-3c15-48b9-9b53-6d5405a3ce02}</UniqueIdentifier>
+    <Filter Include="src\application\UIManager\ScreenMode\CraftScreen">
+      <UniqueIdentifier>{fe821922-a229-49e0-a3d6-8c6bb896c8d6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\DrawSystem">
-      <UniqueIdentifier>{c33b27c6-9c84-4600-b956-0acdc8f3c453}</UniqueIdentifier>
+    <Filter Include="src\application\UIManager\ScreenMode\InventoryScreen">
+      <UniqueIdentifier>{1b074490-5276-46b8-9402-cf06caa82779}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\DrawSystem\RenderDataClass">
-      <UniqueIdentifier>{7d8d53d3-04c0-4caa-ac10-735e5054f1f5}</UniqueIdentifier>
+    <Filter Include="src\application\UIManager\ScreenMode\PauseScreen">
+      <UniqueIdentifier>{5884947e-1d7d-4230-818f-199d1c5953c5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\Utilities\PerlinNoise">
-      <UniqueIdentifier>{313938a3-c0d2-4b3c-89d1-88f4efa161c6}</UniqueIdentifier>
+    <Filter Include="src\application\UIManager\ScreenMode\PlayingScreen">
+      <UniqueIdentifier>{2fb99394-2fdb-4d66-ab6d-199e15446506}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\PhysicsSystem">
-      <UniqueIdentifier>{4dd9de1b-4f1e-49e0-9f35-a9b3c4e8f69d}</UniqueIdentifier>
+    <Filter Include="src\application\UIManager\ScreenMode\UIElement">
+      <UniqueIdentifier>{8a384f6b-fc50-40e0-ad8f-dc880fc5db35}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\IO">
-      <UniqueIdentifier>{debd2fd4-6801-480a-97ea-81cb1b63a910}</UniqueIdentifier>
+    <Filter Include="src\application\UIManager\ScreenMode\UIElement\Craft">
+      <UniqueIdentifier>{2685478f-3c94-495a-be7b-31443e5ea3f0}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\IO\MouseController">
-      <UniqueIdentifier>{2dff2682-3b8b-491d-96a6-d1df4709d6a1}</UniqueIdentifier>
+    <Filter Include="src\application\UIManager\ScreenMode\UIElement\Hotbar">
+      <UniqueIdentifier>{231e05e7-94bb-4286-baac-cd4241fade62}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\IO\GetHitKey">
-      <UniqueIdentifier>{aa632014-e276-40cd-b8d2-109d728ee4ef}</UniqueIdentifier>
+    <Filter Include="src\application\UIManager\ScreenMode\UIElement\Inventory">
+      <UniqueIdentifier>{1aac4d0e-b7cb-47e9-a6aa-9a832da52c06}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\IO\GetPadState">
-      <UniqueIdentifier>{6cdbe87c-683b-4dee-b8c3-f22dd1b10c44}</UniqueIdentifier>
+    <Filter Include="src\application\UIManager\ScreenMode\UIElement\Pause">
+      <UniqueIdentifier>{31e846a1-6682-4143-ad43-f87709b472e6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="application\GameManager">
-      <UniqueIdentifier>{be7b0085-0de3-4d37-bc83-670da58a57b2}</UniqueIdentifier>
+    <Filter Include="src\engine">
+      <UniqueIdentifier>{0cdca727-4aee-40c4-b026-0f60c57e7cc9}</UniqueIdentifier>
     </Filter>
-    <Filter Include="application\GameManager\Phase">
-      <UniqueIdentifier>{e81b7604-cb9c-4ea4-9294-38c65d0c2c9a}</UniqueIdentifier>
+    <Filter Include="src\engine\Camera">
+      <UniqueIdentifier>{d73b8b4b-9152-4dcc-b523-c82f2dbccf38}</UniqueIdentifier>
     </Filter>
-    <Filter Include="application\GameManager\Phase\BattlePhase">
-      <UniqueIdentifier>{4981549d-8a7a-45c3-af1b-6be7c79803f5}</UniqueIdentifier>
+    <Filter Include="src\engine\definition">
+      <UniqueIdentifier>{5e469b4f-7466-403e-8ab0-4cff865102b3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="application\GameManager\Phase\PhaseParent">
-      <UniqueIdentifier>{0e641bc6-709a-4dc4-b0e7-deb84efc8c1b}</UniqueIdentifier>
+    <Filter Include="src\engine\DirectX">
+      <UniqueIdentifier>{a8cb6dd7-951a-4d1d-a90b-d0195f49ad17}</UniqueIdentifier>
     </Filter>
-    <Filter Include="application\GameManager\Phase\TestPhase">
-      <UniqueIdentifier>{86bff4f6-f2b3-4425-a46e-802f7182bacd}</UniqueIdentifier>
+    <Filter Include="src\engine\DirectX\DescriptorHeapManager">
+      <UniqueIdentifier>{b1615337-d71f-43e3-8716-6141b1fd1749}</UniqueIdentifier>
     </Filter>
-    <Filter Include="application\GameManager\Phase\TitlePhase">
-      <UniqueIdentifier>{194b88de-4e02-404e-8a08-59bdab644321}</UniqueIdentifier>
+    <Filter Include="src\engine\DirectX\DescriptorHeapManager\CBV_SRV_UAV">
+      <UniqueIdentifier>{98a8fdf5-4c49-4543-9ef1-e45e6df9c55a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="application\GameManager\Phase\GameScenePhase">
-      <UniqueIdentifier>{187336b4-48e9-448a-a699-e7a55fb56ae1}</UniqueIdentifier>
+    <Filter Include="src\engine\DirectX\DescriptorHeapManager\DSV">
+      <UniqueIdentifier>{0339afd6-8acc-42cb-b256-c0d29dd9e354}</UniqueIdentifier>
     </Filter>
-    <Filter Include="application\GameManager\Map">
-      <UniqueIdentifier>{28f4b7c8-cecf-4edc-a2e3-2071fd41f5b6}</UniqueIdentifier>
+    <Filter Include="src\engine\DirectX\DescriptorHeapManager\RTV">
+      <UniqueIdentifier>{02f547c2-7e33-480b-a238-10b3598140c4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="application\GameManager\Map\Chunk">
-      <UniqueIdentifier>{35fdb512-caaa-4061-a301-e55e6a01029f}</UniqueIdentifier>
+    <Filter Include="src\engine\DirectX\FrameCbAllocator">
+      <UniqueIdentifier>{2bf4b003-3ae7-48de-8389-be64cb17f8a6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="application\GameManager\Map\Chunk\Block">
-      <UniqueIdentifier>{1914304b-d65c-4d83-8e80-cd43ac14c5e2}</UniqueIdentifier>
+    <Filter Include="src\engine\DrawSystem">
+      <UniqueIdentifier>{3ce306d2-8445-4482-93f2-7e5145b35bec}</UniqueIdentifier>
     </Filter>
-    <Filter Include="application\GameManager\CameraController">
-      <UniqueIdentifier>{e3cb53ce-025d-48fe-8c9b-c99c3395bb59}</UniqueIdentifier>
+    <Filter Include="src\engine\DrawSystem\RenderData">
+      <UniqueIdentifier>{ec5e9bbe-3312-41a5-b6f8-3305d9dcea1a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="application\GameManager\UIManager">
-      <UniqueIdentifier>{4c2f64e3-7657-4b9d-b5b3-2ff37c2f8ab9}</UniqueIdentifier>
+    <Filter Include="src\engine\Facade">
+      <UniqueIdentifier>{45d644a6-02d6-406b-9b29-b88231769719}</UniqueIdentifier>
     </Filter>
-    <Filter Include="application\GameManager\UIManager\UIScreen">
-      <UniqueIdentifier>{ca3c0f42-1edc-4113-8ad6-a20184b856a0}</UniqueIdentifier>
+    <Filter Include="src\engine\FixFPS">
+      <UniqueIdentifier>{1bbd02a2-ba05-43c6-9ae9-ce2c45b0218f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="application\GameManager\UIManager\UIScreen\UIElement">
-      <UniqueIdentifier>{904e6f54-289b-4d46-8369-9c545a1e9df1}</UniqueIdentifier>
+    <Filter Include="src\engine\ImGuiManager">
+      <UniqueIdentifier>{fb2ec1ef-111b-4901-ba78-772da9e34c53}</UniqueIdentifier>
     </Filter>
-    <Filter Include="application\GameManager\UIManager\UIScreen\UIElement\Inventory">
-      <UniqueIdentifier>{a4a5843c-d22b-42e1-9803-e66ff74c7e6e}</UniqueIdentifier>
+    <Filter Include="src\engine\IO">
+      <UniqueIdentifier>{01256b2b-22c9-45ca-a55a-de25e41a179e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="application\GameManager\UIManager\UIScreen\UIElement\Hotbar">
-      <UniqueIdentifier>{39268ca7-7519-48e9-bf11-ca596956e61f}</UniqueIdentifier>
+    <Filter Include="src\engine\Physics">
+      <UniqueIdentifier>{6835f615-f0ae-4c6e-a0a2-4e9f82b192b9}</UniqueIdentifier>
     </Filter>
-    <Filter Include="application\GameManager\UIManager\UIScreen\UIElement\Pause">
-      <UniqueIdentifier>{fc76eb3a-8f90-4f4b-a724-72c837b162b5}</UniqueIdentifier>
+    <Filter Include="src\engine\Resource">
+      <UniqueIdentifier>{98f85687-8d72-49b2-bc3a-2ddd53e9ed85}</UniqueIdentifier>
     </Filter>
-    <Filter Include="application\GameManager\UIManager\UIScreen\InventoryScreen">
-      <UniqueIdentifier>{5ff58466-0018-40f5-8fa0-8091a5ef559a}</UniqueIdentifier>
+    <Filter Include="src\engine\Resource\Audio">
+      <UniqueIdentifier>{989d34ab-662a-4545-a7f2-48cdd96ab4f0}</UniqueIdentifier>
     </Filter>
-    <Filter Include="application\GameManager\UIManager\UIScreen\PlayingScreen">
-      <UniqueIdentifier>{ba423f92-ea59-4dfd-9c66-1b748e1340c7}</UniqueIdentifier>
+    <Filter Include="src\engine\Resource\Model">
+      <UniqueIdentifier>{73e22166-0427-41f4-b75e-a4a46ea8fb06}</UniqueIdentifier>
     </Filter>
-    <Filter Include="application\GameManager\UIManager\UIScreen\CraftScreen">
-      <UniqueIdentifier>{063f143d-28f9-4e2e-9e7a-3ee5a42e42f1}</UniqueIdentifier>
+    <Filter Include="src\engine\Resource\Texture">
+      <UniqueIdentifier>{8bc3f57c-7756-497b-ac16-b5b0914e4ec3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="application\GameManager\UIManager\UIScreen\PauseScreen">
-      <UniqueIdentifier>{be480839-6e46-411f-809f-c6c6447cda98}</UniqueIdentifier>
+    <Filter Include="src\engine\Utilities">
+      <UniqueIdentifier>{660b8705-7f77-4a8c-9049-e11bf8caceab}</UniqueIdentifier>
     </Filter>
-    <Filter Include="application\GameManager\Item">
-      <UniqueIdentifier>{c6a0b0da-2ff0-43fa-adc9-007833710f26}</UniqueIdentifier>
+    <Filter Include="src\engine\Utilities\Easing">
+      <UniqueIdentifier>{0e8509ef-4a50-4da8-968c-493cabd6215f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="application\GameManager\Item\HaveItem">
-      <UniqueIdentifier>{30ac8278-a596-4c95-9702-b01431d8f28f}</UniqueIdentifier>
+    <Filter Include="src\engine\Utilities\Json">
+      <UniqueIdentifier>{3aa2871d-fb9c-45f2-ab66-d9dca1f7be28}</UniqueIdentifier>
     </Filter>
-    <Filter Include="application\GameManager\Item\DropItem">
-      <UniqueIdentifier>{dbf079b1-300b-4849-979f-d718265501b7}</UniqueIdentifier>
+    <Filter Include="src\engine\Utilities\Logger">
+      <UniqueIdentifier>{9488ab4e-8d78-4326-98cc-6c98c363e176}</UniqueIdentifier>
     </Filter>
-    <Filter Include="application\GameManager\Item\CraftRecipe">
-      <UniqueIdentifier>{9a5ce3f6-a4d7-4ff5-9f07-090d10c6438a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="application\GameManager\Character">
-      <UniqueIdentifier>{2d9745b8-e424-4cfc-b609-c19145556b45}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="application\GameManager\Character\Player">
-      <UniqueIdentifier>{6a027008-0c2c-4e83-a548-37aff76f8489}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="application\GameManager\Character\BaseCharacter">
-      <UniqueIdentifier>{686134fb-a1b8-47f3-af73-021a2c7fa321}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="application\GameManager\Character\Enemy">
-      <UniqueIdentifier>{d82d499d-4b7a-4494-a0d1-66a863c1abba}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="application\GameManager\UIManager\UIScreen\UIElement\Craft">
-      <UniqueIdentifier>{70365fe4-d6e2-4c1e-a110-7bab04e1d84e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="engine\Binary">
-      <UniqueIdentifier>{3a7d8a7a-aa52-4627-bd1d-7a8f58e124b6}</UniqueIdentifier>
+    <Filter Include="src\engine\Window">
+      <UniqueIdentifier>{347c24a2-18d1-4026-98ae-b24ad2c84515}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="src\engine\DirectX\CommandContextManager.cpp">
-      <Filter>engine\DirectXManager\CommandContextManager</Filter>
-    </ClCompile>
-    <ClCompile Include="src\engine\DirectX\DepthStencilManager.cpp">
-      <Filter>engine\DirectXManager\DepthStencilManager</Filter>
-    </ClCompile>
-    <ClCompile Include="src\engine\DirectX\DescriptorHeapManager\DescriptorHeapManager.cpp">
-      <Filter>engine\DirectXManager\DescriptorHeapManager</Filter>
-    </ClCompile>
-    <ClCompile Include="src\engine\DirectX\DeviceManager.cpp">
-      <Filter>engine\DirectXManager\DeviceManager</Filter>
-    </ClCompile>
-    <ClCompile Include="src\engine\DirectX\DirectXManager.cpp">
-      <Filter>engine\DirectXManager</Filter>
-    </ClCompile>
-    <ClCompile Include="src\engine\DirectX\PipelineStateManager.cpp">
-      <Filter>engine\DirectXManager\PipelineStateManager</Filter>
-    </ClCompile>
-    <ClCompile Include="src\engine\DirectX\SwapChainManager.cpp">
-      <Filter>engine\DirectXManager\SwapChainManager</Filter>
-    </ClCompile>
-    <ClCompile Include="src\engine\DirectX\SynchronizationManager.cpp">
-      <Filter>engine\DirectXManager\SynchronizationManager</Filter>
-    </ClCompile>
-    <ClCompile Include="src\engine\DirectX\ViewportScissorManager.cpp">
-      <Filter>engine\DirectXManager\ViewportScissorManager</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\GameManager\GameManager.cpp">
-      <Filter>application\GameManager</Filter>
-    </ClCompile>
-    <ClCompile Include="src\engine\Resource\Audio\AudioManager.cpp">
-      <Filter>engine\ResourceManager\AudioManager</Filter>
-    </ClCompile>
-    <ClCompile Include="src\engine\Resource\Model\ModelManager.cpp">
-      <Filter>engine\ResourceManager\ModelManager</Filter>
-    </ClCompile>
-    <ClCompile Include="src\engine\Resource\Texture\TextureManager.cpp">
-      <Filter>engine\ResourceManager\TextureManager</Filter>
-    </ClCompile>
-    <ClCompile Include="src\engine\Resource\ResourceManager.cpp">
-      <Filter>engine\ResourceManager</Filter>
-    </ClCompile>
-    <ClCompile Include="src\engine\IO\GetHitKey.cpp">
-      <Filter>engine\IO\GetHitKey</Filter>
-    </ClCompile>
-    <ClCompile Include="src\engine\IO\IOManager.cpp">
-      <Filter>engine\IO</Filter>
-    </ClCompile>
-    <ClCompile Include="src\engine\IO\MouseController.cpp">
-      <Filter>engine\IO\MouseController</Filter>
-    </ClCompile>
-    <ClCompile Include="src\engine\IO\GetPadState.cpp">
-      <Filter>engine\IO\GetPadState</Filter>
-    </ClCompile>
-    <ClCompile Include="src\engine\DrawSystem\DrawSystem.cpp">
-      <Filter>engine\DrawSystem</Filter>
-    </ClCompile>
-    <ClCompile Include="src\engine\Utilities\functions.cpp">
-      <Filter>engine\Utilities\functions</Filter>
-    </ClCompile>
-    <ClCompile Include="src\engine\Utilities\Easing\Easings.cpp">
-      <Filter>engine\Utilities\Easings</Filter>
-    </ClCompile>
-    <ClCompile Include="src\engine\definition\definition.cpp">
-      <Filter>engine\definition</Filter>
-    </ClCompile>
-    <ClCompile Include="src\engine\Facade\Game.cpp">
-      <Filter>engine\Facade</Filter>
-    </ClCompile>
-    <ClCompile Include="src\engine\Window\WindowManager.cpp">
-      <Filter>engine\WindowManager</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\GameManager\Phase\BattlePhase\BattlePhase.cpp">
-      <Filter>application\GameManager\Phase\BattlePhase</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\GameManager\Phase\PhaseParent\PhaseParent.cpp">
-      <Filter>application\GameManager\Phase\PhaseParent</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\GameManager\Phase\TestPhase\TestPhase.cpp">
-      <Filter>application\GameManager\Phase\TestPhase</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\GameManager\Phase\TitlePhase\TitlePhase.cpp">
-      <Filter>application\GameManager\Phase\TitlePhase</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\GameManager\Phase\GameScenePhase\GameScenePhase.cpp">
-      <Filter>application\GameManager\Phase\GameScenePhase</Filter>
-    </ClCompile>
-    <ClCompile Include="src\engine\DrawSystem\RenderData\RenderData.cpp">
-      <Filter>engine\DrawSystem\RenderDataClass</Filter>
-    </ClCompile>
-    <ClCompile Include="src\engine\FixFPS\FixFPS.cpp">
-      <Filter>engine\FixFPS</Filter>
-    </ClCompile>
-    <ClCompile Include="src\engine\Utilities\Json\JsonManager.cpp">
-      <Filter>engine\Utilities\Json</Filter>
-    </ClCompile>
-    <ClCompile Include="src\engine\Camera\CameraManager.cpp">
-      <Filter>engine\Camera\CameraManager</Filter>
-    </ClCompile>
-    <ClCompile Include="src\engine\Camera\Camera.cpp">
-      <Filter>engine\Camera\Camera</Filter>
-    </ClCompile>
-    <ClCompile Include="src\engine\DirectX\DescriptorHeapManager\CBV_SRV_UAV\CBV_SRV_UAVManager.cpp">
-      <Filter>engine\DirectXManager\SrvManager</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\MapManager\Chunk\Block\Block.cpp">
-      <Filter>application\GameManager\Map\Chunk\Block</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\MapManager\MapManager.cpp">
-      <Filter>application\GameManager\Map</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\Character\Player\Player.cpp">
-      <Filter>application\GameManager\Character\Player</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\Item\DropItem\DropItem.cpp">
-      <Filter>application\GameManager\Item\DropItem</Filter>
-    </ClCompile>
-    <ClCompile Include="src\engine\Engine.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
-    <ClCompile Include="src\engine\ImGuiManager\ImGuiManager.cpp">
-      <Filter>engine\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\MapManager\Chunk\Block\BlockDurability.cpp">
-      <Filter>application\GameManager\Map\Chunk\Block</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\ResourceLoader\ResourceID.cpp">
-      <Filter>application</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\Camera\CameraController.cpp">
-      <Filter>application\GameManager\CameraController</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\MapManager\Chunk\Block\BlockConfig.cpp">
-      <Filter>application\GameManager\Map\Chunk\Block</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\Character\BaseCharacter.cpp">
-      <Filter>application\GameManager\Character\BaseCharacter</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\MapManager\Chunk\Chunk.cpp">
-      <Filter>application\GameManager\Map\Chunk</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\UIManager\UIManager.cpp">
-      <Filter>application\GameManager\UIManager</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\UIManager\ScreenMode\UIScreen.cpp">
-      <Filter>application\GameManager\UIManager\UIScreen</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\UIManager\ScreenMode\InventoryScreen\InventoryScreen.cpp">
-      <Filter>application\GameManager\UIManager\UIScreen\InventoryScreen</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\UIManager\ScreenMode\PlayingScreen\PlayingScreen.cpp">
-      <Filter>application\GameManager\UIManager\UIScreen\PlayingScreen</Filter>
-    </ClCompile>
-    <ClCompile Include="src\engine\Utilities\PerlinNoise.cpp">
-      <Filter>engine\Utilities\PerlinNoise</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\UIElement.cpp">
-      <Filter>application\GameManager\UIManager\UIScreen\UIElement</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\Inventory\Inventory.cpp">
-      <Filter>application\GameManager\UIManager\UIScreen\UIElement\Inventory</Filter>
-    </ClCompile>
-    <ClCompile Include="src\engine\Physics\PhysicsSystem.cpp">
-      <Filter>engine\PhysicsSystem</Filter>
-    </ClCompile>
-    <ClCompile Include="src\engine\Physics\IWorldCollider.cpp">
-      <Filter>engine\PhysicsSystem</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\Item\Item.cpp">
-      <Filter>application\GameManager\Item</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\Item\HaveItem\HaveItem.cpp">
-      <Filter>application\GameManager\Item\HaveItem</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\Item\DropItem\DropItemManager.cpp">
-      <Filter>application\GameManager\Item\DropItem</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\Hotbar\Hotbar.cpp">
-      <Filter>application\GameManager\UIManager\UIScreen\UIElement\Hotbar</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\Item\CraftRecipe\CraftRecipe.cpp">
-      <Filter>application\GameManager\Item\CraftRecipe</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\UIManager\ScreenMode\CraftScreen\CraftScreen.cpp">
-      <Filter>application\GameManager\UIManager\UIScreen\CraftScreen</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\Character\Enemy\EnemyManager.cpp">
-      <Filter>application\GameManager\Character\Enemy</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\Character\Enemy\Enemy.cpp">
-      <Filter>application\GameManager\Character\Enemy</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\UIManager\ScreenMode\PauseScreen\PauseScreen.cpp">
-      <Filter>application\GameManager\UIManager\UIScreen\PauseScreen</Filter>
-    </ClCompile>
-    <ClCompile Include="src\engine\Physics\IPhysicsBody.cpp">
-      <Filter>engine\PhysicsSystem</Filter>
-    </ClCompile>
-    <ClCompile Include="src\engine\Physics\MapWorldCollider.cpp">
-      <Filter>engine\PhysicsSystem</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\Pause\Pause.cpp">
-      <Filter>application\GameManager\UIManager\UIScreen\UIElement\Pause</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\Craft\Craft.cpp">
-      <Filter>application\GameManager\UIManager\UIScreen\UIElement\Craft</Filter>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="externals\Shigemori\Binary\BinaryManager.cpp">
+      <Filter>externals\Shigemori\Binary</Filter>
     </ClCompile>
     <ClCompile Include="externals\Shigemori\Binary\Data\BinaryInput.cpp">
-      <Filter>engine\Binary</Filter>
-    </ClCompile>
-    <ClCompile Include="externals\Shigemori\Binary\BinaryManager.cpp">
-      <Filter>engine\Binary</Filter>
+      <Filter>externals\Shigemori\Binary\Data</Filter>
     </ClCompile>
     <ClCompile Include="externals\Shigemori\Binary\Data\BinaryOutput.cpp">
-      <Filter>engine\Binary</Filter>
+      <Filter>externals\Shigemori\Binary\Data</Filter>
     </ClCompile>
-    <ClCompile Include="src\engine\Utilities\SimpleModelBody.cpp">
-      <Filter>engine\PhysicsSystem</Filter>
+    <ClCompile Include="src\application\Camera\CameraController.cpp">
+      <Filter>src\application\Camera</Filter>
     </ClCompile>
-    <ClCompile Include="src\engine\DrawSystem\RenderData\RenderObject.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="src\application\Character\BaseCharacter.cpp">
+      <Filter>src\application\Character</Filter>
     </ClCompile>
-    <ClCompile Include="src\engine\DirectX\DescriptorHeapManager\RTV\RTVManager.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="src\application\Character\Enemy\Enemy.cpp">
+      <Filter>src\application\Character\Enemy</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\Character\Enemy\EnemyManager.cpp">
+      <Filter>src\application\Character\Enemy</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\Character\Player\Player.cpp">
+      <Filter>src\application\Character\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\GameManager\GameManager.cpp">
+      <Filter>src\application\GameManager</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\GameManager\Phase\BattlePhase\BattlePhase.cpp">
+      <Filter>src\application\GameManager\Phase\BattlePhase</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\GameManager\Phase\GameScenePhase\GameScenePhase.cpp">
+      <Filter>src\application\GameManager\Phase\GameScenePhase</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\GameManager\Phase\PhaseParent\PhaseParent.cpp">
+      <Filter>src\application\GameManager\Phase\PhaseParent</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\GameManager\Phase\TestPhase\TestPhase.cpp">
+      <Filter>src\application\GameManager\Phase\TestPhase</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\GameManager\Phase\TitlePhase\TitlePhase.cpp">
+      <Filter>src\application\GameManager\Phase\TitlePhase</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\Item\Item.cpp">
+      <Filter>src\application\Item</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\Item\CraftRecipe\CraftRecipe.cpp">
+      <Filter>src\application\Item\CraftRecipe</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\Item\DropItem\DropItem.cpp">
+      <Filter>src\application\Item\DropItem</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\Item\DropItem\DropItemManager.cpp">
+      <Filter>src\application\Item\DropItem</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\Item\HaveItem\HaveItem.cpp">
+      <Filter>src\application\Item\HaveItem</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\MapManager\MapManager.cpp">
+      <Filter>src\application\MapManager</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\MapManager\Chunk\Chunk.cpp">
+      <Filter>src\application\MapManager\Chunk</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\MapManager\Chunk\Block\Block.cpp">
+      <Filter>src\application\MapManager\Chunk\Block</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\MapManager\Chunk\Block\BlockConfig.cpp">
+      <Filter>src\application\MapManager\Chunk\Block</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\MapManager\Chunk\Block\BlockDurability.cpp">
+      <Filter>src\application\MapManager\Chunk\Block</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\ResourceLoader\ResourceID.cpp">
+      <Filter>src\application\ResourceLoader</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\UIManager\UIManager.cpp">
+      <Filter>src\application\UIManager</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\UIManager\ScreenMode\UIScreen.cpp">
+      <Filter>src\application\UIManager\ScreenMode</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\UIManager\ScreenMode\CraftScreen\CraftScreen.cpp">
+      <Filter>src\application\UIManager\ScreenMode\CraftScreen</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\UIManager\ScreenMode\InventoryScreen\InventoryScreen.cpp">
+      <Filter>src\application\UIManager\ScreenMode\InventoryScreen</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\UIManager\ScreenMode\PauseScreen\PauseScreen.cpp">
+      <Filter>src\application\UIManager\ScreenMode\PauseScreen</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\UIManager\ScreenMode\PlayingScreen\PlayingScreen.cpp">
+      <Filter>src\application\UIManager\ScreenMode\PlayingScreen</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\UIElement.cpp">
+      <Filter>src\application\UIManager\ScreenMode\UIElement</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\Craft\Craft.cpp">
+      <Filter>src\application\UIManager\ScreenMode\UIElement\Craft</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\Hotbar\Hotbar.cpp">
+      <Filter>src\application\UIManager\ScreenMode\UIElement\Hotbar</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\Inventory\Inventory.cpp">
+      <Filter>src\application\UIManager\ScreenMode\UIElement\Inventory</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\Pause\Pause.cpp">
+      <Filter>src\application\UIManager\ScreenMode\UIElement\Pause</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\Engine.cpp">
+      <Filter>src\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\Camera\Camera.cpp">
+      <Filter>src\engine\Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\Camera\CameraManager.cpp">
+      <Filter>src\engine\Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\definition\definition.cpp">
+      <Filter>src\engine\definition</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\DirectX\CommandContextManager.cpp">
+      <Filter>src\engine\DirectX</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\DirectX\DepthStencilManager.cpp">
+      <Filter>src\engine\DirectX</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\DirectX\DeviceManager.cpp">
+      <Filter>src\engine\DirectX</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\DirectX\DirectXManager.cpp">
+      <Filter>src\engine\DirectX</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\DirectX\PipelineStateManager.cpp">
+      <Filter>src\engine\DirectX</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\DirectX\SwapChainManager.cpp">
+      <Filter>src\engine\DirectX</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\DirectX\SynchronizationManager.cpp">
+      <Filter>src\engine\DirectX</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\DirectX\ViewportScissorManager.cpp">
+      <Filter>src\engine\DirectX</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\DirectX\DescriptorHeapManager\DescriptorHeapManager.cpp">
+      <Filter>src\engine\DirectX\DescriptorHeapManager</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\DirectX\DescriptorHeapManager\CBV_SRV_UAV\CBV_SRV_UAVManager.cpp">
+      <Filter>src\engine\DirectX\DescriptorHeapManager\CBV_SRV_UAV</Filter>
     </ClCompile>
     <ClCompile Include="src\engine\DirectX\DescriptorHeapManager\DSV\DSVManager.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>src\engine\DirectX\DescriptorHeapManager\DSV</Filter>
     </ClCompile>
-    <ClCompile Include="src\engine\Utilities\Logger\Logger.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="src\engine\DirectX\DescriptorHeapManager\RTV\RTVManager.cpp">
+      <Filter>src\engine\DirectX\DescriptorHeapManager\RTV</Filter>
     </ClCompile>
     <ClCompile Include="src\engine\DirectX\FrameCbAllocator\FrameCbAllocator.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>src\engine\DirectX\FrameCbAllocator</Filter>
     </ClCompile>
+    <ClCompile Include="src\engine\DrawSystem\DrawSystem.cpp">
+      <Filter>src\engine\DrawSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\DrawSystem\RenderData\RenderData.cpp">
+      <Filter>src\engine\DrawSystem\RenderData</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\DrawSystem\RenderData\RenderObject.cpp">
+      <Filter>src\engine\DrawSystem\RenderData</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\Facade\Game.cpp">
+      <Filter>src\engine\Facade</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\FixFPS\FixFPS.cpp">
+      <Filter>src\engine\FixFPS</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\ImGuiManager\ImGuiManager.cpp">
+      <Filter>src\engine\ImGuiManager</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\IO\GetHitKey.cpp">
+      <Filter>src\engine\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\IO\GetPadState.cpp">
+      <Filter>src\engine\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\IO\IOManager.cpp">
+      <Filter>src\engine\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\IO\MouseController.cpp">
+      <Filter>src\engine\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\Physics\IPhysicsBody.cpp">
+      <Filter>src\engine\Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\Physics\IWorldCollider.cpp">
+      <Filter>src\engine\Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\Physics\MapWorldCollider.cpp">
+      <Filter>src\engine\Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\Physics\PhysicsSystem.cpp">
+      <Filter>src\engine\Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\Resource\ResourceManager.cpp">
+      <Filter>src\engine\Resource</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\Resource\Audio\AudioManager.cpp">
+      <Filter>src\engine\Resource\Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\Resource\Model\ModelManager.cpp">
+      <Filter>src\engine\Resource\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\Resource\Texture\TextureManager.cpp">
+      <Filter>src\engine\Resource\Texture</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\Utilities\functions.cpp">
+      <Filter>src\engine\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\Utilities\PerlinNoise.cpp">
+      <Filter>src\engine\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\Utilities\SimpleModelBody.cpp">
+      <Filter>src\engine\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\Utilities\Easing\Easings.cpp">
+      <Filter>src\engine\Utilities\Easing</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\Utilities\Json\JsonManager.cpp">
+      <Filter>src\engine\Utilities\Json</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\Utilities\Logger\Logger.cpp">
+      <Filter>src\engine\Utilities\Logger</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\Window\WindowManager.cpp">
+      <Filter>src\engine\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\DirectX\Resource\Dx12ResourceFactory.cpp" />
+    <ClCompile Include="src\engine\DirectX\View\Dx12ViewFactory.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\engine\DirectX\CommandContextManager.h">
-      <Filter>engine\DirectXManager\CommandContextManager</Filter>
-    </ClInclude>
-    <ClInclude Include="src\engine\DirectX\DepthStencilManager.h">
-      <Filter>engine\DirectXManager\DepthStencilManager</Filter>
-    </ClInclude>
-    <ClInclude Include="src\engine\DirectX\DescriptorHeapManager\DescriptorHeapManager.h">
-      <Filter>engine\DirectXManager\DescriptorHeapManager</Filter>
-    </ClInclude>
-    <ClInclude Include="src\engine\DirectX\DeviceManager.h">
-      <Filter>engine\DirectXManager\DeviceManager</Filter>
-    </ClInclude>
-    <ClInclude Include="src\engine\DirectX\DirectXManager.h">
-      <Filter>engine\DirectXManager</Filter>
-    </ClInclude>
-    <ClInclude Include="src\engine\DirectX\PipelineStateManager.h">
-      <Filter>engine\DirectXManager\PipelineStateManager</Filter>
-    </ClInclude>
-    <ClInclude Include="src\engine\DirectX\SwapChainManager.h">
-      <Filter>engine\DirectXManager\SwapChainManager</Filter>
-    </ClInclude>
-    <ClInclude Include="src\engine\DirectX\SynchronizationManager.h">
-      <Filter>engine\DirectXManager\SynchronizationManager</Filter>
-    </ClInclude>
-    <ClInclude Include="src\engine\DirectX\ViewportScissorManager.h">
-      <Filter>engine\DirectXManager\ViewportScissorManager</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\GameManager\GameManager.h">
-      <Filter>application\GameManager</Filter>
-    </ClInclude>
-    <ClInclude Include="src\engine\Resource\Audio\AudioManager.h">
-      <Filter>engine\ResourceManager\AudioManager</Filter>
-    </ClInclude>
-    <ClInclude Include="src\engine\Resource\Model\ModelManager.h">
-      <Filter>engine\ResourceManager\ModelManager</Filter>
-    </ClInclude>
-    <ClInclude Include="src\engine\Resource\ResourceManager.h">
-      <Filter>engine\ResourceManager</Filter>
-    </ClInclude>
-    <ClInclude Include="src\engine\Resource\Texture\TextureManager.h">
-      <Filter>engine\ResourceManager\TextureManager</Filter>
-    </ClInclude>
-    <ClInclude Include="src\engine\IO\IOManager.h">
-      <Filter>engine\IO</Filter>
-    </ClInclude>
-    <ClInclude Include="src\engine\IO\GetHitKey.h">
-      <Filter>engine\IO\GetHitKey</Filter>
-    </ClInclude>
-    <ClInclude Include="src\engine\IO\GetPadState.h">
-      <Filter>engine\IO\GetPadState</Filter>
-    </ClInclude>
-    <ClInclude Include="src\engine\IO\MouseController.h">
-      <Filter>engine\IO\MouseController</Filter>
-    </ClInclude>
-    <ClInclude Include="src\engine\DrawSystem\DrawSystem.h">
-      <Filter>engine\DrawSystem</Filter>
-    </ClInclude>
-    <ClInclude Include="src\engine\Utilities\Easing\Easings.h">
-      <Filter>engine\Utilities\Easings</Filter>
-    </ClInclude>
-    <ClInclude Include="src\engine\Utilities\functions.h">
-      <Filter>engine\Utilities\functions</Filter>
-    </ClInclude>
-    <ClInclude Include="src\engine\definition\definition.h">
-      <Filter>engine\definition</Filter>
-    </ClInclude>
-    <ClInclude Include="src\engine\Facade\Game.h">
-      <Filter>engine\Facade</Filter>
-    </ClInclude>
-    <ClInclude Include="src\engine\Window\WindowManager.h">
-      <Filter>engine\WindowManager</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\GameManager\Phase\BattlePhase\BattlePhase.h">
-      <Filter>application\GameManager\Phase\BattlePhase</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\GameManager\Phase\PhaseParent\PhaseParent.h">
-      <Filter>application\GameManager\Phase\PhaseParent</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\GameManager\Phase\TestPhase\TestPhase.h">
-      <Filter>application\GameManager\Phase\TestPhase</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\GameManager\Phase\TitlePhase\TitlePhase.h">
-      <Filter>application\GameManager\Phase\TitlePhase</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\GameManager\Phase\GameScenePhase\GameScenePhase.h">
-      <Filter>application\GameManager\Phase\GameScenePhase</Filter>
-    </ClInclude>
-    <ClInclude Include="src\engine\DrawSystem\RenderData\RenderData.h">
-      <Filter>engine\DrawSystem\RenderDataClass</Filter>
-    </ClInclude>
-    <ClInclude Include="src\engine\FixFPS\FixFPS.h">
-      <Filter>engine\FixFPS</Filter>
-    </ClInclude>
-    <ClInclude Include="src\engine\Utilities\Json\JsonManager.h">
-      <Filter>engine\Utilities\Json</Filter>
-    </ClInclude>
-    <ClInclude Include="src\engine\Camera\CameraManager.h">
-      <Filter>engine\Camera\CameraManager</Filter>
-    </ClInclude>
-    <ClInclude Include="src\engine\Camera\Camera.h">
-      <Filter>engine\Camera\Camera</Filter>
-    </ClInclude>
-    <ClInclude Include="src\engine\DirectX\DescriptorHeapManager\CBV_SRV_UAV\CBV_SRV_UAVManager.h">
-      <Filter>engine\DirectXManager\SrvManager</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\MapManager\Chunk\Block\Block.h">
-      <Filter>application\GameManager\Map\Chunk\Block</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\MapManager\MapManager.h">
-      <Filter>application\GameManager\Map</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\Character\Player\Player.h">
-      <Filter>application\GameManager\Character\Player</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\Item\DropItem\DropItem.h">
-      <Filter>application\GameManager\Item\DropItem</Filter>
-    </ClInclude>
-    <ClInclude Include="src\engine\Engine.h">
-      <Filter>engine</Filter>
-    </ClInclude>
-    <ClInclude Include="src\engine\ImGuiManager\ImGuiManager.h">
-      <Filter>engine\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\MapManager\Chunk\Block\BlockDurability.h">
-      <Filter>application\GameManager\Map\Chunk\Block</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\ResourceLoader\ResourceID.h">
-      <Filter>application</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\Camera\CameraController.h">
-      <Filter>application\GameManager\CameraController</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\MapManager\Chunk\Block\BlockConfig.h">
-      <Filter>application\GameManager\Map\Chunk\Block</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\Character\BaseCharacter.h">
-      <Filter>application\GameManager\Character\BaseCharacter</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\MapManager\Chunk\Chunk.h">
-      <Filter>application\GameManager\Map\Chunk</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\UIManager\UIManager.h">
-      <Filter>application\GameManager\UIManager</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\UIManager\ScreenMode\UIScreen.h">
-      <Filter>application\GameManager\UIManager\UIScreen</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\UIManager\ScreenMode\InventoryScreen\InventoryScreen.h">
-      <Filter>application\GameManager\UIManager\UIScreen\InventoryScreen</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\UIManager\ScreenMode\PlayingScreen\PlayingScreen.h">
-      <Filter>application\GameManager\UIManager\UIScreen\PlayingScreen</Filter>
-    </ClInclude>
-    <ClInclude Include="src\engine\Utilities\PerlinNoise.h">
-      <Filter>engine\Utilities\PerlinNoise</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\UIElement.h">
-      <Filter>application\GameManager\UIManager\UIScreen\UIElement</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\Inventory\Inventory.h">
-      <Filter>application\GameManager\UIManager\UIScreen\UIElement\Inventory</Filter>
-    </ClInclude>
-    <ClInclude Include="src\engine\Physics\PhysicsSystem.h">
-      <Filter>engine\PhysicsSystem</Filter>
-    </ClInclude>
-    <ClInclude Include="src\engine\Physics\IWorldCollider.h">
-      <Filter>engine\PhysicsSystem</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\Item\Item.h">
-      <Filter>application\GameManager\Item</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\Item\HaveItem\HaveItem.h">
-      <Filter>application\GameManager\Item\HaveItem</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\Item\DropItem\DropItemManager.h">
-      <Filter>application\GameManager\Item\DropItem</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\Hotbar\Hotbar.h">
-      <Filter>application\GameManager\UIManager\UIScreen\UIElement\Hotbar</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\Item\CraftRecipe\CraftRecipe.h">
-      <Filter>application\GameManager\Item\CraftRecipe</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\UIManager\ScreenMode\CraftScreen\CraftScreen.h">
-      <Filter>application\GameManager\UIManager\UIScreen\CraftScreen</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\Character\Enemy\Enemy.h">
-      <Filter>application\GameManager\Character\Enemy</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\Character\Enemy\EnemyManager.h">
-      <Filter>application\GameManager\Character\Enemy</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\UIManager\ScreenMode\PauseScreen\PauseScreen.h">
-      <Filter>application\GameManager\UIManager\UIScreen\PauseScreen</Filter>
-    </ClInclude>
-    <ClInclude Include="src\engine\Physics\IPhysicsBody.h">
-      <Filter>engine\PhysicsSystem</Filter>
-    </ClInclude>
-    <ClInclude Include="src\engine\Physics\MapWorldCollider.h">
-      <Filter>engine\PhysicsSystem</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\Pause\Pause.h">
-      <Filter>application\GameManager\UIManager\UIScreen\UIElement\Pause</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\Craft\Craft.h">
-      <Filter>application\GameManager\UIManager\UIScreen\UIElement\Craft</Filter>
+    <ClInclude Include="externals\Shigemori\Binary\BinaryManager.h">
+      <Filter>externals\Shigemori\Binary</Filter>
     </ClInclude>
     <ClInclude Include="externals\Shigemori\Binary\Data\BinaryInput.h">
-      <Filter>engine\Binary</Filter>
-    </ClInclude>
-    <ClInclude Include="externals\Shigemori\Binary\BinaryManager.h">
-      <Filter>engine\Binary</Filter>
+      <Filter>externals\Shigemori\Binary\Data</Filter>
     </ClInclude>
     <ClInclude Include="externals\Shigemori\Binary\Data\BinaryOutput.h">
-      <Filter>engine\Binary</Filter>
+      <Filter>externals\Shigemori\Binary\Data</Filter>
     </ClInclude>
     <ClInclude Include="externals\Shigemori\Binary\Data\Value.h">
-      <Filter>engine\Binary</Filter>
+      <Filter>externals\Shigemori\Binary\Data</Filter>
     </ClInclude>
-    <ClInclude Include="src\engine\Utilities\SimpleModelBody.h">
-      <Filter>engine\PhysicsSystem</Filter>
+    <ClInclude Include="src\application\Camera\CameraController.h">
+      <Filter>src\application\Camera</Filter>
     </ClInclude>
-    <ClInclude Include="src\engine\DrawSystem\RenderData\RenderObject.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="src\application\Character\BaseCharacter.h">
+      <Filter>src\application\Character</Filter>
     </ClInclude>
-    <ClInclude Include="src\engine\DirectX\DescriptorHeapManager\RTV\RTVManager.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="src\application\Character\Enemy\Enemy.h">
+      <Filter>src\application\Character\Enemy</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\Character\Enemy\EnemyManager.h">
+      <Filter>src\application\Character\Enemy</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\Character\Player\Player.h">
+      <Filter>src\application\Character\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\GameManager\GameManager.h">
+      <Filter>src\application\GameManager</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\GameManager\Phase\BattlePhase\BattlePhase.h">
+      <Filter>src\application\GameManager\Phase\BattlePhase</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\GameManager\Phase\GameScenePhase\GameScenePhase.h">
+      <Filter>src\application\GameManager\Phase\GameScenePhase</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\GameManager\Phase\PhaseParent\PhaseParent.h">
+      <Filter>src\application\GameManager\Phase\PhaseParent</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\GameManager\Phase\TestPhase\TestPhase.h">
+      <Filter>src\application\GameManager\Phase\TestPhase</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\GameManager\Phase\TitlePhase\TitlePhase.h">
+      <Filter>src\application\GameManager\Phase\TitlePhase</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\Item\Item.h">
+      <Filter>src\application\Item</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\Item\CraftRecipe\CraftRecipe.h">
+      <Filter>src\application\Item\CraftRecipe</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\Item\DropItem\DropItem.h">
+      <Filter>src\application\Item\DropItem</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\Item\DropItem\DropItemManager.h">
+      <Filter>src\application\Item\DropItem</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\Item\HaveItem\HaveItem.h">
+      <Filter>src\application\Item\HaveItem</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\MapManager\MapManager.h">
+      <Filter>src\application\MapManager</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\MapManager\Chunk\Chunk.h">
+      <Filter>src\application\MapManager\Chunk</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\MapManager\Chunk\Block\Block.h">
+      <Filter>src\application\MapManager\Chunk\Block</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\MapManager\Chunk\Block\BlockConfig.h">
+      <Filter>src\application\MapManager\Chunk\Block</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\MapManager\Chunk\Block\BlockDurability.h">
+      <Filter>src\application\MapManager\Chunk\Block</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\ResourceLoader\ResourceID.h">
+      <Filter>src\application\ResourceLoader</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\UIManager\UIManager.h">
+      <Filter>src\application\UIManager</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\UIManager\ScreenMode\UIScreen.h">
+      <Filter>src\application\UIManager\ScreenMode</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\UIManager\ScreenMode\CraftScreen\CraftScreen.h">
+      <Filter>src\application\UIManager\ScreenMode\CraftScreen</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\UIManager\ScreenMode\InventoryScreen\InventoryScreen.h">
+      <Filter>src\application\UIManager\ScreenMode\InventoryScreen</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\UIManager\ScreenMode\PauseScreen\PauseScreen.h">
+      <Filter>src\application\UIManager\ScreenMode\PauseScreen</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\UIManager\ScreenMode\PlayingScreen\PlayingScreen.h">
+      <Filter>src\application\UIManager\ScreenMode\PlayingScreen</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\UIElement.h">
+      <Filter>src\application\UIManager\ScreenMode\UIElement</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\Craft\Craft.h">
+      <Filter>src\application\UIManager\ScreenMode\UIElement\Craft</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\Hotbar\Hotbar.h">
+      <Filter>src\application\UIManager\ScreenMode\UIElement\Hotbar</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\Inventory\Inventory.h">
+      <Filter>src\application\UIManager\ScreenMode\UIElement\Inventory</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\Pause\Pause.h">
+      <Filter>src\application\UIManager\ScreenMode\UIElement\Pause</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\Engine.h">
+      <Filter>src\engine</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\Camera\Camera.h">
+      <Filter>src\engine\Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\Camera\CameraManager.h">
+      <Filter>src\engine\Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\definition\definition.h">
+      <Filter>src\engine\definition</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\DirectX\CommandContextManager.h">
+      <Filter>src\engine\DirectX</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\DirectX\DepthStencilManager.h">
+      <Filter>src\engine\DirectX</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\DirectX\DeviceManager.h">
+      <Filter>src\engine\DirectX</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\DirectX\DirectXManager.h">
+      <Filter>src\engine\DirectX</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\DirectX\PipelineStateManager.h">
+      <Filter>src\engine\DirectX</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\DirectX\SwapChainManager.h">
+      <Filter>src\engine\DirectX</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\DirectX\SynchronizationManager.h">
+      <Filter>src\engine\DirectX</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\DirectX\ViewportScissorManager.h">
+      <Filter>src\engine\DirectX</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\DirectX\DescriptorHeapManager\DescriptorHeapManager.h">
+      <Filter>src\engine\DirectX\DescriptorHeapManager</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\DirectX\DescriptorHeapManager\CBV_SRV_UAV\CBV_SRV_UAVManager.h">
+      <Filter>src\engine\DirectX\DescriptorHeapManager\CBV_SRV_UAV</Filter>
     </ClInclude>
     <ClInclude Include="src\engine\DirectX\DescriptorHeapManager\DSV\DSVManager.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>src\engine\DirectX\DescriptorHeapManager\DSV</Filter>
     </ClInclude>
-    <ClInclude Include="src\engine\Utilities\Logger\Logger.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="src\engine\DirectX\DescriptorHeapManager\RTV\RTVManager.h">
+      <Filter>src\engine\DirectX\DescriptorHeapManager\RTV</Filter>
     </ClInclude>
     <ClInclude Include="src\engine\DirectX\FrameCbAllocator\FrameCbAllocator.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>src\engine\DirectX\FrameCbAllocator</Filter>
     </ClInclude>
+    <ClInclude Include="src\engine\DrawSystem\DrawSystem.h">
+      <Filter>src\engine\DrawSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\DrawSystem\RenderData\RenderData.h">
+      <Filter>src\engine\DrawSystem\RenderData</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\DrawSystem\RenderData\RenderObject.h">
+      <Filter>src\engine\DrawSystem\RenderData</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\Facade\Game.h">
+      <Filter>src\engine\Facade</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\FixFPS\FixFPS.h">
+      <Filter>src\engine\FixFPS</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\ImGuiManager\ImGuiManager.h">
+      <Filter>src\engine\ImGuiManager</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\IO\GetHitKey.h">
+      <Filter>src\engine\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\IO\GetPadState.h">
+      <Filter>src\engine\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\IO\IOManager.h">
+      <Filter>src\engine\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\IO\MouseController.h">
+      <Filter>src\engine\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\Physics\IPhysicsBody.h">
+      <Filter>src\engine\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\Physics\IWorldCollider.h">
+      <Filter>src\engine\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\Physics\MapWorldCollider.h">
+      <Filter>src\engine\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\Physics\PhysicsSystem.h">
+      <Filter>src\engine\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\Resource\ResourceManager.h">
+      <Filter>src\engine\Resource</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\Resource\Audio\AudioManager.h">
+      <Filter>src\engine\Resource\Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\Resource\Model\ModelManager.h">
+      <Filter>src\engine\Resource\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\Resource\Texture\TextureManager.h">
+      <Filter>src\engine\Resource\Texture</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\Utilities\functions.h">
+      <Filter>src\engine\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\Utilities\PerlinNoise.h">
+      <Filter>src\engine\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\Utilities\SimpleModelBody.h">
+      <Filter>src\engine\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\Utilities\Easing\Easings.h">
+      <Filter>src\engine\Utilities\Easing</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\Utilities\Json\JsonManager.h">
+      <Filter>src\engine\Utilities\Json</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\Utilities\Logger\Logger.h">
+      <Filter>src\engine\Utilities\Logger</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\Window\WindowManager.h">
+      <Filter>src\engine\Window</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\DirectX\Resource\Dx12ResourceFactory.h" />
+    <ClInclude Include="src\engine\DirectX\View\Dx12ViewFactory.h" />
+    <ClInclude Include="src\engine\DirectX\Pipeline\RenderPipelineTypes.h" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="externals\imgui\LICENSE.txt">
-      <Filter>engine\imgui</Filter>
-    </Text>
+    <Text Include="externals\imgui\LICENSE.txt" />
   </ItemGroup>
 </Project>

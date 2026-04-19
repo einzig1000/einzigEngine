@@ -1,130 +1,76 @@
 #pragma once
 #include <string>
 #include <vector>
-#include "definition/definition.h"
+#include "DirectX/PipeLine/RenderPipelineTypes.h"
 
-struct PSOConfig
-{
-	/// @brief 頂点シェーダーファイル名
-	std::string vs = "Object3d.VS.hlsl";
-	/// @brief ピクセルシェーダーファイル名
-	std::string ps = "Object3d.PS.hlsl";
-	/// @brief ルートシグネチャ設定
-	RootSignatureConfig rootConfig = {};
-	/// @brief 入力レイアウトID
-	InputLayoutID inputLayoutID = InputLayoutID::Default;
-	/// @brief ブレンドステートID
-	BlendStateID blendID = BlendStateID::Normal;
-	/// @brief 深度ステンシルID
-	DepthStencilID depthStencilID = DepthStencilID::Default;
-	/// @brief ラスタライザーID
-	RasterizerID rasterizerID = RasterizerID::Fill;
-	/// @brief プリミティブトポロジー
-	D3D12_PRIMITIVE_TOPOLOGY topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-	/// @brief スワップチェーン用かどうか
-	bool isSwapChain = false;
 
-	bool operator==(const PSOConfig& other) const
-	{
-		return vs == other.vs &&
-			ps == other.ps &&
-			blendID == other.blendID &&
-			depthStencilID == other.depthStencilID &&
-			rasterizerID == other.rasterizerID &&
-			rootConfig == other.rootConfig &&
-			inputLayoutID == other.inputLayoutID &&
-			topology == other.topology &&
-			isSwapChain == other.isSwapChain;
-	}
-};
+//// 例：Material/WVP/Light を RenderObject に登録
+// 
+// Material material{};
+// material.color = { 1.0f, 0.0f, 0.0f, 1.0f };
+// 
+// Matrix4x4 wvp{};
+// wvp = Matrix4x4::MakeIdentity();
+// 
+// DirectionalLight light{};
+// light.color = { 1.0f, 1.0f, 1.0f, 1.0f };
+// 
+//int cbMaterial = ro.CreateCBV(sizeof(Material), RenderObject::ShaderTypxaderType::VERTEX_SHADER, "WVP");
+//int cbLight = ro.CreateCBV(sizeof(DirectionalLight), RenderObject::ShaderType::PIXEL_SHADER, "Light");
+//
+//// 毎フレーム（or 更新時）にスナップショットをセット
+//ro.SetBufferDataT(cbMaterial, material);
+//ro.SetBufferDataT(cbWvp, wvp);
+//ro.SetBufferDataT(cbLight, light);
+//
+//// 描画側
+//ro.ApplyRootParams(cmdList, cbAllocators_[GetFrameIndex()]);
 
-	enum class ShaderType
-	{
-		VERTEX_SHADER,  ///< 頂点シェーダー
-		PIXEL_SHADER,   ///< ピクセルシェーダー
-		COMPUTE_SHADER, ///< コンピュートシェーダー
-
-		Count           ///< シェーダータイプの総数
-	};
 
 
 /// <summary>
-///	何を描くか」と「シェーダに何を渡すか」をユーザーが宣言・更新できるようにする
-///	ただし GPUメモリ実体（CB用 ID3D12Resource）は所有しない（B方式）
-///	描画時に必要なバインド情報を Draw() でコマンドへ反映する（ただしCBの確保は外部Allocatorに依存）
+// ・PSO 設定（どのシェーダ・どのブレンド・どのラスタライザか）
+// ・ルートパラメータ（CBV / SRV）とその中身
+// だけを持つ、描画オブジェクトの基底クラス。描画に必要な情報はここに集約するイメージ。
 /// </summary>
 class RenderObject
 {
 public:
-	RenderObject() {}
-	virtual ~RenderObject() {}
+	RenderObject() = default;
+	virtual ~RenderObject() = default;
+
+	RenderObject(const RenderObject&) = delete;
+	RenderObject& operator=(const RenderObject&) = delete;
+
 	virtual void Update() = 0;
 
-	void Initialize();
 
-	void SetDrawData(const DrawData& data);
+	// rootIndex を払い出す（=RootSignature上のスロット番号とは別。ここではRenderObject内のID）
+	int32_t CreateCBV(size_t sizeBytes, ShaderType shaderType, std::string debugName = "");
+	int32_t CreateSRV(ShaderType shaderType, std::string debugName = "");
 
+	// CBVデータをCPUスナップショットへコピー（GPUへは書かない）
+	void SetBufferData(int index, const void* data);
 
-	/// <summary>
-	/// CBVを作成
-	/// </summary>
-	/// <param name="size">バッファサイズ</param>
-	/// <param name="type">シェーダータイプ</param>
-	/// <param name="debugName">デバッグ用の名前</param>
-	/// <returns>ルートパラメータのインデックス</returns>
-	int32_t CreateCBV(size_t size, ShaderType type, std::string debugName = "");
+	void SetSRVHandle(int index, D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle);
 
-	/// <summary>
-	/// SRVを作成
-	/// </summary>
-	/// <param name="size">バッファサイズ</param>
-	/// <param name="num">要素数</param>
-	/// <param name="type">シェーダータイプ</param>
-	/// <param name="debugName">デバッグ用の名前</param>
-	/// <returns>ルートパラメータのインデックス</returns>
-	int32_t CreateSRV(size_t size, uint32_t num, ShaderType type, std::string debugName = "");
+	const std::vector<RootParam>& GetRootParams() const { return rootParams_; }
+	const std::vector<uint8_t>& GetCpuStorage() const { return cpuStorage_; }
 
-	/// <summary>
-	/// バッファにデータをセット
-	/// </summary>
-	/// <param name="index">ルートパラメータのインデックス</param>
-	/// <param name="data">セットするデータのポインタ</param>
-	/// <param name="size">セットするデータのサイズ</param>
-	void SetBufferData(int index, const void* data, size_t size);
-
-
-	void Draw();
-
-
-	/// @brief パイプラインステート設定
+	// SRVはGPUハンドルを保存（GPUバッファの所有はここではしない
+public:
+	// PSO設定
 	PSOConfig psoConfig_{};
-	/// @brief インスタンス数
+	// インスタンス数
 	uint32_t instanceNum_ = 1;
 
-	/// @brief コピー禁止
-	void operator=(const RenderObject& other) = delete;
+private:
+	// RootParameterにいれるものリスト。CBVもSRVもここで管理する
+	std::vector<RootParam> rootParams_{};
 
+	// CBVの内容をuint8_tのただのバイト列で保持。読みとる時はreinterpret_castで型を戻すイメージ。すべての情報を型に依存せずまとめて管理するためのもの。
+	std::vector<uint8_t> cpuStorage_{};
 
-	struct BufferData
-	{
-		/// @brief マップされたメモリへのポインタ
-		void* mapped = nullptr;
-		/// @brief バッファサイズ
-		size_t size = 0;
-	};
-	/// @brief バッファデータのリスト（二重配列：外側=バッファ種類、内側=スワップチェーン対応）
-	std::vector<std::vector<BufferData>> bufferDatas_{};
-
-	/// @brief 定数バッファのGPUアドレスリスト
-	std::vector<std::vector<D3D12_GPU_VIRTUAL_ADDRESS>> cbvAddresses_{};
-
-
-	struct Resource
-	{
-		/// @brief ID3D12ResourceのComポインタ
-		Microsoft::WRL::ComPtr<ID3D12Resource> res = nullptr;
-	};
-	/// @brief リソースのリスト
-	std::vector<Resource> resources_{};
+	// デバッグ用
+	std::vector<std::string> debugNames_{};
 };
-
