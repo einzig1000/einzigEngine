@@ -1,7 +1,8 @@
 #pragma once
 #include "Game.h"
 #include "definition/definition.h"
-#include "DrawSystem/RenderData/RenderData.h"
+#include <DrawSystem/RenderData/RenderObject.h>
+#include <ImGuiManager/ImGuiManager.h>
 
 
 // フェーズ間

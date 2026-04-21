@@ -1,4 +1,5 @@
 #include "DSVManager.h"
+#include <Window/WindowManager.h>
 #include "Utilities/Logger/Logger.h"
 
 
@@ -56,13 +57,4 @@ DSVManager::DSVAllocation DSVManager::CreateDSV(ID3D12Resource* resource, const 
 	device_->CreateDepthStencilView(resource, desc, cpuHandle);
 
 	return DSVAllocation{ index, cpuHandle };
-}
-
-DSVManager::DSVAllocation DSVManager::CreateDSVforTexture2D(ID3D12Resource* resource, DXGI_FORMAT format)
-{
-	D3D12_DEPTH_STENCIL_VIEW_DESC desc = {};
-	desc.Format = format;
-	desc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-	desc.Flags = D3D12_DSV_FLAG_NONE;
-	return CreateDSV(resource, &desc);
 }

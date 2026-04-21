@@ -5,9 +5,8 @@
 #include "DeviceManager.h"
 #include "DirectX/CommandContextManager.h"
 #include "DirectX/SwapChainManager.h"
-#include "DirectX/DepthStencilManager.h"
 #include "DirectX/PipelineStateManager.h"
-#include "DirectX/DescriptorHeapManager.h"
+#include "DirectX/DescriptorHeapManager/DescriptorHeapManager.h"
 #include "DirectX/SynchronizationManager.h"
 #include "DirectX/ViewportScissorManager.h"
 #include "FixFPS/FixFPS.h"
@@ -25,25 +24,24 @@ public:
     ~DirectXManager();
 
     ID3D12Device* GetDevice() const { return deviceManager->GetDevice(); }
-	CommandContextManager* GetCommandContextManager() const { return commandContextManager.get(); }
+    CommandContextManager* GetCommandContextManager() const { return commandContextManager.get(); }
     DescriptorHeapManager* GetDescriptorHeapManager() const { return descriptorHeapManager.get(); }
     SwapChainManager* GetSwapChain() const { return swapChainManager.get(); };
     PipelineStateManager* GetPipelineStateManager() const { return pipelineStateManager.get(); }
-	SynchronizationManager* GetSynchronizationManager() const { return synchronizationManager.get(); }
+    SynchronizationManager* GetSynchronizationManager() const { return synchronizationManager.get(); }
 
-	ResourceManager* GetResourceManager() const { return resourceManager_.get(); }
-    
-	FixFPS* GetFixFPS() const { return fixFPS_.get(); }
+    ResourceManager* GetResourceManager() const { return resourceManager_.get(); }
+
+    FixFPS* GetFixFPS() const { return fixFPS_.get(); }
 
     void BeginFrame();
     void EndFrame();
-	void Resize();
+    void Resize();
 
 private:
     std::unique_ptr<SwapChainManager> swapChainManager;
     std::unique_ptr<DeviceManager> deviceManager;
     std::unique_ptr<CommandContextManager> commandContextManager;
-    std::unique_ptr<DepthStencilManager> depthStencilManager;
     std::unique_ptr<PipelineStateManager> pipelineStateManager;
     std::unique_ptr<DescriptorHeapManager> descriptorHeapManager;
     std::unique_ptr<SynchronizationManager> synchronizationManager;

@@ -1,5 +1,5 @@
 #include "DirectX/CommandContextManager.h"
-#include "Utilities/functions.h"
+#include "Utilities/Logger/Logger.h"
 
 CommandContextManager::CommandContextManager(ID3D12Device* device)
 {

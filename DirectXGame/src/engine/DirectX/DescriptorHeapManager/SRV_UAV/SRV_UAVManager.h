@@ -1,12 +1,10 @@
 #pragma once
 #include <d3d12.h>
 #include <wrl.h>
-#include <cassert>
 #include <cstdint>
-#include "definition/definition.h"
 
 
-class CBV_SRV_UAVManager
+class SRV_UAVManager
 {
 public:
 
@@ -25,8 +23,8 @@ public:
 		ViewType type;
     };
 
-    CBV_SRV_UAVManager(ID3D12Device* device);
-    ~CBV_SRV_UAVManager();
+    SRV_UAVManager(ID3D12Device* device);
+    ~SRV_UAVManager();
 
     ID3D12DescriptorHeap* GetSRVDescriptorHeap() const { return descriptorHeap_.Get(); }
     uint32_t GetDescriptorSizeSRV() const { return descriptorSize_; }
@@ -44,14 +42,8 @@ public:
     Allocation CreateSRVforTexture(ID3D12Resource* resource, DXGI_FORMAT format, UINT mipLevels);
     Allocation CreateSRVforTextureArray(ID3D12Resource* resource, DXGI_FORMAT format, UINT mipLevels, UINT arraySize);
     Allocation CreateSRVforStructuredBuffer(ID3D12Resource* resource, UINT numElements, UINT structureByteStride);
-    void CreateSRVforImGui(UINT bufferCount, D3D12_SHADER_RESOURCE_VIEW_DESC  format);
-
-	Allocation CreateCBV(ID3D12Resource* resource, const D3D12_CONSTANT_BUFFER_VIEW_DESC* desc);
-
 
 private:
-
-
 
 	// デバイス
     ID3D12Device* device_ = nullptr;

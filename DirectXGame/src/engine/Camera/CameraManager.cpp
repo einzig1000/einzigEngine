@@ -1,6 +1,6 @@
 #include "CameraManager.h"
 #include "Camera.h"
-#include "Facade/Game.h"
+#include <ImGuiManager/ImGuiManager.h>
 
 CameraManager::CameraManager()
 {

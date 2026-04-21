@@ -1,8 +1,6 @@
 #include "FrameCbAllocator.h"
-#include "Utilities/functions.h"
 #include "DirectX/Resource/Dx12ResourceFactory.h"
 #include <cassert>
-#include <cstring>
 
 void FrameCbAllocator::Initialize(ID3D12Device* device, size_t capacityBytes, const wchar_t* debugName)
 {

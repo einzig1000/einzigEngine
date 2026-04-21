@@ -1,5 +1,6 @@
 #include "Resource/Model/ModelManager.h"
-#include "Utilities/functions.h"
+#include <Utilities/Logger/Logger.h>
+#include <DirectX/Resource/Dx12ResourceFactory.h>
 #include <filesystem> 
 #include <fstream>
 
@@ -51,7 +52,7 @@ int32_t ModelManager::LoadModel(const std::string& directoryPath, const std::str
 
     // 頂点バッファ作成
     ref.vertexBufferSize = sizeof(VertexData) * UINT(ref.modelData.vertices.size());
-    ref.vertexBuffer = CreateBufferResource(device_, ref.vertexBufferSize);
+    ref.vertexBuffer = Dx12ResourceFactory::CreateBufferResource(device_, ref.vertexBufferSize);
     VertexData* vData = nullptr;
     ref.vertexBuffer->Map(0, nullptr, reinterpret_cast<void**>(&vData));
     std::memcpy(vData, ref.modelData.vertices.data(), ref.vertexBufferSize);

@@ -1,32 +1,10 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <wrl.h>
+#include <d3d12.h>
 #include "DirectX/PipeLine/RenderPipelineTypes.h"
-
-
-//// 例：Material/WVP/Light を RenderObject に登録
-// 
-// Material material{};
-// material.color = { 1.0f, 0.0f, 0.0f, 1.0f };
-// 
-// Matrix4x4 wvp{};
-// wvp = Matrix4x4::MakeIdentity();
-// 
-// DirectionalLight light{};
-// light.color = { 1.0f, 1.0f, 1.0f, 1.0f };
-// 
-//int cbMaterial = ro.CreateCBV(sizeof(Material), RenderObject::ShaderTypxaderType::VERTEX_SHADER, "WVP");
-//int cbLight = ro.CreateCBV(sizeof(DirectionalLight), RenderObject::ShaderType::PIXEL_SHADER, "Light");
-//
-//// 毎フレーム（or 更新時）にスナップショットをセット
-//ro.SetBufferDataT(cbMaterial, material);
-//ro.SetBufferDataT(cbWvp, wvp);
-//ro.SetBufferDataT(cbLight, light);
-//
-//// 描画側
-//ro.ApplyRootParams(cmdList, cbAllocators_[GetFrameIndex()]);
-
-
+#include "DirectX/DescriptorHeapManager/SRV_UAV/SRV_UAVManager.h"
 
 /// <summary>
 // ・PSO 設定（どのシェーダ・どのブレンド・どのラスタライザか）
@@ -36,6 +14,15 @@
 class RenderObject
 {
 public:
+	static constexpr uint32_t kMaxFramesInFlight = 2;
+
+	struct DynamicSRVData
+	{
+		Microsoft::WRL::ComPtr<ID3D12Resource> buffers[kMaxFramesInFlight];
+		void* mappedData[kMaxFramesInFlight] = { nullptr };
+		SRV_UAVManager::Allocation srvAllocations[kMaxFramesInFlight];
+	};
+
 	RenderObject() = default;
 	virtual ~RenderObject() = default;
 
@@ -44,25 +31,23 @@ public:
 
 	virtual void Update() = 0;
 
-
 	// rootIndex を払い出す（=RootSignature上のスロット番号とは別。ここではRenderObject内のID）
 	int32_t CreateCBV(size_t sizeBytes, ShaderType shaderType, std::string debugName = "");
-	int32_t CreateSRV(ShaderType shaderType, std::string debugName = "");
+	int32_t CreateSRV(size_t sizeBytes, size_t arraySize, ShaderType shaderType, std::string debugName = "");
 
 	// CBVデータをCPUスナップショットへコピー（GPUへは書かない）
 	void SetBufferData(int index, const void* data);
 
-	void SetSRVHandle(int index, D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle);
-
 	const std::vector<RootParam>& GetRootParams() const { return rootParams_; }
 	const std::vector<uint8_t>& GetCpuStorage() const { return cpuStorage_; }
 
-	// SRVはGPUハンドルを保存（GPUバッファの所有はここではしない
 public:
 	// PSO設定
 	PSOConfig psoConfig_{};
 	// インスタンス数
 	uint32_t instanceNum_ = 1;
+
+	int32_t modelID = 0;
 
 private:
 	// RootParameterにいれるものリスト。CBVもSRVもここで管理する
@@ -70,6 +55,9 @@ private:
 
 	// CBVの内容をuint8_tのただのバイト列で保持。読みとる時はreinterpret_castで型を戻すイメージ。すべての情報を型に依存せずまとめて管理するためのもの。
 	std::vector<uint8_t> cpuStorage_{};
+
+	// 動的巨大データ（SRV用）のストレージ。CreateSRV() で確保し、SetBufferData() で直接GPUへ書き込む
+	std::vector<DynamicSRVData> dynamicSrvStorage_{};
 
 	// デバッグ用
 	std::vector<std::string> debugNames_{};

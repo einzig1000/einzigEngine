@@ -46,3 +46,11 @@ void Log(const char* format, ...);
 /// <param name="os">出力先のファイルストリーム</param>
 /// <param name="message">出力するメッセージ</param>
 void Log(std::ofstream& os, const std::string& message);
+
+
+/// <summary>
+/// D3D12_RESOURCE_STATES を文字列に変換する関数
+/// </summary>
+/// <param name="state">リソースの状態 (D3D12_RESOURCE_STATES)</param>
+/// <returns>リソース状態を表す文字列</returns>
+std::string ResourceStateToString(D3D12_RESOURCE_STATES state);

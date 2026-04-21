@@ -1,4 +1,5 @@
 #include "GameManager.h"
+#include <Utilities/Logger/Logger.h>
 #include "Phase/TestPhase/TestPhase.h"
 #include "Phase/BattlePhase/BattlePhase.h"
 #include "Phase/TitlePhase/TitlePhase.h"
@@ -6,7 +7,7 @@
 
 GameManager::GameManager()
 {
-	currentPhase_ = CreatePhase(PHASE::Phase_Title);
+	currentPhase_ = CreatePhase(PHASE::Phase_Test);
 	currentPhase_->SetContext(&phaseContext_);
 	currentPhase_->Initialize();
 }
@@ -46,7 +47,7 @@ std::unique_ptr<PhaseParent> GameManager::CreatePhase(PHASE phase)
 	case PHASE::Phase_Title:
 		return std::make_unique<TitlePhase>();
 	case PHASE::Phase_GameScene:
-		return std::make_unique<GameScenePhase>();
+		//return std::make_unique<GameScenePhase>();
 	default:
 		assert(false);
 		Log("Error : 該当するフェーズクラスが存在しません");

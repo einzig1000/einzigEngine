@@ -1,4 +1,7 @@
 #include "RenderObject.h"
+#include "Engine.h"
+#include "DirectX/DirectXManager.h"
+#include "DirectX/Resource/Dx12ResourceFactory.h"
 #include <cassert>
 #include <cstring>
 
@@ -16,8 +19,10 @@ int32_t RenderObject::CreateCBV(size_t sizeBytes, ShaderType shaderType, std::st
 	p.paramType = ParamType::CBV;
 	// CBVをどのシェーダーステージで使うか
 	p.shaderType = shaderType;
-	// CBVのサイズ。GPUに書くときはこのサイズ分だけ書くことになる。
+	// CBVに渡すデータの単位サイズ。構造体一個分のサイズと認識したってかまわない。
 	p.sizeBytes = static_cast<uint32_t>(sizeBytes);
+	// 配列サイズはCBVなら1
+	p.arraySize = 1;
 	// cpuStorage_ 内のどこに書くかのオフセット。
 	p.offsetBytes = static_cast<uint32_t>(offset);
 
@@ -28,20 +33,49 @@ int32_t RenderObject::CreateCBV(size_t sizeBytes, ShaderType shaderType, std::st
 	return static_cast<int32_t>(rootParams_.size() - 1);
 }
 
-int32_t RenderObject::CreateSRV(ShaderType shaderType, std::string debugName)
+int32_t RenderObject::CreateSRV(size_t sizeBytes, size_t arraySize, ShaderType shaderType, std::string debugName)
 {
+	assert(sizeBytes > 0);
+	assert(arraySize > 0);
+
+	auto* dxManager = Engine::Instance().GetDirectXManager();
+	auto* device = dxManager->GetDevice();
+	auto* srvManager = dxManager->GetDescriptorHeapManager()->GetSRV_UAVManager();
+
+	const size_t totalBytes = sizeBytes * arraySize;
+
+	DynamicSRVData data{};
+	for (uint32_t i = 0; i < kMaxFramesInFlight; ++i)
+	{
+		data.buffers[i] = Dx12ResourceFactory::CreateBufferResource(device, totalBytes);
+		data.buffers[i]->Map(0, nullptr, &data.mappedData[i]);
+
+		// SRVを作成 (StructuredBufferとして)
+		data.srvAllocations[i] = srvManager->CreateSRVforStructuredBuffer(
+			data.buffers[i].Get(), 
+			static_cast<UINT>(arraySize), 
+			static_cast<UINT>(sizeBytes)
+		);
+	}
+
+	const size_t storageIndex = dynamicSrvStorage_.size();
+	dynamicSrvStorage_.push_back(std::move(data));
+
 	RootParam p{};
 	// SRVである
 	p.paramType = ParamType::SRV;
 	// SRVをどのシェーダーステージで使うか
 	p.shaderType = shaderType;
-	// SRVはGPUハンドルを保存する。
-	p.srvGpuHandle = {};
+	// 単位サイズ。構造体一個分のサイズと認識したってかまわない。
+	p.sizeBytes = static_cast<uint32_t>(sizeBytes);
+	// 配列サイズ。
+	p.arraySize = static_cast<uint32_t>(arraySize);
+	// dynamicSrvStorage_ 内のインデックスとして使用
+	p.offsetBytes = static_cast<uint32_t>(storageIndex);
 
 	rootParams_.push_back(p);
 	debugNames_.push_back(std::move(debugName));
 
-	// ユーザーがSetBufferDataで渡すIDを返す
 	return static_cast<int32_t>(rootParams_.size() - 1);
 }
 
@@ -52,21 +86,30 @@ void RenderObject::SetBufferData(int index, const void* data)
 	assert(data);
 
 	auto& p = rootParams_[static_cast<size_t>(index)];
-	assert(p.paramType == ParamType::CBV);
 
-	const size_t dstOffset = p.offsetBytes;
-	assert(dstOffset + p.sizeBytes <= cpuStorage_.size());
+	const size_t bytes = static_cast<size_t>(p.sizeBytes) * static_cast<size_t>(p.arraySize);
+	assert(bytes > 0);
 
-	std::memcpy(cpuStorage_.data() + dstOffset, data, p.sizeBytes);
-}
+	if (p.paramType == ParamType::SRV)
+	{
+		auto* dxManager = Engine::Instance().GetDirectXManager();
+		// フレームインデックスを取得
+		const uint32_t frameIndex = dxManager->GetSwapChain()->GetCurrentBackBufferIndex() % kMaxFramesInFlight;
 
-void RenderObject::SetSRVHandle(int index, D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle)
-{
-	assert(index >= 0);
-	assert(static_cast<size_t>(index) < rootParams_.size());
+		auto& srvData = dynamicSrvStorage_[p.offsetBytes];
+		if (srvData.mappedData[frameIndex])
+		{
+			std::memcpy(srvData.mappedData[frameIndex], data, bytes);
+		}
 
-	auto& p = rootParams_[static_cast<size_t>(index)];
-	assert(p.paramType == ParamType::SRV);
+		// GPUハンドルをこのフレーム用に更新しておく
+		p.srvGpuHandle = srvData.srvAllocations[frameIndex].gpu;
+	}
+	else if (p.paramType == ParamType::CBV)
+	{
+		const size_t dstOffset = p.offsetBytes;
+		assert(dstOffset + bytes <= cpuStorage_.size());
 
-	p.srvGpuHandle = gpuHandle;
+		std::memcpy(cpuStorage_.data() + dstOffset, data, bytes);
+	}
 }

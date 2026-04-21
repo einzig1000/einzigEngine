@@ -1,5 +1,5 @@
 #include "DirectX/ViewportScissorManager.h"
-#include "Utilities/functions.h"
+#include "Utilities/Logger/Logger.h"
 #include "Window/WindowManager.h"
 
 ViewportScissorManager::ViewportScissorManager()

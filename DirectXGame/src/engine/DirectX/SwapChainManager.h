@@ -2,36 +2,47 @@
 #include <d3d12.h>
 #include <dxgi1_6.h>
 #include <wrl.h>
-#include <cassert>
+#include "DirectX/DescriptorHeapManager/DescriptorHeapManager.h"
 
 class SwapChainManager
 {
 public:
-    SwapChainManager(ID3D12Device* device, ID3D12CommandQueue* commandQueue, HWND hwnd);
-    ~SwapChainManager();
+	SwapChainManager(ID3D12Device* device, ID3D12CommandQueue* commandQueue, HWND hwnd, DescriptorHeapManager* descriptorHeapManager);
+	~SwapChainManager();
 
-    UINT GetCurrentBackBufferIndex() const { return backBufferIndex; }
-    ID3D12Resource* GetCurrentBackBufferResource() const { return swapChainResources[backBufferIndex].Get(); }
-    D3D12_CPU_DESCRIPTOR_HANDLE GetCurrentRTVHandle() const { return rtvHandles[backBufferIndex]; }
-    ID3D12DescriptorHeap* GetRTVDescriptorHeap() const { return rtvDescriptorHeap.Get(); }
-    const DXGI_SWAP_CHAIN_DESC1& GetSwapChainDesc() const { return swapChainDesc; }
-    const D3D12_RENDER_TARGET_VIEW_DESC& GetRtvDesc() const { return rtvDesc; }
+	UINT GetCurrentBackBufferIndex() const { return backBufferIndex_; }
+	ID3D12Resource* GetCurrentBackBufferResource() const { return swapChainResources_[backBufferIndex_].Get(); }
+	D3D12_CPU_DESCRIPTOR_HANDLE GetCurrentRTVHandle() const { return rtvAllocations_[backBufferIndex_].handle; }
+	D3D12_CPU_DESCRIPTOR_HANDLE GetDSVHandle() const { return mainDepthDSV_.handle; }
 
-    void Present();
-    void UpdateBackBufferIndex();
+	const DXGI_SWAP_CHAIN_DESC1& GetSwapChainDesc() const { return swapChainDesc_; }
+	const D3D12_RENDER_TARGET_VIEW_DESC& GetRtvDesc() const { return rtvDesc_; }
 
-    void Resize(ID3D12Device* device, ID3D12CommandQueue* commandQueue);
+	void Present();
+	void UpdateBackBufferIndex();
+
+	void Resize(ID3D12Device* device, ID3D12CommandQueue* commandQueue);
 
 private:
-    Microsoft::WRL::ComPtr<IDXGISwapChain4> swapChain;
-    Microsoft::WRL::ComPtr<ID3D12Resource> swapChainResources[2];
-    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvDescriptorHeap;
-	Microsoft::WRL::ComPtr<ID3D12Device> device_;
-    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[2];
-    DXGI_SWAP_CHAIN_DESC1 swapChainDesc;
-    D3D12_RENDER_TARGET_VIEW_DESC rtvDesc;
-    UINT backBufferIndex;
+	Microsoft::WRL::ComPtr<IDXGISwapChain4> swapChain_;
+	Microsoft::WRL::ComPtr<ID3D12Resource> swapChainResources_[2];
+	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilBuffer_;
 
-    void InitializeSwapChainInternal(ID3D12Device* device, ID3D12CommandQueue* commandQueue, HWND hwnd);
-    void InitializeRenderTargetView(ID3D12Device* device);
+
+	RTVManager::RTVAllocation rtvAllocations_[2]{ {UINT32_MAX}, {UINT32_MAX} };
+	DSVManager::DSVAllocation mainDepthDSV_{ UINT32_MAX };
+
+	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc_;
+	DXGI_SWAP_CHAIN_DESC1 swapChainDesc_;
+	UINT backBufferIndex_;
+
+
+	void InitializeSwapChainInternal(ID3D12Device* device, ID3D12CommandQueue* commandQueue, HWND hwnd);
+	void InitializeRenderTargetView(ID3D12Device* device);
+	void InitializeDepthStencilView(ID3D12Device* device);
+
+
+	// 外部ポインタ
+	ID3D12Device* device_;
+	DescriptorHeapManager* descriptorHeapManager_ = nullptr;
 };

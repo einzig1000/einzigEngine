@@ -1,7 +1,6 @@
 #pragma once
 #include <d3d12.h>
 #include <wrl.h>
-#include <cassert>
 #include <cstdint>
 
 class DSVManager
@@ -27,8 +26,6 @@ public:
 
 	// DSVの作成とスロットの割り当て
 	DSVAllocation CreateDSV(ID3D12Resource* resource, const D3D12_DEPTH_STENCIL_VIEW_DESC* desc);
-
-	DSVAllocation CreateDSVforTexture2D(ID3D12Resource* resource, DXGI_FORMAT format);
 
 private:
 	// デバイス

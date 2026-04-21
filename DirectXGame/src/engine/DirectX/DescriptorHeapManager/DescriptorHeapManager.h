@@ -1,14 +1,9 @@
 #pragma once
 #include <d3d12.h>
-#include <wrl.h>
-#include <cassert>
-#include <cstdint>
 #include <memory>
-
-class SrvManager;
-class CBVManager;
-class RTVManager;
-class DSVManager;
+#include "SRV_UAV/SRV_UAVManager.h"
+#include "RTV/RTVManager.h"
+#include "DSV/DSVManager.h"
 
 class DescriptorHeapManager
 {
@@ -16,14 +11,12 @@ public:
     DescriptorHeapManager(ID3D12Device* device);
     ~DescriptorHeapManager();
 
-    SRVManager* GetSrvManager() const { return srvManager_.get(); }
-	CBVManager* GetCbvManager() const { return cbvManager_.get(); }
-	RTVManager* GetRtvManager() const { return rtvManager_.get(); }
-	DSVManager* GetDsvManager() const { return dsvManager_.get(); }
+	SRV_UAVManager* GetSRV_UAVManager() const { return srv_uavManager_.get(); }
+	RTVManager* GetRTVManager() const { return rtvManager_.get(); }
+	DSVManager* GetDSVManager() const { return dsvManager_.get(); }
 
 private:
-    std::unique_ptr<SRVManager> srvManager_;
-	std::unique_ptr<CBVManager> cbvManager_;
+	std::unique_ptr<SRV_UAVManager> srv_uavManager_;
 	std::unique_ptr<RTVManager> rtvManager_;
 	std::unique_ptr<DSVManager> dsvManager_;
 };

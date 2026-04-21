@@ -4,14 +4,12 @@
 
 
 #include "Resource/Audio/AudioManager.h"
-#include <iostream>
 #include <Windows.h>
 #include <string>
-#include <iomanip>
 
-#include <propvarutil.h>
 
-#include "Utilities/functions.h"
+#include <Utilities/Logger/Logger.h>
+#include <Utilities/Converter/StringConverter/StringConverter.h>
 
 
 // x
@@ -89,7 +87,7 @@ uint32_t AudioManager::LoadAudio(const std::string& filePath)
 
 
     // ファイルパスをワイド文字列に変換
-    std::wstring wFilePath = ConvertString(filePath);
+    std::wstring wFilePath = StringConverter::Convert(filePath);
 
     Microsoft::WRL::ComPtr<IMFSourceReader> pSourceReader;
 

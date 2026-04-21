@@ -1,14 +1,15 @@
 #include "DirectX/DirectXManager.h"
+#include "Utilities/Logger/Logger.h"
 #include <memory>
 
 DirectXManager::DirectXManager(HWND hwnd)
 {
     deviceManager = std::make_unique<DeviceManager>();
     commandContextManager = std::make_unique<CommandContextManager>(deviceManager->GetDevice());
-    swapChainManager = std::make_unique<SwapChainManager>(deviceManager->GetDevice(), commandContextManager->GetCommandQueue(), hwnd);
-    depthStencilManager = std::make_unique<DepthStencilManager>(deviceManager->GetDevice());
-    pipelineStateManager = std::make_unique<PipelineStateManager>(deviceManager->GetDevice());
     descriptorHeapManager = std::make_unique<DescriptorHeapManager>(deviceManager->GetDevice());
+    swapChainManager = std::make_unique<SwapChainManager>(deviceManager->GetDevice(), commandContextManager->GetCommandQueue(), hwnd, descriptorHeapManager.get());
+    pipelineStateManager = std::make_unique<PipelineStateManager>(deviceManager->GetDevice());
+
     synchronizationManager = std::make_unique<SynchronizationManager>(deviceManager->GetDevice());
     viewportScissorManager = std::make_unique<ViewportScissorManager>();
 
@@ -41,21 +42,20 @@ void DirectXManager::BeginFrame()
     barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
     commandContextManager->GetCommandList()->ResourceBarrier(1, &barrier);
 
-    // 描画先のRTVとDSVを指定
-    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = swapChainManager->GetCurrentRTVHandle();
-    D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = depthStencilManager->GetDSVHandle();
-    commandContextManager->GetCommandList()->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
+	// 描画先のRTVとDSVを指定
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = swapChainManager->GetCurrentRTVHandle();
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = swapChainManager->GetDSVHandle();
+	commandContextManager->GetCommandList()->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
+
+    // SRV用のディスクリプタヒープを指定
+    ID3D12DescriptorHeap* descriptorHeaps[] = { descriptorHeapManager->GetSRV_UAVManager()->GetSRVDescriptorHeap()};
+    commandContextManager->GetCommandList()->SetDescriptorHeaps(1, descriptorHeaps);
 
     // クリア
-  
     //float clearColor[] = { 0.1f,0.1f,0.1f,1.0f };
     float clearColor[] = { 0.396078f, 0.894117f, 1.0f, 1.0f };
     commandContextManager->GetCommandList()->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
     commandContextManager->GetCommandList()->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
-
-    // SRV用のディスクリプタヒープを指定
-    ID3D12DescriptorHeap* descriptorHeaps[] = { descriptorHeapManager->GetSrvManager()->GetSRVDescriptorHeap()};
-    commandContextManager->GetCommandList()->SetDescriptorHeaps(1, descriptorHeaps);
 
     // ViewportとScissorを設定
     commandContextManager->GetCommandList()->RSSetViewports(1, &viewportScissorManager->GetViewport());
@@ -95,15 +95,11 @@ void DirectXManager::EndFrame()
 
 void DirectXManager::Resize()
 {
-    // スワップチェーンのリサイズ
-    swapChainManager->Resize(
-        GetDevice(),
-        GetCommandContextManager()->GetCommandQueue());
+	// スワップチェーンのリサイズ
+	swapChainManager->Resize(
+		GetDevice(),
+		GetCommandContextManager()->GetCommandQueue());
 
-	// デプスステンシルバッファのリサイズ
-    depthStencilManager->Resize(
-        GetDevice());
-
-    // ビューポートとシザー矩形の更新
-    viewportScissorManager->Resize();
+	// ビューポートとシザー矩形の更新
+	viewportScissorManager->Resize();
 }

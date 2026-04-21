@@ -1,16 +1,18 @@
 #include "DirectX/SwapChainManager.h"
-#include "Utilities/functions.h"
+#include "Utilities/Logger/Logger.h"
 #include "Window/WindowManager.h"
 #include <Windows.h> 
+#include <cassert>
 
-SwapChainManager::SwapChainManager(ID3D12Device* device, ID3D12CommandQueue* commandQueue, HWND hwnd)
-	: device_(device)
+SwapChainManager::SwapChainManager(ID3D12Device* device, ID3D12CommandQueue* commandQueue, HWND hwnd, DescriptorHeapManager* descriptorHeapManager)
+	: device_(device), descriptorHeapManager_(descriptorHeapManager)
 {
-    InitializeSwapChainInternal(device, commandQueue, hwnd);
-    InitializeRenderTargetView(device);
-    backBufferIndex = 0;
+	InitializeSwapChainInternal(device, commandQueue, hwnd);
+	InitializeRenderTargetView(device);
+	InitializeDepthStencilView(device);
+	backBufferIndex_ = 0;
 
-    Log("コンストラクタ実行成功 : SwapChainManager");
+	Log("コンストラクタ実行成功 : SwapChainManager");
 }
 
 SwapChainManager::~SwapChainManager()
@@ -26,53 +28,89 @@ void SwapChainManager::InitializeSwapChainInternal(ID3D12Device* device, ID3D12C
     HRESULT hr = CreateDXGIFactory(IID_PPV_ARGS(&dxgiFactory));
     assert(SUCCEEDED(hr));
 
-    swapChainDesc.Width = UINT(WindowManager::winWidth_);
-    swapChainDesc.Height = UINT(WindowManager::winHeight_);
-    swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    //swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
-    swapChainDesc.SampleDesc.Count = 1;
-    swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    swapChainDesc.BufferCount = 2;
-    swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+    swapChainDesc_.Width = UINT(WindowManager::winWidth_);
+    swapChainDesc_.Height = UINT(WindowManager::winHeight_);
+    swapChainDesc_.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    //swapChainDesc_.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+    swapChainDesc_.SampleDesc.Count = 1;
+    swapChainDesc_.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+    swapChainDesc_.BufferCount = 2;
+    swapChainDesc_.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 
     Microsoft::WRL::ComPtr<IDXGISwapChain1> swapChain1;
     hr = dxgiFactory->CreateSwapChainForHwnd(
-        commandQueue, hwnd, &swapChainDesc, nullptr, nullptr,
+        commandQueue, hwnd, &swapChainDesc_, nullptr, nullptr,
         swapChain1.ReleaseAndGetAddressOf());
     assert(SUCCEEDED(hr));
 
     // IDXGISwapChain4 へ昇格
-    hr = swapChain1.As(&swapChain);
+    hr = swapChain1.As(&swapChain_);
     assert(SUCCEEDED(hr));
 
-    hr = swapChain->GetBuffer(0, IID_PPV_ARGS(&swapChainResources[0]));
+    hr = swapChain_->GetBuffer(0, IID_PPV_ARGS(&swapChainResources_[0]));
     assert(SUCCEEDED(hr));
-    hr = swapChain->GetBuffer(1, IID_PPV_ARGS(&swapChainResources[1]));
+    hr = swapChain_->GetBuffer(1, IID_PPV_ARGS(&swapChainResources_[1]));
     assert(SUCCEEDED(hr));
 }
 
 void SwapChainManager::InitializeRenderTargetView(ID3D12Device* device)
 {
-    D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-    rtvHeapDesc.NumDescriptors = 2;
-    rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-    HRESULT hr = device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&rtvDescriptorHeap));
+	rtvDesc_ = {};
+    rtvDesc_.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+    rtvDesc_.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+
+    for (int i = 0; i < 2; ++i)
+    {
+        if (rtvAllocations_[i].index == UINT32_MAX)
+        {
+			rtvAllocations_[i] = descriptorHeapManager_->GetRTVManager()->CreateRTV(swapChainResources_[i].Get(), &rtvDesc_);
+        }
+    }
+}
+
+void SwapChainManager::InitializeDepthStencilView(ID3D12Device* device)
+{
+    D3D12_RESOURCE_DESC depthStencilDesc = {};
+    depthStencilDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    depthStencilDesc.Width = UINT(WindowManager::winWidth_);
+    depthStencilDesc.Height = UINT(WindowManager::winHeight_);
+    depthStencilDesc.DepthOrArraySize = 1;
+    depthStencilDesc.MipLevels = 1;
+    depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    depthStencilDesc.SampleDesc.Count = 1;
+    depthStencilDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+
+    D3D12_HEAP_PROPERTIES heapProperties{};
+    heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
+
+    D3D12_CLEAR_VALUE clearValue = {};
+    clearValue.DepthStencil.Depth = 1.0f;
+    clearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+
+    HRESULT hr = device->CreateCommittedResource(
+        &heapProperties,
+        D3D12_HEAP_FLAG_NONE,
+        &depthStencilDesc,
+        D3D12_RESOURCE_STATE_DEPTH_WRITE,
+        &clearValue,
+        IID_PPV_ARGS(depthStencilBuffer_.ReleaseAndGetAddressOf())
+    );
     assert(SUCCEEDED(hr));
 
-    rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
-    //rtvDesc.Format = swapChainDesc.Format;
-    rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+    D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+    dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+    dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
 
-    D3D12_CPU_DESCRIPTOR_HANDLE rtvStartHandle = rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-    rtvHandles[0] = rtvStartHandle;
-    device->CreateRenderTargetView(swapChainResources[0].Get(), &rtvDesc, rtvHandles[0]);
-    rtvHandles[1].ptr = rtvHandles[0].ptr + device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-    device->CreateRenderTargetView(swapChainResources[1].Get(), &rtvDesc, rtvHandles[1]);
+    if (mainDepthDSV_.index == UINT32_MAX)
+    {
+		mainDepthDSV_ = descriptorHeapManager_->GetDSVManager()->CreateDSV(depthStencilBuffer_.Get(), &dsvDesc);
+    }
 }
 
 void SwapChainManager::Present()
 {
-	HRESULT hr = swapChain->Present(1, 0);
+	HRESULT hr = swapChain_->Present(1, 0);
     // FAILED(hr) の場合に device->GetDeviceRemovedReason() をログ出し
     if (FAILED(hr))
     {
@@ -87,7 +125,7 @@ void SwapChainManager::Present()
 
 void SwapChainManager::UpdateBackBufferIndex()
 {
-    backBufferIndex = swapChain->GetCurrentBackBufferIndex();
+    backBufferIndex_ = swapChain_->GetCurrentBackBufferIndex();
 }
 
 void SwapChainManager::Resize(ID3D12Device* device, ID3D12CommandQueue* commandQueue)
@@ -109,32 +147,49 @@ void SwapChainManager::Resize(ID3D12Device* device, ID3D12CommandQueue* commandQ
     CloseHandle(evt);
 
     // バックバッファの参照を解放
-    swapChainResources[0].Reset();
-    swapChainResources[1].Reset();
+    swapChainResources_[0].Reset();
+    swapChainResources_[1].Reset();
+    depthStencilBuffer_.Reset();
 
-    hr = swapChain->ResizeBuffers(
-        swapChainDesc.BufferCount,
+    hr = swapChain_->ResizeBuffers(
+        swapChainDesc_.BufferCount,
         UINT(WindowManager::winWidth_),
         UINT(WindowManager::winHeight_),
-        swapChainDesc.Format,
+        swapChainDesc_.Format,
         0);
     assert(SUCCEEDED(hr));
 
-    swapChainDesc.Width = UINT(WindowManager::winWidth_);
-    swapChainDesc.Height = UINT(WindowManager::winHeight_);
+    swapChainDesc_.Width = UINT(WindowManager::winWidth_);
+    swapChainDesc_.Height = UINT(WindowManager::winHeight_);
 
     // 新しいバックバッファの取得とRTV再作成
-    hr = swapChain->GetBuffer(0, IID_PPV_ARGS(&swapChainResources[0]));
+    hr = swapChain_->GetBuffer(0, IID_PPV_ARGS(&swapChainResources_[0]));
     assert(SUCCEEDED(hr));
-    hr = swapChain->GetBuffer(1, IID_PPV_ARGS(&swapChainResources[1]));
+    hr = swapChain_->GetBuffer(1, IID_PPV_ARGS(&swapChainResources_[1]));
     assert(SUCCEEDED(hr));
 
-    D3D12_CPU_DESCRIPTOR_HANDLE start = rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-    rtvHandles[0] = start;
-    device->CreateRenderTargetView(swapChainResources[0].Get(), &rtvDesc, rtvHandles[0]);
-    SIZE_T inc = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-    rtvHandles[1].ptr = start.ptr + inc;
-    device->CreateRenderTargetView(swapChainResources[1].Get(), &rtvDesc, rtvHandles[1]);
+    for (int i = 0; i < 2; ++i)
+    {
+  //      if (rtvAllocations_[i].index != UINT32_MAX)
+  //      {
+  //          descriptorHeapManager_->GetRTVManager()->Free(rtvAllocations_[i].index);
+  //          rtvAllocations_[i] = { UINT32_MAX };
+		//}
 
-    backBufferIndex = swapChain->GetCurrentBackBufferIndex();
+            //if (rtvAllocations_[i].index == UINT32_MAX)
+            //{
+            //    rtvAllocations_[i] = descriptorHeapManager_->GetRTVManager()->CreateRTV(swapChainResources_[i].Get(), &rtvDesc_);
+            //}
+
+        if (rtvAllocations_[i].index == UINT32_MAX)
+        {
+            uint32_t index = descriptorHeapManager_->GetRTVManager()->Allocate();
+            rtvAllocations_[i] = { index, descriptorHeapManager_->GetRTVManager()->GetCPUHandleAt(index) };
+        }
+        device->CreateRenderTargetView(swapChainResources_[i].Get(), &rtvDesc_, rtvAllocations_[i].handle);
+    }
+
+    InitializeDepthStencilView(device);
+
+    backBufferIndex_ = swapChain_->GetCurrentBackBufferIndex();
 }

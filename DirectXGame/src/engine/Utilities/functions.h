@@ -74,7 +74,7 @@ bool IsLooseCollision(const AABB& aabb1, const AABB& aabb2, float threshold = 0.
 bool IsCollision(const AABB& aabb, const Sphere& s);
 bool IsCollision(const AABB& aabb, const Segment& s);
 //bool IsCollision(const Ray& ray, const std::vector<VertexData>& vertices, const AABB& aabb, const Transforms& data);
-bool IsCollision(const Ray& ray, const std::vector<VertexData>& vertices, const RenderData_Model* data);
+//bool IsCollision(const Ray& ray, const std::vector<VertexData>& vertices, const RenderData_Model* data);
 
 std::optional<Vector3> IntersectRayTriangle(const Ray& ray, const Triangle& t);
 //std::optional<Vector3> IntersectRayModel(const Ray& ray, const std::vector<VertexData>& vertices, const AABB& aabb, const Transforms& data);
@@ -85,57 +85,7 @@ std::optional<Vector3> IntersectRayAABB(const Ray& ray, const AABB& box);
 #pragma endregion
 
 #pragma region Rand
-
-int RandomInt(int min, int max);
-float RandomFloat(float min, float max, int decimalPlaces = 2);
-
 #pragma endregion
-
-/// <summary>
-/// 角度をラジアンに変換
-/// </summary>
-/// <param name="angle"></param>
-/// <returns></returns>
-float ToRadian(const float& angle);
-
-// ARGBをRGBA
-Vector4 ConvertARGBtoRGBA(const Vector4& argb);
-// RGBAをARGB
-Vector4 ConvertUintToVector4(uint32_t color);
-uint32_t ConvertVector4ToUint(Vector4 color);
-
-// 直交座標系を円柱座標系に変換
-Coordinate_cylindrical ConvertCartesianToCylindrical(const Vector3& cartesian);
-
-// 円柱座標系を直交座標系に変換
-Vector3 ConvertCylindricalToCartesian(const Coordinate_cylindrical& cylindrical);
-
-// 直交座標系を球座標系に変換
-Coordinate_spherical ConvertCartesianToSpherical(const Vector3& cartesian);
-
-// 球座標系を直交座標系に変換
-Vector3 ConvertSphericalToCartesian(const Coordinate_spherical& spherical);
-
-// 円柱座標系を球座標系に変換
-Coordinate_spherical ConvertCylindricalToSpherical(const Coordinate_cylindrical& cylindrical);
-
-// 球座標系を円柱座標系に変換
-Coordinate_cylindrical ConvertSphericalToCylindrical(const Coordinate_spherical& spherical);
-
-/// <summary>
-/// UTF-8 文字列をワイド文字列 (UTF-16) に変換する関数
-/// </summary>
-/// <param name="str">変換する UTF-8 文字列</param>
-/// <returns>変換されたワイド文字列</returns>
-std::wstring ConvertString(const std::string& str);
-
-/// <summary>
-/// ワイド文字列 (UTF-16) を UTF-8 文字列に変換する関数
-/// </summary>
-/// <param name="str">変換するワイド文字列</param>
-/// <returns>変換された UTF-8 文字列</returns>
-std::string ConvertString(const std::wstring& str);
-
 
 
 
@@ -149,13 +99,6 @@ std::string ConvertString(const std::wstring& str);
 /// <param name="vertexData">頂点データを格納する配列</param>
 /// <param name="kSubdivision">球体の分割数</param>
 void CreateSphere(VertexData* vertexData, uint32_t kSubdivision);
-
-/// <summary>
-/// D3D12_RESOURCE_STATES を文字列に変換する関数
-/// </summary>
-/// <param name="state">リソースの状態 (D3D12_RESOURCE_STATES)</param>
-/// <returns>リソース状態を表す文字列</returns>
-std::string ResourceStateToString(D3D12_RESOURCE_STATES state);
 
 
 

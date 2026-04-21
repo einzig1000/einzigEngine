@@ -1,8 +1,8 @@
-#include "DirectX/DescriptorHeapManager/CBV_SRV_UAV/CBV_SRV_UAVManager.h"
+#include "DirectX/DescriptorHeapManager/SRV_UAV/SRV_UAVManager.h"
 #include "Utilities/functions.h"
 #include "Utilities/Logger/Logger.h"
 
-CBV_SRV_UAVManager::CBV_SRV_UAVManager(ID3D12Device* device)
+SRV_UAVManager::SRV_UAVManager(ID3D12Device* device)
     :device_(device)
 {
     // SRVスロット一つ分のサイズ取得
@@ -21,12 +21,12 @@ CBV_SRV_UAVManager::CBV_SRV_UAVManager(ID3D12Device* device)
     Log("コンストラクタ実行成功 : DescriptorHeapManager");
 }
 
-CBV_SRV_UAVManager::~CBV_SRV_UAVManager()
+SRV_UAVManager::~SRV_UAVManager()
 {
     Log("デストラクタ実行成功 : DescriptorHeapManager");
 }
 
-uint32_t CBV_SRV_UAVManager::Allocate()
+uint32_t SRV_UAVManager::Allocate()
 {
     if (nextIndex_ >= capacity_)
     {
@@ -37,21 +37,21 @@ uint32_t CBV_SRV_UAVManager::Allocate()
     return nextIndex_++;
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE CBV_SRV_UAVManager::GetCPUHandleAt(uint32_t i) const
+D3D12_CPU_DESCRIPTOR_HANDLE SRV_UAVManager::GetCPUHandleAt(uint32_t i) const
 {
-    D3D12_CPU_DESCRIPTOR_HANDLE handle = descriptorHeap_.Get()->GetCPUDescriptorHandleForHeapStart();
+    D3D12_CPU_DESCRIPTOR_HANDLE handle = descriptorHeap_->GetCPUDescriptorHandleForHeapStart();
     handle.ptr += (descriptorSize_ * i);
     return handle;
 }
 
-D3D12_GPU_DESCRIPTOR_HANDLE CBV_SRV_UAVManager::GetGPUHandleAt(uint32_t i) const
+D3D12_GPU_DESCRIPTOR_HANDLE SRV_UAVManager::GetGPUHandleAt(uint32_t i) const
 {
-    D3D12_GPU_DESCRIPTOR_HANDLE handle = descriptorHeap_.Get()->GetGPUDescriptorHandleForHeapStart();
+    D3D12_GPU_DESCRIPTOR_HANDLE handle = descriptorHeap_->GetGPUDescriptorHandleForHeapStart();
     handle.ptr += (descriptorSize_ * i);
     return handle;
 }
 
-CBV_SRV_UAVManager::Allocation CBV_SRV_UAVManager::CreateSRV(ID3D12Resource* resource, const D3D12_SHADER_RESOURCE_VIEW_DESC* desc)
+SRV_UAVManager::Allocation SRV_UAVManager::CreateSRV(ID3D12Resource* resource, const D3D12_SHADER_RESOURCE_VIEW_DESC* desc)
 {
     // 次スロットのインデックス取得
     uint32_t index = Allocate();
@@ -66,7 +66,7 @@ CBV_SRV_UAVManager::Allocation CBV_SRV_UAVManager::CreateSRV(ID3D12Resource* res
 	return Allocation{ index, cpu, gpu };
 }
 
-CBV_SRV_UAVManager::Allocation CBV_SRV_UAVManager::CreateSRVforTexture(ID3D12Resource* resource, DXGI_FORMAT format, UINT mipLevels)
+SRV_UAVManager::Allocation SRV_UAVManager::CreateSRVforTexture(ID3D12Resource* resource, DXGI_FORMAT format, UINT mipLevels)
 {
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
     srvDesc.Format = format;
@@ -76,7 +76,7 @@ CBV_SRV_UAVManager::Allocation CBV_SRV_UAVManager::CreateSRVforTexture(ID3D12Res
     return CreateSRV(resource, &srvDesc);
 }
 
-CBV_SRV_UAVManager::Allocation CBV_SRV_UAVManager::CreateSRVforTextureArray(ID3D12Resource* resource, DXGI_FORMAT format, UINT mipLevels, UINT arraySize)
+SRV_UAVManager::Allocation SRV_UAVManager::CreateSRVforTextureArray(ID3D12Resource* resource, DXGI_FORMAT format, UINT mipLevels, UINT arraySize)
 {
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
     srvDesc.Format = format;
@@ -92,7 +92,7 @@ CBV_SRV_UAVManager::Allocation CBV_SRV_UAVManager::CreateSRVforTextureArray(ID3D
     return CreateSRV(resource, &srvDesc);
 }
 
-CBV_SRV_UAVManager::Allocation CBV_SRV_UAVManager::CreateSRVforStructuredBuffer(ID3D12Resource* resource, UINT numElements, UINT structureByteStride)
+SRV_UAVManager::Allocation SRV_UAVManager::CreateSRVforStructuredBuffer(ID3D12Resource* resource, UINT numElements, UINT structureByteStride)
 {
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
     srvDesc.Format = DXGI_FORMAT_UNKNOWN;
@@ -104,18 +104,4 @@ CBV_SRV_UAVManager::Allocation CBV_SRV_UAVManager::CreateSRVforStructuredBuffer(
     srvDesc.Buffer.StructureByteStride = structureByteStride;
     return CreateSRV(resource, &srvDesc);
 }
-
-void CBV_SRV_UAVManager::CreateSRVforImGui(UINT bufferCount, D3D12_SHADER_RESOURCE_VIEW_DESC format)
-{
-    uint32_t index = Allocate();
-    ImGui_ImplDX12_Init(
-        device_,
-        bufferCount,
-        format,
-        descriptorHeap_,
-        GetCPUHandleAt(index),                    // ImGuiフォントSRV用のCPUハンドル
-        GetGPUHandleAt(index)                     // ImGuiフォントSRV用のGPUハンドル
-    );
-}
-
 

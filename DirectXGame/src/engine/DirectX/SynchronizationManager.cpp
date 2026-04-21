@@ -1,5 +1,5 @@
 #include "DirectX/SynchronizationManager.h"
-#include "Utilities/functions.h"
+#include "Utilities/Logger/Logger.h"
 
 SynchronizationManager::SynchronizationManager(ID3D12Device* device)
     : fenceValue(0)

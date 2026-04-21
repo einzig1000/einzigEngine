@@ -204,29 +204,11 @@
     <ClCompile Include="externals\Shigemori\Binary\Data\BinaryOutput.cpp">
       <Filter>externals\Shigemori\Binary\Data</Filter>
     </ClCompile>
-    <ClCompile Include="src\application\Camera\CameraController.cpp">
-      <Filter>src\application\Camera</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\Character\BaseCharacter.cpp">
-      <Filter>src\application\Character</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\Character\Enemy\Enemy.cpp">
-      <Filter>src\application\Character\Enemy</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\Character\Enemy\EnemyManager.cpp">
-      <Filter>src\application\Character\Enemy</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\Character\Player\Player.cpp">
-      <Filter>src\application\Character\Player</Filter>
-    </ClCompile>
     <ClCompile Include="src\application\GameManager\GameManager.cpp">
       <Filter>src\application\GameManager</Filter>
     </ClCompile>
     <ClCompile Include="src\application\GameManager\Phase\BattlePhase\BattlePhase.cpp">
       <Filter>src\application\GameManager\Phase\BattlePhase</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\GameManager\Phase\GameScenePhase\GameScenePhase.cpp">
-      <Filter>src\application\GameManager\Phase\GameScenePhase</Filter>
     </ClCompile>
     <ClCompile Include="src\application\GameManager\Phase\PhaseParent\PhaseParent.cpp">
       <Filter>src\application\GameManager\Phase\PhaseParent</Filter>
@@ -236,72 +218,6 @@
     </ClCompile>
     <ClCompile Include="src\application\GameManager\Phase\TitlePhase\TitlePhase.cpp">
       <Filter>src\application\GameManager\Phase\TitlePhase</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\Item\Item.cpp">
-      <Filter>src\application\Item</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\Item\CraftRecipe\CraftRecipe.cpp">
-      <Filter>src\application\Item\CraftRecipe</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\Item\DropItem\DropItem.cpp">
-      <Filter>src\application\Item\DropItem</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\Item\DropItem\DropItemManager.cpp">
-      <Filter>src\application\Item\DropItem</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\Item\HaveItem\HaveItem.cpp">
-      <Filter>src\application\Item\HaveItem</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\MapManager\MapManager.cpp">
-      <Filter>src\application\MapManager</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\MapManager\Chunk\Chunk.cpp">
-      <Filter>src\application\MapManager\Chunk</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\MapManager\Chunk\Block\Block.cpp">
-      <Filter>src\application\MapManager\Chunk\Block</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\MapManager\Chunk\Block\BlockConfig.cpp">
-      <Filter>src\application\MapManager\Chunk\Block</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\MapManager\Chunk\Block\BlockDurability.cpp">
-      <Filter>src\application\MapManager\Chunk\Block</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\ResourceLoader\ResourceID.cpp">
-      <Filter>src\application\ResourceLoader</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\UIManager\UIManager.cpp">
-      <Filter>src\application\UIManager</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\UIManager\ScreenMode\UIScreen.cpp">
-      <Filter>src\application\UIManager\ScreenMode</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\UIManager\ScreenMode\CraftScreen\CraftScreen.cpp">
-      <Filter>src\application\UIManager\ScreenMode\CraftScreen</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\UIManager\ScreenMode\InventoryScreen\InventoryScreen.cpp">
-      <Filter>src\application\UIManager\ScreenMode\InventoryScreen</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\UIManager\ScreenMode\PauseScreen\PauseScreen.cpp">
-      <Filter>src\application\UIManager\ScreenMode\PauseScreen</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\UIManager\ScreenMode\PlayingScreen\PlayingScreen.cpp">
-      <Filter>src\application\UIManager\ScreenMode\PlayingScreen</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\UIElement.cpp">
-      <Filter>src\application\UIManager\ScreenMode\UIElement</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\Craft\Craft.cpp">
-      <Filter>src\application\UIManager\ScreenMode\UIElement\Craft</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\Hotbar\Hotbar.cpp">
-      <Filter>src\application\UIManager\ScreenMode\UIElement\Hotbar</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\Inventory\Inventory.cpp">
-      <Filter>src\application\UIManager\ScreenMode\UIElement\Inventory</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\UIManager\ScreenMode\UIElement\Pause\Pause.cpp">
-      <Filter>src\application\UIManager\ScreenMode\UIElement\Pause</Filter>
     </ClCompile>
     <ClCompile Include="src\engine\Engine.cpp">
       <Filter>src\engine</Filter>
@@ -316,9 +232,6 @@
       <Filter>src\engine\definition</Filter>
     </ClCompile>
     <ClCompile Include="src\engine\DirectX\CommandContextManager.cpp">
-      <Filter>src\engine\DirectX</Filter>
-    </ClCompile>
-    <ClCompile Include="src\engine\DirectX\DepthStencilManager.cpp">
       <Filter>src\engine\DirectX</Filter>
     </ClCompile>
     <ClCompile Include="src\engine\DirectX\DeviceManager.cpp">
@@ -341,9 +254,6 @@
     </ClCompile>
     <ClCompile Include="src\engine\DirectX\DescriptorHeapManager\DescriptorHeapManager.cpp">
       <Filter>src\engine\DirectX\DescriptorHeapManager</Filter>
-    </ClCompile>
-    <ClCompile Include="src\engine\DirectX\DescriptorHeapManager\CBV_SRV_UAV\CBV_SRV_UAVManager.cpp">
-      <Filter>src\engine\DirectX\DescriptorHeapManager\CBV_SRV_UAV</Filter>
     </ClCompile>
     <ClCompile Include="src\engine\DirectX\DescriptorHeapManager\DSV\DSVManager.cpp">
       <Filter>src\engine\DirectX\DescriptorHeapManager\DSV</Filter>
@@ -417,7 +327,7 @@
     <ClCompile Include="src\engine\Utilities\SimpleModelBody.cpp">
       <Filter>src\engine\Utilities</Filter>
     </ClCompile>
-    <ClCompile Include="src\engine\Utilities\Easing\Easings.cpp">
+    <ClCompile Include="src\engine\Utilities\Easing\Easing.cpp">
       <Filter>src\engine\Utilities\Easing</Filter>
     </ClCompile>
     <ClCompile Include="src\engine\Utilities\Json\JsonManager.cpp">
@@ -431,6 +341,12 @@
     </ClCompile>
     <ClCompile Include="src\engine\DirectX\Resource\Dx12ResourceFactory.cpp" />
     <ClCompile Include="src\engine\DirectX\View\Dx12ViewFactory.cpp" />
+    <ClCompile Include="src\engine\DirectX\DescriptorHeapManager\SRV_UAV\SRV_UAVManager.cpp" />
+    <ClCompile Include="src\engine\Utilities\Converter\StringConverter\StringConverter.cpp" />
+    <ClCompile Include="src\engine\Utilities\Converter\CoordinateConverter\CoordinateConverter.cpp" />
+    <ClCompile Include="src\engine\Utilities\Converter\ColorConverter\ColorConverter.cpp" />
+    <ClCompile Include="src\engine\Utilities\Converter\AngleConverter\AngleConverter.cpp" />
+    <ClCompile Include="src\engine\Utilities\Random\Random.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="externals\Shigemori\Binary\BinaryManager.h">
@@ -445,29 +361,11 @@
     <ClInclude Include="externals\Shigemori\Binary\Data\Value.h">
       <Filter>externals\Shigemori\Binary\Data</Filter>
     </ClInclude>
-    <ClInclude Include="src\application\Camera\CameraController.h">
-      <Filter>src\application\Camera</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\Character\BaseCharacter.h">
-      <Filter>src\application\Character</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\Character\Enemy\Enemy.h">
-      <Filter>src\application\Character\Enemy</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\Character\Enemy\EnemyManager.h">
-      <Filter>src\application\Character\Enemy</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\Character\Player\Player.h">
-      <Filter>src\application\Character\Player</Filter>
-    </ClInclude>
     <ClInclude Include="src\application\GameManager\GameManager.h">
       <Filter>src\application\GameManager</Filter>
     </ClInclude>
     <ClInclude Include="src\application\GameManager\Phase\BattlePhase\BattlePhase.h">
       <Filter>src\application\GameManager\Phase\BattlePhase</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\GameManager\Phase\GameScenePhase\GameScenePhase.h">
-      <Filter>src\application\GameManager\Phase\GameScenePhase</Filter>
     </ClInclude>
     <ClInclude Include="src\application\GameManager\Phase\PhaseParent\PhaseParent.h">
       <Filter>src\application\GameManager\Phase\PhaseParent</Filter>
@@ -477,72 +375,6 @@
     </ClInclude>
     <ClInclude Include="src\application\GameManager\Phase\TitlePhase\TitlePhase.h">
       <Filter>src\application\GameManager\Phase\TitlePhase</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\Item\Item.h">
-      <Filter>src\application\Item</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\Item\CraftRecipe\CraftRecipe.h">
-      <Filter>src\application\Item\CraftRecipe</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\Item\DropItem\DropItem.h">
-      <Filter>src\application\Item\DropItem</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\Item\DropItem\DropItemManager.h">
-      <Filter>src\application\Item\DropItem</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\Item\HaveItem\HaveItem.h">
-      <Filter>src\application\Item\HaveItem</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\MapManager\MapManager.h">
-      <Filter>src\application\MapManager</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\MapManager\Chunk\Chunk.h">
-      <Filter>src\application\MapManager\Chunk</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\MapManager\Chunk\Block\Block.h">
-      <Filter>src\application\MapManager\Chunk\Block</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\MapManager\Chunk\Block\BlockConfig.h">
-      <Filter>src\application\MapManager\Chunk\Block</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\MapManager\Chunk\Block\BlockDurability.h">
-      <Filter>src\application\MapManager\Chunk\Block</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\ResourceLoader\ResourceID.h">
-      <Filter>src\application\ResourceLoader</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\UIManager\UIManager.h">
-      <Filter>src\application\UIManager</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\UIManager\ScreenMode\UIScreen.h">
-      <Filter>src\application\UIManager\ScreenMode</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\UIManager\ScreenMode\CraftScreen\CraftScreen.h">
-      <Filter>src\application\UIManager\ScreenMode\CraftScreen</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\UIManager\ScreenMode\InventoryScreen\InventoryScreen.h">
-      <Filter>src\application\UIManager\ScreenMode\InventoryScreen</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\UIManager\ScreenMode\PauseScreen\PauseScreen.h">
-      <Filter>src\application\UIManager\ScreenMode\PauseScreen</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\UIManager\ScreenMode\PlayingScreen\PlayingScreen.h">
-      <Filter>src\application\UIManager\ScreenMode\PlayingScreen</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\UIElement.h">
-      <Filter>src\application\UIManager\ScreenMode\UIElement</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\Craft\Craft.h">
-      <Filter>src\application\UIManager\ScreenMode\UIElement\Craft</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\Hotbar\Hotbar.h">
-      <Filter>src\application\UIManager\ScreenMode\UIElement\Hotbar</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\Inventory\Inventory.h">
-      <Filter>src\application\UIManager\ScreenMode\UIElement\Inventory</Filter>
-    </ClInclude>
-    <ClInclude Include="src\application\UIManager\ScreenMode\UIElement\Pause\Pause.h">
-      <Filter>src\application\UIManager\ScreenMode\UIElement\Pause</Filter>
     </ClInclude>
     <ClInclude Include="src\engine\Engine.h">
       <Filter>src\engine</Filter>
@@ -557,9 +389,6 @@
       <Filter>src\engine\definition</Filter>
     </ClInclude>
     <ClInclude Include="src\engine\DirectX\CommandContextManager.h">
-      <Filter>src\engine\DirectX</Filter>
-    </ClInclude>
-    <ClInclude Include="src\engine\DirectX\DepthStencilManager.h">
       <Filter>src\engine\DirectX</Filter>
     </ClInclude>
     <ClInclude Include="src\engine\DirectX\DeviceManager.h">
@@ -582,9 +411,6 @@
     </ClInclude>
     <ClInclude Include="src\engine\DirectX\DescriptorHeapManager\DescriptorHeapManager.h">
       <Filter>src\engine\DirectX\DescriptorHeapManager</Filter>
-    </ClInclude>
-    <ClInclude Include="src\engine\DirectX\DescriptorHeapManager\CBV_SRV_UAV\CBV_SRV_UAVManager.h">
-      <Filter>src\engine\DirectX\DescriptorHeapManager\CBV_SRV_UAV</Filter>
     </ClInclude>
     <ClInclude Include="src\engine\DirectX\DescriptorHeapManager\DSV\DSVManager.h">
       <Filter>src\engine\DirectX\DescriptorHeapManager\DSV</Filter>
@@ -658,7 +484,7 @@
     <ClInclude Include="src\engine\Utilities\SimpleModelBody.h">
       <Filter>src\engine\Utilities</Filter>
     </ClInclude>
-    <ClInclude Include="src\engine\Utilities\Easing\Easings.h">
+    <ClInclude Include="src\engine\Utilities\Easing\Easing.h">
       <Filter>src\engine\Utilities\Easing</Filter>
     </ClInclude>
     <ClInclude Include="src\engine\Utilities\Json\JsonManager.h">
@@ -673,6 +499,12 @@
     <ClInclude Include="src\engine\DirectX\Resource\Dx12ResourceFactory.h" />
     <ClInclude Include="src\engine\DirectX\View\Dx12ViewFactory.h" />
     <ClInclude Include="src\engine\DirectX\Pipeline\RenderPipelineTypes.h" />
+    <ClInclude Include="src\engine\DirectX\DescriptorHeapManager\SRV_UAV\SRV_UAVManager.h" />
+    <ClInclude Include="src\engine\Utilities\Converter\StringConverter\StringConverter.h" />
+    <ClInclude Include="src\engine\Utilities\Converter\CoordinateConverter\CoordinateConverter.h" />
+    <ClInclude Include="src\engine\Utilities\Converter\ColorConverter\ColorConverter.h" />
+    <ClInclude Include="src\engine\Utilities\Converter\AngleConverter\AngleConverter.h" />
+    <ClInclude Include="src\engine\Utilities\Random\Random.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

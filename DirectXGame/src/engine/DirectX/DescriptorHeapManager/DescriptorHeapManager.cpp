@@ -1,14 +1,13 @@
 #include "DirectX/DescriptorHeapManager/DescriptorHeapManager.h"
-#include "DirectX/DescriptorHeapManager/SRV/SRVManager.h"
-#include "DirectX/DescriptorHeapManager/CBV/CBVManager.h"
-#include "DirectX/DescriptorHeapManager/RTV/RTVManager.h"
-#include "DirectX/DescriptorHeapManager/DSV/DSVManager.h"
 #include "Utilities/Logger/Logger.h"
+#include "SRV_UAV/SRV_UAVManager.h"
+#include "DSV/DSVManager.h"
+#include "RTV/RTVManager.h"
+
 
 DescriptorHeapManager::DescriptorHeapManager(ID3D12Device* device)
 {
-    srvManager_ = std::make_unique<SRVManager>(device);
-	cbvManager_ = std::make_unique<CBVManager>(device);
+	srv_uavManager_ = std::make_unique<SRV_UAVManager>(device);
 	rtvManager_ = std::make_unique<RTVManager>(device);
 	dsvManager_ = std::make_unique<DSVManager>(device);
 

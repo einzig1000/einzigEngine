@@ -4,32 +4,16 @@
 
 #include <cassert>
 #include <cmath>
-#include <iostream>
-#include <fstream>
-#include <sstream>
 #include <vector>
-#include <string>
-#include <format>
 #include <algorithm>
-#include <cstdio>
-#include <cstdarg>
-
-#include <d3d12.h>
-#include <wrl.h>
 
 #define NOMINMAX
 #include <windows.h>
 #include <DbgHelp.h>
 #include <strsafe.h>
-#include "Game.h"
-#include <random>
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "Dbghelp.lib")
-
-
-
-
 
 
 
@@ -438,45 +422,45 @@ bool IsCollision(const AABB& aabb, const Segment& s)
     return true;
 }
 
-bool IsCollision(const Ray& ray, const std::vector<VertexData>& vertices, const RenderData_Model* data)
-{
-    // まずAABBで大まかに判定
-    bool hit = false;
-    for (const auto& aabb : data->aabbs)
-    {
-        if (IsCollision(ray, aabb))
-        {
-            hit = true;
-            break;
-        }
-    }
-    if (!hit) return false;
-       
-    // AABBに当たっていた場合のみ、三角形ごとに詳細判定
-    for (size_t i = 0; i + 2 < vertices.size(); i += 3)
-    {
-        Triangle t;
-        // 三角形の頂点をワールド座標に変換
-        t.vertices[0] = Transform(
-            Vector3{ vertices[i].position.x, vertices[i].position.y, vertices[i].position.z },
-            data->GetWorldMatrix()
-        );
-        t.vertices[1] = Transform(
-            Vector3{ vertices[i + 1].position.x, vertices[i + 1].position.y, vertices[i + 1].position.z },
-            data->GetWorldMatrix()
-        );
-        t.vertices[2] = Transform(
-            Vector3{ vertices[i + 2].position.x, vertices[i + 2].position.y, vertices[i + 2].position.z },
-            data->GetWorldMatrix()
-        );
-
-        if (IsCollision(ray, t))
-        {
-            return true; // どれか1つでも当たればtrue
-        }
-    }
-    return false;
-}
+//bool IsCollision(const Ray& ray, const std::vector<VertexData>& vertices, const RenderData_Model* data)
+//{
+//    //// まずAABBで大まかに判定
+//    //bool hit = false;
+//    //for (const auto& aabb : data->aabbs)
+//    //{
+//    //    if (IsCollision(ray, aabb))
+//    //    {
+//    //        hit = true;
+//    //        break;
+//    //    }
+//    //}
+//    //if (!hit) return false;
+//    //   
+//    //// AABBに当たっていた場合のみ、三角形ごとに詳細判定
+//    //for (size_t i = 0; i + 2 < vertices.size(); i += 3)
+//    //{
+//    //    Triangle t;
+//    //    // 三角形の頂点をワールド座標に変換
+//    //    t.vertices[0] = Transform(
+//    //        Vector3{ vertices[i].position.x, vertices[i].position.y, vertices[i].position.z },
+//    //        data->GetWorldMatrix()
+//    //    );
+//    //    t.vertices[1] = Transform(
+//    //        Vector3{ vertices[i + 1].position.x, vertices[i + 1].position.y, vertices[i + 1].position.z },
+//    //        data->GetWorldMatrix()
+//    //    );
+//    //    t.vertices[2] = Transform(
+//    //        Vector3{ vertices[i + 2].position.x, vertices[i + 2].position.y, vertices[i + 2].position.z },
+//    //        data->GetWorldMatrix()
+//    //    );
+//
+//    //    if (IsCollision(ray, t))
+//    //    {
+//    //        return true; // どれか1つでも当たればtrue
+//    //    }
+//    //}
+//    return false;
+//}
 
 
 
@@ -539,51 +523,52 @@ std::optional<Vector3> IntersectRayTriangle(const Ray& r, const Triangle& t)
 
 std::optional<Vector3> IntersectRayModel(const Ray& ray, const std::vector<VertexData>& vertices, const RenderData_Model* data)
 {
-    // まずAABBで大まかに判定
-    bool hit = false;
-    for (const auto& aabb : data->aabbs)
-    {
-        if (IsCollision(ray, aabb))
-        {
-            hit = true;
-            break;
-        }
-    }
-    if (!hit)return std::nullopt;
-		
+ //   // まずAABBで大まかに判定
+ //   bool hit = false;
+ //   for (const auto& aabb : data->aabbs)
+ //   {
+ //       if (IsCollision(ray, aabb))
+ //       {
+ //           hit = true;
+ //           break;
+ //       }
+ //   }
+ //   if (!hit)return std::nullopt;
+	//	
 
-    // AABBに当たっていた場合のみ、三角形ごとに詳細判定 最近衝突点を返す
-	std::optional<Vector3> closestPoint = std::nullopt;
-    float closestDist = std::numeric_limits<float>::infinity();
-    for (size_t i = 0; i + 2 < vertices.size(); i += 3)
-    {
-        Triangle t;
-        // 三角形の頂点をワールド座標に変換
-        t.vertices[0] = Transform(
-            Vector3{ vertices[i].position.x, vertices[i].position.y, vertices[i].position.z },
-            data->GetWorldMatrix()
-        );
-        t.vertices[1] = Transform(
-            Vector3{ vertices[i + 1].position.x, vertices[i + 1].position.y, vertices[i + 1].position.z },
-            data->GetWorldMatrix()
-        );
-        t.vertices[2] = Transform(
-            Vector3{ vertices[i + 2].position.x, vertices[i + 2].position.y, vertices[i + 2].position.z },
-            data->GetWorldMatrix()
-        );
-        std::optional<Vector3> pos = IntersectRayTriangle(ray, t);
-        if (pos != std::nullopt)
-        {
-            // 衝突点までの距離を計算
-            float dist = (pos.value() - ray.origin).Length();
-            if (dist < closestDist)
-            {
-                closestDist = dist;
-                closestPoint = pos;
-            }
-        }
-    }
-	return closestPoint;
+ //   // AABBに当たっていた場合のみ、三角形ごとに詳細判定 最近衝突点を返す
+	//std::optional<Vector3> closestPoint = std::nullopt;
+ //   float closestDist = std::numeric_limits<float>::infinity();
+ //   for (size_t i = 0; i + 2 < vertices.size(); i += 3)
+ //   {
+ //       Triangle t;
+ //       // 三角形の頂点をワールド座標に変換
+ //       t.vertices[0] = Transform(
+ //           Vector3{ vertices[i].position.x, vertices[i].position.y, vertices[i].position.z },
+ //           data->GetWorldMatrix()
+ //       );
+ //       t.vertices[1] = Transform(
+ //           Vector3{ vertices[i + 1].position.x, vertices[i + 1].position.y, vertices[i + 1].position.z },
+ //           data->GetWorldMatrix()
+ //       );
+ //       t.vertices[2] = Transform(
+ //           Vector3{ vertices[i + 2].position.x, vertices[i + 2].position.y, vertices[i + 2].position.z },
+ //           data->GetWorldMatrix()
+ //       );
+ //       std::optional<Vector3> pos = IntersectRayTriangle(ray, t);
+ //       if (pos != std::nullopt)
+ //       {
+ //           // 衝突点までの距離を計算
+ //           float dist = (pos.value() - ray.origin).Length();
+ //           if (dist < closestDist)
+ //           {
+ //               closestDist = dist;
+ //               closestPoint = pos;
+ //           }
+ //       }
+ //   }
+//	return closestPoint;
+	return std::nullopt;
 }
 
 std::optional<Vector3> IntersectRayAABB(const Ray& ray, const AABB& box)
@@ -629,165 +614,8 @@ std::optional<Vector3> IntersectRayAABB(const Ray& ray, const AABB& box)
 
 #pragma region Rand
 
-int RandomInt(int min, int max)
-{
-    static std::mt19937 rng(std::random_device{}());
-    std::uniform_int_distribution<int> dist(min, max);
-    return dist(rng);
-}
-
-float RandomFloat(float min, float max, int decimalPlaces)
-{
-    int scale = static_cast<int>(std::pow(10, decimalPlaces));
-    int intMin = static_cast<int>(std::round(min * scale));
-    int intMax = static_cast<int>(std::round(max * scale));
-    int randomInt = RandomInt(intMin, intMax);
-    return static_cast<float>(randomInt) / scale;
-}
-
 #pragma endregion
 
-#pragma region Converter
-
-Vector4 ConvertUintToVector4(uint32_t color)
-{
-    float r = ((color >> 24) & 0xFF) / 255.0f;
-    float g = ((color >> 16) & 0xFF) / 255.0f;
-    float b = ((color >> 8) & 0xFF) / 255.0f;
-    float a = (color & 0xFF) / 255.0f;
-    return { r, g, b, a };
-}
-
-uint32_t ConvertVector4ToUint(Vector4 color)
-{
-    uint32_t r = static_cast<uint32_t>(std::clamp(color.x * 255.0f, 0.0f, 255.0f));
-    uint32_t g = static_cast<uint32_t>(std::clamp(color.y * 255.0f, 0.0f, 255.0f));
-    uint32_t b = static_cast<uint32_t>(std::clamp(color.z * 255.0f, 0.0f, 255.0f));
-    uint32_t a = static_cast<uint32_t>(std::clamp(color.w * 255.0f, 0.0f, 255.0f));
-    return (r << 24) | (g << 16) | (b << 8) | a;
-}
-
-Vector4 ConvertARGBtoRGBA(const Vector4& argb)
-{
-    return { argb.y, argb.z, argb.w, argb.x };
-}
-
-// 文字列変換
-std::wstring ConvertString(const std::string& str)
-{
-    if (str.empty())
-    {
-        return std::wstring();
-    }
-
-
-    auto sizeNeeded = MultiByteToWideChar(CP_UTF8, 0, reinterpret_cast<const char*>(&str[0]), static_cast<int>(str.size()), NULL, 0);
-    if (sizeNeeded == 0)
-    {
-        return std::wstring();
-    }
-    std::wstring result(sizeNeeded, 0);
-    MultiByteToWideChar(CP_UTF8, 0, reinterpret_cast<const char*>(&str[0]), static_cast<int>(str.size()), &result[0], sizeNeeded);
-    return result;
-}
-
-// 文字列変換
-std::string ConvertString(const std::wstring& str)
-{
-    if (str.empty())
-    {
-        return std::string();
-    }
-
-    auto sizeNeeded = WideCharToMultiByte(CP_UTF8, 0, str.data(), static_cast<int>(str.size()), NULL, 0, NULL, NULL);
-    if (sizeNeeded == 0)
-    {
-        return std::string();
-    }
-    std::string result(sizeNeeded, 0);
-    WideCharToMultiByte(CP_UTF8, 0, str.data(), static_cast<int>(str.size()), result.data(), sizeNeeded, NULL, NULL);
-    return result;
-}
-
-Coordinate_cylindrical ConvertCartesianToCylindrical(const Vector3& cartesian)
-{
-    Coordinate_cylindrical out{};
-    out.radius = std::sqrt(cartesian.x * cartesian.x + cartesian.z * cartesian.z);
-    out.theta = std::atan2(cartesian.z, cartesian.x); // [-pi, +pi]
-    out.height = cartesian.y;
-    return out;
-}
-Vector3 ConvertCylindricalToCartesian(const Coordinate_cylindrical& cylindrical)
-{
-    Vector3 out{};
-    out.x = cylindrical.radius * std::cos(cylindrical.theta);
-    out.z = cylindrical.radius * std::sin(cylindrical.theta);
-    out.y = cylindrical.height;
-    return out;
-}
-Coordinate_spherical ConvertCartesianToSpherical(const Vector3& cartesian)
-{
-    Coordinate_spherical out{};
-    out.radius = std::sqrt(
-        cartesian.x * cartesian.x +
-        cartesian.y * cartesian.y +
-        cartesian.z * cartesian.z);
-
-    // 原点は角度が定義できないので 0 扱い
-    if (out.radius <= 1e-8f)
-    {
-        out.theta = 0.0f;
-        out.phi = 0.0f;
-        return out;
-    }
-
-    // 方位角（XZ平面）
-    out.theta = std::atan2(cartesian.z, cartesian.x);
-
-    // 仰角（XZ平面から上。[-pi/2, +pi/2]）
-    float t = cartesian.y / out.radius;
-    t = std::clamp(t, -1.0f, 1.0f); // 浮動小数誤差対策
-    out.phi = std::asin(t);
-
-    return out;
-}
-Vector3 ConvertSphericalToCartesian(const Coordinate_spherical& spherical)
-{
-    Vector3 out{};
-
-    if (spherical.radius <= 1e-8f)
-    {
-        return out;
-    }
-
-    const float cosPhi = std::cos(spherical.phi);
-
-    out.x = spherical.radius * cosPhi * std::cos(spherical.theta);
-    out.z = spherical.radius * cosPhi * std::sin(spherical.theta);
-    out.y = spherical.radius * std::sin(spherical.phi);
-
-    return out;
-}
-Coordinate_spherical ConvertCylindricalToSpherical(const Coordinate_cylindrical& cylindrical)
-{
-    // 円柱 -> 直交 -> 球面（定義を混ぜないために経由変換が安全）
-    const Vector3 cart = ConvertCylindricalToCartesian(cylindrical);
-    return ConvertCartesianToSpherical(cart);
-}
-Coordinate_cylindrical ConvertSphericalToCylindrical(const Coordinate_spherical& spherical)
-{
-    // 球面 -> 直交 -> 円柱
-    const Vector3 cart = ConvertSphericalToCartesian(spherical);
-    return ConvertCartesianToCylindrical(cart);
-}
-
-
-float ToRadian(const float& angle)
-{
-    return angle * (std::numbers::pi_v<float> / 180.0f);
-}
-
-#pragma endregion
 
 void CreateSphere(VertexData* vertexData, uint32_t kSubdivision)
 {
@@ -882,21 +710,3 @@ LONG WINAPI ExportDump(EXCEPTION_POINTERS* exception)
     // 他に関連づけられているSEH例外ハンドラがあれば実行。通常はプロセスを終了する
     return EXCEPTION_EXECUTE_HANDLER;
 }
-
-//Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible)
-//{
-//    // ディスクリプタヒープの生成
-//    ID3D12DescriptorHeap* DescriptorHeap = nullptr;
-//    D3D12_DESCRIPTOR_HEAP_DESC DescriptorHeapDesc{};
-//    // レンダ―ターゲットビュー用
-//    DescriptorHeapDesc.Type = heapType;
-//    // ダブルバッファ用に２つ。多くたってかまわない。
-//    DescriptorHeapDesc.NumDescriptors = numDescriptors;
-//    // 
-//    DescriptorHeapDesc.Flags = shaderVisible ? D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE : D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-//    // エラーチェック
-//    HRESULT hr = device->CreateDescriptorHeap(&DescriptorHeapDesc, IID_PPV_ARGS(&DescriptorHeap));
-//    // ディスクリプタヒープの生成がうまくいかなかったので起動できない
-//    assert(SUCCEEDED(hr));
-//    return DescriptorHeap;
-//}

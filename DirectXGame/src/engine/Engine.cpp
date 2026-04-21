@@ -1,22 +1,19 @@
 #include "Engine.h"
-#include "externals/DirectXTex/d3dx12.h"
-#include "externals/DirectXTex/DirectXTex.h"
-#include "Utilities/Easings.h"
+#include "Utilities/Easing/Easing.h"
 #include "Utilities/functions.h"
 #include <cstdint>
 
 #include "IO/MouseController.h"
+#include "IO/IOManager.h"
 #include "Window/WindowManager.h"
 #include "DirectX/DirectXManager.h"
 #include "Facade/Game.h"
 #include "Resource/Texture/TextureManager.h"
-#include "DrawSystem/RenderData/RenderData.h"
 #include "DrawSystem/DrawSystem.h"
 #include "Camera/CameraManager.h"
 #include "imGuiManager/ImGuiManager.h"
 #include "Physics/PhysicsSystem.h"
 
-#include <DirectXMath.h>
 #include <filesystem>
 using namespace DirectX;
 
@@ -50,7 +47,7 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 
 
 	dxManager_->BeginFrame();
-	ResourceID::reload();
+	//ResourceID::reload();
 	dxManager_->EndFrame();
 }
 
@@ -91,7 +88,7 @@ void Engine::BeginFrame()
 
 	// 描画関数初期化
 	drawSystem_->Update();
-	drawSystem_->SetViewProjectionMatrix(cameraManager_->GetCurrentViewProjectionMatrix());
+	//drawSystem_->SetViewProjectionMatrix(cameraManager_->GetCurrentViewProjectionMatrix());
 
 	// デバッグ情報更新
 	UpdateDebugInfo();
@@ -101,19 +98,19 @@ void Engine::BeginFrame()
 }
 void Engine::UpdateTransforms()
 {
-	if (RenderData_Model::renderModels.size() == 0)return;
+	//if (RenderData_Model::renderModels.size() == 0)return;
 
-	if (Game::IO::Key::IsHeld(DIK_RSHIFT))
-	{
-		if (!Game::IO::Key::IsJustPressed(DIK_RIGHTARROW))
-		{
-			return;
-		}
-	}
+	//if (Game::IO::Key::IsHeld(DIK_RSHIFT))
+	//{
+	//	if (!Game::IO::Key::IsJustPressed(DIK_RIGHTARROW))
+	//	{
+	//		return;
+	//	}
+	//}
 
 #pragma region モデルリスト取得
 
-	const auto& modelList = RenderData_Model::renderModels;
+	//const auto& modelList = RenderData_Model::renderModels;
 
 #pragma endregion
 
@@ -149,45 +146,45 @@ void Engine::UpdateTransforms()
 
 #pragma region マウスレイ衝突判定
 
-	// マウスレイ取得
-	Ray mouseRay = ioManager_->GetMouseController()->GetRay();
+	//// マウスレイ取得
+	//Ray mouseRay = ioManager_->GetMouseController()->GetRay();
 
-	// モデルと衝突までの距離セット構造体
-	struct HitInfo { RenderData_Model* rdm; float distance; };
-	// のリスト
-	std::vector<HitInfo> hits;
-	// のリサイズ(リサイズではない)
-	hits.reserve(modelList.size());
+	//// モデルと衝突までの距離セット構造体
+	//struct HitInfo { RenderData_Model* rdm; float distance; };
+	//// のリスト
+	//std::vector<HitInfo> hits;
+	//// のリサイズ(リサイズではない)
+	//hits.reserve(modelList.size());
 
-	for (auto& rd : modelList)
-	{
-		rd->isCollisionMouseRay = -1;
-		// 描画範囲内なら判定
-		if (rd->inPicture && rd->isCheckMouseRay)
-		{
-			// 最近接衝突点を取得
-			std::optional<Vector3> colPos = IntersectRayModel(
-				mouseRay,
-				objects[rd->GetModel()].modelData.vertices, rd
-			);
-			// 衝突していたらリストに登録
-			if (colPos)
-			{
-				float minDistance = (colPos.value() - mouseRay.origin).Length();
-				hits.push_back({ rd, minDistance });
-			}
-		}
-	}
+	//for (auto& rd : modelList)
+	//{
+	//	rd->isCollisionMouseRay = -1;
+	//	// 描画範囲内なら判定
+	//	if (rd->inPicture && rd->isCheckMouseRay)
+	//	{
+	//		// 最近接衝突点を取得
+	//		std::optional<Vector3> colPos = IntersectRayModel(
+	//			mouseRay,
+	//			objects[rd->GetModel()].modelData.vertices, rd
+	//		);
+	//		// 衝突していたらリストに登録
+	//		if (colPos)
+	//		{
+	//			float minDistance = (colPos.value() - mouseRay.origin).Length();
+	//			hits.push_back({ rd, minDistance });
+	//		}
+	//	}
+	//}
 
-	// 距離の昇順でソート
-	std::sort(hits.begin(), hits.end(),
-		[](auto& a, auto& b) { return a.distance < b.distance; });
+	//// 距離の昇順でソート
+	//std::sort(hits.begin(), hits.end(),
+	//	[](auto& a, auto& b) { return a.distance < b.distance; });
 
-	// ソート後に順序を割り当て
-	for (int order = 0; order < (int)hits.size(); ++order)
-	{
-		hits[order].rdm->isCollisionMouseRay = order;
-	}
+	//// ソート後に順序を割り当て
+	//for (int order = 0; order < (int)hits.size(); ++order)
+	//{
+	//	hits[order].rdm->isCollisionMouseRay = order;
+	//}
 
 #pragma endregion
 
@@ -195,7 +192,7 @@ void Engine::UpdateTransforms()
 void Engine::UpdateParticles()
 {
 	// パーティクル更新
-	RenderData_Particle::UpdateAllParticles();
+	//RenderData_Particle::UpdateAllParticles();
 }
 void Engine::UpdateCamera()
 {
@@ -288,10 +285,6 @@ uint32_t Engine::LoadTexture(const std::string& filePath)
 {
 	return dxManager_->GetResourceManager()->GetTextureManager()->LoadTexture(filePath);
 }
-uint32_t Engine::LoadTextureArray(const std::vector<std::string>& filePaths)
-{
-	return dxManager_->GetResourceManager()->GetTextureManager()->LoadTexture2DArray(filePaths);
-}
 uint32_t Engine::LoadModel(const std::string& directoryPath, const std::string& filename)
 {
 	return dxManager_->GetResourceManager()->GetModelManager()->LoadModel(directoryPath, filename);
@@ -320,31 +313,31 @@ size_t Engine::GetModelCount()
 // 描画
 void Engine::AddModelDrawList(RenderData_Model* renderData)
 {
-	drawSystem_->AddModelDrawList(renderData);
+	//drawSystem_->AddModelDrawList(renderData);
 }
 void Engine::AddTriangleDrawList(RenderData_Triangle* renderData)
 {
-	drawSystem_->AddTriangleDrawList(renderData);
+	//drawSystem_->AddTriangleDrawList(renderData);
 }
 void Engine::AddRectDrawList(RenderData_Rect* renderData)
 {
-	drawSystem_->AddRectDrawList(renderData);
+	//drawSystem_->AddRectDrawList(renderData);
 }
 void Engine::AddSpriteDrawList(RenderData_Sprite* renderData)
 {
-	drawSystem_->AddSpriteDrawList(renderData);
+	//drawSystem_->AddSpriteDrawList(renderData);
 }
 void Engine::AddLineDrawList(RenderData_Line* renderData)
 {
-	drawSystem_->AddLineDrawList(renderData);
+	//drawSystem_->AddLineDrawList(renderData);
 }
 void Engine::AddParticleDrawList(RenderData_Particle* renderData)
 {
-	drawSystem_->AddParticleDrawList(renderData);
+	//drawSystem_->AddParticleDrawList(renderData);
 }
 void Engine::AddBlockDrawList(RenderData_Block* renderData)
 {
-	drawSystem_->AddBlockDrawList(renderData);
+	//drawSystem_->AddBlockDrawList(renderData);
 }
 
 void Engine::AddSphere(const Sphere& sphere, uint32_t color)
@@ -406,19 +399,19 @@ bool Engine::IsAudioPlaying(const uint32_t& audioId)
 // ライト
 void Engine::SetLightDirection(const Vector3 direction)
 {
-	drawSystem_->SetLightDirection(direction);
+	//drawSystem_->SetLightDirection(direction);
 }
 void Engine::SetLightColor(const Vector4 color)
 {
-	drawSystem_->SetLightColor(color);
+	//drawSystem_->SetLightColor(color);
 }
 void Engine::SetLightIntensity(float intensity)
 {
-	drawSystem_->SetLightIntensity(intensity);
+	//drawSystem_->SetLightIntensity(intensity);
 }
 void Engine::ToggleLightMode(const LightMode mode)
 {
-	drawSystem_->ToggleLightMode(mode);
+	//drawSystem_->ToggleLightMode(mode);
 }
 
 // マウス
@@ -642,43 +635,43 @@ void Engine::ToggleFullscreen()
 // CreateLocalAABBでつくったAABBに座標を適応させる（当たり判定の毎フレーム更新用）
 std::vector<AABB>  Engine::CreateAABB(RenderData_Model* data)
 {
-	if (data->GetModel() < 0 || data->GetModel() >= (int)dxManager_->GetResourceManager()->GetModelManager()->GetModelCount())
-	{
-		return {};
-	}
-	Matrix4x4 worldMatrix = data->GetWorldMatrix();
-	Object3D& obj = dxManager_->GetResourceManager()->GetModelManager()->GetModelList()[data->GetModel()];
+	//if (data->GetModel() < 0 || data->GetModel() >= (int)dxManager_->GetResourceManager()->GetModelManager()->GetModelCount())
+	//{
+	//	return {};
+	//}
+	//Matrix4x4 worldMatrix = data->GetWorldMatrix();
+	//Object3D& obj = dxManager_->GetResourceManager()->GetModelManager()->GetModelList()[data->GetModel()];
 	std::vector<AABB> result;
 
-	for (const auto& localAABB : obj.aabb)
-	{
-		// ローカルAABBの8頂点
-		Vector3 corners[8] = {
-			{localAABB.min.x, localAABB.min.y, localAABB.min.z},
-			{localAABB.max.x, localAABB.min.y, localAABB.min.z},
-			{localAABB.min.x, localAABB.max.y, localAABB.min.z},
-			{localAABB.max.x, localAABB.max.y, localAABB.min.z},
-			{localAABB.min.x, localAABB.min.y, localAABB.max.z},
-			{localAABB.max.x, localAABB.min.y, localAABB.max.z},
-			{localAABB.min.x, localAABB.max.y, localAABB.max.z},
-			{localAABB.max.x, localAABB.max.y, localAABB.max.z},
-		};
+	//for (const auto& localAABB : obj.aabb)
+	//{
+	//	// ローカルAABBの8頂点
+	//	Vector3 corners[8] = {
+	//		{localAABB.min.x, localAABB.min.y, localAABB.min.z},
+	//		{localAABB.max.x, localAABB.min.y, localAABB.min.z},
+	//		{localAABB.min.x, localAABB.max.y, localAABB.min.z},
+	//		{localAABB.max.x, localAABB.max.y, localAABB.min.z},
+	//		{localAABB.min.x, localAABB.min.y, localAABB.max.z},
+	//		{localAABB.max.x, localAABB.min.y, localAABB.max.z},
+	//		{localAABB.min.x, localAABB.max.y, localAABB.max.z},
+	//		{localAABB.max.x, localAABB.max.y, localAABB.max.z},
+	//	};
 
-		// 8頂点をワールド空間に変換
-		Vector3 worldMin = Transform(corners[0], worldMatrix);
-		Vector3 worldMax = worldMin;
-		for (int i = 1; i < 8; ++i)
-		{
-			Vector3 v = Transform(corners[i], worldMatrix);
-			worldMin.x = my_min(worldMin.x, v.x);
-			worldMin.y = my_min(worldMin.y, v.y);
-			worldMin.z = my_min(worldMin.z, v.z);
-			worldMax.x = my_max(worldMax.x, v.x);
-			worldMax.y = my_max(worldMax.y, v.y);
-			worldMax.z = my_max(worldMax.z, v.z);
-		}
-		result.push_back({ worldMin, worldMax });
-	}
+	//	// 8頂点をワールド空間に変換
+	//	Vector3 worldMin = Transform(corners[0], worldMatrix);
+	//	Vector3 worldMax = worldMin;
+	//	for (int i = 1; i < 8; ++i)
+	//	{
+	//		Vector3 v = Transform(corners[i], worldMatrix);
+	//		worldMin.x = my_min(worldMin.x, v.x);
+	//		worldMin.y = my_min(worldMin.y, v.y);
+	//		worldMin.z = my_min(worldMin.z, v.z);
+	//		worldMax.x = my_max(worldMax.x, v.x);
+	//		worldMax.y = my_max(worldMax.y, v.y);
+	//		worldMax.z = my_max(worldMax.z, v.z);
+	//	}
+	//	result.push_back({ worldMin, worldMax });
+	//}
 	return result;
 }
 
@@ -687,61 +680,6 @@ void Engine::toggleWireframeMode()
 	drawSystem_->toggleWireframeMode();
 }
 
-
-Microsoft::WRL::ComPtr<ID3D12Resource> Engine::CreateBufferResource(size_t sizeInBytes)
-{
-	// ID3D12Resourceを格納するポインタ
-	Microsoft::WRL::ComPtr<ID3D12Resource> pResource = nullptr;
-
-	D3D12_HEAP_PROPERTIES heapProperties{};
-	heapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
-
-	// リソース記述子を作成
-	D3D12_RESOURCE_DESC resourceDesc{};
-	// バッファリソース。テクスチャの場合はまた別の設定をする
-	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	resourceDesc.Width = sizeInBytes;
-	// バッファの場合はこれらは１にする決まり
-	resourceDesc.Height = 1;
-	resourceDesc.DepthOrArraySize = 1;
-	resourceDesc.MipLevels = 1;
-	resourceDesc.SampleDesc.Count = 1;
-	// バッファの場合はこれにする決まり
-	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-
-	// リソースを作成
-	HRESULT hr = dxManager_->GetDevice()->CreateCommittedResource(
-		&heapProperties,        // ヒープのプロパティ
-		D3D12_HEAP_FLAG_NONE,   // ヒープフラグ
-		&resourceDesc,          // リソースの記述子
-		D3D12_RESOURCE_STATE_GENERIC_READ,           // 初期状態
-		nullptr,                // Clear値 (バッファの場合はnullptr)
-		IID_PPV_ARGS(&pResource) // ID3D12Resourceポインタを取得
-	);
-
-
-	if (FAILED(hr) || !pResource)
-	{
-		const HRESULT removed = dxManager_->GetDevice()->GetDeviceRemovedReason();
-		Log("CreateCommittedResource failed. size=%zu hr=0x%08X removed=0x%08X",
-			sizeInBytes,
-			static_cast<unsigned>(hr),
-			static_cast<unsigned>(removed));
-		return nullptr;
-	}
-
-	pResource->SetName(L"CreateBufferResource()");
-
-	return pResource;
-}
-
-Microsoft::WRL::ComPtr<ID3D12Resource> Engine::CreateConstantBufferResource(size_t sizeInBytes)
-{
-	size_t ConstantSize;
-	ConstantSize = (sizeInBytes + (D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1)) & ~(D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1);
-
-	return CreateBufferResource(ConstantSize);
-}
 
 const std::vector<Object3D> Engine::GetAllObject3D()
 {

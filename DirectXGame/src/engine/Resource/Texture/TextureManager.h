@@ -25,11 +25,6 @@ public:
     );
     TextureData* GetTextureData(int32_t textureID);
 
-    // 同サイズ/同フォーマット前提の Texture2DArray を作る
-    int32_t LoadTexture2DArray(const std::vector<std::string>& filePaths);
-
-    void reloadAllTextures();
-
 	// テクスチャ数を取得
 	size_t GetTextureCount() const { return textures_.size(); }
 
@@ -41,9 +36,6 @@ private:
 
     // 画像データを詰める
     std::vector<TextureData> textures_;
-
-    // white1x1を読み込まずにコードで作成する
-    void CreateTransparentTexture();
 
     // アップロード用一時リソースを保持するリスト
     std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> intermediateUploadResources_;

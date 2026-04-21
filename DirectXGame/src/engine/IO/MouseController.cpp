@@ -2,8 +2,7 @@
 #include "Utilities/functions.h"
 #include "Window/WindowManager.h"
 #include "Camera/CameraManager.h"
-#include "Game.h"
-
+#include <ImGuiManager/ImGuiManager.h>
 
 MouseController::MouseController(HWND hwnd, CameraManager* cameraManager)
 	:cameraManager_(cameraManager)

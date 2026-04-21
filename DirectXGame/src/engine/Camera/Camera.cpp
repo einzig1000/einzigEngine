@@ -1,6 +1,8 @@
 #include "Camera.h"
 #include "Facade/Game.h"
 #include "Window/WindowManager.h"
+#include <ImGuiManager/ImGuiManager.h>
+#include <Utilities/Converter/CoordinateConverter/CoordinateConverter.h>
 
 Camera::Camera()
 {
@@ -16,7 +18,7 @@ Camera::Camera()
 	currentPosSpherical_.phi = 0.78f;
 	currentPosSpherical_.theta = 0.0f;
 	// デカルト座標上の現在位置
-	currentPosCartesian_ = ConvertSphericalToCartesian(currentPosSpherical_);
+	currentPosCartesian_ = CoordinateConverter::ToCartesian(currentPosSpherical_);
 
     fovY_ = 0.65f;
 
@@ -250,7 +252,7 @@ void Camera::Update_Orbit()
 
 #pragma region 座標変換
 
-	currentPosCartesian_ = ConvertSphericalToCartesian(currentPosSpherical_);
+	currentPosCartesian_ = CoordinateConverter::ToCartesian(currentPosSpherical_);
 
 #pragma endregion
 

@@ -1,6 +1,7 @@
-#include "DirectX/PipelineStateManager.h"
+#include <DirectX/PipelineStateManager.h>
 #include <string>
-#include "Utilities/Logger/Logger.h"
+#include <Utilities/Logger/Logger.h>
+#include <Utilities/Converter/StringConverter/StringConverter.h>
 #include <filesystem>
 #include <DrawSystem/RenderData/RenderObject.h>
 
@@ -27,6 +28,11 @@ namespace
         {
             h = HashCombine(h, static_cast<size_t>(params[i].paramType));
             h = HashCombine(h, static_cast<size_t>(params[i].shaderType));
+            if (params[i].paramType == ParamType::CBV)
+            {
+                // CBVはサイズも考慮する
+                h = HashCombine(h, params[i].sizeBytes);
+			}
         }
         return h;
     }
@@ -156,8 +162,6 @@ namespace
             d.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
             d.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
             break;
-
-        default:
         }
 
 
@@ -380,8 +384,8 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineStateManager::CreatePipeline
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> rs = GetOrCreateRootSignature(params);
 
     // シェーダー取得（なければコンパイル）
-    std::wstring vsPath = ConvertString(cfg.vs);
-    std::wstring psPath = ConvertString(cfg.ps);
+    std::wstring vsPath = StringConverter::Convert(cfg.vs);
+    std::wstring psPath = StringConverter::Convert(cfg.ps);
     auto vsBlob = GetOrCompileShader(vsPath.c_str(), L"vs_6_0");
     auto psBlob = GetOrCompileShader(psPath.c_str(), L"ps_6_0");
 
@@ -426,7 +430,7 @@ Microsoft::WRL::ComPtr<IDxcBlob> PipelineStateManager::CompileShader(const std::
     //// 1 hlslファイルを読む
     ///////////////////////////////////////
     /// これからシェーダーをコンパイルする旨をログに出す
-    Log(ConvertString(std::format(L"Begin CompileShader, path:{}, profile:{}", filePath, profile)));
+    Log(StringConverter::Convert(std::format(L"Begin CompileShader, path:{}, profile:{}", filePath, profile)));
     // hlslファイルを読む
     IDxcBlobEncoding* shaderSource = nullptr;
     HRESULT hr = dxcUtils->LoadFile(filePath.c_str(), nullptr, &shaderSource);
@@ -494,7 +498,7 @@ Microsoft::WRL::ComPtr<IDxcBlob> PipelineStateManager::CompileShader(const std::
     }
     assert(SUCCEEDED(hr));
     // 成功したログを出す
-    Log(ConvertString(std::format(L"Compile Succeeded. path:{}\n", filePath, profile)));
+    Log(StringConverter::Convert(std::format(L"Compile Succeeded. path:{}\n", filePath, profile)));
     // もう使わないリソースを解放
     shaderSource->Release();
     shaderResult->Release();

@@ -22,12 +22,13 @@ struct RootParam
 	ParamType paramType = ParamType::None;
 	ShaderType shaderType = ShaderType::None;
 
-	// ---- CBV用 ----
-	uint32_t sizeBytes = 0;    // 要求サイズ
-	uint32_t offsetBytes = 0;  // cpuStorage_ 内オフセット
+	uint32_t sizeBytes = 0;    // 単位サイズ
 
-	// ---- SRV用 ----
-	D3D12_GPU_DESCRIPTOR_HANDLE srvGpuHandle{};
+	uint32_t offsetBytes = 0;  // cpuStorage_ 内オフセット または dynamicSrvStorage_ のインデックス(SRV用)
+
+	uint32_t arraySize = 0;    // 配列サイズ CBVなら1
+
+	D3D12_GPU_DESCRIPTOR_HANDLE srvGpuHandle{}; // Bindlessアーキテクチャや動的SRVで使用するGPU側のハンドル
 };
 
 

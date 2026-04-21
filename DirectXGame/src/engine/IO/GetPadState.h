@@ -4,22 +4,6 @@
 #include <Xinput.h>
 #pragma comment(lib, "xinput.lib") // XInputライブラリをリンク
 
-#define PAD_A               0x00
-#define PAD_B               0x01
-#define PAD_X               0x02
-#define PAD_Y               0x03
-#define PAD_LB              0x04
-#define PAD_RB              0x05
-#define PAD_LS              0x06
-#define PAD_RS              0x07
-#define PAD_BACK            0x08
-#define PAD_START           0x09
-#define PAD_UP              0x0A
-#define PAD_DOWN            0x0B
-#define PAD_LEFT            0x0C
-#define PAD_RIGHT           0x0D
-#define PAD_BUTTON_MAX      0x0E
-
 /// <summary>
 /// パッド管理クラス
 /// </summary>

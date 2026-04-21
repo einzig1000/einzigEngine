@@ -1,9 +1,8 @@
 #include "Dx12ResourceFactory.h"
-#include <cassert>
+#include <Utilities/Logger/Logger.h>
 
 namespace Dx12ResourceFactory
 {
-
     Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(
         ID3D12Device* device, size_t sizeInBytes)
     {
@@ -36,14 +35,22 @@ namespace Dx12ResourceFactory
             IID_PPV_ARGS(&pResource) // ID3D12Resourceポインタを取得
         );
 
-        assert(SUCCEEDED(hr));
+        if (FAILED(hr) || !pResource)
+        {
+            const HRESULT removed = device->GetDeviceRemovedReason();
+            Log("CreateCommittedResource failed. size=%zu hr=0x%08X removed=0x%08X",
+                sizeInBytes,
+                static_cast<unsigned>(hr),
+                static_cast<unsigned>(removed));
+            return nullptr;
+        }
+
         pResource->SetName(L"CreateBufferResource()");
 
         return pResource; // 作成したリソースを返す
     };
 
-    Microsoft::WRL::ComPtr<ID3D12Resource> CreateConstantBufferResource(
-        ID3D12Device* device, size_t sizeInBytes)
+    Microsoft::WRL::ComPtr<ID3D12Resource> CreateConstantBufferResource(ID3D12Device* device, size_t sizeInBytes)
     {
         size_t ConstantSize;
         ConstantSize = (sizeInBytes + (D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1)) & ~(D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1);

@@ -6,6 +6,7 @@
 #include <wrl/client.h>
 #include <memory>
 #include "ResourceLoader/ResourceID.h"
+#include <dinput.h>
 
 
 class WindowManager;
@@ -53,7 +54,6 @@ public:
 	// リソース
 	uint32_t LoadModel(const std::string& directoryPath, const std::string& filename);
 	uint32_t LoadTexture(const std::string& filePath);
-	uint32_t LoadTextureArray(const std::vector<std::string>& filePaths);
 	uint32_t LoadAudio(const std::string& filePath);
 	Object3D* GetModelData(uint32_t modelNumber);
 	TextureData* GetTextureData(uint32_t textureNumber);

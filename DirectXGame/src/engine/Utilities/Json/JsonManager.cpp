@@ -1,5 +1,6 @@
-#include "Utilities/JsonManager.h"
-#include "Utilities/functions.h"
+#include <Utilities/Json/JsonManager.h>
+#include <Utilities/functions.h>
+#include <Utilities/Logger/Logger.h>
 #include <fstream>
 #include <iostream>
 #include <string>
