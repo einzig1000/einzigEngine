@@ -1,6 +1,6 @@
-#include "Camera/CameraManager.h"
-#include "Facade/Game.h"
-#include "Utilities/Easing/Easing.h"
+#include <Camera/CameraManager.h>
+#include <Facade/Game.h>
+#include <Utilities/Easing/Easing.h>
 #include <Utilities/Converter/ColorConverter/ColorConverter.h>
 #include <Utilities/Converter/CoordinateConverter/CoordinateConverter.h>
 #include <Utilities/Converter/AngleConverter/AngleConverter.h>
@@ -12,9 +12,9 @@ namespace Game
 {
 	namespace Resource
 	{
-		uint32_t LoadModel(const std::string& directoryPath, const std::string& filename)
+		uint32_t LoadModel(const std::string& filePath)
 		{
-			return Engine::Instance().LoadModel(directoryPath, filename);
+			return Engine::Instance().LoadModel(filePath);
 		}
 		uint32_t LoadTexture(const std::string& filePath)
 		{
@@ -24,10 +24,20 @@ namespace Game
 		{
 			return Engine::Instance().LoadAudio(filePath);
 		}
+
 		TextureData* GetTextureData(uint32_t textureNumber)
 		{
 			return Engine::Instance().GetTextureData(textureNumber);
 		}
+		ModelData* GetModelData(uint32_t modelID)
+		{
+			return Engine::Instance().GetModelData(modelID);
+		}
+		AudioData* GetAudioData(uint32_t audioID)
+		{
+			return Engine::Instance().GetAudioData(audioID);
+		}
+
 		size_t GetTextureCount()
 		{
 			return Engine::Instance().GetTextureCount();
@@ -35,6 +45,10 @@ namespace Game
 		size_t GetModelCount()
 		{
 			return Engine::Instance().GetModelCount();
+		}
+		size_t GetAudioCount()
+		{
+			return Engine::Instance().GetAudioCount();
 		}
 	}
 
@@ -326,48 +340,83 @@ namespace Game
 
 	namespace Utilities
 	{
-		void ToggleWireframeMode()
-		{
-			Engine::Instance().toggleWireframeMode();
-		}
+
 	}
 
 	namespace Math
 	{
-		float EasingFloat(float start, float end, EaseType easeType, float t)
+		namespace Ease
 		{
-			return Easing::EasingFloat(start, end, easeType, t);
-		}
-		Vector3 EasingVector3(Vector3 start, Vector3 end, EaseType easeType, float t)
-		{
-			return Easing::EasingVector3(start, end, easeType, t);
-		}
-
-		Vector4 UintToVector4(uint32_t color)
-		{
-			return ColorConverter::ConvertUintToVector4(color);
-		}
-		uint32_t Vector4ToUint(Vector4 color)
-		{
-			return ColorConverter::ConvertVector4ToUint(color);
+			float EasingFloat(float start, float end, EaseType easeType, float t)
+			{
+				return Easing::EasingFloat(start, end, easeType, t);
+			}
+			Vector3 EasingVector3(Vector3 start, Vector3 end, EaseType easeType, float t)
+			{
+				return Easing::EasingVector3(start, end, easeType, t);
+			}
 		}
 
-		float DegreeToRadian(float degree)
+		namespace Rand
 		{
-			return AngleConverter::ToRadian(degree);
-		}
-		float RadianToDegree(float radian)
-		{
-			return AngleConverter::ToDegree(radian);
+			float RandFloat(float min, float max, int decimalPlaces)
+			{
+				return Random::RandomFloat(min, max, decimalPlaces);
+			}
+			int RandInt(int min, int max)
+			{
+				return Random::RandomInt(min, max);
+			}
 		}
 
-		float RandFloat(float min, float max, int decimalPlaces)
+		namespace Converter
 		{
-			return Random::RandomFloat(min, max, decimalPlaces);
-		}
-		int RandInt(int min, int max)
-		{
-			return Random::RandomInt(min, max);
+			Vector4 UintToVector4(uint32_t color)
+			{
+				return ColorConverter::ConvertUintToVector4(color);
+			}
+			uint32_t Vector4ToUint(Vector4 color)
+			{
+				return ColorConverter::ConvertVector4ToUint(color);
+			}
+
+			float DegreeToRadian(float degree)
+			{
+				return AngleConverter::ToRadian(degree);
+			}
+			float RadianToDegree(float radian)
+			{
+				return AngleConverter::ToDegree(radian);
+			}
+
+			Vector3 ToCartesian(const Coordinate_cylindrical& cylindrical)
+			{
+				return CoordinateConverter::ToCartesian(cylindrical);
+			}
+			Vector3 ToCartesian(const Coordinate_spherical& spherical)
+			{
+				return CoordinateConverter::ToCartesian(spherical);
+			}
+
+			Coordinate_cylindrical ToCylindrical(const Vector3& cartesian)
+			{
+				return CoordinateConverter::ToCylindrical(cartesian);
+			}
+
+			Coordinate_cylindrical ToCylindrical(const Coordinate_spherical& spherical)
+			{
+				return CoordinateConverter::ToCylindrical(spherical);
+			}
+
+			Coordinate_spherical ToSpherical(const Vector3& cartesian)
+			{
+				return CoordinateConverter::ToSpherical(cartesian);
+			}
+
+			Coordinate_spherical ToSpherical(const Coordinate_cylindrical& cylindrical)
+			{
+				return CoordinateConverter::ToSpherical(cylindrical);
+			}
 		}
 
 		Vector3 DirectionFromYawPitch(float yaw, float pitch)

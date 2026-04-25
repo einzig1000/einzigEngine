@@ -1,27 +1,21 @@
 #pragma once
-// 標準ライブラリ
 #include <vector>
 #include <string>
-#include <cmath>
 #include <cstdint>
-#include <numbers>
-#include <array>
 
-// Windows/DirectX
 #include <initguid.h>
 #include <dxgidebug.h>
 #include <d3d12.h>
 #include <dxgi1_6.h>
-#include <dinput.h>
+#define DIRECTINPUT_VERSION 0x0800
+#include <dinput.h>     // DIK_〇系
+#include <xaudio2.h>
 
-// ライブラリリンク
 #pragma comment(lib, "dxguid.lib")
 #pragma comment(lib, "d3d12.lib")
 
-// WRL
 #include <wrl.h>
 
-// 外部ライブラリ
 #include "externals/DirectXTex/DirectXTex.h"
 
 
@@ -963,6 +957,14 @@ struct EasingSetFloat
 #pragma endregion
 
 
+// 変換情報
+struct Transforms
+{
+    Vector3 scale = { 1,1,1 };
+    Vector3 rotate = { 0,0,0 };
+    Vector3 translate = { 0,0,0 };
+};
+
 #pragma region モデルデータ構造体
 
 // 材質データ(今はテクスチャパスしかいれてない.質感とか追加するようになったら使うのかも)
@@ -979,21 +981,6 @@ struct VertexData
     Vector3 normal;
 };
 
-// 頂点データと材質データ
-struct ModelData
-{
-    std::vector<VertexData> vertices;
-    MaterialData material;
-};
-
-// 変換情報
-struct Transforms
-{
-    Vector3 scale = { 1,1,1 };
-    Vector3 rotate = { 0,0,0 };
-    Vector3 translate = { 0,0,0 };
-};
-
 struct VectorDynamics
 {
     Vector3 value = { 1.0f,1.0f,1.0f };
@@ -1001,17 +988,12 @@ struct VectorDynamics
     Vector3 acceleration;
 };
 
-struct TransformationMatrix
+// モデルデータ
+struct ModelData
 {
-    Matrix4x4 WVP;
-    Matrix4x4 World;
-};
-
-// 3Dオブジェクトデータ
-struct Object3D
-{
-    // モデルデータ（頂点データと材質データ）
-    ModelData modelData;
+	// データ本体
+    std::vector<VertexData> vertices;
+    MaterialData material;
 
     // 頂点バッファ
     Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer;
@@ -1028,18 +1010,54 @@ struct Object3D
     std::string filePath;
 };
 
+#pragma endregion
+
+#pragma region テクスチャデータ構造体
+
 // テクスチャデータ
 struct TextureData
 {
+    // データ本体
     DirectX::TexMetadata metadata;
     DirectX::ScratchImage mipImage;
-    int32_t number;
-    std::string filePath;
+
+	// テクスチャリソース
     Microsoft::WRL::ComPtr<ID3D12Resource> textureResource;
+	// SRVのGPUハンドル
     D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU;
+
+	// 識別ナンバー   
+    int32_t number;
+
+	// ファイルパス
+    std::string filePath;
 };
 
 #pragma endregion
+
+#pragma region オーディオデータ構造体
+
+// オーディオデータとソースボイスを保持する構造体
+struct AudioData
+{
+	// データ本体
+    std::vector<BYTE> audioData;
+    UINT32 audioBytes = 0;
+
+    WAVEFORMATEX* pWfx = nullptr;
+    UINT32 wfxSize = 0;
+
+    IXAudio2SourceVoice* pSourceVoice = nullptr;
+    XAUDIO2_BUFFER xAudioBuffer = {};
+};
+
+#pragma endregion
+
+struct TransformationMatrix
+{
+    Matrix4x4 WVP;
+    Matrix4x4 World;
+};
 
 
 #pragma region 入力構造体

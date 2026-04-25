@@ -15,6 +15,7 @@ public:
 	ResourceManager(ID3D12GraphicsCommandList* commandList, DescriptorHeapManager* descriptorHeap, ID3D12Device* device);
 	~ResourceManager();
 
+
 	AudioManager* GetAudioManager() const { return audioManager_.get(); }
 	TextureManager* GetTextureManager() const { return textureManager_.get(); }
 	ModelManager* GetModelManager() const { return modelManager_.get(); }

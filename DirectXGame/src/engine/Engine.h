@@ -5,8 +5,6 @@
 #include <string>
 #include <wrl/client.h>
 #include <memory>
-#include "ResourceLoader/ResourceID.h"
-#include <dinput.h>
 
 
 class WindowManager;
@@ -18,14 +16,9 @@ class ImGuiManager;
 class PhysicsSystem;
 class IWorldCollider;
 class IPhysicsBody;
+class ResourceManager;
 
-class RenderData_Model;
-class RenderData_Triangle;
-class RenderData_Rect;
-class RenderData_Sprite;
-class RenderData_Line;
-class RenderData_Particle;
-class RenderData_Block;
+class RenderObject;
 
 
 
@@ -52,22 +45,18 @@ public:
 	void Finalize();
 
 	// リソース
-	uint32_t LoadModel(const std::string& directoryPath, const std::string& filename);
+	uint32_t LoadModel(const std::string& filename);
 	uint32_t LoadTexture(const std::string& filePath);
 	uint32_t LoadAudio(const std::string& filePath);
-	Object3D* GetModelData(uint32_t modelNumber);
-	TextureData* GetTextureData(uint32_t textureNumber);
+	ModelData* GetModelData(uint32_t modelID);
+	TextureData* GetTextureData(uint32_t textureID);
+	AudioData* GetAudioData(uint32_t audioID);
 	size_t GetTextureCount();
 	size_t GetModelCount();
+	size_t GetAudioCount();
 
 	// 描画
-	void AddModelDrawList(RenderData_Model* renderData);
-	void AddTriangleDrawList(RenderData_Triangle* renderData);
-	void AddRectDrawList(RenderData_Rect* renderData);
-	void AddSpriteDrawList(RenderData_Sprite* renderData);
-	void AddLineDrawList(RenderData_Line* renderData);
-	void AddParticleDrawList(RenderData_Particle* renderData);
-	void AddBlockDrawList(RenderData_Block* renderData);
+	void AddDrawList(const RenderObject* renderObject);
 
 
 	void AddSphere(const Sphere& sphere, uint32_t color);
@@ -163,25 +152,18 @@ public:
 	void ToggleFullscreen();
 
 	// AABBの作成
-	std::vector<AABB> CreateAABB(RenderData_Model* data);
+	//std::vector<AABB> CreateAABB(RenderData_Model* data);
 
-	// プリミティブモードの設定
-	void toggleWireframeMode();
-
-
-	Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(size_t sizeInBytes);
-
-	Microsoft::WRL::ComPtr<ID3D12Resource> CreateConstantBufferResource(size_t sizeInBytes);
 
 	DirectXManager* GetDirectXManager() { return dxManager_.get(); }
 	PhysicsSystem* GetPhysicsSystem() { return physicsSystem_.get(); }
 
 
-	const std::vector<Object3D> GetAllObject3D();
 
 private:
 	Engine() = default;
 	~Engine() = default;
+
 
 	// カメラ更新
 	void UpdateCamera();
@@ -202,4 +184,6 @@ private:
 	std::unique_ptr<ImGuiManager> imguiManager_;
 	// 物理演算
 	std::unique_ptr<PhysicsSystem> physicsSystem_;
+	// リソース管理
+	std::unique_ptr<ResourceManager> resourceManager_;
 };

@@ -17,7 +17,7 @@ namespace Game
 		/// <param name="directoryPath">例:"Resources/Prototypes/model/"</param>
 		/// <param name="filename">"cube.obj"</param>
 		/// <returns>モデルID</returns>
-		uint32_t LoadModel(const std::string& directoryPath, const std::string& filename);
+		uint32_t LoadModel(const std::string& filePath);
 
 		/// <summary>
 		/// テクスチャ読み込み
@@ -36,9 +36,23 @@ namespace Game
 		/// <summary>
 		/// テクスチャデータ取得
 		/// </summary>
-		/// <param name="textureNumber">テクスチャID</param>
+		/// <param name="textureID">テクスチャID</param>
 		/// <returns>メタデータを含むテクスチャデータ</returns>
-		TextureData* GetTextureData(uint32_t textureNumber);
+		TextureData* GetTextureData(uint32_t textureID);
+
+		/// <summary>
+		/// モデルデータ取得
+		/// </summary>
+		/// <param name="modelID">モデルID</param>
+		/// <returns>モデルデータ</returns>
+		ModelData* GetModelData(uint32_t modelID);
+
+		/// <summary>
+		/// オーディオデータ取得
+		/// </summary>
+		/// <param name="audioID">オーディオID</param>
+		/// <returns>オーディオデータ</returns>
+		AudioData* GetAudioData(uint32_t audioID);
 
 		/// <summary>
 		/// 読み込んだテクスチャ数取得
@@ -51,6 +65,12 @@ namespace Game
 		/// </summary>
 		/// <returns>読み込んだモデル数</returns>
 		size_t GetModelCount();
+
+		/// <summary>
+		/// 読み込んだオーディオ数取得
+		/// </summary>
+		/// <returns>読み込んだオーディオ数</returns>
+		size_t GetAudioCount();
 	};
 
 	namespace DebugDraw
@@ -418,73 +438,99 @@ namespace Game
 
 	namespace Utilities
 	{
-		// プリミティブモードの設定
-		void toggleWireframeMode();
 
 	};
 
 	namespace Math
 	{
-		/// <summary>
-		/// イージング float
-		/// </summary>
-		/// <param name="start"> 初期値 </param>
-		/// <param name="end"> 終了値 </param>
-		/// <param name="easeType"> イージングタイプ </param>
-		/// <param name="t"> 0.0f～1.0f の補完値 </param>
-		/// <returns> イージング後の値 </returns>
-		float EasingFloat(float start, float end, EaseType easeType, float t);
+		namespace Ease
+		{
+			/// <summary>
+			/// イージング float
+			/// </summary>
+			/// <param name="start"> 初期値 </param>
+			/// <param name="end"> 終了値 </param>
+			/// <param name="easeType"> イージングタイプ </param>
+			/// <param name="t"> 0.0f～1.0f の補完値 </param>
+			/// <returns> イージング後の値 </returns>
+			float EasingFloat(float start, float end, EaseType easeType, float t);
 
-		/// <summary>
-		/// イージング Vector3
-		/// </summary>
-		/// <param name="start"> 初期値 </param>
-		/// <param name="end"> 終了値 </param>
-		/// <param name="easeType"> イージングタイプ </param>
-		/// <param name="t"> 0.0f～1.0f の補完値 </param>
-		/// <returns> イージング後の値 </returns>
-		Vector3 EasingVector3(Vector3 start, Vector3 end, EaseType easeType, float t);
+			/// <summary>
+			/// イージング Vector3
+			/// </summary>
+			/// <param name="start"> 初期値 </param>
+			/// <param name="end"> 終了値 </param>
+			/// <param name="easeType"> イージングタイプ </param>
+			/// <param name="t"> 0.0f～1.0f の補完値 </param>
+			/// <returns> イージング後の値 </returns>
+			Vector3 EasingVector3(Vector3 start, Vector3 end, EaseType easeType, float t);
+		}
 
-		/// <summary>
-		/// 指定範囲の小数点付き乱数取得
-		/// </summary>
-		/// <param name="min"> 最小値 </param>
-		/// <param name="max"> 最大値 </param>
-		/// <param name="decimalPlaces"> 小数点以下の桁数 </param>
-		/// <returns> 乱数 </returns>
-		float RandFloat(float min, float max, int decimalPlaces);
+		namespace Rand
+		{
+			/// <summary>
+			/// 指定範囲の小数点付き乱数取得
+			/// </summary>
+			/// <param name="min"> 最小値 </param>
+			/// <param name="max"> 最大値 </param>
+			/// <param name="decimalPlaces"> 小数点以下の桁数 </param>
+			/// <returns> 乱数 </returns>
+			float RandFloat(float min, float max, int decimalPlaces);
 
-		/// <summary>
-		/// 指定範囲の整数乱数取得
-		/// </summary>
-		/// <param name="min"> 最小値 </param>
-		/// <param name="max"> 最大値 </param>
-		/// <returns> 乱数 </returns>
-		int RandInt(int min, int max);
+			/// <summary>
+			/// 指定範囲の整数乱数取得
+			/// </summary>
+			/// <param name="min"> 最小値 </param>
+			/// <param name="max"> 最大値 </param>
+			/// <returns> 乱数 </returns>
+			int RandInt(int min, int max);
+		}
 
-		/// <summary>
-		/// 度数法を弧度法に変換
-		/// </summary>
-		float DegreeToRadian(float degree);
 
-		/// <summary>
-		/// 弧度法を度数法に変換
-		/// </summary>
-		float RadianToDegree(float radian);
+		namespace Converter
+		{
+			/// <summary>
+			/// 度数法を弧度法に変換
+			/// </summary>
+			float DegreeToRadian(float degree);
 
-		/// <summary>
-		/// uint32_tをVector4(0.0f～1.0f)に変換
-		/// </summary>
-		/// <param name="color"> RGBA </param>
-		/// <returns> Vector4 </returns>
-		Vector4 UintToVector4(uint32_t color);
+			/// <summary>
+			/// 弧度法を度数法に変換
+			/// </summary>
+			float RadianToDegree(float radian);
 
-		/// <summary>
-		/// Vector4(0.0f～1.0f)をuint32_tに変換
-		/// </summary>
-		/// <param name="color"> Vector4 </param>
-		/// <returns> RGBA </returns>
-		uint32_t Vector4ToUint(Vector4 color);
+			/// <summary>
+			/// uint32_tをVector4(0.0f～1.0f)に変換
+			/// </summary>
+			/// <param name="color"> RGBA </param>
+			/// <returns> Vector4 </returns>
+			Vector4 UintToVector4(uint32_t color);
+
+			/// <summary>
+			/// Vector4(0.0f～1.0f)をuint32_tに変換
+			/// </summary>
+			/// <param name="color"> Vector4 </param>
+			/// <returns> RGBA </returns>
+			uint32_t Vector4ToUint(Vector4 color);
+
+			// 円柱座標系を直交座標系に変換
+			Vector3 ToCartesian(const Coordinate_cylindrical& cylindrical);
+
+			// 球座標系を直交座標系に変換
+			Vector3 ToCartesian(const Coordinate_spherical& spherical);
+
+			// 直交座標系を円柱座標系に変換
+			Coordinate_cylindrical ToCylindrical(const Vector3& cartesian);
+
+			// 球座標系を円柱座標系に変換
+			Coordinate_cylindrical ToCylindrical(const Coordinate_spherical& spherical);
+
+			// 直交座標系を球座標系に変換
+			Coordinate_spherical ToSpherical(const Vector3& cartesian);
+
+			// 円柱座標系を球座標系に変換
+			Coordinate_spherical ToSpherical(const Coordinate_cylindrical& cylindrical);
+		}
 
 		Vector3 DirectionFromYawPitch(float yaw, float pitch);
 

@@ -9,7 +9,7 @@
 /// <summary>
 // ・PSO 設定（どのシェーダ・どのブレンド・どのラスタライザか）
 // ・ルートパラメータ（CBV / SRV）とその中身
-// だけを持つ、描画オブジェクトの基底クラス。描画に必要な情報はここに集約するイメージ。
+// だけを持つ描画オブジェクト。描画に必要な情報はここに集約するイメージ。
 /// </summary>
 class RenderObject
 {
@@ -23,20 +23,16 @@ public:
 		SRV_UAVManager::Allocation srvAllocations[kMaxFramesInFlight];
 	};
 
-	RenderObject() = default;
-	virtual ~RenderObject() = default;
+	void Draw() const;
 
-	RenderObject(const RenderObject&) = delete;
-	RenderObject& operator=(const RenderObject&) = delete;
+	void SetupFromShaders();
 
-	virtual void Update() = 0;
-
-	// rootIndex を払い出す（=RootSignature上のスロット番号とは別。ここではRenderObject内のID）
+	// rootIndex を返す
 	int32_t CreateCBV(size_t sizeBytes, ShaderType shaderType, std::string debugName = "");
 	int32_t CreateSRV(size_t sizeBytes, size_t arraySize, ShaderType shaderType, std::string debugName = "");
 
-	// CBVデータをCPUスナップショットへコピー（GPUへは書かない）
-	void SetBufferData(int index, const void* data);
+	void SetCBufferData(const std::string& key, ShaderType shaderType, const void* data);
+	void SetSBufferData(const std::string& key, ShaderType shaderType, const void* data, size_t elementSize, size_t elementCount);
 
 	const std::vector<RootParam>& GetRootParams() const { return rootParams_; }
 	const std::vector<uint8_t>& GetCpuStorage() const { return cpuStorage_; }
@@ -47,16 +43,17 @@ public:
 	// インスタンス数
 	uint32_t instanceNum_ = 1;
 
-	int32_t modelID = 0;
+	int32_t modelID = -1;
+	int32_t textureID = -1;
 
 private:
 	// RootParameterにいれるものリスト。CBVもSRVもここで管理する
 	std::vector<RootParam> rootParams_{};
 
-	// CBVの内容をuint8_tのただのバイト列で保持。読みとる時はreinterpret_castで型を戻すイメージ。すべての情報を型に依存せずまとめて管理するためのもの。
+	// CBV用のストレージ。uint8_tのただのバイト列で保持。読みとる時はreinterpret_castで型を戻すイメージ。すべての情報を型に依存せずまとめて管理するためのもの。
 	std::vector<uint8_t> cpuStorage_{};
 
-	// 動的巨大データ（SRV用）のストレージ。CreateSRV() で確保し、SetBufferData() で直接GPUへ書き込む
+	// 動的SRV用のストレージ。CreateSRV() で確保し、SetBufferData() で直接GPUへ書き込む
 	std::vector<DynamicSRVData> dynamicSrvStorage_{};
 
 	// デバッグ用

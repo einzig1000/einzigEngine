@@ -12,12 +12,35 @@ namespace CoordinateConverter
         out.height = cartesian.y;
         return out;
     }
+    Coordinate_cylindrical ToCylindrical(const Coordinate_spherical& spherical)
+    {
+        // 球面 -> 直交 -> 円柱
+        const Vector3 cart = ToCartesian(spherical);
+        return ToCylindrical(cart);
+    }
     Vector3 ToCartesian(const Coordinate_cylindrical& cylindrical)
     {
         Vector3 out{};
         out.x = cylindrical.radius * std::cos(cylindrical.theta);
         out.z = cylindrical.radius * std::sin(cylindrical.theta);
         out.y = cylindrical.height;
+        return out;
+    }
+    Vector3 ToCartesian(const Coordinate_spherical& spherical)
+    {
+        Vector3 out{};
+
+        if (spherical.radius <= 1e-8f)
+        {
+            return out;
+        }
+
+        const float cosPhi = std::cos(spherical.phi);
+
+        out.x = spherical.radius * cosPhi * std::cos(spherical.theta);
+        out.z = spherical.radius * cosPhi * std::sin(spherical.theta);
+        out.y = spherical.radius * std::sin(spherical.phi);
+
         return out;
     }
     Coordinate_spherical ToSpherical(const Vector3& cartesian)
@@ -46,33 +69,10 @@ namespace CoordinateConverter
 
         return out;
     }
-    Vector3 ToCartesian(const Coordinate_spherical& spherical)
-    {
-        Vector3 out{};
-
-        if (spherical.radius <= 1e-8f)
-        {
-            return out;
-        }
-
-        const float cosPhi = std::cos(spherical.phi);
-
-        out.x = spherical.radius * cosPhi * std::cos(spherical.theta);
-        out.z = spherical.radius * cosPhi * std::sin(spherical.theta);
-        out.y = spherical.radius * std::sin(spherical.phi);
-
-        return out;
-    }
     Coordinate_spherical ToSpherical(const Coordinate_cylindrical& cylindrical)
     {
         // 円柱 -> 直交 -> 球面
         const Vector3 cart = ToCartesian(cylindrical);
         return ToSpherical(cart);
-    }
-    Coordinate_cylindrical ConvertSphericalToCylindrical(const Coordinate_spherical& spherical)
-    {
-        // 球面 -> 直交 -> 円柱
-        const Vector3 cart = ToCartesian(spherical);
-        return ToCylindrical(cart);
     }
 };

@@ -287,6 +287,7 @@ Matrix4x4 Matrix4x4::MakePerspectiveFovMatrix(float fovY, float aspectRatio, flo
     Return.m[2][2] = farClip / (farClip - nearClip);
     Return.m[3][2] = (-nearClip * farClip) / (farClip - nearClip);
     Return.m[2][3] = 1.0f;
+	Return.m[3][3] = 0.0f;
 
     return Return;
 }

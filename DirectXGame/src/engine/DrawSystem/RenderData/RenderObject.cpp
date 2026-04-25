@@ -2,8 +2,34 @@
 #include "Engine.h"
 #include "DirectX/DirectXManager.h"
 #include "DirectX/Resource/Dx12ResourceFactory.h"
+#include <DirectX/Pipeline/ShaderReflectionHelper/ShaderReflectionHelper.h>
 #include <cassert>
 #include <cstring>
+
+void RenderObject::Draw() const
+{
+	Engine::Instance().AddDrawList(this);
+}
+
+void RenderObject::SetupFromShaders()
+{
+	auto vsBlob = shaderManager->GetOrCompileShader(psoConfig_.vs);
+	auto psBlob = shaderManager->GetOrCompileShader(psoConfig_.ps);
+
+	rootParams_.clear();
+	cpuStorage_.clear();
+
+	size_t cbvOffset = 0;
+
+	// VS の CBV / SRV を反映
+	ShaderReflection::BuildRootParamsFromShader(vsBlob.Get(), ShaderType::VertexShader, rootParams_, cbvOffset);
+
+	// PS の CBV / SRV を反映
+	ShaderReflection::BuildRootParamsFromShader(psBlob.Get(), ShaderType::PixelShader, rootParams_, cbvOffset);
+
+	cpuStorage_.resize(cbvOffset);
+}
+
 
 int32_t RenderObject::CreateCBV(size_t sizeBytes, ShaderType shaderType, std::string debugName)
 {
@@ -77,6 +103,21 @@ int32_t RenderObject::CreateSRV(size_t sizeBytes, size_t arraySize, ShaderType s
 	debugNames_.push_back(std::move(debugName));
 
 	return static_cast<int32_t>(rootParams_.size() - 1);
+}
+
+void RenderObject::SetSBufferData(const std::string& key, ShaderType shaderType, const void* data, size_t elementSize, size_t elementCount)
+{}
+
+void RenderObject::SetCBufferData(const std::string& key, ShaderType shaderType, const void* data)
+{
+	for (auto& param : rootParams_)
+	{
+		if (param.paramType == ParamType::CBV && param.key == key)
+		{
+			std::memcpy(cpuStorage_.data() + param.offsetBytes, data, param.sizeBytes);
+			return;
+		}
+	}
 }
 
 void RenderObject::SetBufferData(int index, const void* data)

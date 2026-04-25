@@ -1,18 +1,12 @@
 #pragma once
-#include <sdkddkver.h>
+#include <definition/definition.h>
 
 #include <xaudio2.h>
-#include <mfapi.h>
-#include <mfidl.h>
-#include <mferror.h>
-#include <mfreadwrite.h>
-
 #include <wrl/client.h> 
 
 #include <vector>
 #include <map>
 #include <string>
-#include <atomic>
 
 
 
@@ -45,8 +39,14 @@ public:
     AudioManager();
     ~AudioManager();
 
-
+	// オーディオ読み込み
     uint32_t LoadAudio(const std::string& filePath);
+
+	// データ取得
+	AudioData* GetAudioData(uint32_t audioId);
+
+	// オーディオ数を取得
+	size_t GetAudioCount() const { return loadedAudio.size(); }
 
     // 読み込まれたオーディオを再生
     void PlayAudio(const uint32_t& audioId, bool loop);
@@ -66,25 +66,12 @@ public:
     bool IsAudioPlaying(const uint32_t& audioId);
 
 private:
-    // オーディオデータとソースボイスを保持する構造体
-    struct AudioEntry
-    {
-        std::vector<BYTE> audioData;
-        UINT32 audioBytes = 0;
-
-        WAVEFORMATEX* pWfx = nullptr;
-        UINT32 wfxSize = 0;
-
-        IXAudio2SourceVoice* pSourceVoice = nullptr;
-        XAUDIO2_BUFFER xAudioBuffer = {};
-    };
-
-    std::map<uint32_t, AudioEntry> loadedAudio;
+    std::map<uint32_t, AudioData> loadedAudio;
 
     // 初期化
     HRESULT Initialize();
     // デストラクタで何回もつかう
-    void CleanupAudioEntry(AudioEntry& entry);
+    void CleanupAudioData(AudioData& entry);
 
     Microsoft::WRL::ComPtr<IXAudio2> pXAudio2;
     IXAudio2MasteringVoice* pMasteringVoice;

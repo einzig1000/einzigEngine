@@ -17,10 +17,20 @@ enum class ParamType : uint8_t
 	SRV,
 };
 
+struct InputElement
+{
+    std::string semanticName;
+	UINT semanticIndex;
+    D3D12_INPUT_ELEMENT_DESC desc;
+};
+
+
+
 struct RootParam
 {
 	ParamType paramType = ParamType::None;
 	ShaderType shaderType = ShaderType::None;
+    std::string key;              // "b0", "b1" など
 
 	uint32_t sizeBytes = 0;    // 単位サイズ
 
@@ -28,17 +38,10 @@ struct RootParam
 
 	uint32_t arraySize = 0;    // 配列サイズ CBVなら1
 
+	bool isStructured = false; // StructuredBufferかどうか (SRV用)
+	bool isBindless = false;   // Bindlessテクスチャ配列かどうか (SRV用)
+
 	D3D12_GPU_DESCRIPTOR_HANDLE srvGpuHandle{}; // Bindlessアーキテクチャや動的SRVで使用するGPU側のハンドル
-};
-
-
-// 入力レイアウトの種類
-enum class InputLayoutID : uint8_t
-{
-    Default,
-    Line,
-    Block,
-    Particle,
 };
 
 // ブレンドステートの種類
@@ -73,15 +76,13 @@ struct PSOConfig
     std::string vs = "Object3d.VS.hlsl";
     /// ピクセルシェーダーファイル名
     std::string ps = "Object3d.PS.hlsl";
-    /// 入力レイアウトID
-    InputLayoutID inputLayoutID = InputLayoutID::Default;
     /// ブレンドステートID
     BlendStateID blendID = BlendStateID::Normal;
     /// 深度ステンシルID
     DepthStencilID depthStencilID = DepthStencilID::Default;
     /// ラスタライザーID
     RasterizerID rasterizerID = RasterizerID::Fill;
-    /// プリミティブトポロジー
+    /// プリミティブトポロジ
     D3D12_PRIMITIVE_TOPOLOGY topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
     /// スワップチェーン用かどうか
     bool isSwapChain = false;
@@ -93,7 +94,6 @@ struct PSOConfig
             blendID == other.blendID &&
             depthStencilID == other.depthStencilID &&
             rasterizerID == other.rasterizerID &&
-            inputLayoutID == other.inputLayoutID &&
             topology == other.topology &&
             isSwapChain == other.isSwapChain;
     }

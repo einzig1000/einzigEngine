@@ -3,7 +3,6 @@
 #include <string>
 #include <d3d12.h>
 #include <vector>
-#include <map>
 #include "definition/definition.h"
 
 class DescriptorHeapManager;
@@ -20,9 +19,10 @@ public:
         ID3D12Device* device);
     ~TextureManager();
 
-    int32_t LoadTexture(
-        const std::string& filePath
-    );
+	// テクスチャ読み込み
+    int32_t LoadTexture(const std::string& filePath);
+
+	// データ取得
     TextureData* GetTextureData(int32_t textureID);
 
 	// テクスチャ数を取得
@@ -32,7 +32,6 @@ private:
 	ID3D12GraphicsCommandList* commandList_;
 	DescriptorHeapManager* descriptorHeap_;
 	ID3D12Device* device_;
-
 
     // 画像データを詰める
     std::vector<TextureData> textures_;

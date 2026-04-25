@@ -1,17 +1,15 @@
 #pragma once
 #include <d3d12.h>
-#include <wrl.h>
 
-#include "DeviceManager.h"
-#include "DirectX/CommandContextManager.h"
-#include "DirectX/SwapChainManager.h"
-#include "DirectX/PipelineStateManager.h"
-#include "DirectX/DescriptorHeapManager/DescriptorHeapManager.h"
-#include "DirectX/SynchronizationManager.h"
-#include "DirectX/ViewportScissorManager.h"
-#include "FixFPS/FixFPS.h"
+#include <DirectX/DeviceManager.h>
+#include <DirectX/CommandContextManager.h>
+#include <DirectX/SwapChainManager.h>
+#include <DirectX/Pipeline/PipelineStateManager/PipelineStateManager.h>
+#include <DirectX/DescriptorHeapManager/DescriptorHeapManager.h>
+#include <DirectX/SynchronizationManager.h>
+#include <DirectX/ViewportScissorManager.h>
+#include <FixFPS/FixFPS.h>
 
-#include "Resource/ResourceManager.h"
 #include <memory>
 
 /// <summary>
@@ -30,8 +28,6 @@ public:
     PipelineStateManager* GetPipelineStateManager() const { return pipelineStateManager.get(); }
     SynchronizationManager* GetSynchronizationManager() const { return synchronizationManager.get(); }
 
-    ResourceManager* GetResourceManager() const { return resourceManager_.get(); }
-
     FixFPS* GetFixFPS() const { return fixFPS_.get(); }
 
     void BeginFrame();
@@ -47,6 +43,5 @@ private:
     std::unique_ptr<SynchronizationManager> synchronizationManager;
     std::unique_ptr<ViewportScissorManager> viewportScissorManager;
 
-    std::unique_ptr<ResourceManager> resourceManager_;
     std::unique_ptr<FixFPS> fixFPS_;
 };

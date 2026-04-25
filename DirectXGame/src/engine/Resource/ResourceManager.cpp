@@ -1,5 +1,4 @@
 #include "ResourceManager.h"
-#include "Utilities/functions.h"
 
 ResourceManager::ResourceManager(ID3D12GraphicsCommandList* commandList, DescriptorHeapManager* descriptorHeap, ID3D12Device* device)
 {

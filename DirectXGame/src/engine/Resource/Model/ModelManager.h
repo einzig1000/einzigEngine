@@ -1,6 +1,5 @@
 #pragma once
 #include "definition/definition.h"
-#include <sstream>
 
 /// <summary>
 /// モデル管理クラス
@@ -11,16 +10,17 @@ public:
 	ModelManager(ID3D12Device* device);
 	~ModelManager();
 
-	int32_t LoadModel(
-		const std::string& directoryPath, 
-		const std::string& filename);
-	Object3D* GetModelData(int32_t modelID);
+	// モデル読み込み
+	int32_t LoadModel(const std::string& filePath);
+
+	// データ取得
+	ModelData* GetModelData(int32_t modelID);
 
 	// モデル数を取得
 	size_t GetModelCount() const { return objects.size(); }
 
 	// モデルリストを取得
-	std::vector<Object3D>& GetModelList() { return objects; }
+	std::vector<ModelData>& GetModelList() { return objects; }
 
 
 
@@ -28,27 +28,27 @@ private:
 	ID3D12Device* device_;
 
 	// モデルデータを詰める
-	std::vector<Object3D> objects;
+	std::vector<ModelData> objects;
 
 	// mtlファイルを読み込む関数
-	std::string LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
+	MaterialData LoadMaterialTemplateFile(const std::string& filePath);
 
 	// objファイルを読み込む関数
-	ModelData LoadModelFile(const std::string& directoryPath, const std::string& filename);
+	std::vector<VertexData> LoadModelFile(const std::string& filePath);
 
 	
 
 	// １，AABB読み込み
-	std::vector<AABB> LoadAABB(const std::string& csvPath, const ModelData& model);
+	std::vector<AABB> LoadAABB(const std::string& filePath, const std::vector<VertexData>& vertices);
 
 	// ２、AABB.csvがあれば読み込み
-	std::vector<AABB> LoadAABBFromCSV(const std::string& csvPath);
+	std::vector<AABB> LoadAABBFromCSV(const std::string& filePath);
 	
 	// ２，AABB.csvがなければモデルデータから作成
-	AABB CreateLocalAABB(const ModelData& model);
+	AABB CreateLocalAABB(const std::vector<VertexData>& vertices);
 
 	// ３、AABBをCSVに保存
-	void SaveAABBToCSV(const std::string& csvPath, const std::vector<AABB>& aabbs);
+	void SaveAABBToCSV(const std::string& filePath, const std::vector<AABB>& aabbs);
 
 
 };

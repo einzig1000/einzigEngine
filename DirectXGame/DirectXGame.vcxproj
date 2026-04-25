@@ -19,7 +19,7 @@
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{b44aa4d4-c70c-4924-97f7-f7b0e9bbcbed}</ProjectGuid>
     <RootNamespace>DirectXGame</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.26100.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -158,6 +158,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\engine\DirectX\Pipeline\ShaderReflectionHelper\ShaderReflectionHelper.cpp" />
     <ClCompile Include="src\engine\Utilities\Random\Random.cpp" />
     <ClCompile Include="src\engine\Utilities\Converter\AngleConverter\AngleConverter.cpp" />
     <ClCompile Include="src\engine\Utilities\Converter\ColorConverter\ColorConverter.cpp" />
@@ -200,7 +201,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">MaxSpeed</Optimization>
       <WholeProgramOptimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</WholeProgramOptimization>
     </ClCompile>
-    <ClCompile Include="src\engine\DirectX\PipelineStateManager.cpp">
+    <ClCompile Include="src\engine\DirectX\Pipeline\PipelineStateManager\PipelineStateManager.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">MaxSpeed</Optimization>
       <WholeProgramOptimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</WholeProgramOptimization>
     </ClCompile>
@@ -241,6 +242,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="src\engine\Utilities\Converter\StringConverter\StringConverter.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\engine\DirectX\Pipeline\ShaderReflectionHelper\ShaderReflectionHelper.h" />
     <ClInclude Include="src\engine\Utilities\Random\Random.h" />
     <ClInclude Include="src\engine\Utilities\Converter\AngleConverter\AngleConverter.h" />
     <ClInclude Include="src\engine\Utilities\Converter\ColorConverter\ColorConverter.h" />
@@ -273,7 +275,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="src\engine\DirectX\DescriptorHeapManager\DescriptorHeapManager.h" />
     <ClInclude Include="src\engine\DirectX\DeviceManager.h" />
     <ClInclude Include="src\engine\DirectX\DirectXManager.h" />
-    <ClInclude Include="src\engine\DirectX\PipelineStateManager.h" />
+    <ClInclude Include="src\engine\DirectX\Pipeline\PipelineStateManager\PipelineStateManager.h" />
     <ClInclude Include="src\engine\DirectX\SwapChainManager.h" />
     <ClInclude Include="src\engine\DirectX\SynchronizationManager.h" />
     <ClInclude Include="src\engine\DirectX\ViewportScissorManager.h" />

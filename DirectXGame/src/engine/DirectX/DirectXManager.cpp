@@ -13,8 +13,6 @@ DirectXManager::DirectXManager(HWND hwnd)
     synchronizationManager = std::make_unique<SynchronizationManager>(deviceManager->GetDevice());
     viewportScissorManager = std::make_unique<ViewportScissorManager>();
 
-
-	resourceManager_ = std::make_unique<ResourceManager>(commandContextManager->GetCommandList(), descriptorHeapManager.get(), deviceManager->GetDevice());
     fixFPS_ = std::make_unique<FixFPS>();
 
     Log("コンストラクタ実行成功 : DirectXManager");

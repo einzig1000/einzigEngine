@@ -2,23 +2,18 @@
 #include "Facade/Game.h"
 #include "Window/WindowManager.h"
 #include <ImGuiManager/ImGuiManager.h>
-#include <Utilities/Converter/CoordinateConverter/CoordinateConverter.h>
 
 Camera::Camera()
 {
-    mouseDelta_ = { 0,0 };
     enableControl_ = true;
-
-    // 
-    transform_.translate = { 0.0f, 0.0f, 0.0f };
-    transform_.rotate = { 1.0f, 0.0f, 0.0f };
 
 	// 球面座標上の現在位置
     currentPosSpherical_.radius = 35.60f;
 	currentPosSpherical_.phi = 0.78f;
 	currentPosSpherical_.theta = 0.0f;
+
 	// デカルト座標上の現在位置
-	currentPosCartesian_ = CoordinateConverter::ToCartesian(currentPosSpherical_);
+	currentPosCartesian_ = Game::Math::Converter::ToCartesian(currentPosSpherical_);
 
     fovY_ = 0.65f;
 
@@ -43,6 +38,113 @@ void Camera::Update()
         break;
     }
 }
+
+void Camera::Update_Orbit()
+{
+#pragma region 入力取得
+
+    // マウス移動量取得
+    Vector2 mouseDelta = Game::IO::Mouse::GetPositionDelta();
+    // マウスホイール取得
+    int32_t mouseWheel = Game::IO::Mouse::GetWheel();
+    // マウス中ボタンが押されているか
+    bool isMiddleButtonDown = Game::IO::Mouse::IsHeld(2);
+    // シフトキーが押されているか
+    bool isShiftDown = Game::IO::Key::IsHeld(DIK_LSHIFT);
+
+#pragma endregion
+
+#pragma region カメラ回転
+
+    if (isMiddleButtonDown && !isShiftDown)
+    {
+        currentPosSpherical_.theta += mouseDelta.x * 0.01f;
+        currentPosSpherical_.phi += mouseDelta.y * 0.01f;
+        // 上下の回転角度を制限
+        const float epsilon = 0.01f; // 完全な上下を防ぐための小さな値
+        if (currentPosSpherical_.phi < epsilon)
+        {
+            currentPosSpherical_.phi = epsilon;
+        }
+        else if (currentPosSpherical_.phi > 3.14f - epsilon)
+        {
+            currentPosSpherical_.phi = 3.14f - epsilon;
+        }
+    }
+
+
+#pragma endregion
+
+#pragma region カメラ中心移動
+
+    if (isMiddleButtonDown && isShiftDown)
+    {
+        // スクリーン座標 → カメラ平面移動
+        const float moveSpeed = currentPosSpherical_.radius * 0.002f;
+
+        // カメラの右方向・上方向ベクトルを取得
+        Vector3 right = {
+            std::cos(currentPosSpherical_.theta),
+            0.0f,
+            -std::sin(currentPosSpherical_.theta)
+        };
+        Vector3 up = { 0,1,0 };
+
+        center_ += right * (-mouseDelta.x * moveSpeed);
+        center_ += up * (mouseDelta.y * moveSpeed);
+    }
+
+#pragma endregion
+
+#pragma region カメラ距離移動
+
+    if (mouseWheel != 0)
+    {
+        currentPosSpherical_.radius -= mouseWheel * 0.1f;
+        if (currentPosSpherical_.radius < 1.0f)
+        {
+            currentPosSpherical_.radius = 1.0f;
+        }
+    }
+
+#pragma endregion
+
+#pragma region 座標変換
+
+    currentPosCartesian_ = Game::Math::Converter::ToCartesian(currentPosSpherical_);
+
+#pragma endregion
+
+#pragma region カメラ行列計算
+
+    // カメラの位置を設定
+    transform_.translate = (currentPosCartesian_ + center_ + GetShakeOffset());
+    // カメラの回転角度を設定
+    transform_.rotate.x = currentPosSpherical_.phi;
+    transform_.rotate.y = currentPosSpherical_.theta;
+    transform_.rotate.z = 0.0f;
+
+    // カメラ行列を作成
+    Matrix4x4 worldMatrix_ = Matrix4x4::MakeAffineMatrix(
+        { 1,1,1 },
+        transform_.rotate,
+        transform_.translate
+    );
+
+    // ビュー行列を作成
+    viewMatrix_ = (worldMatrix_.Inverse());
+
+    // ビュー行列とプロジェクション行列を掛け合わせた行列を作成
+    viewProjectionMatrix = viewMatrix_ * projectionMatrix_;
+
+    CreateFrustumPlanes();
+
+#pragma endregion
+
+}
+
+void Camera::Update_FPS()
+{}
 
 void Camera::Resize()
 {
@@ -69,15 +171,24 @@ void Camera::DrawImGui()
 	//ImGui::SameLine();
 	//ImGui::Text("Center");
 
-	std::string rotateTag = tag + ".Rotate";
-    ImGui::DragFloat3(rotateTag.c_str(), &transform_.rotate.x, 0.01f);
+    // 緯度・経度
+    
+	std::string thetaTag = tag + ".theta";
+	ImGui::DragFloat(thetaTag.c_str(), &currentPosSpherical_.theta, 0.01f);
     ImGui::SameLine();
-	ImGui::Text("Rotate");
+    ImGui::Text("theta");
+
+	std::string phiTag = tag + ".phi";
+    ImGui::DragFloat(phiTag.c_str(), &currentPosSpherical_.phi, 0.01f);
+    ImGui::SameLine();
+    ImGui::Text("phi");
 
 	std::string distanceTag = tag + ".Distance";
     ImGui::DragFloat(distanceTag.c_str(), &currentPosSpherical_.radius, 0.1f);
     ImGui::SameLine();
-	ImGui::Text("Distance");
+    ImGui::Text("Distance");
+
+	ImGui::Separator();
 
 	std::string fovYTag = tag + ".fovY";
     if (ImGui::DragFloat(fovYTag.c_str(), &fovY_, 0.01f))
@@ -225,67 +336,6 @@ float Camera::InFrustum_Lod(const AABB& aabb)
     points[7] = Hits(Vector3{ aabb.min.x, aabb.max.y, aabb.max.z }, false);
 
 	return 0.0f;
-}
-
-void Camera::Update_Orbit()
-{
-#pragma region 入力取得
-    
-    // マウス移動量取得
-    mouseDelta_ = Game::IO::Mouse::GetPositionDelta();
-    // マウスホイール取得
-	mouseWheel_ = Game::IO::Mouse::GetWheel();
-
-#pragma endregion
-
-#pragma region カメラ回転
-
-#pragma endregion
-
-#pragma region カメラ中心移動
-
-#pragma endregion
-
-#pragma region カメラ距離移動
-
-#pragma endregion
-
-#pragma region 座標変換
-
-	currentPosCartesian_ = CoordinateConverter::ToCartesian(currentPosSpherical_);
-
-#pragma endregion
-
-#pragma region カメラ行列計算
-
-	// カメラの位置を設定
-    transform_.translate = (currentPosCartesian_ + GetShakeOffset());
-	// カメラの回転角度を設定
-    transform_.rotate.x = currentPosSpherical_.phi;
-    transform_.rotate.y = currentPosSpherical_.theta;
-	transform_.rotate.z = 0.0f;
-
-    // カメラ行列を作成
-    Matrix4x4 worldMatrix_ = Matrix4x4::MakeAffineMatrix(
-        { 1,1,1 },
-        transform_.rotate,
-        transform_.translate
-    );
-
-    // ビュー行列を作成
-    viewMatrix_ = (worldMatrix_.Inverse());
-
-    // ビュー行列とプロジェクション行列を掛け合わせた行列を作成
-    viewProjectionMatrix = (viewMatrix_ * projectionMatrix_);
-
-    CreateFrustumPlanes();
-
-#pragma endregion
-
-}
-
-void Camera::Update_FPS()
-{
 }
 
 // 実際に動かす

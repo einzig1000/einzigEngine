@@ -1,5 +1,6 @@
-#include <DirectX/PipelineStateManager.h>
+#include "PipelineStateManager.h"
 #include <string>
+#include <DirectX/Pipeline/ShaderReflectionHelper/ShaderReflectionHelper.h>
 #include <Utilities/Logger/Logger.h>
 #include <Utilities/Converter/StringConverter/StringConverter.h>
 #include <filesystem>
@@ -42,7 +43,6 @@ namespace
         size_t h = 0;
         h = HashCombine(h, HashString(c.vs));
         h = HashCombine(h, HashString(c.ps));
-        h = HashCombine(h, static_cast<size_t>(c.inputLayoutID));
         h = HashCombine(h, static_cast<size_t>(c.blendID));
         h = HashCombine(h, static_cast<size_t>(c.depthStencilID));
         h = HashCombine(h, static_cast<size_t>(c.rasterizerID));
@@ -52,6 +52,7 @@ namespace
         return h;
     }
 
+
     static D3D12_PRIMITIVE_TOPOLOGY_TYPE ToTopologyType(D3D12_PRIMITIVE_TOPOLOGY topo)
     {
         switch (topo)
@@ -59,12 +60,11 @@ namespace
         case D3D_PRIMITIVE_TOPOLOGY_LINELIST:
             return D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
         case D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST:
-			return D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+            return D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
         default:
             return D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
         }
     }
-
 
     static D3D12_BLEND_DESC MakeBlendDesc(BlendStateID id)
     {
@@ -167,21 +167,6 @@ namespace
 
         return d;
     }
-
-    // 入力レイアウトも本来はInputLayoutID→配列を返すテーブルにすべき
-    static void GetInputLayout(InputLayoutID id, const D3D12_INPUT_ELEMENT_DESC*& outElems, UINT& outCount)
-    {
-        static D3D12_INPUT_ELEMENT_DESC defaultElems[] =
-        {
-            { "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-            { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,      0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-            { "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT,   0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-        };
-
-        (void)id;
-        outElems = defaultElems;
-        outCount = _countof(defaultElems);
-    }
 }
 
 PipelineStateManager::PipelineStateManager(ID3D12Device* device)
@@ -209,6 +194,9 @@ void PipelineStateManager::InitializeDxc()
 
 Microsoft::WRL::ComPtr<ID3D12RootSignature> PipelineStateManager::GetOrCreateRootSignature(const std::vector<RootParam>& params)
 {
+    // ログ
+	Log("ルートシグネチャ取得開始");
+
 	// ハッシュキーを生成
 	const size_t key = HashRootLayout(params);
 
@@ -216,12 +204,14 @@ Microsoft::WRL::ComPtr<ID3D12RootSignature> PipelineStateManager::GetOrCreateRoo
     auto it = rootSignatureCache_.find(key);
     if (it != rootSignatureCache_.end())
     {
+		Log("キャッシュから取得成功: キー %zu", key);
         return it->second;
     }
 
 	// ルートシグネチャ生成
     auto rs = CreateRootSignature(params);
 	assert(rs);
+	Log("ルートシグネチャ新規生成成功: キー %zu", key);
 
 	// キャッシュに保存してから返す
     rootSignatureCache_.emplace(key, rs);
@@ -230,6 +220,11 @@ Microsoft::WRL::ComPtr<ID3D12RootSignature> PipelineStateManager::GetOrCreateRoo
 
 Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineStateManager::GetOrCreateGraphicsPipelineState(const PSOConfig& psoConfig, const std::vector<RootParam>& params)
 {
+	// ログ
+    Log("PSO取得開始: VS=%s, PS=%s, BlendID=%d, DepthStencilID=%d, RasterizerID=%d, Topology=%d, isSwapChain=%d, RootParam数=%zu",
+        psoConfig.vs.c_str(), psoConfig.ps.c_str(), static_cast<int>(psoConfig.blendID), static_cast<int>(psoConfig.depthStencilID),
+		static_cast<int>(psoConfig.rasterizerID), static_cast<int>(psoConfig.topology), psoConfig.isSwapChain ? 1 : 0, params.size());
+
 	// ハッシュキーを生成
     const size_t rootKey = HashRootLayout(params);
     const size_t psoKey = HashCombine(HashPsoConfig(psoConfig), rootKey);
@@ -238,12 +233,14 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineStateManager::GetOrCreateGra
     auto it = psoCache_.find(psoKey);
     if (it != psoCache_.end())
     {
+		Log("キャッシュから取得成功: キー %zu", psoKey);
         return it->second;
     }
 
 	// パイプラインステート生成
 	auto pso = CreatePipelineState(psoConfig, params);
     assert(pso);
+	Log("PSO新規生成成功: キー %zu", psoKey);
 
 	// キャッシュに保存してから返す
     psoCache_.emplace(psoKey, pso);
@@ -252,6 +249,9 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineStateManager::GetOrCreateGra
 
 Microsoft::WRL::ComPtr<IDxcBlob> PipelineStateManager::GetOrCompileShader(const wchar_t* path, const wchar_t* target)
 {
+	// ログ
+	Log("シェーダー取得開始: %s, Target=%s", path, target);
+
     // キーを生成
     std::wstring key = std::wstring(path) + L"|" + target;
 
@@ -259,12 +259,14 @@ Microsoft::WRL::ComPtr<IDxcBlob> PipelineStateManager::GetOrCompileShader(const 
     auto it = shaderCache_.find(key);
     if (it != shaderCache_.end())
     {
+		Log("キャッシュから取得成功: キー %s", key.c_str());
         return it->second;
     }
 
 	// blob生成
     auto blob = CompileShader(path, target);
     assert(blob);
+	Log("シェーダー新規コンパイル成功: キー %s", key.c_str());
 
 	// キャッシュに保存してから返す
     shaderCache_.emplace(std::move(key), blob);
@@ -380,8 +382,7 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineStateManager::CreatePipeline
 {
     HRESULT hr;
 
-    // ルートシグネチャ取得（なければ生成）
-	Microsoft::WRL::ComPtr<ID3D12RootSignature> rs = GetOrCreateRootSignature(params);
+	std::vector<RootParam> localParams = params;
 
     // シェーダー取得（なければコンパイル）
     std::wstring vsPath = StringConverter::Convert(cfg.vs);
@@ -389,23 +390,43 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineStateManager::CreatePipeline
     auto vsBlob = GetOrCompileShader(vsPath.c_str(), L"vs_6_0");
     auto psBlob = GetOrCompileShader(psPath.c_str(), L"ps_6_0");
 
+	if (ShaderReflection::HasBindlessTextureArray(psBlob.Get()))
+    {
+        // ピクセルシェーダーにbindlessテクスチャ配列がある場合、ルートパラメータに追加する
+        RootParam bindlessSrvParam{};
+        bindlessSrvParam.paramType = ParamType::SRV;
+        bindlessSrvParam.shaderType = ShaderType::PixelShader;
+        bindlessSrvParam.arraySize = UINT_MAX;
+        localParams.push_back(bindlessSrvParam);
+    }
+
+    // ルートシグネチャ取得（なければ生成）
+	Microsoft::WRL::ComPtr<ID3D12RootSignature> rs = GetOrCreateRootSignature(localParams);
+
     // 各IDからDESCを取得
     const D3D12_BLEND_DESC blendDesc = MakeBlendDesc(cfg.blendID);
     const D3D12_RASTERIZER_DESC rasterizerDesc = MakeRasterizerDesc(cfg.rasterizerID);
     const D3D12_DEPTH_STENCIL_DESC depthStencilDesc = MakeDepthStencilDesc(cfg.depthStencilID);
     const D3D12_PRIMITIVE_TOPOLOGY_TYPE topoType = ToTopologyType(cfg.topology);
 
-    const D3D12_INPUT_ELEMENT_DESC* elems = nullptr;
-    UINT elemCount = 0;
-    GetInputLayout(cfg.inputLayoutID, elems, elemCount);
+    std::vector<InputElement> inputLayout = ShaderReflection::GetInputLayoutFromShader(vsBlob.Get());
+    for (auto& elem : inputLayout)
+    {
+		elem.desc.SemanticName = elem.semanticName.c_str();
+		elem.desc.SemanticIndex = elem.semanticIndex;
+	}
 
-    D3D12_INPUT_LAYOUT_DESC inputLayoutDesc{};
-    inputLayoutDesc.pInputElementDescs = elems;
-    inputLayoutDesc.NumElements = elemCount;
+    std::vector<D3D12_INPUT_ELEMENT_DESC> inputElementDescs;
+    inputElementDescs.reserve(inputLayout.size());
+    for (auto& elem : inputLayout)
+    {
+        inputElementDescs.push_back(elem.desc);
+    }
 
     D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc{};
     graphicsPipelineStateDesc.pRootSignature = rs.Get();
-    graphicsPipelineStateDesc.InputLayout = inputLayoutDesc;
+    graphicsPipelineStateDesc.InputLayout.pInputElementDescs = inputElementDescs.data();
+	graphicsPipelineStateDesc.InputLayout.NumElements = static_cast<UINT>(inputElementDescs.size());
     graphicsPipelineStateDesc.BlendState = blendDesc;
     graphicsPipelineStateDesc.RasterizerState = rasterizerDesc;
     graphicsPipelineStateDesc.VS = { vsBlob->GetBufferPointer(), vsBlob->GetBufferSize() };

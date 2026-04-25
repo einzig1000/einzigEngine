@@ -3,147 +3,26 @@
 
 TestPhase::TestPhase()
 {
-	int32_t tex1 = Game::Resource::LoadTexture("resources/Prototypes/texture/UVChecker.png");
+	//int32_t tex1 = Game::Resource::LoadTexture("resources/Prototypes/texture/uvChecker.png");
 
-	int32_t model1 = Game::Resource::LoadModel("resources/Prototypes/model/", "Cube.obj");
+	int32_t model1 = Game::Resource::LoadModel("resources/Prototypes/model/sphere.obj");
 
 	audio1 = Game::Resource::LoadAudio("resources/Prototypes/audio/BGM/InGame.mp3");
 	audio2 = Game::Resource::LoadAudio("resources/Prototypes/audio/SE/バトル用/氷魔法1.mp3");
 
-	//ground_ = std::make_unique<RenderData_Model>();
-	//wall1_ = std::make_unique<RenderData_Model>();
-	//wall2_ = std::make_unique<RenderData_Model>();
-	//wall3_ = std::make_unique<RenderData_Model>();
-	//wall4_ = std::make_unique<RenderData_Model>();
-	//player_ = std::make_unique<RenderData_Model>();
-
-	//shoulder_ = std::make_unique<RenderData_Model>();
-	//elbow_ = std::make_unique<RenderData_Model>();
-	//hand_ = std::make_unique<RenderData_Model>();
-
-	//rect_ = std::make_unique<RenderData_Rect>();
-
-	//sprite1_ = std::make_unique<RenderData_Sprite>();
-	//sprite2_ = std::make_unique<RenderData_Sprite>();
-
-	//particle1_ = std::make_unique<RenderData_Particle>();
-
-	//triangle1_ = std::make_unique<RenderData_Triangle>();
-	//triangle2_ = std::make_unique<RenderData_Triangle>();
-
-	//line_ = std::make_unique<RenderData_Line>();
-	//line2_ = std::make_unique<RenderData_Line>();
-	//line3_ = std::make_unique<RenderData_Line>();
-
-	//ground_->SetModel(model1);
-	//ground_->SetTexture(tex1);
-	//ground_->name = "ground";
-	//ground_->mass = 1001.0f;
-	//ground_->scale.value = { 10.0f,1.0f,10.0f };
-
-	//wall1_->SetModel(model1);
-	//wall1_->SetTexture(tex1);
-	//wall1_->name = "wall1";
-	//wall1_->scale.value = { 0.5f,2.0f,10.0f };
-	//wall1_->translate.value = { -5.0f,0.5f,0.0f };
-	//wall1_->mass = 1000.0f;
-	//wall2_->SetModel(model1);
-	//wall2_->SetTexture(tex1);
-	//wall2_->name = "wall2";
-	//wall2_->scale.value = { 0.5f,2.0f,10.0f };
-	//wall2_->translate.value = { 5.0f,0.5f,0.0f };
-	//wall2_->mass = 1000.0f;
-	//wall3_->SetModel(model1);
-	//wall3_->SetTexture(tex1);
-	//wall3_->name = "wall3";
-	//wall3_->scale.value = { 10.0f,2.0f,0.5f };
-	//wall3_->translate.value = { 0.0f,0.5f,-5.0f };
-	//wall3_->mass = 1000.0f;
-	//wall4_->SetModel(model1);
-	//wall4_->SetTexture(tex1);
-	//wall4_->name = "wall4";
-	//wall4_->scale.value = { 10.0f,2.0f,0.5f };
-	//wall4_->translate.value = { 0.0f,0.5f,5.0f };
-	//wall4_->mass = 1000.0f;
-
-	//shoulder_->SetModel(model4);
-	//shoulder_->SetTexture(tex2);
-	//shoulder_->name = "shoulder";
-	//shoulder_->translate.value.y = 0.0f;
-	//elbow_->SetModel(model4);
-	//elbow_->SetTexture(tex2);
-	//elbow_->name = "elbow";
-	//elbow_->translate.value.y = 3.0f;
-	//hand_->SetModel(model4);
-	//hand_->SetTexture(tex2);
-	//hand_->name = "hand";
-	//hand_->translate.value.y = 6.0f;
-
-	//hand_->parentModel = elbow_.get();
-	//elbow_->parentModel = shoulder_.get();
-
-	//rect_->texture = tex1;
-	//rect_->pos1 = { 1.0f,1.0f,0.0f };
-	//rect_->pos2 = { 1.0f,-1.0f,0.0f };
-	//rect_->pos3 = { -1.0f,1.0f,0.0f };
-	//rect_->pos4 = { -1.0f,-1.0f,0.0f };
-
-	//player_->SetModel(model4);
-	//player_->SetTexture(tex3);
-	//player_->name = "player";
-	//player_->translate.value = { 0.0f,2.0f,0.0f };
-	//player_->translate.acceleration = { 0.0f,-0.2f,0.0f };
-	//player_->mass = 1.0f;
-	//player_->SetBlock(ground_.get());
-	//player_->SetBlock(wall1_.get());
-	//player_->SetBlock(wall2_.get());
-	//player_->SetBlock(wall3_.get());
-	//player_->SetBlock(wall4_.get());
-
-	//sprite1_->texture = tex5;
-	//sprite1_->transforms.scale = { 0.1f,0.1f };
-	//sprite1_->anchor = Anchor::CenterLeft;
-	//sprite1_->cutImageSize = Vector2int(32, 32);
-	//sprite1_->cutImageLeftTop = fontCutImagePos('0');
-
-	//sprite2_->texture = tex3;
-	//sprite2_->transforms.scale = { 0.1f,0.1f };
-
-	//triangle1_->texture = tex1;
-	//triangle2_->texture = tex1;
-
-
-	//line_->points.push_back(Vector3{ 10.0f,0.0f,0.0f });
-	//line_->points.push_back(Vector3{ 0.0f,10.0f,0.0f });
-	//line_->points.push_back(Vector3{ -10.0f,0.0f,0.0f });
-
-	//line2_->points.push_back(Vector3{ 10.0f,0.0f,0.0f });
-	//line2_->points.push_back(Vector3{ 0.0f,10.0f,0.0f });
-	//line2_->points.push_back(Vector3{ -10.0f,0.0f,0.0f });
-	//line2_->lineType = LineType::BezierCurve;
-
-	//line3_->points.push_back(Vector3{ 10.0f,0.0f,0.0f });
-	//line3_->points.push_back(Vector3{ 0.0f,10.0f,0.0f });
-	//line3_->points.push_back(Vector3{ -10.0f,0.0f,0.0f });
-	//line3_->lineType = LineType::SplineCurve;
-
-	//particle1_->model = model3;
-	//particle1_->texture = tex1;
-	//particle1_->filePath = "resources/Prototypes/particle/aaa";
-
-	//sphere1_.center = { 0.0f,0.0f,0.0f };
-	//sphere1_.radius = 1.0f;
-	//sphereXYZ1_.center = { 0.0f,0.0f,0.0f };
-	//sphereXYZ1_.radius = { 5.0f,2.0f,3.0f };
-	//cylinder1_.bottomCenter = { 0.0f,0.0f,0.0f };
-	//cylinder1_.topCenter = { 0.0f,10.0f,0.0f };
-	//cylinder1_.radius = 3.0f;
-	//aabb1_.min = { -5.0f,0.0f,-5.0f };
-	//aabb1_.max = { 5.0f,10.0f,5.0f };
-
-
 	renderObject1_ = std::make_unique<RenderObject>();
 	renderObject1_->modelID = model1;
+	renderObject1_->psoConfig_.ps = "resources/Shaders/SimpleModel.PS.hlsl";
+	renderObject1_->psoConfig_.vs = "resources/Shaders/SimpleModel.VS.hlsl";
+
+	renderObject1_->CreateCBV(sizeof(Matrix4x4), ShaderType::VertexShader, "wvp");
+	renderObject1_->CreateCBV(sizeof(Vector4), ShaderType::PixelShader, "color");
+	renderObject1_->CreateCBV(sizeof(int32_t), ShaderType::PixelShader, "textureIndex");
+
+	renderObject1_->textureID = 0;
+
+	transform1_.scale = { 100.0f,100.0f,100.0f };
+	color1_ = Vector4{ 1.0f,0.0f,0.0f,1.0f };
 }
 
 
@@ -160,118 +39,58 @@ void TestPhase::Initialize()
 
 void TestPhase::Update()
 {
-	//if (Game::IO::Key::IsHeld(DIK_A))
-	//{
-	//	player_->translate.value.x -= 0.1f;
-	//}
-	//if (Game::IO::Key::IsHeld(DIK_D))
-	//{
-	//	player_->translate.value.x += 0.1f;
-	//}
-	//if (Game::IO::Key::IsHeld(DIK_S))
-	//{
-	//	player_->translate.value.z -= 0.1f;
-	//}
-	//if (Game::IO::Key::IsHeld(DIK_W))
-	//{
-	//	player_->translate.value.z += 0.1f;
-	//}
-	//if (Game::IO::Key::IsJustPressed(DIK_SPACE))
-	//{
-	//	player_->translate.velocity.y += 2.5f;
-	//}
+	transform1_.translate = Game::Camera::Getter::GetCurrentCenter();
+	Matrix4x4 worldMatrix = Matrix4x4::MakeAffineMatrix(transform1_.scale, transform1_.rotate, transform1_.translate);
+	Matrix4x4 wvpMatrix = worldMatrix * Game::Camera::Getter::GetCurrentViewProjectionMatrix();
+	renderObject1_->SetBufferData(0, &wvpMatrix);
 
-	//targetPos_ = ConvertCylindricalToCartesian(cylindricalPos_);
-	//sphere1_.center = targetPos_;
+	renderObject1_->SetBufferData(1, &color1_);
+
+	renderObject1_->SetBufferData(2, &renderObject1_->textureID);
 }
 
 
 void TestPhase::Draw()
 {
-	//rect_->Draw();
-	//
-	//ground_->Draw();
-	//ground_->DrawAABB();
-	//wall1_->Draw();
-	//wall2_->Draw();
-	//wall3_->Draw();
-	//wall4_->Draw();
-
-	//player_->Draw();
-	//player_->DrawAABB();
-
-	//sprite1_->Draw();
-	//sprite2_->Draw();
-
-	//triangle1_->Draw();
-	//triangle2_->Draw();
-
-	//particle1_->Draw();
-	//particle1_->DrawEmitter();
-
-	//line_->Draw();
-	//line2_->Draw();
-	//line3_->Draw();
-
-	//shoulder_->Draw();
-	//elbow_->Draw();
-	//hand_->Draw();
-
-	Game::DebugDraw::AddSphere(sphere1_, 0x00FF00FF);
-	Game::DebugDraw::AddSphereXYZ(sphereXYZ1_, 0x0000FFFF);
-	Game::DebugDraw::AddCylinder(cylinder1_, 0xFFFF00FF);
-	Game::DebugDraw::AddAABB(aabb1_, 0xFF00FFFF);
+	renderObject1_->Draw();
 }
 
 
 void TestPhase::DrawImGui()
 {
-	//rect_->DrawImGui();
-	//
-	//ground_->DrawImGui();
-	//
-	//player_->DrawImGui();
-	//
-	//sprite1_->DrawImGui();
-	//sprite2_->DrawImGui();
-	//
-	//triangle1_->DrawImGui();
-	//triangle2_->DrawImGui();
-	//
-	//particle1_->DrawImGui();
-	//
-	//line_->DrawImGui();
-	//line2_->DrawImGui();
-	//line3_->DrawImGui();
-	//
-	//shoulder_->DrawImGui();
-	//elbow_->DrawImGui();
-	//hand_->DrawImGui();
-
 	ImGui::Begin("Facade Test");
 	if (ImGui::BeginTabBar("Facade Test", ImGuiTabBarFlags_::ImGuiTabBarFlags_Reorderable))
 	{
+
+		if (ImGui::BeginTabItem("RenderObject Test"))
+		{
+			ImGui::ColorEdit4("color1", &color1_.x, 1);
+
+			ImGui::EndTabItem();
+		}
+
+
 #pragma region debugDraw test
 
 		if (ImGui::BeginTabItem("DebugDraw Test"))
 		{
-			ImGui::Text("GreenSphere");
-			ImGui::DragFloat3("sphere center", &sphere1_.center.x, 0.1f);
-			ImGui::DragFloat("sphere radius", &sphere1_.radius, 0.1f, 0.1f, 100.0f);
-			ImGui::Text("BlueSphereXYZ");
-			ImGui::DragFloat3("sphereXYZ center", &sphereXYZ1_.center.x, 0.1f);
-			ImGui::DragFloat3("sphereXYZ radius", &sphereXYZ1_.radius.x, 0.1f, 0.1f, 100.0f);
-			ImGui::Text("YellowCylinder");
-			ImGui::DragFloat3("cylinder bottomCenter", &cylinder1_.bottomCenter.x, 0.1f);
-			ImGui::DragFloat3("cylinder topCenter", &cylinder1_.topCenter.x, 0.1f);
-			ImGui::DragFloat("cylinder radius", &cylinder1_.radius, 0.1f, 0.1f, 100.0f);
-			ImGui::Text("PurpleAABB");
-			ImGui::DragFloat3("aabb min", &aabb1_.min.x, 0.1f);
-			ImGui::DragFloat3("aabb max", &aabb1_.max.x, 0.1f);
-			ImGui::Text("pos on cylindrical coord");
-			ImGui::DragFloat("radius", &cylindricalPos_.radius, 0.1f, 0.0f, 100.0f);
-			ImGui::DragFloat("theta", &cylindricalPos_.theta, 0.1f);
-			ImGui::DragFloat("height", &cylindricalPos_.height, 0.1f);
+			//ImGui::Text("GreenSphere");
+			//ImGui::DragFloat3("sphere center", &sphere1_.center.x, 0.1f);
+			//ImGui::DragFloat("sphere radius", &sphere1_.radius, 0.1f, 0.1f, 100.0f);
+			//ImGui::Text("BlueSphereXYZ");
+			//ImGui::DragFloat3("sphereXYZ center", &sphereXYZ1_.center.x, 0.1f);
+			//ImGui::DragFloat3("sphereXYZ radius", &sphereXYZ1_.radius.x, 0.1f, 0.1f, 100.0f);
+			//ImGui::Text("YellowCylinder");
+			//ImGui::DragFloat3("cylinder bottomCenter", &cylinder1_.bottomCenter.x, 0.1f);
+			//ImGui::DragFloat3("cylinder topCenter", &cylinder1_.topCenter.x, 0.1f);
+			//ImGui::DragFloat("cylinder radius", &cylinder1_.radius, 0.1f, 0.1f, 100.0f);
+			//ImGui::Text("PurpleAABB");
+			//ImGui::DragFloat3("aabb min", &aabb1_.min.x, 0.1f);
+			//ImGui::DragFloat3("aabb max", &aabb1_.max.x, 0.1f);
+			//ImGui::Text("pos on cylindrical coord");
+			//ImGui::DragFloat("radius", &cylindricalPos_.radius, 0.1f, 0.0f, 100.0f);
+			//ImGui::DragFloat("theta", &cylindricalPos_.theta, 0.1f);
+			//ImGui::DragFloat("height", &cylindricalPos_.height, 0.1f);
 
 			ImGui::EndTabItem();
 		}

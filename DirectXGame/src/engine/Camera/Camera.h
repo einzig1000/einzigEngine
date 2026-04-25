@@ -54,13 +54,12 @@ private:
     void MovingRotate();
     void MovingDistance();
 
-	Vector2 mouseDelta_;
-    int mouseWheel_ = 0;
-
 	// 球面座標上の現在位置
 	Coordinate_spherical currentPosSpherical_;
 	// デカルト座標上の現在位置
 	Vector3 currentPosCartesian_;
+	// カメラの回転中心
+	Vector3 center_ = { 0.0f, 0.0f, 0.0f };
 
     //////////////////////////////////////////////
     ///              カメラ回転                ///
@@ -100,7 +99,7 @@ private:
 	float fovY_ = 0.45f;
     float aspect_;
     float nearZ_ = 0.01f;
-	float farZ_ = 100.0f;
+	float farZ_ = 1000.0f;
 
 	// ビュープロジェクション行列
     Matrix4x4 viewProjectionMatrix;

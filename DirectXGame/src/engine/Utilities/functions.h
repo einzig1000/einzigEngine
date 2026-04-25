@@ -93,21 +93,6 @@ std::optional<Vector3> IntersectRayAABB(const Ray& ray, const AABB& box);
 
 
 
-/// <summary>
-/// 球体の頂点データを生成する関数
-/// </summary>
-/// <param name="vertexData">頂点データを格納する配列</param>
-/// <param name="kSubdivision">球体の分割数</param>
-void CreateSphere(VertexData* vertexData, uint32_t kSubdivision);
-
-
-
-
-
-
-
-
-
 
 
 /// <summary>

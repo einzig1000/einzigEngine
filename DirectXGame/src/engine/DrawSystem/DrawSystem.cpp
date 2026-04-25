@@ -1,33 +1,34 @@
-#include "DrawSystem/DrawSystem.h"
-#include "DirectX/DirectXManager.h"
-#include "Window/WindowManager.h"
-#include "Utilities/functions.h"
-#include "MapManager/Chunk/Block/Block.h"
+#include <DrawSystem/DrawSystem.h>
+#include <DirectX/DirectXManager.h>
+#include <Resource/ResourceManager.h>
+#include <Window/WindowManager.h>
+#include <numbers>
 
-DrawSystem::DrawSystem(DirectXManager* dxManager)
-	:dxManager_(dxManager)
+DrawSystem::DrawSystem(DirectXManager* dxManager, ResourceManager* resourceManager)
+	:dxManager_(dxManager), resourceManager_(resourceManager)
 {
 	for (uint32_t i = 0; i < kFramesInFlight_; ++i)
 	{
 		cbAllocators_[i].Initialize(dxManager_->GetDevice(), 8 * 1024 * 1024, L"FrameCBAllocator");
 	}
 
-	// 正射影行列
-	orthoProjectionMatrix_ = Matrix4x4::MakeOrthographicMatrix(
-		0.0f, 0.0f,
-		static_cast<float>(WindowManager::winWidth_),
-		static_cast<float>(WindowManager::winHeight_),
-		0.0f, 100.0f);
+	//// 正射影行列
+	//orthoProjectionMatrix_ = Matrix4x4::MakeOrthographicMatrix(
+	//	0.0f, 0.0f,
+	//	static_cast<float>(WindowManager::winWidth_),
+	//	static_cast<float>(WindowManager::winHeight_),
+	//	0.0f, 100.0f);
+	//
+	//// カメラマトリックス
+	//viewProjectionMatrix_ = Matrix4x4::MakeIdentity4x4();
 
-	// カメラマトリックス
-	viewProjectionMatrix_ = Matrix4x4::MakeIdentity4x4();
-
+	// 1フレームに呼び出せるDrawCallの最大数
 	kMaxDrawCallPerFrame_ = 4096;
 
 	// 描画コールカウント初期化
 	drawCallIndex_ = 0;
 
-
+	// そのフレームで使用されている頂点データのサイズ
 	vertexDataUsed_ = 0;
 }
 
@@ -41,9 +42,6 @@ uint32_t DrawSystem::GetFrameIndex() const
 
 void DrawSystem::Update()
 {
-	// 前フレームの不要VBを解放（EndFrame→Present→WaitForGPU 後）
-	vbHoldUntilSubmit_.clear();
-
 	// CBアロケータをリセット
 	cbAllocators_[GetFrameIndex()].Reset();
 
@@ -52,14 +50,19 @@ void DrawSystem::Update()
 
 	// 三角形用頂点データの初期化
 	vertexDataUsed_ = 0;
+
+
+	renderObjects_.clear();
 }
 
 void DrawSystem::Draw()
 {
-	///// RenderObjectリストをソート
+	///// いつかRenderObjectリストをソートしたい
 	//① PSO
 	//② トポロジ
 	//③ ルートシグネチャ
+
+	DrawRenderObject();
 
 	//// 形状を設定 (三角形)
 	//dxManager_->GetCommandContextManager()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -73,6 +76,69 @@ void DrawSystem::Draw()
 	//dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetLinePipelineState(BlendMode::kBlendModeNormal));
 }
 
+
+void DrawSystem::AddDrawList(const RenderObject* renderObject)
+{
+	renderObjects_.push_back(renderObject);
+}
+
+
+void DrawSystem::DrawRenderObject()
+{
+	auto* cmdList = dxManager_->GetCommandContextManager()->GetCommandList();
+	auto& cb = cbAllocators_[GetFrameIndex()];
+
+	for (auto* renderObject : renderObjects_)
+	{
+		// 1) RootSignatureセット
+		cmdList->SetGraphicsRootSignature(dxManager_->GetPipelineStateManager()->GetOrCreateRootSignature(renderObject->GetRootParams()).Get());
+		// 2) PSOセット
+		cmdList->SetPipelineState(dxManager_->GetPipelineStateManager()->GetOrCreateGraphicsPipelineState(renderObject->psoConfig_, renderObject->GetRootParams()).Get());
+
+		// 3) トポロジーセット
+		cmdList->IASetPrimitiveTopology(renderObject->psoConfig_.topology);
+
+		// 4) CBV・SRVセット
+		const auto& cpuStrage = renderObject->GetCpuStorage();
+		const auto& rootParams = renderObject->GetRootParams();
+
+		for (size_t i = 0; i < rootParams.size(); ++i)
+		{
+			const auto& param = rootParams[i];
+
+			if (param.paramType == ParamType::CBV)
+			{
+				const auto alloc = cb.Allocate(param.sizeBytes);
+				std::memcpy(alloc.cpu, cpuStrage.data() + param.offsetBytes, param.sizeBytes);
+				cmdList->SetGraphicsRootConstantBufferView(static_cast<UINT>(i), alloc.gpu);
+			}
+			else if (param.paramType == ParamType::SRV)
+			{
+				if (param.isBindless)
+				{
+					cmdList->SetGraphicsRootDescriptorTable(static_cast<UINT>(i),
+						dxManager_->GetDescriptorHeapManager()->GetSRV_UAVManager()->GetGPUHandleAt(0)
+					);
+				}
+				else
+				{
+					cmdList->SetGraphicsRootDescriptorTable(static_cast<UINT>(i), param.srvGpuHandle);
+				}
+			}
+		}
+
+		// モデルの検索
+		const ModelData* obj = resourceManager_->GetModelManager()->GetModelData(renderObject->modelID);
+		if (!obj) continue;
+		// 頂点数の取得
+		const uint32_t kSumVertex = static_cast<uint32_t>(obj->vertices.size());
+		// 5)頂点バッファをバインド
+		cmdList->IASetVertexBuffers(0, 1, &obj->vertexBufferView);
+
+		// 6)描画
+		cmdList->DrawInstanced(kSumVertex, 1, 0, 0);
+	}
+}
 
 void DrawSystem::AddDebugLineList(const Vector3& start, const Vector3& end, uint32_t color)
 {
@@ -228,53 +294,6 @@ void DrawSystem::AddAABB(const AABB& aabb, uint32_t color)
 }
 
 
-void DrawSystem::DrawRenderObject(RenderObject* renderObject)
-{
-	auto* cmdList = dxManager_->GetCommandContextManager()->GetCommandList();
-	auto& cb = cbAllocators_[GetFrameIndex()];
-
-	// 1) RootSignature / PSO をセット（自動生成＆キャッシュ）
-	cmdList->SetGraphicsRootSignature(dxManager_->GetPipelineStateManager()->GetOrCreateRootSignature(renderObject->GetRootParams()).Get());
-	cmdList->SetPipelineState(dxManager_->GetPipelineStateManager()->GetOrCreateGraphicsPipelineState(renderObject->psoConfig_, renderObject->GetRootParams()).Get());
-
-	// 2) トポロジーをセット
-	cmdList->IASetPrimitiveTopology(renderObject->psoConfig_.topology);
-
-	// 3) RootParameterをセット
-	const auto& cpuStrage = renderObject->GetCpuStorage();
-	const auto& rootParams = renderObject->GetRootParams();
-
-
-	UINT rootSlot = 0;
-
-	for (size_t i = 0; i < rootParams.size(); ++i)
-	{
-		const auto& param = rootParams[i];
-		rootSlot = static_cast<UINT>(i);
-
-		if (param.paramType == ParamType::CBV)
-		{
-			const auto alloc = cb.Allocate(param.sizeBytes);
-			std::memcpy(alloc.cpu, cpuStrage.data() + param.offsetBytes, param.sizeBytes);
-			cmdList->SetGraphicsRootConstantBufferView(rootSlot, alloc.gpu);
-		}
-		else if (param.paramType == ParamType::SRV)
-		{
-			cmdList->SetGraphicsRootDescriptorTable(rootSlot, param.srvGpuHandle);
-		}
-	}
-
-	// モデルの検索
-	const Object3D* obj = dxManager_->GetResourceManager()->GetModelManager()->GetModelData(renderObject->modelID);
-	if (!obj) return;
-	// 頂点数の取得
-	const uint32_t kSumVertex = static_cast<uint32_t>(obj->modelData.vertices.size());
-	// 頂点バッファをバインド
-	cmdList->IASetVertexBuffers(0, 1, &obj->vertexBufferView);
-
-	// 描画
-	cmdList->DrawInstanced(kSumVertex, 1, 0, 0);
-}
 //
 //void DrawSystem::DrawAllModel()
 //{
@@ -324,11 +343,11 @@ void DrawSystem::DrawRenderObject(RenderObject* renderObject)
 //		if (drawCallIndex_ >= kMaxDrawCallPerFrame_)continue;
 //
 //		// モデルの検索
-//		const Object3D* obj = dxManager_->GetResourceManager()->GetModelManager()->GetModelData(renderData->GetModel());
+//		const ModelData* obj = resourceManager_->GetModelManager()->GetModelData(renderData->GetModel());
 //		if (!obj)continue;
 //
 //		// テクスチャの検索
-//		const TextureData* tex = dxManager_->GetResourceManager()->GetTextureManager()->GetTextureData(renderData->GetTexture());
+//		const TextureData* tex = resourceManager_->GetTextureManager()->GetTextureData(renderData->GetTexture());
 //		if (!tex)continue;
 //
 //		// ルートシグネチャを設定
@@ -402,7 +421,7 @@ void DrawSystem::DrawRenderObject(RenderObject* renderObject)
 //		if (drawCallIndex_ >= kMaxDrawCallPerFrame_) continue;
 //
 //		// テクスチャの検索
-//		const TextureData* tex = dxManager_->GetResourceManager()->GetTextureManager()->GetTextureData(renderData->texture);
+//		const TextureData* tex = resourceManager_->GetTextureManager()->GetTextureData(renderData->texture);
 //		if (!tex) continue;
 //
 //		// PSOを設定
@@ -508,7 +527,7 @@ void DrawSystem::DrawRenderObject(RenderObject* renderObject)
 //		if (drawCallIndex_ >= kMaxDrawCallPerFrame_) continue;
 //
 //		// テクスチャの検索
-//		const TextureData* tex = dxManager_->GetResourceManager()->GetTextureManager()->GetTextureData(renderData->texture);
+//		const TextureData* tex = resourceManager_->GetTextureManager()->GetTextureData(renderData->texture);
 //		if (!tex) continue;
 //
 //		// PSOを設定
@@ -620,7 +639,7 @@ void DrawSystem::DrawRenderObject(RenderObject* renderObject)
 //		if (drawCallIndex_ >= kMaxDrawCallPerFrame_) continue;
 //
 //		// テクスチャの検索
-//		const TextureData* tex = dxManager_->GetResourceManager()->GetTextureManager()->GetTextureData(renderData->texture);
+//		const TextureData* tex = resourceManager_->GetTextureManager()->GetTextureData(renderData->texture);
 //		if (!tex) continue;
 //
 //		// PSOを設定
@@ -1145,11 +1164,11 @@ void DrawSystem::DrawRenderObject(RenderObject* renderObject)
 //		if (renderData->GetCurrentSum() == 0) continue;
 //
 //		// モデルの検索
-//		Object3D* obj = dxManager_->GetResourceManager()->GetModelManager()->GetModelData(renderData->model);
+//		ModelData* obj = resourceManager_->GetModelManager()->GetModelData(renderData->model);
 //		if (!obj) continue;
 //
 //		// テクスチャの検索
-//		const TextureData* tex = dxManager_->GetResourceManager()->GetTextureManager()->GetTextureData(renderData->texture);
+//		const TextureData* tex = resourceManager_->GetTextureManager()->GetTextureData(renderData->texture);
 //		if (!tex) continue;
 //
 //		// RootSignatureとPSOを設定
@@ -1200,13 +1219,13 @@ void DrawSystem::DrawRenderObject(RenderObject* renderObject)
 //		}
 //
 //		// モデルの検索
-//		Object3D* obj = dxManager_->GetResourceManager()->GetModelManager()->GetModelData(renderData->model);
+//		ModelData* obj = resourceManager_->GetModelManager()->GetModelData(renderData->model);
 //		if (!obj) continue;
 //
 //		// テクスチャの検索
-//		const TextureData* tex = dxManager_->GetResourceManager()->GetTextureManager()->GetTextureData(renderData->texture);
+//		const TextureData* tex = resourceManager_->GetTextureManager()->GetTextureData(renderData->texture);
 //		if (!tex) continue;
-//		const TextureData* tex2 = dxManager_->GetResourceManager()->GetTextureManager()->GetTextureData(renderData->breakTexture);
+//		const TextureData* tex2 = resourceManager_->GetTextureManager()->GetTextureData(renderData->breakTexture);
 //		if (!tex2) continue;
 //
 //		if (baseAtlasInfoData_)

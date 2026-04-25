@@ -1,21 +1,22 @@
 #include "Engine.h"
-#include "Utilities/Easing/Easing.h"
 #include "Utilities/functions.h"
 #include <cstdint>
 
-#include "IO/MouseController.h"
-#include "IO/IOManager.h"
-#include "Window/WindowManager.h"
-#include "DirectX/DirectXManager.h"
-#include "Facade/Game.h"
-#include "Resource/Texture/TextureManager.h"
-#include "DrawSystem/DrawSystem.h"
-#include "Camera/CameraManager.h"
-#include "imGuiManager/ImGuiManager.h"
-#include "Physics/PhysicsSystem.h"
+#include <IO/MouseController.h>
+#include <IO/IOManager.h>
+#include <Window/WindowManager.h>
+#include <DirectX/DirectXManager.h>
+#include <Facade/Game.h>
+#include <Resource/ResourceManager.h>
+#include <DrawSystem/DrawSystem.h>
+#include <Camera/CameraManager.h>
+#include <imGuiManager/ImGuiManager.h>
+#include <Physics/PhysicsSystem.h>
+#include <DrawSystem/RenderData/RenderObject.h>
 
-#include <filesystem>
 using namespace DirectX;
+
+
 
 
 Engine& Engine::Instance()
@@ -35,7 +36,8 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 
 	windowManager_ = std::make_unique<WindowManager>(width, height, title);
 	dxManager_ = std::make_unique<DirectXManager>(windowManager_->GetHwnd());
-	drawSystem_ = std::make_unique<DrawSystem>(dxManager_.get());
+	resourceManager_ = std::make_unique<ResourceManager>(dxManager_->GetCommandContextManager()->GetCommandList(), dxManager_->GetDescriptorHeapManager(), dxManager_->GetDevice());
+	drawSystem_ = std::make_unique<DrawSystem>(dxManager_.get(), resourceManager_.get());
 	cameraManager_ = std::make_unique<CameraManager>();
 	ioManager_ = std::make_unique<IOManager>(windowManager_->GetHwnd(), cameraManager_.get());
 	imguiManager_ = std::make_unique<ImGuiManager>();
@@ -47,6 +49,7 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 
 
 	dxManager_->BeginFrame();
+	Game::Resource::LoadTexture("resources/Prototypes/texture/uvChecker.png");
 	//ResourceID::reload();
 	dxManager_->EndFrame();
 }
@@ -117,7 +120,7 @@ void Engine::UpdateTransforms()
 #pragma region 座標更新 & 描画範囲内判定
 
 	// オブジェクト更新
-	std::vector<Object3D> objects = dxManager_->GetResourceManager()->GetModelManager()->GetModelList();
+	std::vector<ModelData> objects = resourceManager_->GetModelManager()->GetModelList();
 
 	//for (auto& rd : modelList)
 	//{
@@ -283,61 +286,47 @@ void Engine::Finalize()
 // リソース読み込み
 uint32_t Engine::LoadTexture(const std::string& filePath)
 {
-	return dxManager_->GetResourceManager()->GetTextureManager()->LoadTexture(filePath);
+	return resourceManager_->GetTextureManager()->LoadTexture(filePath);
 }
-uint32_t Engine::LoadModel(const std::string& directoryPath, const std::string& filename)
+uint32_t Engine::LoadModel(const std::string& filename)
 {
-	return dxManager_->GetResourceManager()->GetModelManager()->LoadModel(directoryPath, filename);
+	return resourceManager_->GetModelManager()->LoadModel(filename);
 }
 uint32_t Engine::LoadAudio(const std::string& filePath)
 {
-	return dxManager_->GetResourceManager()->GetAudioManager()->LoadAudio(filePath);
+	return resourceManager_->GetAudioManager()->LoadAudio(filePath);
 }
-Object3D* Engine::GetModelData(uint32_t modelNumber)
+
+ModelData* Engine::GetModelData(uint32_t modelID)
 {
-	return dxManager_->GetResourceManager()->GetModelManager()->GetModelData(modelNumber);
+	return resourceManager_->GetModelManager()->GetModelData(modelID);
 }
-TextureData* Engine::GetTextureData(uint32_t textureNumber)
+TextureData* Engine::GetTextureData(uint32_t textureID)
 {
-	return dxManager_->GetResourceManager()->GetTextureManager()->GetTextureData(textureNumber);
+	return resourceManager_->GetTextureManager()->GetTextureData(textureID);
 }
+AudioData* Engine::GetAudioData(uint32_t audioID)
+{
+	return resourceManager_->GetAudioManager()->GetAudioData(audioID);
+}
+
 size_t Engine::GetTextureCount()
 {
-	return dxManager_->GetResourceManager()->GetTextureManager()->GetTextureCount();
+	return resourceManager_->GetTextureManager()->GetTextureCount();
 }
 size_t Engine::GetModelCount()
 {
-	return dxManager_->GetResourceManager()->GetModelManager()->GetModelCount();
+	return resourceManager_->GetModelManager()->GetModelCount();
+}
+size_t Engine::GetAudioCount()
+{
+	return resourceManager_->GetAudioManager()->GetAudioCount();
 }
 
 // 描画
-void Engine::AddModelDrawList(RenderData_Model* renderData)
+void Engine::AddDrawList(const RenderObject* renderObject)
 {
-	//drawSystem_->AddModelDrawList(renderData);
-}
-void Engine::AddTriangleDrawList(RenderData_Triangle* renderData)
-{
-	//drawSystem_->AddTriangleDrawList(renderData);
-}
-void Engine::AddRectDrawList(RenderData_Rect* renderData)
-{
-	//drawSystem_->AddRectDrawList(renderData);
-}
-void Engine::AddSpriteDrawList(RenderData_Sprite* renderData)
-{
-	//drawSystem_->AddSpriteDrawList(renderData);
-}
-void Engine::AddLineDrawList(RenderData_Line* renderData)
-{
-	//drawSystem_->AddLineDrawList(renderData);
-}
-void Engine::AddParticleDrawList(RenderData_Particle* renderData)
-{
-	//drawSystem_->AddParticleDrawList(renderData);
-}
-void Engine::AddBlockDrawList(RenderData_Block* renderData)
-{
-	//drawSystem_->AddBlockDrawList(renderData);
+	drawSystem_->AddDrawList(renderObject);
 }
 
 void Engine::AddSphere(const Sphere& sphere, uint32_t color)
@@ -369,31 +358,31 @@ bool Engine::InFrustum(const AABB& aabb)
 // 音
 void Engine::PlayAudio(const uint32_t& audioId, bool loop)
 {
-	dxManager_->GetResourceManager()->GetAudioManager()->PlayAudio(audioId, loop);
+	resourceManager_->GetAudioManager()->PlayAudio(audioId, loop);
 }
 void Engine::StopAudio(const uint32_t& audioId)
 {
-	dxManager_->GetResourceManager()->GetAudioManager()->StopAudio(audioId);
+	resourceManager_->GetAudioManager()->StopAudio(audioId);
 }
 void Engine::SetAudioVolume(const uint32_t& audioId, float volume)
 {
-	dxManager_->GetResourceManager()->GetAudioManager()->SetVolume(audioId, volume);
+	resourceManager_->GetAudioManager()->SetVolume(audioId, volume);
 }
 void Engine::SetMasterVolume(float volume)
 {
-	dxManager_->GetResourceManager()->GetAudioManager()->SetMasterVolume(volume);
+	resourceManager_->GetAudioManager()->SetMasterVolume(volume);
 }
 float Engine::GetVolume(const uint32_t& audioId)
 {
-	return dxManager_->GetResourceManager()->GetAudioManager()->GetVolume(audioId);
+	return resourceManager_->GetAudioManager()->GetVolume(audioId);
 }
 float Engine::GetMasterVolume()
 {
-	return dxManager_->GetResourceManager()->GetAudioManager()->GetMasterVolume();
+	return resourceManager_->GetAudioManager()->GetMasterVolume();
 }
 bool Engine::IsAudioPlaying(const uint32_t& audioId)
 {
-	return dxManager_->GetResourceManager()->GetAudioManager()->IsAudioPlaying(audioId);
+	return resourceManager_->GetAudioManager()->IsAudioPlaying(audioId);
 }
 
 // ライト
@@ -576,7 +565,7 @@ float Engine::GetDeltaTime()
 {
 	float dt = dxManager_->GetFixFPS()->GetDeltaTime();
 
-	// alt-tab / ウィンドウドラッグ等で巨大dtが出るのを防ぐ
+	// ブレークポイントで止めたときなどに、くそでかデルタタイムが出るのを防止
 	constexpr float kMaxDt = 0.1f; // 100ms
 	if (dt < 0.0f) dt = 0.0f;
 	if (dt > kMaxDt) dt = kMaxDt;
@@ -633,55 +622,44 @@ void Engine::ToggleFullscreen()
 }
 
 // CreateLocalAABBでつくったAABBに座標を適応させる（当たり判定の毎フレーム更新用）
-std::vector<AABB>  Engine::CreateAABB(RenderData_Model* data)
-{
-	//if (data->GetModel() < 0 || data->GetModel() >= (int)dxManager_->GetResourceManager()->GetModelManager()->GetModelCount())
-	//{
-	//	return {};
-	//}
-	//Matrix4x4 worldMatrix = data->GetWorldMatrix();
-	//Object3D& obj = dxManager_->GetResourceManager()->GetModelManager()->GetModelList()[data->GetModel()];
-	std::vector<AABB> result;
-
-	//for (const auto& localAABB : obj.aabb)
-	//{
-	//	// ローカルAABBの8頂点
-	//	Vector3 corners[8] = {
-	//		{localAABB.min.x, localAABB.min.y, localAABB.min.z},
-	//		{localAABB.max.x, localAABB.min.y, localAABB.min.z},
-	//		{localAABB.min.x, localAABB.max.y, localAABB.min.z},
-	//		{localAABB.max.x, localAABB.max.y, localAABB.min.z},
-	//		{localAABB.min.x, localAABB.min.y, localAABB.max.z},
-	//		{localAABB.max.x, localAABB.min.y, localAABB.max.z},
-	//		{localAABB.min.x, localAABB.max.y, localAABB.max.z},
-	//		{localAABB.max.x, localAABB.max.y, localAABB.max.z},
-	//	};
-
-	//	// 8頂点をワールド空間に変換
-	//	Vector3 worldMin = Transform(corners[0], worldMatrix);
-	//	Vector3 worldMax = worldMin;
-	//	for (int i = 1; i < 8; ++i)
-	//	{
-	//		Vector3 v = Transform(corners[i], worldMatrix);
-	//		worldMin.x = my_min(worldMin.x, v.x);
-	//		worldMin.y = my_min(worldMin.y, v.y);
-	//		worldMin.z = my_min(worldMin.z, v.z);
-	//		worldMax.x = my_max(worldMax.x, v.x);
-	//		worldMax.y = my_max(worldMax.y, v.y);
-	//		worldMax.z = my_max(worldMax.z, v.z);
-	//	}
-	//	result.push_back({ worldMin, worldMax });
-	//}
-	return result;
-}
-
-void Engine::toggleWireframeMode()
-{
-	drawSystem_->toggleWireframeMode();
-}
-
-
-const std::vector<Object3D> Engine::GetAllObject3D()
-{
-	return dxManager_->GetResourceManager()->GetModelManager()->GetModelList();
-}
+//std::vector<AABB>  Engine::CreateAABB(RenderData_Model* data)
+//{
+//	//if (data->GetModel() < 0 || data->GetModel() >= (int)resourceManager_->GetModelManager()->GetModelCount())
+//	//{
+//	//	return {};
+//	//}
+//	//Matrix4x4 worldMatrix = data->GetWorldMatrix();
+//	//ModelData& obj = resourceManager_->GetModelManager()->GetModelList()[data->GetModel()];
+//	std::vector<AABB> result;
+//
+//	//for (const auto& localAABB : obj.aabb)
+//	//{
+//	//	// ローカルAABBの8頂点
+//	//	Vector3 corners[8] = {
+//	//		{localAABB.min.x, localAABB.min.y, localAABB.min.z},
+//	//		{localAABB.max.x, localAABB.min.y, localAABB.min.z},
+//	//		{localAABB.min.x, localAABB.max.y, localAABB.min.z},
+//	//		{localAABB.max.x, localAABB.max.y, localAABB.min.z},
+//	//		{localAABB.min.x, localAABB.min.y, localAABB.max.z},
+//	//		{localAABB.max.x, localAABB.min.y, localAABB.max.z},
+//	//		{localAABB.min.x, localAABB.max.y, localAABB.max.z},
+//	//		{localAABB.max.x, localAABB.max.y, localAABB.max.z},
+//	//	};
+//
+//	//	// 8頂点をワールド空間に変換
+//	//	Vector3 worldMin = Transform(corners[0], worldMatrix);
+//	//	Vector3 worldMax = worldMin;
+//	//	for (int i = 1; i < 8; ++i)
+//	//	{
+//	//		Vector3 v = Transform(corners[i], worldMatrix);
+//	//		worldMin.x = my_min(worldMin.x, v.x);
+//	//		worldMin.y = my_min(worldMin.y, v.y);
+//	//		worldMin.z = my_min(worldMin.z, v.z);
+//	//		worldMax.x = my_max(worldMax.x, v.x);
+//	//		worldMax.y = my_max(worldMax.y, v.y);
+//	//		worldMax.z = my_max(worldMax.z, v.z);
+//	//	}
+//	//	result.push_back({ worldMin, worldMax });
+//	//}
+//	return result;
+//}

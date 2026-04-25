@@ -240,7 +240,7 @@
     <ClCompile Include="src\engine\DirectX\DirectXManager.cpp">
       <Filter>src\engine\DirectX</Filter>
     </ClCompile>
-    <ClCompile Include="src\engine\DirectX\PipelineStateManager.cpp">
+    <ClCompile Include="src\engine\DirectX\Pipeline\PipelineStateManager\PipelineStateManager.cpp">
       <Filter>src\engine\DirectX</Filter>
     </ClCompile>
     <ClCompile Include="src\engine\DirectX\SwapChainManager.cpp">
@@ -347,6 +347,7 @@
     <ClCompile Include="src\engine\Utilities\Converter\ColorConverter\ColorConverter.cpp" />
     <ClCompile Include="src\engine\Utilities\Converter\AngleConverter\AngleConverter.cpp" />
     <ClCompile Include="src\engine\Utilities\Random\Random.cpp" />
+    <ClCompile Include="src\engine\DirectX\Pipeline\ShaderReflectionHelper\ShaderReflectionHelper.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="externals\Shigemori\Binary\BinaryManager.h">
@@ -397,7 +398,7 @@
     <ClInclude Include="src\engine\DirectX\DirectXManager.h">
       <Filter>src\engine\DirectX</Filter>
     </ClInclude>
-    <ClInclude Include="src\engine\DirectX\PipelineStateManager.h">
+    <ClInclude Include="src\engine\DirectX\Pipeline\PipelineStateManager\PipelineStateManager.h">
       <Filter>src\engine\DirectX</Filter>
     </ClInclude>
     <ClInclude Include="src\engine\DirectX\SwapChainManager.h">
@@ -505,6 +506,7 @@
     <ClInclude Include="src\engine\Utilities\Converter\ColorConverter\ColorConverter.h" />
     <ClInclude Include="src\engine\Utilities\Converter\AngleConverter\AngleConverter.h" />
     <ClInclude Include="src\engine\Utilities\Random\Random.h" />
+    <ClInclude Include="src\engine\DirectX\Pipeline\ShaderReflectionHelper\ShaderReflectionHelper.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

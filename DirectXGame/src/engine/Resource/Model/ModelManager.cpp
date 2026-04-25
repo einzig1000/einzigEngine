@@ -13,15 +13,18 @@ ModelManager::~ModelManager()
 {}
 
 
-int32_t ModelManager::LoadModel(const std::string& directoryPath, const std::string& filename)
+int32_t ModelManager::LoadModel(const std::string& filePath)
 {
-    const std::string directory = directoryPath.ends_with("/") ? directoryPath : (directoryPath + "/");
+    auto path = std::filesystem::path(filePath);
 
-    auto path = directory + filename;
+	// ディレクトリ名
+	std::string directory = path.parent_path().string();
+	// 拡張子を除いたファイル名
+	std::string stem = path.stem().string();
 
     auto exists = std::find_if(
         objects.begin(), objects.end(),
-        [&path](const Object3D& model) { return model.filePath == path; }
+        [&filePath](const ModelData& model) { return model.filePath == filePath; }
     );
     if (exists != objects.end())
     {
@@ -29,33 +32,27 @@ int32_t ModelManager::LoadModel(const std::string& directoryPath, const std::str
     }
 
     // ボックスを作成
-    Object3D obj;
+    ModelData obj;
     // モデルデータ
-    obj.modelData = LoadModelFile(directory, filename);
+    obj.vertices = LoadModelFile(filePath);
     // AABB .obj → .csv へ拡張子を変換して渡す
-    std::string csvFilename = filename;
-    size_t dotPos = csvFilename.rfind('.');
-    if (dotPos != std::string::npos)
-        csvFilename.replace(dotPos, csvFilename.length() - dotPos, ".csv");
-    else
-        csvFilename += ".csv";
-    csvFilename = directoryPath + csvFilename;
-    obj.aabb = LoadAABB(csvFilename, obj.modelData);
+	std::string csvFilename = directory + "/" + stem + ".csv";
+    obj.aabb = LoadAABB(csvFilename, obj.vertices);
     // 識別ナンバー
     obj.number = static_cast<uint32_t>(objects.size());
     // ファイルパス
-    obj.filePath = path;
+    obj.filePath = filePath;
 
-    // まず空のObject3Dをvectorに追加し、参照を取得
+    // まず空のModelDataをvectorに追加し、参照を取得
     objects.push_back(obj);
-    Object3D& ref = objects.back();
+    ModelData& ref = objects.back();
 
     // 頂点バッファ作成
-    ref.vertexBufferSize = sizeof(VertexData) * UINT(ref.modelData.vertices.size());
+    ref.vertexBufferSize = sizeof(VertexData) * UINT(ref.vertices.size());
     ref.vertexBuffer = Dx12ResourceFactory::CreateBufferResource(device_, ref.vertexBufferSize);
     VertexData* vData = nullptr;
     ref.vertexBuffer->Map(0, nullptr, reinterpret_cast<void**>(&vData));
-    std::memcpy(vData, ref.modelData.vertices.data(), ref.vertexBufferSize);
+    std::memcpy(vData, ref.vertices.data(), ref.vertexBufferSize);
     ref.vertexBuffer->Unmap(0, nullptr);
 
     ref.vertexBufferView.BufferLocation = ref.vertexBuffer->GetGPUVirtualAddress();
@@ -65,10 +62,11 @@ int32_t ModelManager::LoadModel(const std::string& directoryPath, const std::str
     return ref.number;
 }
 
-Object3D* ModelManager::GetModelData(int32_t modelID)
+ModelData* ModelManager::GetModelData(int32_t modelID)
 {
     if (modelID < 0)
     {
+        Log("存在しないモデルIDです:%d", modelID);
         return &objects[0];
     }
 
@@ -86,28 +84,28 @@ Object3D* ModelManager::GetModelData(int32_t modelID)
 
 
 // AABB.csvの読み込み & 存在しなければ作成,保存
-std::vector<AABB> ModelManager::LoadAABB(const std::string& csvPath, const ModelData& model)
+std::vector<AABB> ModelManager::LoadAABB(const std::string& filePath, const std::vector<VertexData>& vertices)
 {
 	std::vector<AABB> aabbs;
-	if (std::filesystem::exists(csvPath))
+	if (std::filesystem::exists(filePath))
 	{
-		aabbs = LoadAABBFromCSV(csvPath);
+		aabbs = LoadAABBFromCSV(filePath);
 	}
 	else
 	{
 		// 今までの方法でAABBを1つ作成
-		AABB aabb = CreateLocalAABB(model);
+		AABB aabb = CreateLocalAABB(vertices);
 		aabbs.push_back(aabb);
-		SaveAABBToCSV(csvPath, aabbs);
+		SaveAABBToCSV(filePath, aabbs);
 	}
 	return aabbs;
 }
 
 // AABB.csvの読み込み
-std::vector<AABB> ModelManager::LoadAABBFromCSV(const std::string& csvPath)
+std::vector<AABB> ModelManager::LoadAABBFromCSV(const std::string& filePath)
 {
     std::vector<AABB> aabbs;
-    std::ifstream file(csvPath);
+    std::ifstream file(filePath);
     if (!file.is_open()) return aabbs;
 
     std::string line;
@@ -135,7 +133,7 @@ std::vector<AABB> ModelManager::LoadAABBFromCSV(const std::string& csvPath)
 }
 
 // AABBの作成
-AABB ModelManager::CreateLocalAABB(const ModelData& model)
+AABB ModelManager::CreateLocalAABB(const std::vector<VertexData>& vertices)
 {
 	AABB localAABB;
 
@@ -147,7 +145,7 @@ AABB ModelManager::CreateLocalAABB(const ModelData& model)
 	localAABB.max.x = std::numeric_limits<float>::lowest();
 
 	// 頂点データ空だったらエラー出すべきだけどunityシステムあるかもだから落とさない
-	if (model.vertices.empty())
+	if (vertices.empty())
 	{
 		localAABB.min = { 0.0f, 0.0f, 0.0f };
 		localAABB.max = { 0.0f, 0.0f, 0.0f };
@@ -155,7 +153,7 @@ AABB ModelManager::CreateLocalAABB(const ModelData& model)
 	}
 
 	// 全ての頂点を調べてAABBの最小値と最大値を更新
-	for (const auto& vertex : model.vertices)
+	for (const auto& vertex : vertices)
 	{
 		// 各軸の最小値を更新
 		if (vertex.position.x < localAABB.min.x) localAABB.min.x = vertex.position.x;
@@ -172,9 +170,9 @@ AABB ModelManager::CreateLocalAABB(const ModelData& model)
 }
 
 // AABB.csvの作成、保存
-void ModelManager::SaveAABBToCSV(const std::string& csvPath, const std::vector<AABB>& aabbs)
+void ModelManager::SaveAABBToCSV(const std::string& filePath, const std::vector<AABB>& aabbs)
 {
-    std::ofstream file(csvPath);
+    std::ofstream file(filePath);
     file << "min_x,min_y,min_z,max_x,max_y,max_z\n";
     for (const auto& aabb : aabbs)
     {
@@ -183,24 +181,19 @@ void ModelManager::SaveAABBToCSV(const std::string& csvPath, const std::vector<A
     }
 }
 
+
 // mtlファイルを読み込む関数
-std::string ModelManager::LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename)
+MaterialData ModelManager::LoadMaterialTemplateFile(const std::string& filePath)
 {
-    /////////////////
-    // 変数宣言
-    /////////////////
-    std::string filePath;
+	MaterialData materialData;
+
     std::string line;
 
-    /////////////////
     // ファイルを開く
-    /////////////////
-    std::ifstream file(directoryPath + "/" + filename);
+    std::ifstream file(filePath);
     assert(file.is_open());
 
-    /////////////////
     // MaterialDataを構築する
-    /////////////////
     while (std::getline(file, line))
     {
         std::string identifier;
@@ -212,23 +205,20 @@ std::string ModelManager::LoadMaterialTemplateFile(const std::string& directoryP
         {
             std::string textureFilename;
             s >> textureFilename;
-            filePath = directoryPath + "/" + textureFilename;
         }
     }
 
-    /////////////////
     // 構築したMaterialDataをreturnする
-    /////////////////
-    return filePath;
+	return materialData;
 }
 
 // objファイルを読み込む関数
-ModelData ModelManager::LoadModelFile(const std::string& directoryPath, const std::string& filename)
+std::vector<VertexData> ModelManager::LoadModelFile(const std::string& filePath)
 {
     /////////////////
     // 変数宣言
     /////////////////
-    ModelData modelData;
+    std::vector<VertexData> vertices;
     std::vector<Vector4> positions;
     std::vector<Vector3> normals;
     std::vector<Vector2> texcoords;
@@ -237,11 +227,11 @@ ModelData ModelManager::LoadModelFile(const std::string& directoryPath, const st
     /////////////////
     // ファイルをひらく
     /////////////////
-    std::ifstream file(directoryPath + "/" + filename);
+    std::ifstream file(filePath);
     assert(file.is_open());
 
     /////////////////
-    // ModelDataを構築する
+    // VertexAndMaterialDataを構築する
     /////////////////
     while (std::getline(file, line))
     {
@@ -322,9 +312,9 @@ ModelData ModelManager::LoadModelFile(const std::string& directoryPath, const st
                 }
 
                 // 頂点の順序を逆にして追加（右手系→左手系変換のため）
-                modelData.vertices.push_back(triangle[2]);
-                modelData.vertices.push_back(triangle[1]);
-                modelData.vertices.push_back(triangle[0]);
+                vertices.push_back(triangle[2]);
+                vertices.push_back(triangle[1]);
+                vertices.push_back(triangle[0]);
             }
         }
 
@@ -340,7 +330,7 @@ ModelData ModelManager::LoadModelFile(const std::string& directoryPath, const st
     }
 
     /////////////////
-    // 構築したModelDataをreturnする
+    // 構築したVertexAndMaterialDataをreturnする
     /////////////////
-    return modelData;
+	return vertices;
 }

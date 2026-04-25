@@ -2,14 +2,18 @@
 #pragma comment(lib, "mfreadwrite.lib")
 #pragma comment(lib, "mfuuid.lib")
 
-
-#include "Resource/Audio/AudioManager.h"
+#include <Resource/Audio/AudioManager.h>
 #include <Windows.h>
 #include <string>
-
-
 #include <Utilities/Logger/Logger.h>
 #include <Utilities/Converter/StringConverter/StringConverter.h>
+#include <mfapi.h>
+#include <mfidl.h>
+#include <mferror.h>
+#include <mfreadwrite.h>
+#include <atomic>
+#include <sdkddkver.h>
+
 
 
 // x
@@ -25,7 +29,7 @@ AudioManager::~AudioManager()
 {
     for (auto& pair : loadedAudio)
     {
-        CleanupAudioEntry(pair.second);
+        CleanupAudioData(pair.second);
     }
     loadedAudio.clear();
 
@@ -82,7 +86,7 @@ HRESULT AudioManager::Initialize()
 uint32_t AudioManager::LoadAudio(const std::string& filePath)
 {
     static uint32_t nextAudioId = 0;
-    AudioEntry entry = {};
+    AudioData entry = {};
     HRESULT hr = S_OK;
 
 
@@ -255,13 +259,28 @@ uint32_t AudioManager::LoadAudio(const std::string& filePath)
     return id;
 }
 
+AudioData* AudioManager::GetAudioData(uint32_t audioId)
+{
+    auto it = loadedAudio.find(audioId);
+	if (it != loadedAudio.end())
+    {
+        return &it->second;
+    }
+    else
+    {
+        Log("存在しないオーディオIDのデータを取得しました。ID: %u", audioId);
+        assert(0);
+        return nullptr;
+    }
+}
+
 // 再生
 void AudioManager::PlayAudio(const uint32_t& audioId, bool loop)
 {
     auto it = loadedAudio.find(audioId);
     if (it != loadedAudio.end())
     {
-        AudioEntry& entry = it->second;
+        AudioData& entry = it->second;
 
         // すでに再生中であれば停止
         entry.pSourceVoice->Stop(0);
@@ -381,7 +400,7 @@ bool AudioManager::IsAudioPlaying(const uint32_t& audioId)
     auto it = loadedAudio.find(audioId);
     if (it != loadedAudio.end())
     {
-        AudioEntry& entry = it->second;
+        AudioData& entry = it->second;
         if (entry.pSourceVoice)
         {
             XAUDIO2_VOICE_STATE state;
@@ -412,7 +431,7 @@ bool AudioManager::IsAudioPlaying(const uint32_t& audioId)
 
 
 // 解放のループ内でたくさん使う
-void AudioManager::CleanupAudioEntry(AudioEntry& entry)
+void AudioManager::CleanupAudioData(AudioData& entry)
 {
     if (entry.pSourceVoice)
     {
