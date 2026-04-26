@@ -301,8 +301,6 @@ Microsoft::WRL::ComPtr<ID3D12RootSignature> PipelineStateManager::CreateRootSign
     std::vector<D3D12_DESCRIPTOR_RANGE> srvRanges;
 	srvRanges.resize(srvCount);
 
-    UINT cbvReg = 0;
-    UINT srvReg = 0;
     size_t srvIndex = 0;
 
     for (size_t i = 0; i < params.size(); ++i)
@@ -312,7 +310,8 @@ Microsoft::WRL::ComPtr<ID3D12RootSignature> PipelineStateManager::CreateRootSign
         if (params[i].paramType == ParamType::CBV)
         {
             rootParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-            rootParam.Descriptor.ShaderRegister = cbvReg++;
+            const UINT reg = static_cast<UINT>(std::stoi(params[i].key.substr(1)));
+            rootParam.Descriptor.ShaderRegister = reg;
             rootParam.Descriptor.RegisterSpace = 0;
             rootParam.ShaderVisibility = GetShaderVisibilityFromShaderType(params[i].shaderType);
         }
@@ -323,8 +322,16 @@ Microsoft::WRL::ComPtr<ID3D12RootSignature> PipelineStateManager::CreateRootSign
             D3D12_DESCRIPTOR_RANGE& range = srvRanges[srvIndex++];
 
             range.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-            range.BaseShaderRegister = srvReg++;
-            range.NumDescriptors = 1;
+            const UINT reg = static_cast<UINT>(std::stoi(params[i].key.substr(1)));
+            range.BaseShaderRegister = reg;
+            if (params[i].isBindless)
+            {
+                range.NumDescriptors = UINT_MAX;
+            }
+            else
+            {
+                range.NumDescriptors = 1;
+            }
             range.RegisterSpace = 0;
             range.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
@@ -382,26 +389,14 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineStateManager::CreatePipeline
 {
     HRESULT hr;
 
-	std::vector<RootParam> localParams = params;
-
     // シェーダー取得（なければコンパイル）
     std::wstring vsPath = StringConverter::Convert(cfg.vs);
     std::wstring psPath = StringConverter::Convert(cfg.ps);
     auto vsBlob = GetOrCompileShader(vsPath.c_str(), L"vs_6_0");
     auto psBlob = GetOrCompileShader(psPath.c_str(), L"ps_6_0");
 
-	if (ShaderReflection::HasBindlessTextureArray(psBlob.Get()))
-    {
-        // ピクセルシェーダーにbindlessテクスチャ配列がある場合、ルートパラメータに追加する
-        RootParam bindlessSrvParam{};
-        bindlessSrvParam.paramType = ParamType::SRV;
-        bindlessSrvParam.shaderType = ShaderType::PixelShader;
-        bindlessSrvParam.arraySize = UINT_MAX;
-        localParams.push_back(bindlessSrvParam);
-    }
-
     // ルートシグネチャ取得（なければ生成）
-	Microsoft::WRL::ComPtr<ID3D12RootSignature> rs = GetOrCreateRootSignature(localParams);
+	Microsoft::WRL::ComPtr<ID3D12RootSignature> rs = GetOrCreateRootSignature(params);
 
     // 各IDからDESCを取得
     const D3D12_BLEND_DESC blendDesc = MakeBlendDesc(cfg.blendID);

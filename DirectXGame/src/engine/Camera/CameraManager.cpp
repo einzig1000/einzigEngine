@@ -107,7 +107,8 @@ Vector3 CameraManager::GetTranslate(const std::string name) const
 	{
 		if (cam.name_ == name)
 		{
-			return cam.GetTransform().translate;
+			//return cam.GetTransform().translate;
+			return Vector3{};
 		}
 	}
 
@@ -149,12 +150,14 @@ Vector3 CameraManager::GetCurrentCenter() const
 
 Vector3 CameraManager::GetCurrentTranslate() const
 {
-	return camera_[currentCameraID_].GetTransform().translate;
+	//return camera_[currentCameraID_].GetTransform().translate;
+	return Vector3{};
 }
 
 Vector3 CameraManager::GetCurrentRotate() const
 {
-	return camera_[currentCameraID_].GetTransform().rotate;
+	//return camera_[currentCameraID_].GetTransform().rotate;
+	return Vector3{};
 }
 
 Matrix4x4 CameraManager::GetCurrentViewProjectionMatrix() const

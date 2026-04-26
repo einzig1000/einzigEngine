@@ -27,10 +27,6 @@ public:
 
 	void SetupFromShaders();
 
-	// rootIndex を返す
-	int32_t CreateCBV(size_t sizeBytes, ShaderType shaderType, std::string debugName = "");
-	int32_t CreateSRV(size_t sizeBytes, size_t arraySize, ShaderType shaderType, std::string debugName = "");
-
 	void SetCBufferData(const std::string& key, ShaderType shaderType, const void* data);
 	void SetSBufferData(const std::string& key, ShaderType shaderType, const void* data, size_t elementSize, size_t elementCount);
 

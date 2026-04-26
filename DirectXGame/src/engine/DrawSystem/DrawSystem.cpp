@@ -1,6 +1,6 @@
 #include <DrawSystem/DrawSystem.h>
 #include <DirectX/DirectXManager.h>
-#include <Resource/ResourceManager.h>
+#include <ResourceManager/ResourceManager.h>
 #include <Window/WindowManager.h>
 #include <numbers>
 

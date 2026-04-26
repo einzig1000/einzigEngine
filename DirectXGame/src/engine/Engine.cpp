@@ -7,7 +7,7 @@
 #include <Window/WindowManager.h>
 #include <DirectX/DirectXManager.h>
 #include <Facade/Game.h>
-#include <Resource/ResourceManager.h>
+#include <ResourceManager/ResourceManager.h>
 #include <DrawSystem/DrawSystem.h>
 #include <Camera/CameraManager.h>
 #include <imGuiManager/ImGuiManager.h>

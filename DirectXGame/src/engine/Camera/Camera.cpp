@@ -100,7 +100,7 @@ void Camera::Update_Orbit()
 
     if (mouseWheel != 0)
     {
-        currentPosSpherical_.radius -= mouseWheel * 0.1f;
+        currentPosSpherical_.radius -= mouseWheel * 0.01f;
         if (currentPosSpherical_.radius < 1.0f)
         {
             currentPosSpherical_.radius = 1.0f;
@@ -109,30 +109,17 @@ void Camera::Update_Orbit()
 
 #pragma endregion
 
-#pragma region 座標変換
-
-    currentPosCartesian_ = Game::Math::Converter::ToCartesian(currentPosSpherical_);
-
-#pragma endregion
-
 #pragma region カメラ行列計算
 
-    // カメラの位置を設定
-    transform_.translate = (currentPosCartesian_ + center_ + GetShakeOffset());
-    // カメラの回転角度を設定
-    transform_.rotate.x = currentPosSpherical_.phi;
-    transform_.rotate.y = currentPosSpherical_.theta;
-    transform_.rotate.z = 0.0f;
+	// 球面座標 → デカルト座標変換
+    currentPosCartesian_ = Game::Math::Converter::ToCartesian(currentPosSpherical_);
 
-    // カメラ行列を作成
-    Matrix4x4 worldMatrix_ = Matrix4x4::MakeAffineMatrix(
-        { 1,1,1 },
-        transform_.rotate,
-        transform_.translate
-    );
+	// カメラの位置、注視点、上方向ベクトルを設定してビュー行列を作成
+    Vector3 eye = currentPosCartesian_ + center_;// +GetShakeOffset();
+    Vector3 target = center_;
+    Vector3 up = { 0, 1, 0 };
 
-    // ビュー行列を作成
-    viewMatrix_ = (worldMatrix_.Inverse());
+    viewMatrix_ = Matrix4x4::LookAtMatrix(eye, target, up);
 
     // ビュー行列とプロジェクション行列を掛け合わせた行列を作成
     viewProjectionMatrix = viewMatrix_ * projectionMatrix_;
@@ -187,6 +174,9 @@ void Camera::DrawImGui()
     ImGui::DragFloat(distanceTag.c_str(), &currentPosSpherical_.radius, 0.1f);
     ImGui::SameLine();
     ImGui::Text("Distance");
+
+    // 直交座標
+	ImGui::Text("Cartesian Position : %.2f, %.2f, %.2f", currentPosCartesian_.x, currentPosCartesian_.y, currentPosCartesian_.z);
 
 	ImGui::Separator();
 

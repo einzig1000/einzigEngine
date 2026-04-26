@@ -14,7 +14,8 @@ namespace ShaderReflection
         IDxcBlob* shaderBlob,
         ShaderType shaderType,
         std::vector<RootParam>& outParams,
-        size_t& currentCBVOffsetBytes
+        size_t& currentCBVOffsetBytes,
+        uint32_t& currentSRVOffsetIndex
     );
 
 	/// <summary>

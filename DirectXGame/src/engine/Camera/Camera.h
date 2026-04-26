@@ -25,7 +25,6 @@ public:
     Vector3 GetShakeOffset() const;
 
 	// 情報取得
-    Transforms GetTransform() const { return transform_; }
 	Matrix4x4 GetViewProjectionMatrix() const { return viewProjectionMatrix; }
 
     // 視錐台内にAABBがあるか
@@ -91,8 +90,6 @@ private:
 
 	// ビュー行列関連データ
     Matrix4x4 viewMatrix_;
-    Transforms transform_;
-    //Matrix4x4 worldMatrix_;
 
     /// プロジェクション行列関連データ
     Matrix4x4 projectionMatrix_;

@@ -281,13 +281,31 @@ Matrix4x4 Matrix4x4::MakePerspectiveFovMatrix(float fovY, float aspectRatio, flo
 {
     Matrix4x4 Return{};
 
-    float tanHalfFovY = std::tan(fovY / 2.0f);
+    float tanHalfFovY = std::tan(fovY * 0.5f);
     Return.m[0][0] = 1.0f / (aspectRatio * tanHalfFovY);
     Return.m[1][1] = 1.0f / tanHalfFovY;
     Return.m[2][2] = farClip / (farClip - nearClip);
     Return.m[3][2] = (-nearClip * farClip) / (farClip - nearClip);
     Return.m[2][3] = 1.0f;
-	Return.m[3][3] = 0.0f;
+    Return.m[3][3] = 0.0f;
+
+    //float f = 1.0f / std::tan(fovY * 0.5f);
+    //Return.m[0][0] = f / aspectRatio;
+	//Return.m[0][1] = 0.0f;
+	//Return.m[0][2] = 0.0f;
+	//Return.m[0][3] = 0.0f;
+	//Return.m[1][0] = 0.0f;
+    //Return.m[1][1] = f;
+	//Return.m[1][2] = 0.0f;
+	//Return.m[1][3] = 0.0f;
+	//Return.m[2][0] = 0.0f;
+	//Return.m[2][1] = 0.0f;
+	//Return.m[2][2] = farClip / (nearClip - farClip);
+    //Return.m[2][3] = -1.0f;
+	//Return.m[3][0] = 0.0f;
+	//Return.m[3][1] = 0.0f;
+    //Return.m[3][2] = (nearClip * farClip) / (nearClip - farClip);
+    //Return.m[3][3] = 0.0f;
 
     return Return;
 }
@@ -405,6 +423,28 @@ Matrix4x4 Matrix4x4::DirectionToDirectionMatrix(const Vector3& from, const Vecto
 
     axis.Normalize();
 	return MakeRotateAxisMatrix(axis, angle);
+}
+
+Matrix4x4 Matrix4x4::LookAtMatrix(const Vector3& eye, const Vector3& target, const Vector3& up)
+{
+    Vector3 z = (target - eye).Normalize();      // 前方向（左手系は target - eye）
+    Vector3 x = up.Cross(z).Normalize();         // 右方向
+    Vector3 y = z.Cross(x);                      // 上方向（直交化）
+
+    Matrix4x4 m;
+
+    // 回転部分（行ベクトル）
+    m.m[0][0] = x.x;  m.m[0][1] = x.y;  m.m[0][2] = x.z;  m.m[0][3] = -x.Dot(eye);
+    m.m[1][0] = y.x;  m.m[1][1] = y.y;  m.m[1][2] = y.z;  m.m[1][3] = -y.Dot(eye);
+    m.m[2][0] = z.x;  m.m[2][1] = z.y;  m.m[2][2] = z.z;  m.m[2][3] = -z.Dot(eye);
+
+    // 最後の行
+    m.m[3][0] = 0.0f;
+    m.m[3][1] = 0.0f;
+    m.m[3][2] = 0.0f;
+    m.m[3][3] = 1.0f;
+
+    return m;
 }
 
 

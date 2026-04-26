@@ -5,50 +5,42 @@ TestPhase::TestPhase()
 {
 	//int32_t tex1 = Game::Resource::LoadTexture("resources/Prototypes/texture/uvChecker.png");
 
-	int32_t model1 = Game::Resource::LoadModel("resources/Prototypes/model/sphere.obj");
+	int32_t model1 = Game::Resource::LoadModel("resources/Prototypes/model/cube.obj");
 
 	audio1 = Game::Resource::LoadAudio("resources/Prototypes/audio/BGM/InGame.mp3");
 	audio2 = Game::Resource::LoadAudio("resources/Prototypes/audio/SE/バトル用/氷魔法1.mp3");
 
 	renderObject1_ = std::make_unique<RenderObject>();
 	renderObject1_->modelID = model1;
+	renderObject1_->textureID = 1;
 	renderObject1_->psoConfig_.ps = "resources/Shaders/SimpleModel.PS.hlsl";
 	renderObject1_->psoConfig_.vs = "resources/Shaders/SimpleModel.VS.hlsl";
-
-	renderObject1_->CreateCBV(sizeof(Matrix4x4), ShaderType::VertexShader, "wvp");
-	renderObject1_->CreateCBV(sizeof(Vector4), ShaderType::PixelShader, "color");
-	renderObject1_->CreateCBV(sizeof(int32_t), ShaderType::PixelShader, "textureIndex");
-
-	renderObject1_->textureID = 0;
+	renderObject1_->SetupFromShaders();
 
 	transform1_.scale = { 100.0f,100.0f,100.0f };
-	color1_ = Vector4{ 1.0f,0.0f,0.0f,1.0f };
+	color1_ = Vector4{ 1.0f,1.0f,1.0f,1.0f };
 }
-
 
 TestPhase::~TestPhase()
 {
 }
-
 
 void TestPhase::Initialize()
 {
 	nextPhase_ = PHASE::Phase_None;
 }
 
-
 void TestPhase::Update()
 {
-	transform1_.translate = Game::Camera::Getter::GetCurrentCenter();
 	Matrix4x4 worldMatrix = Matrix4x4::MakeAffineMatrix(transform1_.scale, transform1_.rotate, transform1_.translate);
-	Matrix4x4 wvpMatrix = worldMatrix * Game::Camera::Getter::GetCurrentViewProjectionMatrix();
-	renderObject1_->SetBufferData(0, &wvpMatrix);
+	Matrix4x4 viewProjection = Game::Camera::Getter::GetCurrentViewProjectionMatrix();
+	Matrix4x4 wvpMatrix = worldMatrix * viewProjection;
 
-	renderObject1_->SetBufferData(1, &color1_);
 
-	renderObject1_->SetBufferData(2, &renderObject1_->textureID);
+	renderObject1_->SetCBufferData("b0", ShaderType::PixelShader, &color1_);
+	renderObject1_->SetCBufferData("b1", ShaderType::PixelShader, &renderObject1_->textureID);
+	renderObject1_->SetCBufferData("b0", ShaderType::VertexShader, &wvpMatrix);
 }
-
 
 void TestPhase::Draw()
 {
@@ -65,6 +57,17 @@ void TestPhase::DrawImGui()
 		if (ImGui::BeginTabItem("RenderObject Test"))
 		{
 			ImGui::ColorEdit4("color1", &color1_.x, 1);
+			ImGui::DragInt("textureID", &renderObject1_->textureID, 1, 0, 10);
+			ImGui::DragFloat3("scale", &transform1_.scale.x, 0.1f, 0.1f, 100.0f);
+			ImGui::DragFloat3("rotate", &transform1_.rotate.x, 0.1f);
+			ImGui::DragFloat3("translate", &transform1_.translate.x, 0.1f, -100.0f, 100.0f);
+
+			Matrix4x4 viewProjection = Game::Camera::Getter::GetCurrentViewProjectionMatrix();
+			ImGui::Text("viewProjection");
+			ImGui::Text("%5.2f %5.2f %5.2f %5.2f", viewProjection.m[0][0], viewProjection.m[0][1], viewProjection.m[0][2], viewProjection.m[0][3]);
+			ImGui::Text("%5.2f %5.2f %5.2f %5.2f", viewProjection.m[1][0], viewProjection.m[1][1], viewProjection.m[1][2], viewProjection.m[1][3]);
+			ImGui::Text("%5.2f %5.2f %5.2f %5.2f", viewProjection.m[2][0], viewProjection.m[2][1], viewProjection.m[2][2], viewProjection.m[2][3]);
+			ImGui::Text("%5.2f %5.2f %5.2f %5.2f", viewProjection.m[3][0], viewProjection.m[3][1], viewProjection.m[3][2], viewProjection.m[3][3]);
 
 			ImGui::EndTabItem();
 		}

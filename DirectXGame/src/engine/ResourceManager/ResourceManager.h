@@ -1,9 +1,9 @@
 #pragma once
 #include <d3d12.h>
 #include <wrl.h>
-#include "Resource/Audio/AudioManager.h"
-#include "Resource/Texture/TextureManager.h"
-#include "Resource/Model/ModelManager.h"
+#include "ResourceManager/Audio/AudioManager.h"
+#include "ResourceManager/Texture/TextureManager.h"
+#include "ResourceManager/Model/ModelManager.h"
 #include <memory> 
 
 /// <summary>

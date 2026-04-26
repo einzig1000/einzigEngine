@@ -11,12 +11,12 @@ struct PSOutput
     float4 color : SV_TARGET;
 };
 
-cbuffer ColorBuffer : register(b1)
+cbuffer ColorBuffer : register(b0)
 {
     float4 color;
 }
 
-cbuffer TextureIndex : register(b2)
+cbuffer TextureIndex : register(b1)
 {
     int textureIndex;
 };

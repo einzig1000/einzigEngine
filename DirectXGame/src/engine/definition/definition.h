@@ -728,8 +728,10 @@ struct Matrix4x4
     static Matrix4x4 MakeViewPortMatrix(float left, float top, float width, float height, float minD, float maxD);
     // 任意軸回転行列
     static Matrix4x4 MakeRotateAxisMatrix(const Vector3& axis, float radian);
-    // ある方向からある方向に向ける回転行列
+	// ある方向からある方向に向ける回転行列(方向ベクトル同士と方向ベクトル)
 	static Matrix4x4 DirectionToDirectionMatrix(const Vector3& from, const Vector3& to);
+	// カメラの位置と注視点と上方向からビュー行列を作成(座標と座標とベクトル)
+	static Matrix4x4 LookAtMatrix(const Vector3& eye, const Vector3& target, const Vector3& up);
 };
 
 struct Quaternion

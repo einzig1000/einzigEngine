@@ -38,7 +38,7 @@ static float2 ComputeAtlasUV(float2 uvInInner01, uint tileIndex, AtlasInfo info)
     return tileOriginUV + innerOffsetUV + uvInInner01 * innerSizeUV;
 }
 
-VertexShaderOutput main(VertexShaderInput input, uint32_t instancedID : SV_InstanceID)
+VertexShaderOutput main(VertexShaderInput input, uint instancedID : SV_InstanceID)
 {
     VertexShaderOutput output;
 

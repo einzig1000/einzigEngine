@@ -32,16 +32,14 @@ struct RootParam
 	ShaderType shaderType = ShaderType::None;
     std::string key;              // "b0", "b1" など
 
+	// CBuffer用
 	uint32_t sizeBytes = 0;    // 単位サイズ
-
 	uint32_t offsetBytes = 0;  // cpuStorage_ 内オフセット または dynamicSrvStorage_ のインデックス(SRV用)
 
-	uint32_t arraySize = 0;    // 配列サイズ CBVなら1
-
-	bool isStructured = false; // StructuredBufferかどうか (SRV用)
-	bool isBindless = false;   // Bindlessテクスチャ配列かどうか (SRV用)
-
-	D3D12_GPU_DESCRIPTOR_HANDLE srvGpuHandle{}; // Bindlessアーキテクチャや動的SRVで使用するGPU側のハンドル
+	// SRV用
+    D3D12_GPU_DESCRIPTOR_HANDLE srvGpuHandle{}; // Bindlessアーキテクチャや動的SRVで使用するGPU側のハンドル
+	uint32_t srvIndex = 0;      // SRVのインデックス (BindlessでないSRV用)
+	bool isBindless = false;    // Bindlessテクスチャ配列かどうか
 };
 
 // ブレンドステートの種類

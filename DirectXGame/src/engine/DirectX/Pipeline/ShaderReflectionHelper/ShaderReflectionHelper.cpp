@@ -100,7 +100,7 @@ namespace ShaderReflection
 
 
 
-    void BuildRootParamsFromShader(IDxcBlob* shaderBlob, ShaderType shaderType, std::vector<RootParam>& outParams, size_t& currentCBVOffsetBytes)
+    void BuildRootParamsFromShader(IDxcBlob* shaderBlob, ShaderType shaderType, std::vector<RootParam>& outParams, size_t& currentCBVOffsetBytes, uint32_t& currentSRVOffsetIndex)
     {
         Microsoft::WRL::ComPtr<IDxcUtils> dxcUtils;
         HRESULT hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils));
@@ -140,9 +140,10 @@ namespace ShaderReflection
                 RootParam p{};
                 p.paramType = ParamType::CBV;
                 p.shaderType = shaderType;
+                p.key = "b" + std::to_string(bind.BindPoint);
+
                 p.sizeBytes = cbDesc.Size;
                 p.offsetBytes = currentCBVOffsetBytes;
-                p.key = "b" + std::to_string(bind.BindPoint);
 
                 currentCBVOffsetBytes += cbDesc.Size;
                 outParams.push_back(p);
@@ -154,7 +155,9 @@ namespace ShaderReflection
                 p.paramType = ParamType::SRV;
                 p.shaderType = shaderType;
                 p.key = "t" + std::to_string(bind.BindPoint);
-                p.isStructured = true;
+
+				p.srvIndex = currentSRVOffsetIndex;
+                currentSRVOffsetIndex++;
                 outParams.push_back(p);
             }
             else if (bind.Type == D3D_SIT_TEXTURE &&
@@ -164,7 +167,7 @@ namespace ShaderReflection
                 p.paramType = ParamType::SRV;
                 p.shaderType = shaderType;
                 p.key = "t" + std::to_string(bind.BindPoint);
-                p.arraySize = UINT_MAX; // Bindlessテクスチャ配列はサイズ不定
+
 				p.isBindless = true;
                 outParams.push_back(p);
             }
