@@ -18,7 +18,6 @@ public:
 	void UpdateButtonState();	// マウスボタン状態更新
 	void UpdateSensitivity();	// マウス感度の適用
 
-
 	void SetSensitivity(float sensitivity) { mouseSensitivity_ = sensitivity; }	// マウス感度設定
 
 	// 相対移動の蓄積

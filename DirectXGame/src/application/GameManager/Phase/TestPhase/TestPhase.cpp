@@ -3,7 +3,6 @@
 
 TestPhase::TestPhase()
 {
-	//int32_t tex1 = Game::Resource::LoadTexture("resources/Prototypes/texture/uvChecker.png");
 
 	int32_t model1 = Game::Resource::LoadModel("resources/Prototypes/model/cube.obj");
 
@@ -12,7 +11,7 @@ TestPhase::TestPhase()
 
 	renderObject1_ = std::make_unique<RenderObject>();
 	renderObject1_->modelID = model1;
-	renderObject1_->textureID = 1;
+	//renderObject1_->textureID = tex1;
 	renderObject1_->psoConfig_.ps = "resources/Shaders/SimpleModel.PS.hlsl";
 	renderObject1_->psoConfig_.vs = "resources/Shaders/SimpleModel.VS.hlsl";
 	renderObject1_->SetupFromShaders();
@@ -32,14 +31,14 @@ void TestPhase::Initialize()
 
 void TestPhase::Update()
 {
+	int32_t tex1 = Game::Resource::LoadTexture("resources/Prototypes/texture/uvChecker.png");
 	Matrix4x4 worldMatrix = Matrix4x4::MakeAffineMatrix(transform1_.scale, transform1_.rotate, transform1_.translate);
 	Matrix4x4 viewProjection = Game::Camera::Getter::GetCurrentViewProjectionMatrix();
-	Matrix4x4 wvpMatrix = worldMatrix * viewProjection;
-
-
+	
 	renderObject1_->SetCBufferData("b0", ShaderType::PixelShader, &color1_);
-	renderObject1_->SetCBufferData("b1", ShaderType::PixelShader, &renderObject1_->textureID);
-	renderObject1_->SetCBufferData("b0", ShaderType::VertexShader, &wvpMatrix);
+	renderObject1_->SetCBufferData("b1", ShaderType::PixelShader, &tex1);
+	renderObject1_->SetCBufferData("b0", ShaderType::VertexShader, &viewProjection);
+	renderObject1_->SetCBufferData("b1", ShaderType::VertexShader, &worldMatrix);
 }
 
 void TestPhase::Draw()
@@ -224,10 +223,10 @@ void TestPhase::DrawImGui()
 			{
 				Game::Camera::StartCameraShake(intensity, duration, frequency);
 			}
-			ImGui::Text("is camera shaking : %d", Game::Camera::IsCameraShaking());
+			ImGui::Text("is camera shaking : %d", Game::Camera::IsShaking());
 			if (ImGui::Button("Stop Camera Shake"))
 			{
-				Game::Camera::StopCameraShake();
+				Game::Camera::StopShake();
 			}
 
 			ImGui::EndTabItem();

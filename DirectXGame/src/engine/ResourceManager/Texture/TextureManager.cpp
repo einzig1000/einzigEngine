@@ -1,4 +1,4 @@
-#include "Resource/Texture/TextureManager.h"
+#include "ResourceManager/Texture/TextureManager.h"
 #include "externals/DirectXTex/d3dx12.h"
 #include "externals/DirectXTex/DirectXTex.h"
 #include <Utilities/Logger/Logger.h>
@@ -47,7 +47,7 @@ int32_t TextureManager::LoadTexture(const std::string& filePath)
     assert(SUCCEEDED(hr));
 
     text.metadata = mipImageLocal.GetMetadata();
-    text.number = static_cast<uint32_t> (textures_.size());
+    text.number = static_cast<uint32_t>(textures_.size() + 1);
     text.mipImage = std::move(mipImageLocal);
 
 

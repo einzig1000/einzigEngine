@@ -9,24 +9,24 @@
 /// <summary>
 /// キーボード管理クラス
 /// </summary>
-class GetHitKey
+class KeyboardController
 {
 public:
-	GetHitKey(HWND hwnd);
+	KeyboardController(HWND hwnd);
 	void Update();
 
 	// 今押しているか
-	bool IsHeld(BYTE key);
+	bool IsHeld(BYTE key) const;
 	// 押した瞬間（今フレームで押された）
-	bool IsJustPressed(BYTE key);
+	bool IsJustPressed(BYTE key) const;
 	// 離した瞬間（今フレームで離れた）
-	bool IsJustReleased(BYTE key);
+	bool IsJustReleased(BYTE key) const;
 
 	// 押されてからの経過フレーム数
-	uint32_t HoldFrames(BYTE key);
+	uint32_t HoldFrames(BYTE key) const;
 
 	// 0: なし  1:単押し  2:長押し(n = 長押し判定)
-	int TestTapLong(int n, BYTE key);
+	int TestTapLong(int n, BYTE key) const;
 
 private:
 

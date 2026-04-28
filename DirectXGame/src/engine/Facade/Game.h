@@ -360,19 +360,17 @@ namespace Game
 	{
 		namespace Getter
 		{
-			Vector3 GetCenter(const std::string name);			// カメラ回転中心
-			Vector3 GetTranslate(const std::string name);			// カメラ位置
-			Matrix4x4 GetViewProjectionMatrix(const std::string name); // ビュープロジェクション行列
-			float GetDistance(const std::string name);			// カメラ距離
-
-			Vector3 GetCurrentCenter();			// カメラ回転中心
-			Vector3 GetCurrentTranslate();		// カメラ位置
+			/// <returns>カメラが向いてる座標</returns>
+			Vector3 GetCurrentCenter();
+			/// <returns>カメラの球面座標上位置座標</returns>
+			Vector3 GetCurrentTranslate();
+			/// <returns>カメラの回転量</returns>
 			Vector3 GetCurrentRotate();
-			Matrix4x4 GetCurrentViewProjectionMatrix(); // ビュープロジェクション行列
-			float GetCurrentDistance();			// カメラ距離
+			/// <returns>カメラのCenterまでの距離</returns>
+			float GetCurrentDistance();
+			/// <returns>カメラのビュープロジェクション行列</returns>
+			Matrix4x4 GetCurrentViewProjectionMatrix();
 		};
-
-		void SetCameraMode(CameraMode_ORBIT_FPS mode);
 
 		/// <summary>
 		/// カメラの回転中心座標の移動
@@ -411,12 +409,13 @@ namespace Game
 		/// 今シェイクしているか
 		/// </summary>
 		/// <returns>今シェイクしているか</returns>
-		bool IsCameraShaking();
+		bool IsShaking();
 
 		/// <summary>
 		/// シェイク停止関数
 		/// </summary>
-		void StopCameraShake();
+		void StopShake();
+
 
 		/// <summary>
 		/// 描画範囲内にAABBがあるか
@@ -424,6 +423,13 @@ namespace Game
 		/// <param name="aabb">検索対象のAABB</param>
 		/// <returns>結果</returns>
 		bool InCamera(const AABB& aabb);
+
+
+		/// <summary>
+		/// カメラモード(オービット or FPS)切り替え
+		/// </summary>
+		/// <param name="mode">カメラモード</param>
+		void SetCameraMode(CameraMode_ORBIT_FPS mode);
 
 		/// <summary>
 		/// カメラコントロールの有効無効設定
@@ -433,7 +439,12 @@ namespace Game
 		/// <summary>
 		/// カメラ切り替え
 		/// </summary>
-		void SetCurrentCamera(const std::string name);
+		void ToggleCamera(const std::string name);
+
+		/// <summary>
+		/// 順番にカメラ切り替え
+		/// </summary>
+		void ToggleCamera();
 	};
 
 	namespace Utilities
@@ -539,25 +550,19 @@ namespace Game
 
 	namespace Time
 	{
-		/// <summary>
-		/// デルタタイム取得
-		/// </summary>
 		/// <returns>デルタタイム</returns>
 		float GetDeltaTime();
 
-		/// <summary>
-		/// 起動からの経過時間取得
-		/// </summary>
+		/// <returns>起動からの経過時間取得</returns>
 		uint32_t GetElapsedTime();
 
-		/// <summary>
-		/// フレームレート取得
-		/// </summary>
+		/// <returns>フレームレート取得</returns>
 		float GetFrameRate();
 
 		/// <summary>
-		/// タイムスケール設定　タイムスケールとは時間の進み具合を調整する値。1.0が通常速度、0.5が半分の速度、2.0が2倍の速度になる。
+		/// 時間の速さを調整する。1.0が通常速度、0.5が半分の速度、2.0が2倍の速度になる。
 		/// </summary>
+		/// <param name="scale">タイムスケール</param>
 		void SetTimeScale(float scale);
 	};
 

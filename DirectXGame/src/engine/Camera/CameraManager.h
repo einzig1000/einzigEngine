@@ -43,6 +43,7 @@ public:
 	bool InCamera(const AABB& aabb);
 
 	void ToggleCamera();
+	void ToggleCamera(const std::string name);
 
 private:
 	int currentCameraID_ = 0;

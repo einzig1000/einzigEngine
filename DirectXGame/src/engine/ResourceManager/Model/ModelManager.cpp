@@ -1,4 +1,4 @@
-#include "Resource/Model/ModelManager.h"
+#include "ResourceManager/Model/ModelManager.h"
 #include <Utilities/Logger/Logger.h>
 #include <DirectX/Resource/Dx12ResourceFactory.h>
 #include <filesystem> 

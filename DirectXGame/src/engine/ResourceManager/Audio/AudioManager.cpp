@@ -2,7 +2,7 @@
 #pragma comment(lib, "mfreadwrite.lib")
 #pragma comment(lib, "mfuuid.lib")
 
-#include <Resource/Audio/AudioManager.h>
+#include <ResourceManager/Audio/AudioManager.h>
 #include <Windows.h>
 #include <string>
 #include <Utilities/Logger/Logger.h>

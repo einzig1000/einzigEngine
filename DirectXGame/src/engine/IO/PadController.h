@@ -7,25 +7,25 @@
 /// <summary>
 /// パッド管理クラス
 /// </summary>
-class GetPadState
+class PadController
 {
 public:
-    GetPadState();
-	~GetPadState();
+    PadController();
+	~PadController();
 
     void Update();
 
-	bool IsHeld(int padIndex, BYTE button);
-	bool IsJustPressed(int padIndex, BYTE button);
-	bool IsJustReleased(int padIndex, BYTE button);
+	bool IsHeld(int padIndex, BYTE button) const;
+	bool IsJustPressed(int padIndex, BYTE button) const;
+	bool IsJustReleased(int padIndex, BYTE button) const;
 
-    uint32_t HoldFrames(int padIndex, BYTE button);	// 押されてからの経過フレーム数
-	Vector2 GetLeftStick(int padIndex);	    // 左スティックの値取得 (-1.0f ～ 1.0f)
-	Vector2 GetRightStick(int padIndex);	// 右スティックの値取得 (-1.0f ～ 1.0f)
+    uint32_t HoldFrames(int padIndex, BYTE button) const;	// 押されてからの経過フレーム数
+	Vector2 GetLeftStick(int padIndex) const;	    // 左スティックの値取得 (-1.0f ～ 1.0f)
+	Vector2 GetRightStick(int padIndex) const;	// 右スティックの値取得 (-1.0f ～ 1.0f)
 
     // トリガーの値取得（0.0f ～ 1.0f）
-    float GetLeftTrigger(int padIndex);
-    float GetRightTrigger(int padIndex);
+    float GetLeftTrigger(int padIndex) const;
+    float GetRightTrigger(int padIndex) const;
     // ゲームパッド振動
     void SetVibration(int padIndex, float leftMotor, float rightMotor);
 

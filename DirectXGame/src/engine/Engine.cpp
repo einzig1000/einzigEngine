@@ -2,7 +2,6 @@
 #include "Utilities/functions.h"
 #include <cstdint>
 
-#include <IO/MouseController.h>
 #include <IO/IOManager.h>
 #include <Window/WindowManager.h>
 #include <DirectX/DirectXManager.h>
@@ -11,12 +10,10 @@
 #include <DrawSystem/DrawSystem.h>
 #include <Camera/CameraManager.h>
 #include <imGuiManager/ImGuiManager.h>
+#include <FixFPS/FixFPS.h>
 #include <Physics/PhysicsSystem.h>
-#include <DrawSystem/RenderData/RenderObject.h>
 
 using namespace DirectX;
-
-
 
 
 Engine& Engine::Instance()
@@ -43,13 +40,14 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 	imguiManager_ = std::make_unique<ImGuiManager>();
 	imguiManager_->Initialize(dxManager_.get(), windowManager_.get());
 	physicsSystem_ = std::make_unique<PhysicsSystem>();
+	fixFPS_ = std::make_unique<FixFPS>();
 
 
 	windowManager_->AttachMouseController(ioManager_->GetMouseController());
 
 
 	dxManager_->BeginFrame();
-	Game::Resource::LoadTexture("resources/Prototypes/texture/uvChecker.png");
+	//Game::Resource::LoadTexture("resources/Prototypes/texture/uvChecker.png");
 	//ResourceID::reload();
 	dxManager_->EndFrame();
 }
@@ -91,7 +89,6 @@ void Engine::BeginFrame()
 
 	// 描画関数初期化
 	drawSystem_->Update();
-	//drawSystem_->SetViewProjectionMatrix(cameraManager_->GetCurrentViewProjectionMatrix());
 
 	// デバッグ情報更新
 	UpdateDebugInfo();
@@ -225,7 +222,7 @@ void Engine::UpdateDebugInfo()
 	}
 	if (Game::IO::Key::IsJustPressed(DIK_F3))
 	{
-		ToggleCamera();
+		cameraManager_->ToggleCamera();
 	}
 
 	if (isDebugInfo_)
@@ -238,8 +235,8 @@ void Engine::UpdateDebugInfo()
 		ImGui::Text("F3  : Toggle Camera Release or Debug");
 		ImGui::Text("F5  : Toggle Camera FirstPerson or ThirdPerson");
 		ImGui::Text("F12 : Toggle Fullscreen");
-		ImGui::Text("DeltaTime: %.3f ms", dxManager_->GetFixFPS()->GetDeltaTime() * 1000.0f);
-		ImGui::Text("FPS: %.1f ", dxManager_->GetFixFPS()->GetAverageFPS());
+		ImGui::Text("DeltaTime: %.3f ms", fixFPS_->GetDeltaTime() * 1000.0f);
+		ImGui::Text("FPS: %.1f ", fixFPS_->GetAverageFPS());
 		ImGui::Text("ImGui FPS: %.1f ", ImGui::GetIO().Framerate);
 		ImGui::End();
 	}
@@ -250,7 +247,7 @@ void Engine::EndFrame()
 	ioManager_->EndFrame();
 
 	// 物理更新
-	physicsSystem_->Step();
+	//physicsSystem_->Step();
 
 	/// 座標更新
 	//UpdateTransforms();
@@ -267,6 +264,9 @@ void Engine::EndFrame()
 
 	// DirectX終了処理
 	dxManager_->EndFrame();
+
+	// FPS制限
+	fixFPS_->UpdateFixFPS();
 }
 void Engine::Quit()
 {
@@ -283,328 +283,6 @@ void Engine::Finalize()
 	CoUninitialize();
 }
 
-// リソース読み込み
-uint32_t Engine::LoadTexture(const std::string& filePath)
-{
-	return resourceManager_->GetTextureManager()->LoadTexture(filePath);
-}
-uint32_t Engine::LoadModel(const std::string& filename)
-{
-	return resourceManager_->GetModelManager()->LoadModel(filename);
-}
-uint32_t Engine::LoadAudio(const std::string& filePath)
-{
-	return resourceManager_->GetAudioManager()->LoadAudio(filePath);
-}
-
-ModelData* Engine::GetModelData(uint32_t modelID)
-{
-	return resourceManager_->GetModelManager()->GetModelData(modelID);
-}
-TextureData* Engine::GetTextureData(uint32_t textureID)
-{
-	return resourceManager_->GetTextureManager()->GetTextureData(textureID);
-}
-AudioData* Engine::GetAudioData(uint32_t audioID)
-{
-	return resourceManager_->GetAudioManager()->GetAudioData(audioID);
-}
-
-size_t Engine::GetTextureCount()
-{
-	return resourceManager_->GetTextureManager()->GetTextureCount();
-}
-size_t Engine::GetModelCount()
-{
-	return resourceManager_->GetModelManager()->GetModelCount();
-}
-size_t Engine::GetAudioCount()
-{
-	return resourceManager_->GetAudioManager()->GetAudioCount();
-}
-
-// 描画
-void Engine::AddDrawList(const RenderObject* renderObject)
-{
-	drawSystem_->AddDrawList(renderObject);
-}
-
-void Engine::AddSphere(const Sphere& sphere, uint32_t color)
-{
-	drawSystem_->AddSphere(sphere, color);
-}
-void Engine::AddSphereXYZ(const SphereXYZ& sphere, uint32_t color)
-{
-	drawSystem_->AddSphereXYZ(sphere, color);
-}
-void Engine::AddCylinder(const Cylinder& cylinder, uint32_t color)
-{
-	drawSystem_->AddCylinder(cylinder, color);
-}
-void Engine::AddAABB(const AABB& aabb, uint32_t color)
-{
-	drawSystem_->AddAABB(aabb, color);
-}
-void Engine::AddLine(Vector3 start, Vector3 end, uint32_t color)
-{
-	drawSystem_->AddDebugLineList(start, end, color);
-}
-
-bool Engine::InFrustum(const AABB& aabb)
-{
-	return cameraManager_->InCamera(aabb);
-}
-
-// 音
-void Engine::PlayAudio(const uint32_t& audioId, bool loop)
-{
-	resourceManager_->GetAudioManager()->PlayAudio(audioId, loop);
-}
-void Engine::StopAudio(const uint32_t& audioId)
-{
-	resourceManager_->GetAudioManager()->StopAudio(audioId);
-}
-void Engine::SetAudioVolume(const uint32_t& audioId, float volume)
-{
-	resourceManager_->GetAudioManager()->SetVolume(audioId, volume);
-}
-void Engine::SetMasterVolume(float volume)
-{
-	resourceManager_->GetAudioManager()->SetMasterVolume(volume);
-}
-float Engine::GetVolume(const uint32_t& audioId)
-{
-	return resourceManager_->GetAudioManager()->GetVolume(audioId);
-}
-float Engine::GetMasterVolume()
-{
-	return resourceManager_->GetAudioManager()->GetMasterVolume();
-}
-bool Engine::IsAudioPlaying(const uint32_t& audioId)
-{
-	return resourceManager_->GetAudioManager()->IsAudioPlaying(audioId);
-}
-
-// ライト
-void Engine::SetLightDirection(const Vector3 direction)
-{
-	//drawSystem_->SetLightDirection(direction);
-}
-void Engine::SetLightColor(const Vector4 color)
-{
-	//drawSystem_->SetLightColor(color);
-}
-void Engine::SetLightIntensity(float intensity)
-{
-	//drawSystem_->SetLightIntensity(intensity);
-}
-void Engine::ToggleLightMode(const LightMode mode)
-{
-	//drawSystem_->ToggleLightMode(mode);
-}
-
-// マウス
-Vector2 Engine::GetMousePosition()
-{
-	return ioManager_->GetMouseController()->GetPosition();
-}
-Vector2 Engine::GetMousePositionDelta()
-{
-	return ioManager_->GetMouseController()->GetRawDelta();
-}
-Vector3 Engine::GetMouseWorldPosition()
-{
-	return ioManager_->GetMouseController()->GetWorldPosition();
-}
-Ray Engine::GetMouseRay()
-{
-	return ioManager_->GetMouseController()->GetRay();
-}
-int32_t Engine::GetMouseWheel()
-{
-	return ioManager_->GetMouseController()->GetWheelDelta();
-}
-bool Engine::IsMouseHeld(int i)
-{
-	return ioManager_->GetMouseController()->IsHeld(i);
-}
-bool Engine::IsMouseJustPressed(int i)
-{
-	return ioManager_->GetMouseController()->IsJustPressed(i);
-}
-bool Engine::IsMouseJustReleased(int i)
-{
-	return ioManager_->GetMouseController()->IsJustReleased(i);
-}
-uint32_t Engine::MouseHoldFrames(int i)
-{
-	return ioManager_->GetMouseController()->HoldFrames(i);
-}
-void Engine::ToggleMouseCursorVisible()
-{
-	ioManager_->GetMouseController()->ToggleMouseCursorVisible();
-}
-void Engine::SetMouseCursorVisible(bool visible)
-{
-	ioManager_->GetMouseController()->ShowCursor(visible);
-}
-void Engine::SetMouseSensitivity(float sensitivity)
-{
-	ioManager_->GetMouseController()->SetSensitivity(sensitivity);
-}
-
-// キーボード
-bool Engine::IsKeyHeld(BYTE key)
-{
-	return ioManager_->GetGetHitKey()->IsHeld(key);
-}
-bool Engine::IsKeyJustPressed(BYTE key)
-{
-	return ioManager_->GetGetHitKey()->IsJustPressed(key);
-}
-bool Engine::IsKeyJustReleased(BYTE key)
-{
-	return ioManager_->GetGetHitKey()->IsJustReleased(key);
-}
-uint32_t Engine::KeyHoldFrames(BYTE key)
-{
-	return ioManager_->GetGetHitKey()->HoldFrames(key);
-}
-int Engine::TestTapLong(int n, BYTE key)
-{
-	return ioManager_->GetGetHitKey()->TestTapLong(n, key);
-}
-
-// ゲームパッド
-bool Engine::IsPadHeld(int padIndex, BYTE button)
-{
-	return ioManager_->GetGetPadState()->IsHeld(padIndex, button);
-}
-bool Engine::IsPadJustPressed(int padIndex, BYTE button)
-{
-	return ioManager_->GetGetPadState()->IsJustPressed(padIndex, button);
-}
-bool Engine::IsPadJustReleased(int padIndex, BYTE button)
-{
-	return ioManager_->GetGetPadState()->IsJustReleased(padIndex, button);
-}
-uint32_t Engine::PadHoldFrames(int padIndex, BYTE button)
-{
-	return ioManager_->GetGetPadState()->HoldFrames(padIndex, button);
-}
-Vector2 Engine::GetLeftStick(int padIndex)
-{
-	return ioManager_->GetGetPadState()->GetLeftStick(padIndex);
-}
-Vector2 Engine::GetRightStick(int padIndex)
-{
-	return ioManager_->GetGetPadState()->GetRightStick(padIndex);
-}
-float Engine::GetLeftTrigger(int padIndex)
-{
-	return ioManager_->GetGetPadState()->GetLeftTrigger(padIndex);
-}
-float Engine::GetRightTrigger(int padIndex)
-{
-	return ioManager_->GetGetPadState()->GetRightTrigger(padIndex);
-}
-void Engine::SetPadVibration(int padIndex, float leftMotor, float rightMotor)
-{
-	ioManager_->GetGetPadState()->SetVibration(padIndex, leftMotor, rightMotor);
-}
-int32_t Engine::GetConnectedPadNum()
-{
-	return ioManager_->GetGetPadState()->GetConnectedPadNum();
-}
-
-// カメラ
-Vector3 Engine::GetCameraTranslate() const
-{
-	return cameraManager_->GetCurrentTranslate();
-}
-void Engine::MoveCameraCenter(Vector3 target, int spendFrame, EaseType easetype)
-{
-	cameraManager_->SetCenterTarget(target, spendFrame, easetype);
-}
-void Engine::MoveCameraRotate(Vector3 target, int spendFrame, EaseType easetype)
-{
-	cameraManager_->SetRotateTarget(target, spendFrame, easetype);
-}
-void Engine::MoveCameraDistance(float target, int spendFrame, EaseType easetype)
-{
-	cameraManager_->SetDistanceTarget(target, spendFrame, easetype);
-}
-void Engine::StartCameraShake(float intensity, float duration, float frequency)
-{
-	cameraManager_->StartShake(intensity, duration, frequency);
-}
-bool Engine::IsCameraShaking()
-{
-	return cameraManager_->IsShaking();
-}
-void Engine::SetCameraMode(CameraMode_ORBIT_FPS mode)
-{
-	cameraManager_->SetCameraMode(mode); 
-}
-void Engine::ToggleCamera()
-{
-	cameraManager_->ToggleCamera();
-}
-void Engine::StopCameraShake()
-{
-	cameraManager_->StopShake();
-}
-void Engine::SetEnableCameraControl(bool enable)
-{
-	cameraManager_->SetEnableControl(enable);
-}
-
-
-// 時間制御
-float Engine::GetDeltaTime()
-{
-	float dt = dxManager_->GetFixFPS()->GetDeltaTime();
-
-	// ブレークポイントで止めたときなどに、くそでかデルタタイムが出るのを防止
-	constexpr float kMaxDt = 0.1f; // 100ms
-	if (dt < 0.0f) dt = 0.0f;
-	if (dt > kMaxDt) dt = kMaxDt;
-
-	return dt;
-}
-uint32_t Engine::GetElapsedTime()
-{
-	return dxManager_->GetFixFPS()->GetFrameCount();
-}
-float Engine::GetFrameRate()
-{
-	return dxManager_->GetFixFPS()->GetAverageFPS();
-}
-void Engine::SetTimeScale(float scale)
-{
-	dxManager_->GetFixFPS()->SetTimeScale(scale);
-}
-
-
-// 物理制御
-void Engine::AddWorldCollider(IWorldCollider* worldCollider)
-{
-	physicsSystem_->AddWorldCollider(worldCollider);
-}
-
-void Engine::RegisterDynamic(IPhysicsBody* b)
-{
-	physicsSystem_->RegisterDynamic(b);
-}
-
-void Engine::UnregisterDynamic(IPhysicsBody* b)
-{
-	physicsSystem_->UnregisterDynamic(b);
-}
-void Engine::ClearDynamicAll()
-{
-	physicsSystem_->ClearDynamics();
-}
 
 // ウィンドウ操作
 void Engine::ToggleFullscreen()

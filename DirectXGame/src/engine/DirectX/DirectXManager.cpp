@@ -1,6 +1,5 @@
 #include "DirectX/DirectXManager.h"
 #include "Utilities/Logger/Logger.h"
-#include <memory>
 
 DirectXManager::DirectXManager(HWND hwnd)
 {
@@ -12,8 +11,6 @@ DirectXManager::DirectXManager(HWND hwnd)
 
     synchronizationManager = std::make_unique<SynchronizationManager>(deviceManager->GetDevice());
     viewportScissorManager = std::make_unique<ViewportScissorManager>();
-
-    fixFPS_ = std::make_unique<FixFPS>();
 
     Log("コンストラクタ実行成功 : DirectXManager");
 }
@@ -86,9 +83,6 @@ void DirectXManager::EndFrame()
 
     // フェンスシグナル
     synchronizationManager->Signal(commandContextManager->GetCommandQueue());
-
-	// FPS制限
-    fixFPS_->UpdateFixFPS();
 }
 
 void DirectXManager::Resize()

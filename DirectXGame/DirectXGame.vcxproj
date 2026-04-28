@@ -220,8 +220,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="src\engine\DrawSystem\DrawSystem.cpp" />
     <ClCompile Include="src\engine\Engine.cpp" />
     <ClCompile Include="src\engine\Facade\Game.cpp" />
-    <ClCompile Include="src\engine\IO\GetHitKey.cpp" />
-    <ClCompile Include="src\engine\IO\GetPadState.cpp" />
+    <ClCompile Include="src\engine\IO\KeyboardController.cpp" />
+    <ClCompile Include="src\engine\IO\PadController.cpp" />
     <ClCompile Include="src\engine\IO\IOManager.cpp" />
     <ClCompile Include="src\engine\IO\MouseController.cpp" />
     <ClCompile Include="src\engine\ResourceManager\Audio\AudioManager.cpp" />
@@ -282,8 +282,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="src\engine\DrawSystem\DrawSystem.h" />
     <ClInclude Include="src\engine\Engine.h" />
     <ClInclude Include="src\engine\Facade\Game.h" />
-    <ClInclude Include="src\engine\IO\GetHitKey.h" />
-    <ClInclude Include="src\engine\IO\GetPadState.h" />
+    <ClInclude Include="src\engine\IO\KeyboardController.h" />
+    <ClInclude Include="src\engine\IO\PadController.h" />
     <ClInclude Include="src\engine\IO\IOManager.h" />
     <ClInclude Include="src\engine\IO\MouseController.h" />
     <ClInclude Include="src\engine\ResourceManager\Audio\AudioManager.h" />

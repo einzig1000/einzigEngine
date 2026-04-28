@@ -327,10 +327,10 @@
     <ClCompile Include="src\engine\ImGuiManager\ImGuiManager.cpp">
       <Filter>src\engine\ImGuiManager</Filter>
     </ClCompile>
-    <ClCompile Include="src\engine\IO\GetHitKey.cpp">
+    <ClCompile Include="src\engine\IO\KeyboardController.cpp">
       <Filter>src\engine\IO</Filter>
     </ClCompile>
-    <ClCompile Include="src\engine\IO\GetPadState.cpp">
+    <ClCompile Include="src\engine\IO\PadController.cpp">
       <Filter>src\engine\IO</Filter>
     </ClCompile>
     <ClCompile Include="src\engine\IO\IOManager.cpp">
@@ -506,10 +506,10 @@
     <ClInclude Include="src\engine\ImGuiManager\ImGuiManager.h">
       <Filter>src\engine\ImGuiManager</Filter>
     </ClInclude>
-    <ClInclude Include="src\engine\IO\GetHitKey.h">
+    <ClInclude Include="src\engine\IO\KeyboardController.h">
       <Filter>src\engine\IO</Filter>
     </ClInclude>
-    <ClInclude Include="src\engine\IO\GetPadState.h">
+    <ClInclude Include="src\engine\IO\PadController.h">
       <Filter>src\engine\IO</Filter>
     </ClInclude>
     <ClInclude Include="src\engine\IO\IOManager.h">

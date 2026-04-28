@@ -1,5 +1,6 @@
 #pragma once
 #include <d3d12.h>
+#include <memory>
 
 #include <DirectX/DeviceManager.h>
 #include <DirectX/CommandContextManager.h>
@@ -8,9 +9,6 @@
 #include <DirectX/DescriptorHeapManager/DescriptorHeapManager.h>
 #include <DirectX/SynchronizationManager.h>
 #include <DirectX/ViewportScissorManager.h>
-#include <FixFPS/FixFPS.h>
-
-#include <memory>
 
 /// <summary>
 /// DirectX管理クラス
@@ -28,8 +26,6 @@ public:
     PipelineStateManager* GetPipelineStateManager() const { return pipelineStateManager.get(); }
     SynchronizationManager* GetSynchronizationManager() const { return synchronizationManager.get(); }
 
-    FixFPS* GetFixFPS() const { return fixFPS_.get(); }
-
     void BeginFrame();
     void EndFrame();
     void Resize();
@@ -42,6 +38,4 @@ private:
     std::unique_ptr<DescriptorHeapManager> descriptorHeapManager;
     std::unique_ptr<SynchronizationManager> synchronizationManager;
     std::unique_ptr<ViewportScissorManager> viewportScissorManager;
-
-    std::unique_ptr<FixFPS> fixFPS_;
 };

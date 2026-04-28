@@ -143,7 +143,7 @@ namespace ShaderReflection
                 p.key = "b" + std::to_string(bind.BindPoint);
 
                 p.sizeBytes = cbDesc.Size;
-                p.offsetBytes = currentCBVOffsetBytes;
+                p.offsetBytes = uint32_t(currentCBVOffsetBytes);
 
                 currentCBVOffsetBytes += cbDesc.Size;
                 outParams.push_back(p);

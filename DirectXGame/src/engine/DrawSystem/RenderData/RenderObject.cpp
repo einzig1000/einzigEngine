@@ -4,7 +4,7 @@
 #include "DirectX/Resource/Dx12ResourceFactory.h"
 #include <DirectX/Pipeline/ShaderReflectionHelper/ShaderReflectionHelper.h>
 #include <Utilities/Converter/StringConverter/StringConverter.h>
-#include <cassert>
+#include <DrawSystem/DrawSystem.h>
 #include <cstring>
 
 void RenderObject::SetupFromShaders()
@@ -68,7 +68,7 @@ void RenderObject::SetCBufferData(const std::string& key, ShaderType shaderType,
 
 void RenderObject::Draw() const
 {
-	Engine::Instance().AddDrawList(this);
+	Engine::Instance().GetDrawSystem()->AddDrawList(this);
 }
 
 

@@ -1,5 +1,6 @@
 #include "FixFPS/FixFPS.h"
 #include <thread>
+#include <algorithm>
 
 FixFPS::FixFPS()
 {
@@ -50,6 +51,7 @@ void FixFPS::UpdateFixFPS()
     deltaTime_ = std::chrono::duration<float>(currentTime - previousTime_).count();
     if (deltaTime_ != 0)realTimeFPS_ = (1.0f / deltaTime_);
     averageFPS_ = (averageFPS_ * 0.95f) + (realTimeFPS_ * 0.05f);
+	deltaTime_ = std::clamp(deltaTime_, 0.0f, 1.0f);
 
     // 前回時間を更新
     previousTime_ = currentTime;

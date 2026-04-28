@@ -1,6 +1,7 @@
 #include "CameraManager.h"
 #include "Camera.h"
 #include <ImGuiManager/ImGuiManager.h>
+#include <algorithm>
 
 CameraManager::CameraManager()
 {
@@ -13,8 +14,6 @@ CameraManager::CameraManager()
 	DebugCamera.name_ = "DebugCamera";
 	DebugCamera.SetEnableControl(true);
 	camera_.push_back(DebugCamera);
-
-
 }
 
 CameraManager::~CameraManager()
@@ -23,6 +22,13 @@ CameraManager::~CameraManager()
 
 void CameraManager::AddCamera(const std::string name, bool enableControl)
 {
+	// 名前が被ってないか確認
+	if (std::any_of(camera_.begin(), camera_.end(), [&](const Camera& cam) { return cam.name_ == name; }))
+	{
+		assert(false && "同じ名前のカメラが既に存在しています");
+		return;
+	}
+
 	Camera def;
 	def.name_ = name;
 	def.SetEnableControl(enableControl);
@@ -54,37 +60,35 @@ void CameraManager::Resize()
 
 void CameraManager::SetCenterTarget(Vector3 Center, int spendFrame, EaseType easetype)
 {
-	camera_[0].SetCenterTarget(Center, spendFrame, easetype);
+	camera_[currentCameraID_].SetCenterTarget(Center, spendFrame, easetype);
 }
-
 void CameraManager::SetRotateTarget(Vector3 Center, int spendFrame, EaseType easetype)
 {
-	camera_[0].SetRotateTarget(Center, spendFrame, easetype);
+	camera_[currentCameraID_].SetRotateTarget(Center, spendFrame, easetype);
 }
-
 void CameraManager::SetDistanceTarget(float Center, int spendFrame, EaseType easetype)
 {
-	camera_[0].SetDistanceTarget(Center, spendFrame, easetype);
+	camera_[currentCameraID_].SetDistanceTarget(Center, spendFrame, easetype);
 }
 
-void CameraManager::SetEnableControl(bool enable)
-{
-	camera_[currentCameraID_].SetEnableControl(enable);
-}
 
 void CameraManager::StartShake(float intensity, float duration, float frequency)
 {
 	camera_[currentCameraID_].StartShake(intensity, duration, frequency);
 }
-
 bool CameraManager::IsShaking()
 {
 	return camera_[currentCameraID_].IsShaking();
 }
-
 void CameraManager::StopShake()
 {
 	camera_[currentCameraID_].StopShake();
+}
+
+
+void CameraManager::SetEnableControl(bool enable)
+{
+	camera_[currentCameraID_].SetEnableControl(enable);
 }
 
 
@@ -94,27 +98,24 @@ Vector3 CameraManager::GetCenter(const std::string name) const
 	{
 		if (cam.name_ == name)
 		{
-			//return cam.center_;
+			return cam.GetCenter();
 		}
 	}
 
 	return Vector3{};
 }
-
 Vector3 CameraManager::GetTranslate(const std::string name) const
 {
 	for (const auto& cam : camera_)
 	{
 		if (cam.name_ == name)
 		{
-			//return cam.GetTransform().translate;
-			return Vector3{};
+			return cam.GetTranslate();
 		}
 	}
 
 	return Vector3{};
 }
-
 Matrix4x4 CameraManager::GetViewProjectionMatrix(const std::string name) const
 {
 	for (const auto& cam : camera_)
@@ -127,14 +128,13 @@ Matrix4x4 CameraManager::GetViewProjectionMatrix(const std::string name) const
 
 	return Matrix4x4{};
 }
-
 float CameraManager::GetDistance(const std::string name) const
 {
 	for (const auto& cam : camera_)
 	{
 		if (cam.name_ == name)
 		{
-			//return cam.distance_;
+			return cam.GetDistance();
 		}
 	}
 
@@ -144,32 +144,25 @@ float CameraManager::GetDistance(const std::string name) const
 
 Vector3 CameraManager::GetCurrentCenter() const
 {
-	//return camera_[currentCameraID_].center_;
-	return Vector3{};
+	return camera_[currentCameraID_].GetCenter();
 }
-
 Vector3 CameraManager::GetCurrentTranslate() const
 {
-	//return camera_[currentCameraID_].GetTransform().translate;
-	return Vector3{};
+	return camera_[currentCameraID_].GetTranslate();
 }
-
 Vector3 CameraManager::GetCurrentRotate() const
 {
-	//return camera_[currentCameraID_].GetTransform().rotate;
-	return Vector3{};
+	return camera_[currentCameraID_].GetRotate();
 }
-
 Matrix4x4 CameraManager::GetCurrentViewProjectionMatrix() const
 {
 	return camera_[currentCameraID_].GetViewProjectionMatrix();
 }
-
 float CameraManager::GetCurrentDistance() const
 {
-	//return camera_[currentCameraID_].distance_;
-	return 0.0f;
+	return camera_[currentCameraID_].GetDistance();
 }
+
 
 void CameraManager::SetCameraMode(CameraMode_ORBIT_FPS mode)
 {
@@ -188,4 +181,17 @@ void CameraManager::ToggleCamera()
 	{
 		currentCameraID_ = 0;
 	}
+}
+
+void CameraManager::ToggleCamera(const std::string name)
+{
+	for (size_t i = 0; i < camera_.size(); ++i)
+	{
+		if (camera_[i].name_ == name)
+		{
+			currentCameraID_ = static_cast<int>(i);
+			return;
+		}
+	}
+	assert(false && "指定された名前のカメラが存在しません");
 }

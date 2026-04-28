@@ -1,15 +1,18 @@
 #include "Camera.h"
 #include "Facade/Game.h"
 #include "Window/WindowManager.h"
+#include <algorithm>
 #include <ImGuiManager/ImGuiManager.h>
 
 Camera::Camera()
 {
     enableControl_ = true;
 
-	// 球面座標上の現在位置
+    // 球面座標上の現在位置
     currentPosSpherical_.radius = 35.60f;
-	currentPosSpherical_.phi = 0.78f;
+    currentPosSpherical_.phi = 0.78f;
+    currentPosSpherical_.radius = 30.00f;
+    currentPosSpherical_.phi = 0.0f;
 	currentPosSpherical_.theta = 0.0f;
 
 	// デカルト座標上の現在位置
@@ -39,7 +42,97 @@ void Camera::Update()
     }
 }
 
+// 移動(回転)するものをカメラ座標にして、center_を固定
 void Camera::Update_Orbit()
+{
+#pragma region 入力取得
+
+    // マウス移動量取得
+    Vector2 mouseDelta = Game::IO::Mouse::GetPositionDelta();
+    // マウスホイール取得
+    int32_t mouseWheel = Game::IO::Mouse::GetWheel();
+    // マウス中ボタンが押されているか
+    bool isMiddleButtonDown = Game::IO::Mouse::IsHeld(2);
+    // シフトキーが押されているか
+    bool isShiftDown = Game::IO::Key::IsHeld(DIK_LSHIFT);
+
+#pragma endregion
+
+#pragma region カメラ回転
+
+    if (isMiddleButtonDown && !isShiftDown)
+    {
+        currentPosSpherical_.theta += mouseDelta.x * 0.01f;
+        currentPosSpherical_.phi += mouseDelta.y * 0.01f;
+        // 上下の回転角度を制限
+        currentPosSpherical_.phi = std::clamp(currentPosSpherical_.phi, -1.56f, +1.56f);
+    }
+
+#pragma endregion
+
+#pragma region カメラ中心移動
+
+    if (isMiddleButtonDown && isShiftDown)
+    {
+        // スクリーン座標 → カメラ平面移動
+        const float moveSpeed = currentPosSpherical_.radius * 0.002f;
+
+        // カメラの右方向・上方向ベクトルを取得
+        Vector3 right = {
+            std::cos(currentPosSpherical_.theta),
+            0.0f,
+            -std::sin(currentPosSpherical_.theta)
+        };
+        Vector3 up = { 0,1,0 };
+
+        center_ += right * (-mouseDelta.x * moveSpeed);
+        center_ += up * (mouseDelta.y * moveSpeed);
+    }
+
+#pragma endregion
+
+#pragma region カメラ距離移動
+
+    if (mouseWheel != 0)
+    {
+        currentPosSpherical_.radius -= mouseWheel * 0.01f;
+        if (currentPosSpherical_.radius < 1.0f)
+        {
+            currentPosSpherical_.radius = 1.0f;
+        }
+    }
+
+#pragma endregion
+
+#pragma region カメラ行列計算
+
+	// 球面座標 → デカルト座標変換
+    currentPosCartesian_ = Game::Math::Converter::ToCartesian(currentPosSpherical_);
+
+	// カメラの位置、注視点、上方向ベクトルを設定してビュー行列を作成
+    Vector3 eye = currentPosCartesian_ + center_ + GetShakeOffset();
+    Vector3 target = center_;
+    Vector3 forward = (target - eye).Normalized();
+	Vector3 right = Vector3(0, 1, 0).Cross(forward).Normalized();
+    Vector3 up = forward.Cross(right);
+
+    viewMatrix_ = Matrix4x4::LookAtMatrix(eye, target, up);
+
+    // ビュー行列とプロジェクション行列を掛け合わせた行列を作成
+    viewProjectionMatrix = viewMatrix_ * projectionMatrix_;
+
+
+	Vector3 dir = center_ - eye;
+	Vector3 angle = Game::Math::YawPitchFromDirection(dir);
+
+    CreateFrustumPlanes();
+
+#pragma endregion
+
+}
+
+// 移動(回転)するものをcenter_にして、カメラ座標を固定
+void Camera::Update_FPS()
 {
 #pragma region 入力取得
 
@@ -111,11 +204,11 @@ void Camera::Update_Orbit()
 
 #pragma region カメラ行列計算
 
-	// 球面座標 → デカルト座標変換
+    // 球面座標 → デカルト座標変換
     currentPosCartesian_ = Game::Math::Converter::ToCartesian(currentPosSpherical_);
 
-	// カメラの位置、注視点、上方向ベクトルを設定してビュー行列を作成
-    Vector3 eye = currentPosCartesian_ + center_;// +GetShakeOffset();
+    // カメラの位置、注視点、上方向ベクトルを設定してビュー行列を作成
+    Vector3 eye = currentPosCartesian_ + center_ + GetShakeOffset();
     Vector3 target = center_;
     Vector3 up = { 0, 1, 0 };
 
@@ -124,14 +217,15 @@ void Camera::Update_Orbit()
     // ビュー行列とプロジェクション行列を掛け合わせた行列を作成
     viewProjectionMatrix = viewMatrix_ * projectionMatrix_;
 
+
+    Vector3 dir = center_ - eye;
+    Vector3 angle = Game::Math::YawPitchFromDirection(dir);
+
     CreateFrustumPlanes();
 
 #pragma endregion
 
 }
-
-void Camera::Update_FPS()
-{}
 
 void Camera::Resize()
 {
@@ -332,11 +426,9 @@ float Camera::InFrustum_Lod(const AABB& aabb)
 void Camera::MovingCenter()
 {
 }
-
 void Camera::MovingRotate()
 {
 }
-
 void Camera::MovingDistance()
 {
 }
@@ -345,11 +437,9 @@ void Camera::MovingDistance()
 void Camera::SetCenterTarget(Vector3 target, int spendFrame, EaseType easetype)
 {
 };
-
 void Camera::SetRotateTarget(Vector3 target, int spendFrame, EaseType easetype)
 {
 };
-
 void Camera::SetDistanceTarget(float target, int spendFrame, EaseType easetype)
 {
 }

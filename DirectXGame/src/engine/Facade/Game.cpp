@@ -1,12 +1,20 @@
-#include <Camera/CameraManager.h>
 #include <Facade/Game.h>
+#include <Engine.h>
+
+#include <Camera/CameraManager.h>
+#include <ResourceManager/ResourceManager.h>
+#include <DrawSystem/DrawSystem.h>
+#include <IO/IOManager.h>
+#include <IO/KeyboardController.h>
+#include <IO/PadController.h>
+#include <IO/MouseController.h>
+#include <FixFPS/FixFPS.h>
+#include <Physics/PhysicsSystem.h>
 #include <Utilities/Easing/Easing.h>
 #include <Utilities/Converter/ColorConverter/ColorConverter.h>
 #include <Utilities/Converter/CoordinateConverter/CoordinateConverter.h>
 #include <Utilities/Converter/AngleConverter/AngleConverter.h>
 #include <Utilities/Random/Random.h>
-#include "Engine.h"
-
 
 namespace Game
 {
@@ -14,41 +22,41 @@ namespace Game
 	{
 		uint32_t LoadModel(const std::string& filePath)
 		{
-			return Engine::Instance().LoadModel(filePath);
+			return Engine::Instance().GetResourceManager()->GetModelManager()->LoadModel(filePath);
 		}
 		uint32_t LoadTexture(const std::string& filePath)
 		{
-			return Engine::Instance().LoadTexture(filePath);
+			return Engine::Instance().GetResourceManager()->GetTextureManager()->LoadTexture(filePath);
 		}
 		uint32_t LoadAudio(const std::string& filePath)
 		{
-			return Engine::Instance().LoadAudio(filePath);
+			return Engine::Instance().GetResourceManager()->GetAudioManager()->LoadAudio(filePath);
 		}
 
 		TextureData* GetTextureData(uint32_t textureNumber)
-		{
-			return Engine::Instance().GetTextureData(textureNumber);
+		{	
+			return Engine::Instance().GetResourceManager()->GetTextureManager()->GetTextureData(textureNumber);
 		}
 		ModelData* GetModelData(uint32_t modelID)
 		{
-			return Engine::Instance().GetModelData(modelID);
+			return Engine::Instance().GetResourceManager()->GetModelManager()->GetModelData(modelID);
 		}
 		AudioData* GetAudioData(uint32_t audioID)
 		{
-			return Engine::Instance().GetAudioData(audioID);
+			return Engine::Instance().GetResourceManager()->GetAudioManager()->GetAudioData(audioID);
 		}
 
 		size_t GetTextureCount()
 		{
-			return Engine::Instance().GetTextureCount();
+			return Engine::Instance().GetResourceManager()->GetTextureManager()->GetTextureCount();
 		}
 		size_t GetModelCount()
 		{
-			return Engine::Instance().GetModelCount();
+			return Engine::Instance().GetResourceManager()->GetModelManager()->GetModelCount();
 		}
 		size_t GetAudioCount()
 		{
-			return Engine::Instance().GetAudioCount();
+			return Engine::Instance().GetResourceManager()->GetAudioManager()->GetAudioCount();
 		}
 	}
 
@@ -56,23 +64,23 @@ namespace Game
 	{
 		void AddSphere(const Sphere& sphere, uint32_t color)
 		{
-			Engine::Instance().AddSphere(sphere, color);
+			Engine::Instance().GetDrawSystem()->AddSphere(sphere, color);
 		}
 		void AddSphereXYZ(const SphereXYZ& sphere, uint32_t color)
 		{
-			Engine::Instance().AddSphereXYZ(sphere, color);
+			Engine::Instance().GetDrawSystem()->AddSphereXYZ(sphere, color);
 		}
 		void AddCylinder(const Cylinder& cylinder, uint32_t color)
 		{
-			Engine::Instance().AddCylinder(cylinder, color);
+			Engine::Instance().GetDrawSystem()->AddCylinder(cylinder, color);
 		}
 		void AddAABB(const AABB& aabb, uint32_t color)
 		{
-			Engine::Instance().AddAABB(aabb, color);
+			Engine::Instance().GetDrawSystem()->AddAABB(aabb, color);
 		}
 		void AddLine(Vector3 start, Vector3 end, uint32_t color)
 		{
-			Engine::Instance().AddLine(start, end, color);
+			Engine::Instance().GetDrawSystem()->AddDebugLineList(start, end, color);
 		}
 	}
 
@@ -80,31 +88,31 @@ namespace Game
 	{
 		void PlayAudio(const uint32_t& audioId, bool loop)
 		{
-			Engine::Instance().PlayAudio(audioId, loop);
+			Engine::Instance().GetResourceManager()->GetAudioManager()->PlayAudio(audioId, loop);
 		}
 		void StopAudio(const uint32_t& audioId)
 		{
-			Engine::Instance().StopAudio(audioId);
+			Engine::Instance().GetResourceManager()->GetAudioManager()->StopAudio(audioId);
 		}
 		void SetAudioVolume(const uint32_t& audioId, float volume)
 		{
-			Engine::Instance().SetAudioVolume(audioId, volume);
+			Engine::Instance().GetResourceManager()->GetAudioManager()->SetVolume(audioId, volume);
 		}
 		void SetMasterVolume(float volume)
 		{
-			Engine::Instance().SetMasterVolume(volume);
+			Engine::Instance().GetResourceManager()->GetAudioManager()->SetMasterVolume(volume);
 		}
 		float GetVolume(const uint32_t& audioId)
 		{
-			return Engine::Instance().GetVolume(audioId);
+			return Engine::Instance().GetResourceManager()->GetAudioManager()->GetVolume(audioId);
 		}
 		float GetMasterVolume()
 		{
-			return Engine::Instance().GetMasterVolume();
+			return Engine::Instance().GetResourceManager()->GetAudioManager()->GetMasterVolume();
 		}
 		bool IsAudioPlaying(const uint32_t& audioId)
 		{
-			return Engine::Instance().IsAudioPlaying(audioId);
+			return Engine::Instance().GetResourceManager()->GetAudioManager()->IsAudioPlaying(audioId);
 		}
 	}
 
@@ -112,19 +120,19 @@ namespace Game
 	{
 		void SetLightColor(const Vector4 color)
 		{
-			Engine::Instance().SetLightColor(color);
+			//Engine::Instance().SetLightColor(color);
 		}
 		void SetLightDirection(const Vector3 direction)
 		{
-			Engine::Instance().SetLightDirection(direction);
+			//Engine::Instance().SetLightDirection(direction);
 		}
 		void SetLightIntensity(float intensity)
 		{
-			Engine::Instance().SetLightIntensity(intensity);
+			//Engine::Instance().SetLightIntensity(intensity);
 		}
 		void ToggleLightMode(const LightMode mode)
 		{
-			Engine::Instance().ToggleLightMode(mode);
+			//Engine::Instance().ToggleLightMode(mode);
 		}
 	}
 
@@ -135,51 +143,51 @@ namespace Game
 			// マウス関連
 			Vector2 GetPosition()
 			{
-				return Engine::Instance().GetMousePosition();
+				return Engine::Instance().GetIOManager()->GetMouseController()->GetPosition();
 			}
 			Vector2 GetPositionDelta()
 			{
-				return Engine::Instance().GetMousePositionDelta();
+				return Engine::Instance().GetIOManager()->GetMouseController()->GetRawDelta();
 			}
 			Vector3 GetWorldPosition()
 			{
-				return Engine::Instance().GetMouseWorldPosition();
+				return Engine::Instance().GetIOManager()->GetMouseController()->GetWorldPosition();
 			}
 			Ray GetRay()
 			{
-				return Engine::Instance().GetMouseRay();
+				return Engine::Instance().GetIOManager()->GetMouseController()->GetRay();
 			}
 			bool IsHeld(int i)
 			{
-				return Engine::Instance().IsMouseHeld(i);
+				return Engine::Instance().GetIOManager()->GetMouseController()->IsHeld(i);
 			}
 			bool IsJustPressed(int i)
 			{
-				return Engine::Instance().IsMouseJustPressed(i);
+				return Engine::Instance().GetIOManager()->GetMouseController()->IsJustPressed(i);
 			}
 			bool IsJustReleased(int i)
 			{
-				return Engine::Instance().IsMouseJustReleased(i);
+				return Engine::Instance().GetIOManager()->GetMouseController()->IsJustReleased(i);
 			}
 			uint32_t HoldFrames(int i)
 			{
-				return Engine::Instance().MouseHoldFrames(i);
+				return Engine::Instance().GetIOManager()->GetMouseController()->HoldFrames(i);
 			}
 			int32_t GetWheel()
 			{
-				return Engine::Instance().GetMouseWheel();
+				return Engine::Instance().GetIOManager()->GetMouseController()->GetWheelDelta();
 			}
 			void ToggleMouseCursorVisible()
 			{
-				Engine::Instance().ToggleMouseCursorVisible();
+				Engine::Instance().GetIOManager()->GetMouseController()->ToggleMouseCursorVisible();
 			}
 			void ShowCursor(bool visible)
 			{
-				Engine::Instance().SetMouseCursorVisible(visible);
+				Engine::Instance().GetIOManager()->GetMouseController()->ShowCursor(visible);
 			}
 			void SetMouseSensitivity(float sensitivity)
 			{
-				Engine::Instance().SetMouseSensitivity(sensitivity);
+				Engine::Instance().GetIOManager()->GetMouseController()->SetSensitivity(sensitivity);
 			}
 		}
 
@@ -188,23 +196,23 @@ namespace Game
 			// キー関連
 			bool IsHeld(BYTE key)
 			{
-				return Engine::Instance().IsKeyHeld(key);
+				return Engine::Instance().GetIOManager()->GetKeyboardController()->IsHeld(key);
 			}
 			bool IsJustPressed(BYTE key)
 			{
-				return Engine::Instance().IsKeyJustPressed(key);
+				return Engine::Instance().GetIOManager()->GetKeyboardController()->IsJustPressed(key);
 			}
 			bool IsJustReleased(BYTE key)
 			{
-				return Engine::Instance().IsKeyJustReleased(key);
+				return Engine::Instance().GetIOManager()->GetKeyboardController()->IsJustReleased(key);
 			}
 			uint32_t HoldFrames(BYTE key)
 			{
-				return Engine::Instance().KeyHoldFrames(key);
+				return Engine::Instance().GetIOManager()->GetKeyboardController()->HoldFrames(key);
 			}
 			int TestTapLong(int n, BYTE key)
 			{
-				return Engine::Instance().TestTapLong(n, key);
+				return Engine::Instance().GetIOManager()->GetKeyboardController()->TestTapLong(n, key);
 			}
 		}
 
@@ -212,43 +220,43 @@ namespace Game
 		{
 			bool IsHeld(int padIndex, BYTE button)
 			{
-				return Engine::Instance().IsPadHeld(padIndex, button);
+				return Engine::Instance().GetIOManager()->GetPadController()->IsHeld(padIndex, button);
 			}
 			bool IsJustPressed(int padIndex, BYTE button)
 			{
-				return Engine::Instance().IsPadJustPressed(padIndex, button);
+				return Engine::Instance().GetIOManager()->GetPadController()->IsJustPressed(padIndex, button);
 			}
 			bool IsJustReleased(int padIndex, BYTE button)
 			{
-				return Engine::Instance().IsPadJustReleased(padIndex, button);
+				return Engine::Instance().GetIOManager()->GetPadController()->IsJustReleased(padIndex, button);
 			}
 			uint32_t HoldFrames(int padIndex, BYTE button)
 			{
-				return Engine::Instance().PadHoldFrames(padIndex, button);
+				return Engine::Instance().GetIOManager()->GetPadController()->HoldFrames(padIndex, button);
 			}
 			Vector2 GetLeftStick(int padIndex)
 			{
-				return Engine::Instance().GetLeftStick(padIndex);
+				return Engine::Instance().GetIOManager()->GetPadController()->GetLeftStick(padIndex);
 			}
 			Vector2 GetRightStick(int padIndex)
 			{
-				return Engine::Instance().GetRightStick(padIndex);
+				return Engine::Instance().GetIOManager()->GetPadController()->GetRightStick(padIndex);
 			}
 			float GetLeftTrigger(int padIndex)
 			{
-				return Engine::Instance().GetLeftTrigger(padIndex);
+				return Engine::Instance().GetIOManager()->GetPadController()->GetLeftTrigger(padIndex);
 			}
 			float GetRightTrigger(int padIndex)
 			{
-				return Engine::Instance().GetRightTrigger(padIndex);
+				return Engine::Instance().GetIOManager()->GetPadController()->GetRightTrigger(padIndex);
 			}
 			void SetVibration(int padIndex, float leftMotor, float rightMotor)
 			{
-				Engine::Instance().SetPadVibration(padIndex, leftMotor, rightMotor);
+				Engine::Instance().GetIOManager()->GetPadController()->SetVibration(padIndex, leftMotor, rightMotor);
 			}
 			int32_t GetConnectedPadNum()
 			{
-				return Engine::Instance().GetConnectedPadNum();
+				return Engine::Instance().GetIOManager()->GetPadController()->GetConnectedPadNum();
 			}
 
 		}
@@ -258,40 +266,49 @@ namespace Game
 	{
 		void MoveCameraCenter(Vector3 target, int spendFrame, EaseType easetype)
 		{
-			Engine::Instance().MoveCameraCenter(target, spendFrame, easetype);
+			Engine::Instance().GetCameraManager()->SetCenterTarget(target, spendFrame, easetype);
 		}
 		void MoveCameraRotate(Vector3 target, int spendFrame, EaseType easetype)
 		{
-			Engine::Instance().MoveCameraRotate(target, spendFrame, easetype);
+			Engine::Instance().GetCameraManager()->SetRotateTarget(target, spendFrame, easetype);
 		}
 		void MoveCameraDistance(float target, int spendFrame, EaseType easetype)
 		{
-			Engine::Instance().MoveCameraDistance(target, spendFrame, easetype);
+			Engine::Instance().GetCameraManager()->SetDistanceTarget(target, spendFrame, easetype);
 		}
+		
 		void StartCameraShake(float intensity, float duration, float frequency)
 		{
-			Engine::Instance().StartCameraShake(intensity, duration, frequency);
+			Engine::Instance().GetCameraManager()->StartShake(intensity, duration, frequency);
 		}
-		bool IsCameraShaking()
+		bool IsShaking()
 		{
-			return Engine::Instance().IsCameraShaking();
+			return Engine::Instance().GetCameraManager()->IsShaking();
 		}
-		void StopCameraShake()
+		void StopShake()
 		{
-			Engine::Instance().StopCameraShake();
+			Engine::Instance().GetCameraManager()->StopShake();
 		}
+		
 		bool InCamera(const AABB& aabb)
 		{
-			return Engine::Instance().InFrustum(aabb);
+			return Engine::Instance().GetCameraManager()->InCamera(aabb);
 		}
+
 		void SetEnableControl(bool enable)
 		{
-			Engine::Instance().SetEnableCameraControl(enable);
+			Engine::Instance().GetCameraManager()->SetEnableControl(enable);
 		}
-		void SetCurrentCamera(const std::string name)
-		{
 
+		void ToggleCamera()
+		{
+			Engine::Instance().GetCameraManager()->ToggleCamera();
 		}
+		void ToggleCamera(const std::string name)
+		{
+			Engine::Instance().GetCameraManager()->ToggleCamera(name);
+		}
+
 		void SetCameraMode(CameraMode_ORBIT_FPS mode)
 		{
 			Engine::Instance().GetCameraManager()->SetCameraMode(mode);
@@ -299,22 +316,6 @@ namespace Game
 
 		namespace Getter
 		{
-			Vector3 GetCenter(const std::string name)
-			{
-				return Engine::Instance().GetCameraManager()->GetCenter(name);
-			}
-			Vector3 GetTranslate(const std::string name)
-			{
-				return Engine::Instance().GetCameraManager()->GetTranslate(name);
-			}
-			Matrix4x4 GetViewProjectionMatrix(const std::string name)
-			{
-				return Engine::Instance().GetCameraManager()->GetViewProjectionMatrix(name);
-			}
-			float GetDistance(const std::string name)
-			{
-				return Engine::Instance().GetCameraManager()->GetDistance(name);
-			}
 			Vector3 GetCurrentCenter()
 			{
 				return Engine::Instance().GetCameraManager()->GetCurrentCenter();
@@ -340,7 +341,7 @@ namespace Game
 
 	namespace Utilities
 	{
-
+		// Counterとか追加する？
 	}
 
 	namespace Math
@@ -435,8 +436,7 @@ namespace Game
 		}
 		Vector3 YawPitchFromDirection(const Vector3& dir)
 		{
-			Vector3 normDir = dir;
-			normDir.Normalize();
+			Vector3 normDir = dir.Normalized();
 			float pitch = std::asinf(-normDir.y); // -sin(pitch) = y 成分
 			float yaw = std::atan2f(normDir.x, normDir.z); // sin(yaw) = x 成分, cos(yaw) = z 成分
 			return Vector3(pitch, yaw, 0.0f); // roll はここでは未使用
@@ -448,19 +448,19 @@ namespace Game
 		// 時間関連
 		float GetDeltaTime()
 		{
-			return Engine::Instance().GetDeltaTime();
+			return Engine::Instance().GetFixFPS()->GetDeltaTime();
 		}
 		uint32_t GetElapsedTime()
 		{
-			return Engine::Instance().GetElapsedTime();
+			return Engine::Instance().GetFixFPS()->GetFrameCount();
 		}
 		float GetFrameRate()
 		{
-			return Engine::Instance().GetFrameRate();
+			return Engine::Instance().GetFixFPS()->GetAverageFPS();
 		}
 		void SetTimeScale(float scale)
 		{
-			Engine::Instance().SetTimeScale(scale);
+			Engine::Instance().GetFixFPS()->SetTimeScale(scale);
 		}
 	}
 
@@ -469,25 +469,25 @@ namespace Game
 		// マップ設定
 		void AddWorldCollider(IWorldCollider* worldCollider)
 		{
-			Engine::Instance().AddWorldCollider(worldCollider);
+			Engine::Instance().GetPhysicsSystem()->AddWorldCollider(worldCollider);
 		}
 
 		// マップと衝突する動的オブジェクトの登録
 		void RegisterDynamic(IPhysicsBody* b)
 		{
-			Engine::Instance().RegisterDynamic(b);
+			Engine::Instance().GetPhysicsSystem()->RegisterDynamic(b);
 		}
 
 		// マップと衝突する動的オブジェクトの登録解除
 		void UnregisterDynamic(IPhysicsBody* b)
 		{
-			Engine::Instance().UnregisterDynamic(b);
+			Engine::Instance().GetPhysicsSystem()->UnregisterDynamic(b);
 		}
 
 		// 全ての動的オブジェクトの登録解除
 		void ClearDynamicAll()
 		{
-			Engine::Instance().ClearDynamicAll();
+			Engine::Instance().GetPhysicsSystem()->ClearDynamics();
 		}
 
 		//void SetGravity(Vector3 gravity)

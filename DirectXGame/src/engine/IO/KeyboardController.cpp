@@ -1,7 +1,7 @@
-#include "IO/GetHitKey.h"
+#include "IO/KeyboardController.h"
 #include <cassert>
 
-GetHitKey::GetHitKey(HWND hwnd)
+KeyboardController::KeyboardController(HWND hwnd)
 {
     Microsoft::WRL::ComPtr<IDirectInput8> directInput;
     HINSTANCE hInstance = GetModuleHandle(nullptr);
@@ -29,7 +29,7 @@ GetHitKey::GetHitKey(HWND hwnd)
 
 }
 
-void GetHitKey::Update()
+void KeyboardController::Update()
 {
     if (keyboard_)
     {
@@ -89,28 +89,28 @@ void GetHitKey::Update()
     }
 }
 
-bool GetHitKey::IsHeld(BYTE key)
+bool KeyboardController::IsHeld(BYTE key) const
 {
     return keys_[key].curr;
 }
 
-bool GetHitKey::IsJustPressed(BYTE key)
+bool KeyboardController::IsJustPressed(BYTE key) const
 {
     return (!keys_[key].prev && keys_[key].curr);
 }
 
-bool GetHitKey::IsJustReleased(BYTE key)
+bool KeyboardController::IsJustReleased(BYTE key) const
 {
     return (keys_[key].prev && !keys_[key].curr);
 }
 
-uint32_t GetHitKey::HoldFrames(BYTE key)
+uint32_t KeyboardController::HoldFrames(BYTE key) const
 {
     return keys_[key].holdFrames;
 }
 
 // 0: なし  1:単押し  2:長押し(n = 長押し判定)
-int GetHitKey::TestTapLong(int n, BYTE key)
+int KeyboardController::TestTapLong(int n, BYTE key) const
 {
     const KeyState& ks = keys_[key];
 
