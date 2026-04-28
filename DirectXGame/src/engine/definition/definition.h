@@ -381,6 +381,8 @@ struct Vector3int
     }
 };
 
+struct Quaternion;
+
 struct Vector3
 {
     float x = 0;
@@ -472,6 +474,8 @@ struct Vector3
     Vector3 Cross(const Vector3& rhs) const;
     // 反射角
     Vector3 Reflect(const Vector3& input, const Vector3& normal);
+	// ベクトルをQuaternionで回転させた結果のベクトルを返す
+    Vector3 RotateByQuaternion(const Quaternion& q) const;
 };
 
 struct Vector4int
@@ -755,19 +759,21 @@ struct Quaternion
     // 単位Quaternion
     static Quaternion MakeIdentityQuaternion();
     // 共役Quaternion
-	static Quaternion MakeConjugateQuaternion(const Quaternion& q);
+	Quaternion MakeConjugateQuaternion() const;
     // Quaternionのnormを返す
-	static float Norm(const Quaternion& q);
+	float Norm() const;
     // 正規化したQuaternion
-    static Quaternion Normalize(const Quaternion& q);
+    Quaternion Normalize() const;
     // 逆Quaternion
-    static Quaternion Inverse(const Quaternion& q);
+    Quaternion Inverse() const;
 	// 任意軸回転を表すQuaternion
 	static Quaternion MakeRotateAxisAngleQuaternion(const Vector3& axis, float radian);
-	// ベクトルをQuaternionで回転させた結果のベクトルを返す
-	static Vector3 RotateVector(const Vector3& v, const Quaternion& q);
 	// 単位Quaternionから回転行列を作成
-	static Matrix4x4 MakeRotateMatrix(const Quaternion& q);
+	Matrix4x4 MakeRotateMatrix() const;
+	// Quaternionからオイラー角を作成
+	Vector3 ToEuler() const;
+	// オイラー角からQuaternionを作成
+	static Quaternion MakeFromEuler(const Vector3& euler);
 };
 
 #pragma endregion

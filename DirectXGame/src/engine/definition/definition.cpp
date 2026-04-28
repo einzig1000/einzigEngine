@@ -95,6 +95,13 @@ Vector3 Vector3::Reflect(const Vector3& input, const Vector3& normal)
     return result;
 }
 
+Vector3 Vector3::RotateByQuaternion(const Quaternion& q) const
+{
+    Vector3 qv(q.x, q.y, q.z);
+    Vector3 t = qv.Cross(*this) * 2.0f;
+	return *this + t * q.w + qv.Cross(t);
+}
+
 #pragma endregion
 
 #pragma region Vector4
@@ -437,37 +444,37 @@ Quaternion Quaternion::MakeIdentityQuaternion()
 	return Quaternion(0.0f, 0.0f, 0.0f, 1.0f);
 }
 
-Quaternion Quaternion::MakeConjugateQuaternion(const Quaternion& q)
+Quaternion Quaternion::MakeConjugateQuaternion() const
 {
-	return Quaternion(-q.x, -q.y, -q.z, q.w);
+	return Quaternion(-x, -y, -z, w);
 }
 
-float Quaternion::Norm(const Quaternion& q)
+float Quaternion::Norm() const
 {
-	return std::sqrt(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
+	return std::sqrt(x * x + y * y + z * z + w * w);
 }
 
-Quaternion Quaternion::Normalize(const Quaternion& q)
+Quaternion Quaternion::Normalize() const
 {
-    float norm = Norm(q);
+	float norm = Norm();
     if (std::abs(norm) > eps)
     {
         return Quaternion(
-            q.x / norm,
-            q.y / norm,
-            q.z / norm,
-            q.w / norm
+            x / norm,
+            y / norm,
+            z / norm,
+            w / norm
         );
     }
 	return Quaternion();
 }
 
-Quaternion Quaternion::Inverse(const Quaternion& q)
+Quaternion Quaternion::Inverse() const
 {
-    const float normSq = q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w;
+    const float normSq = x * x + y * y + z * z + w * w;
     if (std::abs(normSq) > eps)
     {
-        const Quaternion conjugate = MakeConjugateQuaternion(q);
+        const Quaternion conjugate = this->MakeConjugateQuaternion();
         return Quaternion(
             conjugate.x / normSq,
             conjugate.y / normSq,
@@ -475,7 +482,7 @@ Quaternion Quaternion::Inverse(const Quaternion& q)
             conjugate.w / normSq
         );
     }
-	return Quaternion();
+    return Quaternion();
 }
 
 Quaternion Quaternion::MakeRotateAxisAngleQuaternion(const Vector3& axis, float radian)
@@ -491,40 +498,63 @@ Quaternion Quaternion::MakeRotateAxisAngleQuaternion(const Vector3& axis, float 
 	);
 }
 
-Vector3 Quaternion::RotateVector(const Vector3& v, const Quaternion& q)
-{
-    Quaternion vQuat(v.x, v.y, v.z, 0.0f);
-    Quaternion qConjugate = MakeConjugateQuaternion(q);
-    Quaternion resultQuat = q * vQuat * qConjugate;
-	return Vector3(resultQuat.x, resultQuat.y, resultQuat.z);
-}
-
-Matrix4x4 Quaternion::MakeRotateMatrix(const Quaternion& q)
+Matrix4x4 Quaternion::MakeRotateMatrix() const
 {
     Matrix4x4 result = Matrix4x4::MakeIdentity4x4();
-    result.m[0][0] = 1.0f - 2.0f * (q.y * q.y + q.z * q.z);
-    result.m[0][1] = 2.0f * (q.x * q.y - q.z * q.w);
-    result.m[0][2] = 2.0f * (q.x * q.z + q.y * q.w);
-    result.m[1][0] = 2.0f * (q.x * q.y + q.z * q.w);
-    result.m[1][1] = 1.0f - 2.0f * (q.x * q.x + q.z * q.z);
-    result.m[1][2] = 2.0f * (q.y * q.z - q.x * q.w);
-    result.m[2][0] = 2.0f * (q.x * q.z - q.y * q.w);
-    result.m[2][1] = 2.0f * (q.y * q.z + q.x * q.w);
-    result.m[2][2] = 1.0f - 2.0f * (q.x * q.x + q.y * q.y);
+    result.m[0][0] = 1.0f - 2.0f * (y * y + z * z);
+    result.m[0][1] = 2.0f * (x * y - z * w);
+    result.m[0][2] = 2.0f * (x * z + y * w);
+    result.m[1][0] = 2.0f * (x * y + z * w);
+    result.m[1][1] = 1.0f - 2.0f * (x * x + z * z);
+    result.m[1][2] = 2.0f * (y * z - x * w);
+    result.m[2][0] = 2.0f * (x * z - y * w);
+    result.m[2][1] = 2.0f * (y * z + x * w);
+    result.m[2][2] = 1.0f - 2.0f * (x * x + y * y);
     return result;
-
-    //Matrix4x4 result = Matrix4x4::MakeIdentity4x4();
-	//result.m[0][0] = q.w * q.w + q.x * q.x - q.y * q.y - q.z * q.z;
-	//result.m[0][1] = 2.0f * (q.x * q.y - q.w * q.z);
-	//result.m[0][2] = 2.0f * (q.x * q.z + q.w * q.y);
-	//result.m[1][0] = 2.0f * (q.x * q.y + q.w * q.z);
-	//result.m[1][1] = q.w * q.w - q.x * q.x + q.y * q.y - q.z * q.z;
-	//result.m[1][2] = 2.0f * (q.y * q.z - q.w * q.x);
-	//result.m[2][0] = 2.0f * (q.x * q.z - q.w * q.y);
-	//result.m[2][1] = 2.0f * (q.y * q.z + q.w * q.x);
-	//result.m[2][2] = q.w * q.w - q.x * q.x - q.y * q.y + q.z * q.z;
-    //return result;
 }
+
+Vector3 Quaternion::ToEuler() const
+{
+    Vector3 euler;
+
+    // --- Pitch (X軸) ---
+    float sinp = 2.0f * (w * x - y * z);
+    if (std::abs(sinp) >= 1.0f)
+        euler.x = std::copysign(3.1415926535f / 2.0f, sinp); // ±90°
+    else
+        euler.x = std::asin(sinp);
+
+    // --- Yaw (Y軸) ---
+    float siny_cosp = 2.0f * (w * y + z * x);
+    float cosy_cosp = 1.0f - 2.0f * (x * x + y * y);
+    euler.y = std::atan2(siny_cosp, cosy_cosp);
+
+    // --- Roll (Z軸) ---
+    float sinr_cosp = 2.0f * (w * z + x * y);
+    float cosr_cosp = 1.0f - 2.0f * (y * y + z * z);
+    euler.z = std::atan2(sinr_cosp, cosr_cosp);
+
+    return euler;
+}
+
+Quaternion Quaternion::MakeFromEuler(const Vector3& euler)
+{
+    float cy = std::cos(euler.y * 0.5f);
+    float sy = std::sin(euler.y * 0.5f);
+    float cp = std::cos(euler.x * 0.5f);
+    float sp = std::sin(euler.x * 0.5f);
+    float cr = std::cos(euler.z * 0.5f);
+    float sr = std::sin(euler.z * 0.5f);
+
+    Quaternion q;
+    q.w = cr * cp * cy + sr * sp * sy;
+    q.x = sr * cp * cy - cr * sp * sy;
+    q.y = cr * sp * cy + sr * cp * sy;
+    q.z = cr * cp * sy - sr * sp * cy;
+
+    return q;
+}
+
 
 #pragma endregion
 

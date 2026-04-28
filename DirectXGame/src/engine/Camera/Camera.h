@@ -48,11 +48,11 @@ public:
 
 	Vector3 GetCenter() const { return center_; }
 
-	Vector3 GetTranslate() const { return currentPosCartesian_; }
+    Vector3 GetTranslate() const { return Vector3{}; }
 
-	Vector3 GetRotate() const { return Vector3(-currentPosSpherical_.theta, currentPosSpherical_.phi, 0.0f); }
+    Vector3 GetRotate() const { return Vector3{}; }
 
-	float GetDistance() const { return currentPosSpherical_.radius; }
+	float GetDistance() const { return distance_; }
 
 private:
     Vector3 GetShakeOffset() const;
@@ -67,12 +67,12 @@ private:
     // 操作可能か
     bool enableControl_;
 
-	// 球面座標上の現在位置
-	Coordinate_spherical currentPosSpherical_;
-	// デカルト座標上の現在位置
-	Vector3 currentPosCartesian_;
-	// カメラの回転中心
+	// 注視点
 	Vector3 center_ = { 0.0f, 0.0f, 0.0f };
+    // 注視点までの距離
+	float distance_ = 30.0f;
+    // カメラの向き
+	Quaternion rotate_ = { 0.0f, 0.0f, 0.0f, 1.0f };
 
     //////////////////////////////////////////////
     ///              カメラ回転                ///

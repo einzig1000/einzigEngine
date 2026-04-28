@@ -16,7 +16,7 @@ TestPhase::TestPhase()
 	renderObject1_->psoConfig_.vs = "resources/Shaders/SimpleModel.VS.hlsl";
 	renderObject1_->SetupFromShaders();
 
-	transform1_.scale = { 100.0f,100.0f,100.0f };
+	transform1_.scale = { 10.0f,10.0f,10.0f };
 	color1_ = Vector4{ 1.0f,1.0f,1.0f,1.0f };
 }
 
@@ -481,12 +481,12 @@ void TestPhase::DrawImGui()
 			Quaternion q0 = Quaternion{ 2.0f,3.0f,4.0f,1.0f };
 			Quaternion q1 = Quaternion{ 1.0f,3.0f,5.0f,2.0f };
 			Quaternion identity = Quaternion::MakeIdentityQuaternion();
-			Quaternion conj = Quaternion::MakeConjugateQuaternion(q0);
-			Quaternion inv = Quaternion::Inverse(q0);
-			Quaternion normal = Quaternion::Normalize(q0);
+			Quaternion conj = q0.MakeConjugateQuaternion();
+			Quaternion inv = q0.Inverse();
+			Quaternion normal = q0.Normalize();
 			Quaternion mul1 = q0 * q1;
 			Quaternion mul2 = q1 * q0;
-			float norm = Quaternion::Norm(q0);
+			float norm = q0.Norm();
 
 			ImGui::Text("q1       : (%5.2f, %5.2f, %5.2f, %5.2f)", q0.x, q0.y, q0.z, q0.w);
 			ImGui::Text("q2       : (%5.2f, %5.2f, %5.2f, %5.2f)", q1.x, q1.y, q1.z, q1.w);
@@ -505,9 +505,9 @@ void TestPhase::DrawImGui()
 		{
 			Quaternion rotation =
 				Quaternion::MakeRotateAxisAngleQuaternion(Vector3(1.0f, 0.4f, -0.2f).Normalize(), 0.45f);
-			Matrix4x4 rotateMatrix = Quaternion::MakeRotateMatrix(rotation);
+			Matrix4x4 rotateMatrix = rotation.MakeRotateMatrix();
 			Vector3 pointY = Vector3(2.1f, -0.9f, 1.3f);
-			Vector3 rotateByQuaternion = Quaternion::RotateVector(pointY, rotation);
+			Vector3 rotateByQuaternion = pointY.RotateByQuaternion(rotation);
 			Vector3 rotateByMatrix = Transform(pointY, rotateMatrix);
 
 			ImGui::Text("%5.2f, %5.2f, %5.2f %5.2f : rotation",

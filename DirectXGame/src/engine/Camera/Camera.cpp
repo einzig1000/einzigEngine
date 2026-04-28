@@ -8,16 +8,6 @@ Camera::Camera()
 {
     enableControl_ = true;
 
-    // 球面座標上の現在位置
-    currentPosSpherical_.radius = 35.60f;
-    currentPosSpherical_.phi = 0.78f;
-    currentPosSpherical_.radius = 30.00f;
-    currentPosSpherical_.phi = 0.0f;
-	currentPosSpherical_.theta = 0.0f;
-
-	// デカルト座標上の現在位置
-	currentPosCartesian_ = Game::Math::Converter::ToCartesian(currentPosSpherical_);
-
     fovY_ = 0.65f;
 
     Resize();
@@ -55,6 +45,8 @@ void Camera::Update_Orbit()
     bool isMiddleButtonDown = Game::IO::Mouse::IsHeld(2);
     // シフトキーが押されているか
     bool isShiftDown = Game::IO::Key::IsHeld(DIK_LSHIFT);
+	// コントロールキーが押されているか
+	bool isControlDown = Game::IO::Key::IsHeld(DIK_LCONTROL);
 
 #pragma endregion
 
@@ -62,10 +54,9 @@ void Camera::Update_Orbit()
 
     if (isMiddleButtonDown && !isShiftDown)
     {
-        currentPosSpherical_.theta += mouseDelta.x * 0.01f;
-        currentPosSpherical_.phi += mouseDelta.y * 0.01f;
-        // 上下の回転角度を制限
-        currentPosSpherical_.phi = std::clamp(currentPosSpherical_.phi, -1.56f, +1.56f);
+        Quaternion qx = Quaternion::MakeRotateAxisAngleQuaternion(Vector3(0, 1, 0), (mouseDelta.x * -0.01f));
+        Quaternion qy = Quaternion::MakeRotateAxisAngleQuaternion(Vector3(1, 0, 0), (mouseDelta.y * -0.01f));
+        rotate_ = qx * qy * rotate_;
     }
 
 #pragma endregion
@@ -75,15 +66,11 @@ void Camera::Update_Orbit()
     if (isMiddleButtonDown && isShiftDown)
     {
         // スクリーン座標 → カメラ平面移動
-        const float moveSpeed = currentPosSpherical_.radius * 0.002f;
+        const float moveSpeed = distance_ * 0.005f;
 
         // カメラの右方向・上方向ベクトルを取得
-        Vector3 right = {
-            std::cos(currentPosSpherical_.theta),
-            0.0f,
-            -std::sin(currentPosSpherical_.theta)
-        };
-        Vector3 up = { 0,1,0 };
+        Vector3 right = Vector3(1, 0, 0).RotateByQuaternion(rotate_);
+        Vector3 up = Vector3(0, 1, 0).RotateByQuaternion(rotate_);
 
         center_ += right * (-mouseDelta.x * moveSpeed);
         center_ += up * (mouseDelta.y * moveSpeed);
@@ -93,30 +80,26 @@ void Camera::Update_Orbit()
 
 #pragma region カメラ距離移動
 
-    if (mouseWheel != 0)
+    if (isControlDown && mouseWheel != 0)
     {
-        currentPosSpherical_.radius -= mouseWheel * 0.01f;
-        if (currentPosSpherical_.radius < 1.0f)
-        {
-            currentPosSpherical_.radius = 1.0f;
-        }
+		const float moveSpeed = distance_ * 0.05f;
+
+		distance_ -= mouseWheel * moveSpeed;
     }
 
 #pragma endregion
 
 #pragma region カメラ行列計算
 
-	// 球面座標 → デカルト座標変換
-    currentPosCartesian_ = Game::Math::Converter::ToCartesian(currentPosSpherical_);
+    // eye 計算
+    Vector3 offset = Vector3(0, 0, distance_).RotateByQuaternion(rotate_);
+    Vector3 eye = center_ + offset;
 
-	// カメラの位置、注視点、上方向ベクトルを設定してビュー行列を作成
-    Vector3 eye = currentPosCartesian_ + center_ + GetShakeOffset();
-    Vector3 target = center_;
-    Vector3 forward = (target - eye).Normalized();
-	Vector3 right = Vector3(0, 1, 0).Cross(forward).Normalized();
-    Vector3 up = forward.Cross(right);
+    // view 行列
+    Vector3 up = Vector3(0.0f, 1.0f, 0.0f).RotateByQuaternion(rotate_);
+    viewMatrix_ = Matrix4x4::LookAtMatrix(eye, center_, up);
 
-    viewMatrix_ = Matrix4x4::LookAtMatrix(eye, target, up);
+    //GetShakeOffset();
 
     // ビュー行列とプロジェクション行列を掛け合わせた行列を作成
     viewProjectionMatrix = viewMatrix_ * projectionMatrix_;
@@ -134,96 +117,6 @@ void Camera::Update_Orbit()
 // 移動(回転)するものをcenter_にして、カメラ座標を固定
 void Camera::Update_FPS()
 {
-#pragma region 入力取得
-
-    // マウス移動量取得
-    Vector2 mouseDelta = Game::IO::Mouse::GetPositionDelta();
-    // マウスホイール取得
-    int32_t mouseWheel = Game::IO::Mouse::GetWheel();
-    // マウス中ボタンが押されているか
-    bool isMiddleButtonDown = Game::IO::Mouse::IsHeld(2);
-    // シフトキーが押されているか
-    bool isShiftDown = Game::IO::Key::IsHeld(DIK_LSHIFT);
-
-#pragma endregion
-
-#pragma region カメラ回転
-
-    if (isMiddleButtonDown && !isShiftDown)
-    {
-        currentPosSpherical_.theta += mouseDelta.x * 0.01f;
-        currentPosSpherical_.phi += mouseDelta.y * 0.01f;
-        // 上下の回転角度を制限
-        const float epsilon = 0.01f; // 完全な上下を防ぐための小さな値
-        if (currentPosSpherical_.phi < epsilon)
-        {
-            currentPosSpherical_.phi = epsilon;
-        }
-        else if (currentPosSpherical_.phi > 3.14f - epsilon)
-        {
-            currentPosSpherical_.phi = 3.14f - epsilon;
-        }
-    }
-
-
-#pragma endregion
-
-#pragma region カメラ中心移動
-
-    if (isMiddleButtonDown && isShiftDown)
-    {
-        // スクリーン座標 → カメラ平面移動
-        const float moveSpeed = currentPosSpherical_.radius * 0.002f;
-
-        // カメラの右方向・上方向ベクトルを取得
-        Vector3 right = {
-            std::cos(currentPosSpherical_.theta),
-            0.0f,
-            -std::sin(currentPosSpherical_.theta)
-        };
-        Vector3 up = { 0,1,0 };
-
-        center_ += right * (-mouseDelta.x * moveSpeed);
-        center_ += up * (mouseDelta.y * moveSpeed);
-    }
-
-#pragma endregion
-
-#pragma region カメラ距離移動
-
-    if (mouseWheel != 0)
-    {
-        currentPosSpherical_.radius -= mouseWheel * 0.01f;
-        if (currentPosSpherical_.radius < 1.0f)
-        {
-            currentPosSpherical_.radius = 1.0f;
-        }
-    }
-
-#pragma endregion
-
-#pragma region カメラ行列計算
-
-    // 球面座標 → デカルト座標変換
-    currentPosCartesian_ = Game::Math::Converter::ToCartesian(currentPosSpherical_);
-
-    // カメラの位置、注視点、上方向ベクトルを設定してビュー行列を作成
-    Vector3 eye = currentPosCartesian_ + center_ + GetShakeOffset();
-    Vector3 target = center_;
-    Vector3 up = { 0, 1, 0 };
-
-    viewMatrix_ = Matrix4x4::LookAtMatrix(eye, target, up);
-
-    // ビュー行列とプロジェクション行列を掛け合わせた行列を作成
-    viewProjectionMatrix = viewMatrix_ * projectionMatrix_;
-
-
-    Vector3 dir = center_ - eye;
-    Vector3 angle = Game::Math::YawPitchFromDirection(dir);
-
-    CreateFrustumPlanes();
-
-#pragma endregion
 
 }
 
@@ -254,23 +147,18 @@ void Camera::DrawImGui()
 
     // 緯度・経度
     
-	std::string thetaTag = tag + ".theta";
-	ImGui::DragFloat(thetaTag.c_str(), &currentPosSpherical_.theta, 0.01f);
-    ImGui::SameLine();
-    ImGui::Text("theta");
+	std::string centerTag = ".Center" + tag;
+	ImGui::DragFloat3(centerTag.c_str(), &center_.x, 0.1f);
 
-	std::string phiTag = tag + ".phi";
-    ImGui::DragFloat(phiTag.c_str(), &currentPosSpherical_.phi, 0.01f);
-    ImGui::SameLine();
-    ImGui::Text("phi");
+	std::string distanceTag = ".Distance" + tag;
+    ImGui::DragFloat(distanceTag.c_str(), &distance_, 0.1f);
 
-	std::string distanceTag = tag + ".Distance";
-    ImGui::DragFloat(distanceTag.c_str(), &currentPosSpherical_.radius, 0.1f);
-    ImGui::SameLine();
-    ImGui::Text("Distance");
-
-    // 直交座標
-	ImGui::Text("Cartesian Position : %.2f, %.2f, %.2f", currentPosCartesian_.x, currentPosCartesian_.y, currentPosCartesian_.z);
+    //Vector3 euler = rotate_.ToEuler();
+    //if (ImGui::DragFloat3("Rotation (Euler)", &euler.x, 0.1f))
+    //{
+    //    rotate_ = Quaternion::MakeFromEuler(euler);
+    //    rotate_ = rotate_.Normalize();
+    //}
 
 	ImGui::Separator();
 
