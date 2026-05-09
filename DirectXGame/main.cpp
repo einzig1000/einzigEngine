@@ -9,7 +9,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 	// ウィンドウ、DirectX初期化
 	Engine::Instance().Initialize(WIDTH, HEIGHT, L"MyCraft Builders");
+	Engine::Instance().BeginFrame();
 	std::unique_ptr<GameManager> gm = std::make_unique<GameManager>();
+	Engine::Instance().EndFrame();
 	while (Engine::Instance().ProcessMessage())
 	{
 		// フレームの開始

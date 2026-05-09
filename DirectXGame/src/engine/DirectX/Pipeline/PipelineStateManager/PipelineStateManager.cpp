@@ -29,6 +29,7 @@ namespace
         {
             h = HashCombine(h, static_cast<size_t>(params[i].paramType));
             h = HashCombine(h, static_cast<size_t>(params[i].shaderType));
+			h = HashCombine(h, static_cast<size_t>(params[i].key));
             if (params[i].paramType == ParamType::CBV)
             {
                 // CBVはサイズも考慮する
@@ -194,9 +195,6 @@ void PipelineStateManager::InitializeDxc()
 
 Microsoft::WRL::ComPtr<ID3D12RootSignature> PipelineStateManager::GetOrCreateRootSignature(const std::vector<RootParam>& params)
 {
-    // ログ
-	Log("ルートシグネチャ取得開始");
-
 	// ハッシュキーを生成
 	const size_t key = HashRootLayout(params);
 
@@ -204,7 +202,6 @@ Microsoft::WRL::ComPtr<ID3D12RootSignature> PipelineStateManager::GetOrCreateRoo
     auto it = rootSignatureCache_.find(key);
     if (it != rootSignatureCache_.end())
     {
-		Log("キャッシュから取得成功: キー %zu", key);
         return it->second;
     }
 
@@ -220,11 +217,6 @@ Microsoft::WRL::ComPtr<ID3D12RootSignature> PipelineStateManager::GetOrCreateRoo
 
 Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineStateManager::GetOrCreateGraphicsPipelineState(const PSOConfig& psoConfig, const std::vector<RootParam>& params)
 {
-	// ログ
-    Log("PSO取得開始: VS=%s, PS=%s, BlendID=%d, DepthStencilID=%d, RasterizerID=%d, Topology=%d, isSwapChain=%d, RootParam数=%zu",
-        psoConfig.vs.c_str(), psoConfig.ps.c_str(), static_cast<int>(psoConfig.blendID), static_cast<int>(psoConfig.depthStencilID),
-		static_cast<int>(psoConfig.rasterizerID), static_cast<int>(psoConfig.topology), psoConfig.isSwapChain ? 1 : 0, params.size());
-
 	// ハッシュキーを生成
     const size_t rootKey = HashRootLayout(params);
     const size_t psoKey = HashCombine(HashPsoConfig(psoConfig), rootKey);
@@ -233,7 +225,6 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineStateManager::GetOrCreateGra
     auto it = psoCache_.find(psoKey);
     if (it != psoCache_.end())
     {
-		Log("キャッシュから取得成功: キー %zu", psoKey);
         return it->second;
     }
 
@@ -249,9 +240,6 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineStateManager::GetOrCreateGra
 
 Microsoft::WRL::ComPtr<IDxcBlob> PipelineStateManager::GetOrCompileShader(const wchar_t* path, const wchar_t* target)
 {
-	// ログ
-	Log("シェーダー取得開始: %s, Target=%s", path, target);
-
     // キーを生成
     std::wstring key = std::wstring(path) + L"|" + target;
 
@@ -259,7 +247,6 @@ Microsoft::WRL::ComPtr<IDxcBlob> PipelineStateManager::GetOrCompileShader(const 
     auto it = shaderCache_.find(key);
     if (it != shaderCache_.end())
     {
-		Log("キャッシュから取得成功: キー %s", key.c_str());
         return it->second;
     }
 
@@ -310,7 +297,7 @@ Microsoft::WRL::ComPtr<ID3D12RootSignature> PipelineStateManager::CreateRootSign
         if (params[i].paramType == ParamType::CBV)
         {
             rootParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-            const UINT reg = static_cast<UINT>(std::stoi(params[i].key.substr(1)));
+			const UINT reg = static_cast<UINT>(params[i].key);
             rootParam.Descriptor.ShaderRegister = reg;
             rootParam.Descriptor.RegisterSpace = 0;
             rootParam.ShaderVisibility = GetShaderVisibilityFromShaderType(params[i].shaderType);
@@ -322,7 +309,7 @@ Microsoft::WRL::ComPtr<ID3D12RootSignature> PipelineStateManager::CreateRootSign
             D3D12_DESCRIPTOR_RANGE& range = srvRanges[srvIndex++];
 
             range.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-            const UINT reg = static_cast<UINT>(std::stoi(params[i].key.substr(1)));
+            const UINT reg = static_cast<UINT>(params[i].key);
             range.BaseShaderRegister = reg;
             if (params[i].isBindless)
             {

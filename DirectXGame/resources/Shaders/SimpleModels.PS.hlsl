@@ -1,4 +1,4 @@
-// SimpleModel.PS.hlsl
+// SimpleModels.PS.hlsl
 struct PSInput
 {
     float4 position : SV_POSITION;

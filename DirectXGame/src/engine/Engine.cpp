@@ -283,7 +283,6 @@ void Engine::Finalize()
 	CoUninitialize();
 }
 
-
 // ウィンドウ操作
 void Engine::ToggleFullscreen()
 {

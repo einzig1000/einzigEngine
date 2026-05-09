@@ -47,9 +47,7 @@ int32_t TextureManager::LoadTexture(const std::string& filePath)
     assert(SUCCEEDED(hr));
 
     text.metadata = mipImageLocal.GetMetadata();
-    text.number = static_cast<uint32_t>(textures_.size() + 1);
     text.mipImage = std::move(mipImageLocal);
-
 
     // テクスチャリソースとSRVの作成
     text.textureResource = CreateTextureResource(device_, text.metadata);
@@ -58,6 +56,7 @@ int32_t TextureManager::LoadTexture(const std::string& filePath)
 
     SRV_UAVManager::Allocation srvAllocation = descriptorHeap_->GetSRV_UAVManager()->CreateSRVforTexture(text.textureResource.Get(), text.metadata.format, UINT(text.metadata.mipLevels));
 	text.textureSrvHandleGPU = srvAllocation.gpu;
+	text.number = srvAllocation.index;
 
     textures_.push_back(std::move(text));
 
@@ -73,7 +72,7 @@ TextureData* TextureManager::GetTextureData(int32_t textureID)
 
     if (textureID < textures_.size())
     {
-        return &textures_[textureID];
+		return &textures_[textureID];
     }
 
     else

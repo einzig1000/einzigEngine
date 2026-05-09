@@ -66,13 +66,13 @@ void Camera::Update_Orbit()
     if (isMiddleButtonDown && isShiftDown)
     {
         // スクリーン座標 → カメラ平面移動
-        const float moveSpeed = distance_ * 0.005f;
+        const float moveSpeed = distance_ * 0.002f;
 
         // カメラの右方向・上方向ベクトルを取得
         Vector3 right = Vector3(1, 0, 0).RotateByQuaternion(rotate_);
         Vector3 up = Vector3(0, 1, 0).RotateByQuaternion(rotate_);
 
-        center_ += right * (-mouseDelta.x * moveSpeed);
+        center_ += right * (mouseDelta.x * moveSpeed);
         center_ += up * (mouseDelta.y * moveSpeed);
     }
 
@@ -84,7 +84,7 @@ void Camera::Update_Orbit()
     {
 		const float moveSpeed = distance_ * 0.05f;
 
-		distance_ -= mouseWheel * moveSpeed;
+		distance_ -= mouseWheel * moveSpeed * 0.01f;
     }
 
 #pragma endregion

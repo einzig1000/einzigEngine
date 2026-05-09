@@ -3,6 +3,7 @@
 
 TestPhase::TestPhase()
 {
+	int32_t tex1 = Game::Resource::LoadTexture("resources/Prototypes/texture/uvChecker.png");
 
 	int32_t model1 = Game::Resource::LoadModel("resources/Prototypes/model/cube.obj");
 
@@ -11,13 +12,26 @@ TestPhase::TestPhase()
 
 	renderObject1_ = std::make_unique<RenderObject>();
 	renderObject1_->modelID = model1;
-	//renderObject1_->textureID = tex1;
+	renderObject1_->textureID = tex1;
 	renderObject1_->psoConfig_.ps = "resources/Shaders/SimpleModel.PS.hlsl";
 	renderObject1_->psoConfig_.vs = "resources/Shaders/SimpleModel.VS.hlsl";
 	renderObject1_->SetupFromShaders();
 
+	renderObject2_ = std::make_unique<RenderObject>();
+	renderObject2_->modelID = model1;
+	renderObject2_->textureID = tex1;
+	renderObject2_->psoConfig_.ps = "resources/Shaders/SimpleModel.PS.hlsl";
+	renderObject2_->psoConfig_.vs = "resources/Shaders/SimpleModels.VS.hlsl";
+	renderObject2_->SetupFromShaders();
+	renderObject2_->instanceNum_ = 10;
+
 	transform1_.scale = { 10.0f,10.0f,10.0f };
 	color1_ = Vector4{ 1.0f,1.0f,1.0f,1.0f };
+	for (int i = 0; i < 10; ++i)
+	{
+		transform2_[i].scale = { 10.0f,10.0f,10.0f };
+		transform2_[i].translate = { static_cast<float>(i * 15), 0.0f, 0.0f };
+	}
 }
 
 TestPhase::~TestPhase()
@@ -31,19 +45,33 @@ void TestPhase::Initialize()
 
 void TestPhase::Update()
 {
-	int32_t tex1 = Game::Resource::LoadTexture("resources/Prototypes/texture/uvChecker.png");
-	Matrix4x4 worldMatrix = Matrix4x4::MakeAffineMatrix(transform1_.scale, transform1_.rotate, transform1_.translate);
 	Matrix4x4 viewProjection = Game::Camera::Getter::GetCurrentViewProjectionMatrix();
+
+	Matrix4x4 worldMatrix = Matrix4x4::MakeAffineMatrix(transform1_.scale, transform1_.rotate, transform1_.translate);
+	Matrix4x4 worldViewProjection = worldMatrix * viewProjection;
 	
-	renderObject1_->SetCBufferData("b0", ShaderType::PixelShader, &color1_);
-	renderObject1_->SetCBufferData("b1", ShaderType::PixelShader, &tex1);
-	renderObject1_->SetCBufferData("b0", ShaderType::VertexShader, &viewProjection);
-	renderObject1_->SetCBufferData("b1", ShaderType::VertexShader, &worldMatrix);
+	renderObject1_->SetCBufferData(0, ShaderType::PixelShader, &color1_);
+	renderObject1_->SetCBufferData(1, ShaderType::PixelShader, &renderObject1_->textureID);
+	renderObject1_->SetCBufferData(0, ShaderType::VertexShader, &worldViewProjection);
+	renderObject1_->SetCBufferData(1, ShaderType::VertexShader, &worldMatrix);
+
+	std::vector<Matrix4x4> worldMatrices2;
+	for (int i = 0; i < 10; ++i)
+	{
+		Matrix4x4 worldMatrix2 = Matrix4x4::MakeAffineMatrix(transform2_[i].scale, transform2_[i].rotate, transform2_[i].translate);
+		worldMatrices2.push_back(worldMatrix2);
+	}
+
+	renderObject2_->SetCBufferData(0, ShaderType::PixelShader, &color1_);
+	renderObject2_->SetCBufferData(1, ShaderType::PixelShader, &renderObject2_->textureID);
+	renderObject2_->SetCBufferData(0, ShaderType::VertexShader, &viewProjection);
+	renderObject2_->SetSBufferData(0, ShaderType::VertexShader, worldMatrices2.data(), sizeof(Matrix4x4), worldMatrices2.size());
 }
 
 void TestPhase::Draw()
 {
 	renderObject1_->Draw();
+	renderObject2_->Draw();
 }
 
 

@@ -12,16 +12,6 @@ DrawSystem::DrawSystem(DirectXManager* dxManager, ResourceManager* resourceManag
 		cbAllocators_[i].Initialize(dxManager_->GetDevice(), 8 * 1024 * 1024, L"FrameCBAllocator");
 	}
 
-	//// 正射影行列
-	//orthoProjectionMatrix_ = Matrix4x4::MakeOrthographicMatrix(
-	//	0.0f, 0.0f,
-	//	static_cast<float>(WindowManager::winWidth_),
-	//	static_cast<float>(WindowManager::winHeight_),
-	//	0.0f, 100.0f);
-	//
-	//// カメラマトリックス
-	//viewProjectionMatrix_ = Matrix4x4::MakeIdentity4x4();
-
 	// 1フレームに呼び出せるDrawCallの最大数
 	kMaxDrawCallPerFrame_ = 4096;
 
@@ -87,6 +77,7 @@ void DrawSystem::DrawRenderObject()
 {
 	auto* cmdList = dxManager_->GetCommandContextManager()->GetCommandList();
 	auto& cb = cbAllocators_[GetFrameIndex()];
+	const auto& bindlessGPUHandle = dxManager_->GetDescriptorHeapManager()->GetSRV_UAVManager()->GetGPUHandleAt(0);
 
 	for (auto* renderObject : renderObjects_)
 	{
@@ -116,9 +107,7 @@ void DrawSystem::DrawRenderObject()
 			{
 				if (param.isBindless)
 				{
-					cmdList->SetGraphicsRootDescriptorTable(static_cast<UINT>(i),
-						dxManager_->GetDescriptorHeapManager()->GetSRV_UAVManager()->GetGPUHandleAt(0)
-					);
+					cmdList->SetGraphicsRootDescriptorTable(static_cast<UINT>(i), bindlessGPUHandle);
 				}
 				else
 				{
@@ -136,7 +125,7 @@ void DrawSystem::DrawRenderObject()
 		cmdList->IASetVertexBuffers(0, 1, &obj->vertexBufferView);
 
 		// 6)描画
-		cmdList->DrawInstanced(kSumVertex, 1, 0, 0);
+		cmdList->DrawInstanced(kSumVertex, renderObject->instanceNum_, 0, 0);
 	}
 }
 

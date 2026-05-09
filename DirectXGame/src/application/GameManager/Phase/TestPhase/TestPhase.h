@@ -19,7 +19,9 @@ public:
 
 private:
 	std::unique_ptr<RenderObject> renderObject1_;
+	std::unique_ptr<RenderObject> renderObject2_;
 	Transforms transform1_;
+	Transforms transform2_[10];
 	Vector4 color1_;
 
 	uint32_t audio1;

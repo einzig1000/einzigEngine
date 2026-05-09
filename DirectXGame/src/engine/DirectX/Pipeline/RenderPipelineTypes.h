@@ -30,11 +30,11 @@ struct RootParam
 {
 	ParamType paramType = ParamType::None;
 	ShaderType shaderType = ShaderType::None;
-    std::string key;              // "b0", "b1" など
+    int32_t key;              // "b0", "b1" など
 
 	// CBuffer用
 	uint32_t sizeBytes = 0;    // 単位サイズ
-	uint32_t offsetBytes = 0;  // cpuStorage_ 内オフセット または dynamicSrvStorage_ のインデックス(SRV用)
+	uint32_t offsetBytes = 0;  // cpuStorage_ 内オフセット
 
 	// SRV用
     D3D12_GPU_DESCRIPTOR_HANDLE srvGpuHandle{}; // Bindlessアーキテクチャや動的SRVで使用するGPU側のハンドル

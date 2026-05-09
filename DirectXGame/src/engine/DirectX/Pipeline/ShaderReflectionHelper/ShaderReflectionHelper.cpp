@@ -131,6 +131,7 @@ namespace ShaderReflection
             D3D12_SHADER_INPUT_BIND_DESC bind{};
             reflection->GetResourceBindingDesc(i, &bind);
 
+            // CBV
             if (bind.Type == D3D_SIT_CBUFFER)
             {
                 ID3D12ShaderReflectionConstantBuffer* cb = reflection->GetConstantBufferByIndex(bind.BindPoint);
@@ -140,7 +141,7 @@ namespace ShaderReflection
                 RootParam p{};
                 p.paramType = ParamType::CBV;
                 p.shaderType = shaderType;
-                p.key = "b" + std::to_string(bind.BindPoint);
+                p.key = bind.BindPoint;
 
                 p.sizeBytes = cbDesc.Size;
                 p.offsetBytes = uint32_t(currentCBVOffsetBytes);
@@ -148,25 +149,25 @@ namespace ShaderReflection
                 currentCBVOffsetBytes += cbDesc.Size;
                 outParams.push_back(p);
             }
-            else if (bind.Type == D3D_SIT_STRUCTURED ||
-                bind.Type == D3D_SIT_BYTEADDRESS)
+			// SRV
+            else if (bind.Type == D3D_SIT_STRUCTURED || bind.Type == D3D_SIT_BYTEADDRESS)
             {
                 RootParam p{};
                 p.paramType = ParamType::SRV;
                 p.shaderType = shaderType;
-                p.key = "t" + std::to_string(bind.BindPoint);
+                p.key = bind.BindPoint;
 
 				p.srvIndex = currentSRVOffsetIndex;
                 currentSRVOffsetIndex++;
                 outParams.push_back(p);
             }
-            else if (bind.Type == D3D_SIT_TEXTURE &&
-                bind.BindCount == 0)
+			// Bindlessテクスチャ配列 (BindCountが0で、型がテクスチャ)
+            else if (bind.Type == D3D_SIT_TEXTURE && bind.BindCount == 0)
             {
                 RootParam p{};
                 p.paramType = ParamType::SRV;
                 p.shaderType = shaderType;
-                p.key = "t" + std::to_string(bind.BindPoint);
+                p.key = bind.BindPoint;
 
 				p.isBindless = true;
                 outParams.push_back(p);
