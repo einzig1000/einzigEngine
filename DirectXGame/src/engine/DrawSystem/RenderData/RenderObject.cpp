@@ -6,13 +6,14 @@
 #include <Utilities/Converter/StringConverter/StringConverter.h>
 #include <DrawSystem/DrawSystem.h>
 #include <cstring>
+#include <cstdint>
 
 namespace
 {
-	//static size_t HashRootParam(const RootParam& param)
-	//{
-	//	return param.shaderType << 16 | param.key;
-	//}
+	static uint32_t HashRootParam(const RootParam& param)
+	{
+		return static_cast<uint32_t>(static_cast<uint16_t>(param.shaderType) << 16 | param.key);
+	}
 }
 
 void RenderObject::SetupFromShaders()
@@ -86,8 +87,8 @@ void RenderObject::SetSBufferData(const int32_t key, ShaderType shaderType, cons
 			assert(srvData.mappedData[frameIndex]);
 			std::memcpy(srvData.mappedData[frameIndex], data, bytes);
 
-			// GPUハンドルをこのフレーム用に更新しておく
-			param.srvGpuHandle = alloc.gpu;
+			// RootParamにSRVのスロットインデックスを保存
+			param.srvAllocIndex = alloc.index;
 			return;
 		}
 	}

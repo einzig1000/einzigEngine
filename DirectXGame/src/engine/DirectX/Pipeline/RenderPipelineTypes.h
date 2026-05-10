@@ -37,8 +37,9 @@ struct RootParam
 	uint32_t offsetBytes = 0;  // cpuStorage_ 内オフセット
 
 	// SRV用
-    D3D12_GPU_DESCRIPTOR_HANDLE srvGpuHandle{}; // Bindlessアーキテクチャや動的SRVで使用するGPU側のハンドル
-	uint32_t srvIndex = 0;      // SRVのインデックス (BindlessでないSRV用)
+    //D3D12_GPU_DESCRIPTOR_HANDLE srvGpuHandle{}; // Bindlessアーキテクチャや動的SRVで使用するGPU側のハンドル
+	uint32_t srvIndex = 0;      // そのSRVがdynamicSrvStorage_のどこにあるか。
+    uint32_t srvAllocIndex = UINT32_MAX;    // SRVのスロットインデックス
 	bool isBindless = false;    // Bindlessテクスチャ配列かどうか
 };
 

@@ -16,11 +16,6 @@ cbuffer ColorBuffer : register(b0)
     float4 color;
 }
 
-cbuffer TextureIndex : register(b1)
-{
-    int textureIndex;
-};
-
 Texture2D<float4> textures[] : register(t0);
 SamplerState gSampler : register(s0);
 

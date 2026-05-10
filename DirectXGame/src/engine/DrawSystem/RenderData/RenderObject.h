@@ -44,6 +44,7 @@ public:
 
 private:
 	// RootParameterにいれるものリスト。CBVもSRVもここで管理する
+	//std::unordered_map<uint32_t, RootParam> rootParams_{};
 	std::vector<RootParam> rootParams_{};
 
 	// CBV用のストレージ。uint8_tのただのバイト列で保持。読みとる時はreinterpret_castで型を戻すイメージ。すべての情報を型に依存せずまとめて管理するためのもの。

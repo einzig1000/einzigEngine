@@ -169,6 +169,7 @@ namespace ShaderReflection
                 p.shaderType = shaderType;
                 p.key = bind.BindPoint;
 
+				p.srvAllocIndex = 0;
 				p.isBindless = true;
                 outParams.push_back(p);
             }

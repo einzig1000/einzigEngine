@@ -6,7 +6,6 @@
 #include <wrl/client.h>
 #include <memory>
 
-
 class WindowManager;
 class DirectXManager;
 class DrawSystem;
@@ -19,8 +18,6 @@ class IPhysicsBody;
 class ResourceManager;
 class FixFPS;
 class RenderObject;
-
-
 
 class Engine
 {

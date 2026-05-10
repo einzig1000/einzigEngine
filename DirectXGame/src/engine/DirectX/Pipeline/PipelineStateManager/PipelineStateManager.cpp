@@ -264,6 +264,14 @@ Microsoft::WRL::ComPtr<IDxcBlob> PipelineStateManager::GetOrCompileShader(const 
 
 Microsoft::WRL::ComPtr<ID3D12RootSignature> PipelineStateManager::CreateRootSignature(const std::vector<RootParam>& params)
 {
+    //auto* srvMgr = Engine::Instance()
+    //    .GetDirectXManager()
+    //    ->GetDescriptorHeapManager()
+    //    ->GetSRV_UAVManager();
+
+    //const UINT srvCapacity = srvMgr->GetTextureCapacity() + srvMgr->GetBufferCapacity();
+
+
     size_t srvCount = 0;
 	size_t cbvCount = 0;
     for (const auto& p : params)

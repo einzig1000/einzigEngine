@@ -77,7 +77,7 @@ void DrawSystem::DrawRenderObject()
 {
 	auto* cmdList = dxManager_->GetCommandContextManager()->GetCommandList();
 	auto& cb = cbAllocators_[GetFrameIndex()];
-	const auto& bindlessGPUHandle = dxManager_->GetDescriptorHeapManager()->GetSRV_UAVManager()->GetGPUHandleAt(0);
+	auto* srvManager = dxManager_->GetDescriptorHeapManager()->GetSRV_UAVManager();
 
 	for (auto* renderObject : renderObjects_)
 	{
@@ -105,14 +105,8 @@ void DrawSystem::DrawRenderObject()
 			}
 			else if (param.paramType == ParamType::SRV)
 			{
-				if (param.isBindless)
-				{
-					cmdList->SetGraphicsRootDescriptorTable(static_cast<UINT>(i), bindlessGPUHandle);
-				}
-				else
-				{
-					cmdList->SetGraphicsRootDescriptorTable(static_cast<UINT>(i), param.srvGpuHandle);
-				}
+				assert(param.srvAllocIndex != UINT32_MAX);
+				cmdList->SetGraphicsRootDescriptorTable(static_cast<UINT>(i), srvManager->GetGPUHandleAt(param.srvAllocIndex));
 			}
 		}
 

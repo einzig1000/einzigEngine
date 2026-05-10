@@ -89,12 +89,12 @@ void TestPhase::DrawImGui()
 			ImGui::DragFloat3("rotate", &transform1_.rotate.x, 0.1f);
 			ImGui::DragFloat3("translate", &transform1_.translate.x, 0.1f, -100.0f, 100.0f);
 
-			Matrix4x4 viewProjection = Game::Camera::Getter::GetCurrentViewProjectionMatrix();
-			ImGui::Text("viewProjection");
-			ImGui::Text("%5.2f %5.2f %5.2f %5.2f", viewProjection.m[0][0], viewProjection.m[0][1], viewProjection.m[0][2], viewProjection.m[0][3]);
-			ImGui::Text("%5.2f %5.2f %5.2f %5.2f", viewProjection.m[1][0], viewProjection.m[1][1], viewProjection.m[1][2], viewProjection.m[1][3]);
-			ImGui::Text("%5.2f %5.2f %5.2f %5.2f", viewProjection.m[2][0], viewProjection.m[2][1], viewProjection.m[2][2], viewProjection.m[2][3]);
-			ImGui::Text("%5.2f %5.2f %5.2f %5.2f", viewProjection.m[3][0], viewProjection.m[3][1], viewProjection.m[3][2], viewProjection.m[3][3]);
+			for (int i = 0; i < 10; ++i)
+			{
+				ImGui::DragFloat3(("scale" + std::to_string(i)).c_str(), &transform2_[i].scale.x, 0.1f, 0.1f, 100.0f);
+				ImGui::DragFloat3(("rotate" + std::to_string(i)).c_str(), &transform2_[i].rotate.x, 0.1f);
+				ImGui::DragFloat3(("translate" + std::to_string(i)).c_str(), &transform2_[i].translate.x, 0.1f, -100.0f, 100.0f);
+			}
 
 			ImGui::EndTabItem();
 		}
