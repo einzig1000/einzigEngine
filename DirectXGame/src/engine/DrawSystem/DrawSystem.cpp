@@ -93,22 +93,38 @@ void DrawSystem::DrawRenderObject()
 		const auto& cpuStrage = renderObject->GetCpuStorage();
 		const auto& rootParams = renderObject->GetRootParams();
 
-		for (size_t i = 0; i < rootParams.size(); ++i)
+		//uint32_t 
+		for (const auto& [key, param] : rootParams)
 		{
-			const auto& param = rootParams[i];
-
 			if (param.paramType == ParamType::CBV)
 			{
 				const auto alloc = cb.Allocate(param.sizeBytes);
 				std::memcpy(alloc.cpu, cpuStrage.data() + param.offsetBytes, param.sizeBytes);
-				cmdList->SetGraphicsRootConstantBufferView(static_cast<UINT>(i), alloc.gpu);
+				cmdList->SetGraphicsRootConstantBufferView(param.vectorIndex, alloc.gpu);
 			}
 			else if (param.paramType == ParamType::SRV)
 			{
 				assert(param.srvAllocIndex != UINT32_MAX);
-				cmdList->SetGraphicsRootDescriptorTable(static_cast<UINT>(i), srvManager->GetGPUHandleAt(param.srvAllocIndex));
+				cmdList->SetGraphicsRootDescriptorTable(param.vectorIndex, srvManager->GetGPUHandleAt(param.srvAllocIndex));
 			}
 		}
+
+		//for (size_t i = 0; i < rootParams.size(); ++i)
+		//{
+		//	const auto& param = rootParams[i];
+		//
+		//	if (param.paramType == ParamType::CBV)
+		//	{
+		//		const auto alloc = cb.Allocate(param.sizeBytes);
+		//		std::memcpy(alloc.cpu, cpuStrage.data() + param.offsetBytes, param.sizeBytes);
+		//		cmdList->SetGraphicsRootConstantBufferView(static_cast<UINT>(i), alloc.gpu);
+		//	}
+		//	else if (param.paramType == ParamType::SRV)
+		//	{
+		//		assert(param.srvAllocIndex != UINT32_MAX);
+		//		cmdList->SetGraphicsRootDescriptorTable(static_cast<UINT>(i), srvManager->GetGPUHandleAt(param.srvAllocIndex));
+		//	}
+		//}
 
 		// モデルの検索
 		const ModelData* obj = resourceManager_->GetModelManager()->GetModelData(renderObject->modelID);

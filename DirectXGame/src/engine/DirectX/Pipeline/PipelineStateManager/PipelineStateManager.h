@@ -15,17 +15,17 @@ public:
     ~PipelineStateManager();
 
     // ルートシグネチャキャッシュにあればそれを返す。なければ生成してキャッシュに保存してから返す
-    Microsoft::WRL::ComPtr<ID3D12RootSignature> GetOrCreateRootSignature(const std::vector<RootParam>& params);
+    Microsoft::WRL::ComPtr<ID3D12RootSignature> GetOrCreateRootSignature(const std::unordered_map<uint32_t, RootParam>& params);
 	// PSOキャッシュにあればそれを返す。なければ生成してキャッシュに保存してから返す
-    Microsoft::WRL::ComPtr<ID3D12PipelineState> GetOrCreateGraphicsPipelineState(const PSOConfig& psoConfig, const std::vector<RootParam>& params);
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> GetOrCreateGraphicsPipelineState(const PSOConfig& psoConfig, const std::unordered_map<uint32_t, RootParam>& params);
 	// シェーダーキャッシュにあればそれを返す。なければコンパイルしてキャッシュに保存してから返す
     Microsoft::WRL::ComPtr<IDxcBlob> GetOrCompileShader(const wchar_t* path, const wchar_t* target);
 
 private:
 	// ルートシグネチャ生成
-	Microsoft::WRL::ComPtr<ID3D12RootSignature> CreateRootSignature(const std::vector<RootParam>& params);
+	Microsoft::WRL::ComPtr<ID3D12RootSignature> CreateRootSignature(const std::unordered_map<uint32_t, RootParam>& params);
 	// パイプラインステート生成
-    Microsoft::WRL::ComPtr<ID3D12PipelineState> CreatePipelineState(const PSOConfig& cfg, const std::vector<RootParam>& params);
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> CreatePipelineState(const PSOConfig& cfg, const std::unordered_map<uint32_t, RootParam>& params);
 	// シェーダーコンパイル
     Microsoft::WRL::ComPtr<IDxcBlob> CompileShader(const std::wstring& filePath, const wchar_t* profile);
 

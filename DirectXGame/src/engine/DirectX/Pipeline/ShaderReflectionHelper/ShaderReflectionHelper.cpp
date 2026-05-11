@@ -9,6 +9,27 @@
 
 namespace ShaderReflection
 {
+    uint32_t HashRootParam(const ParamType& paramType, const ShaderType& shaderType, const uint32_t key)
+    {
+        uint32_t h = 0;
+
+        h ^= static_cast<uint32_t>(paramType);
+        h *= 0x85ebca6b;
+
+        h ^= static_cast<uint32_t>(shaderType);
+        h *= 0x85ebca6b;
+
+        h ^= key; // 32bit そのまま
+        h *= 0x85ebca6b;
+
+        // MurmurHash3 finalizer
+        h ^= h >> 16;
+        h *= 0xc2b2ae35;
+        h ^= h >> 16;
+
+		return h;
+    }
+
     std::vector<InputElement> GetInputLayoutFromShader(IDxcBlob* shaderBlob)
     {
         std::vector<InputElement> inputElements;
@@ -100,7 +121,7 @@ namespace ShaderReflection
 
 
 
-    void BuildRootParamsFromShader(IDxcBlob* shaderBlob, ShaderType shaderType, std::vector<RootParam>& outParams, size_t& currentCBVOffsetBytes, uint32_t& currentSRVOffsetIndex)
+    void BuildRootParamsFromShader(IDxcBlob* shaderBlob, ShaderType shaderType, std::unordered_map<uint32_t, RootParam>& outParams, size_t& currentCBVOffsetBytes, uint32_t& currentSRVOffsetIndex)
     {
         Microsoft::WRL::ComPtr<IDxcUtils> dxcUtils;
         HRESULT hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils));
@@ -142,12 +163,14 @@ namespace ShaderReflection
                 p.paramType = ParamType::CBV;
                 p.shaderType = shaderType;
                 p.key = bind.BindPoint;
+                p.vectorIndex = outParams.size();
 
                 p.sizeBytes = cbDesc.Size;
                 p.offsetBytes = uint32_t(currentCBVOffsetBytes);
 
                 currentCBVOffsetBytes += cbDesc.Size;
-                outParams.push_back(p);
+                uint32_t hash = HashRootParam(ParamType::CBV, shaderType, bind.BindPoint);
+                outParams[hash] = p;
             }
 			// SRV
             else if (bind.Type == D3D_SIT_STRUCTURED || bind.Type == D3D_SIT_BYTEADDRESS)
@@ -156,10 +179,12 @@ namespace ShaderReflection
                 p.paramType = ParamType::SRV;
                 p.shaderType = shaderType;
                 p.key = bind.BindPoint;
+                p.vectorIndex = outParams.size();
 
-				p.srvIndex = currentSRVOffsetIndex;
+				p.srvStorageIndex = currentSRVOffsetIndex;
                 currentSRVOffsetIndex++;
-                outParams.push_back(p);
+                uint32_t hash = HashRootParam(ParamType::SRV, shaderType, bind.BindPoint);
+                outParams[hash] = p;
             }
 			// Bindlessテクスチャ配列 (BindCountが0で、型がテクスチャ)
             else if (bind.Type == D3D_SIT_TEXTURE && bind.BindCount == 0)
@@ -168,12 +193,15 @@ namespace ShaderReflection
                 p.paramType = ParamType::SRV;
                 p.shaderType = shaderType;
                 p.key = bind.BindPoint;
+                p.vectorIndex = outParams.size();
 
 				p.srvAllocIndex = 0;
-				p.isBindless = true;
-                outParams.push_back(p);
+                uint32_t hash = HashRootParam(ParamType::SRV, shaderType, bind.BindPoint);
+                outParams[hash] = p;
             }
         }
+
+        int i = 0;
     }
 
     bool HasBindlessTextureArray(IDxcBlob* shaderBlob)

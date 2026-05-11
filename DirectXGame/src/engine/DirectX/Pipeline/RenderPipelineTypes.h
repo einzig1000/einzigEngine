@@ -10,7 +10,7 @@ enum class ShaderType
     ComputeShader,
 };
 
-enum class ParamType : uint8_t
+enum class ParamType
 {
 	None,
 	CBV,
@@ -30,17 +30,16 @@ struct RootParam
 {
 	ParamType paramType = ParamType::None;
 	ShaderType shaderType = ShaderType::None;
-    int32_t key;              // "b0", "b1" など
+    uint32_t key = 0;           // "b0", "b1" など
+	size_t vectorIndex = 0;     // RootParameterの配列内インデックス。
 
 	// CBuffer用
-	uint32_t sizeBytes = 0;    // 単位サイズ
-	uint32_t offsetBytes = 0;  // cpuStorage_ 内オフセット
+	uint32_t sizeBytes = 0;     // 自身のサイズ。CBuffer用ストレージ内でどれだけのサイズが必要か。
+	uint32_t offsetBytes = 0;   // cpuStorage_ 内オフセット
 
 	// SRV用
-    //D3D12_GPU_DESCRIPTOR_HANDLE srvGpuHandle{}; // Bindlessアーキテクチャや動的SRVで使用するGPU側のハンドル
-	uint32_t srvIndex = 0;      // そのSRVがdynamicSrvStorage_のどこにあるか。
-    uint32_t srvAllocIndex = UINT32_MAX;    // SRVのスロットインデックス
-	bool isBindless = false;    // Bindlessテクスチャ配列かどうか
+	uint32_t srvStorageIndex = 0;   // そのSRVがdynamicSrvStorage_のどこにあるか。
+	uint32_t srvAllocIndex = UINT32_MAX;    // SRVのスロットインデックス(0であればBindlessテクスチャ配列、1以上UINT32_MAX未満であればリソース確保済みのSRV)
 };
 
 // ブレンドステートの種類

@@ -3,17 +3,20 @@
 #include <dxcapi.h>
 #include <vector>
 #include <string>
+#include <unordered_map>
 #include <DirectX/Pipeline/RenderPipelineTypes.h>
 
 namespace ShaderReflection
 {
+    uint32_t HashRootParam(const ParamType& paramType, const ShaderType& shaderType, const uint32_t key);
+
     /// <summary>
 	/// シェーダーからRootParameterを作成する関数(完成版)
     /// </summary>
     void BuildRootParamsFromShader(
         IDxcBlob* shaderBlob,
         ShaderType shaderType,
-        std::vector<RootParam>& outParams,
+        std::unordered_map<uint32_t, RootParam>& outParams,
         size_t& currentCBVOffsetBytes,
         uint32_t& currentSRVOffsetIndex
     );

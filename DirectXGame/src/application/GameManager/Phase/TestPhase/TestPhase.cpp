@@ -4,6 +4,7 @@
 TestPhase::TestPhase()
 {
 	int32_t tex1 = Game::Resource::LoadTexture("resources/Prototypes/texture/uvChecker.png");
+	int32_t tex2 = Game::Resource::LoadTexture("resources/Prototypes/texture/monsterBall.png");
 
 	int32_t model1 = Game::Resource::LoadModel("resources/Prototypes/model/cube.obj");
 
@@ -19,7 +20,7 @@ TestPhase::TestPhase()
 
 	renderObject2_ = std::make_unique<RenderObject>();
 	renderObject2_->modelID = model1;
-	renderObject2_->textureID = tex1;
+	renderObject2_->textureID = tex2;
 	renderObject2_->psoConfig_.ps = "resources/Shaders/SimpleModel.PS.hlsl";
 	renderObject2_->psoConfig_.vs = "resources/Shaders/SimpleModels.VS.hlsl";
 	renderObject2_->SetupFromShaders();

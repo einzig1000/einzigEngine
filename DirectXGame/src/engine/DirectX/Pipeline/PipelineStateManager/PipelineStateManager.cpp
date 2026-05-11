@@ -21,19 +21,19 @@ namespace
         return std::hash<std::string>{}(s);
     }
 
-	static size_t HashRootLayout(const std::vector<RootParam>& params)
+	static size_t HashRootLayout(const std::unordered_map<uint32_t, RootParam>& params)
     {
         size_t h = 1469598103934665603ULL;
         h = HashCombine(h, params.size());
-        for (size_t i = 0; i < params.size(); ++i)
+		for (const auto& [key, param] : params)
         {
-            h = HashCombine(h, static_cast<size_t>(params[i].paramType));
-            h = HashCombine(h, static_cast<size_t>(params[i].shaderType));
-			h = HashCombine(h, static_cast<size_t>(params[i].key));
-            if (params[i].paramType == ParamType::CBV)
+            h = HashCombine(h, static_cast<size_t>(param.paramType));
+            h = HashCombine(h, static_cast<size_t>(param.shaderType));
+            h = HashCombine(h, static_cast<size_t>(param.key));
+            if (param.paramType == ParamType::CBV)
             {
                 // CBVはサイズも考慮する
-                h = HashCombine(h, params[i].sizeBytes);
+                h = HashCombine(h, param.sizeBytes);
 			}
         }
         return h;
@@ -193,7 +193,7 @@ void PipelineStateManager::InitializeDxc()
     assert(SUCCEEDED(hr));
 }
 
-Microsoft::WRL::ComPtr<ID3D12RootSignature> PipelineStateManager::GetOrCreateRootSignature(const std::vector<RootParam>& params)
+Microsoft::WRL::ComPtr<ID3D12RootSignature> PipelineStateManager::GetOrCreateRootSignature(const std::unordered_map<uint32_t, RootParam>& params)
 {
 	// ハッシュキーを生成
 	const size_t key = HashRootLayout(params);
@@ -215,7 +215,7 @@ Microsoft::WRL::ComPtr<ID3D12RootSignature> PipelineStateManager::GetOrCreateRoo
 	return rs;
 }
 
-Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineStateManager::GetOrCreateGraphicsPipelineState(const PSOConfig& psoConfig, const std::vector<RootParam>& params)
+Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineStateManager::GetOrCreateGraphicsPipelineState(const PSOConfig& psoConfig, const std::unordered_map<uint32_t, RootParam>& params)
 {
 	// ハッシュキーを生成
     const size_t rootKey = HashRootLayout(params);
@@ -262,24 +262,16 @@ Microsoft::WRL::ComPtr<IDxcBlob> PipelineStateManager::GetOrCompileShader(const 
 
 
 
-Microsoft::WRL::ComPtr<ID3D12RootSignature> PipelineStateManager::CreateRootSignature(const std::vector<RootParam>& params)
+Microsoft::WRL::ComPtr<ID3D12RootSignature> PipelineStateManager::CreateRootSignature(const std::unordered_map<uint32_t, RootParam>& params)
 {
-    //auto* srvMgr = Engine::Instance()
-    //    .GetDirectXManager()
-    //    ->GetDescriptorHeapManager()
-    //    ->GetSRV_UAVManager();
-
-    //const UINT srvCapacity = srvMgr->GetTextureCapacity() + srvMgr->GetBufferCapacity();
-
-
     size_t srvCount = 0;
 	size_t cbvCount = 0;
-    for (const auto& p : params)
+    for (const auto& [key, p] : params)
     {
         if (p.paramType == ParamType::CBV)
         {
             ++cbvCount;
-		}
+        }
         else if (p.paramType == ParamType::SRV)
         {
             ++srvCount;
@@ -287,7 +279,7 @@ Microsoft::WRL::ComPtr<ID3D12RootSignature> PipelineStateManager::CreateRootSign
         else
         {
             assert(false && "Invalid RootParam");
-		}
+        }
     }
 
     std::vector<D3D12_ROOT_PARAMETER> rootParams;
@@ -297,29 +289,30 @@ Microsoft::WRL::ComPtr<ID3D12RootSignature> PipelineStateManager::CreateRootSign
 	srvRanges.resize(srvCount);
 
     size_t srvIndex = 0;
+	size_t vectorIndex = 0;
 
-    for (size_t i = 0; i < params.size(); ++i)
+    for (const auto& [key, param] : params)
     {
-        D3D12_ROOT_PARAMETER rootParam{};
+		D3D12_ROOT_PARAMETER rootParam{};
 
-        if (params[i].paramType == ParamType::CBV)
+        if (param.paramType == ParamType::CBV)
         {
             rootParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-			const UINT reg = static_cast<UINT>(params[i].key);
+            const UINT reg = static_cast<UINT>(param.key);
             rootParam.Descriptor.ShaderRegister = reg;
             rootParam.Descriptor.RegisterSpace = 0;
-            rootParam.ShaderVisibility = GetShaderVisibilityFromShaderType(params[i].shaderType);
+            rootParam.ShaderVisibility = GetShaderVisibilityFromShaderType(param.shaderType);
         }
-        else if (params[i].paramType == ParamType::SRV)
+        else if (param.paramType == ParamType::SRV)
         {
             assert(srvIndex < srvRanges.size());
 
             D3D12_DESCRIPTOR_RANGE& range = srvRanges[srvIndex++];
 
             range.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-            const UINT reg = static_cast<UINT>(params[i].key);
+            const UINT reg = static_cast<UINT>(param.key);
             range.BaseShaderRegister = reg;
-            if (params[i].isBindless)
+            if (param.srvAllocIndex == 0)
             {
                 range.NumDescriptors = UINT_MAX;
             }
@@ -333,14 +326,15 @@ Microsoft::WRL::ComPtr<ID3D12RootSignature> PipelineStateManager::CreateRootSign
             rootParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
             rootParam.DescriptorTable.NumDescriptorRanges = 1;
             rootParam.DescriptorTable.pDescriptorRanges = &range;
-            rootParam.ShaderVisibility = GetShaderVisibilityFromShaderType(params[i].shaderType);
+            rootParam.ShaderVisibility = GetShaderVisibilityFromShaderType(param.shaderType);
         }
         else
         {
             assert(false && "Invalid RootParam");
-		}
+        }
 
-        rootParams[i] = rootParam;
+        rootParams[vectorIndex] = rootParam;
+		vectorIndex++;
     }
 
     D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};
@@ -380,7 +374,7 @@ Microsoft::WRL::ComPtr<ID3D12RootSignature> PipelineStateManager::CreateRootSign
     return rs;
 }
 
-Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineStateManager::CreatePipelineState(const PSOConfig& cfg, const std::vector<RootParam>& params)
+Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineStateManager::CreatePipelineState(const PSOConfig& cfg, const std::unordered_map<uint32_t, RootParam>& params)
 {
     HRESULT hr;
 
