@@ -92,18 +92,20 @@ void DrawSystem::DrawRenderObject()
 		// 4) CBV・SRVセット
 		const auto& cpuStrage = renderObject->GetCpuStorage();
 		const auto& rootParams = renderObject->GetRootParams(); 
-		for (const auto& [key, param] : rootParams)
+		for (size_t i = 0; i < rootParams.size(); ++i)
 		{
+			const auto& param = rootParams[i];
+
 			if (param.paramType == ParamType::CBV)
 			{
 				const auto alloc = cb.Allocate(param.sizeBytes);
 				std::memcpy(alloc.cpu, cpuStrage.data() + param.offsetBytes, param.sizeBytes);
-				cmdList->SetGraphicsRootConstantBufferView(UINT(param.vectorIndex), alloc.gpu);
+				cmdList->SetGraphicsRootConstantBufferView(static_cast<UINT>(i), alloc.gpu);
 			}
 			else if (param.paramType == ParamType::SRV)
 			{
 				assert(param.srvAllocIndex != UINT32_MAX);
-				cmdList->SetGraphicsRootDescriptorTable(UINT(param.vectorIndex), srvManager->GetGPUHandleAt(param.srvAllocIndex));
+				cmdList->SetGraphicsRootDescriptorTable(static_cast<UINT>(i), srvManager->GetGPUHandleAt(param.srvAllocIndex));
 			}
 		}
 

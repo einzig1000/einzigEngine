@@ -16,8 +16,8 @@ namespace ShaderReflection
     void BuildRootParamsFromShader(
         IDxcBlob* shaderBlob,
         ShaderType shaderType,
-        std::unordered_map<uint32_t, RootParam>& outParams,
-        size_t& currentCBVOffsetBytes,
+        std::vector<RootParam>& outParams,
+        uint32_t& currentCBVOffsetBytes,
         uint32_t& currentSRVOffsetIndex
     );
 

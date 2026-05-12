@@ -133,5 +133,4 @@ namespace Dx12ResourceFactory
 
 		return resource;
     }
-
 }

@@ -31,7 +31,7 @@ public:
 	void SetCBufferData(const uint32_t key, ShaderType shaderType, const void* data);
 	void SetSBufferData(const uint32_t key, ShaderType shaderType, const void* data, size_t elementSize, size_t elementCount);
 
-	const std::unordered_map<uint32_t, RootParam>& GetRootParams() const { return rootParams_; }
+	const std::vector<RootParam>& GetRootParams() const { return rootParams_; }
 	const std::vector<uint8_t>& GetCpuStorage() const { return cpuStorage_; }
 
 public:
@@ -45,8 +45,9 @@ public:
 
 private:
 	// RootParameterにいれるものリスト。CBVもSRVもここで管理する
-	std::unordered_map<uint32_t, RootParam> rootParams_{};
-	//std::vector<RootParam> rootParams_{};
+	//std::unordered_map<uint32_t, RootParam> rootParams_{};
+	std::vector<RootParam> rootParams_{};
+	std::unordered_map<uint32_t, size_t> rootParamHashToIndexMap_{};
 
 	// CBV用のストレージ。uint8_tのただのバイト列で保持。読みとる時はreinterpret_castで型を戻すイメージ。すべての情報を型に依存せずまとめて管理するためのもの。
 	std::vector<uint8_t> cpuStorage_{};

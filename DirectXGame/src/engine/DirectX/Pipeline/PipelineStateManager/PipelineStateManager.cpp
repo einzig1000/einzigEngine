@@ -21,11 +21,11 @@ namespace
         return std::hash<std::string>{}(s);
     }
 
-	static size_t HashRootLayout(const std::unordered_map<uint32_t, RootParam>& params)
+	static size_t HashRootLayout(const std::vector<RootParam>& params)
     {
         size_t h = 1469598103934665603ULL;
         h = HashCombine(h, params.size());
-		for (const auto& [key, param] : params)
+		for (const auto& param : params)
         {
             h = HashCombine(h, static_cast<size_t>(param.paramType));
             h = HashCombine(h, static_cast<size_t>(param.shaderType));
@@ -193,7 +193,7 @@ void PipelineStateManager::InitializeDxc()
     assert(SUCCEEDED(hr));
 }
 
-Microsoft::WRL::ComPtr<ID3D12RootSignature> PipelineStateManager::GetOrCreateRootSignature(const std::unordered_map<uint32_t, RootParam>& params)
+Microsoft::WRL::ComPtr<ID3D12RootSignature> PipelineStateManager::GetOrCreateRootSignature(const std::vector<RootParam>& params)
 {
 	// ハッシュキーを生成
 	const size_t key = HashRootLayout(params);
@@ -215,7 +215,7 @@ Microsoft::WRL::ComPtr<ID3D12RootSignature> PipelineStateManager::GetOrCreateRoo
 	return rs;
 }
 
-Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineStateManager::GetOrCreateGraphicsPipelineState(const PSOConfig& psoConfig, const std::unordered_map<uint32_t, RootParam>& params)
+Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineStateManager::GetOrCreateGraphicsPipelineState(const PSOConfig& psoConfig, const std::vector<RootParam>& params)
 {
 	// ハッシュキーを生成
     const size_t rootKey = HashRootLayout(params);
@@ -262,11 +262,11 @@ Microsoft::WRL::ComPtr<IDxcBlob> PipelineStateManager::GetOrCompileShader(const 
 
 
 
-Microsoft::WRL::ComPtr<ID3D12RootSignature> PipelineStateManager::CreateRootSignature(const std::unordered_map<uint32_t, RootParam>& params)
+Microsoft::WRL::ComPtr<ID3D12RootSignature> PipelineStateManager::CreateRootSignature(const std::vector<RootParam>& params)
 {
     size_t srvCount = 0;
 	size_t cbvCount = 0;
-    for (const auto& [key, p] : params)
+    for (const auto& p : params)
     {
         if (p.paramType == ParamType::CBV)
         {
@@ -291,7 +291,7 @@ Microsoft::WRL::ComPtr<ID3D12RootSignature> PipelineStateManager::CreateRootSign
     size_t srvIndex = 0;
 	size_t vectorIndex = 0;
 
-    for (const auto& [key, param] : params)
+	for (const auto& param : params)
     {
 		D3D12_ROOT_PARAMETER rootParam{};
 
@@ -374,7 +374,7 @@ Microsoft::WRL::ComPtr<ID3D12RootSignature> PipelineStateManager::CreateRootSign
     return rs;
 }
 
-Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineStateManager::CreatePipelineState(const PSOConfig& cfg, const std::unordered_map<uint32_t, RootParam>& params)
+Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineStateManager::CreatePipelineState(const PSOConfig& cfg, const std::vector<RootParam>& params)
 {
     HRESULT hr;
 

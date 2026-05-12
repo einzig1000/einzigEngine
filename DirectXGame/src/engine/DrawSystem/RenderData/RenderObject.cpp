@@ -16,16 +16,22 @@ void RenderObject::SetupFromShaders()
 	auto psBlob = Engine::Instance().GetDirectXManager()->GetPipelineStateManager()->GetOrCompileShader(psPath.c_str(), L"ps_6_0");
 
 	rootParams_.clear();
+	rootParamHashToIndexMap_.clear();
 	cpuStorage_.clear();
 	dynamicSrvStorage_.clear();
 
-	size_t cbvSizeOffset = 0;
+	uint32_t cbvSizeOffset = 0;
 	uint32_t srvIndexOffset = 0;
 
 	// VS の CBV / SRV を反映
 	ShaderReflection::BuildRootParamsFromShader(vsBlob.Get(), ShaderType::VertexShader, rootParams_, cbvSizeOffset, srvIndexOffset);
 	// PS の CBV / SRV を反映
 	ShaderReflection::BuildRootParamsFromShader(psBlob.Get(), ShaderType::PixelShader, rootParams_, cbvSizeOffset, srvIndexOffset);
+
+	for (size_t i = 0; i < rootParams_.size(); ++i)
+	{
+		rootParamHashToIndexMap_[rootParams_[i].hash] = i;
+	}
 
 	cpuStorage_.resize(cbvSizeOffset);
 	dynamicSrvStorage_.resize(srvIndexOffset);
@@ -35,10 +41,10 @@ void RenderObject::SetSBufferData(const uint32_t key, ShaderType shaderType, con
 {
 	const size_t bytes = elementSize * elementCount;
 	const uint32_t hash = ShaderReflection::HashRootParam(ParamType::SRV, shaderType, key);
-	const auto& it = rootParams_.find(hash);
-	if (it == rootParams_.end()) return;
+	const auto& it = rootParamHashToIndexMap_.find(hash);
+	if (it == rootParamHashToIndexMap_.end()) return;
 
-	auto& param = it->second;
+	auto& param = rootParams_.at(it->second);
 	if (param.paramType == ParamType::SRV && param.shaderType == shaderType && param.key == key)
 	{
 		auto* dxManager = Engine::Instance().GetDirectXManager();
@@ -88,9 +94,9 @@ void RenderObject::SetSBufferData(const uint32_t key, ShaderType shaderType, con
 void RenderObject::SetCBufferData(const uint32_t key, ShaderType shaderType, const void* data)
 {
 	uint32_t hash = ShaderReflection::HashRootParam(ParamType::CBV, shaderType, key);
-	const auto& it = rootParams_.find(hash);
-	if (it == rootParams_.end()) return;
-	const auto& param = it->second;
+	const auto& it = rootParamHashToIndexMap_.find(hash);
+	if (it == rootParamHashToIndexMap_.end()) return;
+	const auto& param = rootParams_.at(it->second);
 
 	if (param.paramType == ParamType::CBV && param.shaderType == shaderType && param.key == key)
 	{
