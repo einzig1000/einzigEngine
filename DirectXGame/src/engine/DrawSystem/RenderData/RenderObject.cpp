@@ -8,6 +8,7 @@
 #include <cstring>
 #include <cstdint>
 
+
 void RenderObject::SetupFromShaders()
 {
 	std::wstring vsPath = StringConverter::Convert(psoConfig_.vs);

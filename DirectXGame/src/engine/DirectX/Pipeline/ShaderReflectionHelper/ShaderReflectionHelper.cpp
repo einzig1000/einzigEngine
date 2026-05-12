@@ -22,12 +22,11 @@ namespace ShaderReflection
         h ^= key; // 32bit そのまま
         h *= 0x85ebca6b;
 
-        // MurmurHash3 finalizer
         h ^= h >> 16;
         h *= 0xc2b2ae35;
         h ^= h >> 16;
 
-		return h;
+        return h;
     }
 
     std::vector<InputElement> GetInputLayoutFromShader(IDxcBlob* shaderBlob)
@@ -197,8 +196,6 @@ namespace ShaderReflection
                 outParams.push_back(p);
             }
         }
-
-        int i = 0;
     }
 
     bool HasBindlessTextureArray(IDxcBlob* shaderBlob)

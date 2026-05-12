@@ -35,12 +35,9 @@ public:
 	void Initialize(int width, int height, const std::wstring& title);
 	bool ProcessMessage();
 	void BeginFrame();
-	void UpdateTransforms();
-	void UpdateParticles();
 	void EndFrame();
 	void Quit();
 	void Finalize();
-
 
 	// フルスクリーン切り替え
 	void ToggleFullscreen();
@@ -59,10 +56,10 @@ private:
 	Engine() = default;
 	~Engine() = default;
 
-
-	// カメラ更新
 	void UpdateCamera();
 	void UpdateDebugInfo();
+	void UpdateTransforms();
+	void UpdateParticles();
 	bool isDebugInfo_ = true;
 
 
