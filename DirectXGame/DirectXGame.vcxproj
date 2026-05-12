@@ -58,19 +58,22 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IntDir>$(SolutionDir)..\generated\obj\$(ProjectName)$(Configuration)\</IntDir>
-    <OutDir>$(SolutionDir)..\generated\outputs\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)generated\obj\$(ProjectName)$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)generated\outputs\$(Configuration)\</OutDir>
     <IncludePath>$(SolutionDir)imgui;$(SolutionDir)DirectXTex;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)generated\outputs\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Development|x64'">
-    <IntDir>$(SolutionDir)..\generated\obj\$(ProjectName)$(Configuration)\</IntDir>
-    <OutDir>$(SolutionDir)..\generated\outputs\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)generated\obj\$(ProjectName)$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)generated\outputs\$(Configuration)\</OutDir>
     <IncludePath>$(SolutionDir)imgui;$(SolutionDir)DirectXTex;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)generated\outputs\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IntDir>$(SolutionDir)..\generated\obj\$(ProjectName)$(Configuration)\</IntDir>
-    <OutDir>$(SolutionDir)..\generated\outputs\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)generated\obj\$(ProjectName)$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)generated\outputs\$(Configuration)\</OutDir>
     <IncludePath>$(SolutionDir)imgui;$(SolutionDir)DirectXTex;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)generated\outputs\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -92,8 +95,10 @@
       <AdditionalDependencies>imgui.lib;DirectXTex.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(ProjectDir)externals\dxc\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"
-copy "$(ProjectDir)externals\dxc\dxil.dll" "$(TargetDir)dxil.dll"</Command>
+      <Command>
+copy "C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"
+copy "C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\arm64\dxil.dll" "$(TargetDir)dxil.dll"
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -120,9 +125,10 @@ copy "$(ProjectDir)externals\dxc\dxil.dll" "$(TargetDir)dxil.dll"</Command>
       <AdditionalDependencies>imgui.lib;DirectXTex.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"
-
-copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dxil.dll"</Command>
+      <Command>
+copy "C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"
+copy "C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\arm64\dxil.dll" "$(TargetDir)dxil.dll"
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Development|x64'">
@@ -152,9 +158,10 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <AdditionalDependencies>imgui.lib;DirectXTex.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"
-
-copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dxil.dll"</Command>
+      <Command>
+copy "C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"
+copy "C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\arm64\dxil.dll" "$(TargetDir)dxil.dll"
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
