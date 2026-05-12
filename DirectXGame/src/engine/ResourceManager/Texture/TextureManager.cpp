@@ -1,10 +1,11 @@
-#include "ResourceManager/Texture/TextureManager.h"
-#include "externals/DirectXTex/d3dx12.h"
-#include "externals/DirectXTex/DirectXTex.h"
+#include "TextureManager.h"
+#include <externals/DirectXTex/d3dx12.h>
+#include <externals/DirectXTex/DirectXTex.h>
 #include <Utilities/Logger/Logger.h>
 #include <Utilities/Converter/StringConverter/StringConverter.h>
-#include "DirectX/DescriptorHeapManager/DescriptorHeapManager.h"
+#include <DirectX/DescriptorHeapManager/DescriptorHeapManager.h>
 #include <DirectX/Resource/Dx12ResourceFactory.h>
+#include <filesystem>
 #include <cassert>
 
 TextureManager::TextureManager(ID3D12GraphicsCommandList* commandList, DescriptorHeapManager* descriptorHeap, ID3D12Device* device)
@@ -20,13 +21,22 @@ TextureManager::~TextureManager()
 
 int32_t TextureManager::LoadTexture(const std::string& filePath)
 {
-    auto exists = std::find_if(
-        textures_.begin(), textures_.end(),
-        [&filePath](const TextureData& tex) { return tex.filePath == filePath; }
-	);
-    if (exists != textures_.end())
+	// ファイルパス型に変換
+	std::filesystem::path path(filePath);
+
+    // すでに読み込まれていたらそのテクスチャIDを返す
+    auto it = pathToIDMap_.find(filePath);
+    if (it != pathToIDMap_.end())
     {
-        return exists->number;
+		return it->second;
+    }
+
+	// ファイルが存在しない場合はエラー
+    if (!std::filesystem::exists(path))
+    {
+        Log("テクスチャファイルが見つかりませんでした:%s", filePath.c_str());
+        assert(false);
+        return -1;
 	}
 
     // ボックスを作成
@@ -50,72 +60,35 @@ int32_t TextureManager::LoadTexture(const std::string& filePath)
     text.mipImage = std::move(mipImageLocal);
 
     // テクスチャリソースとSRVの作成
-    text.textureResource = CreateTextureResource(device_, text.metadata);
+    text.textureResource = Dx12ResourceFactory::CreateTextureResource(device_, text.metadata);
     Microsoft::WRL::ComPtr<ID3D12Resource> tempIntermediateResource = UploadTextureData(text.textureResource.Get(), text.mipImage, device_, commandList_);
     intermediateUploadResources_.push_back(tempIntermediateResource);
 
-    SRV_UAVManager::Allocation srvAllocation = descriptorHeap_->GetSRV_UAVManager()->CreateSRVforTexture(text.textureResource.Get(), text.metadata.format, UINT(text.metadata.mipLevels));
+    SRV_UAVManager::Allocation srvAllocation = descriptorHeap_->GetSRV_UAVManager()->CreateSRVforTexture(text.textureResource.Get(), text.metadata);
 	text.textureSrvHandleGPU = srvAllocation.gpu;
 	text.number = srvAllocation.index;
 
-    textures_.push_back(std::move(text));
+	pathToIDMap_[filePath] = text.number;
+	if (textures_.size() <= static_cast<size_t>(text.number))
+    {
+		textures_.resize(text.number + 1);
+    }
+	textures_[text.number] = std::move(text);
 
     return text.number;
 }
 
 TextureData* TextureManager::GetTextureData(int32_t textureID)
 {
-    if (textureID < 0)
+    if (textureID < 0 || textureID >= static_cast<int32_t>(textures_.size()))
     {
-        return nullptr;
-	}
-
-    if (textureID < textures_.size())
-    {
-		return &textures_[textureID];
-    }
-
-    else
-    {
-        Log("存在しないテクスチャIDです:%d", textureID);
+        // IDが範囲外の場合はエラー
+        Log("テクスチャIDが範囲外です:%d", textureID);
+        assert(false);
         return nullptr;
     }
+    return &textures_[textureID];
 }
-
-// 2,
-Microsoft::WRL::ComPtr<ID3D12Resource> TextureManager::CreateTextureResource(ID3D12Device* device, const DirectX::TexMetadata& metadata)
-{
-    // 1,metadataを基にResourceの設定
-    D3D12_RESOURCE_DESC resourceDesc{};
-    resourceDesc.Width = UINT(metadata.width);
-    resourceDesc.Height = UINT(metadata.height);
-    resourceDesc.MipLevels = UINT16(metadata.mipLevels); // mipmapの数
-    resourceDesc.DepthOrArraySize = UINT16(metadata.arraySize); // 奥行き or 配列Textureの配列数
-    resourceDesc.Format = metadata.format; // TextureのFormat
-
-    resourceDesc.SampleDesc.Count = 1; // サンプリングカウント。１固定
-    resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION(metadata.dimension); // Textureの次元数。普段使ってるのは２次元
-
-    // 2,利用するHeapの設定
-    D3D12_HEAP_PROPERTIES heapProperties{};
-    heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
-
-    // 3,Resourceを生成する
-    Microsoft::WRL::ComPtr<ID3D12Resource> resource = nullptr;
-    HRESULT hr = device->CreateCommittedResource(
-        &heapProperties, // Heapの設定
-        D3D12_HEAP_FLAG_NONE, // Heapの特殊な設定
-        &resourceDesc, // Resourceの設定
-        D3D12_RESOURCE_STATE_COPY_DEST, // 初回のResourceState.Textureは基本読むだけ
-        nullptr, // Clear最適解。使わないのでnullptr
-        IID_PPV_ARGS(&resource) // 作成するResourceポインタへのポインタ
-    );
-    assert(SUCCEEDED(hr));
-    resource->SetName(L"CreateTextureResource()");
-
-    return resource;
-}
-
 
 
 // 3,TextureResourceにデータを転送する

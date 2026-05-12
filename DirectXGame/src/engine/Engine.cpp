@@ -279,6 +279,25 @@ void Engine::Finalize()
 	// ImGuiの終了処理
 	imguiManager_->Finalize();
 
+	// フレームレート制御
+	fixFPS_.reset();
+	// 物理演算
+	physicsSystem_.reset();
+	// ImGui
+	imguiManager_.reset();
+	// 入力関連
+	ioManager_.reset();
+	// カメラ
+	cameraManager_.reset();
+	// 描画関連
+	drawSystem_.reset();
+	// リソース管理
+	resourceManager_.reset();
+	// DirectX関連
+	dxManager_.reset();
+	// ウィンドウ関連
+	windowManager_.reset();
+
 	// COMの終了処理
 	CoUninitialize();
 }

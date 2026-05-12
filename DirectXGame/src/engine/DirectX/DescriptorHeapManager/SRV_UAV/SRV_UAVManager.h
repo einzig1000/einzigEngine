@@ -2,6 +2,7 @@
 #include <d3d12.h>
 #include <wrl.h>
 #include <cstdint>
+#include <externals/DirectXTex/DirectXTex.h>
 
 
 class SRV_UAVManager
@@ -36,7 +37,8 @@ public:
     D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandleAt(uint32_t index) const;
     D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandleAt(uint32_t index) const;
 
-    Allocation CreateSRVforTexture(ID3D12Resource* resource, DXGI_FORMAT format, UINT mipLevels);
+    Allocation CreateSRVforTexture(ID3D12Resource* resource, const DirectX::TexMetadata& metadata);
+	Allocation CreateSRVforDDS(ID3D12Resource* resource, const DirectX::TexMetadata& metadata);
     Allocation CreateSRVforStructuredBuffer(ID3D12Resource* resource, UINT numElements, UINT structureByteStride);
 	void RewriteSRVforStructuredBuffer(Allocation& allocation, ID3D12Resource* resource, UINT numElements, UINT structureByteStride);
 

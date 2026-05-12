@@ -40,16 +40,9 @@ private:
 
 	std::vector<const RenderObject*> renderObjects_{};
 
-
 	// DirectXマネージャー
 	DirectXManager* dxManager_ = nullptr;
 	ResourceManager* resourceManager_ = nullptr;
-
-	//// カメラビュープロジェクション行列
-	//Matrix4x4 viewProjectionMatrix_;
-	//// 正射影行列
-	//Matrix4x4 orthoProjectionMatrix_;
-
 
 	// 現フレームで描画されている頂点数(モデルは除く)
 	size_t vertexDataUsed_ = 0;

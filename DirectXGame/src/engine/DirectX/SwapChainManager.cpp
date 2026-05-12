@@ -1,6 +1,7 @@
-#include "DirectX/SwapChainManager.h"
-#include "Utilities/Logger/Logger.h"
-#include "Window/WindowManager.h"
+#include <DirectX/SwapChainManager.h>
+#include <Utilities/Logger/Logger.h>
+#include <Window/WindowManager.h>
+#include <DirectX/Resource/Dx12ResourceFactory.h>
 #include <Windows.h> 
 #include <cassert>
 
@@ -70,32 +71,7 @@ void SwapChainManager::InitializeRenderTargetView(ID3D12Device* device)
 
 void SwapChainManager::InitializeDepthStencilView(ID3D12Device* device)
 {
-    D3D12_RESOURCE_DESC depthStencilDesc = {};
-    depthStencilDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-    depthStencilDesc.Width = UINT(WindowManager::winWidth_);
-    depthStencilDesc.Height = UINT(WindowManager::winHeight_);
-    depthStencilDesc.DepthOrArraySize = 1;
-    depthStencilDesc.MipLevels = 1;
-    depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-    depthStencilDesc.SampleDesc.Count = 1;
-    depthStencilDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
-
-    D3D12_HEAP_PROPERTIES heapProperties{};
-    heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
-
-    D3D12_CLEAR_VALUE clearValue = {};
-    clearValue.DepthStencil.Depth = 1.0f;
-    clearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-
-    HRESULT hr = device->CreateCommittedResource(
-        &heapProperties,
-        D3D12_HEAP_FLAG_NONE,
-        &depthStencilDesc,
-        D3D12_RESOURCE_STATE_DEPTH_WRITE,
-        &clearValue,
-        IID_PPV_ARGS(depthStencilBuffer_.ReleaseAndGetAddressOf())
-    );
-    assert(SUCCEEDED(hr));
+	depthStencilBuffer_ = Dx12ResourceFactory::CreateDepthStencilResource(device, UINT(WindowManager::winWidth_), UINT(WindowManager::winHeight_));
 
     D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
     dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
@@ -170,17 +146,6 @@ void SwapChainManager::Resize(ID3D12Device* device, ID3D12CommandQueue* commandQ
 
     for (int i = 0; i < 2; ++i)
     {
-  //      if (rtvAllocations_[i].index != UINT32_MAX)
-  //      {
-  //          descriptorHeapManager_->GetRTVManager()->Free(rtvAllocations_[i].index);
-  //          rtvAllocations_[i] = { UINT32_MAX };
-		//}
-
-            //if (rtvAllocations_[i].index == UINT32_MAX)
-            //{
-            //    rtvAllocations_[i] = descriptorHeapManager_->GetRTVManager()->CreateRTV(swapChainResources_[i].Get(), &rtvDesc_);
-            //}
-
         if (rtvAllocations_[i].index == UINT32_MAX)
         {
             uint32_t index = descriptorHeapManager_->GetRTVManager()->Allocate();

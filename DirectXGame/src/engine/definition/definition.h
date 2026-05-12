@@ -1026,7 +1026,7 @@ struct ModelData
 struct TextureData
 {
     // データ本体
-    DirectX::TexMetadata metadata;
+	DirectX::TexMetadata metadata{};
     DirectX::ScratchImage mipImage;
 
 	// テクスチャリソース
@@ -1035,7 +1035,7 @@ struct TextureData
     D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU;
 
 	// 識別ナンバー   
-    int32_t number;
+	int32_t number = -1;
 
 	// ファイルパス
     std::string filePath;

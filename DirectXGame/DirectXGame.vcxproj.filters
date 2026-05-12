@@ -582,7 +582,4 @@
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="resources\Shaders\PerFrame.hlsli" />
-  </ItemGroup>
 </Project>

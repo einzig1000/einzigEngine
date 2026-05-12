@@ -20,18 +20,18 @@ TestPhase::TestPhase()
 
 	renderObject2_ = std::make_unique<RenderObject>();
 	renderObject2_->modelID = model1;
-	renderObject2_->textureID = tex2;
+	renderObject2_->textureID = tex1;
 	renderObject2_->psoConfig_.ps = "resources/Shaders/SimpleModel.PS.hlsl";
 	renderObject2_->psoConfig_.vs = "resources/Shaders/SimpleModels.VS.hlsl";
-	renderObject2_->SetupFromShaders();
 	renderObject2_->instanceNum_ = 10;
+	renderObject2_->SetupFromShaders();
 
-	transform1_.scale = { 10.0f,10.0f,10.0f };
+	transform1_.scale = { 11.0f,11.0f,11.0f };
 	color1_ = Vector4{ 1.0f,1.0f,1.0f,1.0f };
 	for (int i = 0; i < 10; ++i)
 	{
 		transform2_[i].scale = { 10.0f,10.0f,10.0f };
-		transform2_[i].translate = { static_cast<float>(i * 15), 0.0f, 0.0f };
+		transform2_[i].translate = { static_cast<float>(((i + 1) * 15)), 0.0f, 0.0f };
 	}
 }
 
