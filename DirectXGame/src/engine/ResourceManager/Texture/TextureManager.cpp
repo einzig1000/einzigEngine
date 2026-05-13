@@ -2,11 +2,13 @@
 #include <externals/DirectXTex/d3dx12.h>
 #include <externals/DirectXTex/DirectXTex.h>
 #include <Utilities/Logger/Logger.h>
-#include <Utilities/Converter/StringConverter/StringConverter.h>
 #include <DirectX/DescriptorHeapManager/DescriptorHeapManager.h>
 #include <DirectX/Resource/Dx12ResourceFactory.h>
+#include <definition/definition.h>
 #include <filesystem>
 #include <cassert>
+#include <cctype>
+#include <algorithm>
 
 TextureManager::TextureManager(ID3D12GraphicsCommandList* commandList, DescriptorHeapManager* descriptorHeap, ID3D12Device* device)
 	:commandList_(commandList), descriptorHeap_(descriptorHeap), device_(device)
@@ -21,6 +23,8 @@ TextureManager::~TextureManager()
 
 int32_t TextureManager::LoadTexture(const std::string& filePath)
 {
+	HRESULT hr = S_OK;
+
 	// ファイルパス型に変換
 	std::filesystem::path path(filePath);
 
@@ -39,23 +43,39 @@ int32_t TextureManager::LoadTexture(const std::string& filePath)
         return -1;
 	}
 
+    // 識別子を判定
+    std::string ext = path.extension().string();
+    std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+	bool dds = (ext == ".dds");
+
     // ボックスを作成
     TextureData text;
 
-	// ファイルパスを保存
-    text.filePath = filePath;
-
-    // テクスチャファイルを読んでプログラムを扱えるようにする
+	// 画像データとメタデータの作成
     DirectX::ScratchImage image{};
-    std::wstring filePathw = StringConverter::Convert(filePath);
-    HRESULT hr = DirectX::LoadFromWICFile(filePathw.c_str(), DirectX::WIC_FLAGS_FORCE_SRGB, nullptr, image);
+    if (dds)
+    {
+        hr = DirectX::LoadFromDDSFile(path.c_str(), DirectX::DDS_FLAGS_NONE, nullptr, image);
+	}
+    else
+    {
+        hr = DirectX::LoadFromWICFile(path.c_str(), DirectX::WIC_FLAGS_FORCE_SRGB, nullptr, image);
+    }
     assert(SUCCEEDED(hr));
 
     // ミップマップの作成
     DirectX::ScratchImage mipImageLocal;
-    hr = DirectX::GenerateMipMaps(image.GetImages(), image.GetImageCount(), image.GetMetadata(), DirectX::TEX_FILTER_SRGB, 0, mipImageLocal);
-    assert(SUCCEEDED(hr));
+	if (DirectX::IsCompressed(image.GetMetadata().format))
+    {
+		mipImageLocal = std::move(image);
+    }
+    else
+    {
+        hr = DirectX::GenerateMipMaps(image.GetImages(), image.GetImageCount(), image.GetMetadata(), DirectX::TEX_FILTER_SRGB, 0, mipImageLocal);
+        assert(SUCCEEDED(hr));
+    }
 
+    // メタデータ・ミップマップを保存
     text.metadata = mipImageLocal.GetMetadata();
     text.mipImage = std::move(mipImageLocal);
 
@@ -64,9 +84,22 @@ int32_t TextureManager::LoadTexture(const std::string& filePath)
     Microsoft::WRL::ComPtr<ID3D12Resource> tempIntermediateResource = UploadTextureData(text.textureResource.Get(), text.mipImage, device_, commandList_);
     intermediateUploadResources_.push_back(tempIntermediateResource);
 
-    SRV_UAVManager::Allocation srvAllocation = descriptorHeap_->GetSRV_UAVManager()->CreateSRVforTexture(text.textureResource.Get(), text.metadata);
+	SRV_UAVManager::Allocation srvAllocation{};
+    if (dds)
+    {
+        srvAllocation = descriptorHeap_->GetSRV_UAVManager()->CreateSRVforDDS(text.textureResource.Get(), text.metadata);
+    }
+    else
+    {
+        srvAllocation = descriptorHeap_->GetSRV_UAVManager()->CreateSRVforTexture(text.textureResource.Get(), text.metadata);
+    }
+
+	// SRVのGPUハンドルとテクスチャIDを保存
 	text.textureSrvHandleGPU = srvAllocation.gpu;
 	text.number = srvAllocation.index;
+
+    // ファイルパスを保存
+    text.filePath = filePath;
 
 	pathToIDMap_[filePath] = text.number;
 	if (textures_.size() <= static_cast<size_t>(text.number))

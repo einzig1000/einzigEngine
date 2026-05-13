@@ -370,6 +370,10 @@ namespace Game
 			float GetCurrentDistance();
 			/// <returns>カメラのビュープロジェクション行列</returns>
 			Matrix4x4 GetCurrentViewProjectionMatrix();
+			/// <returns>カメラのビュー行列</returns>
+			Matrix4x4 GetCurrentViewMatrix();
+			/// <returns>カメラのプロジェクション行列</returns>
+			Matrix4x4 GetCurrentProjectionMatrix();
 		};
 
 		/// <summary>

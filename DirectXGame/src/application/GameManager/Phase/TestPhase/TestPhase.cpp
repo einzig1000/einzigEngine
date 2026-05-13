@@ -5,26 +5,39 @@ TestPhase::TestPhase()
 {
 	int32_t tex1 = Game::Resource::LoadTexture("resources/Prototypes/texture/uvChecker.png");
 	int32_t tex2 = Game::Resource::LoadTexture("resources/Prototypes/texture/monsterBall.png");
+	int32_t tex3 = Game::Resource::LoadTexture("resources/Prototypes/texture/shine.dds");
 
 	int32_t model1 = Game::Resource::LoadModel("resources/Prototypes/model/cube.obj");
 
 	audio1 = Game::Resource::LoadAudio("resources/Prototypes/audio/BGM/InGame.mp3");
 	audio2 = Game::Resource::LoadAudio("resources/Prototypes/audio/SE/バトル用/氷魔法1.mp3");
 
-	renderObject1_ = std::make_unique<RenderObject>();
-	renderObject1_->modelID = model1;
-	renderObject1_->textureID = tex1;
-	renderObject1_->psoConfig_.ps = "resources/Shaders/SimpleModel.PS.hlsl";
-	renderObject1_->psoConfig_.vs = "resources/Shaders/SimpleModel.VS.hlsl";
-	renderObject1_->SetupFromShaders();
+	cbvOnly = std::make_unique<RenderObject>();
+	cbvOnly->modelID = model1;
+	cbvOnly->textureID = tex1;
+	cbvOnly->psoConfig_.ps = "resources/Shaders/SimpleModel/SimpleModel.PS.hlsl";
+	cbvOnly->psoConfig_.vs = "resources/Shaders/SimpleModel/SimpleModel.VS.hlsl";
+	cbvOnly->SetupFromShaders();
 
-	renderObject2_ = std::make_unique<RenderObject>();
-	renderObject2_->modelID = model1;
-	renderObject2_->textureID = tex1;
-	renderObject2_->psoConfig_.ps = "resources/Shaders/SimpleModel.PS.hlsl";
-	renderObject2_->psoConfig_.vs = "resources/Shaders/SimpleModels.VS.hlsl";
-	renderObject2_->instanceNum_ = 10;
-	renderObject2_->SetupFromShaders();
+	cbvAndSrv = std::make_unique<RenderObject>();
+	cbvAndSrv->modelID = model1;
+	cbvAndSrv->textureID = tex1;
+	cbvAndSrv->psoConfig_.ps = "resources/Shaders/SimpleModel/SimpleModel.PS.hlsl";
+	cbvAndSrv->psoConfig_.vs = "resources/Shaders/SimpleModel/SimpleModels.VS.hlsl";
+	cbvAndSrv->instanceNum_ = 10;
+	cbvAndSrv->SetupFromShaders();
+
+	line = std::make_unique<RenderObject>();
+	line->psoConfig_.ps = "resources/Shaders/Line/Line.PS.hlsl";
+	line->psoConfig_.vs = "resources/Shaders/Line/Line.VS.hlsl";
+	line->SetupFromShaders();
+
+	skybox = std::make_unique<RenderObject>();
+	skybox->modelID = model1;
+	skybox->textureID = tex3;
+	skybox->psoConfig_.ps = "resources/Shaders/SkyBox/SkyBox.PS.hlsl";
+	skybox->psoConfig_.vs = "resources/Shaders/SkyBox/SkyBox.VS.hlsl";
+	skybox->SetupFromShaders();
 
 	transform1_.scale = { 11.0f,11.0f,11.0f };
 	color1_ = Vector4{ 1.0f,1.0f,1.0f,1.0f };
@@ -46,15 +59,17 @@ void TestPhase::Initialize()
 
 void TestPhase::Update()
 {
+	Matrix4x4 viewMatrix = Game::Camera::Getter::GetCurrentViewMatrix();
+	Matrix4x4 projectionMatrix = Game::Camera::Getter::GetCurrentProjectionMatrix();
 	Matrix4x4 viewProjection = Game::Camera::Getter::GetCurrentViewProjectionMatrix();
 
 	Matrix4x4 worldMatrix = Matrix4x4::MakeAffineMatrix(transform1_.scale, transform1_.rotate, transform1_.translate);
 	Matrix4x4 worldViewProjection = worldMatrix * viewProjection;
 	
-	renderObject1_->SetCBufferData(0, ShaderType::PixelShader, &color1_);
-	renderObject1_->SetCBufferData(1, ShaderType::PixelShader, &renderObject1_->textureID);
-	renderObject1_->SetCBufferData(0, ShaderType::VertexShader, &worldViewProjection);
-	renderObject1_->SetCBufferData(1, ShaderType::VertexShader, &worldMatrix);
+	cbvOnly->SetCBufferData(0, ShaderType::PixelShader, &color1_);
+	cbvOnly->SetCBufferData(1, ShaderType::PixelShader, &cbvOnly->textureID);
+	cbvOnly->SetCBufferData(0, ShaderType::VertexShader, &worldViewProjection);
+	cbvOnly->SetCBufferData(1, ShaderType::VertexShader, &worldMatrix);
 
 	std::vector<Matrix4x4> worldMatrices2;
 	for (int i = 0; i < 10; ++i)
@@ -63,16 +78,31 @@ void TestPhase::Update()
 		worldMatrices2.push_back(worldMatrix2);
 	}
 
-	renderObject2_->SetCBufferData(0, ShaderType::PixelShader, &color1_);
-	renderObject2_->SetCBufferData(1, ShaderType::PixelShader, &renderObject2_->textureID);
-	renderObject2_->SetCBufferData(0, ShaderType::VertexShader, &viewProjection);
-	renderObject2_->SetSBufferData(0, ShaderType::VertexShader, worldMatrices2.data(), sizeof(Matrix4x4), worldMatrices2.size());
+	cbvAndSrv->SetCBufferData(0, ShaderType::PixelShader, &color1_);
+	cbvAndSrv->SetCBufferData(1, ShaderType::PixelShader, &cbvAndSrv->textureID);
+	cbvAndSrv->SetCBufferData(0, ShaderType::VertexShader, &viewProjection);
+	cbvAndSrv->SetSBufferData(0, ShaderType::VertexShader, worldMatrices2.data(), sizeof(Matrix4x4), worldMatrices2.size());
+
+	line->SetCBufferData(0, ShaderType::VertexShader, &viewProjection);
+	line->SetCBufferData(0, ShaderType::PixelShader, &color1_);
+
+	Matrix4x4 noTranslateView = viewMatrix;
+	noTranslateView.m[3][0] = 0.0f;
+	noTranslateView.m[3][1] = 0.0f;
+	noTranslateView.m[3][2] = 0.0f;
+	Matrix4x4 noTranslateViewProjection = noTranslateView * projectionMatrix;
+
+	int32_t skyboxTextureID = 0;
+	skybox->SetCBufferData(0, ShaderType::VertexShader, &noTranslateViewProjection);
+	skybox->SetCBufferData(0, ShaderType::PixelShader, &skyboxTextureID);
 }
 
 void TestPhase::Draw()
 {
-	renderObject1_->Draw();
-	renderObject2_->Draw();
+	cbvOnly->Draw();
+	cbvAndSrv->Draw();
+	line->Draw();
+	skybox->Draw();
 }
 
 
@@ -85,7 +115,7 @@ void TestPhase::DrawImGui()
 		if (ImGui::BeginTabItem("RenderObject Test"))
 		{
 			ImGui::ColorEdit4("color1", &color1_.x, 1);
-			ImGui::DragInt("textureID", &renderObject1_->textureID, 1, 0, 10);
+			ImGui::DragInt("textureID", &cbvOnly->textureID, 1, 0, 10);
 			ImGui::DragFloat3("scale", &transform1_.scale.x, 0.1f, 0.1f, 100.0f);
 			ImGui::DragFloat3("rotate", &transform1_.rotate.x, 0.1f);
 			ImGui::DragFloat3("translate", &transform1_.translate.x, 0.1f, -100.0f, 100.0f);

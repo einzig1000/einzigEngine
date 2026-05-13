@@ -46,6 +46,10 @@ public:
 
 	Matrix4x4 GetViewProjectionMatrix() const { return viewProjectionMatrix; }
 
+    Matrix4x4 GetViewMatrix() const { return viewMatrix_; }
+
+	Matrix4x4 GetProjectionMatrix() const { return projectionMatrix_; }
+
 	Vector3 GetCenter() const { return center_; }
 
     Vector3 GetTranslate() const { return Vector3{}; }

@@ -392,6 +392,7 @@ void DrawSystem::AddAABB(const AABB& aabb, uint32_t color)
 //		drawCallIndex_++;
 //	}
 //}
+
 //void DrawSystem::DrawAllTriangle()
 //{
 //	// B方式：フレームCBアロケータ（Upload線形）から確保して RootCBV に直刺し
@@ -501,6 +502,7 @@ void DrawSystem::AddAABB(const AABB& aabb, uint32_t color)
 //		vertexDataUsed_ += kSumVertex;
 //	}
 //}
+
 //void DrawSystem::DrawAllRect()
 //{
 //	for (auto& renderData : rectDrawList_)
@@ -613,6 +615,7 @@ void DrawSystem::AddAABB(const AABB& aabb, uint32_t color)
 //		vertexDataUsed_ += kSumVertex;
 //	}
 //}
+
 //void DrawSystem::DrawAllSprite()
 //{
 //	for (auto& renderData : spriteDrawList_)
@@ -956,6 +959,7 @@ void DrawSystem::AddAABB(const AABB& aabb, uint32_t color)
 //		vertexDataUsed_ += kSumVertex;
 //	}
 //}
+
 //void DrawSystem::DrawAllLine()
 //{
 //	for (auto& renderData : lineDrawList_)
@@ -1136,6 +1140,7 @@ void DrawSystem::AddAABB(const AABB& aabb, uint32_t color)
 //		vertexDataUsed_ += kSumVertex;
 //	}
 //}
+
 //void DrawSystem::DrawAllParticle()
 //{
 //	for (auto& renderData : particleDrawList_)
@@ -1184,6 +1189,7 @@ void DrawSystem::AddAABB(const AABB& aabb, uint32_t color)
 //		drawCallIndex_++;
 //	}
 //}
+
 //void DrawSystem::DrawAllBlock()
 //{
 //	// PSOを設定(一旦normal固定)
@@ -1249,6 +1255,7 @@ void DrawSystem::AddAABB(const AABB& aabb, uint32_t color)
 //		dxManager_->GetCommandContextManager()->GetCommandList()->DrawInstanced(kSumVertex, renderData->currentDrawSum, 0, 0);
 //	}
 //}
+
 //void DrawSystem::DrawAllDebugLine()
 //{
 //	// 色ごとに1回ずつ描画（＝色数がDrawCall数になる）

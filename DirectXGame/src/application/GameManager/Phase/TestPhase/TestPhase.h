@@ -18,8 +18,10 @@ public:
 
 
 private:
-	std::unique_ptr<RenderObject> renderObject1_;
-	std::unique_ptr<RenderObject> renderObject2_;
+	std::unique_ptr<RenderObject> cbvOnly;
+	std::unique_ptr<RenderObject> cbvAndSrv;
+	std::unique_ptr<RenderObject> line;
+	std::unique_ptr<RenderObject> skybox;
 	Transforms transform1_;
 	Transforms transform2_[10];
 	Vector4 color1_;

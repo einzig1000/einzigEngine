@@ -332,6 +332,14 @@ namespace Game
 			{
 				return Engine::Instance().GetCameraManager()->GetCurrentViewProjectionMatrix();
 			}
+			Matrix4x4 GetCurrentViewMatrix()
+			{
+				return Engine::Instance().GetCameraManager()->GetCurrentViewMatrix();
+			}
+			Matrix4x4 GetCurrentProjectionMatrix()
+			{
+				return Engine::Instance().GetCameraManager()->GetCurrentProjectionMatrix();
+			}
 			float GetCurrentDistance()
 			{
 				return Engine::Instance().GetCameraManager()->GetCurrentDistance();

@@ -192,7 +192,24 @@ namespace ShaderReflection
                 p.key = bind.BindPoint;
 				p.hash = HashRootParam(ParamType::SRV, shaderType, bind.BindPoint);
 
-				p.srvAllocIndex = 0;
+                switch (bind.Dimension)
+                {
+                case D3D_SRV_DIMENSION_TEXTURE2D:
+                    //p.textureKind = TextureKind::Texture2D;
+                    p.srvAllocIndex = 0;
+                    break;
+
+                case D3D_SRV_DIMENSION_TEXTURECUBE:
+                    //p.textureKind = TextureKind::TextureCube;
+                    p.srvAllocIndex = 128;
+                    // p.srvAllocIndex = SRV_UAVManager::textureCapacity_
+                    break;
+
+                default:
+                    Log("未対応のテクスチャタイプ");
+                    break;
+                }
+
                 outParams.push_back(p);
             }
         }

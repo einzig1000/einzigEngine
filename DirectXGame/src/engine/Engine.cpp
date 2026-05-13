@@ -42,14 +42,7 @@ void Engine::Initialize(int width, int height, const std::wstring& title)
 	physicsSystem_ = std::make_unique<PhysicsSystem>();
 	fixFPS_ = std::make_unique<FixFPS>();
 
-
 	windowManager_->AttachMouseController(ioManager_->GetMouseController());
-
-
-	dxManager_->BeginFrame();
-	//Game::Resource::LoadTexture("resources/Prototypes/texture/uvChecker.png");
-	//ResourceID::reload();
-	dxManager_->EndFrame();
 }
 
 // メインループ用
@@ -309,9 +302,6 @@ void Engine::ToggleFullscreen()
 
 	// DirectXのリサイズ処理
 	dxManager_->Resize();
-
-	// 描画システムのリサイズ処理
-	//drawSystem_->Resize();
 
 	// カメラのアスペクト比を更新
 	cameraManager_->Resize();
