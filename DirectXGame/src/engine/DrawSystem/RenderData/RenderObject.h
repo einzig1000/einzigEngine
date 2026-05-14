@@ -28,8 +28,8 @@ public:
 
 	void SetupFromShaders();
 
-	void SetCBufferData(const uint32_t key, ShaderType shaderType, const void* data);
-	void SetSBufferData(const uint32_t key, ShaderType shaderType, const void* data, size_t elementSize, size_t elementCount);
+	void SetCBufferData(const uint32_t key, ShaderType shaderType, const void* data, uint32_t space = 0);
+	void SetSBufferData(const uint32_t key, ShaderType shaderType, const void* data, size_t elementSize, size_t elementCount, uint32_t space = 0);
 
 	const std::vector<RootParam>& GetRootParams() const { return rootParams_; }
 	const std::vector<uint8_t>& GetCpuStorage() const { return cpuStorage_; }

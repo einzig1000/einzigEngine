@@ -31,7 +31,8 @@ struct RootParam
 	ParamType paramType = ParamType::None;
 	ShaderType shaderType = ShaderType::None;
     uint32_t key = 0;           // "b0", "b1" など
-    uint32_t hash = 0;     // RootParamのハッシュ
+	uint32_t registerSpace = 0; // space0, space1 など。2Dテクスチャバインドレスとddsテクスチャバインドレスで区別
+    uint32_t hash = 0;          // paramType･shaderType･key･registerSpace のハッシュ
 
 	// CBuffer用
 	uint32_t sizeBytes = 0;     // 自身のサイズ。CBuffer用ストレージ内でどれだけのサイズが必要か。

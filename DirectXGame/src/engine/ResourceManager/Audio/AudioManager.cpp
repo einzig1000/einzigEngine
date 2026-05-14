@@ -85,10 +85,11 @@ HRESULT AudioManager::Initialize()
 // 読み込み
 uint32_t AudioManager::LoadAudio(const std::string& filePath)
 {
+	Log("オーディオ読み込み開始 パス:%s", filePath.c_str());
+
     static uint32_t nextAudioId = 0;
     AudioData entry = {};
     HRESULT hr = S_OK;
-
 
     // ファイルパスをワイド文字列に変換
     std::wstring wFilePath = StringConverter::Convert(filePath);
@@ -134,15 +135,15 @@ uint32_t AudioManager::LoadAudio(const std::string& filePath)
 
 
 
-    Log("--- WAVEFORMATEX Debug Info ---");
-    Log("wFormatTag: 0x%X", entry.pWfx->wFormatTag);
-    Log("nChannels: %u", entry.pWfx->nChannels);
-    Log("nSamplesPerSec: %u", entry.pWfx->nSamplesPerSec);
-    Log("nAvgBytesPerSec: %u", entry.pWfx->nAvgBytesPerSec);
-    Log("nBlockAlign: %u", entry.pWfx->nBlockAlign);
-    Log("wBitsPerSample: %u", entry.pWfx->wBitsPerSample);
-    Log("cbSize: %u", entry.pWfx->cbSize);
-    Log("-------------------------------");
+    //Log("--- WAVEFORMATEX Debug Info ---");
+    //Log("wFormatTag: 0x%X", entry.pWfx->wFormatTag);
+    //Log("nChannels: %u", entry.pWfx->nChannels);
+    //Log("nSamplesPerSec: %u", entry.pWfx->nSamplesPerSec);
+    //Log("nAvgBytesPerSec: %u", entry.pWfx->nAvgBytesPerSec);
+    //Log("nBlockAlign: %u", entry.pWfx->nBlockAlign);
+    //Log("wBitsPerSample: %u", entry.pWfx->wBitsPerSample);
+    //Log("cbSize: %u", entry.pWfx->cbSize);
+    //Log("-------------------------------");
 
 
     // オーディオデータの読み込み
@@ -169,9 +170,21 @@ uint32_t AudioManager::LoadAudio(const std::string& filePath)
         );
 
 
-        if (FAILED(hr)) { Log("ReadSample FAILED: 0x%X", hr); break; }
-        if (streamFlags & MF_SOURCE_READERF_ENDOFSTREAM) { Log("End of stream reached."); break; }
-        if (!pSample) { Log("pSample is null but not end of stream."); break; }
+        if (FAILED(hr))
+        { 
+            Log("ReadSample FAILED: 0x%X", hr);
+            break; 
+        }
+        if (streamFlags & MF_SOURCE_READERF_ENDOFSTREAM)
+        { 
+            //Log("End of stream reached.");
+            break; 
+        }
+        if (!pSample)
+        { 
+            Log("pSample is null but not end of stream.");
+            break; 
+        }
 
 
         Microsoft::WRL::ComPtr<IMFMediaBuffer> pBuffer;
@@ -191,7 +204,7 @@ uint32_t AudioManager::LoadAudio(const std::string& filePath)
             entry.audioData.resize(cur + currentBufferLength);
             memcpy(entry.audioData.data() + cur, pAudioData, currentBufferLength);
             totalAudioDataSize += currentBufferLength;
-            Log("Read chunk: %u bytes. Total: %u bytes.", currentBufferLength, totalAudioDataSize);
+            //Log("Read chunk: %u bytes. Total: %u bytes.", currentBufferLength, totalAudioDataSize);
         }
 
         hr = pBuffer->Unlock();
@@ -199,8 +212,8 @@ uint32_t AudioManager::LoadAudio(const std::string& filePath)
     }
 
 
-    Log("Actual total audio data loaded: %u", totalAudioDataSize);
-    Log("Final audioData.size(): %u", (uint32_t)entry.audioData.size());
+    //Log("Actual total audio data loaded: %u", totalAudioDataSize);
+    //Log("Final audioData.size(): %u", (uint32_t)entry.audioData.size());
 
     if (hr != S_OK && hr != MF_E_END_OF_STREAM)
     {
@@ -230,16 +243,16 @@ uint32_t AudioManager::LoadAudio(const std::string& filePath)
         return UINT32_MAX;
     }
 
-    Log("--- Debugging WAVEFORMATEX for CreateSourceVoice ---");
-    Log("filePath: %s", filePath.c_str());
-    Log("wFormatTag: 0x%X (0x1 = WAVE_FORMAT_PCM)", entry.pWfx->wFormatTag);
-    Log("nChannels: %u", entry.pWfx->nChannels);
-    Log("nSamplesPerSec: %u Hz", entry.pWfx->nSamplesPerSec);
-    Log("nAvgBytesPerSec: %u bytes/sec", entry.pWfx->nAvgBytesPerSec);
-    Log("nBlockAlign: %u bytes", entry.pWfx->nBlockAlign);
-    Log("wBitsPerSample: %u bits", entry.pWfx->wBitsPerSample);
-    Log("cbSize: %u bytes (extra info size)", entry.pWfx->cbSize);
-    Log("--------------------------------------------------");
+    //Log("--- Debugging WAVEFORMATEX for CreateSourceVoice ---");
+    //Log("filePath: %s", filePath.c_str());
+    //Log("wFormatTag: 0x%X (0x1 = WAVE_FORMAT_PCM)", entry.pWfx->wFormatTag);
+    //Log("nChannels: %u", entry.pWfx->nChannels);
+    //Log("nSamplesPerSec: %u Hz", entry.pWfx->nSamplesPerSec);
+    //Log("nAvgBytesPerSec: %u bytes/sec", entry.pWfx->nAvgBytesPerSec);
+    //Log("nBlockAlign: %u bytes", entry.pWfx->nBlockAlign);
+    //Log("wBitsPerSample: %u bits", entry.pWfx->wBitsPerSample);
+    //Log("cbSize: %u bytes (extra info size)", entry.pWfx->cbSize);
+    //Log("--------------------------------------------------");
 
 
     hr = pXAudio2->CreateSourceVoice(&entry.pSourceVoice, entry.pWfx, 0, XAUDIO2_DEFAULT_FREQ_RATIO, &voiceCallback);
@@ -254,7 +267,7 @@ uint32_t AudioManager::LoadAudio(const std::string& filePath)
     // マップに格納
     uint32_t id = nextAudioId++;
     loadedAudio[id] = std::move(entry);
-    Log("オーディオの読み取り成功 ID: %u Path: %s", id, filePath.c_str());
+    Log("成功 ID: %u", id);
 
     return id;
 }

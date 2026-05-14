@@ -15,6 +15,8 @@ ModelManager::~ModelManager()
 
 int32_t ModelManager::LoadModel(const std::string& filePath)
 {
+    Log("モデル読み込み開始:%s", filePath.c_str());
+  
     auto path = std::filesystem::path(filePath);
 
 	// ディレクトリ名
@@ -58,6 +60,8 @@ int32_t ModelManager::LoadModel(const std::string& filePath)
     ref.vertexBufferView.BufferLocation = ref.vertexBuffer->GetGPUVirtualAddress();
     ref.vertexBufferView.SizeInBytes = static_cast<UINT>(ref.vertexBufferSize);
     ref.vertexBufferView.StrideInBytes = sizeof(VertexData);
+
+    Log("成功 ID:%d", ref.number);
 
     return ref.number;
 }

@@ -18,13 +18,19 @@ public:
 
 
 private:
-	std::unique_ptr<RenderObject> cbvOnly;
-	std::unique_ptr<RenderObject> cbvAndSrv;
-	std::unique_ptr<RenderObject> line;
-	std::unique_ptr<RenderObject> skybox;
+	std::unique_ptr<RenderObject> cbvOnly_;
 	Transforms transform1_;
-	Transforms transform2_[10];
 	Vector4 color1_;
+	std::unique_ptr<RenderObject> cbvAndSrv_;
+	Transforms transform2_[10];
+	Vector4 color2_[10];
+	int32_t tex2_[10];
+	std::unique_ptr<RenderObject> line_;
+	std::unique_ptr<RenderObject> skybox_;
+	std::unique_ptr<RenderObject> PunctualLight_;
+	LightDataForGPU lightData_;
+	Material materialData_;
+	std::unique_ptr<RenderObject> environmentMap_;
 
 	uint32_t audio1;
 	uint32_t audio2;

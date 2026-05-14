@@ -23,6 +23,8 @@ TextureManager::~TextureManager()
 
 int32_t TextureManager::LoadTexture(const std::string& filePath)
 {
+	Log("テクスチャ読み込み開始:%s", filePath.c_str());
+
 	HRESULT hr = S_OK;
 
 	// ファイルパス型に変換
@@ -34,14 +36,6 @@ int32_t TextureManager::LoadTexture(const std::string& filePath)
     {
 		return it->second;
     }
-
-	// ファイルが存在しない場合はエラー
-    if (!std::filesystem::exists(path))
-    {
-        Log("テクスチャファイルが見つかりませんでした:%s", filePath.c_str());
-        assert(false);
-        return -1;
-	}
 
     // 識別子を判定
     std::string ext = path.extension().string();
@@ -61,7 +55,12 @@ int32_t TextureManager::LoadTexture(const std::string& filePath)
     {
         hr = DirectX::LoadFromWICFile(path.c_str(), DirectX::WIC_FLAGS_FORCE_SRGB, nullptr, image);
     }
-    assert(SUCCEEDED(hr));
+	if (FAILED(hr))
+	{
+        Log("ファイルが見つかりませんでした:%s", filePath.c_str());
+		assert(false);
+		return -1;
+	}
 
     // ミップマップの作成
     DirectX::ScratchImage mipImageLocal;
@@ -72,7 +71,12 @@ int32_t TextureManager::LoadTexture(const std::string& filePath)
     else
     {
         hr = DirectX::GenerateMipMaps(image.GetImages(), image.GetImageCount(), image.GetMetadata(), DirectX::TEX_FILTER_SRGB, 0, mipImageLocal);
-        assert(SUCCEEDED(hr));
+		if (FAILED(hr))
+		{
+			Log("ミップマップの生成に失敗しました:%s HRESULT: 0x%X", filePath.c_str(), hr);
+			assert(false);
+			return -1;
+		}
     }
 
     // メタデータ・ミップマップを保存
@@ -107,6 +111,8 @@ int32_t TextureManager::LoadTexture(const std::string& filePath)
 		textures_.resize(text.number + 1);
     }
 	textures_[text.number] = std::move(text);
+
+	Log("成功 ID:%d", pathToIDMap_[filePath]);
 
     return text.number;
 }

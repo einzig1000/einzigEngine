@@ -63,6 +63,8 @@ uint32_t SRV_UAVManager::Allocate(ResourceType type)
 		return nextBufferIndex_++;
         break;
     default:
+        assert(false);
+		return UINT32_MAX;
         break;
     }
 }

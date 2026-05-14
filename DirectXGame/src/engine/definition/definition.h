@@ -972,6 +972,12 @@ struct Transforms
     Vector3 rotate = { 0,0,0 };
     Vector3 translate = { 0,0,0 };
 };
+struct VectorDynamics
+{
+    Vector3 value = { 1.0f,1.0f,1.0f };
+    Vector3 velocity;
+    Vector3 acceleration;
+};
 
 #pragma region モデルデータ構造体
 
@@ -987,13 +993,6 @@ struct VertexData
     Vector4 position;
     Vector2 texcoord;
     Vector3 normal;
-};
-
-struct VectorDynamics
-{
-    Vector3 value = { 1.0f,1.0f,1.0f };
-    Vector3 velocity;
-    Vector3 acceleration;
 };
 
 // モデルデータ
@@ -1032,8 +1031,8 @@ struct TextureData
 	// テクスチャリソース
     Microsoft::WRL::ComPtr<ID3D12Resource> textureResource;
 	// SRVのGPUハンドル
-    D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU;
-
+    D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU{};
+    
 	// 識別ナンバー   
 	int32_t number = -1;
 
@@ -1153,6 +1152,35 @@ enum class LightMode
 };
 std::string EnumToString(LightMode e);
 
+
+struct alignas(16) PunctualLight
+{
+    // 共通
+    Vector3 color = { 1.0f, 1.0f, 1.0f };     // 光の色
+    float   intensity = 1.0f; // 明るさスケール
+
+    // Directional
+    Vector3 direction = { 0.0f, -1.0f, 0.0f }; // 光の向き
+
+	// Spot 用
+    float   spotCos = 0.0f;   // スポットライトの内側コーンの cos(角度)
+
+    // Point / Spot 用
+    Vector3 position = { 0.0f, 0.0f, 0.0f };  // 光源位置
+    float   range = 10.0f;     // 有効距離
+
+    // その他
+    int32_t type = 0;      // 0:Dir, 1:Point, 2:Spot
+    Vector3 _pad = { 0.0f, 0.0f, 0.0f };      // 16byte アラインメント用
+};
+
+struct LightDataForGPU
+{
+	PunctualLight lights[4];
+	int32_t LightCount = 0;
+	Vector3 ambientColor = { 0.0f, 0.0f, 0.0f };
+};
+
 struct DirectionalLight
 {
     Vector4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -1174,11 +1202,19 @@ struct DrawOptions
     BlendMode blendMode = BlendMode::kBlendModeNormal;
 };
 
+//struct Material
+//{
+//    Vector4 color;
+//    Matrix4x4 uvTransform;
+//    float shininess;
+//};
+
 struct Material
 {
-    Vector4 color;
-    Matrix4x4 uvTransform;
-    float shininess;
+	Vector3 diffuseColor = { 1.0f, 1.0f, 1.0f };
+	float  shininess = 1.0f;
+	Vector3 specularColor = { 1.0f, 1.0f, 1.0f };
+    float  _pad0;
 };
 
 // スプライトのアンカー位置
@@ -1393,6 +1429,7 @@ enum class CameraMode_ORBIT_FPS
 std::string EnumToString(CameraMode_ORBIT_FPS e);
 
 #pragma endregion
+
 
 
 #pragma region 方向

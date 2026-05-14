@@ -38,10 +38,11 @@ void RenderObject::SetupFromShaders()
 	dynamicSrvStorage_.resize(srvIndexOffset);
 }
 
-void RenderObject::SetSBufferData(const uint32_t key, ShaderType shaderType, const void* data, size_t elementSize, size_t elementCount)
+
+void RenderObject::SetSBufferData(const uint32_t key, ShaderType shaderType, const void* data, size_t elementSize, size_t elementCount, uint32_t space)
 {
 	const size_t bytes = elementSize * elementCount;
-	const uint32_t hash = ShaderReflection::HashRootParam(ParamType::SRV, shaderType, key);
+	const uint32_t hash = ShaderReflection::HashRootParam(ParamType::SRV, shaderType, key, space);
 	const auto& it = rootParamHashToIndexMap_.find(hash);
 	if (it == rootParamHashToIndexMap_.end()) return;
 
@@ -92,9 +93,9 @@ void RenderObject::SetSBufferData(const uint32_t key, ShaderType shaderType, con
 	}
 }
 
-void RenderObject::SetCBufferData(const uint32_t key, ShaderType shaderType, const void* data)
+void RenderObject::SetCBufferData(const uint32_t key, ShaderType shaderType, const void* data, uint32_t space)
 {
-	uint32_t hash = ShaderReflection::HashRootParam(ParamType::CBV, shaderType, key);
+	const uint32_t hash = ShaderReflection::HashRootParam(ParamType::CBV, shaderType, key, space);
 	const auto& it = rootParamHashToIndexMap_.find(hash);
 	if (it == rootParamHashToIndexMap_.end()) return;
 	const auto& param = rootParams_.at(it->second);

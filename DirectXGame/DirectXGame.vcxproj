@@ -95,9 +95,9 @@
       <AdditionalDependencies>imgui.lib;DirectXTex.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>
-copy "C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"
-copy "C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\arm64\dxil.dll" "$(TargetDir)dxil.dll"
+      <Command>copy "$(ProjectDir)externals\dxc\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"
+copy "$(ProjectDir)externals\dxc\dxil.dll" "$(TargetDir)dxil.dll"
+
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -125,9 +125,9 @@ copy "C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\arm64\dxil.dll" "$
       <AdditionalDependencies>imgui.lib;DirectXTex.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>
-copy "C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"
-copy "C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\arm64\dxil.dll" "$(TargetDir)dxil.dll"
+      <Command>copy "$(ProjectDir)externals\dxc\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"
+copy "$(ProjectDir)externals\dxc\dxil.dll" "$(TargetDir)dxil.dll"
+
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -158,9 +158,9 @@ copy "C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\arm64\dxil.dll" "$
       <AdditionalDependencies>imgui.lib;DirectXTex.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>
-copy "C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"
-copy "C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\arm64\dxil.dll" "$(TargetDir)dxil.dll"
+      <Command>copy "$(ProjectDir)externals\dxc\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"
+copy "$(ProjectDir)externals\dxc\dxil.dll" "$(TargetDir)dxil.dll"
+
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>

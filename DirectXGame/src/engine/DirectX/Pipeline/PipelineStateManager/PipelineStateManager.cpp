@@ -8,7 +8,6 @@
 
 #pragma comment(lib, "dxcompiler.lib")
 
-
 namespace
 {
     static size_t HashCombine(size_t seed, size_t v)
@@ -253,7 +252,6 @@ Microsoft::WRL::ComPtr<IDxcBlob> PipelineStateManager::GetOrCompileShader(const 
 	// blob生成
     auto blob = CompileShader(path, target);
     assert(blob);
-	Log("シェーダー新規コンパイル成功: キー %s", key.c_str());
 
 	// キャッシュに保存してから返す
     shaderCache_.emplace(std::move(key), blob);
@@ -320,7 +318,7 @@ Microsoft::WRL::ComPtr<ID3D12RootSignature> PipelineStateManager::CreateRootSign
             {
                 range.NumDescriptors = 1;
             }
-            range.RegisterSpace = 0;
+            range.RegisterSpace = param.registerSpace;
             range.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
             rootParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
@@ -435,12 +433,17 @@ Microsoft::WRL::ComPtr<IDxcBlob> PipelineStateManager::CompileShader(const std::
     //// 1 hlslファイルを読む
     ///////////////////////////////////////
     /// これからシェーダーをコンパイルする旨をログに出す
-    Log(StringConverter::Convert(std::format(L"Begin CompileShader, path:{}, profile:{}", filePath, profile)));
+    Log("シェーダーコンパイル開始 パス:%s", StringConverter::Convert(filePath).c_str());
     // hlslファイルを読む
     IDxcBlobEncoding* shaderSource = nullptr;
     HRESULT hr = dxcUtils->LoadFile(filePath.c_str(), nullptr, &shaderSource);
     // 読めなかったら停止する
-    assert(SUCCEEDED(hr));
+    if (FAILED(hr))
+    {
+		Log("ファイルが見つかりませんでした:%s", StringConverter::Convert(filePath).c_str());
+        assert(false);
+        return nullptr;
+	}
     // 読み込んだファイルの内容を設定する
     DxcBuffer shaderSourceBuffer;
     shaderSourceBuffer.Ptr = shaderSource->GetBufferPointer();
@@ -468,7 +471,12 @@ Microsoft::WRL::ComPtr<IDxcBlob> PipelineStateManager::CompileShader(const std::
         IID_PPV_ARGS(&shaderResult)// コンパイル結果
     );
     // コンパイルエラーではなくdxcが起動出来ないなど致命的な状況
-    assert(SUCCEEDED(hr));
+	if (FAILED(hr))
+	{
+		Log("シェーダーのコンパイルに失敗しました。多分dxcが起動できていません。");
+		assert(false);
+		return nullptr;
+	}
 
     ///////////////////////////////////////
     //// 3 警告・エラーが出ていないか確認する
@@ -480,6 +488,7 @@ Microsoft::WRL::ComPtr<IDxcBlob> PipelineStateManager::CompileShader(const std::
 
     if (shaderError != nullptr && shaderError->GetStringLength() != 0)
     {
+		Log("シェーダーのコンパイルに警告・エラーが出ました。");
         Log(shaderError->GetStringPointer());
         assert(false); // コンパイルエラーが発生した場合は停止
     }
@@ -489,7 +498,6 @@ Microsoft::WRL::ComPtr<IDxcBlob> PipelineStateManager::CompileShader(const std::
     ///////////////////////////////////////
     // コンパイル結果から実行用のバイナリ部分を取得
     IDxcBlob* shaderBlob = nullptr;
-    //hr = shaderResult->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&shaderBlob), nullptr);
     if (shaderResult->HasOutput(DXC_OUT_OBJECT))
     {
         IDxcBlobWide* dummyOutputName = nullptr;
@@ -501,9 +509,14 @@ Microsoft::WRL::ComPtr<IDxcBlob> PipelineStateManager::CompileShader(const std::
         hr = E_FAIL;
         shaderBlob = nullptr;
     }
-    assert(SUCCEEDED(hr));
-    // 成功したログを出す
-    Log(StringConverter::Convert(std::format(L"Compile Succeeded. path:{}\n", filePath, profile)));
+	if (FAILED(hr) || shaderBlob == nullptr)
+	{
+		Log("シェーダーのコンパイルに失敗しました。");
+		assert(false);
+		return nullptr;
+	}
+    // 成功したログを出す;
+    Log("成功");
     // もう使わないリソースを解放
     shaderSource->Release();
     shaderResult->Release();

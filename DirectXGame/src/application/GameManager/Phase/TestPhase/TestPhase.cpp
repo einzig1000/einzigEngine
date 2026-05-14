@@ -5,39 +5,55 @@ TestPhase::TestPhase()
 {
 	int32_t tex1 = Game::Resource::LoadTexture("resources/Prototypes/texture/uvChecker.png");
 	int32_t tex2 = Game::Resource::LoadTexture("resources/Prototypes/texture/monsterBall.png");
-	int32_t tex3 = Game::Resource::LoadTexture("resources/Prototypes/texture/shine.dds");
+	int32_t tex3 = Game::Resource::LoadTexture("resources/Prototypes/texture/white1x1.png");
+	int32_t tex4 = Game::Resource::LoadTexture("resources/Prototypes/texture/rostock_laage_airport_4k.dds");
 
 	int32_t model1 = Game::Resource::LoadModel("resources/Prototypes/model/cube.obj");
+	int32_t model2 = Game::Resource::LoadModel("resources/Prototypes/model/sphere.obj");
 
 	audio1 = Game::Resource::LoadAudio("resources/Prototypes/audio/BGM/InGame.mp3");
 	audio2 = Game::Resource::LoadAudio("resources/Prototypes/audio/SE/バトル用/氷魔法1.mp3");
 
-	cbvOnly = std::make_unique<RenderObject>();
-	cbvOnly->modelID = model1;
-	cbvOnly->textureID = tex1;
-	cbvOnly->psoConfig_.ps = "resources/Shaders/SimpleModel/SimpleModel.PS.hlsl";
-	cbvOnly->psoConfig_.vs = "resources/Shaders/SimpleModel/SimpleModel.VS.hlsl";
-	cbvOnly->SetupFromShaders();
+	cbvOnly_ = std::make_unique<RenderObject>();
+	cbvOnly_->modelID = model1;
+	cbvOnly_->textureID = tex1;
+	cbvOnly_->psoConfig_.ps = "resources/Shaders/SimpleModel/SimpleModel.PS.hlsl";
+	cbvOnly_->psoConfig_.vs = "resources/Shaders/SimpleModel/SimpleModel.VS.hlsl";
+	cbvOnly_->SetupFromShaders();
 
-	cbvAndSrv = std::make_unique<RenderObject>();
-	cbvAndSrv->modelID = model1;
-	cbvAndSrv->textureID = tex1;
-	cbvAndSrv->psoConfig_.ps = "resources/Shaders/SimpleModel/SimpleModel.PS.hlsl";
-	cbvAndSrv->psoConfig_.vs = "resources/Shaders/SimpleModel/SimpleModels.VS.hlsl";
-	cbvAndSrv->instanceNum_ = 10;
-	cbvAndSrv->SetupFromShaders();
+	cbvAndSrv_ = std::make_unique<RenderObject>();
+	cbvAndSrv_->modelID = model1;
+	cbvAndSrv_->textureID = tex1;
+	cbvAndSrv_->psoConfig_.ps = "resources/Shaders/SimpleModel/SimpleModels.PS.hlsl";
+	cbvAndSrv_->psoConfig_.vs = "resources/Shaders/SimpleModel/SimpleModels.VS.hlsl";
+	cbvAndSrv_->instanceNum_ = 10;
+	cbvAndSrv_->SetupFromShaders();
 
-	line = std::make_unique<RenderObject>();
-	line->psoConfig_.ps = "resources/Shaders/Line/Line.PS.hlsl";
-	line->psoConfig_.vs = "resources/Shaders/Line/Line.VS.hlsl";
-	line->SetupFromShaders();
+	line_ = std::make_unique<RenderObject>();
+	line_->psoConfig_.ps = "resources/Shaders/Line/Line.PS.hlsl";
+	line_->psoConfig_.vs = "resources/Shaders/Line/Line.VS.hlsl";
+	line_->SetupFromShaders();
 
-	skybox = std::make_unique<RenderObject>();
-	skybox->modelID = model1;
-	skybox->textureID = tex3;
-	skybox->psoConfig_.ps = "resources/Shaders/SkyBox/SkyBox.PS.hlsl";
-	skybox->psoConfig_.vs = "resources/Shaders/SkyBox/SkyBox.VS.hlsl";
-	skybox->SetupFromShaders();
+	skybox_ = std::make_unique<RenderObject>();
+	skybox_->modelID = model1;
+	skybox_->textureID = tex4;
+	skybox_->psoConfig_.ps = "resources/Shaders/SkyBox/SkyBox.PS.hlsl";
+	skybox_->psoConfig_.vs = "resources/Shaders/SkyBox/SkyBox.VS.hlsl";
+	skybox_->SetupFromShaders();
+
+	PunctualLight_ = std::make_unique<RenderObject>();
+	PunctualLight_->modelID = model2;
+	PunctualLight_->textureID = tex2;
+	PunctualLight_->psoConfig_.ps = "resources/Shaders/PunctualLight/PunctualLight.PS.hlsl";
+	PunctualLight_->psoConfig_.vs = "resources/Shaders/PunctualLight/PunctualLight.VS.hlsl";
+	PunctualLight_->SetupFromShaders();
+
+	environmentMap_ = std::make_unique<RenderObject>();
+	environmentMap_->modelID = model2;
+	environmentMap_->textureID = tex3;
+	environmentMap_->psoConfig_.ps = "resources/Shaders/EnvironmentMap/EnvironmentMap.PS.hlsl";
+	environmentMap_->psoConfig_.vs = "resources/Shaders/EnvironmentMap/EnvironmentMap.VS.hlsl";
+	environmentMap_->SetupFromShaders();
 
 	transform1_.scale = { 11.0f,11.0f,11.0f };
 	color1_ = Vector4{ 1.0f,1.0f,1.0f,1.0f };
@@ -45,7 +61,11 @@ TestPhase::TestPhase()
 	{
 		transform2_[i].scale = { 10.0f,10.0f,10.0f };
 		transform2_[i].translate = { static_cast<float>(((i + 1) * 15)), 0.0f, 0.0f };
+		color2_[i] = Vector4{ 1.0f,1.0f,1.0f,1.0f };
+		tex2_[i] = tex2;
 	}
+
+	lightData_.LightCount = 1;
 }
 
 TestPhase::~TestPhase()
@@ -62,14 +82,15 @@ void TestPhase::Update()
 	Matrix4x4 viewMatrix = Game::Camera::Getter::GetCurrentViewMatrix();
 	Matrix4x4 projectionMatrix = Game::Camera::Getter::GetCurrentProjectionMatrix();
 	Matrix4x4 viewProjection = Game::Camera::Getter::GetCurrentViewProjectionMatrix();
+	Vector3 cameraPos = Game::Camera::Getter::GetCurrentTranslate();
 
 	Matrix4x4 worldMatrix = Matrix4x4::MakeAffineMatrix(transform1_.scale, transform1_.rotate, transform1_.translate);
 	Matrix4x4 worldViewProjection = worldMatrix * viewProjection;
 	
-	cbvOnly->SetCBufferData(0, ShaderType::PixelShader, &color1_);
-	cbvOnly->SetCBufferData(1, ShaderType::PixelShader, &cbvOnly->textureID);
-	cbvOnly->SetCBufferData(0, ShaderType::VertexShader, &worldViewProjection);
-	cbvOnly->SetCBufferData(1, ShaderType::VertexShader, &worldMatrix);
+	cbvOnly_->SetCBufferData(0, ShaderType::PixelShader, &color1_);
+	cbvOnly_->SetCBufferData(1, ShaderType::PixelShader, &cbvOnly_->textureID);
+	cbvOnly_->SetCBufferData(0, ShaderType::VertexShader, &worldViewProjection);
+	cbvOnly_->SetCBufferData(1, ShaderType::VertexShader, &worldMatrix);
 
 	std::vector<Matrix4x4> worldMatrices2;
 	for (int i = 0; i < 10; ++i)
@@ -78,13 +99,13 @@ void TestPhase::Update()
 		worldMatrices2.push_back(worldMatrix2);
 	}
 
-	cbvAndSrv->SetCBufferData(0, ShaderType::PixelShader, &color1_);
-	cbvAndSrv->SetCBufferData(1, ShaderType::PixelShader, &cbvAndSrv->textureID);
-	cbvAndSrv->SetCBufferData(0, ShaderType::VertexShader, &viewProjection);
-	cbvAndSrv->SetSBufferData(0, ShaderType::VertexShader, worldMatrices2.data(), sizeof(Matrix4x4), worldMatrices2.size());
+	cbvAndSrv_->SetSBufferData(0, ShaderType::PixelShader, &color2_, sizeof(Vector4), 10);
+	cbvAndSrv_->SetSBufferData(1, ShaderType::PixelShader, &tex2_, sizeof(int32_t), 10);
+	cbvAndSrv_->SetCBufferData(0, ShaderType::VertexShader, &viewProjection);
+	cbvAndSrv_->SetSBufferData(0, ShaderType::VertexShader, worldMatrices2.data(), sizeof(Matrix4x4), worldMatrices2.size());
 
-	line->SetCBufferData(0, ShaderType::VertexShader, &viewProjection);
-	line->SetCBufferData(0, ShaderType::PixelShader, &color1_);
+	line_->SetCBufferData(0, ShaderType::VertexShader, &viewProjection);
+	line_->SetCBufferData(0, ShaderType::PixelShader, &color1_);
 
 	Matrix4x4 noTranslateView = viewMatrix;
 	noTranslateView.m[3][0] = 0.0f;
@@ -92,17 +113,33 @@ void TestPhase::Update()
 	noTranslateView.m[3][2] = 0.0f;
 	Matrix4x4 noTranslateViewProjection = noTranslateView * projectionMatrix;
 
-	int32_t skyboxTextureID = 0;
-	skybox->SetCBufferData(0, ShaderType::VertexShader, &noTranslateViewProjection);
-	skybox->SetCBufferData(0, ShaderType::PixelShader, &skyboxTextureID);
+	skybox_->SetCBufferData(0, ShaderType::VertexShader, &noTranslateViewProjection);
+	skybox_->SetCBufferData(0, ShaderType::PixelShader, &skybox_->textureID - 128);
+
+	PunctualLight_->SetCBufferData(0, ShaderType::VertexShader, &worldViewProjection);
+	PunctualLight_->SetCBufferData(1, ShaderType::VertexShader, &worldMatrix);
+	PunctualLight_->SetCBufferData(0, ShaderType::PixelShader, &cameraPos);
+	PunctualLight_->SetCBufferData(1, ShaderType::PixelShader, &lightData_);
+	PunctualLight_->SetCBufferData(2, ShaderType::PixelShader, &materialData_);
+	PunctualLight_->SetCBufferData(3, ShaderType::PixelShader, &PunctualLight_->textureID);
+
+	environmentMap_->SetCBufferData(0, ShaderType::VertexShader, &worldViewProjection);
+	environmentMap_->SetCBufferData(1, ShaderType::VertexShader, &worldMatrix);
+	environmentMap_->SetCBufferData(0, ShaderType::PixelShader, &cameraPos);
+	environmentMap_->SetCBufferData(1, ShaderType::PixelShader, &lightData_);
+	environmentMap_->SetCBufferData(2, ShaderType::PixelShader, &materialData_);
+	environmentMap_->SetCBufferData(3, ShaderType::PixelShader, &environmentMap_->textureID);
+	environmentMap_->SetCBufferData(4, ShaderType::PixelShader, &skybox_->textureID - 128);
 }
 
 void TestPhase::Draw()
 {
-	cbvOnly->Draw();
-	cbvAndSrv->Draw();
-	line->Draw();
-	skybox->Draw();
+	//cbvOnly_->Draw();
+	//cbvAndSrv_->Draw();
+	//line_->Draw();
+	skybox_->Draw();
+	//PunctualLight_->Draw();
+	environmentMap_->Draw();
 }
 
 
@@ -111,20 +148,54 @@ void TestPhase::DrawImGui()
 	ImGui::Begin("Facade Test");
 	if (ImGui::BeginTabBar("Facade Test", ImGuiTabBarFlags_::ImGuiTabBarFlags_Reorderable))
 	{
-
 		if (ImGui::BeginTabItem("RenderObject Test"))
 		{
-			ImGui::ColorEdit4("color1", &color1_.x, 1);
-			ImGui::DragInt("textureID", &cbvOnly->textureID, 1, 0, 10);
-			ImGui::DragFloat3("scale", &transform1_.scale.x, 0.1f, 0.1f, 100.0f);
-			ImGui::DragFloat3("rotate", &transform1_.rotate.x, 0.1f);
-			ImGui::DragFloat3("translate", &transform1_.translate.x, 0.1f, -100.0f, 100.0f);
-
-			for (int i = 0; i < 10; ++i)
+			if (ImGui::TreeNode("cbvOnly_"))
 			{
-				ImGui::DragFloat3(("scale" + std::to_string(i)).c_str(), &transform2_[i].scale.x, 0.1f, 0.1f, 100.0f);
-				ImGui::DragFloat3(("rotate" + std::to_string(i)).c_str(), &transform2_[i].rotate.x, 0.1f);
-				ImGui::DragFloat3(("translate" + std::to_string(i)).c_str(), &transform2_[i].translate.x, 0.1f, -100.0f, 100.0f);
+				ImGui::ColorEdit4("color1", &color1_.x, 1);
+				ImGui::DragInt("textureID", &cbvOnly_->textureID, 1, 0, 10);
+				ImGui::DragFloat3("scale", &transform1_.scale.x, 0.1f, 0.1f, 100.0f);
+				ImGui::DragFloat3("rotate", &transform1_.rotate.x, 0.1f);
+				ImGui::DragFloat3("translate", &transform1_.translate.x, 0.1f, -100.0f, 100.0f);
+
+				ImGui::TreePop();
+			}
+
+			if (ImGui::TreeNode("cbvAndSrv_"))
+			{
+				for (int i = 0; i < 10; ++i)
+				{
+					ImGui::ColorEdit4(("color2_" + std::to_string(i)).c_str(), &color2_[i].x, 1);
+					ImGui::DragInt(("textureID" + std::to_string(i)).c_str(), &tex2_[i], 1, 0, 10);
+					ImGui::DragFloat3(("scale" + std::to_string(i)).c_str(), &transform2_[i].scale.x, 0.1f, 0.1f, 100.0f);
+					ImGui::DragFloat3(("rotate" + std::to_string(i)).c_str(), &transform2_[i].rotate.x, 0.1f);
+					ImGui::DragFloat3(("translate" + std::to_string(i)).c_str(), &transform2_[i].translate.x, 0.1f, -100.0f, 100.0f);
+				}
+
+				ImGui::TreePop();
+			}
+
+			if (ImGui::TreeNode("PunctualLight_"))
+			{
+				ImGui::ColorEdit4("light color", &lightData_.lights[0].color.x, 1);
+				ImGui::DragFloat("light intensity", &lightData_.lights[0].intensity, 0.1f, 0.0f, 10.0f);
+				static const char* items[] = { "Dir", "Point", "Spot" };
+				ImGui::Combo("light type", &lightData_.lights[0].type, items, IM_ARRAYSIZE(items));
+				ImGui::SeparatorText("directional light");
+				ImGui::DragFloat3("light direction", &lightData_.lights[0].direction.x, 0.1f);
+				ImGui::SeparatorText("spot light");
+				ImGui::DragFloat("light spotCos", &lightData_.lights[0].spotCos, 0.01f, -1.0f, 1.0f);
+				ImGui::SeparatorText("point light");
+				ImGui::DragFloat3("light position", &lightData_.lights[0].position.x, 0.1f, -100.0f, 100.0f);
+				ImGui::DragFloat("light range", &lightData_.lights[0].range, 0.1f, 0.1f, 100.0f);
+
+
+				ImGui::SeparatorText("Material");
+
+				ImGui::ColorEdit3("material specular", &materialData_.diffuseColor.x, 1);
+				ImGui::ColorEdit3("material diffuse", &materialData_.specularColor.x, 1);
+				ImGui::DragFloat("material shininess", &materialData_.shininess, 0.1f, 0.0f, 100.0f);
+				ImGui::TreePop();
 			}
 
 			ImGui::EndTabItem();
