@@ -93,7 +93,7 @@ void Camera::Update_Orbit()
 
     // eye 計算
     Vector3 offset = Vector3(0, 0, distance_).RotateByQuaternion(rotate_);
-    Vector3 eye = center_ + offset;
+    eye = center_ + offset;
 
     // view 行列
     Vector3 up = Vector3(0.0f, 1.0f, 0.0f).RotateByQuaternion(rotate_);
@@ -290,24 +290,6 @@ bool Camera::InFrustum(const AABB& aabb)
     }
 
     return true; // どの平面の外側にもない場合は、視錐台内にあると判定
-}
-
-float Camera::InFrustum_Lod(const AABB& aabb)
-{
-    struct Hits { Vector3 point{}; bool in = false; };
-
-    Hits points[8];
-
-    points[0] = Hits(Vector3{ aabb.min.x, aabb.min.y, aabb.min.z }, false);
-    points[1] = Hits(Vector3{ aabb.max.x, aabb.min.y, aabb.min.z }, false);
-    points[2] = Hits(Vector3{ aabb.max.x, aabb.max.y, aabb.min.z }, false);
-    points[3] = Hits(Vector3{ aabb.min.x, aabb.max.y, aabb.min.z }, false);
-    points[4] = Hits(Vector3{ aabb.min.x, aabb.min.y, aabb.max.z }, false);
-    points[5] = Hits(Vector3{ aabb.max.x, aabb.min.y, aabb.max.z }, false);
-    points[6] = Hits(Vector3{ aabb.max.x, aabb.max.y, aabb.max.z }, false);
-    points[7] = Hits(Vector3{ aabb.min.x, aabb.max.y, aabb.max.z }, false);
-
-	return 0.0f;
 }
 
 // 実際に動かす

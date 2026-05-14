@@ -150,6 +150,10 @@ void TestPhase::DrawImGui()
 	{
 		if (ImGui::BeginTabItem("RenderObject Test"))
 		{
+
+			Vector3 cameraPos = Game::Camera::Getter::GetCurrentTranslate();
+			ImGui::Text("cameraPos: (%.2f, %.2f, %.2f)", cameraPos.x, cameraPos.y, cameraPos.z);
+
 			if (ImGui::TreeNode("cbvOnly_"))
 			{
 				ImGui::ColorEdit4("color1", &color1_.x, 1);

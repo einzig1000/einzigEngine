@@ -196,7 +196,7 @@ PSOutput main(PSInput input)
     float3 finalColor =
     (texColor.rgb * gMaterial.diffuseColor * diffuseLighting)
     + specularLighting
-    + ddsColor.rgb * 0.1f;
+    + ddsColor.rgb * 0.5f;
     
     output.color = float4(finalColor, texColor.a);
     return output;

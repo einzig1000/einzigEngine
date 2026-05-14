@@ -29,8 +29,6 @@ public:
 
     // 視錐台内にAABBがあるか
     bool InFrustum(const AABB& aabb);
-	// 視錐台内にAABBがあるか 中心に近いほど1.0、遠いほど0.0を返す
-	float InFrustum_Lod(const AABB& aabb);
     
 	// 操作可能か設定
 	void SetEnableControl(bool enable) { enableControl_ = enable; }
@@ -43,19 +41,13 @@ public:
 
 public:
 	// 情報取得
-
 	Matrix4x4 GetViewProjectionMatrix() const { return viewProjectionMatrix; }
-
     Matrix4x4 GetViewMatrix() const { return viewMatrix_; }
-
+	Matrix4x4 GetViewportMatrix() const { return viewportMatrix; }
 	Matrix4x4 GetProjectionMatrix() const { return projectionMatrix_; }
-
 	Vector3 GetCenter() const { return center_; }
-
-    Vector3 GetTranslate() const { return Vector3{}; }
-
+    Vector3 GetTranslate() const { return eye; }
     Vector3 GetRotate() const { return Vector3{}; }
-
 	float GetDistance() const { return distance_; }
 
 private:
@@ -77,38 +69,30 @@ private:
 	float distance_ = 30.0f;
     // カメラの向き
 	Quaternion rotate_ = { 0.0f, 0.0f, 0.0f, 1.0f };
+	// カメラの位置
+	Vector3 eye = { 0.0f, 0.0f, -30.0f };
 
-    //////////////////////////////////////////////
-    ///              カメラ回転                ///
-    //////////////////////////////////////////////
+    /// カメラ回転
     void MovingCenter();
 
 
-    //////////////////////////////////////////////
-    ///                回転中心                ///
-    //////////////////////////////////////////////
+    /// 回転中心
     void MovingRotate();
 
-
-    //////////////////////////////////////////////
-    ///               カメラ距離               ///
-    //////////////////////////////////////////////
+    /// カメラ距離
     void MovingDistance();
 
-
-    //////////////////////////////////////////////
-    ///             視錐台判定用              ///
-    //////////////////////////////////////////////
+    /// 視錐台判定用
     void CreateFrustumPlanes();
     std::array<Plane, 6> frustumPlanes_;// 視錐台を構成する6つの平面
 	
-    //////////////////////////////////////////////
-    ///              カメラシェイク            ///
-    //////////////////////////////////////////////
+    /// カメラシェイク
 
+
+	// ビューポート行列
     Matrix4x4 viewportMatrix;
 
-	// ビュー行列関連データ
+	// ビュー行列
     Matrix4x4 viewMatrix_;
 
     /// プロジェクション行列関連データ
