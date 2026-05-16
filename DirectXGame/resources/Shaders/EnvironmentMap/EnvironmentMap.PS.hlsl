@@ -193,8 +193,12 @@ PSOutput main(PSInput input)
         specularLighting += lr.specular;
     }
 
+    //float3 finalColor =
+    //(texColor.rgb * gMaterial.diffuseColor * diffuseLighting)
+    //+ specularLighting
+    //+ ddsColor.rgb * 0.5f;
     float3 finalColor =
-    (texColor.rgb * gMaterial.diffuseColor * diffuseLighting)
+    (gMaterial.diffuseColor * diffuseLighting)
     + specularLighting
     + ddsColor.rgb * 0.5f;
     

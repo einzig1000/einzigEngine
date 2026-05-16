@@ -113,8 +113,10 @@ void TestPhase::Update()
 	noTranslateView.m[3][2] = 0.0f;
 	Matrix4x4 noTranslateViewProjection = noTranslateView * projectionMatrix;
 
+	int32_t skyboxTextureID = skybox_->textureID - 128;
+
 	skybox_->SetCBufferData(0, ShaderType::VertexShader, &noTranslateViewProjection);
-	skybox_->SetCBufferData(0, ShaderType::PixelShader, &skybox_->textureID - 128);
+	skybox_->SetCBufferData(0, ShaderType::PixelShader, &skyboxTextureID);
 
 	PunctualLight_->SetCBufferData(0, ShaderType::VertexShader, &worldViewProjection);
 	PunctualLight_->SetCBufferData(1, ShaderType::VertexShader, &worldMatrix);
@@ -129,7 +131,7 @@ void TestPhase::Update()
 	environmentMap_->SetCBufferData(1, ShaderType::PixelShader, &lightData_);
 	environmentMap_->SetCBufferData(2, ShaderType::PixelShader, &materialData_);
 	environmentMap_->SetCBufferData(3, ShaderType::PixelShader, &environmentMap_->textureID);
-	environmentMap_->SetCBufferData(4, ShaderType::PixelShader, &skybox_->textureID - 128);
+	environmentMap_->SetCBufferData(4, ShaderType::PixelShader, &skyboxTextureID);
 }
 
 void TestPhase::Draw()
