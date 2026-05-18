@@ -56,7 +56,6 @@ private:
 	Engine() = default;
 	~Engine() = default;
 
-	void UpdateCamera();
 	void UpdateDebugInfo();
 	void UpdateTransforms();
 	void UpdateParticles();

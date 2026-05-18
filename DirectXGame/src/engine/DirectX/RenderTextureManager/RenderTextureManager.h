@@ -13,8 +13,8 @@ struct RenderTexture
 	Microsoft::WRL::ComPtr<ID3D12Resource> resource;
 	Microsoft::WRL::ComPtr<ID3D12Resource> dsvResource;
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle{};
-    D3D12_CPU_DESCRIPTOR_HANDLE srvHandle{};
     D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle{};
+    D3D12_GPU_DESCRIPTOR_HANDLE srvHandle{};
     UINT width = 0;
     UINT height = 0;
     DXGI_FORMAT format = DXGI_FORMAT_UNKNOWN;

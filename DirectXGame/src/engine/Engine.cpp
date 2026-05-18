@@ -77,31 +77,32 @@ void Engine::BeginFrame()
 	// imguiを更新
 	imguiManager_->BeginFrame();
 
-	// レンダーターゲットをオフスクリーンに切り替える
-	dxManager_->PreSceneDraw();
-
-	// カメラを更新	
-	UpdateCamera();
-
 	// 描画関数初期化
-	drawSystem_->Update();
-
-	// デバッグ情報更新
-	UpdateDebugInfo();
+	drawSystem_->Reset();
 
 	// インプット系を更新
 	ioManager_->Update();
+
+	// カメラを更新	
+	cameraManager_->Update();
+
+	// デバッグ情報更新
+	UpdateDebugInfo();
 }
 void Engine::EndFrame()
 {
 	// 入力終了処理
 	ioManager_->EndFrame();
 
-	// 描画実行
+	// レンダーターゲットをオフスクリーンに切り替える
+	dxManager_->PreSceneDraw();
+
+	// シーン描画
 	drawSystem_->SceneDraw();
 
 	dxManager_->PostSceneDraw();
 
+	// レンダーターゲットをスクリーンに切り替える
 	dxManager_->PreScreenDraw();
 
 	// ImGui描画
@@ -215,26 +216,6 @@ void Engine::UpdateParticles()
 {
 	// パーティクル更新
 	//RenderData_Particle::UpdateAllParticles();
-}
-void Engine::UpdateCamera()
-{
-	// カメラの更新
-	cameraManager_->Update();
-
-	//// 左シフト＋左クリックでカメラターゲットをオブジェクトに合わせる
-	//if (Game::IO::Key::IsHeld(DIK_LSHIFT))
-	//{
-	//	if (Game::IO::Mouse::IsJustPressed(0))
-	//	{
-	//		for (auto& rd : RenderData_Model::renderModels)
-	//		{
-	//			if (rd->isCollisionMouseRay == 0)
-	//			{
-	//				cameraManager_->SetCenterTarget(rd->GetWorldPosition(), 0, EaseType::IN_BACK);
-	//			}
-	//		}
-	//	}
-	//}
 }
 void Engine::UpdateDebugInfo()
 {

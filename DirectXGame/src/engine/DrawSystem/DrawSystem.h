@@ -21,7 +21,7 @@ private:
 public:
 	DrawSystem(DirectXManager* dxManager, ResourceManager* resourceManager);
 	~DrawSystem();
-	void Update();
+	void Reset();
 	void SceneDraw();
 	void ScreenDraw();
 

@@ -2,6 +2,7 @@
 #include <DirectX/DirectXManager.h>
 #include <ResourceManager/ResourceManager.h>
 #include <Window/WindowManager.h>
+#include <DirectX/RenderTextureManager/RenderTextureManager.h>
 #include <numbers>
 
 DrawSystem::DrawSystem(DirectXManager* dxManager, ResourceManager* resourceManager)
@@ -30,7 +31,7 @@ uint32_t DrawSystem::GetFrameIndex() const
 	return dxManager_->GetSwapChain()->GetCurrentBackBufferIndex() % kFramesInFlight_;
 }
 
-void DrawSystem::Update()
+void DrawSystem::Reset()
 {
 	// CBアロケータをリセット
 	cbAllocators_[GetFrameIndex()].Reset();
@@ -69,6 +70,7 @@ void DrawSystem::SceneDraw()
 void DrawSystem::ScreenDraw()
 {
 	auto* cmdList = dxManager_->GetCommandContextManager()->GetCommandList();
+	auto* srvManager = dxManager_->GetDescriptorHeapManager()->GetSRV_UAVManager();
 
 	std::vector<RootParam> outParams{};
 	RootParam p{};
@@ -90,7 +92,7 @@ void DrawSystem::ScreenDraw()
 	// 3) トポロジーセット
 	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	// 4) テクスチャセット
-	//cmdList->SetGraphicsRootDescriptorTable(0, );
+	cmdList->SetGraphicsRootDescriptorTable(0, dxManager_->GetRenderTextureManager()->Get("RenderTarget_0")->srvHandle);
 
 	cmdList->DrawInstanced(3, 1, 0, 0);
 }

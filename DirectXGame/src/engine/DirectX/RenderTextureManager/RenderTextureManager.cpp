@@ -26,7 +26,7 @@ RenderTexture* RenderTextureManager::CreateRenderTarget(UINT width, UINT height,
     auto rtvAlloc = descriptorHeapManager_->GetRTVManager()->CreateRTV(rt->resource.Get(), &rtvDesc);
     rt->rtvHandle = rtvAlloc.handle;
     auto srvAlloc = descriptorHeapManager_->GetSRV_UAVManager()->CreateSRVforRenderTarget(rt->resource.Get());
-    rt->srvHandle = srvAlloc.cpu;
+    rt->srvHandle = srvAlloc.gpu;
 
     D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
     dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
