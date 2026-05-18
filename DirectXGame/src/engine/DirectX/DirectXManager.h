@@ -9,6 +9,7 @@
 #include <DirectX/DescriptorHeapManager/DescriptorHeapManager.h>
 #include <DirectX/SynchronizationManager.h>
 #include <DirectX/ViewportScissorManager.h>
+#include <DirectX/RenderTextureManager/RenderTextureManager.h>
 
 /// <summary>
 /// DirectX管理クラス
@@ -25,8 +26,18 @@ public:
     SwapChainManager* GetSwapChain() const { return swapChainManager.get(); };
     PipelineStateManager* GetPipelineStateManager() const { return pipelineStateManager.get(); }
     SynchronizationManager* GetSynchronizationManager() const { return synchronizationManager.get(); }
-
+    RenderTextureManager* GetRenderTextureManager() const { return renderTextureManager.get(); }
+    // フレーム開始処理
     void BeginFrame();
+	// オブジェクト描画前に呼び出す。
+	void PreSceneDraw();
+	// オブジェクト描画後に呼び出す。
+	void PostSceneDraw();
+	// スクリーン描画前に呼び出す。
+	void PreScreenDraw();
+	// スクリーン描画後に呼び出す。
+	void PostScreenDraw();
+    // フレーム終了処理
     void EndFrame();
     void Resize();
 
@@ -38,4 +49,5 @@ private:
     std::unique_ptr<DescriptorHeapManager> descriptorHeapManager;
     std::unique_ptr<SynchronizationManager> synchronizationManager;
     std::unique_ptr<ViewportScissorManager> viewportScissorManager;
+	std::unique_ptr<RenderTextureManager> renderTextureManager;
 };

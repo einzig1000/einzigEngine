@@ -77,6 +77,9 @@ void Engine::BeginFrame()
 	// imguiを更新
 	imguiManager_->BeginFrame();
 
+	// レンダーターゲットをオフスクリーンに切り替える
+	dxManager_->PreSceneDraw();
+
 	// カメラを更新	
 	UpdateCamera();
 
@@ -88,6 +91,32 @@ void Engine::BeginFrame()
 
 	// インプット系を更新
 	ioManager_->Update();
+}
+void Engine::EndFrame()
+{
+	// 入力終了処理
+	ioManager_->EndFrame();
+
+	// 描画実行
+	drawSystem_->SceneDraw();
+
+	dxManager_->PostSceneDraw();
+
+	dxManager_->PreScreenDraw();
+
+	// ImGui描画
+	imguiManager_->EndFrame();
+	if (isDebugInfo_)imguiManager_->Draw();
+
+	//drawSystem_->ScreenDraw();
+
+	dxManager_->PostScreenDraw();
+
+	// DirectX終了処理
+	dxManager_->EndFrame();
+
+	// FPS制限
+	fixFPS_->UpdateFixFPS();
 }
 void Engine::UpdateTransforms()
 {
@@ -233,33 +262,6 @@ void Engine::UpdateDebugInfo()
 		ImGui::Text("ImGui FPS: %.1f ", ImGui::GetIO().Framerate);
 		ImGui::End();
 	}
-}
-void Engine::EndFrame()
-{
-	// 入力終了処理
-	ioManager_->EndFrame();
-
-	// 物理更新
-	//physicsSystem_->Step();
-
-	/// 座標更新
-	//UpdateTransforms();
-
-	/// パーティクル更新
-	//UpdateParticles();
-
-	// 描画実行
-	drawSystem_->Draw();
-
-	// ImGui描画
-	imguiManager_->EndFrame();
-	if (isDebugInfo_)imguiManager_->Draw();
-
-	// DirectX終了処理
-	dxManager_->EndFrame();
-
-	// FPS制限
-	fixFPS_->UpdateFixFPS();
 }
 void Engine::Quit()
 {

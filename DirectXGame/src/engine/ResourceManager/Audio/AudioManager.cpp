@@ -53,7 +53,7 @@ HRESULT AudioManager::Initialize()
     HRESULT hr = XAudio2Create(&pXAudio2, 0, XAUDIO2_DEFAULT_PROCESSOR);
     if (FAILED(hr))
     {
-        Log("XAudio2エンジンの作成に失敗しました。HRESULT: 0x%X", hr);
+        Log("XAudio2エンジンの作成に失敗しました。hr = %s", HrToString(hr));
         assert(0);
         return hr;
     }
@@ -62,7 +62,7 @@ HRESULT AudioManager::Initialize()
     hr = pXAudio2->CreateMasteringVoice(&pMasteringVoice);
     if (FAILED(hr))
     {
-        Log("XAudio2マスタリングボイスの作成に失敗しました。HRESULT: 0x%X", hr);
+        Log("XAudio2マスタリングボイスの作成に失敗しました。hr = %s", HrToString(hr));
         assert(0);
         return hr;
     }
@@ -99,37 +99,37 @@ uint32_t AudioManager::LoadAudio(const std::string& filePath)
 
     // ソースリーダー(オーディオデータを読み取るためのインターフェース)の作成
     hr = MFCreateSourceReaderFromURL(wFilePath.c_str(), nullptr, &pSourceReader);
-    if (FAILED(hr)) { Log("ソースリーダーの作成に失敗: 0x%X", hr); assert(0); return UINT32_MAX; }
+    if (FAILED(hr)) { Log("ソースリーダーの作成に失敗: %s", HrToString(hr)); assert(0); return UINT32_MAX; }
 
     // メディアファイルには 複数のストリーム（音声・動画・字幕など） が含まれていることがあるため音声を取得するよと設定しているらしい
     hr = pSourceReader->SetStreamSelection((DWORD)MF_SOURCE_READER_FIRST_AUDIO_STREAM, TRUE);
-    if (FAILED(hr)) { Log("取得ストリームの設定に失敗: 0x%X", hr); assert(0); return UINT32_MAX; }
+    if (FAILED(hr)) { Log("取得ストリームの設定に失敗: %s", HrToString(hr)); assert(0); return UINT32_MAX; }
 
     // Media Foundation に対して、オーディオストリームをPCM形式にデコードするように要求
     Microsoft::WRL::ComPtr<IMFMediaType> pOutputMediaType;
     hr = MFCreateMediaType(&pOutputMediaType);
-    if (FAILED(hr)) { Log("PCM出力MFMediaTypeの作成に失敗: 0x%X", hr); assert(0); return UINT32_MAX; }
+    if (FAILED(hr)) { Log("PCM出力MFMediaTypeの作成に失敗: %s", HrToString(hr)); assert(0); return UINT32_MAX; }
 
 
     hr = pOutputMediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
-    if (FAILED(hr)) { Log("PCM出力の主要タイプ設定に失敗: 0x%X", hr); assert(0); return UINT32_MAX; }
+    if (FAILED(hr)) { Log("PCM出力の主要タイプ設定に失敗: %s", HrToString(hr)); assert(0); return UINT32_MAX; }
 
     hr = pOutputMediaType->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_PCM);
-    if (FAILED(hr)) { Log("PCM出力のサブタイプ設定に失敗: 0x%X", hr); assert(0); return UINT32_MAX; }
+    if (FAILED(hr)) { Log("PCM出力のサブタイプ設定に失敗: %s", HrToString(hr)); assert(0); return UINT32_MAX; }
 
     // 音声データがどんな形式(MP3,WAV,AACとか)で保存されているかを調べる
     hr = pSourceReader->SetCurrentMediaType((DWORD)MF_SOURCE_READER_FIRST_AUDIO_STREAM, nullptr, pOutputMediaType.Get());
-    if (FAILED(hr)) { Log("出力タイプをPCMに設定できませんでした: 0x%X", hr); assert(0); return UINT32_MAX; }
+    if (FAILED(hr)) { Log("出力タイプをPCMに設定できませんでした: %s", HrToString(hr)); assert(0); return UINT32_MAX; }
 
     // Media FoundationがPCMフォーマットに変えたはずなので確認
     Microsoft::WRL::ComPtr<IMFMediaType> pActualMediaType;
     hr = pSourceReader->GetCurrentMediaType((DWORD)MF_SOURCE_READER_FIRST_AUDIO_STREAM, &pActualMediaType);
-    if (FAILED(hr)) { Log("実際のメディアタイプ取得に失敗: 0x%X", hr); assert(0); return UINT32_MAX; }
+    if (FAILED(hr)) { Log("実際のメディアタイプ取得に失敗: %s", HrToString(hr)); assert(0); return UINT32_MAX; }
 
     UINT32 formatSize = 0;
     WAVEFORMATEX* wfx = nullptr;
     hr = MFCreateWaveFormatExFromMFMediaType(pActualMediaType.Get(), &wfx, &formatSize, 0);
-    if (FAILED(hr)) { Log("実際のメディアタイプのWAVEFORMATEX変換に失敗: 0x%X", hr); assert(0); return UINT32_MAX; }
+    if (FAILED(hr)) { Log("実際のメディアタイプのWAVEFORMATEX変換に失敗: %s", HrToString(hr)); assert(0); return UINT32_MAX; }
     entry.pWfx = wfx;
     entry.wfxSize = formatSize;
 
@@ -172,7 +172,7 @@ uint32_t AudioManager::LoadAudio(const std::string& filePath)
 
         if (FAILED(hr))
         { 
-            Log("ReadSample FAILED: 0x%X", hr);
+            Log("ReadSample FAILED: %s", HrToString(hr));
             break; 
         }
         if (streamFlags & MF_SOURCE_READERF_ENDOFSTREAM)
@@ -189,13 +189,13 @@ uint32_t AudioManager::LoadAudio(const std::string& filePath)
 
         Microsoft::WRL::ComPtr<IMFMediaBuffer> pBuffer;
         hr = pSample->ConvertToContiguousBuffer(&pBuffer);
-        if (FAILED(hr)) { Log("ConvertToContiguousBuffer FAILED: 0x%X", hr); break; }
+        if (FAILED(hr)) { Log("ConvertToContiguousBuffer FAILED: %s", HrToString(hr)); break; }
 
 
 
         BYTE* pAudioData = nullptr;
         hr = pBuffer->Lock(&pAudioData, nullptr, &currentBufferLength);
-        if (FAILED(hr)) { Log("Buffer Lock FAILED: 0x%X", hr); break; }
+        if (FAILED(hr)) { Log("Buffer Lock FAILED: %s", HrToString(hr)); break; }
 
         if (currentBufferLength > 0)
         {
@@ -208,7 +208,7 @@ uint32_t AudioManager::LoadAudio(const std::string& filePath)
         }
 
         hr = pBuffer->Unlock();
-        if (FAILED(hr)) { Log("Buffer Unlock FAILED: 0x%X", hr); break; }
+        if (FAILED(hr)) { Log("Buffer Unlock FAILED: %s", HrToString(hr)); break; }
     }
 
 

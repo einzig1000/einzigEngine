@@ -22,7 +22,8 @@ public:
 	DrawSystem(DirectXManager* dxManager, ResourceManager* resourceManager);
 	~DrawSystem();
 	void Update();
-	void Draw();
+	void SceneDraw();
+	void ScreenDraw();
 
 	// テスト用の動作確認関数。
 	void DrawRenderObject();
@@ -53,5 +54,6 @@ private:
 	// 1フレームに呼び出せる描画コールの最大数
 	size_t kMaxDrawCallPerFrame_ = 1024;
 
+	// スクリーン描画用の
 };
 

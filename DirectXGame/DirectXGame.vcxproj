@@ -165,6 +165,7 @@ copy "$(ProjectDir)externals\dxc\dxil.dll" "$(TargetDir)dxil.dll"
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\engine\DirectX\RenderTextureManager\RenderTextureManager.cpp" />
     <ClCompile Include="src\engine\DirectX\Pipeline\ShaderReflectionHelper\ShaderReflectionHelper.cpp" />
     <ClCompile Include="src\engine\Utilities\Random\Random.cpp" />
     <ClCompile Include="src\engine\Utilities\Converter\AngleConverter\AngleConverter.cpp" />
@@ -249,6 +250,7 @@ copy "$(ProjectDir)externals\dxc\dxil.dll" "$(TargetDir)dxil.dll"
     <ClCompile Include="src\engine\Utilities\Converter\StringConverter\StringConverter.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\engine\DirectX\RenderTextureManager\RenderTextureManager.h" />
     <ClInclude Include="src\engine\DirectX\Pipeline\ShaderReflectionHelper\ShaderReflectionHelper.h" />
     <ClInclude Include="src\engine\Utilities\Random\Random.h" />
     <ClInclude Include="src\engine\Utilities\Converter\AngleConverter\AngleConverter.h" />

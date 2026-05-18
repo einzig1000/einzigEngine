@@ -41,6 +41,29 @@ struct RootParam
 	// SRV用
 	uint32_t srvStorageIndex = 0;   // そのSRVがdynamicSrvStorage_のどこにあるか。
 	uint32_t srvAllocIndex = UINT32_MAX;    // SRVのスロットインデックス(0であればBindlessテクスチャ配列、1以上UINT32_MAX未満であればリソース確保済みのSRV)
+
+    void ComputeHash()
+    {
+        uint32_t h = 0;
+
+        h ^= static_cast<uint32_t>(paramType);
+        h *= 0x85ebca6b;
+
+        h ^= static_cast<uint32_t>(shaderType);
+        h *= 0x85ebca6b;
+
+        h ^= key;
+        h *= 0x85ebca6b;
+
+        h ^= registerSpace;
+        h *= 0x85ebca6b;
+
+        h ^= h >> 16;
+        h *= 0xc2b2ae35;
+        h ^= h >> 16;
+
+		hash = h;
+    }
 };
 
 // ブレンドステートの種類

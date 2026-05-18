@@ -120,6 +120,16 @@ SRV_UAVManager::Allocation SRV_UAVManager::CreateSRVforDDS(ID3D12Resource* resou
     return CreateSRV(resource, &srvDesc, ResourceType::TextureCube);
 }
 
+SRV_UAVManager::Allocation SRV_UAVManager::CreateSRVforRenderTarget(ID3D12Resource* resource)
+{
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+    srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Texture2D.MipLevels = 1;
+    return CreateSRV(resource, &srvDesc, ResourceType::Texture2D);
+}
+
 SRV_UAVManager::Allocation SRV_UAVManager::CreateSRVforStructuredBuffer(ID3D12Resource* resource, UINT numElements, UINT structureByteStride)
 {
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
@@ -132,6 +142,7 @@ SRV_UAVManager::Allocation SRV_UAVManager::CreateSRVforStructuredBuffer(ID3D12Re
     srvDesc.Buffer.StructureByteStride = structureByteStride;
 	return CreateSRV(resource, &srvDesc, ResourceType::StructuredBuffer);
 }
+
 
 void SRV_UAVManager::RewriteSRVforStructuredBuffer(Allocation& allocation, ID3D12Resource* resource, UINT numElements, UINT structureByteStride)
 {

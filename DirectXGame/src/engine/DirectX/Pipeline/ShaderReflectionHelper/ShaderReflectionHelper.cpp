@@ -9,29 +9,6 @@
 
 namespace ShaderReflection
 {
-    uint32_t HashRootParam(const ParamType& paramType, const ShaderType& shaderType, const uint32_t key, const uint32_t registerSpace)
-    {
-        uint32_t h = 0;
-
-        h ^= static_cast<uint32_t>(paramType);
-        h *= 0x85ebca6b;
-
-        h ^= static_cast<uint32_t>(shaderType);
-        h *= 0x85ebca6b;
-
-        h ^= key;
-        h *= 0x85ebca6b;
-
-        h ^= registerSpace;
-        h *= 0x85ebca6b;
-
-        h ^= h >> 16;
-        h *= 0xc2b2ae35;
-        h ^= h >> 16;
-
-        return h;
-    }
-
     std::vector<InputElement> GetInputLayoutFromShader(IDxcBlob* shaderBlob)
     {
         std::vector<InputElement> inputElements;
@@ -166,7 +143,7 @@ namespace ShaderReflection
                 p.shaderType = shaderType;
                 p.key = bind.BindPoint;
 				p.registerSpace = bind.Space;
-				p.hash = HashRootParam(ParamType::CBV, shaderType, bind.BindPoint, bind.Space);
+                p.ComputeHash();
 
                 p.sizeBytes = cbDesc.Size;
                 p.offsetBytes = currentCBVOffsetBytes;
@@ -182,7 +159,7 @@ namespace ShaderReflection
                 p.shaderType = shaderType;
                 p.key = bind.BindPoint;
                 p.registerSpace = bind.Space;
-				p.hash = HashRootParam(ParamType::SRV, shaderType, bind.BindPoint, bind.Space);
+				p.ComputeHash();
 
 				p.srvStorageIndex = currentSRVOffsetIndex;
                 currentSRVOffsetIndex++;
@@ -196,7 +173,7 @@ namespace ShaderReflection
                 p.shaderType = shaderType;
                 p.key = bind.BindPoint;
                 p.registerSpace = bind.Space;
-				p.hash = HashRootParam(ParamType::SRV, shaderType, bind.BindPoint, bind.Space);
+                p.ComputeHash();
 
                 switch (bind.Dimension)
                 {

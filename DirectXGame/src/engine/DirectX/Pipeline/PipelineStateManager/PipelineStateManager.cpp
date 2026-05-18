@@ -26,14 +26,7 @@ namespace
         h = HashCombine(h, params.size());
 		for (const auto& param : params)
         {
-            h = HashCombine(h, static_cast<size_t>(param.paramType));
-            h = HashCombine(h, static_cast<size_t>(param.shaderType));
-            h = HashCombine(h, static_cast<size_t>(param.key));
-            if (param.paramType == ParamType::CBV)
-            {
-                // CBVはサイズも考慮する
-                h = HashCombine(h, param.sizeBytes);
-			}
+			h = HashCombine(h, param.hash);
         }
         return h;
     }

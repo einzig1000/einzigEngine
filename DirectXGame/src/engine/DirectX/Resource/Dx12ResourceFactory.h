@@ -41,4 +41,15 @@ namespace Dx12ResourceFactory
     /// <returns>作成された深度ステンシルバッファリソース</returns>
     Microsoft::WRL::ComPtr<ID3D12Resource> CreateDepthStencilResource(
 		ID3D12Device* device, UINT width, UINT height);
+
+	/// <summary>
+	/// レンダーターゲット用のテクスチャリソースを作成する関数
+	/// </summary>
+	/// <param name="device">DirectX 12 デバイス</param>
+	/// <param name="width">テクスチャの幅</param>
+	/// <param name="height">テクスチャの高さ</param>
+	/// <param name="format">テクスチャのフォーマット</param>
+	/// <returns>作成されたレンダーターゲット用のテクスチャリソース</returns>
+	Microsoft::WRL::ComPtr<ID3D12Resource> CreateRenderTargetResource(
+		ID3D12Device* device, UINT width, UINT height, DXGI_FORMAT format);
 }
