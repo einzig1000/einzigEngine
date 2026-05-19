@@ -19,7 +19,7 @@ struct VSOutput
     float2 texcoord : TEXCOORD0;
 };
 
-VSOutput main(uint vertexID : SV_VertexID) : SV_POSITION
+VSOutput main(uint vertexID : SV_VertexID)
 {
     VSOutput output;
     output.position = kPosition[vertexID];

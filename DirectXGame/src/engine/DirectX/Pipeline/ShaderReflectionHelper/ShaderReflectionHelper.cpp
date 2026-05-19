@@ -178,14 +178,11 @@ namespace ShaderReflection
                 switch (bind.Dimension)
                 {
                 case D3D_SRV_DIMENSION_TEXTURE2D:
-                    //p.textureKind = TextureKind::Texture2D;
                     p.srvAllocIndex = 0;
                     break;
 
                 case D3D_SRV_DIMENSION_TEXTURECUBE:
-                    //p.textureKind = TextureKind::TextureCube;
-                    p.srvAllocIndex = 128;
-                    // p.srvAllocIndex = SRV_UAVManager::textureCapacity_
+                    p.srvAllocIndex = 0;
                     break;
 
                 default:
@@ -193,6 +190,20 @@ namespace ShaderReflection
                     break;
                 }
 
+                outParams.push_back(p);
+            }
+            else if (bind.Type == D3D_SIT_TEXTURE && bind.BindCount > 0)
+            {
+                RootParam p{};
+                p.paramType = ParamType::SRV;
+                p.shaderType = shaderType;
+                p.key = bind.BindPoint;
+                p.registerSpace = bind.Space;
+                p.ComputeHash();
+
+                // BindCountが0でないテクスチャは通常のSRVとして扱う
+                p.srvStorageIndex = currentSRVOffsetIndex;
+                currentSRVOffsetIndex++;
                 outParams.push_back(p);
             }
         }

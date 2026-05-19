@@ -66,51 +66,49 @@ void Engine::BeginFrame()
 	// GPU同期
 	dxManager_->GetSynchronizationManager()->WaitForGPU();
 
-	if (Game::IO::Key::IsJustPressed(DIK_F12))
-	{
-		ToggleFullscreen();
-	}
-
-	// DirectXを更新
-	dxManager_->BeginFrame();
-
 	// imguiを更新
 	imguiManager_->BeginFrame();
 
+	// デバッグ情報更新
+	UpdateDebugInfo();
+
 	// 描画関数初期化
 	drawSystem_->Reset();
+
+	// DirectXを更新
+	dxManager_->BeginFrame();
 
 	// インプット系を更新
 	ioManager_->Update();
 
 	// カメラを更新	
 	cameraManager_->Update();
-
-	// デバッグ情報更新
-	UpdateDebugInfo();
 }
 void Engine::EndFrame()
 {
 	// 入力終了処理
 	ioManager_->EndFrame();
 
-	// レンダーターゲットをオフスクリーンに切り替える
+	// オフスクリーン描画用のRTV･DSVをセット
 	dxManager_->PreSceneDraw();
 
 	// シーン描画
 	drawSystem_->SceneDraw();
 
+	// オフスクリーン描画終了
 	dxManager_->PostSceneDraw();
 
-	// レンダーターゲットをスクリーンに切り替える
+	// スクリーン描画用のRTVをセット
 	dxManager_->PreScreenDraw();
+
+	// スクリーン描画
+	drawSystem_->ScreenDraw();
 
 	// ImGui描画
 	imguiManager_->EndFrame();
-	if (isDebugInfo_)imguiManager_->Draw();
+	imguiManager_->Draw();
 
-	drawSystem_->ScreenDraw();
-
+	// スクリーン描画終了
 	dxManager_->PostScreenDraw();
 
 	// DirectX終了処理
@@ -221,29 +219,31 @@ void Engine::UpdateDebugInfo()
 {
 	if (Game::IO::Key::IsJustPressed(DIK_F1))
 	{
-		isDebugInfo_ = !isDebugInfo_;
+		imguiManager_->ToggleDraw();
 	}
 	if (Game::IO::Key::IsJustPressed(DIK_F3))
 	{
 		cameraManager_->ToggleCamera();
 	}
-
-	if (isDebugInfo_)
+	if (Game::IO::Key::IsJustPressed(DIK_F12))
 	{
-		cameraManager_->Draw();
-
-		ImGui::Begin("------debug info------");
-		ImGui::Text("ESC : Quit Application");
-		ImGui::Text("F1  : Hide Debug Info");
-		ImGui::Text("F3  : Toggle Camera Release or Debug");
-		ImGui::Text("F5  : Toggle Camera FirstPerson or ThirdPerson");
-		ImGui::Text("F12 : Toggle Fullscreen");
-		ImGui::Text("DeltaTime: %.3f ms", fixFPS_->GetDeltaTime() * 1000.0f);
-		ImGui::Text("FPS: %.1f ", fixFPS_->GetAverageFPS());
-		ImGui::Text("ImGui FPS: %.1f ", ImGui::GetIO().Framerate);
-		ImGui::End();
+		ToggleFullscreen();
 	}
+
+	cameraManager_->Draw();
+
+	ImGui::Begin("------debug info------");
+	ImGui::Text("ESC : Quit Application");
+	ImGui::Text("F1  : Hide Debug Info");
+	ImGui::Text("F3  : Toggle Camera Release or Debug");
+	ImGui::Text("F5  : Toggle Camera FirstPerson or ThirdPerson");
+	ImGui::Text("F12 : Toggle Fullscreen");
+	ImGui::Text("DeltaTime: %.3f ms", fixFPS_->GetDeltaTime() * 1000.0f);
+	ImGui::Text("FPS: %.1f ", fixFPS_->GetAverageFPS());
+	ImGui::Text("ImGui FPS: %.1f ", ImGui::GetIO().Framerate);
+	ImGui::End();
 }
+
 void Engine::Quit()
 {
 	windowManager_->Quit();

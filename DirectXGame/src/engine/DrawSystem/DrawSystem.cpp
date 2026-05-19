@@ -84,6 +84,7 @@ void DrawSystem::ScreenDraw()
 	PSOConfig psoConfig{};
 	psoConfig.vs = "resources/shaders/CopyImage/CopyImage.VS.hlsl";
 	psoConfig.ps = "resources/shaders/CopyImage/CopyImage.PS.hlsl";
+	psoConfig.dsvFormatID = DSVFormatID::Unknown;
 
 	// 1) RootSignatureセット
 	cmdList->SetGraphicsRootSignature(dxManager_->GetPipelineStateManager()->GetOrCreateRootSignature(outParams).Get());

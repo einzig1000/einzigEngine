@@ -180,7 +180,8 @@ void DirectXManager::PreScreenDraw()
     // 描画先のRTVとDSVを指定
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = swapChainManager->GetCurrentRTVHandle();
     D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = swapChainManager->GetDSVHandle();
-    commandContextManager->GetCommandList()->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
+    //commandContextManager->GetCommandList()->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
+    commandContextManager->GetCommandList()->OMSetRenderTargets(1, &rtvHandle, false, nullptr);
 
     // クリア
     float clearColor[] = { 0.396078f, 0.894117f, 1.0f, 1.0f };

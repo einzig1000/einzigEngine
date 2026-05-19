@@ -59,7 +59,6 @@ private:
 	void UpdateDebugInfo();
 	void UpdateTransforms();
 	void UpdateParticles();
-	bool isDebugInfo_ = true;
 
 
 	// ウィンドウ関連

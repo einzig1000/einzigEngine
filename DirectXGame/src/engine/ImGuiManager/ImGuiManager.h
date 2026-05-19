@@ -19,8 +19,11 @@ public:
 	void Draw();
 	void Finalize();
 
+	void ToggleDraw() { isDraw_ = !isDraw_; }
+
 private:
 	DirectXManager* dxManager_;
 	WindowManager* windowManager_;
+	bool isDraw_ = true;
 };
 
