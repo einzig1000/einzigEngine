@@ -1,6 +1,5 @@
 #pragma once
 #include "definition/definition.h"
-#include <definition/definition.h>
 
 namespace CoordinateConverter
 {
