@@ -109,7 +109,7 @@ void Engine::EndFrame()
 	imguiManager_->EndFrame();
 	if (isDebugInfo_)imguiManager_->Draw();
 
-	//drawSystem_->ScreenDraw();
+	drawSystem_->ScreenDraw();
 
 	dxManager_->PostScreenDraw();
 
@@ -140,7 +140,7 @@ void Engine::UpdateTransforms()
 #pragma region 座標更新 & 描画範囲内判定
 
 	// オブジェクト更新
-	std::vector<ModelData> objects = resourceManager_->GetModelManager()->GetModelList();
+	//std::vector<ModelData> objects = resourceManager_->GetModelManager()->GetModelList();
 
 	//for (auto& rd : modelList)
 	//{
@@ -289,46 +289,3 @@ void Engine::ToggleFullscreen()
 	// カメラのアスペクト比を更新
 	cameraManager_->Resize();
 }
-
-// CreateLocalAABBでつくったAABBに座標を適応させる（当たり判定の毎フレーム更新用）
-//std::vector<AABB>  Engine::CreateAABB(RenderData_Model* data)
-//{
-//	//if (data->GetModel() < 0 || data->GetModel() >= (int)resourceManager_->GetModelManager()->GetModelCount())
-//	//{
-//	//	return {};
-//	//}
-//	//Matrix4x4 worldMatrix = data->GetWorldMatrix();
-//	//ModelData& obj = resourceManager_->GetModelManager()->GetModelList()[data->GetModel()];
-//	std::vector<AABB> result;
-//
-//	//for (const auto& localAABB : obj.aabb)
-//	//{
-//	//	// ローカルAABBの8頂点
-//	//	Vector3 corners[8] = {
-//	//		{localAABB.min.x, localAABB.min.y, localAABB.min.z},
-//	//		{localAABB.max.x, localAABB.min.y, localAABB.min.z},
-//	//		{localAABB.min.x, localAABB.max.y, localAABB.min.z},
-//	//		{localAABB.max.x, localAABB.max.y, localAABB.min.z},
-//	//		{localAABB.min.x, localAABB.min.y, localAABB.max.z},
-//	//		{localAABB.max.x, localAABB.min.y, localAABB.max.z},
-//	//		{localAABB.min.x, localAABB.max.y, localAABB.max.z},
-//	//		{localAABB.max.x, localAABB.max.y, localAABB.max.z},
-//	//	};
-//
-//	//	// 8頂点をワールド空間に変換
-//	//	Vector3 worldMin = Transform(corners[0], worldMatrix);
-//	//	Vector3 worldMax = worldMin;
-//	//	for (int i = 1; i < 8; ++i)
-//	//	{
-//	//		Vector3 v = Transform(corners[i], worldMatrix);
-//	//		worldMin.x = my_min(worldMin.x, v.x);
-//	//		worldMin.y = my_min(worldMin.y, v.y);
-//	//		worldMin.z = my_min(worldMin.z, v.z);
-//	//		worldMax.x = my_max(worldMax.x, v.x);
-//	//		worldMax.y = my_max(worldMax.y, v.y);
-//	//		worldMax.z = my_max(worldMax.z, v.z);
-//	//	}
-//	//	result.push_back({ worldMin, worldMax });
-//	//}
-//	return result;
-//}
