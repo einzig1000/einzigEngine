@@ -29,8 +29,8 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource_;
 
 
-	RTVManager::RTVAllocation rtvAllocations_[2]{ {UINT32_MAX}, {UINT32_MAX} };
-	DSVManager::DSVAllocation mainDepthDSV_{ UINT32_MAX };
+	RTVManager::Allocation rtvAllocations_[2]{ {UINT32_MAX}, {UINT32_MAX} };
+	DSVManager::Allocation mainDepthDSV_{ UINT32_MAX };
 
 	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc_;
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc_;

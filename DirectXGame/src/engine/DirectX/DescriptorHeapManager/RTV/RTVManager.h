@@ -6,7 +6,7 @@
 class RTVManager
 {
 public:
-	struct RTVAllocation
+	struct Allocation
 	{
 		uint32_t index;
 		D3D12_CPU_DESCRIPTOR_HANDLE handle;
@@ -25,7 +25,7 @@ public:
 	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandleAt(uint32_t index) const;
 
 	// RTVの作成とスロットの割り当て
-	RTVAllocation CreateRTV(ID3D12Resource* resource, const D3D12_RENDER_TARGET_VIEW_DESC* desc);
+	Allocation CreateRTV(ID3D12Resource* resource, const D3D12_RENDER_TARGET_VIEW_DESC* desc);
 
 private:
 	// デバイス

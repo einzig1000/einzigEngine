@@ -45,7 +45,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE RTVManager::GetCPUHandleAt(uint32_t index) const
 	return handle;
 }
 
-RTVManager::RTVAllocation RTVManager::CreateRTV(ID3D12Resource* resource, const D3D12_RENDER_TARGET_VIEW_DESC* desc)
+RTVManager::Allocation RTVManager::CreateRTV(ID3D12Resource* resource, const D3D12_RENDER_TARGET_VIEW_DESC* desc)
 {
 	// 次スロットのインデックス取得
 	uint32_t index = Allocate();
@@ -56,5 +56,5 @@ RTVManager::RTVAllocation RTVManager::CreateRTV(ID3D12Resource* resource, const 
 	// DSV作成
 	device_->CreateRenderTargetView(resource, desc, cpuHandle);
 
-	return RTVAllocation{ index, cpuHandle };
+	return Allocation{ index, cpuHandle };
 }

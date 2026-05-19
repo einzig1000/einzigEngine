@@ -93,7 +93,7 @@ void DrawSystem::ScreenDraw()
 	// 3) トポロジーセット
 	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	// 4) テクスチャセット
-	cmdList->SetGraphicsRootDescriptorTable(0, dxManager_->GetRenderTextureManager()->Get("RenderTarget_0")->srvHandle);
+	cmdList->SetGraphicsRootDescriptorTable(0, dxManager_->GetRenderTextureManager()->Get("RenderTarget_0")->srvAlloc.gpu);
 
 	cmdList->DrawInstanced(3, 1, 0, 0);
 }

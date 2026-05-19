@@ -45,7 +45,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE DSVManager::GetCPUHandleAt(uint32_t index) const
 	return handle;
 }
 
-DSVManager::DSVAllocation DSVManager::CreateDSV(ID3D12Resource* resource, const D3D12_DEPTH_STENCIL_VIEW_DESC* desc)
+DSVManager::Allocation DSVManager::CreateDSV(ID3D12Resource* resource, const D3D12_DEPTH_STENCIL_VIEW_DESC* desc)
 {
 	// 次スロットのインデックス取得
 	uint32_t index = Allocate();
@@ -56,5 +56,5 @@ DSVManager::DSVAllocation DSVManager::CreateDSV(ID3D12Resource* resource, const 
 	// DSV作成
 	device_->CreateDepthStencilView(resource, desc, cpuHandle);
 
-	return DSVAllocation{ index, cpuHandle };
+	return Allocation{ index, cpuHandle };
 }

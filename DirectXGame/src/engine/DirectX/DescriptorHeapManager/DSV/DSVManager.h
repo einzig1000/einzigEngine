@@ -6,7 +6,7 @@
 class DSVManager
 {
 public:
-	struct DSVAllocation
+	struct Allocation
 	{
 		uint32_t index;
 		D3D12_CPU_DESCRIPTOR_HANDLE handle;
@@ -25,7 +25,7 @@ public:
 	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandleAt(uint32_t index) const;
 
 	// DSVの作成とスロットの割り当て
-	DSVAllocation CreateDSV(ID3D12Resource* resource, const D3D12_DEPTH_STENCIL_VIEW_DESC* desc);
+	Allocation CreateDSV(ID3D12Resource* resource, const D3D12_DEPTH_STENCIL_VIEW_DESC* desc);
 
 private:
 	// デバイス

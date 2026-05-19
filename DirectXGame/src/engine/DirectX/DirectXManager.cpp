@@ -123,8 +123,8 @@ void DirectXManager::PreSceneDraw()
     commandContextManager->GetCommandList()->SetDescriptorHeaps(1, descriptorHeaps);
 
     // 描画先のRTVとDSVを指定
-    D3D12_CPU_DESCRIPTOR_HANDLE offscreenRTVHandle = offscreenRenderTarget->rtvHandle;
-    D3D12_CPU_DESCRIPTOR_HANDLE offscreenDSVHandle = offscreenRenderTarget->dsvHandle;
+    D3D12_CPU_DESCRIPTOR_HANDLE offscreenRTVHandle = offscreenRenderTarget->rtvAlloc.handle;
+    D3D12_CPU_DESCRIPTOR_HANDLE offscreenDSVHandle = offscreenRenderTarget->dsvAlloc.handle;
     commandContextManager->GetCommandList()->OMSetRenderTargets(1, &offscreenRTVHandle, false, &offscreenDSVHandle);
 
     // クリア
