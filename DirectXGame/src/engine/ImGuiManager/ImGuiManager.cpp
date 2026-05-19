@@ -44,6 +44,8 @@ void ImGuiManager::EndFrame()
 
 void ImGuiManager::Draw()
 {
+	if (!isDraw_) return;
+
 	ImDrawData* draw_data = ImGui::GetDrawData();
 	if (draw_data != nullptr && draw_data->CmdListsCount > 0)
 	{

@@ -35,10 +35,9 @@ namespace Dx12ResourceFactory
         if (FAILED(hr) || !resource)
         {
             const HRESULT removed = device->GetDeviceRemovedReason();
-            Log("CreateCommittedResource failed. size=%zu hr=0x%08X removed=0x%08X",
-                sizeInBytes,
-                static_cast<unsigned>(hr),
-                static_cast<unsigned>(removed));
+            Log("CreateBufferResource()に失敗しました。hr=%s removedReason=%s",
+                HrToString(hr),
+                HrToString(removed));
             return nullptr;
         }
 
@@ -86,11 +85,9 @@ namespace Dx12ResourceFactory
         if (FAILED(hr) || !resource)
         {
             const HRESULT removed = device->GetDeviceRemovedReason();
-            Log("CreateCommittedResource failed. width=%u height=%u hr=0x%08X removed=0x%08X",
-                resourceDesc.Width,
-                resourceDesc.Height,
-                static_cast<unsigned>(hr),
-                static_cast<unsigned>(removed));
+			Log("CreateTextureResource()に失敗しました。hr=%s removedReason=%s",
+                HrToString(hr),
+                HrToString(removed));
             return nullptr;
         }
 
@@ -101,6 +98,7 @@ namespace Dx12ResourceFactory
 
     Microsoft::WRL::ComPtr<ID3D12Resource> CreateDepthStencilResource(ID3D12Device* device, UINT width, UINT height)
     {
+        // リソース記述子を作成
         D3D12_RESOURCE_DESC depthStencilDesc = {};
         depthStencilDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
         depthStencilDesc.Width = width;
@@ -111,26 +109,88 @@ namespace Dx12ResourceFactory
         depthStencilDesc.SampleDesc.Count = 1;
         depthStencilDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 
+        // 利用するHeapの設定
         D3D12_HEAP_PROPERTIES heapProperties{};
         heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
 
+        // クリア値の設定
         D3D12_CLEAR_VALUE clearValue = {};
         clearValue.DepthStencil.Depth = 1.0f;
         clearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
+        // リソースを作成
         Microsoft::WRL::ComPtr<ID3D12Resource> resource = nullptr;
         HRESULT hr = device->CreateCommittedResource(
-            &heapProperties,
-            D3D12_HEAP_FLAG_NONE,
-            &depthStencilDesc,
-            D3D12_RESOURCE_STATE_DEPTH_WRITE,
-            &clearValue,
-			IID_PPV_ARGS(resource.ReleaseAndGetAddressOf())
+            &heapProperties,        // ヒープのプロパティ
+            D3D12_HEAP_FLAG_NONE,   // ヒープフラグ
+            &depthStencilDesc,      // リソースの記述子
+            D3D12_RESOURCE_STATE_COMMON, // 初期状態
+            &clearValue,            // Clear値
+			IID_PPV_ARGS(resource.ReleaseAndGetAddressOf()) // ID3D12Resourceポインタを取得
         );
-        assert(SUCCEEDED(hr)); 
+
+		if (FAILED(hr) || !resource)
+		{
+			const HRESULT removed = device->GetDeviceRemovedReason();
+			Log("CreateDepthStencilResource()に失敗しました。 hr=%s removedReason=%s",
+				HrToString(hr),
+				HrToString(removed));
+			return nullptr;
+		}
 
         resource->SetName(L"CreateDepthStencilResource()");
 
 		return resource;
+    }
+
+    Microsoft::WRL::ComPtr<ID3D12Resource> CreateRenderTargetResource(ID3D12Device* device, UINT width, UINT height, DXGI_FORMAT format)
+    {
+        // リソース記述子を作成
+        D3D12_RESOURCE_DESC resourceDesc{};
+        resourceDesc.Width = width;
+        resourceDesc.Height = height;
+        resourceDesc.MipLevels = 1;
+        resourceDesc.DepthOrArraySize = 1;
+        resourceDesc.Format = format;
+		resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+        resourceDesc.SampleDesc.Count = 1;
+		resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D; // レンダーターゲット用のテクスチャは2D固定
+
+        // 利用するHeapの設定
+        D3D12_HEAP_PROPERTIES heapProperties{};
+        heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
+
+		// クリア値の設定
+		D3D12_CLEAR_VALUE clearValue{};
+		clearValue.Format = format;
+		clearValue.Color[0] = 0.396078f;
+        clearValue.Color[1] = 0.894117f;
+        clearValue.Color[2] = 1.0f;
+		clearValue.Color[3] = 1.0f;
+
+        // リソースを作成
+        Microsoft::WRL::ComPtr<ID3D12Resource> resource = nullptr;
+        HRESULT hr = device->CreateCommittedResource(
+            &heapProperties,        // ヒープのプロパティ
+            D3D12_HEAP_FLAG_NONE,   // ヒープフラグ
+            &resourceDesc,          // リソースの記述子
+            D3D12_RESOURCE_STATE_COMMON, // 初期状態
+            &clearValue,            // Clear値
+            IID_PPV_ARGS(resource.ReleaseAndGetAddressOf()) // ID3D12Resourceポインタを取得
+        );
+
+        // 失敗した場合はエラーをログに出力してnullptrを返す
+        if (FAILED(hr) || !resource)
+        {
+            const HRESULT removed = device->GetDeviceRemovedReason();
+            Log("CreateRenderTargetResource()に失敗しました。 hr=%s removedReason=%s",
+                HrToString(hr),
+                HrToString(removed));
+            return nullptr;
+        }
+
+        resource->SetName(L"CreateRenderTargetResource()");
+
+        return resource; // 作成したリソースを返す
     }
 }

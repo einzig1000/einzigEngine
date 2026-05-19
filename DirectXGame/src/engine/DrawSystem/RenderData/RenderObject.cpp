@@ -41,11 +41,17 @@ void RenderObject::SetupFromShaders()
 
 void RenderObject::SetSBufferData(const uint32_t key, ShaderType shaderType, const void* data, size_t elementSize, size_t elementCount, uint32_t space)
 {
-	const size_t bytes = elementSize * elementCount;
-	const uint32_t hash = ShaderReflection::HashRootParam(ParamType::SRV, shaderType, key, space);
-	const auto& it = rootParamHashToIndexMap_.find(hash);
+	RootParam tempParam{};
+	tempParam.paramType = ParamType::SRV;
+	tempParam.shaderType = shaderType;
+	tempParam.key = key;
+	tempParam.registerSpace = space;
+	tempParam.ComputeHash();
+
+	const auto& it = rootParamHashToIndexMap_.find(tempParam.hash);
 	if (it == rootParamHashToIndexMap_.end()) return;
 
+	const size_t bytes = elementSize * elementCount;
 	auto& param = rootParams_.at(it->second);
 	if (param.paramType == ParamType::SRV && param.shaderType == shaderType && param.key == key)
 	{
@@ -95,8 +101,14 @@ void RenderObject::SetSBufferData(const uint32_t key, ShaderType shaderType, con
 
 void RenderObject::SetCBufferData(const uint32_t key, ShaderType shaderType, const void* data, uint32_t space)
 {
-	const uint32_t hash = ShaderReflection::HashRootParam(ParamType::CBV, shaderType, key, space);
-	const auto& it = rootParamHashToIndexMap_.find(hash);
+	RootParam tempParam{};
+	tempParam.paramType = ParamType::CBV;
+	tempParam.shaderType = shaderType;
+	tempParam.key = key;
+	tempParam.registerSpace = space;
+	tempParam.ComputeHash();
+
+	const auto& it = rootParamHashToIndexMap_.find(tempParam.hash);
 	if (it == rootParamHashToIndexMap_.end()) return;
 	const auto& param = rootParams_.at(it->second);
 

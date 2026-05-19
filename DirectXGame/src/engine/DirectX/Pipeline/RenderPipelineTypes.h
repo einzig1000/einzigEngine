@@ -41,6 +41,29 @@ struct RootParam
 	// SRV用
 	uint32_t srvStorageIndex = 0;   // そのSRVがdynamicSrvStorage_のどこにあるか。
 	uint32_t srvAllocIndex = UINT32_MAX;    // SRVのスロットインデックス(0であればBindlessテクスチャ配列、1以上UINT32_MAX未満であればリソース確保済みのSRV)
+
+    void ComputeHash()
+    {
+        uint32_t h = 0;
+
+        h ^= static_cast<uint32_t>(paramType);
+        h *= 0x85ebca6b;
+
+        h ^= static_cast<uint32_t>(shaderType);
+        h *= 0x85ebca6b;
+
+        h ^= key;
+        h *= 0x85ebca6b;
+
+        h ^= registerSpace;
+        h *= 0x85ebca6b;
+
+        h ^= h >> 16;
+        h *= 0xc2b2ae35;
+        h ^= h >> 16;
+
+		hash = h;
+    }
 };
 
 // ブレンドステートの種類
@@ -69,6 +92,13 @@ enum class RasterizerID : uint8_t
     Wireframe,
 };
 
+// DSVformatの種類
+enum class DSVFormatID : uint8_t
+{
+	D24,
+	Unknown,
+};
+
 struct PSOConfig
 {
     /// 頂点シェーダーファイル名
@@ -83,8 +113,8 @@ struct PSOConfig
     RasterizerID rasterizerID = RasterizerID::Fill;
     /// プリミティブトポロジ
     D3D12_PRIMITIVE_TOPOLOGY topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-    /// スワップチェーン用かどうか
-    bool isSwapChain = false;
+	/// DSVフォーマットID
+	DSVFormatID dsvFormatID = DSVFormatID::D24;
 
     bool operator==(const PSOConfig& other) const
     {
@@ -94,7 +124,7 @@ struct PSOConfig
             depthStencilID == other.depthStencilID &&
             rasterizerID == other.rasterizerID &&
             topology == other.topology &&
-            isSwapChain == other.isSwapChain;
+            dsvFormatID == other.dsvFormatID;
     }
 };
 

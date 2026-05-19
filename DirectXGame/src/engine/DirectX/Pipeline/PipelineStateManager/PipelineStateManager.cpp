@@ -26,14 +26,7 @@ namespace
         h = HashCombine(h, params.size());
 		for (const auto& param : params)
         {
-            h = HashCombine(h, static_cast<size_t>(param.paramType));
-            h = HashCombine(h, static_cast<size_t>(param.shaderType));
-            h = HashCombine(h, static_cast<size_t>(param.key));
-            if (param.paramType == ParamType::CBV)
-            {
-                // CBVはサイズも考慮する
-                h = HashCombine(h, param.sizeBytes);
-			}
+			h = HashCombine(h, param.hash);
         }
         return h;
     }
@@ -47,7 +40,7 @@ namespace
         h = HashCombine(h, static_cast<size_t>(c.depthStencilID));
         h = HashCombine(h, static_cast<size_t>(c.rasterizerID));
         h = HashCombine(h, static_cast<size_t>(c.topology));
-        h = HashCombine(h, static_cast<size_t>(c.isSwapChain ? 1 : 0));
+        h = HashCombine(h, static_cast<size_t>(c.dsvFormatID));
 
         return h;
     }
@@ -139,6 +132,19 @@ namespace
         return d;
     }
 
+	static DXGI_FORMAT MakeDsvFormat(DSVFormatID id)
+	{
+		switch (id)
+		{
+		case DSVFormatID::D24:
+			return DXGI_FORMAT_D24_UNORM_S8_UINT;
+		case DSVFormatID::Unknown:
+            return DXGI_FORMAT_UNKNOWN;
+		default:
+			return DXGI_FORMAT_UNKNOWN;
+		}
+	}
+
     static D3D12_DEPTH_STENCIL_DESC MakeDepthStencilDesc(DepthStencilID id)
     {
 		D3D12_DEPTH_STENCIL_DESC d{};
@@ -207,7 +213,7 @@ Microsoft::WRL::ComPtr<ID3D12RootSignature> PipelineStateManager::GetOrCreateRoo
 	// ルートシグネチャ生成
     auto rs = CreateRootSignature(params);
 	assert(rs);
-	Log("ルートシグネチャ新規生成成功: キー %zu", key);
+	Log("成功: キー %zu", key);
 
 	// キャッシュに保存してから返す
     rootSignatureCache_.emplace(key, rs);
@@ -230,7 +236,7 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineStateManager::GetOrCreateGra
 	// パイプラインステート生成
 	auto pso = CreatePipelineState(psoConfig, params);
     assert(pso);
-	Log("PSO新規生成成功: キー %zu", psoKey);
+	Log("成功: キー %zu", psoKey);
 
 	// キャッシュに保存してから返す
     psoCache_.emplace(psoKey, pso);
@@ -262,6 +268,8 @@ Microsoft::WRL::ComPtr<IDxcBlob> PipelineStateManager::GetOrCompileShader(const 
 
 Microsoft::WRL::ComPtr<ID3D12RootSignature> PipelineStateManager::CreateRootSignature(const std::vector<RootParam>& params)
 {
+	Log("ルートシグネチャ生成開始");
+
     size_t srvCount = 0;
 	size_t cbvCount = 0;
     for (const auto& p : params)
@@ -374,6 +382,8 @@ Microsoft::WRL::ComPtr<ID3D12RootSignature> PipelineStateManager::CreateRootSign
 
 Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineStateManager::CreatePipelineState(const PSOConfig& cfg, const std::vector<RootParam>& params)
 {
+	Log("パイプラインステート生成開始: VS=%s, PS=%s", cfg.vs.c_str(), cfg.ps.c_str());
+
     HRESULT hr;
 
     // シェーダー取得（なければコンパイル）
@@ -389,6 +399,7 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineStateManager::CreatePipeline
     const D3D12_BLEND_DESC blendDesc = MakeBlendDesc(cfg.blendID);
     const D3D12_RASTERIZER_DESC rasterizerDesc = MakeRasterizerDesc(cfg.rasterizerID);
     const D3D12_DEPTH_STENCIL_DESC depthStencilDesc = MakeDepthStencilDesc(cfg.depthStencilID);
+	const DXGI_FORMAT dsvFormat = MakeDsvFormat(cfg.dsvFormatID);
     const D3D12_PRIMITIVE_TOPOLOGY_TYPE topoType = ToTopologyType(cfg.topology);
 
     std::vector<InputElement> inputLayout = ShaderReflection::GetInputLayoutFromShader(vsBlob.Get());
@@ -414,7 +425,7 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineStateManager::CreatePipeline
     graphicsPipelineStateDesc.VS = { vsBlob->GetBufferPointer(), vsBlob->GetBufferSize() };
     graphicsPipelineStateDesc.PS = { psBlob->GetBufferPointer(), psBlob->GetBufferSize() };
     graphicsPipelineStateDesc.DepthStencilState = depthStencilDesc;
-    graphicsPipelineStateDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    graphicsPipelineStateDesc.DSVFormat = MakeDsvFormat(cfg.dsvFormatID);
     graphicsPipelineStateDesc.NumRenderTargets = 1;
     graphicsPipelineStateDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
     graphicsPipelineStateDesc.PrimitiveTopologyType = topoType;

@@ -66,28 +66,56 @@ void Engine::BeginFrame()
 	// GPU同期
 	dxManager_->GetSynchronizationManager()->WaitForGPU();
 
-	if (Game::IO::Key::IsJustPressed(DIK_F12))
-	{
-		ToggleFullscreen();
-	}
-
-	// DirectXを更新
-	dxManager_->BeginFrame();
-
 	// imguiを更新
 	imguiManager_->BeginFrame();
-
-	// カメラを更新	
-	UpdateCamera();
-
-	// 描画関数初期化
-	drawSystem_->Update();
 
 	// デバッグ情報更新
 	UpdateDebugInfo();
 
+	// 描画関数初期化
+	drawSystem_->Reset();
+
+	// DirectXを更新
+	dxManager_->BeginFrame();
+
 	// インプット系を更新
 	ioManager_->Update();
+
+	// カメラを更新	
+	cameraManager_->Update();
+}
+void Engine::EndFrame()
+{
+	// 入力終了処理
+	ioManager_->EndFrame();
+
+	// オフスクリーン描画用のRTV･DSVをセット
+	dxManager_->PreSceneDraw();
+
+	// シーン描画
+	drawSystem_->SceneDraw();
+
+	// オフスクリーン描画終了
+	dxManager_->PostSceneDraw();
+
+	// スクリーン描画用のRTVをセット
+	dxManager_->PreScreenDraw();
+
+	// スクリーン描画
+	drawSystem_->ScreenDraw();
+
+	// ImGui描画
+	imguiManager_->EndFrame();
+	imguiManager_->Draw();
+
+	// スクリーン描画終了
+	dxManager_->PostScreenDraw();
+
+	// DirectX終了処理
+	dxManager_->EndFrame();
+
+	// FPS制限
+	fixFPS_->UpdateFixFPS();
 }
 void Engine::UpdateTransforms()
 {
@@ -110,7 +138,7 @@ void Engine::UpdateTransforms()
 #pragma region 座標更新 & 描画範囲内判定
 
 	// オブジェクト更新
-	std::vector<ModelData> objects = resourceManager_->GetModelManager()->GetModelList();
+	//std::vector<ModelData> objects = resourceManager_->GetModelManager()->GetModelList();
 
 	//for (auto& rd : modelList)
 	//{
@@ -187,80 +215,35 @@ void Engine::UpdateParticles()
 	// パーティクル更新
 	//RenderData_Particle::UpdateAllParticles();
 }
-void Engine::UpdateCamera()
-{
-	// カメラの更新
-	cameraManager_->Update();
-
-	//// 左シフト＋左クリックでカメラターゲットをオブジェクトに合わせる
-	//if (Game::IO::Key::IsHeld(DIK_LSHIFT))
-	//{
-	//	if (Game::IO::Mouse::IsJustPressed(0))
-	//	{
-	//		for (auto& rd : RenderData_Model::renderModels)
-	//		{
-	//			if (rd->isCollisionMouseRay == 0)
-	//			{
-	//				cameraManager_->SetCenterTarget(rd->GetWorldPosition(), 0, EaseType::IN_BACK);
-	//			}
-	//		}
-	//	}
-	//}
-}
 void Engine::UpdateDebugInfo()
 {
 	if (Game::IO::Key::IsJustPressed(DIK_F1))
 	{
-		isDebugInfo_ = !isDebugInfo_;
+		imguiManager_->ToggleDraw();
 	}
 	if (Game::IO::Key::IsJustPressed(DIK_F3))
 	{
 		cameraManager_->ToggleCamera();
 	}
-
-	if (isDebugInfo_)
+	if (Game::IO::Key::IsJustPressed(DIK_F12))
 	{
-		cameraManager_->Draw();
-
-		ImGui::Begin("------debug info------");
-		ImGui::Text("ESC : Quit Application");
-		ImGui::Text("F1  : Hide Debug Info");
-		ImGui::Text("F3  : Toggle Camera Release or Debug");
-		ImGui::Text("F5  : Toggle Camera FirstPerson or ThirdPerson");
-		ImGui::Text("F12 : Toggle Fullscreen");
-		ImGui::Text("DeltaTime: %.3f ms", fixFPS_->GetDeltaTime() * 1000.0f);
-		ImGui::Text("FPS: %.1f ", fixFPS_->GetAverageFPS());
-		ImGui::Text("ImGui FPS: %.1f ", ImGui::GetIO().Framerate);
-		ImGui::End();
+		ToggleFullscreen();
 	}
+
+	cameraManager_->Draw();
+
+	ImGui::Begin("------debug info------");
+	ImGui::Text("ESC : Quit Application");
+	ImGui::Text("F1  : Hide Debug Info");
+	ImGui::Text("F3  : Toggle Camera Release or Debug");
+	ImGui::Text("F5  : Toggle Camera FirstPerson or ThirdPerson");
+	ImGui::Text("F12 : Toggle Fullscreen");
+	ImGui::Text("DeltaTime: %.3f ms", fixFPS_->GetDeltaTime() * 1000.0f);
+	ImGui::Text("FPS: %.1f ", fixFPS_->GetAverageFPS());
+	ImGui::Text("ImGui FPS: %.1f ", ImGui::GetIO().Framerate);
+	ImGui::End();
 }
-void Engine::EndFrame()
-{
-	// 入力終了処理
-	ioManager_->EndFrame();
 
-	// 物理更新
-	//physicsSystem_->Step();
-
-	/// 座標更新
-	//UpdateTransforms();
-
-	/// パーティクル更新
-	//UpdateParticles();
-
-	// 描画実行
-	drawSystem_->Draw();
-
-	// ImGui描画
-	imguiManager_->EndFrame();
-	if (isDebugInfo_)imguiManager_->Draw();
-
-	// DirectX終了処理
-	dxManager_->EndFrame();
-
-	// FPS制限
-	fixFPS_->UpdateFixFPS();
-}
 void Engine::Quit()
 {
 	windowManager_->Quit();
@@ -306,46 +289,3 @@ void Engine::ToggleFullscreen()
 	// カメラのアスペクト比を更新
 	cameraManager_->Resize();
 }
-
-// CreateLocalAABBでつくったAABBに座標を適応させる（当たり判定の毎フレーム更新用）
-//std::vector<AABB>  Engine::CreateAABB(RenderData_Model* data)
-//{
-//	//if (data->GetModel() < 0 || data->GetModel() >= (int)resourceManager_->GetModelManager()->GetModelCount())
-//	//{
-//	//	return {};
-//	//}
-//	//Matrix4x4 worldMatrix = data->GetWorldMatrix();
-//	//ModelData& obj = resourceManager_->GetModelManager()->GetModelList()[data->GetModel()];
-//	std::vector<AABB> result;
-//
-//	//for (const auto& localAABB : obj.aabb)
-//	//{
-//	//	// ローカルAABBの8頂点
-//	//	Vector3 corners[8] = {
-//	//		{localAABB.min.x, localAABB.min.y, localAABB.min.z},
-//	//		{localAABB.max.x, localAABB.min.y, localAABB.min.z},
-//	//		{localAABB.min.x, localAABB.max.y, localAABB.min.z},
-//	//		{localAABB.max.x, localAABB.max.y, localAABB.min.z},
-//	//		{localAABB.min.x, localAABB.min.y, localAABB.max.z},
-//	//		{localAABB.max.x, localAABB.min.y, localAABB.max.z},
-//	//		{localAABB.min.x, localAABB.max.y, localAABB.max.z},
-//	//		{localAABB.max.x, localAABB.max.y, localAABB.max.z},
-//	//	};
-//
-//	//	// 8頂点をワールド空間に変換
-//	//	Vector3 worldMin = Transform(corners[0], worldMatrix);
-//	//	Vector3 worldMax = worldMin;
-//	//	for (int i = 1; i < 8; ++i)
-//	//	{
-//	//		Vector3 v = Transform(corners[i], worldMatrix);
-//	//		worldMin.x = my_min(worldMin.x, v.x);
-//	//		worldMin.y = my_min(worldMin.y, v.y);
-//	//		worldMin.z = my_min(worldMin.z, v.z);
-//	//		worldMax.x = my_max(worldMax.x, v.x);
-//	//		worldMax.y = my_max(worldMax.y, v.y);
-//	//		worldMax.z = my_max(worldMax.z, v.z);
-//	//	}
-//	//	result.push_back({ worldMin, worldMax });
-//	//}
-//	return result;
-//}

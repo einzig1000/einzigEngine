@@ -2,6 +2,7 @@
 #include <DirectX/DirectXManager.h>
 #include <ResourceManager/ResourceManager.h>
 #include <Window/WindowManager.h>
+#include <DirectX/RenderTextureManager/RenderTextureManager.h>
 #include <numbers>
 
 DrawSystem::DrawSystem(DirectXManager* dxManager, ResourceManager* resourceManager)
@@ -30,7 +31,7 @@ uint32_t DrawSystem::GetFrameIndex() const
 	return dxManager_->GetSwapChain()->GetCurrentBackBufferIndex() % kFramesInFlight_;
 }
 
-void DrawSystem::Update()
+void DrawSystem::Reset()
 {
 	// CBアロケータをリセット
 	cbAllocators_[GetFrameIndex()].Reset();
@@ -45,7 +46,7 @@ void DrawSystem::Update()
 	renderObjects_.clear();
 }
 
-void DrawSystem::Draw()
+void DrawSystem::SceneDraw()
 {
 	///// いつかRenderObjectリストをソートしたい
 	//① PSO
@@ -66,12 +67,41 @@ void DrawSystem::Draw()
 	//dxManager_->GetCommandContextManager()->GetCommandList()->SetPipelineState(dxManager_->GetPipelineStateManager()->GetLinePipelineState(BlendMode::kBlendModeNormal));
 }
 
+void DrawSystem::ScreenDraw()
+{
+	auto* cmdList = dxManager_->GetCommandContextManager()->GetCommandList();
+	auto* srvManager = dxManager_->GetDescriptorHeapManager()->GetSRV_UAVManager();
+
+	std::vector<RootParam> outParams{};
+	RootParam p{};
+	p.shaderType = ShaderType::PixelShader;
+	p.paramType = ParamType::SRV;
+	p.key = 0;
+	p.registerSpace = 0;
+	p.ComputeHash();
+	outParams.push_back(p);
+
+	PSOConfig psoConfig{};
+	psoConfig.vs = "resources/shaders/CopyImage/CopyImage.VS.hlsl";
+	psoConfig.ps = "resources/shaders/CopyImage/CopyImage.PS.hlsl";
+	psoConfig.dsvFormatID = DSVFormatID::Unknown;
+
+	// 1) RootSignatureセット
+	cmdList->SetGraphicsRootSignature(dxManager_->GetPipelineStateManager()->GetOrCreateRootSignature(outParams).Get());
+	// 2) PSOセット
+	cmdList->SetPipelineState(dxManager_->GetPipelineStateManager()->GetOrCreateGraphicsPipelineState(psoConfig, outParams).Get());
+	// 3) トポロジーセット
+	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	// 4) テクスチャセット
+	cmdList->SetGraphicsRootDescriptorTable(0, dxManager_->GetRenderTextureManager()->Get("RenderTarget_0")->srvHandle);
+
+	cmdList->DrawInstanced(3, 1, 0, 0);
+}
 
 void DrawSystem::AddDrawList(const RenderObject* renderObject)
 {
 	renderObjects_.push_back(renderObject);
 }
-
 
 void DrawSystem::DrawRenderObject()
 {
@@ -121,6 +151,8 @@ void DrawSystem::DrawRenderObject()
 		cmdList->DrawInstanced(kSumVertex, renderObject->instanceNum_, 0, 0);
 	}
 }
+
+
 
 void DrawSystem::AddDebugLineList(const Vector3& start, const Vector3& end, uint32_t color)
 {

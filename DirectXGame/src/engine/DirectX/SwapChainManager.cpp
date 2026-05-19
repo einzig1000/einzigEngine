@@ -18,8 +18,6 @@ SwapChainManager::SwapChainManager(ID3D12Device* device, ID3D12CommandQueue* com
 
 SwapChainManager::~SwapChainManager()
 {
-    // ここで
-
 	Log("デストラクタ実行成功 : SwapChainManager");
 }
 
@@ -71,7 +69,7 @@ void SwapChainManager::InitializeRenderTargetView(ID3D12Device* device)
 
 void SwapChainManager::InitializeDepthStencilView(ID3D12Device* device)
 {
-	depthStencilBuffer_ = Dx12ResourceFactory::CreateDepthStencilResource(device, UINT(WindowManager::winWidth_), UINT(WindowManager::winHeight_));
+    depthStencilResource_ = Dx12ResourceFactory::CreateDepthStencilResource(device, UINT(WindowManager::winWidth_), UINT(WindowManager::winHeight_));
 
     D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
     dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
@@ -80,7 +78,7 @@ void SwapChainManager::InitializeDepthStencilView(ID3D12Device* device)
 
     if (mainDepthDSV_.index == UINT32_MAX)
     {
-		mainDepthDSV_ = descriptorHeapManager_->GetDSVManager()->CreateDSV(depthStencilBuffer_.Get(), &dsvDesc);
+		mainDepthDSV_ = descriptorHeapManager_->GetDSVManager()->CreateDSV(depthStencilResource_.Get(), &dsvDesc);
     }
 }
 
@@ -125,7 +123,7 @@ void SwapChainManager::Resize(ID3D12Device* device, ID3D12CommandQueue* commandQ
     // バックバッファの参照を解放
     swapChainResources_[0].Reset();
     swapChainResources_[1].Reset();
-    depthStencilBuffer_.Reset();
+    depthStencilResource_.Reset();
 
     hr = swapChain_->ResizeBuffers(
         swapChainDesc_.BufferCount,

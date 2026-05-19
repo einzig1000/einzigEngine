@@ -113,7 +113,7 @@ void TestPhase::Update()
 	noTranslateView.m[3][2] = 0.0f;
 	Matrix4x4 noTranslateViewProjection = noTranslateView * projectionMatrix;
 
-	int32_t skyboxTextureID = skybox_->textureID - 128;
+	int32_t skyboxTextureID = skybox_->textureID;
 
 	skybox_->SetCBufferData(0, ShaderType::VertexShader, &noTranslateViewProjection);
 	skybox_->SetCBufferData(0, ShaderType::PixelShader, &skyboxTextureID);

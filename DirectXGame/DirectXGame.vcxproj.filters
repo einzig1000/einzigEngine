@@ -399,6 +399,7 @@
     <ClCompile Include="src\engine\Window\WindowManager.cpp">
       <Filter>src\engine\Window</Filter>
     </ClCompile>
+    <ClCompile Include="src\engine\DirectX\RenderTextureManager\RenderTextureManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="externals\Shigemori\Binary\BinaryManager.h">
@@ -578,6 +579,7 @@
     <ClInclude Include="src\engine\Window\WindowManager.h">
       <Filter>src\engine\Window</Filter>
     </ClInclude>
+    <ClInclude Include="src\engine\DirectX\RenderTextureManager\RenderTextureManager.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

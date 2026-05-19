@@ -8,8 +8,6 @@
 
 namespace ShaderReflection
 {
-    uint32_t HashRootParam(const ParamType& paramType, const ShaderType& shaderType, const uint32_t key, const uint32_t registerSpace);
-
     /// <summary>
 	/// シェーダーからRootParameterを作成する関数(完成版)
     /// </summary>

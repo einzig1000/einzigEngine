@@ -26,7 +26,7 @@ public:
 private:
 	Microsoft::WRL::ComPtr<IDXGISwapChain4> swapChain_;
 	Microsoft::WRL::ComPtr<ID3D12Resource> swapChainResources_[2];
-	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilBuffer_;
+	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource_;
 
 
 	RTVManager::RTVAllocation rtvAllocations_[2]{ {UINT32_MAX}, {UINT32_MAX} };

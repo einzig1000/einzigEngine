@@ -56,11 +56,9 @@ private:
 	Engine() = default;
 	~Engine() = default;
 
-	void UpdateCamera();
 	void UpdateDebugInfo();
 	void UpdateTransforms();
 	void UpdateParticles();
-	bool isDebugInfo_ = true;
 
 
 	// ウィンドウ関連
